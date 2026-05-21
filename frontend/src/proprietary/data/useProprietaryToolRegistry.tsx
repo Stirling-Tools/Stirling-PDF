@@ -8,5 +8,8 @@ import { type ProprietaryToolRegistry } from "@app/data/toolsTaxonomy";
  * and will be included in the main tool registry.
  */
 export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
-  return useMemo<ProprietaryToolRegistry>(() => ({}), []);
+  // "ai-workflow" is a marker super-tool (see proprietaryToolId.ts) with no
+  // registry entry, so we widen via `as`. Add real proprietary tools here as
+  // `{ id: { ... } }` entries.
+  return useMemo(() => ({}) as ProprietaryToolRegistry, []);
 }

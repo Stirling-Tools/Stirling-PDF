@@ -277,6 +277,9 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // AI Engine settings
+            configData.put("aiEngineEnabled", applicationProperties.getAiEngine().isEnabled());
+
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =
                     applicationProperties.getSecurity().getTimestamp();

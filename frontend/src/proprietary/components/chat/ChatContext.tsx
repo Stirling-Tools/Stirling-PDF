@@ -177,7 +177,8 @@ type ChatAction =
   | { type: "SET_LOADING"; loading: boolean }
   | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
   | { type: "TOGGLE_OPEN" }
-  | { type: "SET_OPEN"; open: boolean };
+  | { type: "SET_OPEN"; open: boolean }
+  | { type: "CLEAR" };
 
 function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
@@ -191,6 +192,8 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return { ...state, isOpen: !state.isOpen };
     case "SET_OPEN":
       return { ...state, isOpen: action.open };
+    case "CLEAR":
+      return { ...state, messages: [], isLoading: false, progress: null };
   }
 }
 
@@ -248,7 +251,10 @@ async function consumeSSEStream(
     onError: (data: { message: string }) => void;
   },
 ) {
-  const reader = response.body!.getReader();
+  if (!response.body) {
+    throw new Error("Response body is null");
+  }
+  const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   let currentEvent = "";
@@ -301,6 +307,8 @@ interface ChatContextValue {
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
+  /** Abort any in-flight request and reset the chat to an empty conversation. */
+  clearChat: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -396,6 +404,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     (open: boolean) => dispatch({ type: "SET_OPEN", open }),
     [],
   );
+  const clearChat = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    dispatch({ type: "CLEAR" });
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -542,6 +555,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         toggleOpen,
         setOpen,
         sendMessage,
+        clearChat,
       }}
     >
       {children}

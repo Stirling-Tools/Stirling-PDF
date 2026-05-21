@@ -8,24 +8,25 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
+  Box,
+  Collapse,
+  Group,
+  List,
+  Loader,
+  Menu,
+  Paper,
   ScrollArea,
-  TextInput,
   Stack,
   Text,
-  Paper,
-  Box,
-  Transition,
-  Loader,
-  Group,
-  Collapse,
+  Textarea,
   UnstyledButton,
-  List,
 } from "@mantine/core";
-import SendIcon from "@mui/icons-material/Send";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   useChat,
   AiWorkflowPhase,
@@ -34,6 +35,8 @@ import {
   type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
+import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
+import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
@@ -52,9 +55,6 @@ function useToolNameResolver(): ToolNameResolver {
     const nameByEndpoint = new Map<string, string>();
     Object.values(allTools).forEach((tool) => {
       const endpoint = tool.operationConfig?.endpoint;
-      // Only register tools with a static endpoint. Tools whose endpoint is a function
-      // (dynamic routing, e.g. Convert / Split) need runtime params to resolve, so they fall
-      // through to the generic progress message rather than mis-matching.
       if (typeof endpoint === "string") {
         nameByEndpoint.set(endpoint, tool.name);
       }
@@ -83,8 +83,6 @@ function formatProgress(
           })
         : t("chat.progress.executing_tool_single", { tool });
     }
-    // Unknown tool — fall back to a generic translated message rather than
-    // prettifying the endpoint path by hand.
     return hasSteps
       ? t("chat.progress.executing_tool_generic_step", {
           step: progress.stepIndex,
@@ -98,11 +96,6 @@ function formatProgress(
   return t(`chat.progress.${progress.phase}`);
 }
 
-/**
- * Render an engine-side progress event (e.g. chunked-reasoner slice progress) into a user-facing
- * message. Falls through to the generic processing label for unknown sub-phases so adding new
- * engine events doesn't break the UI before the frontend learns about them.
- */
 function formatEngineProgress(
   detail: AnyEngineProgressDetail | undefined,
   t: TranslateFn,
@@ -206,14 +199,20 @@ function ChatMessageBubble({
   );
 }
 
-export function ChatPanel() {
+export interface ChatPanelProps {
+  /** Called when the user closes the chat to return to the tool list. */
+  onBack: () => void;
+  /** Accessible label for the close button. */
+  backLabel: string;
+}
+
+export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   const { t } = useTranslation();
-  const { messages, isOpen, isLoading, progress, toggleOpen, sendMessage } =
-    useChat();
+  const { messages, isLoading, progress, sendMessage, clearChat } = useChat();
   const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -225,129 +224,136 @@ export function ChatPanel() {
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen) {
-      inputRef.current?.focus();
-    }
-  }, [isOpen]);
+    inputRef.current?.focus();
+  }, []);
 
-  const handleSend = () => {
-    const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
+  const handleSend = (override?: string) => {
+    const text = (override ?? input).trim();
+    if (!text || isLoading) return;
     setInput("");
-    sendMessage(trimmed);
+    sendMessage(text);
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
+  const showQuickActions = messages.length === 0 && !isLoading;
+
   return (
-    <>
-      {/* Toggle button - always visible */}
-      {!isOpen && (
+    <Box className="chat-panel chat-panel--embedded">
+      <div className="chat-panel__header">
+        <Menu shadow="md" width={220} position="bottom-start" withinPortal>
+          <Menu.Target>
+            <button
+              type="button"
+              className="chat-panel__agent-pill"
+              aria-label={t("chat.header.agentMenu", "Stirling agent options")}
+            >
+              <span className="chat-panel__agent-pill-icon">
+                <StirlingLogoOutline size={16} />
+              </span>
+              <span className="chat-panel__agent-pill-label">
+                {t("agents.stirling_name", "Stirling")}
+              </span>
+              <KeyboardArrowDownIcon
+                sx={{ fontSize: 18, color: "var(--text-muted)" }}
+              />
+            </button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
+              onClick={clearChat}
+              disabled={messages.length === 0 && !isLoading}
+            >
+              {t("chat.header.clearChat", "Clear chat")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
         <ActionIcon
-          className="chat-toggle-button"
-          variant="filled"
-          color="blue"
-          size="xl"
+          variant="subtle"
+          color="gray"
+          size="md"
           radius="xl"
-          onClick={toggleOpen}
-          aria-label="Open chat"
+          onClick={onBack}
+          aria-label={backLabel}
         >
-          <ChatBubbleOutlineIcon sx={{ fontSize: 24 }} />
+          <CloseIcon sx={{ fontSize: 18 }} />
         </ActionIcon>
+      </div>
+
+      <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
+        <Stack gap="sm" p="sm">
+          {messages.map((msg) => (
+            <ChatMessageBubble
+              key={msg.id}
+              role={msg.role}
+              content={msg.content}
+              toolsUsed={msg.toolsUsed}
+              resolveToolName={resolveToolName}
+              t={t}
+            />
+          ))}
+          {isLoading && (
+            <div className="chat-message chat-message-assistant">
+              <Paper
+                className="chat-bubble chat-bubble-assistant"
+                p="xs"
+                radius="md"
+              >
+                <Group gap="xs" wrap="nowrap">
+                  <Loader size="xs" type="dots" />
+                  <Text size="sm" c="dimmed">
+                    {progress
+                      ? formatProgress(progress, t, resolveToolName)
+                      : t("chat.progress.thinking")}
+                  </Text>
+                </Group>
+              </Paper>
+            </div>
+          )}
+        </Stack>
+      </ScrollArea>
+
+      {showQuickActions && (
+        <ChatQuickActions
+          heading={t("chat.quickActions.heading", "Get started")}
+          onAction={(text) => handleSend(text)}
+        />
       )}
 
-      {/* Chat panel */}
-      <Transition mounted={isOpen} transition="slide-left" duration={200}>
-        {(styles) => (
-          <Box className="chat-panel" style={styles}>
-            {/* Header */}
-            <div className="chat-panel-header">
-              <Text fw={600} size="sm">
-                AI Assistant
-              </Text>
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                onClick={toggleOpen}
-                aria-label="Close chat"
-              >
-                <CloseIcon sx={{ fontSize: 16 }} />
-              </ActionIcon>
-            </div>
-
-            {/* Messages */}
-            <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
-              <Stack gap="sm" p="sm">
-                {messages.length === 0 && (
-                  <Text size="sm" c="dimmed" ta="center" py="xl">
-                    Ask a question about your documents or get help with PDF
-                    tools.
-                  </Text>
-                )}
-                {messages.map((msg) => (
-                  <ChatMessageBubble
-                    key={msg.id}
-                    role={msg.role}
-                    content={msg.content}
-                    toolsUsed={msg.toolsUsed}
-                    resolveToolName={resolveToolName}
-                    t={t}
-                  />
-                ))}
-                {isLoading && (
-                  <div className="chat-message chat-message-assistant">
-                    <Paper
-                      className="chat-bubble chat-bubble-assistant"
-                      p="xs"
-                      radius="md"
-                    >
-                      <Group gap="xs" wrap="nowrap">
-                        <Loader size="xs" type="dots" />
-                        <Text size="sm" c="dimmed">
-                          {progress
-                            ? formatProgress(progress, t, resolveToolName)
-                            : t("chat.progress.thinking")}
-                        </Text>
-                      </Group>
-                    </Paper>
-                  </div>
-                )}
-              </Stack>
-            </ScrollArea>
-
-            {/* Input */}
-            <div className="chat-panel-input">
-              <TextInput
-                ref={inputRef}
-                placeholder="Type a message..."
-                value={input}
-                onChange={(e) => setInput(e.currentTarget.value)}
-                onKeyDown={handleKeyDown}
-                disabled={isLoading}
-                rightSection={
-                  <ActionIcon
-                    variant="filled"
-                    color="blue"
-                    size="sm"
-                    onClick={handleSend}
-                    disabled={!input.trim() || isLoading}
-                    aria-label="Send message"
-                  >
-                    <SendIcon sx={{ fontSize: 14 }} />
-                  </ActionIcon>
-                }
-                rightSectionWidth={36}
-                style={{ flex: 1 }}
-              />
-            </div>
-          </Box>
-        )}
-      </Transition>
-    </>
+      <div className="chat-panel-input">
+        <Textarea
+          ref={inputRef}
+          placeholder={t("chat.input.placeholder", "What do you want to do?")}
+          value={input}
+          onChange={(e) => setInput(e.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading}
+          autosize
+          minRows={1}
+          maxRows={4}
+          variant="unstyled"
+          classNames={{ input: "chat-panel-input__field" }}
+        />
+        <div className="chat-panel-input__actions">
+          <ActionIcon
+            variant="filled"
+            color="blue"
+            radius="xl"
+            size="md"
+            onClick={() => handleSend()}
+            disabled={!input.trim() || isLoading}
+            aria-label={t("chat.input.send", "Send message")}
+          >
+            <ArrowUpwardIcon sx={{ fontSize: 16 }} />
+          </ActionIcon>
+        </div>
+      </div>
+    </Box>
   );
 }
