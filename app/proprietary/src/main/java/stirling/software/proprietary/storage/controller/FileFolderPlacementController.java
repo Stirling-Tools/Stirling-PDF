@@ -1,21 +1,15 @@
 package stirling.software.proprietary.storage.controller;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -25,68 +19,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.storage.model.Folder;
-import stirling.software.proprietary.storage.model.StoredFile;
-import stirling.software.proprietary.storage.repository.FolderRepository;
-import stirling.software.proprietary.storage.repository.StoredFileRepository;
+import stirling.software.proprietary.storage.service.FolderService;
 
 /**
- * Folder placement endpoints for existing stored files. Sits alongside {@code
- * FileStorageController} so the original controller stays untouched - this controller exists only
- * to add Phase A folder support without risking the cert-signing or default file upload flows.
+ * Folder placement endpoints for existing stored files. Thin adapter: validates the request shape,
+ * delegates the transaction to {@link FolderService}, then maps the result onto the HTTP status.
+ * Authentication, storage-gate, ownership checks, and the bulk cap all live on the service (where
+ * {@code @Transactional} also lives) so the JDBC connection isn't held through JSON serialization.
  */
 @RestController
 @RequestMapping("/api/v1/storage/files")
 @RequiredArgsConstructor
-@Slf4j
 public class FileFolderPlacementController {
 
-    /**
-     * Hard cap on bulk-move payload size. Beyond this we reject with 400 - guards against DoS via
-     * unbounded ID lists and bounds the single bulk-update query.
-     */
     private static final int BULK_MOVE_MAX_FILES = 1000;
 
-    private final StoredFileRepository storedFileRepository;
-    private final FolderRepository folderRepository;
-    private final ApplicationProperties applicationProperties;
-
-    /**
-     * Mirror of {@code FileStorageService.ensureStorageEnabled} - folder placement endpoints must
-     * reject requests when storage is disabled at the server level (otherwise this controller is a
-     * back-door around the global storage gate).
-     */
-    private void ensureStorageEnabled() {
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
-        }
-        if (!applicationProperties.getStorage().isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
-        }
-    }
+    private final FolderService folderService;
 
     /** Move a single file to a folder (or to root when folderId is null). */
     @PatchMapping("/{fileId}/folder")
-    @Transactional
     public ResponseEntity<Void> moveFileToFolder(
             @PathVariable Long fileId, @Valid @RequestBody FolderPlacement body) {
-        ensureStorageEnabled();
-        User user = requireAuthenticatedUser();
-        StoredFile file =
-                storedFileRepository
-                        .findByIdAndOwner(fileId, user)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "File not found or not owned by current user"));
-        file.setFolder(resolveFolder(body.getFolderId(), user));
-        storedFileRepository.save(file);
+        folderService.moveFileToFolder(fileId, body.getFolderId());
         return ResponseEntity.noContent().build();
     }
 
@@ -96,57 +51,13 @@ public class FileFolderPlacementController {
      * to the caller).
      */
     @PatchMapping("/folder")
-    @Transactional
     public ResponseEntity<BulkMoveResponse> bulkMove(@Valid @RequestBody BulkMoveRequest body) {
-        ensureStorageEnabled();
-        User user = requireAuthenticatedUser();
-        Folder target = resolveFolder(body.getFolderId(), user);
-
-        // Single batched read replaces the prior N+1 findByIdAndOwner loop.
-        List<StoredFile> owned =
-                storedFileRepository.findAllByIdInAndOwner(body.getFileIds(), user);
-        Set<Long> ownedIds = new HashSet<>(owned.size());
-        for (StoredFile f : owned) {
-            f.setFolder(target);
-            ownedIds.add(f.getId());
-        }
-        storedFileRepository.saveAll(owned);
-
-        List<Long> moved = owned.stream().map(StoredFile::getId).toList();
-        List<Long> skipped =
-                body.getFileIds().stream().filter(id -> !ownedIds.contains(id)).toList();
-
-        if (!skipped.isEmpty()) {
-            log.warn(
-                    "bulkMove: user {} skipped {} of {} files (not owned or missing)",
-                    user.getId(),
-                    skipped.size(),
-                    body.getFileIds().size());
-        }
-
-        HttpStatus status = skipped.isEmpty() ? HttpStatus.OK : HttpStatus.MULTI_STATUS;
-        return ResponseEntity.status(status).body(new BulkMoveResponse(moved, skipped));
-    }
-
-    private Folder resolveFolder(UUID folderId, User user) {
-        if (folderId == null) return null;
-        return folderRepository
-                .findByIdAndOwner(folderId, user)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Folder does not exist or is not owned by you"));
-    }
-
-    private User requireAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || !(authentication.getPrincipal() instanceof User user)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
-        return user;
+        FolderService.BulkMoveResult result =
+                folderService.bulkMoveFilesToFolder(body.getFolderId(), body.getFileIds());
+        HttpStatus status =
+                result.skippedFileIds().isEmpty() ? HttpStatus.OK : HttpStatus.MULTI_STATUS;
+        return ResponseEntity.status(status)
+                .body(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()));
     }
 
     @Data

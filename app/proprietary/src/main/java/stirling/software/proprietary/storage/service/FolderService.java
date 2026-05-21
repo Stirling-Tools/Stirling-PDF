@@ -23,10 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.Folder;
+import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.CreateFolderRequest;
 import stirling.software.proprietary.storage.model.api.FolderResponse;
 import stirling.software.proprietary.storage.model.api.UpdateFolderRequest;
 import stirling.software.proprietary.storage.repository.FolderRepository;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 /**
  * Phase A folder operations. Each call is scoped to the authenticated user - folders are private to
@@ -44,7 +46,24 @@ public class FolderService {
      */
     private static final long MAX_FOLDERS_PER_USER = 5_000L;
 
+    /**
+     * Hard cap on chain depth from the root to any folder. Bounds the lazy-proxy walks in {@link
+     * #wouldCreateCycle} and {@link #enforceDepth} - otherwise a user could build a chain up to
+     * MAX_FOLDERS_PER_USER deep and force one Hibernate SELECT per ancestor on every reparent
+     * (5,000+ SELECTs == seconds of DB time per request, per-account weaponizable as DoS).
+     */
+    private static final int MAX_FOLDER_DEPTH = 64;
+
+    /**
+     * Hard cap on bulk-move payload size, mirroring the request-validation cap on {@code
+     * FileFolderPlacementController.BulkMoveRequest.fileIds}. Re-asserted at the service layer
+     * because controller-level @Valid bounds aren't enforced when the service is called directly
+     * (e.g. by future internal callers or tests).
+     */
+    private static final int BULK_MOVE_MAX_FILES = 1000;
+
     private final FolderRepository folderRepository;
+    private final StoredFileRepository storedFileRepository;
     private final ApplicationProperties applicationProperties;
 
     /**
@@ -212,7 +231,85 @@ public class FolderService {
         return removed;
     }
 
+    /**
+     * Move a single owned file to a folder (or root when {@code folderId} is null). Owns its
+     * own @Transactional rather than relying on the caller so the JDBC connection is released as
+     * soon as the writes commit, not held through controller-side JSON serialization.
+     */
+    @Transactional
+    public void moveFileToFolder(Long fileId, UUID folderId) {
+        ensureStorageEnabled();
+        User user = requireAuthenticatedUser();
+        StoredFile file =
+                storedFileRepository
+                        .findByIdAndOwner(fileId, user)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "File not found or not owned by current user"));
+        file.setFolder(resolveOwnedFolder(folderId, user));
+        storedFileRepository.save(file);
+    }
+
+    /**
+     * Bulk move that returns the moved + skipped split. Skipped == file ids the caller doesn't own
+     * (or that no longer exist); the controller surfaces this as 207 Multi-Status.
+     */
+    @Transactional
+    public BulkMoveResult bulkMoveFilesToFolder(UUID folderId, List<Long> fileIds) {
+        ensureStorageEnabled();
+        if (fileIds == null || fileIds.isEmpty()) {
+            return new BulkMoveResult(List.of(), List.of());
+        }
+        if (fileIds.size() > BULK_MOVE_MAX_FILES) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "fileIds must contain between 1 and " + BULK_MOVE_MAX_FILES + " entries");
+        }
+        User user = requireAuthenticatedUser();
+        Folder target = resolveOwnedFolder(folderId, user);
+
+        List<StoredFile> owned = storedFileRepository.findAllByIdInAndOwner(fileIds, user);
+        Set<Long> ownedIds = new HashSet<>(owned.size());
+        for (StoredFile f : owned) {
+            f.setFolder(target);
+            ownedIds.add(f.getId());
+        }
+        storedFileRepository.saveAll(owned);
+
+        List<Long> moved = owned.stream().map(StoredFile::getId).toList();
+        List<Long> skipped = fileIds.stream().filter(id -> !ownedIds.contains(id)).toList();
+        if (!skipped.isEmpty()) {
+            log.warn(
+                    "bulkMove: user {} skipped {} of {} files (not owned or missing)",
+                    user.getId(),
+                    skipped.size(),
+                    fileIds.size());
+        }
+        return new BulkMoveResult(moved, skipped);
+    }
+
+    /** Result of {@link #bulkMoveFilesToFolder}. Records are immutable + auto-serializable. */
+    public record BulkMoveResult(List<Long> movedFileIds, List<Long> skippedFileIds) {}
+
     // ─── helpers ────────────────────────────────────────────────────
+
+    /**
+     * Resolve a placement-target folder. Distinct from {@link #resolveParent} because move targets
+     * don't carry the parent-cycle semantics - we only need the folder to exist AND belong to the
+     * caller. Returns null for null input (root).
+     */
+    private Folder resolveOwnedFolder(UUID folderId, User user) {
+        if (folderId == null) return null;
+        return folderRepository
+                .findByIdAndOwner(folderId, user)
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Folder does not exist or is not owned by you"));
+    }
 
     private Folder requireOwnedFolder(UUID id, User user) {
         return folderRepository
@@ -238,22 +335,46 @@ public class FolderService {
                                         new ResponseStatusException(
                                                 HttpStatus.BAD_REQUEST,
                                                 "Parent folder does not exist or is not owned by you"));
-        if (forbidId != null && wouldCreateCycle(parent, forbidId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Cannot move a folder inside one of its descendants");
-        }
+        // Reject before the child is created/moved if attaching it would push the chain past the
+        // depth cap. Done in one pass that also returns the cycle answer so we don't walk the
+        // lazy-proxy chain twice.
+        enforceDepthAndCycle(parent, forbidId);
         return parent;
     }
 
-    private boolean wouldCreateCycle(Folder candidate, UUID forbidId) {
-        Folder cursor = candidate;
+    /**
+     * Single pass that walks the parent chain to root and (a) rejects if attaching a child here
+     * would exceed MAX_FOLDER_DEPTH, (b) rejects if {@code forbidId} appears in the chain (cycle on
+     * reparent), and (c) rejects on a broken graph. The walk is hard-bounded at MAX_FOLDER_DEPTH so
+     * a corrupted database (chain longer than the API would allow) can never produce an unbounded
+     * SELECT loop.
+     */
+    private void enforceDepthAndCycle(Folder candidateParent, UUID forbidId) {
+        Folder cursor = candidateParent;
         Set<UUID> seen = new HashSet<>();
+        int depth = 0;
         while (cursor != null) {
-            if (cursor.getId().equals(forbidId)) return true;
-            if (!seen.add(cursor.getId())) return true; // broken graph
+            if (forbidId != null && cursor.getId().equals(forbidId)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Cannot move a folder inside one of its descendants");
+            }
+            if (!seen.add(cursor.getId())) {
+                // broken graph (cycle in stored data)
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Folder hierarchy is corrupted; contact support");
+            }
+            depth += 1;
+            // candidateParent is at depth 1 from the new child's perspective. After the walk,
+            // `depth` equals the number of ancestors including candidateParent, which is the
+            // depth at which the new child would live. Reject before exceeding the cap.
+            if (depth >= MAX_FOLDER_DEPTH) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Folder nesting limit reached (max " + MAX_FOLDER_DEPTH + " levels)");
+            }
             cursor = cursor.getParent();
         }
-        return false;
     }
 
     private User requireAuthenticatedUser() {
