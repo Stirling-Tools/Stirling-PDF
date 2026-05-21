@@ -2,9 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
-import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import {
   AgentsFullscreenSection,
   useAgentChatOpen,
@@ -12,6 +10,7 @@ import {
 } from "@app/components/agents/AgentsPanel";
 import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
 import { ToolId } from "@app/types/toolId";
+import type { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 
 /** Derives whether the fullscreen tool picker is currently expanded. */
 export function useIsFullscreenExpanded(): boolean {
@@ -27,12 +26,17 @@ export function useIsFullscreenExpanded(): boolean {
   );
 }
 
+interface FullscreenToolPanelProps {
+  geometry: ToolPanelGeometry | null;
+}
+
 /**
  * Self-contained fullscreen tool picker. Renders null when inactive, and takes
  * over the right rail (via FullscreenToolSurface) when fullscreen mode is on.
- * All fullscreen state and side-effects live here, not in RightSidebar.
+ * Geometry is computed by the parent (RightSidebar) so its useLayoutEffect runs
+ * after the ref div is committed, ensuring toolPanelRef.current is always set.
  */
-export function FullscreenToolPanel() {
+export function FullscreenToolPanel({ geometry }: FullscreenToolPanelProps) {
   const {
     toolPanelMode,
     setToolPanelMode,
@@ -45,8 +49,6 @@ export function FullscreenToolPanel() {
     selectedToolKey,
     handleToolSelect,
   } = useToolWorkflow();
-  const { sidebarRefs } = useSidebarContext();
-  const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
   const agentsEnabled = useAgentsEnabled();
   const agentChatOpen = useAgentChatOpen();
@@ -63,12 +65,6 @@ export function FullscreenToolPanel() {
   useEffect(() => {
     setAllButtonsDisabled(fullscreenExpanded);
   }, [fullscreenExpanded, setAllButtonsDisabled]);
-
-  const fullscreenGeometry = useToolPanelGeometry({
-    enabled: fullscreenExpanded,
-    toolPanelRef,
-    quickAccessRef,
-  });
 
   const matchedTextMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -97,7 +93,7 @@ export function FullscreenToolPanel() {
         )
       }
       onExitFullscreenMode={() => setToolPanelMode("sidebar")}
-      geometry={fullscreenGeometry}
+      geometry={geometry}
       agentsSlot={
         agentsEnabled && !searchQuery ? <AgentsFullscreenSection /> : null
       }

@@ -7,8 +7,6 @@ import FullscreenToolList from "@app/components/tools/FullscreenToolList";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useFocusTrap } from "@app/hooks/useFocusTrap";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
 import "@app/components/tools/ToolPanel.css";
 import { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 
@@ -51,16 +49,14 @@ const FullscreenToolSurface = ({
   // Enable focus trap when surface is active
   useFocusTrap(surfaceRef, true);
 
-  const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+  if (!geometry) return null;
 
-  const style = geometry
-    ? {
-        left: `${geometry.left}px`,
-        top: `${geometry.top}px`,
-        width: `${geometry.width}px`,
-        height: `${geometry.height}px`,
-      }
-    : undefined;
+  const style = {
+    left: `${geometry.left}px`,
+    top: `${geometry.top}px`,
+    width: `${geometry.width}px`,
+    height: `${geometry.height}px`,
+  };
 
   const surface = (
     <div
@@ -74,16 +70,6 @@ const FullscreenToolSurface = ({
       data-tour="tool-panel"
     >
       <div ref={surfaceRef} className="tool-panel__fullscreen-surface-inner">
-        <header className="tool-panel__fullscreen-header">
-          <div className="tool-panel__fullscreen-brand">
-            <LogoIcon className="tool-panel__fullscreen-brand-icon" />
-            <Wordmark
-              alt={brandAltText}
-              className="tool-panel__fullscreen-brand-text"
-            />
-          </div>
-        </header>
-
         <div className="tool-panel__fullscreen-controls">
           <ToolSearch
             value={searchQuery}

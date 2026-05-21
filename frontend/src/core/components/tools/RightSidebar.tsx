@@ -29,6 +29,7 @@ import {
   FullscreenToolPanel,
   useIsFullscreenExpanded,
 } from "@app/components/tools/FullscreenToolPanel";
+import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import "@app/components/tools/ToolPanel.css";
 
 /**
@@ -42,7 +43,7 @@ export default function RightSidebar() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
-  const { toolPanelRef } = sidebarRefs;
+  const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
 
   const {
@@ -65,6 +66,11 @@ export default function RightSidebar() {
 
   const agentsEnabled = useAgentsEnabled();
   const fullscreenExpanded = useIsFullscreenExpanded();
+  const fullscreenGeometry = useToolPanelGeometry({
+    enabled: fullscreenExpanded,
+    toolPanelRef,
+    quickAccessRef,
+  });
 
   const handleExpand = () => {
     withViewTransition(() => {
@@ -321,7 +327,7 @@ export default function RightSidebar() {
         </div>
       )}
 
-      <FullscreenToolPanel />
+      <FullscreenToolPanel geometry={fullscreenGeometry} />
     </div>
   );
 }
