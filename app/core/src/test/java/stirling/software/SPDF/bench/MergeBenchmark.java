@@ -131,13 +131,17 @@ public final class MergeBenchmark {
      * Invoke explicitly with:
      *
      * <pre>{@code
-     * ./gradlew :stirling-pdf:test --tests '*MergeBenchmark*' -i
+     * ./gradlew :stirling-pdf:test --tests '*MergeBenchmark*' \
+     *     -Dmerge.bench=true -Dmerge.bench.docs=4 -Dmerge.bench.pages=70
      * }</pre>
      *
-     * <p>Test is filename-targeted (only the {@code --tests} filter runs it)
-     * so it doesn't slow down the regular test suite.
+     * <p>Gated behind {@code -Dmerge.bench=true} so it stays out of normal
+     * CI runs — generating the 1+ GB of input PDFs takes ~60 s and the
+     * merges burn another ~30 s, neither of which belongs in regular
+     * test cycles.
      */
     @Test
+    @EnabledIfSystemProperty(named = "merge.bench", matches = "true")
     void compareMergeMemoryFootprint() throws Exception {
         main(new String[0]);
     }
@@ -153,8 +157,10 @@ public final class MergeBenchmark {
      *
      * <p>Saves ~10 minutes of wall-clock vs running three separate test
      * invocations because the 1+ GB of input PDFs only gets generated once.
+     * Gated behind {@code -Dmerge.bench=true} like the other benchmark.
      */
     @Test
+    @EnabledIfSystemProperty(named = "merge.bench", matches = "true")
     void compareAllMergeScenarios() throws Exception {
         Path workDir = Files.createTempDirectory("merge-bench-all-");
         System.out.println("Work dir: " + workDir);
