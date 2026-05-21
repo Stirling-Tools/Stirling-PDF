@@ -238,7 +238,7 @@ jobs:
 
       - name: Set up Depot CLI
         if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@v1
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
 
       - name: Set up Docker Buildx
         if: env.USE_DEPOT != 'true'
@@ -252,7 +252,7 @@ jobs:
 
       - name: Build and push PR-specific image (Depot)
         if: env.USE_DEPOT == 'true'
-        uses: depot/build-push-action@v1
+        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
@@ -281,7 +281,7 @@ jobs:
 
       - name: Build and push engine image (Depot)
         if: env.USE_DEPOT == 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: depot/build-push-action@v1
+        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: ./engine
