@@ -574,18 +574,46 @@ public class MergeController {
     }
 
     /**
-     * Walk {@code bm} and its descendants depth-first, appending each internal (GoTo-page) entry as
-     * a top-level bookmark with {@code offset} added to the page index. External-URI / launch
-     * bookmarks are skipped because they don't have a useful destination in the merged doc.
+     * Iteratively walk {@code root} and its descendants depth-first using an explicit deque,
+     * appending each internal (GoTo-page) entry as a top-level bookmark with {@code offset} added
+     * to the page index. External-URI / launch bookmarks are skipped because they don't have a
+     * useful destination in the merged doc.
+     *
+     * <p>Iterative (not recursive) so a maliciously deep or cyclically self-referencing outline
+     * tree can't blow the JVM stack. A visited-set further prevents cycles from looping forever,
+     * and a hard cap on visited nodes bounds the work for pathological inputs.
      */
-    private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark bm, int offset) {
-        if (bm.isInternal() && bm.title() != null) {
-            builder.add(bm.title(), offset + bm.pageIndex());
-        }
-        if (bm.hasChildren()) {
-            for (Bookmark child : bm.children()) {
-                addBookmarkFlat(builder, child, offset);
+    private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark root, int offset) {
+        // Cap roughly matches PDF outline limits in the wild; legitimate
+        // documents have hundreds to low thousands of entries at most.
+        final int maxNodes = 100_000;
+        java.util.Deque<Bookmark> stack = new java.util.ArrayDeque<>();
+        java.util.Set<Bookmark> visited =
+                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        stack.push(root);
+        int processed = 0;
+        while (!stack.isEmpty() && processed < maxNodes) {
+            Bookmark bm = stack.pop();
+            if (!visited.add(bm)) {
+                continue; // cycle guard
             }
+            processed++;
+            if (bm.isInternal() && bm.title() != null) {
+                builder.add(bm.title(), offset + bm.pageIndex());
+            }
+            if (bm.hasChildren()) {
+                List<Bookmark> children = bm.children();
+                // Push in reverse so iteration order matches recursive
+                // depth-first traversal (left-to-right child order).
+                for (int i = children.size() - 1; i >= 0; i--) {
+                    stack.push(children.get(i));
+                }
+            }
+        }
+        if (processed >= maxNodes) {
+            log.warn(
+                    "Source bookmark traversal hit {}-node cap; remaining bookmarks dropped",
+                    maxNodes);
         }
     }
 }
