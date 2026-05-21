@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
@@ -81,7 +82,10 @@ public class BlankPageController {
         return whitePixelPercentage >= whitePercent;
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-blanks")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/remove-blanks",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =

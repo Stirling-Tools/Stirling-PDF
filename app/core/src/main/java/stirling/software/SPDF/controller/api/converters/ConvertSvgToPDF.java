@@ -28,6 +28,7 @@ import stirling.software.SPDF.model.api.converters.SvgToPdfRequest;
 import stirling.software.SPDF.utils.SvgToPdf;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.SvgSanitizer;
@@ -44,7 +45,10 @@ public class ConvertSvgToPDF {
     private final SvgSanitizer svgSanitizer;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/svg/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/svg/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
             summary = "Convert SVG to PDF",
