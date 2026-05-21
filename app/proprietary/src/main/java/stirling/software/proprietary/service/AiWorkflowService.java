@@ -326,8 +326,7 @@ public class AiWorkflowService {
 
         try {
             List<Resource> inputFiles = toResources(filesById);
-            listener.onProgress(
-                    AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1, parameters));
+            listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
             ToolResult result = executeStep(endpointPath, parameters, inputFiles);
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
@@ -422,8 +421,7 @@ public class AiWorkflowService {
                 }
 
                 listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(
-                                endpointPath, i + 1, steps.size(), parameters));
+                        AiWorkflowProgressEvent.executingTool(endpointPath, i + 1, steps.size()));
                 ToolResult stepResult = executeStep(endpointPath, parameters, currentFiles);
                 currentFiles = stepResult.files();
                 if (stepResult.report() != null) {
@@ -524,15 +522,6 @@ public class AiWorkflowService {
      *       a flat list of result files.
      * </ul>
      */
-    private static boolean containsStructuredItem(List<?> list) {
-        for (Object item : list) {
-            if (item instanceof Map<?, ?> || item instanceof List<?>) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private ToolResult callEndpoint(
             String endpointPath, Map<String, Object> parameters, List<Resource> files)
             throws IOException {

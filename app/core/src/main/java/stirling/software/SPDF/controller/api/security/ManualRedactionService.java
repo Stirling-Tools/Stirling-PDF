@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
+import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
@@ -278,10 +279,10 @@ class ManualRedactionService {
         textExtractor.getText(document);
         boxes.addAll(textExtractor.getLineBoxes());
 
-        PageImageExtractor imgExtractor = new PageImageExtractor(page);
-        imgExtractor.processPage(page);
-        for (float[] imgBox : imgExtractor.getImageBoxes()) {
-            boxes.add(imgBox);
+        PageImageLocator imgLocator = new PageImageLocator(page, pageIndex);
+        imgLocator.processPage(page);
+        for (PageImageLocator.ImageBox imgBox : imgLocator.getImageBoxes()) {
+            boxes.add(new float[] {imgBox.x1(), imgBox.y1(), imgBox.x2(), imgBox.y2()});
         }
 
         return boxes;

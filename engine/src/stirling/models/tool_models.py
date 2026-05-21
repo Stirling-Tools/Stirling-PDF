@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum, StrEnum
+from typing import Annotated, Literal
 
 from pydantic import Field, RootModel, SecretStr
 
@@ -990,20 +991,58 @@ class Strategy(StrEnum):
     image_finalize = "IMAGE_FINALIZE"
 
 
-class RedactImageBox(ApiModel):
-    page_index: int = Field(..., description="0-based page index")
-    x1: float = Field(..., description="Left edge in PDF user-space (origin bottom-left, Y up)")
-    x2: float = Field(..., description="Right edge")
-    y1: float = Field(..., description="Bottom edge")
-    y2: float = Field(..., description="Top edge")
+class RedactByText(ApiModel):
+    type: Literal["text"] = "text"
+    values: list[str] = Field(description="Exact strings to redact")
 
 
-class RedactTextRange(ApiModel):
-    end_string: str = Field(
-        "",
-        description="Exclusive end marker - first line after the redacted block, copied verbatim. Empty string means redact to the end of the document.",
+class RedactByRegex(ApiModel):
+    type: Literal["regex"] = "regex"
+    patterns: list[str] = Field(
+        description=(
+            "Regex patterns — each match is redacted. "
+            "Account for common format variants: different separators, optional prefixes/suffixes, "
+            "grouped vs unbroken digits, locale spellings, etc."
+        )
     )
-    start_string: str = Field(..., description="First line of the block to redact, copied verbatim")
+
+
+class RedactPages(ApiModel):
+    type: Literal["pages"] = "pages"
+    page_numbers: list[int] = Field(description="1-indexed page numbers to wipe entirely")
+
+
+class RedactByRange(ApiModel):
+    type: Literal["range"] = "range"
+    start_string: str = Field(description="Anchor text where redaction begins (inclusive)")
+    end_string: str = Field(default="", description="Anchor text where redaction ends; empty = to end of page")
+
+
+class RedactImageBox(ApiModel):
+    type: Literal["image_box"] = "image_box"
+    page_index: int = Field(description="0-indexed page number")
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+
+class RedactAllImages(ApiModel):
+    type: Literal["all_images"] = "all_images"
+    page_numbers: list[int] = Field(default=[], description="1-indexed; empty = all pages")
+
+
+RedactOperation = Annotated[
+    RedactByText | RedactByRegex | RedactPages | RedactByRange | RedactImageBox | RedactAllImages,
+    Field(discriminator="type"),
+]
+
+
+class RedactStyle(ApiModel):
+    color: str = Field(default="#000000", description="Hex redaction box color")
+    padding: float = Field(default=0.0, description="Extra padding around each box in points")
+    convert_to_image: bool = Field(default=False, description="Rasterize output to prevent text extraction")
+    strategy: Strategy = Field(default=Strategy.auto, description="Execution strategy hint for the redaction pipeline")
 
 
 class RedactionArea(ApiModel):
@@ -1356,19 +1395,8 @@ class VectorToPdfParams(ApiModel):
 
 
 class RedactExecuteParams(ApiModel):
-    convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to a flattened image")
-    custom_padding: float = Field(0, description="Extra padding (pts) around each redaction box")
-    image_boxes: list[RedactImageBox] = Field([], description="Images to redact by bounding box", validate_default=True)
-    image_pages: list[int] = Field(
-        [], description="1-based page numbers to scan for images when redactAllImages is true"
-    )
-    page_numbers: list[int] = Field([], description="1-based page numbers to redact entirely")
-    redact_all_images: bool = Field(False, description="Redact every image")
-    redact_color: str = Field("#000000", description="Hex colour for the redaction fill")
-    regex_patterns: list[str] = Field([], description="Regex patterns to redact")
-    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
-    text_ranges: list[RedactTextRange] = Field([], description="Multi-line sections to redact", validate_default=True)
-    texts_to_redact: list[str] = Field([], description="Single-line values to redact")
+    operations: list[RedactOperation] = Field(description="Ordered list of redaction operations to apply")
+    style: RedactStyle = Field(default_factory=RedactStyle)
 
 
 class RedactParams(ApiModel):

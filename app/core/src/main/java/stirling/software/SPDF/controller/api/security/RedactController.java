@@ -25,9 +25,9 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
-import stirling.software.SPDF.model.api.security.RedactImageBox;
+import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactOperation;
+import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyle;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
-import stirling.software.SPDF.model.api.security.RedactTextRange;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.security.RedactionArea;
@@ -38,7 +38,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
-import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
+import stirling.software.common.util.propertyeditor.JsonObjectPropertyEditor;
 
 import tools.jackson.core.type.TypeReference;
 
@@ -62,15 +62,13 @@ public class RedactController {
         binder.registerCustomEditor(
                 List.class,
                 "redactions",
-                new StringToArrayListPropertyEditor<>(RedactionArea.class));
+                new JsonListPropertyEditor<>(new TypeReference<List<RedactionArea>>() {}));
         binder.registerCustomEditor(
                 List.class,
-                "textRanges",
-                new JsonListPropertyEditor<>(new TypeReference<List<RedactTextRange>>() {}));
+                "operations",
+                new JsonListPropertyEditor<>(new TypeReference<List<RedactOperation>>() {}));
         binder.registerCustomEditor(
-                List.class,
-                "imageBoxes",
-                new JsonListPropertyEditor<>(new TypeReference<List<RedactImageBox>>() {}));
+                RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
     }
 
     @AutoJobPostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -1,7 +1,5 @@
 package stirling.software.proprietary.model.api.ai;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -33,27 +31,19 @@ public class AiWorkflowProgressEvent {
      */
     private AiEngineProgressDetail engineDetail;
 
-    /**
-     * The parameters passed to the tool, for {@link AiWorkflowPhase#EXECUTING_TOOL} events.
-     * Serialised as-is from the AI engine's plan so the frontend can log exactly what was sent.
-     */
-    private Map<String, Object> parameters;
-
     public static AiWorkflowProgressEvent of(AiWorkflowPhase phase) {
         return new AiWorkflowProgressEvent(
-                phase, System.currentTimeMillis(), null, null, null, null, null);
+                phase, System.currentTimeMillis(), null, null, null, null);
     }
 
-    public static AiWorkflowProgressEvent executingTool(
-            String tool, int stepIndex, int stepCount, Map<String, Object> parameters) {
+    public static AiWorkflowProgressEvent executingTool(String tool, int stepIndex, int stepCount) {
         return new AiWorkflowProgressEvent(
                 AiWorkflowPhase.EXECUTING_TOOL,
                 System.currentTimeMillis(),
                 tool,
                 stepIndex,
                 stepCount,
-                null,
-                parameters);
+                null);
     }
 
     public static AiWorkflowProgressEvent engineProgress(AiEngineProgressDetail detail) {
@@ -63,7 +53,6 @@ public class AiWorkflowProgressEvent {
                 null,
                 null,
                 null,
-                detail,
-                null);
+                detail);
     }
 }

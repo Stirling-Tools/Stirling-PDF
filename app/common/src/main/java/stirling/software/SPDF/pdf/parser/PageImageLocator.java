@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.security;
+package stirling.software.SPDF.pdf.parser;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -13,27 +13,63 @@ import org.apache.pdfbox.util.Matrix;
 
 /**
  * PDFGraphicsStreamEngine that intercepts {@code drawImage} calls and records each image's bounding
- * box in PDF user-space (origin bottom-left, Y up) via the current transformation matrix.
+ * box in PDF user-space (origin bottom-left, Y up) by transforming the unit square through the
+ * current transformation matrix (CTM).
+ *
+ * <p>Usage:
+ *
+ * <pre>{@code
+ * PageImageLocator locator = new PageImageLocator(page, pageIndex);
+ * locator.processPage(page);
+ * List<ImageBox> boxes = locator.getImageBoxes();
+ * }</pre>
+ *
+ * <p>Each {@link ImageBox} carries the 0-based page index and the axis-aligned bounding box {@code
+ * (x1, y1, x2, y2)} in PDF user-space coordinates.
  */
-final class PageImageExtractor extends PDFGraphicsStreamEngine {
+public final class PageImageLocator extends PDFGraphicsStreamEngine {
 
-    private final List<float[]> imageBoxes = new ArrayList<>();
+    /**
+     * Bounding box of a raster or vector image found on a PDF page.
+     *
+     * @param pageIndex 0-based page index
+     * @param x1 left edge in PDF user-space (origin bottom-left)
+     * @param y1 bottom edge in PDF user-space
+     * @param x2 right edge
+     * @param y2 top edge
+     */
+    public record ImageBox(int pageIndex, float x1, float y1, float x2, float y2) {}
+
+    private final int pageIndex;
+    private final List<ImageBox> imageBoxes = new ArrayList<>();
     private final Point2D.Float currentPoint = new Point2D.Float();
 
-    PageImageExtractor(PDPage page) {
+    /**
+     * @param page the PDPage to process
+     * @param pageIndex 0-based index of this page in the document (stored on each returned {@link
+     *     ImageBox})
+     */
+    public PageImageLocator(PDPage page, int pageIndex) {
         super(page);
+        this.pageIndex = pageIndex;
     }
 
-    List<float[]> getImageBoxes() {
+    /** Returns all image bounding boxes collected during {@link #processPage}. */
+    public List<ImageBox> getImageBoxes() {
         return imageBoxes;
     }
 
     @Override
     public void drawImage(PDImage pdImage) throws IOException {
         Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
-        float a = ctm.getScaleX(), b = ctm.getShearY();
-        float c = ctm.getShearX(), d = ctm.getScaleY();
-        float e = ctm.getTranslateX(), f = ctm.getTranslateY();
+        // An image occupies the unit square (0,0)→(1,1) in image space.
+        // Transform all four corners through the CTM to get the page-space bounding box.
+        float a = ctm.getScaleX();
+        float b = ctm.getShearY();
+        float c = ctm.getShearX();
+        float d = ctm.getScaleY();
+        float e = ctm.getTranslateX();
+        float f = ctm.getTranslateY();
         float[] xs = {e, a + e, c + e, a + c + e};
         float[] ys = {f, b + f, d + f, b + d + f};
         float x1 = Float.MAX_VALUE, y1 = Float.MAX_VALUE;
@@ -46,8 +82,10 @@ final class PageImageExtractor extends PDFGraphicsStreamEngine {
             y1 = Math.min(y1, y);
             y2 = Math.max(y2, y);
         }
-        imageBoxes.add(new float[] {x1, y1, x2, y2});
+        imageBoxes.add(new ImageBox(pageIndex, x1, y1, x2, y2));
     }
+
+    // ---------- required abstract methods (no-op for path operations) ----------
 
     @Override
     public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) {}

@@ -6,7 +6,7 @@ from typing import Literal, overload
 
 from pydantic import Field
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput, ToolOutput
+from pydantic_ai.output import NativeOutput
 
 from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
 from stirling.contracts import (
@@ -124,15 +124,14 @@ class PdfEditParameterSelector:
         )
         if operation_id == ToolEndpoint.REDACT_EXECUTE:
             instructions += (
-                " For regexPatterns, account for the common format variants of whatever pattern "
+                " For regex patterns, account for the common format variants of whatever pattern "
                 "the user asked to redact — different separators, optional prefixes/suffixes, "
                 "grouped vs unbroken digits, locale spellings, etc. — so partial matches don't "
                 "leak. Cover the realistic shapes the data appears in, not every conceivable form."
             )
-        # ToolOutput bypasses Anthropic's grammar compiler, which times out on complex schemas.
         parameter_result = await self.agent.run(
             prompt,
-            output_type=ToolOutput(parameter_model),
+            output_type=NativeOutput(parameter_model),
             instructions=instructions,
         )
         logger.debug("[pdf-edit params %s] output: %s", operation_id.name, Pretty(parameter_result.output))
@@ -320,8 +319,19 @@ class PdfEditAgent:
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
-    # Endpoints reserved for direct API / manual UI use; never exposed to the AI agent.
-    # The agent's only AI-driven redaction route is REDACT_EXECUTE.
+    # Endpoints that exist on the server and are callable via the direct API or the manual UI,
+    # but are never offered to the AI agent as a routing option.
+    #
+    # Why: REDACT_EXECUTE is the preferred AI-driven redaction route. AUTO_REDACT and REDACT are
+    # legacy endpoints that remain fully functional for human callers (the manual redact UI, direct
+    # API consumers, pipelines) but would produce a worse experience if the AI routed to them —
+    # they accept a simpler, less expressive schema and pre-date the unified operation model.
+    # Hiding them here channels all AI redaction traffic through REDACT_EXECUTE without disabling
+    # the legacy endpoints for anyone else.
+    #
+    # How to reuse: add an endpoint here whenever a legacy endpoint has a preferred replacement
+    # that the AI should use exclusively. The endpoint remains live on the server; only the AI
+    # planner is prevented from selecting it.
     _AGENT_HIDDEN_ENDPOINTS: frozenset[ToolEndpoint] = frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT})
 
     def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
