@@ -264,11 +264,6 @@ subprojects {
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
         finalizedBy(jacocoReport)
-        System.properties.findAll { k, v -> k.toString().startsWith("merge.bench") }
-                .each { k, v -> systemProperty(k.toString(), v) }
-        if (System.properties.any { k, v -> k.toString().startsWith("merge.bench") }) {
-            maxHeapSize = System.properties.getProperty("merge.bench.xmx", "4g")
-        }
     }
 
     jacocoReport.configure {
