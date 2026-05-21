@@ -1015,7 +1015,7 @@ class RedactPages(ApiModel):
 class RedactByRange(ApiModel):
     type: Literal["range"] = "range"
     start_string: str = Field(description="Anchor text where redaction begins (inclusive)")
-    end_string: str = Field(default="", description="Anchor text where redaction ends; empty = to end of page")
+    end_string: str = Field(default="", description="Anchor text where redaction ends; empty = to end of document")
 
 
 class RedactImageBox(ApiModel):
