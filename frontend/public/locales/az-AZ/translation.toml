@@ -1806,7 +1806,11 @@ title = "Ağıllı adlandırma"
 [automate]
 copyToSaved = "Saxlananlara kopyala"
 desc = "PDF əməliyyatlarını birləşdirərək çoxaddımlı iş axınları yaradın. Təkrarlanan tapşırıqlar üçün idealdır."
+export = "İxrac et"
 exportForFolderScanning = "Qovluq skanı üçün ixrac et"
+import = "İdxal et"
+importPartialSuccess = "{{count}} xəritələnməmiş əməliyyatla idxal edildi: {{ops}}"
+importSuccess = "İdxal edilmiş avtomatlaşdırma: {{name}}"
 invalidStep = "Yanlış addım"
 reviewTitle = "Avtomatlaşdırma Nəticələri"
 title = "Avtomatlaşdırma"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} tənzimləyin"
 [automate.creation]
 createTitle = "Avtomatlaşdırma Yaradın"
 editTitle = "Avtomatlaşdırmanı Redaktə edin"
+export = "İxrac et"
 exportForFolderScanning = "Qovluq skanı üçün ixrac et"
 intro = "Avtomatlaşdırmalar alətləri ardıcıl işlədir. Başlamaq üçün, işləməsini istədiyiniz ardıcıllıqla alətlər əlavə edin."
 save = "Avtomatlaşdırmanı Yadda saxla"
@@ -1852,8 +1857,27 @@ confirm = "Geri qayıt"
 message = "Yadda saxlanmayan dəyişiklikləriniz var. Geri qayıtmaq istədiyinizə əminsiniz? Bütün dəyişikliklər itəcək."
 title = "Yadda saxlanmayan dəyişikliklər"
 
+[automate.entryMenu]
+label = "{{title}} üçün menyunu aç"
+
 [automate.files]
 placeholder = "Bu avtomatlaşdırma ilə emal etmək üçün faylları seçin"
+
+[automate.importModal]
+cancel = "Ləğv et"
+confirm = "İdxal et"
+detectedAutomation = "Avtomatlaşdırma JSON-u"
+detectedFolderScan = "Qovluq Skanı JSON-u"
+dropHint = "JSON-u bura atın və ya fayl seçmək üçün klikləyin"
+dropSubhint = "Həm Avtomatlaşdırma, həm də Qovluq Skanı konfiqurasiyaları qəbul edilir"
+dropzoneAriaLabel = "Buraya avtomatlaşdırma JSON faylı atın"
+intro = "JSON faylını atın və ya məzmununu aşağıya yapışdırın. Format (Avtomatlaşdırma və ya Qovluq Skanı) avtomatik aşkarlanır."
+opCount = "{{count}} əməliyyat"
+parseError = "Təhlil etmək mümkün olmadı: {{message}}"
+pasteLabel = "Və ya JSON-u yapışdırın"
+pastePlaceholder = "Avtomatlaşdırma JSON-unuzu bura yapışdırın…"
+title = "Avtomatlaşdırmanı idxal et"
+unresolved = "Xəritələnməmiş: {{ops}}"
 
 [automate.run]
 title = "Avtomatlaşdırmanı İşə sal"
@@ -2670,6 +2694,10 @@ executing_tool_step = "{{tool}} işə salınır ({{step}}/{{total}} addım)..."
 extracting_content = "Sənədlərinizdən məzmun çıxarılır..."
 processing = "Çıxarılan məzmun emal olunur..."
 thinking = "Düşünür..."
+whole_doc_compression_round = "Qeydlər birləşdirilir..."
+whole_doc_read_done = "Sənədin oxunması tamamlandı..."
+whole_doc_read_started = "Sənəd oxunur..."
+whole_doc_slice_done = "Sənəd oxunur... ({{percent}}% tamamlandı)"
 
 [chat.toolsUsed]
 summary = "{{count}} alət işə salındı"
@@ -2712,6 +2740,7 @@ used = "istifadə edilib"
 [compare]
 addFilesHint = "Seçimi aktivləşdirmək üçün Fayllar addımında PDF-lər əlavə edin."
 clearSelected = "Seçilənləri təmizlə"
+clearSlot = "Faylı çıxar"
 cta = "Müqayisə et"
 header = "PDF-ləri Müqayisə Et"
 loading = "Müqayisə edilir..."
@@ -2764,6 +2793,7 @@ title = "Bu PDF-lər çox fərqli görünür"
 [compare.edited]
 label = "Redaktə edilmiş PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Əvvəlcə orijinal PDF-i seçin"
 
 [compare.error]
 filesMissing = "Seçilmiş faylları tapmaq mümkün olmadı. Zəhmət olmasa onları yenidən seçin."
@@ -2846,6 +2876,7 @@ pageLabel = "Səhifə"
 confirm = "Dəyiş və yenidən işlə"
 confirmBody = "Bu, aləti yenidən işlədəcək. Orijinal və Redaktə edilmiş qaydasını dəyişmək istədiyinizə əminsinizmi?"
 confirmTitle = "Müqayisə yenidən işlənsin?"
+label = "Yerlərini dəyiş"
 
 [compare.toasts]
 unlinkedBody = "Məsləhət: Yuxarı/Aşağı oxlar hər iki paneli sürüşdürür; səthdə hərəkət etdirmə yalnız aktiv paneli hərəkət etdirir."
@@ -3476,6 +3507,8 @@ unlockAll = "Hamısına tətbiq et ({{count}})"
 unlockAllPartialFail = "{{names}} üçün parol yanlışdır"
 unlockAllSuccess = "{{count}} faylın kilidi açıldı."
 unlockPrompt = "Davam etmək üçün PDF-i açın"
+viewerLocked = "Bu PDF parolla qorunur"
+viewerUnlock = "Kilidi aç"
 
 [encryptedPdfUnlock.password]
 label = "PDF parolu"
@@ -3583,6 +3616,9 @@ or = "və ya"
 
 [fileEditor]
 addFiles = "Fayllar əlavə et"
+pageCount = "{{count}} səhifə"
+pageCount_one = "{{count}} səhifə"
+pageCount_other = "{{count}} səhifə"
 
 [fileManager]
 active = "Aktiv"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Dəyişikliklər yüklənməyib"
 clearAll = "Hamısını təmizlə"
 clearSelection = "Seçimi təmizlə"
 clickToUpload = "Faylları yükləmək üçün klikləyin"
+closeAllFiles = "Bütün faylları bağla"
 closeFile = "Faylı bağla"
 cloudFile = "Bulud faylı"
 copyCreated = "Surət bu cihazda saxlandı."
@@ -3665,6 +3702,7 @@ selectAll = "Hamısını Seç"
 selectedCount = "{{count}} seçildi"
 selectedFiles = "Seçilmiş fayllar"
 share = "Paylaş"
+shared = "Paylaşılan"
 sharedByYou = "Sizin paylaşdıqlarınız"
 sharedEditNoticeBody = "Bu faylın server versiyasını redaktə etmə hüququnuz yoxdur. Etdiyiniz dəyişikliklər lokal surət kimi saxlanılacaq."
 sharedEditNoticeConfirm = "Başa düşdüm"
@@ -3704,6 +3742,41 @@ size = "Fayl ölçüsü"
 title = "Fayllar"
 upload = "Yüklə"
 uploadFiles = "Faylları yüklə"
+
+[fileSelectorPicker]
+empty = "Fayl yoxdur"
+placeholder = "Faylı seçin"
+search = "Faylları filtrlə…"
+tabListLabel = "Yadda saxlanılan fayllar, iş sahəsi, yükləmə"
+upload = "Kompüterdən yüklə"
+
+[fileSelectorPicker.sort]
+dateAsc = "Ən köhnə əvvəl"
+dateDesc = "Ən yeni əvvəl"
+dateLabel = "Ən son"
+nameAsc = "A-dan Z-yə"
+nameDesc = "Z-dən A-ya"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Yadda saxlanılan fayllar"
+upload = "Yüklə"
+workbench = "İş sahəsi"
+
+[fileSidebar]
+addFiles = "Fayllar əlavə et"
+collapse = "Yan paneli yığ"
+dropHint = "Başlamaq üçün faylları açın"
+expand = "Yan paneli genişləndir"
+files = "Fayllar"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive konfiqurasiya edilməyib"
+noFiles = "Hələ fayl yoxdur"
+openFileManager = "Fayl menecerini aç"
+openFromComputer = "Kompüterdən aç"
+openSettings = "Ayarları aç"
+search = "Axtar"
+searchPlaceholder = "Fayllarda axtar..."
 
 [fileToPDF]
 credit = "Bu Servis Fayl Çevirmək Üçün LibreOffice və Unoconv İşlədir"
@@ -4202,6 +4275,11 @@ title = "Üst-Üstə Qoy"
 desc = "PDF-in birdən çox səhifəsini bir səhifədə birləşdir"
 tags = "tərtibat,düzülüş,birləşdir"
 title = "Çoxsəhifəli Tərtibat"
+
+[home.pdfCommentAgent]
+desc = "Sorğunuza əsasən AI-dan PDF-ə yapışqan qeyd şəklində şərhlər əlavə etməsini istəyin"
+tags = "AI,agent,şərh,annotasiya,yapışqan qeyd,baxış,rəylər,qeydlər"
+title = "AI şərhləri əlavə et"
 
 [home.pdfOrganiser]
 desc = "Səhifələri Sil/Sırasını Dəyiş"
@@ -4903,7 +4981,6 @@ fileUpload = "<strong>Fayllar</strong> düyməsindən PDF yükləyin və ya son 
 leftPanel = "Sol <strong>Alətlər</strong> paneli edə biləcəyiniz hər şeyi siyahıya alır. Kateqoriyalara baxın və ya tez alət tapmaq üçün axtarın."
 pageEditorView = "Səhifələri yenidən sıralamaq, çevirmək və ya silmək üçün Səhifə Redaktoruna keçin."
 quickAccess = "Reader, Automate, fayllarınız və bütün turlar arasında keçmək üçün <strong>Tez Giriş</strong> panelindən başlayın."
-rightRail = "<strong>Sağ Panel</strong> fayl seçimi, mövzu və dili dəyişmək və nəticələri endirmək üçün sürətli hərəkətləri saxlayır."
 topBar = "Yuxarı panel <strong>Görüntüləyici</strong>, <strong>Səhifə Redaktoru</strong> və <strong>Aktiv Fayllar</strong> arasında keçməyə imkan verir."
 wrapUp = "V2-də yeniliklər bunlardır. <strong>Turlar</strong> menyusunu istənilən vaxt açaraq bunu, Alətlər turunu və ya Admin turunu yenidən izləyə bilərsiniz."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Aylığı seç"
 selectYearly = "İlliyi seç"
 title = "Ödəniş dövrünü seçin"
 totalForSeats = "Cəmi ({{count}} yer)"
+
+[pdfCommentAgent]
+submit = "Şərhləri yarat"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Zəhmət olmasa, AI-nın nəyi şərh etməli olduğunu təsvir edin"
+failed = "Şərhləri yaratmaq alınmadı"
+tooLong = "Sorğu çox uzundur (maksimum {{max}} simvol)"
+
+[pdfCommentAgent.prompt]
+label = "AI nəyi şərh etməlidir?"
+placeholder = "məs., Qeyri-müəyyən tarixləri qeyd edin və aydınlaşdırmalar təklif edin"
+
+[pdfCommentAgent.results]
+title = "Şərh edilmiş PDF"
+
+[pdfCommentAgent.settings]
+title = "Şərh təlimatları"
 
 [pdfOrganiser]
 header = "PDF Səhifə Tənzimləyicisi"
@@ -6486,46 +6581,6 @@ title = "Yüksək kontrast"
 text = "PDF-dəki bütün rəngləri tam tərsinə çevirərək mənfi effekti kimi görünüş yaradır. Sənədlərin qaranlıq rejim versiyalarını yaratmaq və ya az işıqda göz yorğunluğunu azaltmaq üçün faydalıdır."
 title = "Bütün rəngləri tərsinə çevir"
 
-[rightRail]
-annotations = "Annotasiyalar"
-applyRedactionsFirst = "Əvvəlcə məxfiləşdirmələri tətbiq edin"
-closePdf = "PDF-i bağla"
-closeSelected = "Seçilmiş faylları bağla"
-deleteSelected = "Seçilmiş səhifələri sil"
-deselectAll = "Hamısını Seçməni Ləğv Et"
-downloadAll = "Hamısını yüklə"
-downloadSelected = "Seçilmiş faylları yüklə"
-draw = "Rəsm çək"
-exitRedaction = "Məxfiləşdirmə rejimindən çıx"
-exportAll = "PDF-i ixrac et"
-exportSelected = "Seçilmiş səhifələri ixrac et"
-formFill = "Formu doldur"
-language = "Dil"
-panMode = "Sürüşdürmə rejimi"
-print = "PDF-i çap et"
-readAloud = "Səsli oxu"
-readAloudLanguage = "Dil"
-readAloudSpeed = "Sürət"
-redact = "Məxfiləşdir"
-rotateLeft = "Sola döndər"
-rotateRight = "Sağa döndər"
-ruler = "Xətkeş / Ölçmə"
-save = "Yadda saxla"
-saveAll = "Hamısını saxla"
-saveAs = "Fərqli saxla"
-saveChanges = "Dəyişiklikləri yadda saxla"
-search = "PDF-də axtar"
-selectAll = "Hamısını Seç"
-selectByNumber = "Səhifə nömrələrinə görə seç"
-selectLanguage = "Dil seçin"
-toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
-toggleAttachments = "Qoşmaları göstər/gizlət"
-toggleBookmarks = "Əlfəcinləri aç/bağla"
-toggleComments = "Şərhlər"
-toggleLayers = "Qatları aç/bağla"
-toggleSidebar = "Yan paneli aç/bağla"
-toggleTheme = "Mövzunu dəyiş"
-
 [rotate]
 rotateLeft = "Saat əksinə döndür"
 rotateRight = "Saat istiqamətində döndür"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Mövcud olmayan çevirmələri gizlət"
 hideUnavailableConversionsDescription = "Convert alətində deaktiv edilmiş çevirmə seçimlərini boz göstərmək əvəzinə siyahıdan çıxarın."
 hideUnavailableTools = "Mövcud olmayan alətləri gizlət"
 hideUnavailableToolsDescription = "Serveriniz tərəfindən deaktiv edilən alətləri boz göstərmək əvəzinə siyahıdan çıxarın."
+language = "Dil"
+languageDescription = "Görüntüləmə dilini seçin"
 logout = "Hesabdan çıx"
 setAsDefault = "Standart et"
+theme = "Mövzu"
+themeDark = "Tünd"
+themeDescription = "Açıq və tünd rejim arasında keçid et"
+themeLight = "Açıq"
 title = "Ümumi"
 user = "İstifadəçi"
 
@@ -6810,6 +6871,20 @@ title = "Versiya məlumatı"
 auto = "Avtomatik"
 fitPage = "Səhifəyə uyğun"
 fitWidth = "Enə uyğun"
+
+[settings.help]
+label = "Turlar"
+title = "Kömək"
+
+[settings.help.adminTour]
+description = "Komanda idarəetməsi, sistem ayarları və korporativ funksiyaları araşdırın."
+start = "Başla"
+title = "Admin turu"
+
+[settings.help.toolsTour]
+description = "Faylların yüklənməsi, alət seçimi və nəticələrin yoxlanılmasını addım-addım izləyin."
+start = "Başla"
+title = "Alətlər turu"
 
 [settings.hotkeys]
 capturing = "Düymələri basın… (Ləğv üçün Esc)"
@@ -7780,6 +7855,8 @@ settings = "Ayarlar"
 [tool]
 endpointUnavailable = "Bu alət serverinizdə mövcud deyil."
 endpointUnavailableClickable = "Bu rejimdə mövcud deyil. Daxil olmaq üçün klikləyin."
+filesLoading = "Fayllar hələ yüklənir, zəhmət olmasa gözləyin."
+filesLoadingProgress = "{{loaded}} / {{total}} fayl yüklənir..."
 invalidParams = "Tələb olunan ayarları doldurun."
 noFiles = "Başlamaq üçün fayl əlavə edin."
 scopeFiles = "fayllar"
@@ -7789,10 +7866,15 @@ singleFileScope = "Yalnız buna tətbiq olunur: {{fileName}}"
 viewerMode = "Bir neçə fayl seçmək üçün fayl redaktoruna keçin."
 
 [toolPanel]
+allTools = "Bütün alətlər"
 alpha = "Alfa"
+backToTools = "Alətlərə qayıt"
+collapse = "Paneli yığ"
 comingSoon = "Tezliklə:"
+expand = "Paneli genişləndir"
 placeholder = "Başlamaq üçün alət seçin"
 premiumFeature = "Premium xüsusiyyət:"
+search = "Alətlərdə axtar"
 
 [toolPanel.fullscreen]
 comingSoon = "Tezliklə:"
@@ -8342,6 +8424,51 @@ bullet2 = "Ən yaxşı nəticə üçün şəffaf fon məsləhətdir"
 bullet3 = "Şəkil imza sahəsinə uyğun ölçüləndiriləcək"
 description = "Öncədən yaradılmış imza şəklini yükləyin. Skan edilmiş imzanız və ya şirkət loqonuz varsa idealdır."
 title = "İmza şəklini yüklə"
+
+[workbenchBar]
+activeFiles = "Aktiv fayllar"
+annotations = "Annotasiyalar"
+applyRedactionsFirst = "Əvvəlcə gizlətmələri tətbiq et"
+closeAll = "Bütün faylları bağla"
+closePdf = "PDF-i bağla"
+closeSelected = "Seçilmiş faylları bağla"
+deleteSelected = "Seçilmiş səhifələri sil"
+deselectAll = "Hamısını seçmə"
+downloadAll = "Hamısını endir"
+downloadSelected = "Seçilmiş faylları endir"
+draw = "Rəsm çək"
+exitRedaction = "Gizlətmə rejimindən çıx"
+exportAll = "PDF-i ixrac et"
+exportSelected = "Seçilmiş səhifələri ixrac et"
+formFill = "Formu doldur"
+language = "Dil"
+multiTool = "Çoxfunksiyalı alət"
+panMode = "Sürüşdürmə rejimi"
+print = "PDF-i çap et"
+readAloud = "Səsləndir"
+readAloudLanguage = "Dil"
+readAloudSpeed = "Sürət"
+redact = "Gizlət"
+rotateLeft = "Sola çevir"
+rotateRight = "Sağa çevir"
+ruler = "Xətkeş / Ölçmə"
+save = "Yadda saxla"
+saveAll = "Hamısını yadda saxla"
+saveAs = "Fərqli yadda saxla"
+saveChanges = "Dəyişiklikləri yadda saxla"
+search = "PDF-də axtar"
+selectAll = "Hamısını seç"
+selectByNumber = "Səhifə nömrələrinə görə seç"
+selectLanguage = "Dili seçin"
+share = "Paylaş"
+toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
+toggleAttachments = "Qoşmaları aç/bağla"
+toggleBookmarks = "Əlfəcinləri aç/bağla"
+toggleComments = "Şərhlər"
+toggleLayers = "Qatları aç/bağla"
+toggleSidebar = "Yan paneli aç/bağla"
+toggleTheme = "Mövzunu dəyiş"
+viewer = "Görüntüləyici"
 
 [workspace]
 title = "İş sahəsi"
