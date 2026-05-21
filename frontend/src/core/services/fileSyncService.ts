@@ -7,13 +7,31 @@
 
 import apiClient from "@app/services/apiClient";
 import { fileStorage } from "@app/services/fileStorage";
+import { alert } from "@app/components/toast";
 import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
+import { FolderId, parseFolderId } from "@app/types/folder";
 import {
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
 } from "@app/services/shareBundleUtils";
+
+/**
+ * Trust-boundary parser for folderId values coming back from the server.
+ * Matches folderSyncService's discipline - we never want a garbage server
+ * payload to corrupt the local IDB `folderId` index. Returns null on any
+ * invalid input so the file falls back to the root folder.
+ */
+function safeParseFolderId(value: unknown): FolderId | null {
+  if (value == null || value === "") return null;
+  try {
+    return parseFolderId(value);
+  } catch {
+    console.warn("[fileSyncService] dropping invalid server folderId", value);
+    return null;
+  }
+}
 
 interface StoredFileResponse {
   id: number;
@@ -175,7 +193,7 @@ export async function reconcileServerFiles(
           typeof updatedAtMs === "number" && Number.isFinite(updatedAtMs)
             ? updatedAtMs
             : stub.remoteStorageUpdatedAt,
-        folderId: (serverFile.folderId as any) ?? stub.folderId,
+        folderId: safeParseFolderId(serverFile.folderId) ?? stub.folderId,
       };
     });
 
@@ -221,13 +239,28 @@ export async function reconcileServerFiles(
         remoteHasUserShares: Boolean(
           file.sharedUsers?.length || file.sharedWithUsers?.length,
         ),
-        folderId: (file.folderId as any) ?? null,
+        folderId: safeParseFolderId(file.folderId),
       });
     }
 
     combinedStubs = [...updatedLocalStubs, ...serverStubs];
   } catch (err) {
+    // Surface to the user so they don't silently see only locally-cached
+    // files and assume their cloud data is lost. Toast deduplicates by title
+    // so a repeated failure isn't an avalanche of identical popups.
+    const status = (err as { response?: { status?: number } })?.response
+      ?.status;
     console.warn("[fileSyncService] failed to pull server files", err);
+    alert({
+      alertType: "warning",
+      title:
+        status === 401
+          ? "Sign-in required to load cloud files"
+          : "Could not reach the cloud library",
+      body: "Showing only files cached in this browser. Refresh to retry once the connection is back.",
+      expandable: false,
+      durationMs: 5000,
+    });
     return localStubs;
   }
 
@@ -358,6 +391,10 @@ export async function materializeServerStubs(
   },
 ): Promise<StirlingFileStub[]> {
   const out: StirlingFileStub[] = [];
+  // Collect per-stub failures so we can surface ONE summarized toast at the
+  // end instead of N popups (or worse, silently dropping files from the grid
+  // with zero user signal as the previous code did).
+  const failed: { name: string; status?: number }[] = [];
   for (const stub of stubs) {
     const isServerStub =
       typeof stub.id === "string" &&
@@ -436,7 +473,26 @@ export async function materializeServerStubs(
       out.push({ ...stub, ...remoteUpdates, id: newId, originalFileId: newId });
     } catch (err) {
       console.warn("[fileSyncService] failed to materialize server stub", err);
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      failed.push({ name: stub.name, status });
     }
+  }
+  if (failed.length > 0) {
+    // Single summarized toast - far less noisy than per-stub alerts but
+    // still surfaces what would otherwise be a silent drop from the grid.
+    const first = failed[0]!;
+    const bodyText =
+      failed.length === 1
+        ? `Couldn't open "${first.name}"${first.status ? ` (HTTP ${first.status})` : ""}.`
+        : `Couldn't open ${failed.length} files including "${first.name}".`;
+    alert({
+      alertType: "warning",
+      title: "Some files couldn't be opened",
+      body: bodyText,
+      expandable: false,
+      durationMs: 5000,
+    });
   }
   return out;
 }

@@ -225,17 +225,27 @@ class IndexedDBManager {
           result.update(record);
           migrated += 1;
         } catch (error) {
+          // Aborting the upgrade transaction here forces IndexedDB to roll back
+          // the schema version bump too - the user retries on next page load
+          // instead of silently losing folderId / isLeaf / etc on partial rows.
           console.error("Failed to migrate record:", record.id, error);
+          store.transaction.abort();
+          return;
         }
       }
       result.continue();
     };
 
     cursor.onerror = (event) => {
-      console.error(
-        "Files-store migration failed:",
-        (event.target as IDBRequest).error,
-      );
+      // Same reasoning as the per-record catch above: abort the upgrade so the
+      // schema doesn't get marked as v4 with rows still on the v3 shape.
+      const err = (event.target as IDBRequest).error;
+      console.error("Files-store migration cursor failed:", err);
+      try {
+        store.transaction.abort();
+      } catch {
+        // Already aborted - ignore.
+      }
     };
   }
 

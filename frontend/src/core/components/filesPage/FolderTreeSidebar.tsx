@@ -150,8 +150,11 @@ function RootRow({ fileCount, isActive, onSelect, onDropFiles }: RootRowProps) {
           console.error("[RootRow] file drop failed", err);
           setError(
             err instanceof Error
-              ? `Could not move files: ${err.message}`
-              : "Could not move files.",
+              ? t("filesPage.error.moveFilesFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not move files: ${err.message}`,
+                })
+              : t("filesPage.error.moveFilesFailed", "Could not move files."),
           );
         });
       }
@@ -290,8 +293,11 @@ function TreeNodeRow({
             console.error("[TreeNodeRow] file drop failed", err);
             setError(
               err instanceof Error
-                ? `Could not move files: ${err.message}`
-                : "Could not move files.",
+                ? t("filesPage.error.moveFilesFailedDetail", {
+                    message: err.message,
+                    defaultValue: `Could not move files: ${err.message}`,
+                  })
+                : t("filesPage.error.moveFilesFailed", "Could not move files."),
             );
           },
         );
@@ -301,8 +307,14 @@ function TreeNodeRow({
             console.error("[TreeNodeRow] folder drop failed", err);
             setError(
               err instanceof Error
-                ? `Could not move folder: ${err.message}`
-                : "Could not move folder.",
+                ? t("filesPage.error.moveFolderFailedDetail", {
+                    message: err.message,
+                    defaultValue: `Could not move folder: ${err.message}`,
+                  })
+                : t(
+                    "filesPage.error.moveFolderFailed",
+                    "Could not move folder.",
+                  ),
             );
           },
         );

@@ -178,6 +178,31 @@ function reachabilityFromError(err: unknown): boolean {
   return status !== undefined && status >= 400 && status < 500;
 }
 
+/**
+ * True if `currentId` or any of its ancestors is in `removedSet`. Walks up via
+ * `parentFolderId` using the pre-removal `folders` snapshot so the chain is
+ * still discoverable while the cascade is in flight. Used to force-reset
+ * currentFolderId when the user was browsing a folder whose ancestor just
+ * got deleted (otherwise the UI strands them on a folder id that no longer
+ * exists on the server).
+ */
+function shouldStrandedReset(
+  currentId: FolderId,
+  removedSet: Set<FolderId>,
+  folders: FolderRecord[],
+): boolean {
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  let cursor: FolderId | null = currentId;
+  // Bounded walk: max 50 levels matches the existing depth guard elsewhere
+  // and protects against malformed parent cycles.
+  for (let i = 0; i < 50 && cursor; i++) {
+    if (removedSet.has(cursor)) return true;
+    const node = byId.get(cursor);
+    cursor = (node?.parentFolderId ?? null) as FolderId | null;
+  }
+  return false;
+}
+
 export function FolderProvider({ children }: FolderProviderProps) {
   const [folders, setFolders] = useState<FolderRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -518,7 +543,14 @@ export function FolderProvider({ children }: FolderProviderProps) {
         setServerReachable(true);
         setError(null);
         setFolders((prev) => prev.filter((f) => !removedSet.has(f.id)));
-        if (currentFolderId && removedSet.has(currentFolderId)) {
+        // Reset if EITHER the current folder OR any ancestor was deleted.
+        // Walking by parentFolderId catches the "user is browsing /a/b/c and
+        // we just deleted /a" case where the exact-id check would leave the
+        // UI pointing at /c which no longer exists.
+        if (
+          currentFolderId &&
+          shouldStrandedReset(currentFolderId, removedSet, folders)
+        ) {
           setCurrentFolderId(ROOT_FOLDER_ID);
         }
       }
@@ -548,7 +580,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       }
       return removed;
     },
-    [bumpFolderRevision, clearFolderForFiles, currentFolderId],
+    [bumpFolderRevision, clearFolderForFiles, currentFolderId, folders],
   );
 
   const value = useMemo<FolderContextValue>(

@@ -629,8 +629,14 @@ export default function FileManagerView() {
         handleNativeUpload(dropped).catch((err) =>
           folders.setError(
             err instanceof Error
-              ? `Could not upload files: ${err.message}`
-              : "Could not upload files.",
+              ? t("filesPage.error.uploadFilesFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not upload files: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.uploadFilesFailed",
+                  "Could not upload files.",
+                ),
           ),
         );
       }
@@ -688,8 +694,14 @@ export default function FileManagerView() {
         removeFiles(Array.from(selectedFileIds)).catch((err) =>
           folders.setError(
             err instanceof Error
-              ? `Could not remove files: ${err.message}`
-              : "Could not remove files.",
+              ? t("filesPage.error.removeFilesFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not remove files: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.removeFilesFailed",
+                  "Could not remove files.",
+                ),
           ),
         );
         return;
@@ -1395,8 +1407,14 @@ export default function FileManagerView() {
                 setFolderAppearance(folderId, appearance).catch((err) =>
                   folders.setError(
                     err instanceof Error
-                      ? `Could not update folder appearance: ${err.message}`
-                      : "Could not update folder appearance.",
+                      ? t("filesPage.error.folderAppearanceFailedDetail", {
+                          message: err.message,
+                          defaultValue: `Could not update folder appearance: ${err.message}`,
+                        })
+                      : t(
+                          "filesPage.error.folderAppearanceFailed",
+                          "Could not update folder appearance.",
+                        ),
                   ),
                 );
               }}
@@ -1531,8 +1549,14 @@ export default function FileManagerView() {
           } catch (err) {
             folders.setError(
               err instanceof Error
-                ? `Could not delete folder: ${err.message}`
-                : "Could not delete folder.",
+                ? t("filesPage.error.deleteFolderFailedDetail", {
+                    message: err.message,
+                    defaultValue: `Could not delete folder: ${err.message}`,
+                  })
+                : t(
+                    "filesPage.error.deleteFolderFailed",
+                    "Could not delete folder.",
+                  ),
             );
             throw err;
           }
@@ -1623,8 +1647,14 @@ function Breadcrumbs() {
                       console.error("[breadcrumb] drop failed", err);
                       folders.setError(
                         err instanceof Error
-                          ? `Could not move files: ${err.message}`
-                          : "Could not move files.",
+                          ? t("filesPage.error.moveFilesFailedDetail", {
+                              message: err.message,
+                              defaultValue: `Could not move files: ${err.message}`,
+                            })
+                          : t(
+                              "filesPage.error.moveFilesFailed",
+                              "Could not move files.",
+                            ),
                       );
                     });
                 } else if (payload.kind === "folder") {
@@ -1634,8 +1664,14 @@ function Breadcrumbs() {
                       console.error("[breadcrumb] folder drop failed", err);
                       folders.setError(
                         err instanceof Error
-                          ? `Could not move folder: ${err.message}`
-                          : "Could not move folder.",
+                          ? t("filesPage.error.moveFolderFailedDetail", {
+                              message: err.message,
+                              defaultValue: `Could not move folder: ${err.message}`,
+                            })
+                          : t(
+                              "filesPage.error.moveFolderFailed",
+                              "Could not move folder.",
+                            ),
                       );
                     });
                 }

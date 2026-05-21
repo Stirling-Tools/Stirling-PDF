@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.api.CreateFolderRequest;
@@ -44,10 +45,28 @@ public class FolderService {
     private static final long MAX_FOLDERS_PER_USER = 5_000L;
 
     private final FolderRepository folderRepository;
+    private final ApplicationProperties applicationProperties;
+
+    /**
+     * Gate every public method on storage being enabled, mirroring {@code
+     * FileStorageService.ensureStorageEnabled}. Without this, folder CRUD still works when {@code
+     * storage.enabled=false} or {@code security.enableLogin=false}, defeating the operator's intent
+     * to disable storage end-to-end.
+     */
+    private void ensureStorageEnabled() {
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
+        }
+        if (!applicationProperties.getStorage().isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
+        }
+    }
 
     /** List every folder owned by the current user, alphabetical. */
     @Transactional(readOnly = true)
     public List<FolderResponse> listFolders() {
+        ensureStorageEnabled();
         User user = requireAuthenticatedUser();
         return folderRepository.findAllByOwnerOrderByName(user).stream()
                 .map(FolderResponse::from)
@@ -56,6 +75,7 @@ public class FolderService {
 
     @Transactional
     public FolderResponse createFolder(CreateFolderRequest request) {
+        ensureStorageEnabled();
         User user = requireAuthenticatedUser();
         Folder parent = resolveParent(request.getParentFolderId(), user, null);
 
@@ -107,6 +127,7 @@ public class FolderService {
 
     @Transactional
     public FolderResponse updateFolder(UUID id, UpdateFolderRequest request) {
+        ensureStorageEnabled();
         User user = requireAuthenticatedUser();
         Folder folder = requireOwnedFolder(id, user);
 
@@ -147,6 +168,7 @@ public class FolderService {
      */
     @Transactional
     public List<UUID> deleteFolder(UUID id) {
+        ensureStorageEnabled();
         User user = requireAuthenticatedUser();
         Folder folder = requireOwnedFolder(id, user);
 

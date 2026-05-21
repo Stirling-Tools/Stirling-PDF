@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -52,12 +53,29 @@ public class FileFolderPlacementController {
 
     private final StoredFileRepository storedFileRepository;
     private final FolderRepository folderRepository;
+    private final ApplicationProperties applicationProperties;
+
+    /**
+     * Mirror of {@code FileStorageService.ensureStorageEnabled} - folder placement endpoints must
+     * reject requests when storage is disabled at the server level (otherwise this controller is a
+     * back-door around the global storage gate).
+     */
+    private void ensureStorageEnabled() {
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
+        }
+        if (!applicationProperties.getStorage().isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
+        }
+    }
 
     /** Move a single file to a folder (or to root when folderId is null). */
     @PatchMapping("/{fileId}/folder")
     @Transactional
     public ResponseEntity<Void> moveFileToFolder(
             @PathVariable Long fileId, @Valid @RequestBody FolderPlacement body) {
+        ensureStorageEnabled();
         User user = requireAuthenticatedUser();
         StoredFile file =
                 storedFileRepository
@@ -80,6 +98,7 @@ public class FileFolderPlacementController {
     @PatchMapping("/folder")
     @Transactional
     public ResponseEntity<BulkMoveResponse> bulkMove(@Valid @RequestBody BulkMoveRequest body) {
+        ensureStorageEnabled();
         User user = requireAuthenticatedUser();
         Folder target = resolveFolder(body.getFolderId(), user);
 

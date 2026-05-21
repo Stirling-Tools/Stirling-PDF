@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -139,15 +140,23 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
+  // Generation counter to drop stale reconcile results when a second refresh
+  // overlaps the first. Mirrors the pattern FolderContext.pullFromServer uses
+  // via pullInFlight, but kept as a counter so we can also discard results
+  // from clearly-out-of-date calls instead of just serializing them.
+  const refreshGenRef = useRef(0);
 
   // Narrow dep so refresh isn't recreated on every folders field change.
   const setFoldersError = folders.setError;
   const storageEnabled = appConfig?.storageEnabled === true;
   const shareLinksEnabled = appConfig?.storageShareLinksEnabled === true;
   const refresh = useCallback(async () => {
+    const gen = ++refreshGenRef.current;
     setLoading(true);
     try {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
+      // Bail if a newer refresh started while IDB was reading.
+      if (gen !== refreshGenRef.current) return;
       const localLeaf = localStubs.filter((s) => s.isLeaf !== false);
       // Render the cache immediately while the server fetch is in flight.
       setAllFiles(localLeaf);
@@ -155,14 +164,19 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         storageEnabled,
         shareLinksEnabled,
       });
+      // Drop the merged result if a newer refresh has already started -
+      // otherwise its stale snapshot will clobber the newer one's state.
+      if (gen !== refreshGenRef.current) return;
       setAllFiles(merged);
     } catch (err) {
+      if (gen !== refreshGenRef.current) return;
       console.error("[FilesPageContext] refresh failed", err);
       setFoldersError(
         err instanceof Error ? err.message : "Failed to load files",
       );
     } finally {
-      setLoading(false);
+      // Only the latest refresh should clear the loading state.
+      if (gen === refreshGenRef.current) setLoading(false);
     }
   }, [setFoldersError, storageEnabled, shareLinksEnabled]);
 

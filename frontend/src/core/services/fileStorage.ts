@@ -740,6 +740,11 @@ class FileStorageService {
 
   /**
    * Update metadata fields for a stored file record.
+   *
+   * Resolves on transaction.oncomplete, NOT on the individual put's onsuccess,
+   * so callers only receive `true` once the write actually commits. If the
+   * transaction aborts after put() succeeded but before commit, we return false
+   * - the previous behavior incorrectly claimed success in that window.
    */
   async updateFileMetadata(
     fileId: FileId,
@@ -747,29 +752,31 @@ class FileStorageService {
   ): Promise<boolean> {
     try {
       const db = await this.getDatabase();
-      const transaction = db.transaction([this.storeName], "readwrite");
-      const store = transaction.objectStore(this.storeName);
-      const record = await new Promise<StoredStirlingFileRecord | undefined>(
-        (resolve, reject) => {
-          const request = store.get(fileId);
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () =>
-            resolve(request.result as StoredStirlingFileRecord | undefined);
-        },
-      );
+      return await new Promise<boolean>((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readwrite");
+        const store = transaction.objectStore(this.storeName);
+        let recordFound = false;
 
-      if (!record) {
-        return false;
-      }
+        const getRequest = store.get(fileId);
+        getRequest.onsuccess = () => {
+          const record = getRequest.result as
+            | StoredStirlingFileRecord
+            | undefined;
+          if (!record) {
+            // Don't commit anything; caller wants false.
+            return;
+          }
+          recordFound = true;
+          const updatedRecord = { ...record, ...updates };
+          store.put(updatedRecord);
+        };
+        getRequest.onerror = () => reject(getRequest.error);
 
-      const updatedRecord = { ...record, ...updates };
-      await new Promise<void>((resolve, reject) => {
-        const request = store.put(updatedRecord);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        transaction.oncomplete = () => resolve(recordFound);
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () =>
+          reject(transaction.error ?? new Error("updateFileMetadata aborted"));
       });
-
-      return true;
     } catch (error) {
       console.error("Failed to update file metadata:", error);
       return false;

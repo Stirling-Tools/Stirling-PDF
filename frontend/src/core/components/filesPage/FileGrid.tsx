@@ -1008,8 +1008,15 @@ function FolderRow({
     console.error(`[FolderRow] ${label}`, err);
     setError(
       err instanceof Error
-        ? `Could not ${label}: ${err.message}`
-        : `Could not ${label}.`,
+        ? t("filesPage.error.actionFailedDetail", {
+            action: label,
+            message: err.message,
+            defaultValue: `Could not ${label}: ${err.message}`,
+          })
+        : t("filesPage.error.actionFailed", {
+            action: label,
+            defaultValue: `Could not ${label}.`,
+          }),
     );
   };
   const kebabRef = useRef<HTMLButtonElement>(null);
