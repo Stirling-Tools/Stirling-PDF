@@ -192,8 +192,6 @@ subprojects {
         }
         maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
-        // Stirling-Tools JPDFium snapshots — anonymous read, no auth.
-        maven { url = "https://central.sonatype.com/repository/maven-snapshots/" }
         mavenCentral()
     }
 
