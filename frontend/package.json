@@ -150,5 +150,8 @@
       "@testing-library/user-event",
       "@vitest/coverage-v8"
     ]
+  },
+  "overrides": {
+    "devalue": "^5.8.1"
   }
 }

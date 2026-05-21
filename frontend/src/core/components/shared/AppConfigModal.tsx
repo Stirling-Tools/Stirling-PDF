@@ -74,12 +74,18 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     }
   }, [opened]);
 
-  // Handle custom events for backwards compatibility
+  // Handle custom events for backwards compatibility.
+  // Use replace when already on /settings/* so external tab-switches
+  // don't pile up history entries that would break close-by-back.
   useEffect(() => {
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail as { key?: NavKey } | undefined;
       if (detail?.key) {
-        navigate(`/settings/${detail.key}`);
+        const alreadyInSettings =
+          window.location.pathname.startsWith("/settings");
+        navigate(`/settings/${detail.key}`, {
+          replace: alreadyInSettings,
+        });
       }
     };
     window.addEventListener("appConfig:navigate", handler as EventListener);
@@ -159,7 +165,19 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       if (!canProceed) return;
 
       setActive(key);
-      navigate(`/settings/${key}`);
+      // First in-modal nav (when current path isn't `/settings/*` yet) must
+      // PUSH so the originating page stays in history and close-by-back can
+      // return to it. Subsequent tab switches REPLACE so they don't pile up
+      // history entries that handleClose's navigate(-1) can't unwind.
+      //
+      // Read window.location.pathname directly (not the React hook's
+      // location.pathname) so rapid successive clicks pick up the URL
+      // change from the previous click immediately. The hook snapshot is
+      // stale between render cycles - relying on it lets a second click
+      // PUSH again before React re-renders, producing a history pile-up.
+      const alreadyInSettings =
+        window.location.pathname.startsWith("/settings");
+      navigate(`/settings/${key}`, { replace: alreadyInSettings });
     },
     [confirmIfDirty, navigate],
   );
