@@ -13,8 +13,12 @@ permissions:
   pull-requests: write
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   build:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-8' }}
     env:
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:

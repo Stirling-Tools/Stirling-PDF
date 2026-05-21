@@ -19,9 +19,13 @@ permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   files-changed:
     name: detect what files changed
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     timeout-minutes: 3
     outputs:
       licenses-frontend: ${{ steps.changes.outputs.licenses-frontend }}
@@ -44,8 +48,8 @@ jobs:
   generate-frontend-license-report:
     if: needs.files-changed.outputs.licenses-frontend == 'true'
     name: Generate Frontend License Report
-    needs: files-changed
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    needs: [pick, files-changed]
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     permissions:
       contents: write
       pull-requests: write
@@ -307,9 +311,9 @@ jobs:
 
   generate-backend-license-report:
     if: needs.files-changed.outputs.licenses-backend == 'true'
-    needs: files-changed
+    needs: [pick, files-changed]
     name: Generate Backend License Report
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     permissions:
       contents: write
       pull-requests: write

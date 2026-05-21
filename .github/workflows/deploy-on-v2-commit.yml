@@ -10,8 +10,12 @@ permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   deploy-v2-on-push:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     concurrency:
       group: deploy-v2-push-V2
       cancel-in-progress: true
@@ -19,7 +23,7 @@ jobs:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:

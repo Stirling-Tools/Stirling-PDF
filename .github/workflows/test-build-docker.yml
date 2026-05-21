@@ -22,6 +22,9 @@ permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   # TODO: extract a pre-matrix `prepare` job that runs once and produces
   # shared artifacts for the three matrix entries below to consume:
   #   1. `task backend:build` — currently runs 3× in parallel with
@@ -37,12 +40,13 @@ jobs:
   # spring-security=true matrix entry if `task backend:build` and
   # `task backend:build:ci` produce equivalent JARs (verify before wiring).
   test-build-docker-images:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     permissions:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) && inputs.docker-base-changed != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
       fail-fast: false
@@ -194,12 +198,13 @@ jobs:
           if-no-files-found: warn
 
   test-build-unoserver-image:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     permissions:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) && inputs.docker-base-changed != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner

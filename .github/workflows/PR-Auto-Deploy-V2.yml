@@ -23,9 +23,13 @@ permissions:
   pull-requests: write
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   check-pr:
     if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     outputs:
       should_deploy: ${{ steps.decide.outputs.should_deploy }}
       is_fork: ${{ steps.resolve.outputs.is_fork }}
@@ -97,8 +101,8 @@ jobs:
           echo "allow_fork=${allow_fork:-false}" >> $GITHUB_OUTPUT
 
   deploy-v2-pr:
-    needs: check-pr
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    needs: [pick, check-pr]
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
     # Concurrency control - only one deployment per PR at a time
     concurrency:
@@ -110,7 +114,7 @@ jobs:
       pull-requests: write
       id-token: write
     env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
@@ -372,7 +376,8 @@ jobs:
 
   cleanup-v2-deployment:
     if: github.event.action == 'closed'
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     permissions:
       contents: read
       issues: write
