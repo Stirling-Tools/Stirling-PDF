@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,6 +29,7 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.RegexPatternUtils;
 
 @Component
+@Profile("!saas")
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
