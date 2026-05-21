@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-# Sign every .dylib inside the bootJar's JPDFium native jars so Apple's
-# notarytool accepts the Tauri .app (Tauri's own codesign walk doesn't
-# descend into .jar files, JPDFium's published natives are unsigned).
-#
-# Pre: gradle bootJar has produced the fat jar (e.g. via `task desktop:prepare`).
-# Pre: APPLE_SIGNING_IDENTITY points at a Developer ID Application identity in the keychain.
+# Sign every .dylib inside the bootJar's JPDFium native jars.
+# Requires APPLE_SIGNING_IDENTITY set to a Developer ID identity in the keychain.
 #
 # Usage: sign-jpdfium-dylibs-in-bootjar.sh [path/to/stirling-pdf-*.jar]
 
@@ -30,8 +26,6 @@ if ! command -v jar >/dev/null 2>&1; then
     exit 0
 fi
 
-# Sign both the Gradle output AND the Tauri staging copy
-# (frontend/src-tauri/libs/), since Tauri bundles the staging copy.
 BOOTJARS=()
 if [ -n "${1:-}" ]; then
     BOOTJARS+=("$1")
@@ -57,8 +51,6 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
     # shellcheck disable=SC2064
     trap "rm -rf '$WORK'" EXIT
 
-    # List then extract by exact path (`jar xf` has no glob support).
-    # Portable while-read loop because macOS ships bash 3.2 (no mapfile).
     NATIVE_JAR_PATHS=()
     while IFS= read -r line; do
         [ -n "$line" ] || continue
@@ -72,7 +64,6 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         continue
     fi
 
-    # ${ARR[@]+...} guard: bash 3.2 treats an empty "${ARR[@]}" as unbound under set -u.
     ( cd "$WORK" && jar xf "$BOOTJAR" ${NATIVE_JAR_PATHS[@]+"${NATIVE_JAR_PATHS[@]}"} ) \
         || { echo "jar xf failed to extract natives jars" >&2; exit 1; }
 
@@ -82,12 +73,10 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         base=$(basename "$nat_jar")
         echo "  Processing $base"
 
-        # Explode the natives jar.
         exp_dir="$WORK/${base%.jar}.expanded"
         mkdir -p "$exp_dir"
         ( cd "$exp_dir" && jar xf "$nat_jar" )
 
-        # Sign every .dylib in the exploded native jar's tree.
         signed=0
         while IFS= read -r dylib; do
             codesign --force --sign "$APPLE_SIGNING_IDENTITY" \
@@ -101,8 +90,6 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         fi
         echo "    signed $signed dylib(s)"
 
-        # -0 stores without deflate (dylibs don't compress, and Spring Boot's
-        # NestedJarFile prefers stored entries).
         rm -f "$nat_jar"
         ( cd "$exp_dir" && jar cfM0 "$nat_jar" . )
         ANY_SIGNED=1
@@ -114,7 +101,6 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         continue
     fi
 
-    # Replace the natives jars inside the bootJar in place.
     ( cd "$WORK" && jar uf "$BOOTJAR" \
         BOOT-INF/lib/jpdfium-natives-darwin-x64-*.jar \
         BOOT-INF/lib/jpdfium-natives-darwin-arm64-*.jar ) \

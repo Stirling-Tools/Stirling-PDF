@@ -442,8 +442,7 @@ compare_file_lists() {
             echo "New files created during test:"
             cat "${diff_file}.added" | sed 's/^> //'
 
-            # JPDFium extracts native libs to /tmp/.../jpdfium-<id>/ on first use
-            # and registers deleteOnExit; not a leak.
+            # Exclude JPDFium native cache (deleteOnExit-registered, not a leak).
             grep -i "tmp\|temp" "${diff_file}.added" \
                 | grep -v '/jpdfium-[0-9]\+/' \
                 > "${diff_file}.tmp" || true

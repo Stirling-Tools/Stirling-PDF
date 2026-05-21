@@ -62,9 +62,7 @@ dependencies {
 
     api 'com.stirling:jpdfium:1.0.0'
 
-    // -PjpdfiumPlatforms accepts 'all' (default) or a comma list of platform keys
-    // (linux-x64, linux-arm64, darwin-x64, darwin-arm64, windows-x64). Per-OS Tauri
-    // bundles use this to ship only their target's natives jar (~11-12 MB each).
+    // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
     def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
     def jpdfiumPlatforms = jpdfiumPlatformsProp == 'all'

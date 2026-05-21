@@ -205,7 +205,6 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     let java_options = vec![
         "-Xmx2g",
-        // FFM access for JPDFium is granted via Enable-Native-Access in the bootJar manifest.
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,

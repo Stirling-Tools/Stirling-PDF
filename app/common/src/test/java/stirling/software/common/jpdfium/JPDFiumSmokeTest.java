@@ -13,7 +13,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.jpdfium.PdfDocument;
 
-/** End-to-end smoke check: JPDFium resolves from Maven Central and opens a sample PDF. */
 class JPDFiumSmokeTest {
 
     @Test

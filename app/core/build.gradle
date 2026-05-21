@@ -163,8 +163,6 @@ bootJar {
         attributes(
             'Implementation-Title': 'Stirling-PDF',
             'Implementation-Version': project.version,
-            // JEP 472: grants FFM native-access to the unnamed module so we
-            // don't need --enable-native-access on the launch command.
             'Enable-Native-Access': 'ALL-UNNAMED'
         )
     }
