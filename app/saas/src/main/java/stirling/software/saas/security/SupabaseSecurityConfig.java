@@ -81,6 +81,11 @@ public class SupabaseSecurityConfig {
     @Bean
     SecurityFilterChain saasSecurityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder)
             throws Exception {
+        // CSRF protection intentionally disabled: this chain is bearer-token only (Supabase JWT in
+        // Authorization header / X-API-KEY) with SessionCreationPolicy.STATELESS, so there is no
+        // cookie- or session-bound credential a cross-site request could ride on. Re-enabling CSRF
+        // would require synchronizer tokens which don't make sense for a stateless JSON API.
+        // lgtm[java/spring-disabled-csrf-protection]
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -1,5 +1,7 @@
 package stirling.software.saas.controller;
 
+import java.util.Map;
+
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,20 +55,20 @@ public class CreditController {
             description = "Add bought credits to user account (admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiResponse(responseCode = "200", description = "Credits purchased successfully")
-    public ResponseEntity<String> purchaseCredits(
+    public ResponseEntity<Map<String, Object>> purchaseCredits(
             @RequestParam("username") String username, @RequestParam("credits") int credits) {
 
         if (credits <= 0) {
-            return ResponseEntity.badRequest().body("Credits must be positive");
+            return ResponseEntity.badRequest().body(Map.of("error", "Credits must be positive"));
         }
 
         try {
             creditService.addBoughtCredits(username, credits);
             log.info("Admin added {} credits to user: {}", credits, username);
-            return ResponseEntity.ok(
-                    "Successfully added " + credits + " credits to user " + username);
+            return ResponseEntity.ok(Map.of("success", true, "creditsAdded", credits));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.warn("purchaseCredits rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
         }
     }
 
@@ -77,11 +79,11 @@ public class CreditController {
             description = "Add bought credits to user account using Supabase ID (admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiResponse(responseCode = "200", description = "Credits purchased successfully")
-    public ResponseEntity<String> purchaseCreditsBySupabaseId(
+    public ResponseEntity<Map<String, Object>> purchaseCreditsBySupabaseId(
             @RequestParam("supabaseId") String supabaseId, @RequestParam("credits") int credits) {
 
         if (credits <= 0) {
-            return ResponseEntity.badRequest().body("Credits must be positive");
+            return ResponseEntity.badRequest().body(Map.of("error", "Credits must be positive"));
         }
 
         try {
@@ -90,13 +92,10 @@ public class CreditController {
                     "Admin added {} credits to user with Supabase ID: {}",
                     credits,
                     LogRedactionUtils.redactSupabaseId(supabaseId));
-            return ResponseEntity.ok(
-                    "Successfully added "
-                            + credits
-                            + " credits to user with Supabase ID "
-                            + supabaseId);
+            return ResponseEntity.ok(Map.of("success", true, "creditsAdded", credits));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.warn("purchaseCreditsBySupabaseId rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
         }
     }
 
@@ -154,20 +153,20 @@ public class CreditController {
                     "Hard set the bought credits balance for a specific user to an exact amount (admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiResponse(responseCode = "200", description = "Bought credits set successfully")
-    public ResponseEntity<String> setBoughtCredits(
+    public ResponseEntity<Map<String, Object>> setBoughtCredits(
             @RequestParam("username") String username, @RequestParam("credits") int credits) {
 
         if (credits < 0) {
-            return ResponseEntity.badRequest().body("Credits cannot be negative");
+            return ResponseEntity.badRequest().body(Map.of("error", "Credits cannot be negative"));
         }
 
         try {
             creditService.setBoughtCredits(username, credits);
             log.info("Admin set bought credits to {} for user: {}", credits, username);
-            return ResponseEntity.ok(
-                    "Successfully set bought credits to " + credits + " for user " + username);
+            return ResponseEntity.ok(Map.of("success", true, "boughtCredits", credits));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.warn("setBoughtCredits rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
         }
     }
 
@@ -179,11 +178,11 @@ public class CreditController {
                     "Hard set the bought credits balance for a specific user using Supabase ID to an exact amount (admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiResponse(responseCode = "200", description = "Bought credits set successfully")
-    public ResponseEntity<String> setBoughtCreditsBySupabaseId(
+    public ResponseEntity<Map<String, Object>> setBoughtCreditsBySupabaseId(
             @RequestParam("supabaseId") String supabaseId, @RequestParam("credits") int credits) {
 
         if (credits < 0) {
-            return ResponseEntity.badRequest().body("Credits cannot be negative");
+            return ResponseEntity.badRequest().body(Map.of("error", "Credits cannot be negative"));
         }
 
         try {
@@ -191,14 +190,11 @@ public class CreditController {
             log.info(
                     "Admin set bought credits to {} for user with Supabase ID: {}",
                     credits,
-                    supabaseId);
-            return ResponseEntity.ok(
-                    "Successfully set bought credits to "
-                            + credits
-                            + " for user with Supabase ID "
-                            + supabaseId);
+                    LogRedactionUtils.redactSupabaseId(supabaseId));
+            return ResponseEntity.ok(Map.of("success", true, "boughtCredits", credits));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.warn("setBoughtCreditsBySupabaseId rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
         }
     }
 
@@ -210,20 +206,20 @@ public class CreditController {
                     "Hard set the cycle credits remaining balance for a specific user to an exact amount (admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiResponse(responseCode = "200", description = "Cycle credits set successfully")
-    public ResponseEntity<String> setCycleCredits(
+    public ResponseEntity<Map<String, Object>> setCycleCredits(
             @RequestParam("username") String username, @RequestParam("credits") int credits) {
 
         if (credits < 0) {
-            return ResponseEntity.badRequest().body("Credits cannot be negative");
+            return ResponseEntity.badRequest().body(Map.of("error", "Credits cannot be negative"));
         }
 
         try {
             creditService.setCycleCredits(username, credits);
             log.info("Admin set cycle credits to {} for user: {}", credits, username);
-            return ResponseEntity.ok(
-                    "Successfully set cycle credits to " + credits + " for user " + username);
+            return ResponseEntity.ok(Map.of("success", true, "cycleCredits", credits));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.warn("setCycleCredits rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
         }
     }
 
@@ -235,11 +231,11 @@ public class CreditController {
                     "Hard set the cycle credits remaining balance for a specific user using Supabase ID to an exact amount (admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiResponse(responseCode = "200", description = "Cycle credits set successfully")
-    public ResponseEntity<String> setCycleCreditsBySupabaseId(
+    public ResponseEntity<Map<String, Object>> setCycleCreditsBySupabaseId(
             @RequestParam("supabaseId") String supabaseId, @RequestParam("credits") int credits) {
 
         if (credits < 0) {
-            return ResponseEntity.badRequest().body("Credits cannot be negative");
+            return ResponseEntity.badRequest().body(Map.of("error", "Credits cannot be negative"));
         }
 
         try {
@@ -247,14 +243,11 @@ public class CreditController {
             log.info(
                     "Admin set cycle credits to {} for user with Supabase ID: {}",
                     credits,
-                    supabaseId);
-            return ResponseEntity.ok(
-                    "Successfully set cycle credits to "
-                            + credits
-                            + " for user with Supabase ID "
-                            + supabaseId);
+                    LogRedactionUtils.redactSupabaseId(supabaseId));
+            return ResponseEntity.ok(Map.of("success", true, "cycleCredits", credits));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.warn("setCycleCreditsBySupabaseId rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
         }
     }
 

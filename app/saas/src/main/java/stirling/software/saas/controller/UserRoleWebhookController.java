@@ -68,8 +68,8 @@ public class UserRoleWebhookController {
                 return ResponseEntity.ok("User is already PRO");
             }
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid webhook request: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            log.warn("handleUpgrade rejected: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
         } catch (Exception e) {
             log.error("Error processing upgrade webhook", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -100,8 +100,8 @@ public class UserRoleWebhookController {
                 return ResponseEntity.ok("User is already on FREE tier");
             }
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid webhook request: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            log.warn("handleDowngrade rejected: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
         } catch (Exception e) {
             log.error("Error processing downgrade webhook", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -134,8 +134,8 @@ public class UserRoleWebhookController {
                 return ResponseEntity.ok("User already has metered billing enabled");
             }
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid webhook request: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            log.warn("enableMeteredBilling rejected: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
         } catch (Exception e) {
             log.error("Error enabling metered billing", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -167,8 +167,8 @@ public class UserRoleWebhookController {
                 return ResponseEntity.ok("User does not have metered billing enabled");
             }
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid webhook request: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            log.warn("disableMeteredBilling rejected: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
         } catch (Exception e) {
             log.error("Error disabling metered billing", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -272,7 +272,7 @@ public class UserRoleWebhookController {
         } catch (IllegalStateException e) {
             log.error("User not found for upgrade: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", "User not found"));
         } catch (Exception e) {
             log.error("Error synchronizing user upgrade", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
