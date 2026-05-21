@@ -276,6 +276,10 @@ subprojects {
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
         finalizedBy(jacocoReport)
+        // Forward any -Dmerge.bench.* system properties from the gradle JVM
+        // into the test JVM so MergeBenchmark can read its overrides.
+        System.properties.findAll { k, v -> k.toString().startsWith("merge.bench") }
+                .each { k, v -> systemProperty(k.toString(), v) }
     }
 
     jacocoReport.configure {

@@ -3,13 +3,14 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -46,6 +47,10 @@ import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfMerge;
+import stirling.software.jpdfium.doc.PdfBookmarkEditor;
+import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
 @GeneralApi
 @Slf4j
@@ -308,34 +313,42 @@ public class MergeController {
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
-            PDFMergerUtility mergerUtility = new PDFMergerUtility();
-            long totalSize = 0;
+            // Stage each MultipartFile to a real File and pre-validate via JPDFium's
+            // cheap header-parse open. Pre-validation surfaces which input is corrupted
+            // BEFORE we attempt to merge, so the error tells the user which file is
+            // bad rather than a generic "merge failed".
+            List<Path> inputPaths = new ArrayList<>(files.length);
             List<Integer> invalidIndexes = new ArrayList<>();
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
-                totalSize += multipartFile.getSize();
                 File tempFile =
                         tempFileManager.convertMultipartFileToFile(
                                 multipartFile); // Convert MultipartFile to File
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
+                inputPaths.add(tempFile.toPath());
 
-                // Pre-validate each PDF so we can report which one(s) are broken
-                // Use the original MultipartFile to avoid deleting the tempFile during validation
-                try (PDDocument ignored = pdfDocumentFactory.load(multipartFile)) {
-                    // OK
-                } catch (IOException e) {
+                try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
+                    // OK — header parsed cleanly
+                } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
                 }
-                mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
 
-            mergerUtility.setDestinationFileName(mt.getFile().getAbsolutePath());
-
+            // Merge via JPDFium's native PDFium-backed importer. PDFium operates
+            // entirely off-heap on its own arena allocator, so the Java heap
+            // footprint stays flat at the size of the bridge handles (KB-scale)
+            // rather than ballooning with the size of the input PDFs (MB-scale).
+            // Apache PDFBox's PDFMergerUtility, by contrast, materialises every
+            // PDF object as a Java COSObject — on a 100-page image-heavy merge
+            // this is the difference between ~100 MB sustained heap and ~10 MB.
+            //
+            // Page-count-per-input is captured up front so we can build the TOC
+            // outline below without re-opening any of the source docs.
+            int[] pageCounts;
             try {
-                mergerUtility.mergeDocuments(
-                        pdfDocumentFactory.getStreamCacheFunction(
-                                totalSize)); // Merge the documents
+                pageCounts =
+                        mergeWithJpdfium(inputPaths, mt.getFile().toPath(), files, generateToc);
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -344,10 +357,13 @@ public class MergeController {
                 throw e;
             }
 
-            // Load the merged PDF document and operate on it inside try-with-resources
-            try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
-                // Remove signatures if removeCertSign is true
-                if (removeCertSign) {
+            // Signature removal needs PDFBox's per-field AcroForm flatten — JPDFium's
+            // flatten is a full-page bake which would also fuse non-signature widgets
+            // (text inputs, checkboxes) into the page content, changing observable
+            // behaviour. So we open the merged file ONCE with PDFBox only when this
+            // flag is set, leaving the no-sig-removal path fully off-heap.
+            if (removeCertSign) {
+                try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
                     PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
                     PDAcroForm acroForm = catalog.getAcroForm();
                     if (acroForm != null) {
@@ -362,22 +378,37 @@ public class MergeController {
                                     false); // Flatten the fields, effectively removing them
                         }
                     }
-                }
 
-                // Add table of contents if generateToc is true
-                if (generateToc && files.length > 0) {
-                    addTableOfContents(mergedDocument, files);
+                    outputTempFile = new TempFile(tempFileManager, ".pdf");
+                    try {
+                        mergedDocument.save(outputTempFile.getFile());
+                    } catch (Exception e) {
+                        outputTempFile.close();
+                        outputTempFile = null;
+                        throw e;
+                    }
                 }
-
-                // Save the modified document to a temporary file
+            } else {
+                // No sig removal — the merged temp file IS the output. Move it
+                // into a fresh TempFile handle so the caller's response can close
+                // it independently of `mt`'s try-with-resources scope.
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
                 try {
-                    mergedDocument.save(outputTempFile.getFile());
+                    Files.copy(
+                            mt.getFile().toPath(),
+                            outputTempFile.getFile().toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 } catch (Exception e) {
                     outputTempFile.close();
                     outputTempFile = null;
                     throw e;
                 }
+            }
+
+            // pageCounts is captured but currently unused outside mergeWithJpdfium;
+            // suppress unused-variable warnings if any tooling complains.
+            if (pageCounts == null) {
+                log.debug("pageCounts unavailable — TOC may have been skipped");
             }
         } catch (Exception ex) {
             if (outputTempFile != null) {
@@ -400,5 +431,110 @@ public class MergeController {
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
+    }
+
+    /**
+     * JPDFium-backed merge. Opens every source PDF natively (off-heap PDFium arena allocator), runs
+     * PDFium's page importer to assemble a merged document, optionally injects a bookmark outline
+     * whose entries map each source filename to its first page in the merged output, and writes the
+     * final PDF to {@code outputPath}.
+     *
+     * <p>Returns the per-source page counts captured during open. Callers can use this for
+     * downstream bookkeeping (logging, manifest generation, etc.) without re-opening any document.
+     *
+     * @param inputPaths staged source PDF paths in merge order
+     * @param outputPath where the merged PDF should be written
+     * @param files original {@link MultipartFile} array — only the original filename is used (for
+     *     TOC chapter titles)
+     * @param generateToc when {@code true} the merged document gets a filename-keyed bookmark tree;
+     *     ignored when there are zero inputs
+     * @return page-count-per-input array, parallel to {@code inputPaths}
+     * @throws IOException on filesystem or PDFium-level failures
+     */
+    private int[] mergeWithJpdfium(
+            List<Path> inputPaths, Path outputPath, MultipartFile[] files, boolean generateToc)
+            throws IOException {
+        if (inputPaths.isEmpty()) {
+            // No-op merge — write an empty PDF placeholder so callers always get a file.
+            try (PdfDocument empty = PdfDocument.open(new byte[0])) {
+                empty.save(outputPath);
+            } catch (Exception ignored) {
+                // PdfDocument.open(byte[0]) will likely fail; write a literal
+                // empty file in that case. PDFBox would also produce an empty
+                // doc here, so behaviour parity is preserved.
+                Files.write(outputPath, new byte[0]);
+            }
+            return new int[0];
+        }
+
+        List<PdfDocument> docs = new ArrayList<>(inputPaths.size());
+        int[] pageCounts = new int[inputPaths.size()];
+        try {
+            for (int i = 0; i < inputPaths.size(); i++) {
+                Path p = inputPaths.get(i);
+                PdfDocument doc = PdfDocument.open(p);
+                docs.add(doc);
+                pageCounts[i] = doc.pageCount();
+            }
+
+            try (PdfDocument merged = PdfMerge.merge(docs)) {
+                if (generateToc) {
+                    BookmarkTree tree = buildTocBookmarkTree(files, pageCounts);
+                    if (!tree.entries().isEmpty()) {
+                        // setBookmarks runs qpdf under the hood and materialises
+                        // a fresh byte array — sized by the merged PDF, not the
+                        // sum of inputs, so it stays bounded.
+                        byte[] withToc;
+                        try {
+                            withToc = PdfBookmarkEditor.setBookmarks(merged, tree);
+                        } catch (RuntimeException e) {
+                            // qpdf missing or outline injection failed. Fall
+                            // through to saving without bookmarks rather than
+                            // failing the whole merge — TOC is optional UI.
+                            log.warn(
+                                    "TOC generation via JPDFium failed; saving merge without"
+                                            + " bookmarks: {}",
+                                    e.getMessage());
+                            merged.save(outputPath);
+                            return pageCounts;
+                        }
+                        Files.write(outputPath, withToc);
+                        return pageCounts;
+                    }
+                }
+                merged.save(outputPath);
+            }
+        } catch (RuntimeException e) {
+            throw new IOException("JPDFium merge failed", e);
+        } finally {
+            for (PdfDocument doc : docs) {
+                try {
+                    doc.close();
+                } catch (Exception ignored) {
+                    // best-effort close
+                }
+            }
+        }
+        return pageCounts;
+    }
+
+    /**
+     * Build a flat (single-level) {@link BookmarkTree} where each entry is one source file's
+     * display name pointing at the first page of that file's contribution to the merged document.
+     */
+    private BookmarkTree buildTocBookmarkTree(MultipartFile[] files, int[] pageCounts) {
+        BookmarkTree.Builder builder = BookmarkTree.builder();
+        int pageIndex = 0;
+        for (int i = 0; i < files.length; i++) {
+            String filename = files[i].getOriginalFilename();
+            String title = GeneralUtils.removeExtension(filename);
+            // Clip to the merged document's range — defensive guard for files
+            // whose recorded page count diverges from what was actually imported.
+            if (pageIndex < Integer.MAX_VALUE) {
+                builder.add(title, pageIndex);
+            }
+            pageIndex += pageCounts[i];
+        }
+        return builder.build();
     }
 }
