@@ -431,7 +431,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Important Notes
 
-- **Java Version**: Requires JDK 25 (raised from 21 to support JPDFium's FFM bindings, which target `org.gradle.jvm.version=25`).
+- **Java Version**: Requires JDK 25.
 - **Lombok**: Used extensively - ensure IDE plugin is installed
 - **File Persistence**:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only

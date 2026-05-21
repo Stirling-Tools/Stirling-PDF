@@ -18,9 +18,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # JDK 25 is the floor: JPDFium's published artifacts require
-        # org.gradle.jvm.version=25 (FFM is final at 22+, JPDFium picked 25
-        # as its source target). Earlier JDKs can't even resolve the dep.
         jdk-version: [25]
         spring-security: [true, false]
     steps:

@@ -32,10 +32,7 @@ ext {
     logback = "1.5.32"
     // junit-platform-launcher version managed by Spring Boot BOM
     // modernJavaVersion drives javac --release and the restart-helper
-    // compile target. Bumped from 21 to 25 because JPDFium publishes with
-    // org.gradle.jvm.version=25 (FFM is finalized at 22+, JPDFium picks 25
-    // as its source target). Anything < 25 fails Gradle's variant attribute
-    // match at compile time.
+    // compile target.
     modernJavaVersion = 25
 }
 

@@ -45,7 +45,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - [Task](https://taskfile.dev/installation/) — unified command runner (recommended)
 - Docker
 - Git
-- Java JDK 25 (required — JPDFium FFM bindings target JVM 25)
+- Java JDK 25
 - Node.js 18+ and npm (required for frontend development)
 - Gradle 7.0 or later (Included within the repo)
 - [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
