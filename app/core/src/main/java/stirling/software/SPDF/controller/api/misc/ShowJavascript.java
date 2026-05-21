@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.swagger.JavaScriptResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -34,7 +35,10 @@ public class ShowJavascript {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/show-javascript",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JavaScriptResponse
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",

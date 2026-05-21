@@ -24,7 +24,7 @@ ext {
     pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
-    bouncycastleVersion = "1.83"
+    bouncycastleVersion = "1.84"
     springSecuritySamlVersion = "7.0.5"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
@@ -197,7 +197,6 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
 
-
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:
         // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
@@ -209,9 +208,10 @@ subprojects {
         resolutionStrategy.force 'org.apache.commons:commons-lang3:3.20.0'
         // CVE-2024-47554: commons-io 2.21.0 DoS prevention
         resolutionStrategy.force 'commons-io:commons-io:2.21.0'
-        // Bouncycastle 1.83 (from bouncycastleVersion variable)
-        resolutionStrategy.force 'org.bouncycastle:bcprov-jdk18on:1.83'
-        resolutionStrategy.force 'org.bouncycastle:bcpkix-jdk18on:1.83'
+        // Keep BouncyCastle modules aligned to avoid runtime linkage errors
+        resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
     }
 
     dependencyManagement {
@@ -618,4 +618,11 @@ tasks.register('buildRestartHelper', Jar) {
     doLast {
         println "restart-helper.jar created at: ${destinationDirectory.get()}/restart-helper.jar"
     }
+}
+
+
+tasks.withType(Test).configureEach {
+    // maxParallelForks: parallelise JUnit across cores
+    // Half of available CPUs is a safe default; bump if your tests are I/O-bound.
+    maxParallelForks = Math.max(1, (Runtime.runtime.availableProcessors().intdiv(2)) as int)
 }

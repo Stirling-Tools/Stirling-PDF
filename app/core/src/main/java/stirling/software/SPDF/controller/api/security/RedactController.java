@@ -30,6 +30,7 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyl
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -71,7 +72,10 @@ public class RedactController {
                 RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
     }
 
-    @AutoJobPostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/redact",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             operationId = "redactPdfManual",
@@ -114,7 +118,10 @@ public class RedactController {
         }
     }
 
-    @AutoJobPostMapping(value = "/auto-redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/auto-redact",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Redact PDF automatically",
