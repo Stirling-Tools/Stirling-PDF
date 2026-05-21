@@ -585,7 +585,7 @@ public class AuthController {
      * @param username Username of the user to disable MFA for
      * @return Response indicating success or failure
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/mfa/disable/admin/{username}")
     public ResponseEntity<?> disableMfaByAdmin(@PathVariable String username) {
         try {

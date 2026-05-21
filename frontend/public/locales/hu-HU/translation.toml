@@ -1806,7 +1806,11 @@ title = "Intelligens átnevezés"
 [automate]
 copyToSaved = "Másolás a mentettek közé"
 desc = "Többlépéses munkafolyamatok építése PDF-műveletek láncolásával. Ideális ismétlődő feladatokhoz."
+export = "Exportálás"
 exportForFolderScanning = "Exportálás mappavizsgálathoz"
+import = "Importálás"
+importPartialSuccess = "Importálva {{count}} le nem képezett művelettel: {{ops}}"
+importSuccess = "Automatizálás importálva: {{name}}"
 invalidStep = "Érvénytelen lépés"
 reviewTitle = "Automatizálás eredményei"
 title = "Automatizálás"
@@ -1822,6 +1826,7 @@ title = "A(z) {{toolName}} beállítása"
 [automate.creation]
 createTitle = "Automatizálás létrehozása"
 editTitle = "Automatizálás szerkesztése"
+export = "Exportálás"
 exportForFolderScanning = "Exportálás mappavizsgálathoz"
 intro = "Az automatizálások egymás után futtatják az eszközöket. Kezdésként adja hozzá az eszközöket a kívánt sorrendben."
 save = "Automatizálás mentése"
@@ -1852,8 +1857,27 @@ confirm = "Visszalépés"
 message = "Mentetlen módosításai vannak. Biztosan visszalép? Minden változás elvész."
 title = "Mentetlen módosítások"
 
+[automate.entryMenu]
+label = "Menü megnyitása ehhez: {{title}}"
+
 [automate.files]
 placeholder = "Válassza ki az automatizálással feldolgozandó fájlokat"
+
+[automate.importModal]
+cancel = "Mégse"
+confirm = "Importálás"
+detectedAutomation = "Automatizálási JSON"
+detectedFolderScan = "Mappavizsgálati JSON"
+dropHint = "Húzza ide a JSON-t vagy kattintson egy fájl kiválasztásához"
+dropSubhint = "Az Automatizálás és a Mappavizsgálat konfigurációi is elfogadottak"
+dropzoneAriaLabel = "Húzzon ide egy automatizálási JSON-fájlt"
+intro = "Húzzon ide egy JSON fájlt, vagy illessze be a tartalmát alább. A formátumot (Automatizálás vagy Mappavizsgálat) automatikusan felismerjük."
+opCount = "{{count}} művelet"
+parseError = "Nem sikerült feldolgozni: {{message}}"
+pasteLabel = "Vagy illessze be a JSON-t"
+pastePlaceholder = "Illessze ide az automatizálási JSON-t…"
+title = "Automatizálás importálása"
+unresolved = "Le nem képezett: {{ops}}"
 
 [automate.run]
 title = "Automatizálás futtatása"
@@ -2670,6 +2694,10 @@ executing_tool_step = "A {{tool}} futtatása ({{step}} / {{total}}. lépés)..."
 extracting_content = "Tartalom kinyerése a dokumentumaiból..."
 processing = "A kinyert tartalom feldolgozása..."
 thinking = "Gondolkodás..."
+whole_doc_compression_round = "Jegyzetek összevonása..."
+whole_doc_read_done = "A dokumentum beolvasása befejeződött..."
+whole_doc_read_started = "A dokumentum beolvasása..."
+whole_doc_slice_done = "A dokumentum beolvasása... ({{percent}}% kész)"
 
 [chat.toolsUsed]
 summary = "{{count}} eszköz futtatva"
@@ -2712,6 +2740,7 @@ used = "felhasznált"
 [compare]
 addFilesHint = "Adjon hozzá PDF-eket a Fájlok lépésben a kiválasztás engedélyezéséhez."
 clearSelected = "Kijelöltek törlése"
+clearSlot = "Fájl eltávolítása"
 cta = "Összehasonlítás"
 header = "PDF-ek összehasonlítása"
 loading = "Összehasonlítás folyamatban..."
@@ -2764,6 +2793,7 @@ title = "Ezek a PDF-ek nagyon eltérőnek tűnnek"
 [compare.edited]
 label = "Szerkesztett PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Először válassza ki az eredeti PDF-et"
 
 [compare.error]
 filesMissing = "Nem találjuk a kiválasztott fájlokat. Kérjük, válassza ki újra őket."
@@ -2846,6 +2876,7 @@ pageLabel = "Oldal"
 confirm = "Felcsere és újrafuttatás"
 confirmBody = "Ez újra lefuttatja az eszközt. Biztosan felcseréli az Eredeti és Szerkesztett sorrendjét?"
 confirmTitle = "Újrafuttatja az összehasonlítást?"
+label = "Csere"
 
 [compare.toasts]
 unlinkedBody = "Tipp: A Fel/Le nyíllal mindkét panel görgethető; a pásztázás csak az aktív panelt mozgatja."
@@ -3476,6 +3507,8 @@ unlockAll = "Alkalmazza mindegyikre ({{count}})"
 unlockAllPartialFail = "Helytelen jelszó ehhez: {{names}}"
 unlockAllSuccess = "{{count}} fájl feloldva."
 unlockPrompt = "Feloldás a folytatáshoz"
+viewerLocked = "Ez a PDF jelszóval védett"
+viewerUnlock = "Feloldás"
 
 [encryptedPdfUnlock.password]
 label = "PDF-jelszó"
@@ -3583,6 +3616,9 @@ or = "vagy"
 
 [fileEditor]
 addFiles = "Fájlok hozzáadása"
+pageCount = "{{count}} oldal"
+pageCount_one = "{{count}} oldal"
+pageCount_other = "{{count}} oldal"
 
 [fileManager]
 active = "Aktív"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "A módosítások nincsenek feltöltve"
 clearAll = "Összes törlése"
 clearSelection = "Kijelölés törlése"
 clickToUpload = "Kattintson a fájlok feltöltéséhez"
+closeAllFiles = "Összes fájl bezárása"
 closeFile = "Fájl bezárása"
 cloudFile = "Felhőfájl"
 copyCreated = "Másolat elmentve erre az eszközre."
@@ -3665,6 +3702,7 @@ selectAll = "Összes kijelölése"
 selectedCount = "{{count}} kiválasztva"
 selectedFiles = "Kiválasztott fájlok"
 share = "Megosztás"
+shared = "Megosztott"
 sharedByYou = "Ön által megosztva"
 sharedEditNoticeBody = "Nincs szerkesztési joga a fájl szerveres verziójához. A módosítások helyi másolatként lesznek mentve."
 sharedEditNoticeConfirm = "Értettem"
@@ -3704,6 +3742,41 @@ size = "Fájlméret"
 title = "Fájlok"
 upload = "Feltöltés"
 uploadFiles = "Fájlok feltöltése"
+
+[fileSelectorPicker]
+empty = "Nincsenek elérhető fájlok"
+placeholder = "Fájl kiválasztása"
+search = "Fájlok szűrése…"
+tabListLabel = "Mentett fájlok, munkaterület, feltöltés"
+upload = "Feltöltés a számítógépről"
+
+[fileSelectorPicker.sort]
+dateAsc = "Legrégebbiek elöl"
+dateDesc = "Legújabbak elöl"
+dateLabel = "Legújabb"
+nameAsc = "A-tól Z-ig"
+nameDesc = "Z-től A-ig"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Mentett fájlok"
+upload = "Feltöltés"
+workbench = "Munkaterület"
+
+[fileSidebar]
+addFiles = "Fájlok hozzáadása"
+collapse = "Oldalsáv összecsukása"
+dropHint = "A kezdéshez nyisson meg fájlokat"
+expand = "Oldalsáv kinyitása"
+files = "Fájlok"
+googleDrive = "Google Drive"
+googleDriveDisabled = "A Google Drive nincs beállítva"
+noFiles = "Még nincsenek fájlok"
+openFileManager = "Fájlkezelő megnyitása"
+openFromComputer = "Megnyitás a számítógépről"
+openSettings = "Beállítások megnyitása"
+search = "Keresés"
+searchPlaceholder = "Fájlok keresése..."
 
 [fileToPDF]
 credit = "Ez a szolgáltatás a LibreOffice és Unoconv használatával működik."
@@ -4202,6 +4275,11 @@ title = "PDF-ek egymásra helyezése"
 desc = "PDF dokumentum több oldalának egyesítése egyetlen oldalra"
 tags = "elrendezés,átrendez,összevon"
 title = "Többoldalas elrendezés"
+
+[home.pdfCommentAgent]
+desc = "Kérje meg az AI-t, hogy az utasítása alapján ragadós jegyzetekkel lássa el a PDF-et"
+tags = "AI,ügynök,megjegyzés,annotálás,ragadós jegyzet,áttekintés,visszajelzés,jegyzetek"
+title = "AI-megjegyzések hozzáadása"
 
 [home.pdfOrganiser]
 desc = "Oldalak eltávolítása/átrendezése tetszőleges sorrendben"
@@ -4903,7 +4981,6 @@ fileUpload = "A <strong>Fájlok</strong> gombbal töltsön fel vagy válasszon e
 leftPanel = "A bal oldali <strong>Eszközök</strong> panelen minden elérhető funkciót megtalál. Böngésszen kategóriák szerint vagy keressen gyors eszközválasztáshoz."
 pageEditorView = "Váltson az Oldalszerkesztőre az oldalak átrendezéséhez, forgatásához vagy törléséhez."
 quickAccess = "Kezdje a <strong>Gyors elérés</strong> sávval, hogy a Megjelenítő, az Automatizálás, a fájlok és az összes bemutató között váltson."
-rightRail = "A <strong>jobb oldali sáv</strong> gyors műveleteket tartalmaz a fájlválasztáshoz, a téma vagy nyelv módosításához és az eredmények letöltéséhez."
 topBar = "A felső sávban válthat a <strong>Megjelenítő</strong>, az <strong>Oldalszerkesztő</strong> és az <strong>Aktív fájlok</strong> között."
 wrapUp = "Ez az, ami újdonság a V2-ben. Nyissa meg bármikor a <strong>Bemutatók</strong> menüt ennek, az Eszköztúrának vagy az Admin túrának az újra lejátszásához."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Havi kiválasztása"
 selectYearly = "Éves kiválasztása"
 title = "Válassza ki a számlázási időszakot"
 totalForSeats = "Összesen ({{count}} hely)"
+
+[pdfCommentAgent]
+submit = "Megjegyzések létrehozása"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Kérjük, írja le, mire tegyen megjegyzést az AI"
+failed = "Nem sikerült megjegyzéseket létrehozni"
+tooLong = "Az utasítás túl hosszú (legfeljebb {{max}} karakter)"
+
+[pdfCommentAgent.prompt]
+label = "Mire tegyen megjegyzést az AI?"
+placeholder = "pl. Jelölje meg a kétértelmű dátumokat, és javasoljon pontosításokat"
+
+[pdfCommentAgent.results]
+title = "Megjegyzésekkel ellátott PDF"
+
+[pdfCommentAgent.settings]
+title = "Megjegyzési utasítások"
 
 [pdfOrganiser]
 header = "PDF oldalszervező"
@@ -6486,46 +6581,6 @@ title = "Magas kontraszt"
 text = "A PDF összes színének teljes invertálása, negatívhoz hasonló hatással. Hasznos dokumentumok sötét módú változatához vagy a szemfáradás csökkentéséhez gyenge fényviszonyok között."
 title = "Minden szín invertálása"
 
-[rightRail]
-annotations = "Jegyzetek"
-applyRedactionsFirst = "Előbb alkalmazza a kitakarásokat"
-closePdf = "PDF bezárása"
-closeSelected = "Kijelölt fájlok bezárása"
-deleteSelected = "Kijelölt oldalak törlése"
-deselectAll = "Kijelölés megszüntetése"
-downloadAll = "Összes letöltése"
-downloadSelected = "Kijelölt fájlok letöltése"
-draw = "Rajzolás"
-exitRedaction = "Kilépés a kitakarás módból"
-exportAll = "PDF exportálása"
-exportSelected = "Kijelölt oldalak exportálása"
-formFill = "Űrlap kitöltése"
-language = "Nyelv"
-panMode = "Pásztázó mód"
-print = "PDF nyomtatása"
-readAloud = "Felolvasás"
-readAloudLanguage = "Nyelv"
-readAloudSpeed = "Sebesség"
-redact = "Kitakarás"
-rotateLeft = "Forgatás balra"
-rotateRight = "Forgatás jobbra"
-ruler = "Vonalzó / mérés"
-save = "Mentés"
-saveAll = "Összes mentése"
-saveAs = "Mentés másként"
-saveChanges = "Változtatások mentése"
-search = "PDF keresése"
-selectAll = "Összes kijelölése"
-selectByNumber = "Kijelölés oldalszámok alapján"
-selectLanguage = "Nyelv kiválasztása"
-toggleAnnotations = "Jegyzetek láthatóságának váltása"
-toggleAttachments = "Mellékletek megjelenítése/elrejtése"
-toggleBookmarks = "Könyvjelzők megjelenítése/elrejtése"
-toggleComments = "Megjegyzések"
-toggleLayers = "Rétegek váltása"
-toggleSidebar = "Oldalsáv ki/be"
-toggleTheme = "Téma váltása"
-
 [rotate]
 rotateLeft = "Forgatás az óramutató járásával ellentétesen"
 rotateRight = "Forgatás az óramutató járásával megegyezően"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Nem elérhető konverziók elrejtése"
 hideUnavailableConversionsDescription = "A Konvertálás eszközben a letiltott opciók eltávolítása, ahelyett hogy szürkén jelenjenek meg."
 hideUnavailableTools = "Nem elérhető eszközök elrejtése"
 hideUnavailableToolsDescription = "A szerver által letiltott eszközök eltávolítása, ahelyett hogy szürkén jelenjenek meg."
+language = "Nyelv"
+languageDescription = "Válassza ki a megjelenítés nyelvét"
 logout = "Kijelentkezés"
 setAsDefault = "Beállítás alapértelmezettként"
+theme = "Téma"
+themeDark = "Sötét"
+themeDescription = "Váltás világos és sötét mód között"
+themeLight = "Világos"
 title = "Általános"
 user = "Felhasználó"
 
@@ -6810,6 +6871,20 @@ title = "Verzióinformációk"
 auto = "Automatikus"
 fitPage = "Teljes oldal"
 fitWidth = "Szélességhez igazítás"
+
+[settings.help]
+label = "Bemutatók"
+title = "Súgó"
+
+[settings.help.adminTour]
+description = "Ismerje meg a csapatkezelést, a rendszerbeállításokat és a vállalati funkciókat."
+start = "Indítás"
+title = "Admin bemutató"
+
+[settings.help.toolsTour]
+description = "Végigvezeti a fájlok feltöltésén, az eszköz kiválasztásán és az eredmények áttekintésén."
+start = "Indítás"
+title = "Eszközök bemutatója"
 
 [settings.hotkeys]
 capturing = "Billentyűk megnyomása… (Esc a megszakításhoz)"
@@ -7780,6 +7855,8 @@ settings = "Beállítások"
 [tool]
 endpointUnavailable = "Ez az eszköz nem érhető el a szerverén."
 endpointUnavailableClickable = "Ebben a módban nem érhető el. Kattintson a bejelentkezéshez."
+filesLoading = "A fájlok még töltődnek, kérjük, várjon."
+filesLoadingProgress = "{{loaded}} / {{total}} fájl töltődik..."
 invalidParams = "Töltse ki a kötelező beállításokat."
 noFiles = "Adjon hozzá egy fájlt a kezdéshez."
 scopeFiles = "fájlok"
@@ -7789,10 +7866,15 @@ singleFileScope = "Csak erre alkalmazva: {{fileName}}"
 viewerMode = "Váltson a fájlszerkesztőre több fájl kiválasztásához."
 
 [toolPanel]
+allTools = "Összes eszköz"
 alpha = "Alfa"
+backToTools = "Vissza az eszközökhöz"
+collapse = "Panel összecsukása"
 comingSoon = "Hamarosan:"
+expand = "Panel kinyitása"
 placeholder = "Válasszon egy eszközt a kezdéshez"
 premiumFeature = "Prémium funkció:"
+search = "Eszközök keresése"
 
 [toolPanel.fullscreen]
 comingSoon = "Hamarosan elérhető:"
@@ -8342,6 +8424,51 @@ bullet2 = "A legjobb eredmény érdekében átlátszó hátteret javaslunk"
 bullet3 = "A képet átméretezzük, hogy illeszkedjen az aláírási területhez"
 description = "Töltsön fel előre elkészített aláírásképet. Ideális, ha van beszkennelt aláírása vagy céges logója."
 title = "Aláíráskép feltöltése"
+
+[workbenchBar]
+activeFiles = "Aktív fájlok"
+annotations = "Annotációk"
+applyRedactionsFirst = "Először alkalmazza a kitakarásokat"
+closeAll = "Összes fájl bezárása"
+closePdf = "PDF bezárása"
+closeSelected = "Kijelölt fájlok bezárása"
+deleteSelected = "Kijelölt oldalak törlése"
+deselectAll = "Összes kijelölés megszüntetése"
+downloadAll = "Összes letöltése"
+downloadSelected = "Kijelölt fájlok letöltése"
+draw = "Rajzolás"
+exitRedaction = "Kilépés a kitakarási módból"
+exportAll = "PDF exportálása"
+exportSelected = "Kijelölt oldalak exportálása"
+formFill = "Űrlap kitöltése"
+language = "Nyelv"
+multiTool = "Többfunkciós eszköz"
+panMode = "Mozgatás mód"
+print = "PDF nyomtatása"
+readAloud = "Felolvasás"
+readAloudLanguage = "Nyelv"
+readAloudSpeed = "Sebesség"
+redact = "Kitakarás"
+rotateLeft = "Forgatás balra"
+rotateRight = "Forgatás jobbra"
+ruler = "Vonalzó / Mérés"
+save = "Mentés"
+saveAll = "Összes mentése"
+saveAs = "Mentés másként"
+saveChanges = "Változtatások mentése"
+search = "PDF keresése"
+selectAll = "Összes kijelölése"
+selectByNumber = "Kiválasztás oldalszámok szerint"
+selectLanguage = "Nyelv kiválasztása"
+share = "Megosztás"
+toggleAnnotations = "Annotációk láthatóságának be-/kikapcsolása"
+toggleAttachments = "Mellékletek be-/kikapcsolása"
+toggleBookmarks = "Könyvjelzők be-/kikapcsolása"
+toggleComments = "Megjegyzések"
+toggleLayers = "Rétegek be-/kikapcsolása"
+toggleSidebar = "Oldalsáv be-/kikapcsolása"
+toggleTheme = "Téma váltása"
+viewer = "Megjelenítő"
 
 [workspace]
 title = "Munkaterület"
