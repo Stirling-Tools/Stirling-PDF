@@ -115,11 +115,10 @@
   padding-top: 0.65rem;
   padding-bottom: 0.65rem;
   height: auto;
-  align-items: flex-start;
 }
 
 .tool-picker__compact .tool-button .mantine-Button-label {
-  align-items: flex-start;
+  align-items: center;
 }
 
 .tool-picker__compact-list {

@@ -32,6 +32,7 @@ interface ToolButtonProps {
   disableNavigation?: boolean;
   matchedSynonym?: string;
   hasStars?: boolean;
+  showDescription?: boolean;
   /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
   onUnavailableClick?: () => void;
 }
@@ -44,6 +45,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   disableNavigation = false,
   matchedSynonym,
   hasStars = false,
+  showDescription = false,
   onUnavailableClick,
 }) => {
   const { t } = useTranslation();
@@ -183,6 +185,14 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           )}
           {usesCloud && !visuallyUnavailable && <CloudBadge />}
         </div>
+        {showDescription && tool.description && (
+          <span
+            className="tool-button__description"
+            style={{ opacity: visuallyUnavailable ? 0.25 : 1 }}
+          >
+            {tool.description}
+          </span>
+        )}
         {matchedSynonym && (
           <span
             style={{

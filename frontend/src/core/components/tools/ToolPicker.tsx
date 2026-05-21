@@ -142,6 +142,7 @@ const ToolPicker = ({
                     isSelected={selectedToolKey === id}
                     onSelect={onSelect}
                     hasStars
+                    showDescription
                   />
                 ))}
                 {recommendedItems
@@ -156,6 +157,7 @@ const ToolPicker = ({
                       isSelected={selectedToolKey === id}
                       onSelect={onSelect}
                       hasStars
+                      showDescription
                     />
                   ))}
               </div>
