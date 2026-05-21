@@ -190,6 +190,9 @@ subprojects {
                 allowInsecureProtocol = true
             }
         }
+        // mavenLocal first so we can iterate on JPDFium changes locally
+        // (publishToMavenLocal in the JPDFium repo) before pushing.
+        mavenLocal()
         maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
         // Stirling-Tools JPDFium snapshots — anonymous read, no auth.
@@ -280,6 +283,12 @@ subprojects {
         // into the test JVM so MergeBenchmark can read its overrides.
         System.properties.findAll { k, v -> k.toString().startsWith("merge.bench") }
                 .each { k, v -> systemProperty(k.toString(), v) }
+        // When the merge benchmark is requested, give the test JVM enough
+        // headroom that BOTH engines finish — we want to MEASURE peak heap,
+        // not OOM PDFBox on the way to that measurement.
+        if (System.properties.any { k, v -> k.toString().startsWith("merge.bench") }) {
+            maxHeapSize = System.properties.getProperty("merge.bench.xmx", "4g")
+        }
     }
 
     jacocoReport.configure {
