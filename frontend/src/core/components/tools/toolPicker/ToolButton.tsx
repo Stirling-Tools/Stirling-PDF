@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Button, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -10,7 +10,10 @@ import FitText from "@app/components/shared/FitText";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import {
+  useToolWorkflowActions,
+  useToolWorkflowData,
+} from "@app/contexts/ToolWorkflowContext";
 import type { ToolId } from "@app/types/toolId";
 import {
   getToolDisabledReason,
@@ -46,7 +49,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
-  const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
+  const { isFavorite, toolAvailability } = useToolWorkflowData();
+  const { toggleFavorite } = useToolWorkflowActions();
   const disabledReason = getToolDisabledReason(
     id,
     tool,
@@ -201,13 +205,17 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
+  const selectedStyles = isSelected
+    ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" }
+    : {};
+
   const buttonElement = navProps ? (
     // For internal tools with URLs, render Button as an anchor for proper link behavior
     <Button
       component="a"
       href={navProps.href}
       onClick={navProps.onClick}
-      variant={isSelected ? "filled" : "subtle"}
+      variant="subtle"
       size="sm"
       radius="md"
       fullWidth
@@ -219,6 +227,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
+          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}
@@ -233,7 +242,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleExternalClick}
-      variant={isSelected ? "filled" : "subtle"}
+      variant="subtle"
       size="sm"
       radius="md"
       fullWidth
@@ -245,6 +254,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
+          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}
@@ -254,7 +264,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   ) : (
     // For unavailable tools, use regular button
     <Button
-      variant={isSelected ? "filled" : "subtle"}
+      variant="subtle"
       onClick={() => handleClick(id)}
       size="sm"
       radius="md"
@@ -269,6 +279,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           color: "var(--tools-text-and-icon-color)",
           cursor: visuallyUnavailable ? "not-allowed" : undefined,
           overflow: "visible",
+          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}
@@ -292,7 +303,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       {star}
       <Tooltip
         content={tooltipContent}
-        position="right"
+        position="left"
         arrow={true}
         delay={500}
       >
@@ -302,4 +313,4 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   );
 };
 
-export default ToolButton;
+export default memo(ToolButton);

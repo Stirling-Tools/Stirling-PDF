@@ -17,7 +17,7 @@ import { GRID_CONSTANTS } from "@app/components/pageEditor/constants";
 import { useInitialPageDocument } from "@app/components/pageEditor/hooks/useInitialPageDocument";
 import { usePageDocument } from "@app/components/pageEditor/hooks/usePageDocument";
 import { usePageEditorState } from "@app/components/pageEditor/hooks/usePageEditorState";
-import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
+import { usePageEditorWorkbenchBarButtons } from "@app/components/pageEditor/pageEditorWorkbenchBarButtons";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useEditedDocumentState } from "@app/components/pageEditor/hooks/useEditedDocumentState";
@@ -167,6 +167,16 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     return pageEditorFiles.filter((f) => f.isSelected).map((f) => f.fileId);
   }, [pageEditorFiles]);
   const activeFilesSignature = selectors.getFilesSignature();
+
+  // Check if there are any PDF files in FileContext (bypasses fileOrder, which is
+  // populated asynchronously via effect). Used to avoid a one-render flash of
+  // "No PDF files loaded" when PageEditor first mounts after files are added.
+  const hasPdfFiles = useMemo(() => {
+    return state.files.ids.some((id) => {
+      const stub = selectors.getStirlingFileStub(id);
+      return stub?.name?.toLowerCase().endsWith(".pdf") ?? false;
+    });
+  }, [state.files.ids, selectors]);
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -448,11 +458,10 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     unregisterNavigationWarningHandlers,
   ]);
 
-  // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
+  // Derived values for usePageEditorWorkbenchBarButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
-  const activeFileIds = selectedFileIds;
 
-  usePageEditorRightRailButtons({
+  usePageEditorWorkbenchBarButtons({
     totalPages,
     selectedPageCount,
     csvInput,
@@ -466,8 +475,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     onExportSelected,
     onSaveChanges: applyChanges,
     exportLoading,
-    activeFileCount: activeFileIds.length,
-    closePdf,
   });
 
   // Export preview function - defined after export functions to avoid circular dependency
@@ -677,23 +684,21 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     >
       <LoadingOverlay visible={globalProcessing && !initialDocument} />
 
-      {!initialDocument &&
-        !globalProcessing &&
-        selectedFileIds.length === 0 && (
-          <Center h="100%">
-            <Stack align="center" gap="md">
-              <Text size="lg" c="dimmed">
-                📄
-              </Text>
-              <Text c="dimmed">No PDF files loaded</Text>
-              <Text size="sm" c="dimmed">
-                Add files to start editing pages
-              </Text>
-            </Stack>
-          </Center>
-        )}
+      {!initialDocument && !globalProcessing && !hasPdfFiles && (
+        <Center h="100%">
+          <Stack align="center" gap="md">
+            <Text size="lg" c="dimmed">
+              📄
+            </Text>
+            <Text c="dimmed">No PDF files loaded</Text>
+            <Text size="sm" c="dimmed">
+              Add files to start editing pages
+            </Text>
+          </Stack>
+        </Center>
+      )}
 
-      {!initialDocument && globalProcessing && (
+      {!initialDocument && (globalProcessing || hasPdfFiles) && (
         <Box p={0}>
           <SkeletonLoader type="controls" />
           <SkeletonLoader type="pageGrid" count={8} />
