@@ -1806,7 +1806,11 @@ title = "Athainmniú Cliste"
 [automate]
 copyToSaved = "Cóipeáil chuig Sábháilte"
 desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a shlabhrú le chéile. Foirfe do thascanna athfhillteacha."
+export = "Easpórtáil"
 exportForFolderScanning = "Easpórtáil le haghaidh Scanadh Fillteáin"
+import = "Iompórtáil"
+importPartialSuccess = "Iompórtáladh le {{count}} oibríocht(a) gan mhapáil: {{ops}}"
+importSuccess = "Uathoibriú iompórtáilte: {{name}}"
 invalidStep = "Céim neamhbhailí"
 reviewTitle = "Torthaí an Uathoibrithe"
 title = "Uathoibriú"
@@ -1822,6 +1826,7 @@ title = "Cumraigh {{toolName}}"
 [automate.creation]
 createTitle = "Cruthaigh Uathoibriú"
 editTitle = "Cuir Uathoibriú in Eagar"
+export = "Easpórtáil"
 exportForFolderScanning = "Easpórtáil le haghaidh Scanadh Fillteáin"
 intro = "Ritheann uathoibrithe uirlisí as a chéile. Chun tosú, cuir uirlisí leis san ord ina bhfuil tú ag iarraidh iad a rith."
 save = "Sábháil an tUathoibriú"
@@ -1852,8 +1857,27 @@ confirm = "Téigh Ar Ais"
 message = "Tá athruithe gan sábháil agat. An bhfuil tú cinnte gur mhaith leat dul ar ais? Caillefar na hathruithe go léir."
 title = "Athruithe Gan Sábháil"
 
+[automate.entryMenu]
+label = "Oscail an roghchlár do {{title}}"
+
 [automate.files]
 placeholder = "Roghnaigh comhaid le próiseáil leis an uathoibriú seo"
+
+[automate.importModal]
+cancel = "Cealaigh"
+confirm = "Iompórtáil"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "JSON Scanadh Fillteáin"
+dropHint = "Scaoil JSON anseo nó cliceáil chun comhad a roghnú"
+dropSubhint = "Glactar le cumraíochtaí Automate agus Scanadh Fillteáin araon"
+dropzoneAriaLabel = "Scaoil comhad JSON uathoibriúcháin anseo"
+intro = "Scaoil comhad JSON nó greamaigh a inneachar thíos. Braitear an fhormáid (Automate nó Scanadh Fillteáin) go huathoibríoch."
+opCount = "{{count}} oibríocht(a)"
+parseError = "Níorbh fhéidir a pharsáil: {{message}}"
+pasteLabel = "Nó greamaigh JSON"
+pastePlaceholder = "Greamaigh do JSON uathoibriúcháin anseo…"
+title = "Iompórtáil uathoibriú"
+unresolved = "Gan mhapáil: {{ops}}"
 
 [automate.run]
 title = "Rith an tUathoibriú"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Ag rith {{tool}} (céim {{step}} as {{total}})..."
 extracting_content = "Ábhar á bhaint as do dhoiciméid..."
 processing = "Ábhar bainte á phróiseáil..."
 thinking = "Ag smaoineamh..."
+whole_doc_compression_round = "Ag comhdhlúthú nótaí..."
+whole_doc_read_done = "Léamh an doiciméid críochnaithe..."
+whole_doc_read_started = "Ag léamh an doiciméid..."
+whole_doc_slice_done = "Ag léamh an doiciméid... ({{percent}}% críochnaithe)"
 
 [chat.toolsUsed]
 summary = "Rith {{count}} uirlisí"
@@ -2712,6 +2740,7 @@ used = "úsáidte"
 [compare]
 addFilesHint = "Cuir PDFanna leis sa chéim Comhaid chun roghnú a chumasú."
 clearSelected = "Glan roghnaithe"
+clearSlot = "Bain an comhad"
 cta = "Déan comparáid"
 header = "Déan comparáid idir comhaid PDF"
 loading = "Á gComparáid..."
@@ -2764,6 +2793,7 @@ title = "Tá cuma an-éagsúil ar na PDFanna seo"
 [compare.edited]
 label = "PDF Eagarthaithe"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Roghnaigh an PDF bunaidh ar dtús"
 
 [compare.error]
 filesMissing = "Níorbh fhéidir na comhaid roghnaithe a aimsiú. Roghnaigh arís iad le do thoil."
@@ -2846,6 +2876,7 @@ pageLabel = "Leathanach"
 confirm = "Athraigh agus Rith Arís"
 confirmBody = "Rithfear an uirlis arís. An bhfuil tú cinnte gur mian leat ord an Bhunaidh agus an Eagarthaithe a mhalartú?"
 confirmTitle = "Rith an chomparáid arís?"
+label = "Malartaigh"
 
 [compare.toasts]
 unlinkedBody = "Leid: Scrollaíonn Saighead Suas/Síos an dá phána; ní bhogann an pánáil ach an pána gníomhach."
@@ -3476,6 +3507,8 @@ unlockAll = "Úsáid do gach ceann ({{count}})"
 unlockAllPartialFail = "Pasfhocal mícheart do: {{names}}"
 unlockAllSuccess = "Díghlasáladh {{count}} comhad."
 unlockPrompt = "Díghlasáil PDF chun leanúint"
+viewerLocked = "Tá an PDF seo cosanta le focal faire"
+viewerUnlock = "Díghlasáil"
 
 [encryptedPdfUnlock.password]
 label = "Pasfhocal PDF"
@@ -3583,6 +3616,9 @@ or = "nó"
 
 [fileEditor]
 addFiles = "Cuir Comhaid Leis"
+pageCount = "{{count}} leathanaigh"
+pageCount_one = "{{count}} leathanach"
+pageCount_other = "{{count}} leathanaigh"
 
 [fileManager]
 active = "Gníomhach"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Níor uasluchtaíodh na hathruithe"
 clearAll = "Glan Uile"
 clearSelection = "Glan Roghnúchán"
 clickToUpload = "Cliceáil chun comhaid a uaslódáil"
+closeAllFiles = "Dún gach comhad"
 closeFile = "Dún an comhad"
 cloudFile = "Comhad sa scamall"
 copyCreated = "Cóip sábháilte ar an ngléas seo."
@@ -3665,6 +3702,7 @@ selectAll = "Roghnaigh Uile"
 selectedCount = "{{count}} roghnaithe"
 selectedFiles = "Comhaid Roghnaithe"
 share = "Comhroinn"
+shared = "Comhroinnte"
 sharedByYou = "Roinnte agat"
 sharedEditNoticeBody = "Níl cearta eagarthóireachta agat ar leagan freastalaí an chomhaid seo. Sábhálfar aon eagarthóireacht a dhéanfaidh tú mar chóip áitiúil."
 sharedEditNoticeConfirm = "Tuigim"
@@ -3704,6 +3742,41 @@ size = "Méid Comhaid"
 title = "Comhaid"
 upload = "Uaslódáil"
 uploadFiles = "Uaslódáil Comhaid"
+
+[fileSelectorPicker]
+empty = "Níl aon chomhaid ar fáil"
+placeholder = "Roghnaigh comhad"
+search = "Scag comhaid…"
+tabListLabel = "Comhaid sábháilte, binse oibre, uaslódáil"
+upload = "Uaslódáil ón ríomhaire"
+
+[fileSelectorPicker.sort]
+dateAsc = "Is sine ar dtús"
+dateDesc = "Is nuaí ar dtús"
+dateLabel = "Is déanaí"
+nameAsc = "A go Z"
+nameDesc = "Z go A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Comhaid sábháilte"
+upload = "Uaslódáil"
+workbench = "Binse oibre"
+
+[fileSidebar]
+addFiles = "Cuir comhaid leis"
+collapse = "Fill an barra taoibh"
+dropHint = "Oscail comhaid chun tosú"
+expand = "Leathnaigh an barra taoibh"
+files = "Comhaid"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Níl Google Drive cumraithe"
+noFiles = "Níl aon chomhaid go fóill"
+openFileManager = "Oscail bainisteoir comhad"
+openFromComputer = "Oscail ón ríomhaire"
+openSettings = "Oscail socruithe"
+search = "Cuardaigh"
+searchPlaceholder = "Cuardaigh comhaid..."
 
 [fileToPDF]
 credit = "Úsáideann an tseirbhís seo LibreOffice agus Unoconv chun comhaid a thiontú."
@@ -4202,6 +4275,11 @@ title = "Forleagan PDF"
 desc = "Cumaisc leathanaigh iolracha de dhoiciméad PDF isteach i leathanach amháin"
 tags = "leagan amach,socrú,cumaisc"
 title = "Leagan Amach Illeathanaigh"
+
+[home.pdfCommentAgent]
+desc = "Iarr ar AI PDF a anótáil le nótaí greamáin bunaithe ar do leid"
+tags = "AI,gníomhaire,trácht,anótáil,nóta greamáin,athbhreithniú,aiseolas,nótaí"
+title = "Cuir tráchtanna AI leis"
 
 [home.pdfOrganiser]
 desc = "Bain/Atheagraigh na leathanaigh in ord ar bith"
@@ -4903,7 +4981,6 @@ fileUpload = "Úsáid an cnaipe <strong>Comhaid</strong> chun PDF le déanaí a 
 leftPanel = "Liostaítear gach rud is féidir leat a dhéanamh sa phainéal <strong>Uirlisí</strong> ar chlé. Brabhsáil catagóirí nó déan cuardach chun uirlis a aimsiú go tapa."
 pageEditorView = "Téigh go dtí an tEagarthóir Leathanach chun leathanaigh a athordú, a rothlú nó a scriosadh."
 quickAccess = "Tosaigh ag an ráille <strong>Rochtain Thapa</strong> chun léim idir Léitheoir, Uathoibriú, do chuid comhad, agus na turais go léir."
-rightRail = "Tá gníomhartha tapa ar an <strong>Ráille Deas</strong> chun comhaid a roghnú, téama nó teanga a athrú, agus torthaí a íoslódáil."
 topBar = "Ligeann an barra uachtarach duit malartú idir <strong>Amharcóir</strong>, <strong>Eagarthóir Leathanaigh</strong>, agus <strong>Comhaid Ghníomhacha</strong>."
 wrapUp = "Sin atá nua i V2. Oscail an roghchlár <strong>Turais</strong> am ar bith chun é seo, an turas Uirlisí, nó an turas Riarthóra a athsheinm."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Roghnaigh Míosúil"
 selectYearly = "Roghnaigh Bliantúil"
 title = "Roghnaigh Do Thréimhse Billeála"
 totalForSeats = "Iomlán ({{count}} suíochán)"
+
+[pdfCommentAgent]
+submit = "Gin tráchtanna"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Déan cur síos ar céard ba chóir don AI a thrácht air"
+failed = "Theip ar thráchtanna a ghiniúint"
+tooLong = "Tá an leid rófhada (uasmhéid {{max}} carachtar)"
+
+[pdfCommentAgent.prompt]
+label = "Cad ba chóir don AI trácht air?"
+placeholder = "m.sh. Brataigh aon dátaí débhríocha agus mol soiléirithe"
+
+[pdfCommentAgent.results]
+title = "PDF le tráchtanna"
+
+[pdfCommentAgent.settings]
+title = "Treoracha tráchtanna"
 
 [pdfOrganiser]
 header = "Eagraí leathanach PDF"
@@ -6486,46 +6581,6 @@ title = "Ardchodarsnacht"
 text = "Inbhéartaigh gach dath sa PDF go hiomlán, ag cruthú éifeacht cosúil le diúltach. Úsáideach chun leaganacha mód dorcha a chruthú de dhoiciméid nó chun strus súl a laghdú i solas íseal."
 title = "Inbhéartaigh Gach Dath"
 
-[rightRail]
-annotations = "Anótálacha"
-applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
-closePdf = "Dún an PDF"
-closeSelected = "Dún na Comhaid Roghnaithe"
-deleteSelected = "Scrios na Leathanaigh Roghnaithe"
-deselectAll = "Díroghnaigh Uile"
-downloadAll = "Íoslódáil Gach Rud"
-downloadSelected = "Íoslódáil Comhaid Roghnaithe"
-draw = "Tarraing"
-exitRedaction = "Scoir Mód Eagarthóireachta"
-exportAll = "Easpórtáil an PDF"
-exportSelected = "Easpórtáil Leathanaigh Roghnaithe"
-formFill = "Líon Foirm"
-language = "Teanga"
-panMode = "Mód Pan"
-print = "Priontáil PDF"
-readAloud = "Léamh Os Ard"
-readAloudLanguage = "Teanga"
-readAloudSpeed = "Luas"
-redact = "Leasaigh"
-rotateLeft = "Rothlaigh ar Chlé"
-rotateRight = "Rothlaigh ar Dheis"
-ruler = "Rialóir / Tomhas"
-save = "Sábháil"
-saveAll = "Sábháil Uile"
-saveAs = "Sábháil Mar"
-saveChanges = "Sábháil Athruithe"
-search = "Cuardaigh PDF"
-selectAll = "Roghnaigh Uile"
-selectByNumber = "Roghnaigh de réir Uimhreacha Leathanaigh"
-selectLanguage = "Roghnaigh teanga"
-toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
-toggleAttachments = "Scoránaigh Iatáin"
-toggleBookmarks = "Leabharmharcanna a Athsholáthar"
-toggleComments = "Tráchtanna"
-toggleLayers = "Scoránaigh Sraitheanna"
-toggleSidebar = "Barra Taobh a Athraigh"
-toggleTheme = "Téama a Athsholáthar"
-
 [rotate]
 rotateLeft = "Rothlaigh tuathalach"
 rotateRight = "Rothlaigh deiseal"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Folaigh tiontaithe nach bhfuil ar fáil"
 hideUnavailableConversionsDescription = "Bain roghanna tiontaithe díchumasaithe san uirlis Convert seachas iad a thaispeáint i liath."
 hideUnavailableTools = "Folaigh uirlisí nach bhfuil ar fáil"
 hideUnavailableToolsDescription = "Bain uirlisí a díchumasaíodh ag do fhreastalaí seachas iad a thaispeáint i liath."
+language = "Teanga"
+languageDescription = "Roghnaigh an teanga taispeána"
 logout = "Logáil amach"
 setAsDefault = "Socraigh mar Réamhshocraithe"
+theme = "Téama"
+themeDark = "Dorcha"
+themeDescription = "Athraigh idir mód geal agus mód dorcha"
+themeLight = "Geal"
 title = "Ginearálta"
 user = "Úsáideoir"
 
@@ -6810,6 +6871,20 @@ title = "Eolas faoin Leagan"
 auto = "Uathoibríoch"
 fitPage = "Oiriúnaigh don leathanach"
 fitWidth = "Oiriúnaigh don leithead"
+
+[settings.help]
+label = "Turais"
+title = "Cabhair"
+
+[settings.help.adminTour]
+description = "Déan iniúchadh ar bhainistiú foirne, socruithe córais, agus gnéithe fiontraíochta."
+start = "Tosaigh"
+title = "Turas an riarthóra"
+
+[settings.help.toolsTour]
+description = "Siúil trí uaslódáil comhad, uirlis a roghnú, agus torthaí a athbhreithniú."
+start = "Tosaigh"
+title = "Turas uirlisí"
 
 [settings.hotkeys]
 capturing = "Brúigh eochracha… (Esc chun cealú)"
@@ -7780,6 +7855,8 @@ settings = "Socruithe"
 [tool]
 endpointUnavailable = "Níl an uirlis seo ar fáil ar do fhreastalaí."
 endpointUnavailableClickable = "Níl ar fáil sa mhód seo. Cliceáil chun síniú isteach."
+filesLoading = "Tá comhaid fós á luchtú, fan le do thoil."
+filesLoadingProgress = "{{loaded}} / {{total}} comhad á luchtú..."
 invalidParams = "Líon na socruithe riachtanacha."
 noFiles = "Cuir comhad leis chun tosú."
 scopeFiles = "comhaid"
@@ -7789,10 +7866,15 @@ singleFileScope = "Á chur i bhfeidhm ar: {{fileName}} amháin"
 viewerMode = "Athraigh go dtí an t-eagarthóir comhad chun roinnt comhad a roghnú."
 
 [toolPanel]
+allTools = "Gach uirlis"
 alpha = "Alfa"
+backToTools = "Ar ais go huirlisí"
+collapse = "Laghdaigh painéal"
 comingSoon = "Ag teacht go luath:"
+expand = "Leathnaigh painéal"
 placeholder = "Roghnaigh uirlis chun tosú"
 premiumFeature = "Gné Préimhe:"
+search = "Cuardaigh uirlisí"
 
 [toolPanel.fullscreen]
 comingSoon = "Ag teacht go luath:"
@@ -8342,6 +8424,51 @@ bullet2 = "Moltar cúlraí trédhearcacha chun na torthaí is fearr a bhaint ama
 bullet3 = "Athrófar méid na híomhá chun an limistéar sínithe a oiriúnú"
 description = "Uaslódáil íomhá sínithe réamhdhéanta. Oiriúnach má tá síniú scanta nó lógó cuideachta agat."
 title = "Uaslódáil íomhá sínithe"
+
+[workbenchBar]
+activeFiles = "Comhaid ghníomhacha"
+annotations = "Anótálacha"
+applyRedactionsFirst = "Cuir na ceiltí i bhfeidhm ar dtús"
+closeAll = "Dún gach comhad"
+closePdf = "Dún PDF"
+closeSelected = "Dún na comhaid roghnaithe"
+deleteSelected = "Scrios na leathanaigh roghnaithe"
+deselectAll = "Díroghnaigh uile"
+downloadAll = "Íoslódáil gach comhad"
+downloadSelected = "Íoslódáil na comhaid roghnaithe"
+draw = "Tarraing"
+exitRedaction = "Scoir de mhód ceilte"
+exportAll = "Easpórtáil PDF"
+exportSelected = "Easpórtáil na leathanaigh roghnaithe"
+formFill = "Líon foirm"
+language = "Teanga"
+multiTool = "Il-uirlis"
+panMode = "Mód pánála"
+print = "Priontáil PDF"
+readAloud = "Léigh os ard"
+readAloudLanguage = "Teanga"
+readAloudSpeed = "Luas"
+redact = "Ceil"
+rotateLeft = "Rothlaigh go clé"
+rotateRight = "Rothlaigh go deas"
+ruler = "Rialóir / Tomhas"
+save = "Sábháil"
+saveAll = "Sábháil gach comhad"
+saveAs = "Sábháil mar"
+saveChanges = "Sábháil athruithe"
+search = "Cuardaigh PDF"
+selectAll = "Roghnaigh uile"
+selectByNumber = "Roghnaigh de réir uimhreacha leathanaigh"
+selectLanguage = "Roghnaigh teanga"
+share = "Comhroinn"
+toggleAnnotations = "Scoránaigh infheictheacht na n-anótálacha"
+toggleAttachments = "Scoránaigh iatáin"
+toggleBookmarks = "Scoránaigh leabharmharcanna"
+toggleComments = "Tráchtanna"
+toggleLayers = "Scoránaigh sraitheanna"
+toggleSidebar = "Scoránaigh an barra taoibh"
+toggleTheme = "Scoránaigh an téama"
+viewer = "Breathnóir"
 
 [workspace]
 title = "Spás Oibre"

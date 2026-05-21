@@ -1,6 +1,7 @@
 import React, {
   createContext,
   useContext,
+  useMemo,
   useState,
   useEffect,
   useRef,
@@ -63,8 +64,10 @@ export function ActiveDocumentProvider({
     };
   }, []);
 
+  const value = useMemo(() => ({ documentId }), [documentId]);
+
   return (
-    <ActiveDocumentContext.Provider value={{ documentId }}>
+    <ActiveDocumentContext.Provider value={value}>
       {children}
     </ActiveDocumentContext.Provider>
   );

@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import {
+  useToolWorkflow,
+  useToolWorkflowActions,
+} from "@app/contexts/ToolWorkflowContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import ToolPicker from "@app/components/tools/ToolPicker";
 import SearchResults from "@app/components/tools/SearchResults";
@@ -39,17 +42,19 @@ export default function ToolPanel() {
     toolRegistry,
     setSearchQuery,
     selectedToolKey,
+    toolPanelMode,
+    sidebarsVisible,
+    readerMode,
+  } = useToolWorkflow();
+  const {
     handleToolSelect,
     handleBackToTools,
     setPreviewFile,
-    toolPanelMode,
     setToolPanelMode,
     setLeftPanelView,
     setReaderMode,
     setSidebarsVisible,
-    sidebarsVisible,
-    readerMode,
-  } = useToolWorkflow();
+  } = useToolWorkflowActions();
 
   const { setAllButtonsDisabled } = useWorkbenchBar();
   const { preferences, updatePreference } = usePreferences();
@@ -113,6 +118,11 @@ export default function ToolPanel() {
 
     return "18.5rem";
   };
+
+  const handleSelect = useCallback(
+    (id: string) => handleToolSelect(id as ToolId),
+    [handleToolSelect],
+  );
 
   const matchedTextMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -209,7 +219,7 @@ export default function ToolPanel() {
             <div className="flex-1 flex flex-col overflow-y-auto">
               <SearchResults
                 filteredTools={filteredTools}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
+                onSelect={handleSelect}
                 searchQuery={searchQuery}
               />
             </div>
@@ -217,7 +227,7 @@ export default function ToolPanel() {
             <div className="flex-1 flex flex-col overflow-auto">
               <ToolPicker
                 selectedToolKey={selectedToolKey}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
+                onSelect={handleSelect}
                 filteredTools={filteredTools}
                 isSearching={Boolean(
                   searchQuery && searchQuery.trim().length > 0,
