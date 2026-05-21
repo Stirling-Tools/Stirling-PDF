@@ -215,8 +215,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
-  const selectedStyles = isSelected
-    ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" }
+  const selectedBg = isSelected
+    ? { backgroundColor: "var(--tool-button-selected-bg)" }
     : {};
 
   const buttonElement = navProps ? (
@@ -237,7 +237,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
-          ...selectedStyles,
+          ...selectedBg,
         },
         label: { overflow: "visible" },
       }}
@@ -264,7 +264,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
-          ...selectedStyles,
+          ...selectedBg,
         },
         label: { overflow: "visible" },
       }}
@@ -289,7 +289,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           color: "var(--tools-text-and-icon-color)",
           cursor: visuallyUnavailable ? "not-allowed" : undefined,
           overflow: "visible",
-          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}

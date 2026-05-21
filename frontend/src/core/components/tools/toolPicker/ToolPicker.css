@@ -55,6 +55,15 @@
   flex: 1 1 auto;
 }
 
+/* Selected tool highlight — theme-aware via CSS variable */
+:root {
+  --tool-button-selected-bg: var(--mantine-color-gray-2);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --tool-button-selected-bg: var(--mantine-color-dark-4);
+}
+
 /* Compact tool buttons */
 .tool-button {
   font-size: 0.875rem;
