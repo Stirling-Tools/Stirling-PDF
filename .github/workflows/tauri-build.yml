@@ -292,7 +292,7 @@ jobs:
         # tauri-action, using this build's Developer ID identity (set in
         # GITHUB_ENV by the Verify Certificate step above).
         if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
-        run: bash scripts/sign-jpdfium-dylibs-in-bootjar.sh
+        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
 
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
