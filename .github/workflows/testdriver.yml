@@ -20,9 +20,19 @@ permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   deploy:
     if: ${{ vars.CI_PROFILE != 'lite' }}
-    runs-on: ubuntu-latest
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
@@ -51,7 +61,12 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Get version number
@@ -66,7 +81,20 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Build and push test image
+      - name: Build and push test image (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/embedded/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64
+
+      - name: Build and push test image (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
@@ -125,7 +153,8 @@ jobs:
   files-changed:
     if: always()
     name: detect what files changed
-    runs-on: ubuntu-latest
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     timeout-minutes: 3
     outputs:
       frontend: ${{ steps.changes.outputs.frontend }}
@@ -145,9 +174,8 @@ jobs:
 
   test:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: [deploy, files-changed]
-    runs-on: ubuntu-latest
-
+    needs: [pick, deploy, files-changed]
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
@@ -180,8 +208,8 @@ jobs:
           FORCE_COLOR: "3"
 
   cleanup:
-    needs: [deploy, test]
-    runs-on: ubuntu-latest
+    needs: [pick, deploy, test]
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
     if: always()
 
     steps:
