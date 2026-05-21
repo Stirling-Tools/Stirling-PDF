@@ -1,5 +1,5 @@
 /**
-  * A temp stirling logo, may change in future.
+ * A temp stirling logo, may change in future.
  */
 export function StirlingLogoOutline({ size = 20 }: { size?: number }) {
   return (

@@ -332,7 +332,6 @@
   color: var(--text-primary);
 }
 
-
 ::view-transition-old(tool-rail) {
   animation: vt-rail-fade-out 180ms ease-out forwards;
 }

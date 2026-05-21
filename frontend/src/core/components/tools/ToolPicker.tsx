@@ -127,56 +127,52 @@ const ToolPicker = ({
         ) : compact ? (
           /* Resting state: flat list of pinned + recommended only. */
           <Box className="tool-picker__compact">
-              <div style={headerTextStyle}>
-                {t("toolPanel.toolsHeader", "Tools")}
-              </div>
-              {favoriteToolItems.length === 0 &&
-              recommendedItems.length === 0 ? (
-                <NoToolsFound />
-              ) : (
-                <div className="tool-picker__compact-list">
-                  {favoriteToolItems.map(({ id, tool }) => (
+            <div style={HEADER_TEXT_STYLE}>
+              {t("toolPanel.toolsHeader", "Tools")}
+            </div>
+            {favoriteToolItems.length === 0 && recommendedItems.length === 0 ? (
+              <NoToolsFound />
+            ) : (
+              <div className="tool-picker__compact-list">
+                {favoriteToolItems.map(({ id, tool }) => (
+                  <ToolButton
+                    key={`fav-${id}`}
+                    id={id}
+                    tool={tool}
+                    isSelected={selectedToolKey === id}
+                    onSelect={onSelect}
+                    hasStars
+                  />
+                ))}
+                {recommendedItems
+                  .filter(
+                    ({ id }) => !favoriteToolItems.some((fav) => fav.id === id),
+                  )
+                  .map(({ id, tool }) => (
                     <ToolButton
-                      key={`fav-${id}`}
-                      id={id}
+                      key={`rec-${id}`}
+                      id={id as ToolId}
                       tool={tool}
                       isSelected={selectedToolKey === id}
                       onSelect={onSelect}
                       hasStars
-                      showDescription
                     />
                   ))}
-                  {recommendedItems
-                    .filter(
-                      ({ id }) =>
-                        !favoriteToolItems.some((fav) => fav.id === id),
-                    )
-                    .map(({ id, tool }) => (
-                      <ToolButton
-                        key={`rec-${id}`}
-                        id={id as ToolId}
-                        tool={tool}
-                        isSelected={selectedToolKey === id}
-                        onSelect={onSelect}
-                        hasStars
-                        showDescription
-                      />
-                    ))}
-                </div>
-              )}
-              {onShowAllTools && (
-                <Button
-                  variant="subtle"
-                  size="sm"
-                  fullWidth
-                  onClick={onShowAllTools}
-                  className="tool-picker__view-all"
-                  aria-label={t("toolPanel.viewAllTools", "View all tools")}
-                >
-                  {t("toolPanel.viewAllTools", "View all tools")}
-                </Button>
-              )}
-            </Box>
+              </div>
+            )}
+            {onShowAllTools && (
+              <Button
+                variant="subtle"
+                size="sm"
+                fullWidth
+                onClick={onShowAllTools}
+                className="tool-picker__view-all"
+                aria-label={t("toolPanel.viewAllTools", "View all tools")}
+              >
+                {t("toolPanel.viewAllTools", "View all tools")}
+              </Button>
+            )}
+          </Box>
         ) : (
           <>
             {/* All-tools view: favourites + recommended + all subcategories. */}

@@ -25,11 +25,17 @@
   display: block;
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--mantine-color-blue-5) 40%, var(--border-subtle));
+  border: 1px solid
+    color-mix(in srgb, var(--mantine-color-blue-5) 40%, var(--border-subtle));
   border-radius: 0.625rem;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--mantine-color-blue-6) 6%, var(--mantine-color-body)) 0%,
+    color-mix(
+        in srgb,
+        var(--mantine-color-blue-6) 6%,
+        var(--mantine-color-body)
+      )
+      0%,
     var(--mantine-color-body) 100%
   );
   transition:
@@ -38,10 +44,19 @@
 }
 
 .agent-button:hover {
-  border-color: color-mix(in srgb, var(--mantine-color-blue-5) 65%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-5) 65%,
+    var(--border-subtle)
+  );
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--mantine-color-blue-6) 12%, var(--mantine-color-default-hover)) 0%,
+    color-mix(
+        in srgb,
+        var(--mantine-color-blue-6) 12%,
+        var(--mantine-color-default-hover)
+      )
+      0%,
     var(--mantine-color-default-hover) 100%
   );
 }
@@ -86,7 +101,11 @@
 
 .agent-button--coming-soon:hover {
   opacity: 0.85;
-  border-color: color-mix(in srgb, var(--mantine-color-gray-4) 60%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-gray-4) 60%,
+    var(--border-subtle)
+  );
   background: var(--mantine-color-default-hover);
 }
 
@@ -124,7 +143,11 @@
 /* Dark mode — sidebar */
 [data-mantine-color-scheme="dark"] .agent-button--coming-soon {
   background: transparent;
-  border-color: color-mix(in srgb, var(--mantine-color-dark-4) 60%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-dark-4) 60%,
+    transparent
+  );
 }
 
 [data-mantine-color-scheme="dark"] .agent-button--coming-soon:hover {
@@ -133,7 +156,11 @@
 }
 
 [data-mantine-color-scheme="dark"] .agent-button {
-  border-color: color-mix(in srgb, var(--mantine-color-blue-7) 55%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-7) 55%,
+    var(--border-subtle)
+  );
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--mantine-color-blue-9) 35%, transparent) 0%,
@@ -142,10 +169,19 @@
 }
 
 [data-mantine-color-scheme="dark"] .agent-button:hover {
-  border-color: color-mix(in srgb, var(--mantine-color-blue-5) 60%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-5) 60%,
+    var(--border-subtle)
+  );
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--mantine-color-blue-8) 45%, rgba(255, 255, 255, 0.04)) 0%,
+    color-mix(
+        in srgb,
+        var(--mantine-color-blue-8) 45%,
+        rgba(255, 255, 255, 0.04)
+      )
+      0%,
     rgba(255, 255, 255, 0.04) 100%
   );
 }
@@ -361,4 +397,3 @@
     animation-duration: 1ms !important;
   }
 }
-

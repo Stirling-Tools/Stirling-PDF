@@ -59,9 +59,7 @@ export default function ToolPanel({
             selectedToolKey={selectedToolKey}
             onSelect={(id) => selectTool(id as ToolId)}
             filteredTools={filteredTools}
-            isSearching={Boolean(
-              allToolsView && searchQuery && searchQuery.trim().length > 0,
-            )}
+            isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
             compact={compactProp ?? !allToolsView}
             onShowAllTools={onShowAllTools}
           />
