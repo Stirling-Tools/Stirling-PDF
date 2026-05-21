@@ -442,10 +442,8 @@ compare_file_lists() {
             echo "New files created during test:"
             cat "${diff_file}.added" | sed 's/^> //'
 
-            # Check for tmp files. JPDFium's NativeLoader extracts native
-            # libs (libpdfium.so, libjpdfium.so, ICU, harfbuzz, etc.) into
-            # /tmp/.../jpdfium-<id>/ on first use and registers deleteOnExit
-            # so they're cleaned up at JVM shutdown; they're not leaks.
+            # JPDFium extracts native libs to /tmp/.../jpdfium-<id>/ on first use
+            # and registers deleteOnExit; not a leak.
             grep -i "tmp\|temp" "${diff_file}.added" \
                 | grep -v '/jpdfium-[0-9]\+/' \
                 > "${diff_file}.tmp" || true

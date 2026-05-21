@@ -205,10 +205,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     let java_options = vec![
         "-Xmx2g",
-        // FFM native access (for JPDFium) is granted by the
-        // 'Enable-Native-Access: ALL-UNNAMED' manifest attribute baked into
-        // the Spring Boot bootJar (see app/core/build.gradle). No CLI flag
-        // needed here.
+        // FFM access for JPDFium is granted via Enable-Native-Access in the bootJar manifest.
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,

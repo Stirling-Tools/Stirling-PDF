@@ -63,7 +63,6 @@ public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
         boolean success = false;
@@ -82,11 +81,9 @@ public class MergeController {
         }
     }
 
-    // Re-order files to match the explicit order provided by the front-end.
     // fileOrder is newline-delimited original filenames in the desired order.
     private static MultipartFile[] reorderFilesByProvidedOrder(
             MultipartFile[] files, String fileOrder) {
-        // Split by various line endings and trim each entry
         String[] desired =
                 stirling.software.common.util.RegexPatternUtils.getInstance()
                         .getNewlineSplitPattern()
@@ -113,7 +110,6 @@ public class MergeController {
         return ordered.toArray(new MultipartFile[0]);
     }
 
-    // Returns a comparator for sorting MultipartFile arrays based on the given sort type
     private Comparator<MultipartFile> getSortComparator(String sortType) {
         return switch (sortType) {
             case "byFileName" ->
@@ -161,18 +157,16 @@ public class MergeController {
                             return 0;
                         }
                     };
-            case "orderProvided" -> (file1, file2) -> 0; // Default is the order provided
-            default -> (file1, file2) -> 0; // Default is the order provided
+            case "orderProvided" -> (file1, file2) -> 0;
+            default -> (file1, file2) -> 0;
         };
     }
 
-    // Parse client file IDs from JSON string
     private String[] parseClientFileIds(String clientFileIds) {
         if (clientFileIds == null || clientFileIds.trim().isEmpty()) {
             return new String[0];
         }
         try {
-            // Simple JSON array parsing - remove brackets and split by comma
             String trimmed = clientFileIds.trim();
             if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
                 String inside = trimmed.substring(1, trimmed.length() - 1).trim();
@@ -192,39 +186,29 @@ public class MergeController {
         return new String[0];
     }
 
-    // Adds a table of contents to the merged document using filenames as chapter titles
     private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
-        // Create the document outline
         PDDocumentOutline outline = new PDDocumentOutline();
         mergedDocument.getDocumentCatalog().setDocumentOutline(outline);
 
-        int pageIndex = 0; // Current page index in the merged document
-
-        // Iterate through the original files
+        int pageIndex = 0;
         for (MultipartFile file : files) {
-            // Get the filename without extension to use as bookmark title
             String filename = file.getOriginalFilename();
             String title = GeneralUtils.removeExtension(filename);
 
-            // Create an outline item for this file
             PDOutlineItem item = new PDOutlineItem();
             item.setTitle(title);
 
-            // Set the destination to the first page of this file in the merged document
             if (pageIndex < mergedDocument.getNumberOfPages()) {
                 PDPage page = mergedDocument.getPage(pageIndex);
                 item.setDestination(page);
             }
-
-            // Add the item to the outline
             outline.addLast(item);
 
-            // Increment page index for the next file
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
                 pageIndex += doc.getNumberOfPages();
             } catch (IOException e) {
                 ExceptionUtils.logException("document loading for TOC generation", e);
-                pageIndex++; // Increment by at least one if we can't determine page count
+                pageIndex++;
             }
         }
     }
@@ -242,7 +226,7 @@ public class MergeController {
                     }
                 }
 
-                // Fallback to XMP metadata if Info dates are missing
+                // Fall back to XMP if Info dict has no dates.
                 PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
                 if (metadata != null) {
                     try (InputStream is = metadata.createInputStream()) {
@@ -293,7 +277,7 @@ public class MergeController {
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
-        List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
+        List<File> filesToDelete = new ArrayList<>();
         TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
@@ -304,57 +288,38 @@ public class MergeController {
             files = new MultipartFile[0];
         }
 
-        // If front-end provided explicit visible order, honor it and override backend sorting
+        // Front-end visible order, when provided, wins over the request's sortType.
         if (fileOrder != null && !fileOrder.isBlank()) {
             log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
             log.info("Sorting files based on sortType: {}", request.getSortType());
-            Arrays.sort(
-                    files,
-                    getSortComparator(
-                            request.getSortType())); // Sort files based on requested sort type
+            Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
-            // Stage each MultipartFile to a real File and pre-validate via JPDFium's
-            // cheap header-parse open. Pre-validation surfaces which input is corrupted
-            // BEFORE we attempt to merge, so the error tells the user which file is
-            // bad rather than a generic "merge failed".
+            // Stage each upload to disk and pre-validate via JPDFium's header parse so
+            // a corrupted input gets flagged by index rather than as a generic merge fail.
             List<Path> inputPaths = new ArrayList<>(files.length);
             List<Integer> invalidIndexes = new ArrayList<>();
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
-                File tempFile =
-                        tempFileManager.convertMultipartFileToFile(
-                                multipartFile); // Convert MultipartFile to File
-                filesToDelete.add(tempFile); // Add temp file to the list for later deletion
+                File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                filesToDelete.add(tempFile);
                 inputPaths.add(tempFile.toPath());
 
                 try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
-                    // OK — header parsed cleanly
+                    // header parsed cleanly
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
                 }
             }
 
-            // Merge via JPDFium's native PDFium-backed importer. PDFium runs
-            // entirely off-heap on its own arena allocator, so the Java heap
-            // footprint stays flat at the size of the bridge handles (KB-scale)
-            // rather than ballooning with the size of the input PDFs.
-            // Apache PDFBox's PDFMergerUtility, by contrast, materialises every
-            // PDF object as a Java COSObject — on a 1.3 GB image-heavy merge
-            // this is the difference between ~330 MB peak heap and ~1.43 GB.
-            //
-            // PDFium's FPDF_ImportPagesByIndex carries PAGES, not the outline
-            // tree, so we capture each source's bookmarks (with the page
-            // offset where its pages will land) BEFORE merge, then inject the
-            // combined outline via the streaming setBookmarks variant. This
-            // matches PDFBox's default "preserve source bookmarks" behaviour
-            // without forcing us to load the merged 1.3 GB doc back into
-            // PDFBox just to add an outline.
+            // PDFium runs off-heap, so peak Java heap stays roughly constant in input size.
+            // FPDF_ImportPagesByIndex only carries pages, so we capture+offset bookmarks
+            // ourselves and inject them via the streaming setBookmarks.
             int[] pageCounts;
             try {
                 pageCounts =
@@ -367,11 +332,9 @@ public class MergeController {
                 throw e;
             }
 
-            // Signature removal still needs PDFBox's per-field AcroForm flatten
-            // — JPDFium's flatten is a full-page bake that would also fuse
-            // non-signature widgets into the content stream. We pre-check via
-            // JPDFium's signatures() so the PDFBox round-trip only runs when
-            // the merged document actually contains signature fields.
+            // Signature flatten still uses PDFBox (JPDFium's flatten fuses ALL widgets,
+            // not just signature fields). Skip the PDFBox round-trip when there's nothing to
+            // flatten.
             boolean sigFlattenNeeded = false;
             if (removeCertSign) {
                 try (PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
@@ -386,7 +349,7 @@ public class MergeController {
                 if (!sigFlattenNeeded) {
                     log.info(
                             "removeCertSign requested but merged document has no signature"
-                                    + " fields — skipping PDFBox flatten pass");
+                                    + " fields; skipping PDFBox flatten pass");
                 }
             }
 
@@ -413,9 +376,8 @@ public class MergeController {
                     }
                 }
             } else {
-                // Fast path: the merged temp file IS the output. Move it into
-                // a fresh TempFile handle so the caller's response can close
-                // it independently of `mt`'s try-with-resources scope.
+                // Promote the merged temp file to a fresh TempFile so the response
+                // owns it independently of mt's try-with-resources.
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
                 try {
                     Files.copy(
@@ -440,7 +402,7 @@ public class MergeController {
             throw ex;
         } finally {
             for (File file : filesToDelete) {
-                tempFileManager.deleteTempFile(file); // Delete temporary files
+                tempFileManager.deleteTempFile(file);
             }
         }
 
@@ -452,38 +414,19 @@ public class MergeController {
     }
 
     /**
-     * JPDFium-backed merge with bookmark preservation.
+     * Merge {@code inputPaths} via JPDFium, preserving source bookmarks with page-offset
+     * translation and optionally prepending a TOC chapter header per source.
      *
-     * <p>Opens every source PDF natively (off-heap PDFium arena allocator), captures each source's
-     * bookmarks with the page offset where its pages will land in the merged document, runs
-     * PDFium's page importer to assemble the merged content, builds a combined {@link BookmarkTree}
-     * (TOC chapter headers when {@code generateToc} is true, followed by the offset-translated
-     * source bookmarks), and writes the result to {@code outputPath} via the streaming {@link
-     * PdfBookmarkEditor#setBookmarks(PdfDocument, BookmarkTree, Path)} — which appends the outline
-     * as an incremental update and never materialises the merged file in heap.
-     *
-     * <p>This restores PDFBox's "source bookmarks survive the merge" behaviour without forcing us
-     * to load the merged 1.3 GB document back into a PDDocument graph (which would erase the 76%
-     * heap saving).
-     *
-     * @param inputPaths staged source PDF paths in merge order
-     * @param files original MultipartFiles — used for TOC chapter titles
-     * @param generateToc when true, prepend a chapter-header bookmark per source (filename without
-     *     extension, points at the first page of that source's contribution)
-     * @param outputPath where the merged PDF should be written
      * @return page-count-per-input array, parallel to {@code inputPaths}
      */
     private int[] mergeWithJpdfium(
             List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
             throws IOException {
         if (inputPaths.isEmpty()) {
-            // No-op merge — write an empty PDF placeholder so callers always get a file.
+            // Match PDFBox: produce an empty file so callers always get an output.
             try (PdfDocument empty = PdfDocument.open(new byte[0])) {
                 empty.save(outputPath);
             } catch (Exception ignored) {
-                // PdfDocument.open(byte[0]) will likely fail; write a literal
-                // empty file in that case. PDFBox would also produce an empty
-                // doc here, so behaviour parity is preserved.
                 Files.write(outputPath, new byte[0]);
             }
             return new int[0];
@@ -501,9 +444,7 @@ public class MergeController {
                 docs.add(doc);
                 pageCounts[i] = doc.pageCount();
                 pageOffsets[i] = runningOffset;
-                // Capture the source's bookmark tree NOW while the doc is
-                // open. After merge the source docs get closed, so any
-                // bookmark traversal has to happen here.
+                // Bookmarks must be read while the source doc is still open.
                 sourceBookmarks.add(doc.bookmarks());
                 runningOffset += pageCounts[i];
             }
@@ -513,12 +454,10 @@ public class MergeController {
 
             try (PdfDocument merged = PdfMerge.merge(docs)) {
                 if (combinedTree.entries().isEmpty()) {
-                    // No source bookmarks AND no TOC requested → just save.
                     merged.save(outputPath);
                 } else {
-                    // setBookmarks streams the doc to outputPath then
-                    // appends the outline as an incremental update —
-                    // KB-scale heap regardless of merged-file size.
+                    // Streams the merged doc to disk then appends the outline as
+                    // an incremental update; heap stays KB-scale.
                     PdfBookmarkEditor.setBookmarks(merged, combinedTree, outputPath);
                 }
             }
@@ -529,7 +468,7 @@ public class MergeController {
                 try {
                     doc.close();
                 } catch (Exception ignored) {
-                    // best-effort close
+                    // best-effort
                 }
             }
         }
@@ -537,13 +476,9 @@ public class MergeController {
     }
 
     /**
-     * Combine each source's bookmarks (with page-offset translation) plus the optional TOC chapter
-     * headers into a single flat {@link BookmarkTree}.
-     *
-     * <p>Hierarchy is flattened: a source bookmark's children become siblings in the merged
-     * outline. This matches the existing {@link BookmarkTree.Builder} API surface (only {@code add}
-     * for top-level entries) and covers the common single-level outline case. For deeply-nested
-     * source outlines, titles are still preserved but parent/child structure is lost.
+     * Flatten each source's bookmarks (children become siblings, parent/child structure is lost
+     * because {@link BookmarkTree.Builder} only takes top-level entries) with page-offset
+     * translation, optionally prepending a TOC chapter header per source.
      */
     private BookmarkTree buildCombinedBookmarkTree(
             MultipartFile[] files,
@@ -574,18 +509,11 @@ public class MergeController {
     }
 
     /**
-     * Iteratively walk {@code root} and its descendants depth-first using an explicit deque,
-     * appending each internal (GoTo-page) entry as a top-level bookmark with {@code offset} added
-     * to the page index. External-URI / launch bookmarks are skipped because they don't have a
-     * useful destination in the merged doc.
-     *
-     * <p>Iterative (not recursive) so a maliciously deep or cyclically self-referencing outline
-     * tree can't blow the JVM stack. A visited-set further prevents cycles from looping forever,
-     * and a hard cap on visited nodes bounds the work for pathological inputs.
+     * Iterative DFS over {@code root}, appending each GoTo-page bookmark as a top-level entry with
+     * {@code offset} added. Iterative + visited-set + node cap guard against hostile inputs (deep
+     * nesting, cycles, huge outlines).
      */
     private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark root, int offset) {
-        // Cap roughly matches PDF outline limits in the wild; legitimate
-        // documents have hundreds to low thousands of entries at most.
         final int maxNodes = 100_000;
         java.util.Deque<Bookmark> stack = new java.util.ArrayDeque<>();
         java.util.Set<Bookmark> visited =
@@ -595,7 +523,7 @@ public class MergeController {
         while (!stack.isEmpty() && processed < maxNodes) {
             Bookmark bm = stack.pop();
             if (!visited.add(bm)) {
-                continue; // cycle guard
+                continue;
             }
             processed++;
             if (bm.isInternal() && bm.title() != null) {
@@ -603,8 +531,7 @@ public class MergeController {
             }
             if (bm.hasChildren()) {
                 List<Bookmark> children = bm.children();
-                // Push in reverse so iteration order matches recursive
-                // depth-first traversal (left-to-right child order).
+                // Reverse-push keeps DFS left-to-right.
                 for (int i = children.size() - 1; i >= 0; i--) {
                     stack.push(children.get(i));
                 }

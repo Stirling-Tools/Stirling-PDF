@@ -13,11 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.jpdfium.PdfDocument;
 
-/**
- * Validates that the Stirling-Tools JPDFium snapshot artifacts resolve from Maven Central snapshots
- * and that the FFM bridge loads and parses a PDF end-to-end. If the test passes, the package is
- * consumable by downstream projects with no auth, no PAT, and no extra repo setup.
- */
+/** End-to-end smoke check: JPDFium resolves from Maven Central and opens a sample PDF. */
 class JPDFiumSmokeTest {
 
     @Test

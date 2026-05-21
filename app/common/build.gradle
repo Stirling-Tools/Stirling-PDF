@@ -60,26 +60,11 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    // Stirling-Tools JPDFium — Java 25 FFM bindings for the EmbedPDF PDFium fork.
-    // Provides PDF rendering, text extraction, content-stripping redaction, etc.
-    // Resolves from Maven Central; per-platform natives jars ship the
-    // .so/.dylib/.dll bundles, NativeLoader picks the right one at runtime.
     api 'com.stirling:jpdfium:1.0.0'
 
-    // Per-platform JPDFium natives selection.
-    //
-    //   -PjpdfiumPlatforms=all                                  (default — server jar
-    //                                                            ships every OS, runs
-    //                                                            anywhere)
-    //   -PjpdfiumPlatforms=darwin-arm64                         (single platform — Tauri
-    //                                                            macOS arm64 bundle)
-    //   -PjpdfiumPlatforms=darwin-x64,darwin-arm64              (multi — universal macOS)
-    //
-    // Each platform's natives jar is STORED into the bootJar (~11-12 MB raw bytes
-    // each — Spring Boot doesn't recompress nested jars). Building a per-OS Tauri
-    // bundle with only that OS's natives saves ~45 MB out of the ~58 MB JPDFium
-    // overhead. Default 'all' keeps the server / Docker / Maven Central jar
-    // portable across hosts.
+    // -PjpdfiumPlatforms accepts 'all' (default) or a comma list of platform keys
+    // (linux-x64, linux-arm64, darwin-x64, darwin-arm64, windows-x64). Per-OS Tauri
+    // bundles use this to ship only their target's natives jar (~11-12 MB each).
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
     def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
     def jpdfiumPlatforms = jpdfiumPlatformsProp == 'all'

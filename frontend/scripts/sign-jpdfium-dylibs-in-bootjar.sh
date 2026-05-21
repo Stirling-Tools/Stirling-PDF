@@ -1,28 +1,10 @@
 #!/usr/bin/env bash
-# Sign the JPDFium .dylib files nested inside the bootJar's JPDFium native
-# jars so Apple's notarytool stops rejecting the Tauri .app build.
+# Sign every .dylib inside the bootJar's JPDFium native jars so Apple's
+# notarytool accepts the Tauri .app (Tauri's own codesign walk doesn't
+# descend into .jar files, JPDFium's published natives are unsigned).
 #
-# Background: tauri-build's macos-universal step calls notarytool, which
-# walks INTO nested .jar files inside the .app and validates the signature
-# on every binary it finds. The JPDFium native jars
-# (jpdfium-natives-darwin-x64-*.jar / -arm64-*.jar) ship their .dylibs
-# unsigned because JPDFium's publish workflow has no Apple Developer
-# credentials. The result downstream is notarytool logging
-# "The binary is not signed" and failing the build.
-#
-# Tauri's own codesign walk doesn't descend into .jar files (jars are
-# opaque to it), so the fix has to happen before the .app is built: open
-# the JPDFium native jars, sign each .dylib with this build's Developer
-# ID, repack the native jars, repack the bootJar.
-#
-# Pre: gradle bootJar already produced the fat jar (typically via
-#      `task desktop:prepare`).
-# Pre: APPLE_SIGNING_IDENTITY is set to a
-#      "Developer ID Application: ..." identity that's been imported
-#      into the runner's keychain.
-# Post: bootJar contains JPDFium native jars whose .dylibs are signed
-#       with APPLE_SIGNING_IDENTITY + the runtime hardened option +
-#       a secure timestamp.
+# Pre: gradle bootJar has produced the fat jar (e.g. via `task desktop:prepare`).
+# Pre: APPLE_SIGNING_IDENTITY points at a Developer ID Application identity in the keychain.
 #
 # Usage: sign-jpdfium-dylibs-in-bootjar.sh [path/to/stirling-pdf-*.jar]
 
@@ -48,12 +30,8 @@ if ! command -v jar >/dev/null 2>&1; then
     exit 0
 fi
 
-# Targets: by default sign every stirling-pdf-*.jar in both the Gradle
-# output and the Tauri staging copy. task desktop:jlink:jar copies the
-# Gradle bootJar into frontend/src-tauri/libs/ BEFORE this script runs,
-# so signing only the Gradle copy leaves the Tauri-bundled jar unsigned
-# and notarytool rejects the .app. Passing an explicit path overrides
-# the default search.
+# Sign both the Gradle output AND the Tauri staging copy
+# (frontend/src-tauri/libs/), since Tauri bundles the staging copy.
 BOOTJARS=()
 if [ -n "${1:-}" ]; then
     BOOTJARS+=("$1")
@@ -79,10 +57,8 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
     # shellcheck disable=SC2064
     trap "rm -rf '$WORK'" EXIT
 
-    # Resolve the exact paths of the JPDFium darwin native jars inside
-    # this bootJar — `jar xf` doesn't support glob patterns in its path
-    # args, so we have to list-then-extract by exact path. Portable read
-    # loop (mapfile is bash 4+; macOS ships bash 3.2 at /bin/bash).
+    # List then extract by exact path (`jar xf` has no glob support).
+    # Portable while-read loop because macOS ships bash 3.2 (no mapfile).
     NATIVE_JAR_PATHS=()
     while IFS= read -r line; do
         [ -n "$line" ] || continue
@@ -96,10 +72,7 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         continue
     fi
 
-    # Extract those exact entries to $WORK/BOOT-INF/lib/*.jar. The
-    # ${ARR[@]+"${ARR[@]}"} guard expands the array only when set —
-    # works around bash 3.2 treating "${ARR[@]}" as unbound under set -u
-    # even when the array is empty.
+    # ${ARR[@]+...} guard: bash 3.2 treats an empty "${ARR[@]}" as unbound under set -u.
     ( cd "$WORK" && jar xf "$BOOTJAR" ${NATIVE_JAR_PATHS[@]+"${NATIVE_JAR_PATHS[@]}"} ) \
         || { echo "jar xf failed to extract natives jars" >&2; exit 1; }
 
@@ -128,9 +101,8 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         fi
         echo "    signed $signed dylib(s)"
 
-        # Repack the native jar from the exploded tree. -0 stores
-        # without deflate (dylibs are already incompressible and Spring
-        # Boot's NestedJarFile prefers stored entries).
+        # -0 stores without deflate (dylibs don't compress, and Spring Boot's
+        # NestedJarFile prefers stored entries).
         rm -f "$nat_jar"
         ( cd "$exp_dir" && jar cfM0 "$nat_jar" . )
         ANY_SIGNED=1
@@ -142,9 +114,7 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
         continue
     fi
 
-    # Update the original bootJar in place with the freshly-signed
-    # natives jars. `jar uf` adds/replaces entries by path inside the
-    # archive.
+    # Replace the natives jars inside the bootJar in place.
     ( cd "$WORK" && jar uf "$BOOTJAR" \
         BOOT-INF/lib/jpdfium-natives-darwin-x64-*.jar \
         BOOT-INF/lib/jpdfium-natives-darwin-arm64-*.jar ) \

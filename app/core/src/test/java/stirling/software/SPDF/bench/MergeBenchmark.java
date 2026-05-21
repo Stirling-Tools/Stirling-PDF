@@ -46,36 +46,15 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
 /**
- * Apples-to-apples memory benchmark for the merge tool: PDFBox's {@link PDFMergerUtility} (old
- * MergeController path) vs JPDFium's {@link PdfMerge#mergeFiles(List)} (new path).
+ * Heap + wall-clock benchmark: PDFBox PDFMergerUtility vs JPDFium PdfMerge.
  *
- * <p>Generates two 100-page test PDFs each with a unique embedded JPEG per page, merges them,
- * samples heap usage every 25 ms during the merge, and reports peak heap. Run with:
- *
- * <pre>{@code
- * ./gradlew :stirling-pdf:test --tests '*MergeBenchmark*' -i
- * }</pre>
- *
- * or invoke directly:
+ * <p>Generates N synthetic image-heavy PDFs, merges them with each engine, samples heap every 25 ms
+ * during the merge, and reports peak heap (Java heap only - PDFium's off-heap arena is
+ * intentionally excluded, RSS is reported separately).
  *
  * <pre>{@code
- * java -cp <classpath> stirling.software.SPDF.bench.MergeBenchmark
+ * ./gradlew :stirling-pdf:test --tests '*MergeBenchmark*' -Dmerge.bench=true
  * }</pre>
- *
- * <p>Outputs:
- *
- * <ul>
- *   <li>Input PDF sizes
- *   <li>Pre-merge baseline heap (after forced GC)
- *   <li>PDFBox peak heap during merge
- *   <li>JPDFium peak heap during merge
- *   <li>Memory improvement %
- * </ul>
- *
- * <p>Off-heap / native memory used by JPDFium is NOT counted toward "heap peak" — that is the whole
- * point of the comparison. PDFium's arena lives outside the JVM heap, so off-heap usage shows up as
- * RSS growth which we report separately from {@code /proc/self/status} on Linux or {@code
- * GetProcessMemoryInfo} via JMX on Windows.
  */
 public final class MergeBenchmark {
 
@@ -83,16 +62,11 @@ public final class MergeBenchmark {
     private static final int IMAGE_W = Integer.getInteger("merge.bench.imgW", 800);
     private static final int IMAGE_H = Integer.getInteger("merge.bench.imgH", 600);
     private static final int DOC_COUNT = Integer.getInteger("merge.bench.docs", 2);
-    // Inject this many internal bookmarks per generated input PDF. The
-    // merged document should contain (DOC_COUNT × INTERNAL_BOOKMARKS)
-    // entries from sources, plus DOC_COUNT chapter headers added by the
-    // TOC step. Lets us validate that source bookmarks are preserved
-    // through the merge.
+    // Sources will inject this many GoTo-page bookmarks each, so the merged doc
+    // should have DOC_COUNT*INTERNAL_BOOKMARKS source entries (+DOC_COUNT TOC headers when on).
     private static final int INTERNAL_BOOKMARKS =
             Integer.getInteger("merge.bench.internalBookmarks", 0);
-    // 0.0..1.0 JPEG quality. Default 0.6 keeps benchmarks small;
-    // bump to 0.95+ with larger image dimensions to push input PDFs into
-    // the hundreds-of-MB range.
+    // 0.0..1.0; bump toward 0.95 with larger images to drive inputs into the 100s of MB.
     private static final float JPEG_QUALITY =
             Float.parseFloat(System.getProperty("merge.bench.jpegQ", "0.6"));
     private static final boolean WITH_TOC =
@@ -100,60 +74,29 @@ public final class MergeBenchmark {
     private static final boolean WITH_SIG_REMOVAL =
             Boolean.parseBoolean(System.getProperty("merge.bench.sigRemoval", "false"));
 
-    /**
-     * When true, the JPDFium engine writes TOC via {@link
-     * PdfBookmarkEditor#setBookmarks(PdfDocument, BookmarkTree, java.nio.file.Path)} (streaming,
-     * KB-scale heap) instead of doing a PDFBox load+save post-pass. Enables comparing the two TOC
-     * strategies in the same benchmark run.
-     */
+    // When true, JPDFium TOC goes via streaming setBookmarks (KB-scale heap) instead of
+    // load+save through PDFBox. Lets the benchmark contrast the two strategies.
     private static boolean withJpdfiumToc =
             Boolean.parseBoolean(System.getProperty("merge.bench.jpdfiumToc", "false"));
 
-    // Run each scenario this many times back-to-back, report median heap
-    // and wall-clock. Cuts noise from GC scheduling + disk cache cold-start
-    // on the first iteration. Median is ~immune to a single warm-up outlier.
+    // Median over N iterations to absorb GC + disk cache outliers on the first run.
     private static final int ITERATIONS =
             Math.max(1, Integer.getInteger("merge.bench.iterations", 1));
     private static final long SAMPLE_PERIOD_MS = 25L;
 
-    // Mutable scenario flags so compareAllMergeScenarios() can run the same
-    // benchmark loop three times without re-generating the 1+ GB of input
-    // PDFs. The static initialisers above set the defaults from system
-    // properties; the all-scenarios test toggles these per iteration.
+    // Mutable so compareAllMergeScenarios() can re-toggle scenarios without
+    // regenerating the inputs.
     private static boolean withToc = WITH_TOC;
     private static boolean withSigRemoval = WITH_SIG_REMOVAL;
 
-    /**
-     * Invoke explicitly with:
-     *
-     * <pre>{@code
-     * ./gradlew :stirling-pdf:test --tests '*MergeBenchmark*' \
-     *     -Dmerge.bench=true -Dmerge.bench.docs=4 -Dmerge.bench.pages=70
-     * }</pre>
-     *
-     * <p>Gated behind {@code -Dmerge.bench=true} so it stays out of normal CI runs — generating the
-     * 1+ GB of input PDFs takes ~60 s and the merges burn another ~30 s, neither of which belongs
-     * in regular test cycles.
-     */
+    /** Gated by -Dmerge.bench=true (generating the inputs alone takes ~60s). */
     @Test
     @EnabledIfSystemProperty(named = "merge.bench", matches = "true")
     void compareMergeMemoryFootprint() throws Exception {
         main(new String[0]);
     }
 
-    /**
-     * Runs three back-to-back scenarios on a single shared set of inputs:
-     *
-     * <ol>
-     *   <li>plain merge (no TOC, no sig removal)
-     *   <li>merge + TOC generation
-     *   <li>merge + signature removal
-     * </ol>
-     *
-     * <p>Saves ~10 minutes of wall-clock vs running three separate test invocations because the 1+
-     * GB of input PDFs only gets generated once. Gated behind {@code -Dmerge.bench=true} like the
-     * other benchmark.
-     */
+    /** Plain + TOC + sigRemoval scenarios on a single shared input set. */
     @Test
     @EnabledIfSystemProperty(named = "merge.bench", matches = "true")
     void compareAllMergeScenarios() throws Exception {
@@ -190,8 +133,7 @@ public final class MergeBenchmark {
                                     .sum()
                             / 1024);
 
-            // One small warmup pass against a single doc — enough to JIT the
-            // hot merge code paths without paying the full benchmark cost.
+            // One-doc warmup to JIT the hot paths.
             System.out.println("--- Warmup pass (1 input, results discarded) ---");
             withToc = false;
             withSigRemoval = false;
@@ -238,11 +180,11 @@ public final class MergeBenchmark {
             }
             System.out.println();
         } finally {
-            // Leave inputs/outputs on disk for inspection.
+            // inputs/outputs left on disk for inspection
         }
     }
 
-    /** Run one scenario (defined by the two flags) on a shared set of inputs. */
+    /** One scenario on a shared set of inputs. */
     private static ScenarioRow runScenario(
             String name, List<Path> inputs, Path workDir, boolean toc, boolean sig)
             throws Exception {
@@ -253,10 +195,6 @@ public final class MergeBenchmark {
         System.out.printf("--- Scenario: %s (TOC=%s, removeCertSign=%s) ---%n", name, toc, sig);
         System.out.printf("  baseline heap: %,d KB%n", baseline / 1024);
 
-        // Run each engine ITERATIONS times back-to-back; report median heap
-        // and median wall-clock. Median filters out a single warm-up outlier
-        // or a transient GC pause without needing to discard "the first run"
-        // by hand.
         Path outPdfbox = workDir.resolve("out-" + name + "-pdfbox.pdf");
         IterResult pdfBox =
                 runIterations("PDFBox", () -> runPdfBoxMerge(inputs, outPdfbox), baseline);
@@ -271,8 +209,6 @@ public final class MergeBenchmark {
         int jpdfiumBookmarks = countBookmarks(outJpdfium);
         printIter("JPDFium", jpdfium, Files.size(outJpdfium), jpdfiumBookmarks);
 
-        // Validation: with INTERNAL_BOOKMARKS=10 and DOC_COUNT=4 we expect
-        // 40 source bookmarks. Adding TOC contributes 4 chapter headers.
         int expectedFromSources = INTERNAL_BOOKMARKS * inputs.size();
         int expectedTocChapters = toc ? inputs.size() : 0;
         System.out.printf(
@@ -347,8 +283,6 @@ public final class MergeBenchmark {
                 inputs.add(workDir.resolve("doc-" + (char) ('a' + i) + ".pdf"));
             }
 
-            // Build inputs in a fresh JVM-warm phase BEFORE the timed runs so
-            // class loading / JIT warmup doesn't pollute the merge samples.
             System.out.printf(
                     "Scenario: TOC=%s, removeCertSign=%s, jpegQuality=%.2f%n",
                     withToc, withSigRemoval, JPEG_QUALITY);
@@ -365,11 +299,8 @@ public final class MergeBenchmark {
             long buildMs = (System.nanoTime() - t0) / 1_000_000;
             System.out.printf("  generation took %,d ms%n%n", buildMs);
 
-            // Warmup pass: prime classloaders + native lib load + JIT so the
-            // FIRST measured run doesn't get blamed for everything that's
-            // normally amortised across many requests. For big inputs (>50 MB
-            // per doc) we shrink the warmup to a single input — the JIT only
-            // needs to see the hot code paths, not run on the full payload.
+            // Warmup primes classloaders + native lib + JIT. For big inputs
+            // a single doc is enough to hit the hot paths.
             long perDocBytes = Files.size(inputs.getFirst());
             List<Path> warmupInputs =
                     perDocBytes > 50L * 1024 * 1024 ? List.of(inputs.getFirst()) : inputs;
@@ -380,32 +311,25 @@ public final class MergeBenchmark {
             forceGcQuiescence();
             System.out.println();
 
-            // Baseline heap snapshot — what the JVM uses with the inputs on
-            // disk but no merge running. Both runs should start from this
-            // floor.
             long baseline = sampleUsedHeapAfterGc();
             System.out.printf(
                     "Baseline heap (after GC, before merge): %,d KB%n%n", baseline / 1024);
 
-            // === PDFBox run ===
             System.out.println("--- PDFBox PDFMergerUtility ---");
             Path outPdfbox = workDir.resolve("out-pdfbox.pdf");
             BenchResult pdfboxResult = profile(() -> runPdfBoxMerge(inputs, outPdfbox));
             System.out.printf("  output size : %,d KB%n", Files.size(outPdfbox) / 1024);
             pdfboxResult.printSummary("PDFBox", baseline);
 
-            // GC + cooldown between runs so JPDFium's measurement starts clean.
             forceGcQuiescence();
             System.out.println();
 
-            // === JPDFium run ===
             System.out.println("--- JPDFium PdfMerge.mergeFiles ---");
             Path outJpdfium = workDir.resolve("out-jpdfium.pdf");
             BenchResult jpdfiumResult = profile(() -> runJpdfiumMerge(inputs, outJpdfium));
             System.out.printf("  output size : %,d KB%n", Files.size(outJpdfium) / 1024);
             jpdfiumResult.printSummary("JPDFium", baseline);
 
-            // === Compare ===
             System.out.println();
             System.out.println("=== Heap delta (over baseline) ===");
             long pdfboxDelta = pdfboxResult.peakHeapBytes - baseline;
@@ -427,17 +351,11 @@ public final class MergeBenchmark {
             System.out.println("  " + outPdfbox);
             System.out.println("  " + outJpdfium);
         } finally {
-            // Leave temp files in place so the user can re-inspect — workDir
-            // is under the OS temp area so it gets cleaned up by the OS
-            // eventually anyway.
+            // workDir is under the OS temp area; cleanup happens eventually
         }
     }
 
-    /**
-     * Build a PDF with the given page count. Each page gets a unique JPEG image (procedurally
-     * generated, ~30-40 KB per page) and a small text caption — close enough to a "report with
-     * figures" workload that the comparison reflects real merge cost.
-     */
+    /** PDF with a unique procedurally-generated JPEG + caption per page. */
     private static void generateTestPdf(Path out, int pages) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             Random rng = new Random(42L);
@@ -451,7 +369,6 @@ public final class MergeBenchmark {
                 try (PDPageContentStream cs =
                         new PDPageContentStream(
                                 doc, page, PDPageContentStream.AppendMode.APPEND, false)) {
-                    // Center the image with some margin
                     float pageW = page.getMediaBox().getWidth();
                     float pageH = page.getMediaBox().getHeight();
                     float imgRenderW = pageW - 100;
@@ -463,14 +380,11 @@ public final class MergeBenchmark {
                     cs.beginText();
                     cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 14);
                     cs.newLineAtOffset(50, 30);
-                    cs.showText("Page " + (i + 1) + " — benchmark fill");
+                    cs.showText("Page " + (i + 1) + " - benchmark fill");
                     cs.endText();
                 }
             }
-            // Optional internal bookmarks — distributed evenly across the
-            // document. With INTERNAL_BOOKMARKS=10 and pages=70, every 7th
-            // page gets a "Section N" outline entry. We use this to test
-            // that source bookmarks survive the merge.
+            // Internal bookmarks evenly spaced - used to assert source bookmarks survive merge.
             if (INTERNAL_BOOKMARKS > 0 && pages > 0) {
                 PDDocumentOutline outline = new PDDocumentOutline();
                 doc.getDocumentCatalog().setDocumentOutline(outline);
@@ -478,7 +392,7 @@ public final class MergeBenchmark {
                 for (int b = 0; b < INTERNAL_BOOKMARKS; b++) {
                     int pageIdx = Math.min(b * spacing, pages - 1);
                     PDOutlineItem item = new PDOutlineItem();
-                    item.setTitle("Section " + (b + 1) + " — " + out.getFileName().toString());
+                    item.setTitle("Section " + (b + 1) + " - " + out.getFileName().toString());
                     item.setDestination(doc.getPage(pageIdx));
                     outline.addLast(item);
                 }
@@ -487,10 +401,7 @@ public final class MergeBenchmark {
         }
     }
 
-    /**
-     * Open the merged PDF with JPDFium and count its bookmarks. Walks children recursively so
-     * nested outlines (chapter → section → ...) contribute every entry, not just the top level.
-     */
+    /** Total bookmark count, including nested entries. */
     private static int countBookmarks(Path pdf) {
         try (PdfDocument doc = PdfDocument.open(pdf)) {
             int total = 0;
@@ -515,26 +426,16 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Generate a unique-looking JPEG so PDF object dedup can't quietly collapse all pages into one
-     * image stream. We sweep hue per page, fill with random-noise pixels (high entropy → poor
-     * compression → bigger output), and draw some random circles on top.
-     *
-     * <p>Pixel noise fill is the key: a flat-colour rectangle JPEG-compresses to KBs regardless of
-     * dimensions; per-pixel random noise compresses close to the raw byte count, which is what we
-     * need to push a 100-page PDF into the hundreds-of-MB range.
+     * Per-page unique JPEG. Per-pixel random noise resists JPEG compression so output stays large,
+     * which is what we want for measuring real merge cost.
      */
     private static byte[] generateRandomJpeg(Random rng, int w, int h) throws IOException {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-        // High-entropy fill: per-pixel random RGB. Beats Graphics2D shapes
-        // for resisting JPEG compression on the size we want.
         int[] pixels = new int[w * h];
-        // Seed by ImageIdentityHash so each page is unique without holding
-        // the per-pixel buffer beyond this scope.
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = rng.nextInt(0xFFFFFF);
         }
         img.setRGB(0, 0, w, h, pixels, 0, w);
-        // Overlay shapes + a label so the image is still recognisable.
         Graphics2D g = img.createGraphics();
         try {
             for (int i = 0; i < 20; i++) {
@@ -550,9 +451,8 @@ public final class MergeBenchmark {
         } finally {
             g.dispose();
         }
-        // Honour JPEG_QUALITY so callers can dial the per-image size up or
-        // down; default ImageIO.write uses ~0.75 which is too aggressive
-        // when we want big inputs.
+        // Custom JPEG quality (default ImageIO.write ~0.75 is too aggressive when we want big
+        // inputs).
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
         try {
@@ -570,7 +470,6 @@ public final class MergeBenchmark {
     }
 
     private static void runPdfBoxMerge(List<Path> inputs, Path output) throws IOException {
-        // Stage 1: PDFMergerUtility — fast stream-cache merge to a temp file.
         Path stage1 = output.resolveSibling(output.getFileName() + ".stage1");
         try {
             PDFMergerUtility merger = new PDFMergerUtility();
@@ -580,9 +479,7 @@ public final class MergeBenchmark {
             merger.setDestinationFileName(stage1.toAbsolutePath().toString());
             merger.mergeDocuments(null);
 
-            // Stage 2: post-process (TOC / sig removal) only when needed.
-            // Mirror MergeController's PRE-jpdfium behaviour: load with PDFBox,
-            // mutate, save.
+            // Post-process via load+save only when TOC or sig removal is on.
             if (withToc || withSigRemoval) {
                 try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(stage1.toFile())) {
                     if (withSigRemoval) {
@@ -609,9 +506,8 @@ public final class MergeBenchmark {
                                 item.setDestination(doc.getPage(idx));
                             }
                             outline.addLast(item);
-                            // Hop forward by the source's page count — for this
-                            // synthetic benchmark every input has PAGES_PER_DOC
-                            // pages, so no need to re-open and count.
+                            // Every synthetic input has PAGES_PER_DOC pages, so we can skip a
+                            // re-count.
                             idx += PAGES_PER_DOC;
                         }
                     }
@@ -627,12 +523,7 @@ public final class MergeBenchmark {
     }
 
     private static void runJpdfiumMerge(List<Path> inputs, Path output) throws IOException {
-        // Mirror the production MergeController: capture each source's
-        // bookmarks (with the page offset where its pages will land in the
-        // merged doc), run the native page merge, then inject a combined
-        // BookmarkTree via streaming setBookmarks. This preserves source
-        // outlines (PDFium's FPDF_ImportPagesByIndex only carries pages,
-        // not the outline tree).
+        // Mirror MergeController: capture+offset source bookmarks, merge pages, inject outline.
         List<PdfDocument> docs = new ArrayList<>();
         int[] pageCounts = new int[inputs.size()];
         int[] pageOffsets = new int[inputs.size()];
@@ -676,10 +567,7 @@ public final class MergeBenchmark {
             }
         }
 
-        // Sig removal is the only step still routed through PDFBox: JPDFium's
-        // flatten is page-wide and would fuse non-signature widgets too. We
-        // pre-check via JPDFium and skip the PDFBox load+save entirely when
-        // there are no signature fields to flatten.
+        // Sig removal still uses PDFBox (JPDFium's flatten is page-wide). Skip when no sigs.
         boolean sigFlattenNeeded = false;
         if (withSigRemoval) {
             try (PdfDocument check = PdfDocument.open(output)) {
@@ -710,11 +598,7 @@ public final class MergeBenchmark {
         java.nio.file.Files.move(post, output, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
 
-    /**
-     * Recursively flatten a source's bookmark list into top-level entries of the combined
-     * BookmarkTree, translating each entry's pageIndex by the offset where its source's pages were
-     * inserted.
-     */
+    /** Flatten and offset-translate one source's bookmark list onto the combined tree. */
     private static void addBookmarkFlat(
             BookmarkTree.Builder builder,
             List<stirling.software.jpdfium.doc.Bookmark> bookmarks,
