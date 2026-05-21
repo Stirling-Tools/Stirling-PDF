@@ -1904,22 +1904,6 @@ secureWorkflowDesc = "Asegura documentos PDF eliminando contenido potencialmente
 [autoRename]
 description = "Esta herramienta renombrará automáticamente los archivos PDF en función de su contenido. Analiza el documento para encontrar el título más adecuado a partir del texto."
 
-[pdfCommentAgent]
-submit = "Generar comentarios"
-prompt.label = "¿Sobre qué debería comentar la IA?"
-prompt.placeholder = "p. ej., Señala fechas ambiguas y sugiere aclaraciones"
-
-[pdfCommentAgent.settings]
-title = "Instrucciones de comentarios"
-
-[pdfCommentAgent.results]
-title = "PDF con comentarios"
-
-[pdfCommentAgent.error]
-failed = "No se pudieron generar los comentarios"
-emptyPrompt = "Describe sobre qué debería comentar la IA"
-tooLong = "El prompt es demasiado largo (máximo {{max}} caracteres)"
-
 [autoSizeSplitPDF]
 tags = "pdf,dividir,documento,organización"
 
@@ -4140,11 +4124,6 @@ title = "Automatizar"
 desc = "Renombra automáticamente un archivo PDF basándose en su encabezado detectado"
 tags = "auto-detectar,basado-en-encabezado,organizar,reetiquetar"
 title = "Renombrar Automáticamente Archivo PDF"
-
-[home.pdfCommentAgent]
-desc = "Pide a la IA que anote un PDF con comentarios de notas adhesivas según tu indicación"
-tags = "IA,agente,comentario,anotar,nota adhesiva,revisión,feedback,notas"
-title = "Añadir comentarios con IA"
 
 [home.autoSizeSplitPDF]
 desc = "Divide un solo PDF en múltiples documentos según su tamaño, número de páginas, o número de documento"

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -20,7 +21,6 @@ import org.springframework.security.config.annotation.web.configurers.CsrfConfig
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider;
@@ -69,6 +69,7 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @EnableWebSecurity
 @EnableMethodSecurity
 @DependsOn("runningProOrHigher")
+@Profile("!saas")
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
@@ -91,6 +92,7 @@ public class SecurityConfiguration {
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -112,8 +114,8 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver,
             @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
-            stirling.software.proprietary.service.UserLicenseSettingsService
-                    licenseSettingsService) {
+            stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService,
+            PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -132,11 +134,7 @@ public class SecurityConfiguration {
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
         this.clientRegistrationRepository = clientRegistrationRepository;
         this.licenseSettingsService = licenseSettingsService;
-    }
-
-    @Bean
-    public static PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -293,7 +291,7 @@ public class SecurityConfiguration {
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    // TODO: IPRateLimitingFilter disabled — limit is 1M (no-op) and raw Filter
+                    // TODO: IPRateLimitingFilter disabled (limit is 1M, no-op) and raw Filter
                     // impl causes Spring Security async dispatch bug (response already committed
                     // errors on StreamingResponseBody endpoints). Re-enable once converted to
                     // OncePerRequestFilter with proper config-driven limits.
@@ -462,7 +460,7 @@ public class SecurityConfiguration {
 
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 

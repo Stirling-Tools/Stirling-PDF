@@ -94,4 +94,7 @@ dependencies {
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.0"
     }
+
+    // ArchUnit: enforces module dependency direction (see ArchitectureTest)
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }
