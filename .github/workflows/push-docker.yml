@@ -43,7 +43,7 @@ permissions:
 jobs:
   push:
     if: ${{ vars.CI_PROFILE != 'lite' }}
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-24.04-8core'' || ''depot-ubuntu-24.04-8'' }}'
+    runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
       id-token: write
@@ -51,8 +51,6 @@ jobs:
     env:
       RUN_MAIN_APP: ${{ github.event_name != 'workflow_dispatch' || inputs.build_main_app }}
       RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
@@ -82,12 +80,7 @@ jobs:
         with:
           gradle-version: 9.3.1
 
-      - name: Set up Depot CLI
-        if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@v1
-
       - name: Set up Docker Buildx
-        if: env.USE_DEPOT != 'true'
         id: buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -103,13 +96,13 @@ jobs:
 
       - name: Install cosign
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
-        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: "v2.4.1"
 
       - name: Install cosign
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
-        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: "v2.4.1"
 
@@ -127,7 +120,6 @@ jobs:
           password: ${{ github.token }}
 
       - name: Set up QEMU
-        if: env.USE_DEPOT != 'true'
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Convert repository owner to lowercase
@@ -149,28 +141,10 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testMain' }}
 
-      - name: Build and push Unified Dockerfile (latest variant) (Depot)
-        id: build-push-latest-depot
+      - name: Build and push Unified Dockerfile (latest variant)
+        id: build-push-latest
         # Empty-tag guard: build-push-action errors when asked to push with no tags.
-        if: env.USE_DEPOT == 'true' && env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
-        uses: depot/build-push-action@v1
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/embedded/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-            BASE_VERSION=1.0.0
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Build and push Unified Dockerfile (latest variant) (Docker fork fallback)
-        id: build-push-latest-docker
-        if: env.USE_DEPOT != 'true' && env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
+        if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -189,9 +163,9 @@ jobs:
           sbom: true
 
       - name: Sign regular images
-        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && (steps.build-push-latest-depot.outputs.digest != '' || steps.build-push-latest-docker.outputs.digest != '')
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-latest.outputs.digest != ''
         env:
-          DIGEST: ${{ steps.build-push-latest-depot.outputs.digest || steps.build-push-latest-docker.outputs.digest }}
+          DIGEST: ${{ steps.build-push-latest.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
@@ -216,26 +190,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
 
-      - name: Build and push Unified Dockerfile (fat variant) (Depot)
-        id: build-push-fat-depot
-        if: env.USE_DEPOT == 'true' && env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
-        uses: depot/build-push-action@v1
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/embedded/Dockerfile.fat
-          push: true
-          tags: ${{ steps.meta-fat.outputs.tags }}
-          labels: ${{ steps.meta-fat.outputs.labels }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Build and push Unified Dockerfile (fat variant) (Docker fork fallback)
-        id: build-push-fat-docker
-        if: env.USE_DEPOT != 'true' && env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
+      - name: Build and push Unified Dockerfile (fat variant)
+        id: build-push-fat
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -251,9 +209,9 @@ jobs:
           sbom: true
 
       - name: Sign fat images
-        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && (steps.build-push-fat-depot.outputs.digest != '' || steps.build-push-fat-docker.outputs.digest != '')
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-fat.outputs.digest != ''
         env:
-          DIGEST: ${{ steps.build-push-fat-depot.outputs.digest || steps.build-push-fat-docker.outputs.digest }}
+          DIGEST: ${{ steps.build-push-fat.outputs.digest }}
           TAGS: ${{ steps.meta-fat.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
@@ -276,26 +234,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
 
-      - name: Build and push Unified Dockerfile (ultra-lite variant) (Depot)
-        id: build-push-lite-depot
-        if: env.USE_DEPOT == 'true' && env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
-        uses: depot/build-push-action@v1
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/embedded/Dockerfile.ultra-lite
-          push: true
-          tags: ${{ steps.meta-lite.outputs.tags }}
-          labels: ${{ steps.meta-lite.outputs.labels }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Build and push Unified Dockerfile (ultra-lite variant) (Docker fork fallback)
-        id: build-push-lite-docker
-        if: env.USE_DEPOT != 'true' && env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
+      - name: Build and push Unified Dockerfile (ultra-lite variant)
+        id: build-push-lite
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -311,9 +253,9 @@ jobs:
           sbom: true
 
       - name: Sign ultra-lite images
-        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && (steps.build-push-lite-depot.outputs.digest != '' || steps.build-push-lite-docker.outputs.digest != '')
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-lite.outputs.digest != ''
         env:
-          DIGEST: ${{ steps.build-push-lite-depot.outputs.digest || steps.build-push-lite-docker.outputs.digest }}
+          DIGEST: ${{ steps.build-push-lite.outputs.digest }}
           TAGS: ${{ steps.meta-lite.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
@@ -420,26 +362,9 @@ jobs:
           echo "mode=${mode}" >> "$GITHUB_OUTPUT"
           echo "tags=${tags}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push unoserver image (Depot)
-        id: build-push-unoserver-depot
-        if: env.USE_DEPOT == 'true' && env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
-        uses: depot/build-push-action@v1
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/unoserver/Dockerfile
-          push: true
-          tags: ${{ steps.unoserverDecision.outputs.tags }}
-          # Manifest annotation read by the decision step above to detect drift.
-          annotations: |
-            index:org.stirlingpdf.unoserver-source-hash=${{ steps.unoserverHash.outputs.hash }}
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Build and push unoserver image (Docker fork fallback)
-        id: build-push-unoserver-docker
-        if: env.USE_DEPOT != 'true' && env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
+      - name: Build and push unoserver image
+        id: build-push-unoserver
+        if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -459,7 +384,7 @@ jobs:
       - name: Sign unoserver image
         if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode == 'stable'
         env:
-          DIGEST: ${{ steps.build-push-unoserver-depot.outputs.digest || steps.build-push-unoserver-docker.outputs.digest }}
+          DIGEST: ${{ steps.build-push-unoserver.outputs.digest }}
           TAGS: ${{ steps.unoserverDecision.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}

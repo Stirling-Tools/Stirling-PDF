@@ -18,13 +18,10 @@ permissions:
 jobs:
   push-base:
     if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-24.04-8core'' || ''depot-ubuntu-24.04-8'' }}'
+    runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
       id-token: write
-    env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Verify authorized user
         run: |
@@ -65,17 +62,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Set up Depot CLI
-        if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@v1
-
       - name: Set up Docker Buildx
-        if: env.USE_DEPOT != 'true'
         id: buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Set up QEMU
-        if: env.USE_DEPOT != 'true'
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Convert repository owner to lowercase
@@ -92,24 +83,8 @@ jobs:
           tags: |
             type=raw,value=${{ steps.version.outputs.version }}
 
-      - name: Build and push base image (Depot)
-        id: build-push-base-depot
-        if: env.USE_DEPOT == 'true'
-        uses: depot/build-push-action@v1
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: docker/base
-          file: ./docker/base/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Build and push base image (Docker fork fallback)
-        id: build-push-base-docker
-        if: env.USE_DEPOT != 'true'
+      - name: Build and push base image
+        id: build-push-base
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -125,13 +100,13 @@ jobs:
           sbom: true
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: "v2.4.1"
 
       - name: Sign base images
         env:
-          DIGEST: ${{ steps.build-push-base-depot.outputs.digest || steps.build-push-base-docker.outputs.digest }}
+          DIGEST: ${{ steps.build-push-base.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
