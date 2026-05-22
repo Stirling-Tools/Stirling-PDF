@@ -52,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/audit")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")

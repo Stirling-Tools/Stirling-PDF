@@ -20,6 +20,7 @@ import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -33,7 +34,10 @@ public class PasswordController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-password")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/remove-password",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Remove password from a PDF file",
@@ -62,7 +66,10 @@ public class PasswordController {
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-password")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-password",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Add password to a PDF file",
