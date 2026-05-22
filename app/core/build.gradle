@@ -137,6 +137,16 @@ sourceSets {
 }
 
 
+// Forward jpdfium.bench / crop.bench.* to the forked test JVM.
+tasks.named('test') {
+    if (System.getProperty('jpdfium.bench')) {
+        systemProperty 'jpdfium.bench', System.getProperty('jpdfium.bench')
+        maxHeapSize = System.getProperty('jpdfium.bench.xmx', '4g')
+        System.properties.findAll { k, v -> k.toString().startsWith('crop.bench.') }
+                .each { k, v -> systemProperty(k.toString(), v) }
+    }
+}
+
 // Disable regular jar
 jar {
     enabled = false

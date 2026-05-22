@@ -281,6 +281,46 @@ class CropControllerTest {
     }
 
     @Nested
+    @DisplayName("Ghostscript CropBox Compatibility")
+    @Tag("integration")
+    class GhostscriptCropBoxTests {
+
+        // gs -dUseCropBox reads the /CropBox dictionary entry on each page.
+        // Verifies JPDFium's PdfPageBoxes.setCropBox actually persists a /CropBox
+        // entry that PDFBox (and therefore gs) can read back.
+        @Test
+        @DisplayName("Should persist /CropBox entry that PDFBox can read after JPDFium save")
+        void shouldPersistCropBoxThatGsCanRead() throws IOException {
+            MockMultipartFile testFile = pdfFactory.createStandardPdf("cropbox.pdf");
+            Path src = Files.createTempFile(tempDir, "src-", ".pdf");
+            Files.write(src, testFile.getBytes());
+            Path out = Files.createTempFile(tempDir, "out-", ".pdf");
+
+            float x = 50, y = 60, w = 400, h = 500;
+            try (stirling.software.jpdfium.PdfDocument doc =
+                    stirling.software.jpdfium.PdfDocument.open(src)) {
+                int n = doc.pageCount();
+                for (int i = 0; i < n; i++) {
+                    try (stirling.software.jpdfium.PdfPage p = doc.page(i)) {
+                        stirling.software.jpdfium.transform.PdfPageBoxes.setCropBox(
+                                p.rawHandle(), stirling.software.jpdfium.model.Rect.of(x, y, w, h));
+                    }
+                }
+                doc.save(out);
+            }
+
+            try (PDDocument loaded = Loader.loadPDF(out.toFile())) {
+                PDRectangle cropBox = loaded.getPage(0).getCropBox();
+                assertThat(cropBox).isNotNull();
+                assertThat(cropBox.getLowerLeftX()).isCloseTo(x, within(0.5f));
+                assertThat(cropBox.getLowerLeftY()).isCloseTo(y, within(0.5f));
+                assertThat(cropBox.getWidth()).isCloseTo(w, within(0.5f));
+                assertThat(cropBox.getHeight()).isCloseTo(h, within(0.5f));
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Content Bounds Detection")
     class ContentBoundsDetectionTests {
 
