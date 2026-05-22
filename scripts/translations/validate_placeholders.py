@@ -112,7 +112,7 @@ def main():
     args = parser.parse_args()
 
     # Define paths
-    locales_dir = Path("frontend/public/locales")
+    locales_dir = Path("frontend/editor/public/locales")
     en_gb_path = locales_dir / "en-GB" / "translation.toml"
 
     if not en_gb_path.exists():
