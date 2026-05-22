@@ -136,6 +136,17 @@ sourceSets {
 
 }
 
+// Forward bench-related system properties through to the test JVM so
+// `-Dsplit.bench=true` (and similar) flags reach Boolean.getBoolean().
+tasks.named('test', Test) {
+    ['split.bench', 'split.bench.pages', 'split.bench.chunk',
+     'split.bench.imgW', 'split.bench.imgH'].each { key ->
+        def v = System.getProperty(key)
+        if (v != null) systemProperty(key, v)
+    }
+    maxHeapSize = '2g'
+}
+
 
 // Disable regular jar
 jar {
