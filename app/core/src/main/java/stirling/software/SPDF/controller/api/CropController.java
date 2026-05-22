@@ -1,21 +1,15 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.pdfbox.multipdf.LayerUtility;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -27,13 +21,19 @@ import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfImageConverter;
+import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.doc.PdfMarginAdjuster;
+import stirling.software.jpdfium.model.PageSize;
+import stirling.software.jpdfium.model.Rect;
+import stirling.software.jpdfium.transform.PdfPageBoxes;
 
 @GeneralApi
 @RequiredArgsConstructor
@@ -42,18 +42,15 @@ public class CropController {
 
     private static final int DEFAULT_RENDER_DPI = 150;
     private static final int WHITE_THRESHOLD = 250;
-    private static final String TEMP_INPUT_PREFIX = "crop_input";
-    private static final String TEMP_OUTPUT_PREFIX = "crop_output";
     private static final String PDF_EXTENSION = ".pdf";
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final EndpointConfiguration endpointConfiguration;
 
     private static int[] detectContentBounds(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        // Early exit if image is too small
         if (width < 1 || height < 1) {
             return new int[] {0, 0, width - 1, height - 1};
         }
@@ -109,8 +106,7 @@ public class CropController {
             }
         }
 
-        // Return bounds in format: [left, bottom, right, top]
-        // Note: Image coordinates are top-down, PDF coordinates are bottom-up
+        // Image coordinates top-down, PDF coordinates bottom-up
         return new int[] {left, height - bottom - 1, right, height - top - 1};
     }
 
@@ -120,8 +116,6 @@ public class CropController {
         int b = rgb & 0xFF;
         return r >= threshold && g >= threshold && b >= threshold;
     }
-
-    private final EndpointConfiguration endpointConfiguration;
 
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
@@ -152,145 +146,124 @@ public class CropController {
 
         if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {
             return cropWithGhostscript(request);
-        } else {
-            return cropWithPDFBox(request);
         }
+        return cropWithJpdfium(request);
     }
 
-    private ResponseEntity<Resource> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
+    private ResponseEntity<Resource> cropWithAutomaticDetection(CropPdfForm request)
             throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
+        MultipartFile fileInput = request.getFileInput();
+        File inputFile = tempFileManager.convertMultipartFileToFile(fileInput);
+        try {
+            try (PdfDocument doc = PdfDocument.open(inputFile.toPath())) {
+                int pageCount = doc.pageCount();
+                for (int i = 0; i < pageCount; i++) {
+                    BufferedImage image = PdfImageConverter.pageToImage(doc, i, DEFAULT_RENDER_DPI);
 
-            try (PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                PDFRenderer renderer = new PDFRenderer(sourceDocument);
-                renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-                LayerUtility layerUtility = new LayerUtility(newDocument);
+                    PageSize size;
+                    try (PdfPage page = doc.page(i)) {
+                        size = page.size();
+                    }
 
-                for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
-                    PDPage sourcePage = sourceDocument.getPage(i);
-                    PDRectangle mediaBox = sourcePage.getMediaBox();
-
-                    BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
                     int[] bounds = detectContentBounds(image);
-
-                    float scaleX = mediaBox.getWidth() / image.getWidth();
-                    float scaleY = mediaBox.getHeight() / image.getHeight();
+                    float scaleX = size.width() / image.getWidth();
+                    float scaleY = size.height() / image.getHeight();
 
                     CropBounds cropBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
-
-                    PDPage newPage = new PDPage(mediaBox);
-                    newDocument.addPage(newPage);
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                        PDFormXObject formXObject =
-                                layerUtility.importPageAsForm(sourceDocument, i);
-                        contentStream.saveGraphicsState();
-                        contentStream.addRect(
-                                cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height);
-                        contentStream.clip();
-                        contentStream.drawForm(formXObject);
-                        contentStream.restoreGraphicsState();
-                    }
-
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    cropBounds.x,
-                                    cropBounds.y,
-                                    cropBounds.width,
-                                    cropBounds.height));
+                    applyCropMargins(doc, i, size, cropBounds);
                 }
 
-                return WebResponseUtils.pdfDocToWebResponse(
-                        newDocument,
+                TempFile outputTempFile = new TempFile(tempFileManager, PDF_EXTENSION);
+                try {
+                    doc.save(outputTempFile.getPath());
+                } catch (Exception e) {
+                    outputTempFile.close();
+                    throw e;
+                }
+                return WebResponseUtils.pdfFileToWebResponse(
+                        outputTempFile,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
-                        tempFileManager);
+                                fileInput.getOriginalFilename(), "_cropped.pdf"));
             }
+        } finally {
+            tempFileManager.deleteTempFile(inputFile);
         }
     }
 
-    private ResponseEntity<Resource> cropWithPDFBox(@ModelAttribute CropPdfForm request)
-            throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
-
-            try (PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                int totalPages = sourceDocument.getNumberOfPages();
-                LayerUtility layerUtility = new LayerUtility(newDocument);
-
-                for (int i = 0; i < totalPages; i++) {
-                    PDPage sourcePage = sourceDocument.getPage(i);
-
-                    // Create a new page with the size of the source page
-                    PDPage newPage = new PDPage(sourcePage.getMediaBox());
-                    newDocument.addPage(newPage);
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                        // Import the source page as a form XObject
-                        PDFormXObject formXObject =
-                                layerUtility.importPageAsForm(sourceDocument, i);
-
-                        contentStream.saveGraphicsState();
-
-                        // Define the crop area
-                        contentStream.addRect(
+    private ResponseEntity<Resource> cropWithJpdfium(CropPdfForm request) throws IOException {
+        MultipartFile fileInput = request.getFileInput();
+        File inputFile = tempFileManager.convertMultipartFileToFile(fileInput);
+        try {
+            try (PdfDocument doc = PdfDocument.open(inputFile.toPath())) {
+                int pageCount = doc.pageCount();
+                CropBounds bounds =
+                        new CropBounds(
                                 request.getX(),
                                 request.getY(),
                                 request.getWidth(),
                                 request.getHeight());
-                        contentStream.clip();
-
-                        // Draw the entire formXObject
-                        contentStream.drawForm(formXObject);
-
-                        contentStream.restoreGraphicsState();
+                for (int i = 0; i < pageCount; i++) {
+                    PageSize size;
+                    try (PdfPage page = doc.page(i)) {
+                        size = page.size();
                     }
-
-                    // Now, set the new page's media box to the cropped size
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    request.getX(),
-                                    request.getY(),
-                                    request.getWidth(),
-                                    request.getHeight()));
+                    applyCropMargins(doc, i, size, bounds);
                 }
 
-                return WebResponseUtils.pdfDocToWebResponse(
-                        newDocument,
+                TempFile outputTempFile = new TempFile(tempFileManager, PDF_EXTENSION);
+                try {
+                    doc.save(outputTempFile.getPath());
+                } catch (Exception e) {
+                    outputTempFile.close();
+                    throw e;
+                }
+                return WebResponseUtils.pdfFileToWebResponse(
+                        outputTempFile,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
-                        tempFileManager);
+                                fileInput.getOriginalFilename(), "_cropped.pdf"));
             }
+        } finally {
+            tempFileManager.deleteTempFile(inputFile);
         }
     }
 
-    private ResponseEntity<Resource> cropWithGhostscript(@ModelAttribute CropPdfForm request)
-            throws IOException {
+    // PdfMarginAdjuster.addMargins(doc, page, left, bottom, right, top): translates
+    // content by (left, bottom), grows page by left+right and bottom+top.
+    // To crop to (x, y, w, h) shift content to (-x, -y) and end at (w, h).
+    private static void applyCropMargins(
+            PdfDocument doc, int pageIndex, PageSize size, CropBounds bounds) {
+        float left = -bounds.x();
+        float bottom = -bounds.y();
+        float right = bounds.width() - size.width() + bounds.x();
+        float top = bounds.height() - size.height() + bounds.y();
+        PdfMarginAdjuster.addMargins(doc, pageIndex, left, bottom, right, top);
+    }
+
+    private ResponseEntity<Resource> cropWithGhostscript(CropPdfForm request) throws IOException {
+        MultipartFile fileInput = request.getFileInput();
+        File inputFile = tempFileManager.convertMultipartFileToFile(fileInput);
         TempFile tempInputFile = null;
         TempFile tempOutputFile = null;
+        try {
+            tempInputFile = new TempFile(tempFileManager, PDF_EXTENSION);
+            tempOutputFile = new TempFile(tempFileManager, PDF_EXTENSION);
 
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
-            for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
-                PDPage page = sourceDocument.getPage(i);
-                PDRectangle cropBox =
-                        new PDRectangle(
+            try (PdfDocument doc = PdfDocument.open(inputFile.toPath())) {
+                Rect cropRect =
+                        Rect.of(
                                 request.getX(),
                                 request.getY(),
                                 request.getWidth(),
                                 request.getHeight());
-                page.setCropBox(cropBox);
+                int pageCount = doc.pageCount();
+                for (int i = 0; i < pageCount; i++) {
+                    try (PdfPage page = doc.page(i)) {
+                        PdfPageBoxes.setCropBox(page.rawHandle(), cropRect);
+                    }
+                }
+                doc.save(tempInputFile.getPath());
             }
 
-            tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
-            tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
-
-            // Save the source document with crop boxes
-            sourceDocument.save(tempInputFile.getFile());
-
-            // Execute Ghostscript to process the crop boxes
             ProcessExecutor processExecutor =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
             List<String> command =
@@ -301,16 +274,13 @@ public class CropController {
                             "-o",
                             tempOutputFile.getAbsolutePath(),
                             tempInputFile.getAbsolutePath());
-
             processExecutor.runCommandWithOutputHandling(command);
 
             TempFile out = tempOutputFile;
-            tempOutputFile = null; // ownership transferred to response Resource
+            tempOutputFile = null;
             return WebResponseUtils.pdfFileToWebResponse(
                     out,
-                    GeneralUtils.generateFilename(
-                            request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
-
+                    GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_cropped.pdf"));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
@@ -321,6 +291,7 @@ public class CropController {
             if (tempOutputFile != null) {
                 tempOutputFile.close();
             }
+            tempFileManager.deleteTempFile(inputFile);
         }
     }
 
