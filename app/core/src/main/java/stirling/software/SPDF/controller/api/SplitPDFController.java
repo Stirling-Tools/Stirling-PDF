@@ -3,11 +3,10 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -30,12 +29,13 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
 @Slf4j
@@ -90,13 +90,8 @@ public class SplitPDFController {
                 String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
-                    if (hasForm) {
-                        writeSplitsViaReload(
-                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
-                    } else {
-                        writeSplitsViaSharedSource(
-                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
-                    }
+                    writeSplits(
+                            sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut, hasForm);
                 }
             }
 
@@ -109,59 +104,71 @@ public class SplitPDFController {
         }
     }
 
-    private void writeSplitsViaReload(
-            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
+    private void writeSplits(
+            File source,
+            List<Integer> pageNumbers,
+            String baseFilename,
+            ZipOutputStream zipOut,
+            boolean hasForm)
             throws IOException {
-        int previousPageNumber = 0;
-        for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
-            int splitPoint = pageNumbers.get(splitIndex);
-            Set<Integer> keep = new HashSet<>();
-            for (int i = previousPageNumber; i <= splitPoint; i++) {
-                keep.add(i);
-            }
-            previousPageNumber = splitPoint + 1;
-
-            try (PDDocument splitDoc = pdfDocumentFactory.load(source)) {
-                for (int p = splitDoc.getNumberOfPages() - 1; p >= 0; p--) {
-                    if (!keep.contains(p)) {
-                        splitDoc.removePage(p);
-                    }
-                }
-                FormUtils.pruneOrphanedFormFields(splitDoc);
-                writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
-            } catch (Exception e) {
-                ExceptionUtils.logException("document splitting and saving", e);
-                throw e;
-            }
-        }
-    }
-
-    private void writeSplitsViaSharedSource(
-            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
-            throws IOException {
-        try (PDDocument sourceDoc = pdfDocumentFactory.load(source)) {
+        try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
             int previousPageNumber = 0;
             for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
                 int splitPoint = pageNumbers.get(splitIndex);
-                try (PDDocument splitDoc =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc)) {
-                    for (int i = previousPageNumber; i <= splitPoint; i++) {
-                        splitDoc.addPage(sourceDoc.getPage(i));
-                    }
-                    previousPageNumber = splitPoint + 1;
-                    writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
-                } catch (Exception e) {
-                    ExceptionUtils.logException("document splitting and saving", e);
-                    throw e;
+                writeSplit(
+                        sourceDoc,
+                        previousPageNumber,
+                        splitPoint,
+                        baseFilename,
+                        splitIndex + 1,
+                        zipOut,
+                        hasForm);
+                previousPageNumber = splitPoint + 1;
+            }
+        }
+    }
+
+    private void writeSplit(
+            PdfDocument sourceDoc,
+            int fromIndex,
+            int toIndex,
+            String baseFilename,
+            int splitNumber,
+            ZipOutputStream zipOut,
+            boolean hasForm)
+            throws IOException {
+        try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
+            try (PdfDocument splitDoc = PdfSplit.extractPageRange(sourceDoc, fromIndex, toIndex)) {
+                splitDoc.save(splitTemp.getPath());
+            }
+            Path finalPath = splitTemp.getPath();
+            TempFile prunedTemp = null;
+            try {
+                if (hasForm) {
+                    prunedTemp = new TempFile(tempFileManager, ".pdf");
+                    pruneForms(splitTemp.getFile(), prunedTemp.getFile());
+                    finalPath = prunedTemp.getPath();
+                }
+                writeEntry(zipOut, baseFilename, splitNumber, finalPath);
+            } finally {
+                if (prunedTemp != null) {
+                    prunedTemp.close();
                 }
             }
         }
     }
 
-    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, PDDocument doc)
+    private void pruneForms(File splitFile, File outputFile) throws IOException {
+        try (PDDocument doc = pdfDocumentFactory.load(splitFile)) {
+            FormUtils.pruneOrphanedFormFields(doc);
+            doc.save(outputFile);
+        }
+    }
+
+    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, Path pdfPath)
             throws IOException {
         zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + index + ".pdf"));
-        doc.save(zipOut);
+        Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
     }
 }

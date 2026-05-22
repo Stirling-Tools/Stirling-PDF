@@ -4,11 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -27,10 +34,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -55,6 +63,9 @@ class SplitPdfByChaptersControllerTest {
                             String suffix = inv.getArgument(0);
                             return Files.createTempFile(tempDir, "test", suffix).toFile();
                         });
+        lenient()
+                .when(pdfDocumentFactory.load(any(File.class)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
     }
 
     private byte[] createPdfWithBookmarks(int numPages, String... chapterNames) throws IOException {
@@ -83,6 +94,29 @@ class SplitPdfByChaptersControllerTest {
         }
     }
 
+    private List<byte[]> unzip(Resource zipResource) throws IOException {
+        List<byte[]> entries = new ArrayList<>();
+        try (ZipInputStream zis =
+                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                entries.add(zis.readAllBytes());
+                zis.closeEntry();
+            }
+        }
+        return entries;
+    }
+
+    private int totalPagesOf(List<byte[]> entries) throws IOException {
+        int total = 0;
+        for (byte[] data : entries) {
+            try (PDDocument doc = Loader.loadPDF(data)) {
+                total += doc.getNumberOfPages();
+            }
+        }
+        return total;
+    }
+
     @Test
     @DisplayName("Should split PDF by chapters")
     void shouldSplitByChapters() throws Exception {
@@ -97,12 +131,12 @@ class SplitPdfByChaptersControllerTest {
         request.setIncludeMetadata(false);
         request.setAllowDuplicates(false);
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        var response = controller.splitPdf(request);
+        ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(3);
+        assertThat(totalPagesOf(outputs)).isEqualTo(6);
     }
 
     @Test
@@ -119,12 +153,12 @@ class SplitPdfByChaptersControllerTest {
         request.setIncludeMetadata(false);
         request.setAllowDuplicates(true);
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        var response = controller.splitPdf(request);
+        ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(2);
+        assertThat(totalPagesOf(outputs)).isEqualTo(4);
     }
 
     @Test
@@ -163,10 +197,6 @@ class SplitPdfByChaptersControllerTest {
             request.setIncludeMetadata(false);
             request.setAllowDuplicates(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(
-                            inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
             assertThrows(IllegalArgumentException.class, () -> controller.splitPdf(request));
         }
     }
@@ -185,12 +215,12 @@ class SplitPdfByChaptersControllerTest {
         request.setIncludeMetadata(false);
         request.setAllowDuplicates(false);
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        var response = controller.splitPdf(request);
+        ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(1);
+        assertThat(totalPagesOf(outputs)).isEqualTo(3);
     }
 
     @Test
@@ -207,14 +237,15 @@ class SplitPdfByChaptersControllerTest {
         request.setIncludeMetadata(true);
         request.setAllowDuplicates(false);
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-        when(pdfMetadataService.extractMetadataFromPdf(any(PDDocument.class)))
+        lenient()
+                .when(pdfMetadataService.extractMetadataFromPdf(any(PDDocument.class)))
                 .thenReturn(new stirling.software.common.model.PdfMetadata());
 
-        var response = controller.splitPdf(request);
+        ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(totalPagesOf(outputs)).isEqualTo(4);
     }
 
     @Test
@@ -231,12 +262,12 @@ class SplitPdfByChaptersControllerTest {
         request.setIncludeMetadata(false);
         request.setAllowDuplicates(false);
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        var response = controller.splitPdf(request);
+        ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(3);
+        assertThat(totalPagesOf(outputs)).isEqualTo(6);
     }
 
     @Test
@@ -253,11 +284,11 @@ class SplitPdfByChaptersControllerTest {
         request.setIncludeMetadata(false);
         request.setAllowDuplicates(true);
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        var response = controller.splitPdf(request);
+        ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(5);
+        assertThat(totalPagesOf(outputs)).isEqualTo(10);
     }
 }
