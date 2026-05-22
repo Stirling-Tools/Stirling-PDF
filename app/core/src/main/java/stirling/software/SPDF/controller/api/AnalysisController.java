@@ -42,9 +42,8 @@ public class AnalysisController {
             summary = "Get PDF page count",
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<?> getPageCount(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
-            return ResponseEntity.ok(Map.of("pageCount", document.getNumberOfPages()));
-        }
+        int pageCount = pdfDocumentFactory.pageCountFast(file.getFileInput());
+        return ResponseEntity.ok(Map.of("pageCount", pageCount));
     }
 
     @AutoJobPostMapping(

@@ -57,9 +57,7 @@ class AnalysisControllerTest {
     @Test
     void getPageCount_returnsCorrectCount() throws IOException {
         PDFFile request = createRequest();
-        PDDocument doc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(doc);
-        when(doc.getNumberOfPages()).thenReturn(5);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(5);
 
         ResponseEntity<?> response = analysisController.getPageCount(request);
 
@@ -67,15 +65,12 @@ class AnalysisControllerTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertThat(body).containsEntry("pageCount", 5);
-        verify(doc).close();
     }
 
     @Test
     void getPageCount_emptyDocument() throws IOException {
         PDFFile request = createRequest();
-        PDDocument doc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(doc);
-        when(doc.getNumberOfPages()).thenReturn(0);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(0);
 
         ResponseEntity<?> response = analysisController.getPageCount(request);
 
@@ -87,7 +82,7 @@ class AnalysisControllerTest {
     @Test
     void getPageCount_ioException() throws IOException {
         PDFFile request = createRequest();
-        when(pdfDocumentFactory.load(mockFile)).thenThrow(new IOException("corrupt"));
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenThrow(new IOException("corrupt"));
 
         assertThatThrownBy(() -> analysisController.getPageCount(request))
                 .isInstanceOf(IOException.class);

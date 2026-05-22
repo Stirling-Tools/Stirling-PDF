@@ -83,18 +83,9 @@ class MergeControllerTest {
         when(mockMergedDocument.getPage(2)).thenReturn(mockPage2);
         when(mockMergedDocument.getPage(4)).thenReturn(mockPage1);
 
-        // Mock individual document loading for page count
-        PDDocument doc1 = mock(PDDocument.class);
-        PDDocument doc2 = mock(PDDocument.class);
-        PDDocument doc3 = mock(PDDocument.class);
-
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(pdfDocumentFactory.load(mockFile2)).thenReturn(doc2);
-        when(pdfDocumentFactory.load(mockFile3)).thenReturn(doc3);
-
-        when(doc1.getNumberOfPages()).thenReturn(2);
-        when(doc2.getNumberOfPages()).thenReturn(2);
-        when(doc3.getNumberOfPages()).thenReturn(2);
+        when(pdfDocumentFactory.pageCountFast(mockFile1)).thenReturn(2);
+        when(pdfDocumentFactory.pageCountFast(mockFile2)).thenReturn(2);
+        when(pdfDocumentFactory.pageCountFast(mockFile3)).thenReturn(2);
 
         // When
         Method addTableOfContentsMethod =
@@ -111,15 +102,9 @@ class MergeControllerTest {
         PDDocumentOutline capturedOutline = outlineCaptor.getValue();
         assertNotNull(capturedOutline);
 
-        // Verify that documents were loaded for page count
-        verify(pdfDocumentFactory).load(mockFile1);
-        verify(pdfDocumentFactory).load(mockFile2);
-        verify(pdfDocumentFactory).load(mockFile3);
-
-        // Verify document closing
-        verify(doc1).close();
-        verify(doc2).close();
-        verify(doc3).close();
+        verify(pdfDocumentFactory).pageCountFast(mockFile1);
+        verify(pdfDocumentFactory).pageCountFast(mockFile2);
+        verify(pdfDocumentFactory).pageCountFast(mockFile3);
     }
 
     @Test
@@ -131,9 +116,7 @@ class MergeControllerTest {
         when(mockMergedDocument.getNumberOfPages()).thenReturn(3);
         when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
 
-        PDDocument doc1 = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(doc1.getNumberOfPages()).thenReturn(3);
+        when(pdfDocumentFactory.pageCountFast(mockFile1)).thenReturn(3);
 
         // When
         Method addTableOfContentsMethod =
@@ -144,8 +127,7 @@ class MergeControllerTest {
 
         // Then
         verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(pdfDocumentFactory).load(mockFile1);
-        verify(doc1).close();
+        verify(pdfDocumentFactory).pageCountFast(mockFile1);
     }
 
     @Test
@@ -177,13 +159,8 @@ class MergeControllerTest {
         when(mockMergedDocument.getPage(anyInt()))
                 .thenReturn(mockPage1); // Use anyInt() to avoid stubbing conflicts
 
-        // First document loads successfully
-        PDDocument doc1 = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(doc1.getNumberOfPages()).thenReturn(2);
-
-        // Second document throws IOException
-        when(pdfDocumentFactory.load(mockFile2))
+        when(pdfDocumentFactory.pageCountFast(mockFile1)).thenReturn(2);
+        when(pdfDocumentFactory.pageCountFast(mockFile2))
                 .thenThrow(new IOException("Failed to load document"));
 
         // When
@@ -198,9 +175,8 @@ class MergeControllerTest {
 
         // Then
         verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(pdfDocumentFactory).load(mockFile1);
-        verify(pdfDocumentFactory).load(mockFile2);
-        verify(doc1).close();
+        verify(pdfDocumentFactory).pageCountFast(mockFile1);
+        verify(pdfDocumentFactory).pageCountFast(mockFile2);
     }
 
     @Test
@@ -218,9 +194,7 @@ class MergeControllerTest {
         when(mockMergedDocument.getNumberOfPages()).thenReturn(1);
         when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
 
-        PDDocument doc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(fileWithoutExtension)).thenReturn(doc);
-        when(doc.getNumberOfPages()).thenReturn(1);
+        when(pdfDocumentFactory.pageCountFast(fileWithoutExtension)).thenReturn(1);
 
         // When
         Method addTableOfContentsMethod =
@@ -231,7 +205,7 @@ class MergeControllerTest {
 
         // Then
         verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(doc).close();
+        verify(pdfDocumentFactory).pageCountFast(fileWithoutExtension);
     }
 
     @Test
@@ -242,9 +216,7 @@ class MergeControllerTest {
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockMergedDocument.getNumberOfPages()).thenReturn(0); // No pages in merged document
 
-        PDDocument doc1 = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(doc1.getNumberOfPages()).thenReturn(3);
+        when(pdfDocumentFactory.pageCountFast(mockFile1)).thenReturn(3);
 
         // When
         Method addTableOfContentsMethod =
@@ -259,7 +231,6 @@ class MergeControllerTest {
         // Then
         verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
         verify(mockMergedDocument, never()).getPage(anyInt());
-        verify(doc1).close();
     }
 
     @Test

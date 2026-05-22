@@ -51,6 +51,7 @@ import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfMerge;
 import stirling.software.jpdfium.doc.Bookmark;
+import stirling.software.jpdfium.doc.MetadataTag;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
@@ -132,16 +133,15 @@ public class MergeController {
                     };
             case "byPDFTitle" ->
                     (file1, file2) -> {
-                        try (PDDocument doc1 = pdfDocumentFactory.load(file1);
-                                PDDocument doc2 = pdfDocumentFactory.load(file2)) {
+                        try {
                             String title1 =
-                                    doc1.getDocumentInformation() != null
-                                            ? doc1.getDocumentInformation().getTitle()
-                                            : null;
+                                    pdfDocumentFactory
+                                            .infoTagFast(file1, MetadataTag.TITLE)
+                                            .orElse(null);
                             String title2 =
-                                    doc2.getDocumentInformation() != null
-                                            ? doc2.getDocumentInformation().getTitle()
-                                            : null;
+                                    pdfDocumentFactory
+                                            .infoTagFast(file2, MetadataTag.TITLE)
+                                            .orElse(null);
                             if (title1 == null && title2 == null) {
                                 return 0;
                             }
@@ -203,8 +203,8 @@ public class MergeController {
             }
             outline.addLast(item);
 
-            try (PDDocument doc = pdfDocumentFactory.load(file)) {
-                pageIndex += doc.getNumberOfPages();
+            try {
+                pageIndex += pdfDocumentFactory.pageCountFast(file);
             } catch (IOException e) {
                 ExceptionUtils.logException("document loading for TOC generation", e);
                 pageIndex++;

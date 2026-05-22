@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.doc.MetadataTag;
 
 @Component
 @Slf4j
@@ -728,5 +732,76 @@ public class CustomPDFDocumentFactory {
         Path p = Files.createTempFile(prefix, ".tmp");
         p.toFile().deleteOnExit();
         return p;
+    }
+
+    /** Reads page count via JPDFium without loading the full PDDocument object graph. */
+    public int pageCountFast(Path path) throws IOException {
+        if (path == null) throw ExceptionUtils.createNullArgumentException("Path");
+        try (PdfDocument doc = PdfDocument.open(path)) {
+            return doc.pageCount();
+        } catch (RuntimeException e) {
+            throw new IOException("JPDFium failed to read page count", e);
+        }
+    }
+
+    /**
+     * {@link MultipartFile} variant of {@link #pageCountFast(Path)}; spills to a managed temp file.
+     */
+    public int pageCountFast(MultipartFile file) throws IOException {
+        if (file == null) throw ExceptionUtils.createNullArgumentException("MultipartFile");
+        Path tmp = createTempFilePath("pdf-page-count-");
+        try {
+            file.transferTo(tmp.toFile());
+            return pageCountFast(tmp);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
+    /** Reads the Info dictionary via JPDFium without loading the full PDDocument object graph. */
+    public Map<String, String> infoDictFast(Path path) throws IOException {
+        if (path == null) throw ExceptionUtils.createNullArgumentException("Path");
+        try (PdfDocument doc = PdfDocument.open(path)) {
+            return doc.metadata();
+        } catch (RuntimeException e) {
+            throw new IOException("JPDFium failed to read metadata", e);
+        }
+    }
+
+    /**
+     * {@link MultipartFile} variant of {@link #infoDictFast(Path)}; spills to a managed temp file.
+     */
+    public Map<String, String> infoDictFast(MultipartFile file) throws IOException {
+        if (file == null) throw ExceptionUtils.createNullArgumentException("MultipartFile");
+        Path tmp = createTempFilePath("pdf-info-dict-");
+        try {
+            file.transferTo(tmp.toFile());
+            return infoDictFast(tmp);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
+    /** Reads a single Info dictionary tag via JPDFium. */
+    public Optional<String> infoTagFast(Path path, MetadataTag tag) throws IOException {
+        if (path == null) throw ExceptionUtils.createNullArgumentException("Path");
+        if (tag == null) throw ExceptionUtils.createNullArgumentException("MetadataTag");
+        try (PdfDocument doc = PdfDocument.open(path)) {
+            return doc.metadata(tag.pdfKey());
+        } catch (RuntimeException e) {
+            throw new IOException("JPDFium failed to read metadata tag", e);
+        }
+    }
+
+    /** {@link MultipartFile} variant of {@link #infoTagFast(Path, MetadataTag)}. */
+    public Optional<String> infoTagFast(MultipartFile file, MetadataTag tag) throws IOException {
+        if (file == null) throw ExceptionUtils.createNullArgumentException("MultipartFile");
+        Path tmp = createTempFilePath("pdf-info-tag-");
+        try {
+            file.transferTo(tmp.toFile());
+            return infoTagFast(tmp, tag);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
     }
 }
