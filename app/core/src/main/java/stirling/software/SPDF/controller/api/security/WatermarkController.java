@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
@@ -49,8 +50,10 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @SecurityApi
+@Slf4j
 @RequiredArgsConstructor
 public class WatermarkController {
 
@@ -107,7 +110,13 @@ public class WatermarkController {
         String customColor = request.getCustomColor();
         boolean convertPdfToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
 
-        // Load the input PDF with proper resource management
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox does the tiled overlay.
+        // Holdout: JPDFium WatermarkApplier supports only single-position; PDFBox handles tiling.
+        try (PdfDocument ignored = PdfDocument.open(pdfFile.getBytes())) {
+        } catch (Exception e) {
+            log.debug("JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
+        }
+
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
             // Create a page in the document

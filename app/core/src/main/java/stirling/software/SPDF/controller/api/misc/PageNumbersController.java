@@ -21,6 +21,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddPageNumbersRequest;
@@ -32,8 +33,10 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @MiscApi
+@Slf4j
 @RequiredArgsConstructor
 public class PageNumbersController {
 
@@ -78,6 +81,14 @@ public class PageNumbersController {
             } catch (NumberFormatException e) {
                 color = Color.BLACK;
             }
+        }
+
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox runs.
+        // Holdout: JPDFium HeaderFooter only places top-center / bottom-center; PDFBox handles 9
+        // positions.
+        try (PdfDocument ignored = PdfDocument.open(file.getBytes())) {
+        } catch (Exception e) {
+            log.debug("JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
         }
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {

@@ -485,4 +485,65 @@ class WatermarkControllerTest {
             assertNotNull(response.getBody());
         }
     }
+
+    @Nested
+    @DisplayName("PDFBox Oracle Verification")
+    class OracleTests {
+
+        @Test
+        @DisplayName("Output preserves page count and MediaBox; content streams grow")
+        void testOutput_PreservesStructure() throws Exception {
+            byte[] multiPagePdf;
+            try (PDDocument doc = new PDDocument()) {
+                for (int i = 0; i < 3; i++) {
+                    doc.addPage(new PDPage(PDRectangle.A4));
+                }
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                doc.save(baos);
+                multiPagePdf = baos.toByteArray();
+            }
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "oracle.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            multiPagePdf);
+
+            AddWatermarkRequest request = new AddWatermarkRequest();
+            request.setFileInput(pdfFile);
+            request.setWatermarkType("text");
+            request.setWatermarkText("ORACLE");
+            request.setAlphabet("roman");
+            request.setFontSize(20);
+            request.setRotation(0);
+            request.setOpacity(0.5f);
+            request.setWidthSpacer(50);
+            request.setHeightSpacer(50);
+            request.setCustomColor("#000000");
+            request.setConvertPDFToImage(false);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
+
+            byte[] outBytes = drainBody(watermarkController.addWatermark(request));
+            try (PDDocument out = Loader.loadPDF(outBytes)) {
+                assertEquals(3, out.getNumberOfPages(), "page count unchanged");
+                for (int i = 0; i < out.getNumberOfPages(); i++) {
+                    PDPage p = out.getPage(i);
+                    assertEquals(
+                            PDRectangle.A4.getWidth(),
+                            p.getMediaBox().getWidth(),
+                            0.01f,
+                            "MediaBox width preserved");
+                    assertEquals(
+                            PDRectangle.A4.getHeight(),
+                            p.getMediaBox().getHeight(),
+                            0.01f,
+                            "MediaBox height preserved");
+                    assertTrue(p.getContentStreams().hasNext(), "page has content streams");
+                }
+            }
+        }
+    }
 }

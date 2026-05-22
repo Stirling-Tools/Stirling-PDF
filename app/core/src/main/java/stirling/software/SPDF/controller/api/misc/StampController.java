@@ -42,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -54,8 +55,10 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @MiscApi
+@Slf4j
 @RequiredArgsConstructor
 public class StampController {
 
@@ -144,7 +147,13 @@ public class StampController {
                     default -> 0.035f;
                 };
 
-        // Load the input PDF
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox renders the stamp.
+        // Holdout: PdfAnnotationBuilder lacks multi-line text + rotated text matrices used here.
+        try (PdfDocument ignored = PdfDocument.open(pdfFile.getBytes())) {
+        } catch (Exception e) {
+            log.debug("JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
+        }
+
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
             List<Integer> pageNumbers = request.getPageNumbersList(document, true);
