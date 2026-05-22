@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -67,6 +68,16 @@ class DecompressPdfControllerTest {
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
+                        });
+        // Stub multipart-to-file conversion for the JPDFium pre-validate step
+        lenient()
+                .when(tempFileManager.convertMultipartFileToFile(any()))
+                .thenAnswer(
+                        inv -> {
+                            org.springframework.web.multipart.MultipartFile mf = inv.getArgument(0);
+                            File f = Files.createTempFile("input", ".pdf").toFile();
+                            java.nio.file.Files.write(f.toPath(), mf.getBytes());
+                            return f;
                         });
     }
 
@@ -207,6 +218,33 @@ class DecompressPdfControllerTest {
         assertThat(response.getBody()).isNotNull();
         // Decompressed PDF should generally be larger or equal to compressed
         assertThat(drainBody(response).length).isGreaterThan(0);
+    }
+
+    @Test
+    void decompressPdf_oracleNoFilterEntries() throws IOException {
+        // PDFBox oracle: load the decompressed output and verify every COSStream has no /Filter
+        MockMultipartFile file = createRealPdf("Oracle decompression check");
+        PDFFile request = new PDFFile();
+        request.setFileInput(file);
+
+        PDDocument doc = Loader.loadPDF(file.getBytes());
+        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+
+        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        byte[] body = drainBody(response);
+
+        try (PDDocument result = Loader.loadPDF(body)) {
+            org.apache.pdfbox.cos.COSDocument cosDoc = result.getDocument();
+            for (org.apache.pdfbox.cos.COSObjectKey key : cosDoc.getXrefTable().keySet()) {
+                org.apache.pdfbox.cos.COSObject obj = cosDoc.getObjectFromPool(key);
+                org.apache.pdfbox.cos.COSBase base = obj.getObject();
+                if (base instanceof org.apache.pdfbox.cos.COSStream stream) {
+                    assertThat(stream.containsKey(org.apache.pdfbox.cos.COSName.FILTER))
+                            .as("stream %s should have no /Filter", key)
+                            .isFalse();
+                }
+            }
+        }
     }
 
     @Test
