@@ -1,6 +1,9 @@
 package stirling.software.SPDF.controller.api;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,8 +36,12 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.doc.PdfPageEditor;
+import stirling.software.jpdfium.doc.PdfPageImporter;
 
 @GeneralApi
 @Slf4j
@@ -61,19 +68,26 @@ public class RearrangePagesPDFController {
         MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
 
+        File source = tempFileManager.convertMultipartFileToFile(pdfFile);
+        try {
+            if (detectAcroForm(source)) {
+                return deletePagesWithPdfBox(pdfFile, pagesToDelete);
+            }
+            return deletePagesWithJpdfium(pdfFile, source, pagesToDelete);
+        } finally {
+            tempFileManager.deleteTempFile(source);
+        }
+    }
+
+    private ResponseEntity<Resource> deletePagesWithPdfBox(
+            MultipartFile pdfFile, String pagesToDelete) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
-
-            // Split the page order string into an array of page numbers or range of numbers
             String[] pageOrderArr = pagesToDelete.split(",");
-
             List<Integer> pagesToRemove =
                     GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
-
             Collections.sort(pagesToRemove);
-
             for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
-                int pageIndex = pagesToRemove.get(i);
-                document.removePage(pageIndex);
+                document.removePage(pagesToRemove.get(i));
             }
             FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
@@ -81,6 +95,39 @@ public class RearrangePagesPDFController {
                     GeneralUtils.generateFilename(
                             pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
                     tempFileManager);
+        }
+    }
+
+    private ResponseEntity<Resource> deletePagesWithJpdfium(
+            MultipartFile pdfFile, File source, String pagesToDelete) throws IOException {
+        TempFile outputTempFile = new TempFile(tempFileManager, ".pdf");
+        try {
+            Path src = source.toPath();
+            Path out = outputTempFile.getFile().toPath();
+            try (PdfDocument doc = PdfDocument.open(src)) {
+                int total = doc.pageCount();
+                String[] pageOrderArr = pagesToDelete.split(",");
+                List<Integer> pagesToRemove =
+                        GeneralUtils.parsePageList(pageOrderArr, total, false);
+                Collections.sort(pagesToRemove);
+                MemorySegment rawDoc = doc.rawHandle();
+                for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
+                    int idx = pagesToRemove.get(i);
+                    if (idx >= 0 && idx < doc.pageCount()) {
+                        PdfPageEditor.deletePage(rawDoc, idx);
+                    }
+                }
+                doc.save(out);
+            } catch (RuntimeException e) {
+                throw new IOException("JPDFium remove-pages failed", e);
+            }
+            return WebResponseUtils.pdfFileToWebResponse(
+                    outputTempFile,
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
+        } catch (Exception e) {
+            outputTempFile.close();
+            throw e;
         }
     }
 
@@ -121,10 +168,10 @@ public class RearrangePagesPDFController {
 
     private List<Integer> duplexSort(int totalPages) {
         List<Integer> newPageOrder = new ArrayList<>();
-        int half = (totalPages + 1) / 2; // This ensures proper behavior with odd numbers of pages
+        int half = (totalPages + 1) / 2;
         for (int i = 1; i <= half; i++) {
             newPageOrder.add(i - 1);
-            if (i <= totalPages - half) { // Avoid going out of bounds
+            if (i <= totalPages - half) {
                 newPageOrder.add(totalPages - i);
             }
         }
@@ -166,21 +213,17 @@ public class RearrangePagesPDFController {
     private List<Integer> duplicate(int totalPages, String pageOrder) {
         List<Integer> newPageOrder = new ArrayList<>();
         int duplicateCount;
-
         try {
-            // Parse the duplicate count from pageOrder
             duplicateCount =
                     pageOrder != null && !pageOrder.isEmpty()
                             ? Integer.parseInt(pageOrder.trim())
-                            : 2; // Default to 2 if not specified
+                            : 2;
         } catch (NumberFormatException e) {
             log.error("Invalid duplicate count specified", e);
-            duplicateCount = 2; // Default to 2 if invalid input
+            duplicateCount = 2;
         }
-
-        // Validate duplicate count
         if (duplicateCount < 1) {
-            duplicateCount = 2; // Default to 2 if invalid input
+            duplicateCount = 2;
         }
         int maxDuplicateCount = Math.max(100, totalPages * 3);
         if (duplicateCount > maxDuplicateCount) {
@@ -190,15 +233,11 @@ public class RearrangePagesPDFController {
                     "duplicateCount",
                     "must not exceed " + maxDuplicateCount);
         }
-
-        // For each page in the document
         for (int pageNum = 0; pageNum < totalPages; pageNum++) {
-            // Add the current page index duplicateCount times
             for (int dupCount = 0; dupCount < duplicateCount; dupCount++) {
                 newPageOrder.add(pageNum);
             }
         }
-
         return newPageOrder;
     }
 
@@ -245,59 +284,110 @@ public class RearrangePagesPDFController {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();
-        try {
-            // Load the input PDF with proper resource management
-            try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-                // Split the page order string into an array of page numbers or range of numbers
-                String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
-                int totalPages = document.getNumberOfPages();
-                List<Integer> newPageOrder;
-                if (sortType != null
-                        && !sortType.isEmpty()
-                        && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
-                    newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
-                } else {
-                    newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
-                }
+        File source = tempFileManager.convertMultipartFileToFile(pdfFile);
+        try {
+            if (detectAcroForm(source)) {
+                return rearrangeWithPdfBox(pdfFile, pageOrder, sortType);
+            }
+            return rearrangeWithJpdfium(pdfFile, source, pageOrder, sortType);
+        } finally {
+            tempFileManager.deleteTempFile(source);
+        }
+    }
+
+    private ResponseEntity<Resource> rearrangeWithJpdfium(
+            MultipartFile pdfFile, File source, String pageOrder, String sortType)
+            throws IOException {
+        TempFile outputTempFile = new TempFile(tempFileManager, ".pdf");
+        try {
+            Path src = source.toPath();
+            Path out = outputTempFile.getFile().toPath();
+            try (PdfDocument doc = PdfDocument.open(src)) {
+                int totalPages = doc.pageCount();
+                List<Integer> newPageOrder = computeNewPageOrder(pageOrder, sortType, totalPages);
                 log.info("newPageOrder = {}", newPageOrder);
                 log.info("totalPages = {}", totalPages);
-                // Create a new list to hold the pages in the new order
-                List<PDPage> newPages = new ArrayList<>();
-                for (int i = 0; i < newPageOrder.size(); i++) {
-                    newPages.add(document.getPage(newPageOrder.get(i)));
+
+                int[] indices = newPageOrder.stream().mapToInt(Integer::intValue).toArray();
+                MemorySegment rawDoc = doc.rawHandle();
+                PdfPageImporter.importPagesByIndex(rawDoc, rawDoc, indices, totalPages);
+                for (int i = totalPages - 1; i >= 0; i--) {
+                    PdfPageEditor.deletePage(rawDoc, i);
                 }
+                doc.save(out);
+            } catch (RuntimeException e) {
+                throw new IOException("JPDFium rearrange failed", e);
+            }
+            return WebResponseUtils.pdfFileToWebResponse(
+                    outputTempFile,
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+        } catch (Exception e) {
+            outputTempFile.close();
+            ExceptionUtils.logException("document rearrangement", e);
+            throw e;
+        }
+    }
 
-                // Create a new document based on the original one
-                try (PDDocument rearrangedDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+    private ResponseEntity<Resource> rearrangeWithPdfBox(
+            MultipartFile pdfFile, String pageOrder, String sortType) throws IOException {
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
+            int totalPages = document.getNumberOfPages();
+            List<Integer> newPageOrder = computeNewPageOrder(pageOrder, sortType, totalPages);
+            log.info("newPageOrder = {}", newPageOrder);
+            log.info("totalPages = {}", totalPages);
 
-                    // Add the pages in the new order
-                    for (PDPage page : newPages) {
-                        rearrangedDocument.addPage(page);
-                    }
+            List<PDPage> newPages = new ArrayList<>();
+            for (Integer i : newPageOrder) {
+                newPages.add(document.getPage(i));
+            }
 
-                    PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
-                    if (sourceCatalog != null) {
-                        PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);
-                        if (sourceForm != null) {
-                            rearrangedDocument
-                                    .getDocumentCatalog()
-                                    .getCOSObject()
-                                    .setItem(COSName.ACRO_FORM, sourceForm.getCOSObject());
-                        }
-                    }
-
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            rearrangedDocument,
-                            GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"),
-                            tempFileManager);
+            try (PDDocument rearrangedDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+                for (PDPage page : newPages) {
+                    rearrangedDocument.addPage(page);
                 }
+                PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
+                if (sourceCatalog != null) {
+                    PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);
+                    if (sourceForm != null) {
+                        rearrangedDocument
+                                .getDocumentCatalog()
+                                .getCOSObject()
+                                .setItem(COSName.ACRO_FORM, sourceForm.getCOSObject());
+                    }
+                }
+                return WebResponseUtils.pdfDocToWebResponse(
+                        rearrangedDocument,
+                        GeneralUtils.generateFilename(
+                                pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                        tempFileManager);
             }
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;
+        }
+    }
+
+    private List<Integer> computeNewPageOrder(String pageOrder, String sortType, int totalPages) {
+        String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
+        if (sortType != null
+                && !sortType.isEmpty()
+                && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
+            return processSortTypes(sortType, totalPages, pageOrder);
+        }
+        return GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+    }
+
+    private boolean detectAcroForm(File pdf) {
+        try (PDDocument document = pdfDocumentFactory.load(pdf, true)) {
+            PDDocumentCatalog catalog = document.getDocumentCatalog();
+            if (catalog == null) return false;
+            return catalog.getAcroForm(null) != null;
+        } catch (IOException e) {
+            log.debug("AcroForm detect failed; defaulting to JPDFium path: {}", e.getMessage());
+            return false;
         }
     }
 }
