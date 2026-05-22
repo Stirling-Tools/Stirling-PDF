@@ -294,7 +294,7 @@ export default function RightSidebar() {
                 onClick={handleHeaderBack}
                 aria-label={
                   inToolView
-                    ? t("toolPanel.backToAllTools", "Back to tools")
+                    ? t("toolPanel.backToAllTools", "Back to all tools")
                     : t("toolPanel.goBack", "Go back")
                 }
                 className="tool-panel__expand-btn"
