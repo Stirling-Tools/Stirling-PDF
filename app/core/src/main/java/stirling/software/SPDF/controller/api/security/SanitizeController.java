@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -73,54 +74,50 @@ public class SanitizeController {
         boolean removeLinks = Boolean.TRUE.equals(request.getRemoveLinks());
         boolean removeFonts = Boolean.TRUE.equals(request.getRemoveFonts());
 
-        try (PDDocument document = pdfDocumentFactory.load(inputFile, true)) {
-            if (removeJavaScript) {
-                sanitizeJavaScript(document);
-            }
+        String outName =
+                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_sanitized.pdf");
 
-            if (removeEmbeddedFiles) {
-                sanitizeEmbeddedFiles(document);
+        File inputTempFile = tempFileManager.convertMultipartFileToFile(inputFile);
+        try {
+            // PDFBox holdout - JPDFium's PdfSecurity covers only annotation-level removals and
+            // PII-key stripping; it can't clear catalog OpenAction JS, Names-tree JS, doc-info
+            // wipe, font dictionaries, annotation-attached files, or filter links by action type.
+            try (PDDocument document = pdfDocumentFactory.load(inputTempFile, true)) {
+                if (removeJavaScript) {
+                    sanitizeJavaScript(document);
+                }
+                if (removeEmbeddedFiles) {
+                    sanitizeEmbeddedFiles(document);
+                }
+                if (removeXMPMetadata) {
+                    sanitizeXMPMetadata(document);
+                }
+                if (removeMetadata) {
+                    sanitizeDocumentInfoMetadata(document);
+                }
+                if (removeLinks) {
+                    sanitizeLinks(document);
+                }
+                if (removeFonts) {
+                    sanitizeFonts(document);
+                }
+                return WebResponseUtils.pdfDocToWebResponse(document, outName, tempFileManager);
             }
-
-            if (removeXMPMetadata) {
-                sanitizeXMPMetadata(document);
-            }
-
-            if (removeMetadata) {
-                sanitizeDocumentInfoMetadata(document);
-            }
-
-            if (removeLinks) {
-                sanitizeLinks(document);
-            }
-
-            if (removeFonts) {
-                sanitizeFonts(document);
-            }
-
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_sanitized.pdf"),
-                    tempFileManager);
+        } finally {
+            tempFileManager.deleteTempFile(inputTempFile);
         }
     }
 
     private static void sanitizeJavaScript(PDDocument document) throws IOException {
-        // Get the root dictionary (catalog) of the PDF
         PDDocumentCatalog catalog = document.getDocumentCatalog();
 
-        // Get the Names dictionary
         COSDictionary namesDict =
                 (COSDictionary) catalog.getCOSObject().getDictionaryObject(COSName.NAMES);
 
         if (namesDict != null) {
-            // Get the JavaScript dictionary
             COSDictionary javaScriptDict =
                     (COSDictionary) namesDict.getDictionaryObject(COSName.getPDFName("JavaScript"));
-
             if (javaScriptDict != null) {
-                // Remove the JavaScript dictionary
                 namesDict.removeItem(COSName.getPDFName("JavaScript"));
             }
         }

@@ -1,5 +1,8 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -24,10 +28,13 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @SecurityApi
+@Slf4j
 @RequiredArgsConstructor
 public class RemoveCertSignController {
 
@@ -47,31 +54,53 @@ public class RemoveCertSignController {
     public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
+        String outName = GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf");
 
-        // Load the PDF document with proper resource management
-        try (PDDocument document = pdfDocumentFactory.load(pdf)) {
-
-            // Get the document catalog
-            PDDocumentCatalog catalog = document.getDocumentCatalog();
-
-            // Get the AcroForm
-            PDAcroForm acroForm = catalog.getAcroForm();
-            if (acroForm != null) {
-                // Remove signature fields safely
-                List<PDField> fieldsToRemove =
-                        acroForm.getFields().stream()
-                                .filter(field -> field instanceof PDSignatureField)
-                                .toList();
-
-                if (!fieldsToRemove.isEmpty()) {
-                    acroForm.flatten(fieldsToRemove, false);
+        File inputTempFile = tempFileManager.convertMultipartFileToFile(pdf);
+        try {
+            if (!needsSignatureFlatten(inputTempFile)) {
+                log.info("No signature fields detected; returning input as-is.");
+                TempFile passthrough = tempFileManager.createManagedTempFile(".pdf");
+                try {
+                    Files.copy(
+                            inputTempFile.toPath(),
+                            passthrough.getFile().toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception e) {
+                    passthrough.close();
+                    throw e;
                 }
+                return WebResponseUtils.pdfFileToWebResponse(passthrough, outName);
             }
-            // Return the modified PDF as a response
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf"),
-                    tempFileManager);
+
+            // PDFBox flattens the /Sig field - JPDFium can read signatures but not strip them.
+            try (PDDocument document = pdfDocumentFactory.load(inputTempFile)) {
+                PDDocumentCatalog catalog = document.getDocumentCatalog();
+                PDAcroForm acroForm = catalog.getAcroForm();
+                if (acroForm != null) {
+                    List<PDField> fieldsToRemove =
+                            acroForm.getFields().stream()
+                                    .filter(field -> field instanceof PDSignatureField)
+                                    .toList();
+                    if (!fieldsToRemove.isEmpty()) {
+                        acroForm.flatten(fieldsToRemove, false);
+                    }
+                }
+                return WebResponseUtils.pdfDocToWebResponse(document, outName, tempFileManager);
+            }
+        } finally {
+            tempFileManager.deleteTempFile(inputTempFile);
+        }
+    }
+
+    private boolean needsSignatureFlatten(File inputFile) {
+        try (PdfDocument check = PdfDocument.open(inputFile.toPath())) {
+            return !check.signatures().isEmpty();
+        } catch (Exception e) {
+            log.debug(
+                    "JPDFium signature pre-check failed; falling back to PDFBox flatten: {}",
+                    e.getMessage());
+            return true;
         }
     }
 }
