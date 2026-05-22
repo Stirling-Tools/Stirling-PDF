@@ -1,0 +1,2 @@
+-server KNOWN
+-client IGNORE

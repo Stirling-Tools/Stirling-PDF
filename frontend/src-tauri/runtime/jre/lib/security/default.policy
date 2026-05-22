@@ -1,0 +1,235 @@
+//
+// Permissions required by modules stored in a run-time image and loaded
+// by the platform class loader.
+//
+// NOTE that this file is not intended to be modified. If additional
+// permissions need to be granted to the modules in this file, it is
+// recommended that they be configured in a separate policy file or
+// ${java.home}/conf/security/java.policy.
+//
+
+
+grant codeBase "jrt:/java.compiler" {
+    permission java.security.AllPermission;
+};
+
+
+grant codeBase "jrt:/java.net.http" {
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.net";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.net.util";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.net.www";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.misc";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.ref";
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.net.SocketPermission "*","connect,resolve";
+    // required if the HTTPClient is configured to use a local bind address
+    permission java.net.SocketPermission "localhost:*","listen,resolve";
+    permission java.net.URLPermission "http:*","*:*";
+    permission java.net.URLPermission "https:*","*:*";
+    permission java.net.URLPermission "ws:*","*:*";
+    permission java.net.URLPermission "wss:*","*:*";
+    permission java.net.URLPermission "socket:*","CONNECT";  // proxy
+    // For request/response body processors, fromFile, asFile
+    permission java.io.FilePermission "<<ALL FILES>>","read,write,delete";
+    permission java.util.PropertyPermission "*","read";
+    permission java.net.NetPermission "getProxySelector";
+};
+
+grant codeBase "jrt:/java.scripting" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/java.security.jgss" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/java.smartcardio" {
+    permission javax.smartcardio.CardPermission "*", "*";
+    permission java.lang.RuntimePermission "loadLibrary.j2pcsc";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.sun.security.jca";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.sun.security.util";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.jdk.internal.util";
+    permission java.util.PropertyPermission
+                   "javax.smartcardio.TerminalFactory.DefaultType", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+    permission java.util.PropertyPermission "sun.arch.data.model", "read";
+    permission java.util.PropertyPermission
+                   "sun.security.smartcardio.library", "read";
+    permission java.util.PropertyPermission
+                   "sun.security.smartcardio.t0GetResponse", "read";
+    permission java.util.PropertyPermission
+                   "sun.security.smartcardio.t1GetResponse", "read";
+    permission java.util.PropertyPermission
+                   "sun.security.smartcardio.t1StripLe", "read";
+    // needed for looking up native PC/SC library
+    permission java.io.FilePermission "<<ALL FILES>>","read";
+    permission java.security.SecurityPermission "putProviderProperty.SunPCSC";
+    permission java.security.SecurityPermission
+                   "clearProviderProperties.SunPCSC";
+    permission java.security.SecurityPermission
+                   "removeProviderProperty.SunPCSC";
+};
+
+grant codeBase "jrt:/java.sql" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/java.sql.rowset" {
+    permission java.security.AllPermission;
+};
+
+
+grant codeBase "jrt:/java.xml.crypto" {
+    permission java.lang.RuntimePermission
+                   "getStackWalkerWithClassReference";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.sun.security.util";
+    permission java.util.PropertyPermission "*", "read";
+    permission java.security.SecurityPermission "putProviderProperty.XMLDSig";
+    permission java.security.SecurityPermission
+                   "clearProviderProperties.XMLDSig";
+    permission java.security.SecurityPermission
+                   "removeProviderProperty.XMLDSig";
+    permission java.security.SecurityPermission
+                   "com.sun.org.apache.xml.internal.security.register";
+    permission java.security.SecurityPermission
+                   "getProperty.jdk.xml.dsig.hereFunctionSupported";
+    permission java.security.SecurityPermission
+                   "getProperty.jdk.xml.dsig.secureValidationPolicy";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.com.sun.org.apache.xml.internal.*";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.com.sun.org.apache.xpath.internal";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.com.sun.org.apache.xpath.internal.*";
+    permission java.io.FilePermission "<<ALL FILES>>","read";
+    permission java.net.SocketPermission "*", "connect,resolve";
+};
+
+
+grant codeBase "jrt:/jdk.accessibility" {
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.awt";
+};
+
+grant codeBase "jrt:/jdk.charsets" {
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.lang.RuntimePermission "charsetProvider";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.jdk.internal.access";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.jdk.internal.misc";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.jdk.internal.util";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.nio.cs";
+};
+
+grant codeBase "jrt:/jdk.crypto.ec" {
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.sun.security.*";
+    permission java.lang.RuntimePermission "loadLibrary.sunec";
+    permission java.security.SecurityPermission "putProviderProperty.SunEC";
+    permission java.security.SecurityPermission "clearProviderProperties.SunEC";
+    permission java.security.SecurityPermission "removeProviderProperty.SunEC";
+};
+
+grant codeBase "jrt:/jdk.crypto.cryptoki" {
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.com.sun.crypto.provider";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.misc";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.access";
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.sun.security.*";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.nio.ch";
+    permission java.lang.RuntimePermission "loadLibrary.j2pkcs11";
+    permission java.util.PropertyPermission "sun.security.pkcs11.allowSingleThreadedModules", "read";
+    permission java.util.PropertyPermission "sun.security.pkcs11.disableKeyExtraction", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+    permission java.util.PropertyPermission "jdk.crypto.KeyAgreement.legacyKDF", "read";
+    permission java.security.SecurityPermission "putProviderProperty.*";
+    permission java.security.SecurityPermission "clearProviderProperties.*";
+    permission java.security.SecurityPermission "removeProviderProperty.*";
+    permission java.security.SecurityPermission
+                   "getProperty.auth.login.defaultCallbackHandler";
+    permission java.security.SecurityPermission "authProvider.*";
+    // Needed for reading PKCS11 config file and NSS library check
+    permission java.io.FilePermission "<<ALL FILES>>", "read";
+};
+
+grant codeBase "jrt:/jdk.dynalink" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.httpserver" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.internal.le" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.internal.vm.compiler" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.internal.vm.compiler.management" {
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.vm.compiler.collections";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.vm.ci.runtime";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.vm.ci.services";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.graalvm.compiler.core.common";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.graalvm.compiler.debug";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.graalvm.compiler.hotspot";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.graalvm.compiler.options";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.graalvm.compiler.phases.common.jmx";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.graalvm.compiler.serviceprovider";
+};
+
+grant codeBase "jrt:/jdk.jsobject" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.localedata" {
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.text.*";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.util.*";
+};
+
+grant codeBase "jrt:/jdk.naming.dns" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.scripting.nashorn" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.scripting.nashorn.shell" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.security.auth" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.security.jgss" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.zipfs" {
+    permission java.io.FilePermission "<<ALL FILES>>", "read,write,delete";
+    permission java.lang.RuntimePermission "fileSystemProvider";
+    permission java.lang.RuntimePermission "accessUserInformation";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "user.dir", "read";
+    permission java.util.PropertyPermission "user.name", "read";
+};
+
+// permissions needed by applications using java.desktop module
+grant {
+    permission java.lang.RuntimePermission "accessClassInPackage.com.sun.beans";
+    permission java.lang.RuntimePermission "accessClassInPackage.com.sun.beans.*";
+    permission java.lang.RuntimePermission "accessClassInPackage.com.sun.java.swing.plaf.*";
+    permission java.lang.RuntimePermission "accessClassInPackage.com.apple.*";
+};

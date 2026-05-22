@@ -1,0 +1,46 @@
+//
+// This system policy file grants a set of default permissions to all domains
+// and can be configured to grant additional permissions to modules and other
+// code sources. The code source URL scheme for modules linked into a
+// run-time image is "jrt".
+//
+// For example, to grant permission to read the "foo" property to the module
+// "com.greetings", the grant entry is:
+//
+// grant codeBase "jrt:/com.greetings" {
+//     permission java.util.PropertyPermission "foo", "read";
+// };
+//
+
+// default permissions granted to all domains
+grant {
+    // allows anyone to listen on dynamic ports
+    permission java.net.SocketPermission "localhost:0", "listen";
+
+    // "standard" properties that can be read by anyone
+    permission java.util.PropertyPermission "java.version", "read";
+    permission java.util.PropertyPermission "java.vendor", "read";
+    permission java.util.PropertyPermission "java.vendor.url", "read";
+    permission java.util.PropertyPermission "java.class.version", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.version", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+    permission java.util.PropertyPermission "file.separator", "read";
+    permission java.util.PropertyPermission "path.separator", "read";
+    permission java.util.PropertyPermission "line.separator", "read";
+    permission java.util.PropertyPermission
+                   "java.specification.version", "read";
+    permission java.util.PropertyPermission
+                   "java.specification.maintenance.version", "read";
+    permission java.util.PropertyPermission "java.specification.vendor", "read";
+    permission java.util.PropertyPermission "java.specification.name", "read";
+    permission java.util.PropertyPermission
+                   "java.vm.specification.version", "read";
+    permission java.util.PropertyPermission
+                   "java.vm.specification.vendor", "read";
+    permission java.util.PropertyPermission
+                   "java.vm.specification.name", "read";
+    permission java.util.PropertyPermission "java.vm.version", "read";
+    permission java.util.PropertyPermission "java.vm.vendor", "read";
+    permission java.util.PropertyPermission "java.vm.name", "read";
+};
