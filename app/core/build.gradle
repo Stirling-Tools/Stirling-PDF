@@ -137,6 +137,13 @@ sourceSets {
 }
 
 
+// Forward jpdfium.bench to the forked test JVM so EnabledIfSystemProperty fires
+tasks.named('test') {
+    if (System.getProperty('jpdfium.bench')) {
+        systemProperty 'jpdfium.bench', System.getProperty('jpdfium.bench')
+    }
+}
+
 // Disable regular jar
 jar {
     enabled = false
