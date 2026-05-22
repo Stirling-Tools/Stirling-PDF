@@ -5,6 +5,6 @@
     "moduleResolution": "node16",
     "noEmit": true
   },
-  "include": ["./**/*.ts"],
+  "include": ["./**/*.ts", "./**/*.mts"],
   "exclude": []
 }
