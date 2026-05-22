@@ -94,21 +94,21 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             case "${{ github.event.inputs.platform }}" in
               "windows")
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "macos")
-                echo 'matrix={"include":[{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
-                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For push/release events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build-jars:
@@ -263,15 +263,17 @@ jobs:
         if: matrix.platform == 'macos-15'
         env:
           AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+          JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:jlink:universal-mac
 
       - name: Prepare desktop build
-        run: task desktop:prepare
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
+          JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
+        run: task desktop:prepare
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -425,7 +427,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -438,7 +440,11 @@ jobs:
           }
           EOF
           echo "Generated tauri.windows.conf.json (alias masked):"
-          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
+          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/editor/src-tauri/tauri.windows.conf.json
+
+      - name: Sign JPDFium dylibs inside bootJar (macOS only)
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
 
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
@@ -486,7 +492,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend
+          projectPath: ./frontend/editor
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
@@ -512,7 +518,7 @@ jobs:
           $allSigned = $true
 
           # Check MSI installer (outer wrapper - what users download)
-          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
+          $msiFiles = Get-ChildItem -Path "./frontend/editor/src-tauri/target" -Filter "*.msi" -Recurse -File
           if ($msiFiles.Count -eq 0) {
             Write-Host "[ERROR] No MSI found under target/"
             exit 1
@@ -581,7 +587,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ./dist
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
