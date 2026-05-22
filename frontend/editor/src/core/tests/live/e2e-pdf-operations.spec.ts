@@ -44,9 +44,14 @@ function fixture(filename: string): string {
   );
 }
 
-// Additional test PDFs from the testing/ directory
+// Additional test PDFs from the testing/ directory (lives at the repo root).
+// Candidates cover the three plausible cwds Playwright might be invoked from:
+//   - repo root            → testing/
+//   - frontend/            → ../testing/
+//   - frontend/editor/     → ../../testing/  (post editor-restructure)
 function testingFile(filename: string): string {
   const candidates = [
+    path.resolve(process.cwd(), "..", "..", "testing", filename),
     path.resolve(process.cwd(), "..", "testing", filename),
     path.resolve(process.cwd(), "testing", filename),
   ];
