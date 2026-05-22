@@ -28,11 +28,13 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
+import stirling.software.jpdfium.PdfDocument;
 
 @MiscApi
 @Slf4j
@@ -43,12 +45,9 @@ public class MetadataController {
     private final TempFileManager tempFileManager;
 
     private String checkUndefined(String entry) {
-        // Check if the string is "undefined"
         if ("undefined".equals(entry)) {
-            // Return null if it is
             return null;
         }
-        // Return the original string if it's not "undefined"
         return entry;
     }
 
@@ -71,10 +70,8 @@ public class MetadataController {
     public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
-        // Extract PDF file from the request object
         MultipartFile pdfFile = request.getFileInput();
 
-        // Extract metadata information
         boolean deleteAll = Boolean.TRUE.equals(request.getDeleteAll());
         String author = request.getAuthor();
         String creationDate = request.getCreationDate();
@@ -86,18 +83,19 @@ public class MetadataController {
         String title = request.getTitle();
         String trapped = request.getTrapped();
 
-        // Extract additional custom parameters
         Map<String, String> allRequestParams = request.getAllRequestParams();
         if (allRequestParams == null) {
             allRequestParams = new java.util.HashMap<String, String>();
         }
-        // Load the PDF file into a PDDocument with proper resource management
+
+        // JPDFium pre-validate - cheap structural check before PDFBox parses.
+        validateWithJpdfium(pdfFile);
+
+        // PDFBox handles writes - JPDFium has no metadata write API.
         try (PDDocument document = pdfDocumentFactory.load(pdfFile, true)) {
 
-            // Get the document information from the PDF
             PDDocumentInformation info = document.getDocumentInformation();
 
-            // Check if each metadata value is "undefined" and set it to null if it is
             author = checkUndefined(author);
             creationDate = checkUndefined(creationDate);
             creator = checkUndefined(creator);
@@ -108,13 +106,10 @@ public class MetadataController {
             title = checkUndefined(title);
             trapped = checkUndefined(trapped);
 
-            // If the "deleteAll" flag is set, remove all metadata from the document
-            // information
             if (deleteAll) {
                 for (String key : info.getMetadataKeys()) {
                     info.setCustomMetadataValue(key, null);
                 }
-                // Remove metadata from the PDF history
                 document.getDocumentCatalog()
                         .getCOSObject()
                         .removeItem(COSName.getPDFName("Metadata"));
@@ -131,10 +126,8 @@ public class MetadataController {
                 title = null;
                 trapped = null;
             } else {
-                // Iterate through the request parameters and set the metadata values
                 for (Entry<String, String> entry : allRequestParams.entrySet()) {
                     String key = entry.getKey();
-                    // Check if the key is a standard metadata key
                     if (!"Author".equalsIgnoreCase(key)
                             && !"CreationDate".equalsIgnoreCase(key)
                             && !"Creator".equalsIgnoreCase(key)
@@ -159,18 +152,15 @@ public class MetadataController {
                             String customValue = allRequestParams.get("customValue" + number);
                             info.setCustomMetadataValue(customKey, customValue);
                         } catch (NumberFormatException e) {
-                            // Skip invalid custom key entries that don't have valid numeric
-                            // suffixes
                             log.warn("Skipping invalid custom key '{}': {}", key, e.getMessage());
                         }
                     }
                 }
             }
-            // Set creation date using utility method
+
             Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
             info.setCreationDate(creationDateCal);
 
-            // Set modification date using utility method
             Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
             info.setModificationDate(modificationDateCal);
             info.setCreator(creator);
@@ -188,6 +178,22 @@ public class MetadataController {
                                     Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
                             + "_metadata.pdf",
                     tempFileManager);
+        }
+    }
+
+    private void validateWithJpdfium(MultipartFile pdfFile) {
+        byte[] bytes;
+        try {
+            bytes = pdfFile.getBytes();
+        } catch (Exception e) {
+            return;
+        }
+        if (bytes == null || bytes.length == 0) {
+            return;
+        }
+        try (PdfDocument ignored = PdfDocument.open(bytes)) {
+        } catch (Exception e) {
+            ExceptionUtils.logException("JPDFium metadata pre-validate", e);
         }
     }
 }

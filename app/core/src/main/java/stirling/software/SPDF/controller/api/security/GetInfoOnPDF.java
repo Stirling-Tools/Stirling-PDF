@@ -62,6 +62,10 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.doc.Attachment;
+import stirling.software.jpdfium.doc.Bookmark;
+import stirling.software.jpdfium.doc.MetadataTag;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -306,6 +310,10 @@ public class GetInfoOnPDF {
     }
 
     private static ObjectNode extractMetadata(PDDocument document) {
+        return extractMetadata(document, null);
+    }
+
+    private static ObjectNode extractMetadata(PDDocument document, PdfDocument jpdfiumDoc) {
         ObjectNode metadata = objectMapper.createObjectNode();
 
         try {
@@ -340,7 +348,33 @@ public class GetInfoOnPDF {
             log.error("Error extracting metadata: {}", e.getMessage());
         }
 
+        augmentMetadataFromJpdfium(metadata, jpdfiumDoc);
         return metadata;
+    }
+
+    private static void augmentMetadataFromJpdfium(ObjectNode metadata, PdfDocument jpdfiumDoc) {
+        if (jpdfiumDoc == null) {
+            return;
+        }
+        try {
+            putIfAbsentText(metadata, "Title", jpdfiumDoc.metadata(MetadataTag.TITLE.pdfKey()));
+            putIfAbsentText(metadata, "Author", jpdfiumDoc.metadata(MetadataTag.AUTHOR.pdfKey()));
+            putIfAbsentText(metadata, "Subject", jpdfiumDoc.metadata(MetadataTag.SUBJECT.pdfKey()));
+            putIfAbsentText(
+                    metadata, "Keywords", jpdfiumDoc.metadata(MetadataTag.KEYWORDS.pdfKey()));
+            putIfAbsentText(
+                    metadata, "Producer", jpdfiumDoc.metadata(MetadataTag.PRODUCER.pdfKey()));
+            putIfAbsentText(metadata, "Creator", jpdfiumDoc.metadata(MetadataTag.CREATOR.pdfKey()));
+        } catch (Exception e) {
+            log.debug("JPDFium metadata augment failed: {}", e.getMessage());
+        }
+    }
+
+    private static void putIfAbsentText(
+            ObjectNode node, String key, java.util.Optional<String> value) {
+        if (!node.has(key)) {
+            value.ifPresent(v -> node.put(key, v));
+        }
     }
 
     private static ObjectNode extractDocumentInfo(PDDocument document) {
@@ -1090,24 +1124,32 @@ public class GetInfoOnPDF {
 
         boolean readonly = true;
 
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
+        // JPDFium read path - supplements PDFBox where doc structure is identical.
+        byte[] inputBytes = null;
+        try {
+            inputBytes = inputFile.getBytes();
+        } catch (Exception e) {
+            log.debug("Unable to read input bytes for JPDFium path: {}", e.getMessage());
+        }
+
+        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly);
+                PdfDocument jpdfiumDoc = openJpdfiumQuietly(inputBytes)) {
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
-            ObjectNode metadata = extractMetadata(pdfBoxDoc);
+            ObjectNode metadata = extractMetadata(pdfBoxDoc, jpdfiumDoc);
             ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, inputFile.getSize());
             ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
             ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc, verificationResults);
             ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
             ObjectNode permissionsNode = extractPermissions(pdfBoxDoc);
             ObjectNode other = extractOtherInfo(pdfBoxDoc);
+            augmentOtherFromJpdfium(other, jpdfiumDoc);
             ObjectNode formFieldsNode = extractFormFields(pdfBoxDoc);
 
             ObjectNode summaryData = generatePDFSummaryData(pdfBoxDoc, verificationResults);
 
-            // Extract per-page information
             ObjectNode pageInfoParent = extractPerPageInfo(pdfBoxDoc);
 
-            // Assemble final JSON output
             jsonOutput.set("Metadata", metadata);
             jsonOutput.set("BasicInfo", basicInfo);
             jsonOutput.set("DocumentInfo", docInfoNode);
@@ -1122,7 +1164,6 @@ public class GetInfoOnPDF {
                 jsonOutput.set("SummaryData", summaryData);
             }
 
-            // Convert to JSON string
             String jsonString =
                     objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonOutput);
 
@@ -1137,6 +1178,76 @@ public class GetInfoOnPDF {
         } catch (Exception e) {
             log.error("Unexpected error while processing PDF: {}", e.getMessage(), e);
             return createErrorResponse("Unexpected error processing PDF: " + e.getMessage());
+        }
+    }
+
+    private static PdfDocument openJpdfiumQuietly(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        try {
+            return PdfDocument.open(bytes);
+        } catch (Exception e) {
+            log.debug("JPDFium open failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private static void augmentOtherFromJpdfium(ObjectNode other, PdfDocument jpdfiumDoc) {
+        if (jpdfiumDoc == null) {
+            return;
+        }
+        try {
+            ArrayNode existingAttachments =
+                    other.has("Attachments") && other.get("Attachments").isArray()
+                            ? (ArrayNode) other.get("Attachments")
+                            : null;
+            if (existingAttachments == null || existingAttachments.isEmpty()) {
+                ArrayNode jpdfAttachments = objectMapper.createArrayNode();
+                for (Attachment att : jpdfiumDoc.attachments()) {
+                    ObjectNode node = objectMapper.createObjectNode();
+                    node.put("Name", att.name());
+                    if (att.hasData()) {
+                        node.put("FileSize", att.data().length);
+                    }
+                    att.extension().ifPresent(ext -> node.put("Extension", ext));
+                    jpdfAttachments.add(node);
+                }
+                if (!jpdfAttachments.isEmpty()) {
+                    other.set("Attachments", jpdfAttachments);
+                }
+            }
+
+            ArrayNode existingBookmarks =
+                    other.has("Bookmarks/Outline/TOC")
+                                    && other.get("Bookmarks/Outline/TOC").isArray()
+                            ? (ArrayNode) other.get("Bookmarks/Outline/TOC")
+                            : null;
+            if (existingBookmarks == null || existingBookmarks.isEmpty()) {
+                ArrayNode jpdfBookmarks = objectMapper.createArrayNode();
+                for (Bookmark bm : jpdfiumDoc.bookmarks()) {
+                    appendBookmarkFlat(bm, jpdfBookmarks);
+                }
+                if (!jpdfBookmarks.isEmpty()) {
+                    other.set("Bookmarks/Outline/TOC", jpdfBookmarks);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("JPDFium Other augment failed: {}", e.getMessage());
+        }
+    }
+
+    private static void appendBookmarkFlat(Bookmark bm, ArrayNode arr) {
+        if (bm == null) return;
+        ObjectNode node = objectMapper.createObjectNode();
+        if (bm.title() != null) {
+            node.put("Title", bm.title());
+        }
+        arr.add(node);
+        if (bm.hasChildren()) {
+            for (Bookmark child : bm.children()) {
+                appendBookmarkFlat(child, arr);
+            }
         }
     }
 

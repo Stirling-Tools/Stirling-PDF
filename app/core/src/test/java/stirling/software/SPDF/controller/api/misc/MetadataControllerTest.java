@@ -5,14 +5,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,16 +26,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class MetadataControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
     @InjectMocks private MetadataController metadataController;
 
     private PDDocument mockDocument;
@@ -46,6 +58,19 @@ class MetadataControllerTest {
         mockFile = mock(MultipartFile.class);
 
         when(mockFile.getOriginalFilename()).thenReturn("test.pdf");
+
+        lenient()
+                .when(tempFileManager.createManagedTempFile(any(String.class)))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("mdt", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
     }
 
     @Test
@@ -298,5 +323,119 @@ class MetadataControllerTest {
         }
 
         verify(mockInfo).setCreationDate(any());
+    }
+
+    private byte[] buildSourcePdf() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    @Test
+    void testMetadata_oracleVerifiesInfoDictFields() throws Exception {
+        byte[] source = buildSourcePdf();
+        MockMultipartFile uploaded =
+                new MockMultipartFile(
+                        "fileInput", "src.pdf", MediaType.APPLICATION_PDF_VALUE, source);
+
+        PDDocument liveDoc = Loader.loadPDF(source);
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(liveDoc);
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(uploaded);
+        request.setDeleteAll(false);
+        request.setTitle("Oracle Title");
+        request.setAuthor("Oracle Author");
+        request.setSubject("Oracle Subject");
+        request.setKeywords("a,b,c");
+        request.setCreator("Oracle Creator");
+        request.setProducer("Oracle Producer");
+        request.setTrapped("True");
+        request.setAllRequestParams(new HashMap<>());
+
+        ResponseEntity<Resource> response = metadataController.metadata(request);
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+
+        byte[] outputBytes = response.getBody().getContentAsByteArray();
+        try (PDDocument reloaded = Loader.loadPDF(outputBytes)) {
+            PDDocumentInformation info = reloaded.getDocumentInformation();
+            assertEquals("Oracle Title", info.getTitle());
+            assertEquals("Oracle Author", info.getAuthor());
+            assertEquals("Oracle Subject", info.getSubject());
+            assertEquals("a,b,c", info.getKeywords());
+            assertEquals("Oracle Creator", info.getCreator());
+            assertEquals("Oracle Producer", info.getProducer());
+            assertEquals("True", info.getTrapped());
+        }
+    }
+
+    @Test
+    void testMetadata_oracleCustomMetadataPersists() throws Exception {
+        byte[] source = buildSourcePdf();
+        MockMultipartFile uploaded =
+                new MockMultipartFile(
+                        "fileInput", "src.pdf", MediaType.APPLICATION_PDF_VALUE, source);
+
+        PDDocument liveDoc = Loader.loadPDF(source);
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(liveDoc);
+
+        Map<String, String> params = new HashMap<>();
+        params.put("MyCustomField", "MyCustomValue");
+        params.put("customKey1", "ResolvedKey");
+        params.put("customValue1", "ResolvedValue");
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(uploaded);
+        request.setDeleteAll(false);
+        request.setAllRequestParams(params);
+
+        ResponseEntity<Resource> response = metadataController.metadata(request);
+        byte[] outputBytes = response.getBody().getContentAsByteArray();
+
+        try (PDDocument reloaded = Loader.loadPDF(outputBytes)) {
+            PDDocumentInformation info = reloaded.getDocumentInformation();
+            assertEquals("MyCustomValue", info.getCustomMetadataValue("MyCustomField"));
+            assertEquals("ResolvedValue", info.getCustomMetadataValue("ResolvedKey"));
+        }
+    }
+
+    @Test
+    void testMetadata_oracleDeleteAllClearsInfoFields() throws Exception {
+        byte[] source;
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            PDDocumentInformation seedInfo = new PDDocumentInformation();
+            seedInfo.setTitle("To Be Removed");
+            seedInfo.setAuthor("To Be Removed");
+            doc.setDocumentInformation(seedInfo);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            source = baos.toByteArray();
+        }
+
+        MockMultipartFile uploaded =
+                new MockMultipartFile(
+                        "fileInput", "src.pdf", MediaType.APPLICATION_PDF_VALUE, source);
+
+        PDDocument liveDoc = Loader.loadPDF(source);
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(liveDoc);
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(uploaded);
+        request.setDeleteAll(true);
+        request.setAllRequestParams(new HashMap<>());
+
+        ResponseEntity<Resource> response = metadataController.metadata(request);
+        byte[] outputBytes = response.getBody().getContentAsByteArray();
+
+        try (PDDocument reloaded = Loader.loadPDF(outputBytes)) {
+            PDDocumentInformation info = reloaded.getDocumentInformation();
+            assertNull(info.getTitle());
+            assertNull(info.getAuthor());
+        }
     }
 }
