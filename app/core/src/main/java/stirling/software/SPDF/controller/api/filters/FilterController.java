@@ -131,11 +131,9 @@ public class FilterController {
         int pageCount = request.getPageCount();
         String comparator = request.getComparator();
 
-        boolean valid;
-        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
-            int actualPageCount = document.getNumberOfPages();
-            valid = compare(actualPageCount, pageCount, comparator);
-        }
+        // JPDFium fast path: avoids full PDFBox load just to read page count.
+        int actualPageCount = pdfDocumentFactory.pageCountFast(inputFile);
+        boolean valid = compare(actualPageCount, pageCount, comparator);
 
         return valid
                 ? WebResponseUtils.multiPartFileToWebResponse(inputFile)

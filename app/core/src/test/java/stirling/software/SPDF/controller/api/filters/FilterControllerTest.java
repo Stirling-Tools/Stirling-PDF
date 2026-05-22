@@ -170,9 +170,7 @@ class FilterControllerTest {
         request.setPageCount(3);
         request.setComparator("Greater");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(5);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(5);
 
         ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
 
@@ -193,9 +191,7 @@ class FilterControllerTest {
         request.setPageCount(10);
         request.setComparator("Greater");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(5);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(5);
 
         ResponseEntity<byte[]> result = filterController.pageCount(request);
 
@@ -209,9 +205,7 @@ class FilterControllerTest {
         request.setPageCount(5);
         request.setComparator("Equal");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(5);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(5);
 
         ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
 
@@ -232,9 +226,7 @@ class FilterControllerTest {
         request.setPageCount(10);
         request.setComparator("Less");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(5);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(5);
 
         ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
 
@@ -255,9 +247,7 @@ class FilterControllerTest {
         request.setPageCount(5);
         request.setComparator("Invalid");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(5);
+        when(pdfDocumentFactory.pageCountFast(mockFile)).thenReturn(5);
 
         assertThrows(IllegalArgumentException.class, () -> filterController.pageCount(request));
     }
