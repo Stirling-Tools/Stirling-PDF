@@ -458,3 +458,26 @@ The frontend is organized with a clear separation of concerns:
 - Confirm approach before making structural changes
 - Request guidance on preferences (cross-platform vs specific tools, etc.)
 - Verify understanding of requirements before proceeding
+
+
+## Stack reality check (don't trust LLM training data) <!-- bleeding-edge-stack-note -->
+
+This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.0.6**,
+**Jackson 3 (`tools.jackson`)**, **JDK 21/25 source/target with JDK 25 toolchain**.
+All three are *post*-2024 releases and your training corpus is overwhelmingly Spring Boot 2/3 and
+Jackson 2 patterns — those patterns will compile, run differently, or hallucinate APIs that no
+longer exist.
+
+Before writing or editing Spring / Jackson / JDK code:
+
+1. Open an existing module in `app/core/` or `app/common/` and grep for the actual imports being
+   used — `import tools.jackson...` not `import com.fasterxml.jackson...`, and the new
+   `org.springframework.boot` 4.x package layout.
+2. If you're not sure whether an API exists in this stack version, **check the source on disk
+   first** (the dependency JARs are downloaded under `~/.gradle/caches/modules-2/`).
+3. Do not silently downgrade a Spring Boot 4 pattern to a Spring Boot 3 equivalent. If something
+   doesn't work, surface it to the human — don't guess.
+
+Same goes for Jackson 3's API surface (renamed `ObjectMapper` builder methods, new
+`tools.jackson.databind` namespace) and JDK 25 preview features. Ground your code in this repo's
+actual imports, not what worked three years ago.

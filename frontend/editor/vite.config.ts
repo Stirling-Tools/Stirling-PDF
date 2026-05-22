@@ -27,16 +27,23 @@ export default defineConfig(async ({ mode }) => {
   // frontend/editor/ the cwd-based lookup would miss editor/.env*.
   const env = loadEnv(mode, import.meta.dirname, "");
 
-  // Resolve the effective build mode.
-  // Explicit --mode flags take precedence; otherwise default to proprietary
-  // unless DISABLE_ADDITIONAL_FEATURES=true, in which case default to core.
-  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(
-    mode,
-  )
+  // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
+  const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
     ? (mode as BuildMode)
-    : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
-      ? "core"
-      : "proprietary";
+    : null;
+  const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
+  const flavorMode: BuildMode | null =
+    flavor === "core" || flavor === "proprietary" || flavor === "saas"
+      ? (flavor as BuildMode)
+      : null;
+  const effectiveMode: BuildMode =
+    explicitMode ??
+    flavorMode ??
+    (process.env.ENABLE_SAAS === "true"
+      ? "saas"
+      : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
+        ? "core"
+        : "proprietary");
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
@@ -98,14 +105,14 @@ export default defineConfig(async ({ mode }) => {
             dest: "vendor/jscanify",
           },
           {
-            // pdfjs-dist CMap data for CJK / non-latin glyph mapping — required
+            // pdfjs-dist CMap data for CJK / non-latin glyph mapping. Required
             // when rendering PDFs inside workers where the default DOM fetch paths
             // aren't available.
             src: "../node_modules/pdfjs-dist/cmaps/*",
             dest: "pdfjs/cmaps",
           },
           {
-            // pdfjs-dist standard font data (Helvetica/Times/etc.) — needed so
+            // pdfjs-dist standard font data (Helvetica/Times/etc.) needed so
             // workers can substitute non-embedded base 14 fonts without DOM access.
             src: "../node_modules/pdfjs-dist/standard_fonts/*",
             dest: "pdfjs/standard_fonts",
