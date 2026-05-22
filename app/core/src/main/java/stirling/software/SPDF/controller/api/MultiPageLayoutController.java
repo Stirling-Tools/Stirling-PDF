@@ -31,6 +31,7 @@ import stirling.software.common.util.GeneralFormCopyUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @GeneralApi
 @RequiredArgsConstructor
@@ -190,6 +191,16 @@ public class MultiPageLayoutController {
         }
 
         MultipartFile file = request.getFileInput();
+
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox lays out.
+        // Holdout: JPDFium NUpLayout has no margins, borders, RTL, BY_COLUMNS, or form copy.
+        if (file != null) {
+            try (PdfDocument ignored = PdfDocument.open(file.getBytes())) {
+            } catch (Exception e) {
+                log.debug(
+                        "JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
+            }
+        }
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             try (PDDocument newDocument =

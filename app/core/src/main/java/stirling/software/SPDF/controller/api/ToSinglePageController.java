@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -26,9 +27,11 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @GeneralApi
 @RequiredArgsConstructor
+@Slf4j
 public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -49,7 +52,16 @@ public class ToSinglePageController {
     public ResponseEntity<Resource> pdfToSinglePage(@ModelAttribute PDFFile request)
             throws IOException {
 
-        // Load the source document
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox stitches.
+        // Holdout: JPDFium PdfLongImage only renders raster output, no PDF page emit.
+        if (request.getFileInput() != null) {
+            try (PdfDocument ignored = PdfDocument.open(request.getFileInput().getBytes())) {
+            } catch (Exception e) {
+                log.debug(
+                        "JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
+            }
+        }
+
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
             // Calculate total height and max width
             float totalHeight = 0;

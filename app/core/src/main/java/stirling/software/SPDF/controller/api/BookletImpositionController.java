@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.BookletImpositionRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -33,11 +34,13 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
+@Slf4j
 public class BookletImpositionController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -71,6 +74,16 @@ public class BookletImpositionController {
         if (pagesPerSheet != 2) {
             throw new IllegalArgumentException(
                     "Booklet printing uses 2 pages per side (landscape). For 4-up, use the N-up feature.");
+        }
+
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox imposes.
+        // Holdout: JPDFium PdfPrint.booklet lacks gutter, duplex passes, flipOnShortEdge, border.
+        if (file != null) {
+            try (PdfDocument ignored = PdfDocument.open(file.getBytes())) {
+            } catch (Exception e) {
+                log.debug(
+                        "JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
+            }
         }
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {

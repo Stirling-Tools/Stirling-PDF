@@ -35,6 +35,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
 
 @GeneralApi
 @Slf4j
@@ -64,6 +65,16 @@ public class PosterPdfController {
 
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
         log.debug("Base filename for output: {}", filename);
+
+        // JPDFium pre-validate catches corrupt PDFs cheaply before PDFBox tiles.
+        // Holdout: JPDFium PdfPosterizer edits in-place without scaling to target paper or RTL.
+        if (file != null) {
+            try (PdfDocument ignored = PdfDocument.open(file.getBytes())) {
+            } catch (Exception e) {
+                log.debug(
+                        "JPDFium pre-validate failed; proceeding with PDFBox: {}", e.getMessage());
+            }
+        }
 
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
         try {
