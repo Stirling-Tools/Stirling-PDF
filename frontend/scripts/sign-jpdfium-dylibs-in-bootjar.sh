@@ -103,9 +103,7 @@ for BOOTJAR in "${BOOTJARS[@]}"; do
 
     # `jar uf` always DEFLATEs; Spring Boot's nested-jar loader only reads
     # STORED entries. Use `zip -0` to update in place with no compression.
-    ( cd "$WORK" && zip -q0 "$BOOTJAR" \
-        BOOT-INF/lib/jpdfium-natives-darwin-x64-*.jar \
-        BOOT-INF/lib/jpdfium-natives-darwin-arm64-*.jar ) \
+    ( cd "$WORK" && zip -q0 "$BOOTJAR" ${NATIVE_JAR_PATHS[@]+"${NATIVE_JAR_PATHS[@]}"} ) \
         || { echo "zip update failed" >&2; exit 1; }
 
     echo "  Updated: $BOOTJAR ($(du -h "$BOOTJAR" | cut -f1))"
