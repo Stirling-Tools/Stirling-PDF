@@ -20,7 +20,7 @@ repos:
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(html|css|js|py|md)$
-        exclude: (.vscode|.devcontainer|app/core/src/main/resources|app/proprietary/src/main/resources|frontend/public/vendor|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
+        exclude: (.vscode|.devcontainer|app/core/src/main/resources|app/proprietary/src/main/resources|frontend/editor/public/vendor|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
@@ -38,7 +38,7 @@ repos:
     rev: v0.24.4
     hooks:
       - id: toml-sort-fix
-        files: frontend/public/locales/.*\.toml$
+        files: frontend/editor/public/locales/.*\.toml$
         args: ['--in-place', '--all', '--ignore-case']
   # - repo: https://github.com/thibaudcolas/pre-commit-stylelint
   #   rev: v16.21.1
