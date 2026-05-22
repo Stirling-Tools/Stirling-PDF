@@ -3,6 +3,22 @@ version: '3'
 vars:
   JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
 
+  # Override via JPDFIUM_PLATFORMS env (csv of platform keys, or 'all').
+  JPDFIUM_PLATFORMS:
+    sh: |
+      if [ -n "${JPDFIUM_PLATFORMS:-}" ]; then
+          echo "$JPDFIUM_PLATFORMS"
+      else
+          case "{{OS}}-{{ARCH}}" in
+              darwin-arm64)  echo "darwin-arm64";;
+              darwin-amd64)  echo "darwin-x64";;
+              linux-amd64)   echo "linux-x64";;
+              linux-arm64)   echo "linux-arm64";;
+              windows-amd64) echo "windows-x64";;
+              *)             echo "all";;
+          esac
+      fi
+
 tasks:
   prepare:
     desc: "Prepare desktop build dependencies"
@@ -71,15 +87,16 @@ tasks:
     deps: [jlink:jar, jlink:runtime]
 
   jlink:jar:
-    desc: "Build backend JAR for Tauri bundling"
+    desc: "Build backend JAR for Tauri bundling (host-OS natives only by default)"
     run: once
     dir: ..
     env:
       DISABLE_ADDITIONAL_FEATURES: "true"
     cmds:
-      - cmd: cmd /c gradlew.bat bootJar --no-daemon
+      - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
+      - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [windows]
-      - cmd: ./gradlew bootJar --no-daemon
+      - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
       - mkdir -p frontend/editor/src-tauri/libs
       - cp app/core/build/libs/stirling-pdf-*.jar frontend/editor/src-tauri/libs/
