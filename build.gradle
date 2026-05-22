@@ -31,12 +31,12 @@ ext {
     googleJavaFormatVersion = "1.28.0"
     logback = "1.5.32"
     // junit-platform-launcher version managed by Spring Boot BOM
-    modernJavaVersion = 21
+    modernJavaVersion = 25
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     toolchain {
         languageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
     }
@@ -158,8 +158,8 @@ subprojects {
     apply plugin: 'jacoco'
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
         toolchain {
             languageVersion = JavaLanguageVersion.of(25)
         }
@@ -444,7 +444,8 @@ subprojects {
                 "-XX:G1HeapRegionSize=4m",
                 "-XX:+ExplicitGCInvokesConcurrent",
                 "-XX:+UseStringDeduplication",
-                "-XX:+UseCompactObjectHeaders"
+                "-XX:+UseCompactObjectHeaders",
+                "--enable-native-access=ALL-UNNAMED"
             ]
         }
     }
