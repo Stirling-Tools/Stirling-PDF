@@ -176,6 +176,9 @@ springBoot {
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
 def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
+// Workspace root holds package.json and node_modules (shared across editor /
+// future portal). Editor-specific paths (src, public, dist, tauri) live one
+// level deeper under frontend/editor/.
 
 // Vite mode: -PprototypesMode > -PfrontendMode > enableSaas > disableAdditional > proprietary.
 def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
@@ -194,7 +197,8 @@ if (buildPrototypes) {
 def frontendBuildTask = "frontend:build:${frontendMode}"
 
 def frontendDir = file('../../frontend')
-def frontendDistDir = file('../../frontend/dist')
+def frontendEditorDir = file('../../frontend/editor')
+def frontendDistDir = file('../../frontend/editor/dist')
 def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',
@@ -262,8 +266,8 @@ tasks.register('npmBuild', Exec) {
     description = 'Build frontend application'
     workingDir file('../..')
     commandLine = ['task', frontendBuildTask]
-    inputs.dir(new File(frontendDir, 'src'))
-    inputs.dir(new File(frontendDir, 'public'))
+    inputs.dir(new File(frontendEditorDir, 'src'))
+    inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
     outputs.dir(frontendDistDir)
 
