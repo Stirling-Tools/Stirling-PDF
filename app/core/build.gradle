@@ -162,7 +162,8 @@ bootJar {
     manifest {
         attributes(
             'Implementation-Title': 'Stirling-PDF',
-            'Implementation-Version': project.version
+            'Implementation-Version': project.version,
+            'Enable-Native-Access': 'ALL-UNNAMED'
         )
     }
 }
