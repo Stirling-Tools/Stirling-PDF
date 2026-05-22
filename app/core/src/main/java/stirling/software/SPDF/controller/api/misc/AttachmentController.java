@@ -35,6 +35,8 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.doc.Attachment;
 
 @MiscApi
 @Slf4j
@@ -60,6 +62,7 @@ public class AttachmentController {
                     "This endpoint adds attachments to a PDF. Input:PDF, Output:PDF Type:MISO")
     public ResponseEntity<Resource> addAttachments(@ModelAttribute AddAttachmentRequest request)
             throws Exception {
+        // Hybrid: JPDFium add lacks viewer prefs, content-type and dates; PDFBox preserves them.
         MultipartFile fileInput = request.getFileInput();
         List<MultipartFile> attachments = request.getAttachments();
         boolean convertToPdfA3b = request.isConvertToPdfA3b();
@@ -149,6 +152,7 @@ public class AttachmentController {
                             + " Input:PDF Output:ZIP Type:SISO")
     public ResponseEntity<Resource> extractAttachments(
             @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
+        // Hybrid: PDFBox preserves embedded-file dates/description on ZIP entries.
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
             Optional<byte[]> extracted = pdfAttachmentService.extractAttachments(document);
 
@@ -183,6 +187,7 @@ public class AttachmentController {
                     "This endpoint lists all embedded attachments in a PDF. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<List<stirling.software.SPDF.model.api.misc.AttachmentInfo>>
             listAttachments(@ModelAttribute ListAttachmentsRequest request) throws IOException {
+        // Hybrid: PDFBox preserves content-type/description/dates that JPDFium's record lacks.
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
             List<stirling.software.SPDF.model.api.misc.AttachmentInfo> attachments =
                     pdfAttachmentService.listAttachments(document);
@@ -201,6 +206,7 @@ public class AttachmentController {
                     "This endpoint renames an embedded attachment in a PDF. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<Resource> renameAttachment(
             @ModelAttribute RenameAttachmentRequest request) throws Exception {
+        // Hybrid: JPDFium has no rename API; PDFBox edits the embedded-files name tree directly.
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
         String newName = request.getNewName();
@@ -236,6 +242,7 @@ public class AttachmentController {
                     "This endpoint deletes an embedded attachment from a PDF. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<Resource> deleteAttachment(
             @ModelAttribute DeleteAttachmentRequest request) throws Exception {
+        // JPDFium: locate by name then delete via FPDFDoc_DeleteAttachment(index).
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
 
@@ -244,15 +251,50 @@ public class AttachmentController {
                     "error.attachmentNameRequired", "Attachment name cannot be null or empty");
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(request, false)) {
-            pdfAttachmentService.deleteAttachment(document, attachmentName);
+        TempFile inputTemp = new TempFile(tempFileManager, ".pdf");
+        TempFile tempOut = null;
+        try {
+            fileInput.transferTo(inputTemp.getFile());
 
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
+            try (PdfDocument doc = PdfDocument.open(inputTemp.getPath())) {
+                int matchIndex = -1;
+                List<Attachment> existing = doc.attachments();
+                for (Attachment att : existing) {
+                    if (attachmentName.equals(att.name())) {
+                        matchIndex = att.index();
+                        break;
+                    }
+                }
+
+                if (matchIndex < 0) {
+                    log.warn("Attachment '{}' not found for deletion", attachmentName);
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.attachmentNotFound",
+                            "Attachment ''{0}'' not found for deletion",
+                            attachmentName);
+                }
+
+                if (!doc.deleteAttachment(matchIndex)) {
+                    throw new IOException("Failed to delete attachment '" + attachmentName + "'");
+                }
+
+                tempOut = tempFileManager.createManagedTempFile(".pdf");
+                doc.save(tempOut.getPath());
+                log.info("Deleted attachment: '{}'", attachmentName);
+            }
+
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOut,
                     GeneralUtils.generateFilename(
                             Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                            "_attachment_deleted.pdf"),
-                    tempFileManager);
+                            "_attachment_deleted.pdf"));
+        } catch (RuntimeException | IOException e) {
+            if (tempOut != null) {
+                tempOut.close();
+            }
+            throw e;
+        } finally {
+            inputTemp.close();
         }
     }
 }

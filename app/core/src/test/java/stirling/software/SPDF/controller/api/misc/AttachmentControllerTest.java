@@ -1,18 +1,31 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -26,6 +39,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
+import stirling.software.SPDF.model.api.misc.DeleteAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -38,13 +52,7 @@ class AttachmentControllerTest {
         return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
+    @TempDir Path tempDir;
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -63,11 +71,18 @@ class AttachmentControllerTest {
     @BeforeEach
     void setUp() throws Exception {
         lenient()
+                .when(tempFileManager.createTempFile(anyString()))
+                .thenAnswer(
+                        inv ->
+                                Files.createTempFile(tempDir, "input", inv.<String>getArgument(0))
+                                        .toFile());
+        lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
                         inv -> {
                             File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                    Files.createTempFile(
+                                                    tempDir, "managed", inv.<String>getArgument(0))
                                             .toFile();
                             TempFile tf = mock(TempFile.class);
                             lenient().when(tf.getFile()).thenReturn(f);
@@ -187,5 +202,94 @@ class AttachmentControllerTest {
 
         assertThrows(IOException.class, () -> attachmentController.addAttachments(request));
         verify(pdfAttachmentService).addAttachment(mockDocument, attachments);
+    }
+
+    // Build a PDF with one embedded attachment using PDFBox so JPDFium can read it back.
+    private byte[] buildPdfWithAttachment(String attachmentName, byte[] attachmentBytes)
+            throws IOException {
+        Path path = tempDir.resolve("with-attachment.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.LETTER));
+
+            PDComplexFileSpecification spec = new PDComplexFileSpecification();
+            spec.setFile(attachmentName);
+            spec.setFileUnicode(attachmentName);
+
+            PDEmbeddedFile embedded =
+                    new PDEmbeddedFile(doc, new ByteArrayInputStream(attachmentBytes));
+            embedded.setSize(attachmentBytes.length);
+            spec.setEmbeddedFile(embedded);
+            spec.setEmbeddedFileUnicode(embedded);
+
+            PDDocumentCatalog catalog = doc.getDocumentCatalog();
+            PDDocumentNameDictionary names = new PDDocumentNameDictionary(catalog);
+            PDEmbeddedFilesNameTreeNode tree = new PDEmbeddedFilesNameTreeNode();
+            tree.setNames(java.util.Map.of(attachmentName, spec));
+            names.setEmbeddedFiles(tree);
+            catalog.setNames(names);
+
+            doc.save(path.toFile());
+        }
+        return Files.readAllBytes(path);
+    }
+
+    private int countAttachmentsInPdf(byte[] pdfBytes) throws IOException {
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            PDDocumentCatalog catalog = doc.getDocumentCatalog();
+            if (catalog == null || catalog.getNames() == null) {
+                return 0;
+            }
+            PDEmbeddedFilesNameTreeNode tree = catalog.getNames().getEmbeddedFiles();
+            if (tree == null || tree.getNames() == null) {
+                return 0;
+            }
+            return tree.getNames().size();
+        }
+    }
+
+    @Test
+    void deleteAttachment_removesNamedAttachment() throws Exception {
+        byte[] pdfBytes = buildPdfWithAttachment("to_delete.txt", "payload".getBytes());
+        assertEquals(1, countAttachmentsInPdf(pdfBytes));
+
+        MockMultipartFile input =
+                new MockMultipartFile(
+                        "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        DeleteAttachmentRequest req = new DeleteAttachmentRequest();
+        req.setFileInput(input);
+        req.setAttachmentName("to_delete.txt");
+
+        ResponseEntity<Resource> response = attachmentController.deleteAttachment(req);
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        try (InputStream in = response.getBody().getInputStream()) {
+            byte[] outBytes = in.readAllBytes();
+            assertThat(countAttachmentsInPdf(outBytes)).isZero();
+        }
+    }
+
+    @Test
+    void deleteAttachment_missingName_throws() {
+        DeleteAttachmentRequest req = new DeleteAttachmentRequest();
+        req.setFileInput(pdfFile);
+        req.setAttachmentName("");
+
+        assertThrows(
+                IllegalArgumentException.class, () -> attachmentController.deleteAttachment(req));
+    }
+
+    @Test
+    void deleteAttachment_notFound_throws() throws Exception {
+        byte[] pdfBytes = buildPdfWithAttachment("present.txt", "stuff".getBytes());
+        MockMultipartFile input =
+                new MockMultipartFile(
+                        "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        DeleteAttachmentRequest req = new DeleteAttachmentRequest();
+        req.setFileInput(input);
+        req.setAttachmentName("does_not_exist.txt");
+
+        assertThrows(
+                IllegalArgumentException.class, () -> attachmentController.deleteAttachment(req));
     }
 }

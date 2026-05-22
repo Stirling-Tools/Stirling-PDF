@@ -1,17 +1,8 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.foreign.MemorySegment;
 
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDResources;
-import org.apache.pdfbox.pdmodel.graphics.PDXObject;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,19 +18,20 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.doc.PdfPageEditor;
 
 @GeneralApi
 @Slf4j
 @RequiredArgsConstructor
 public class RemoveImagesController {
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -56,93 +48,66 @@ public class RemoveImagesController {
 
         MultipartFile inputFile = request.getFileInput();
 
-        try (PDDocument pdfDoc = pdfDocumentFactory.load(request)) {
+        TempFile inputTemp = new TempFile(tempFileManager, ".pdf");
+        try {
+            inputFile.transferTo(inputTemp.getFile());
 
-            int totalPages = pdfDoc.getNumberOfPages();
             int imagesRemoved = 0;
+            int totalPages;
 
-            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                PDPage currentPage = pdfDoc.getPage(pageIndex);
-                imagesRemoved += removeImagesFromPage(currentPage);
+            try (PdfDocument doc = PdfDocument.open(inputTemp.getPath())) {
+                totalPages = doc.pageCount();
+                for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                    try (PdfPage page = doc.page(pageIndex)) {
+                        imagesRemoved += removeImagesFromPage(page);
+                    }
+                }
+
+                TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+                try {
+                    doc.save(tempOut.getPath());
+                } catch (RuntimeException e) {
+                    tempOut.close();
+                    throw e;
+                }
+
+                log.info("Removed {} images from PDF with {} pages", imagesRemoved, totalPages);
+
+                return WebResponseUtils.pdfFileToWebResponse(
+                        tempOut,
+                        GeneralUtils.generateFilename(
+                                inputFile.getOriginalFilename(), "_images_removed.pdf"));
             }
-
-            log.info("Removed {} images from PDF with {} pages", imagesRemoved, totalPages);
-
-            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-            try {
-                pdfDoc.save(tempOut.getFile());
-            } catch (IOException e) {
-                tempOut.close();
-                throw e;
-            }
-
-            return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_images_removed.pdf"));
-
+        } catch (RuntimeException e) {
+            throw ExceptionUtils.handlePdfException(new IOException(e), "during image removal");
         } catch (IOException e) {
             throw ExceptionUtils.handlePdfException(e, "during image removal");
+        } finally {
+            inputTemp.close();
         }
     }
 
-    private int removeImagesFromPage(PDPage page) throws IOException {
-        int imagesRemoved = 0;
-
-        PDResources resources = page.getResources();
-        if (resources == null) {
-            return imagesRemoved;
-        }
-
-        imagesRemoved += removeImagesFromResources(resources);
-        return imagesRemoved;
-    }
-
-    private int removeImagesFromFormXObject(PDFormXObject formXObject) throws IOException {
-        PDResources resources = formXObject.getResources();
-        if (resources == null) {
-            return 0;
-        }
-
-        return removeImagesFromResources(resources);
-    }
-
-    private int removeImagesFromResources(PDResources resources) throws IOException {
-        if (resources == null) {
-            return 0;
-        }
-
-        COSDictionary xObjects = resources.getCOSObject().getCOSDictionary(COSName.XOBJECT);
-        if (xObjects == null) {
-            return 0;
-        }
-
-        int imagesRemoved = 0;
-        // Create snapshot to safely iterate while removing
-        List<COSName> names = new ArrayList<>(xObjects.keySet());
-
-        for (COSName name : names) {
-            try {
-                PDXObject xObject = resources.getXObject(name);
-                if (xObject == null) {
-                    continue;
+    // Remove all IMAGE-typed page objects from a single page using JPDFium's editor APIs.
+    private int removeImagesFromPage(PdfPage page) {
+        MemorySegment pageHandle = page.rawHandle();
+        int removed = 0;
+        // Iterate in reverse so index shifts don't skip elements after removal.
+        int count = PdfPageEditor.countObjects(pageHandle);
+        for (int i = count - 1; i >= 0; i--) {
+            MemorySegment obj = PdfPageEditor.getObject(pageHandle, i);
+            if (obj == null) {
+                continue;
+            }
+            int type = PdfPageEditor.getObjectType(obj);
+            if (type == PdfPageEditor.PAGEOBJ_IMAGE) {
+                if (PdfPageEditor.removeObject(pageHandle, obj)) {
+                    removed++;
                 }
-
-                // Remove direct images
-                if (xObject instanceof PDImageXObject) {
-                    xObjects.removeItem(name);
-                    imagesRemoved++;
-                    log.debug("Removed image: {}", name.getName());
-                }
-                // Recursively process nested form XObjects
-                else if (xObject instanceof PDFormXObject form) {
-                    imagesRemoved += removeImagesFromResources(form.getResources());
-                }
-            } catch (IOException e) {
-                log.warn("Error processing XObject {}: {}", name.getName(), e.getMessage());
             }
         }
-
-        return imagesRemoved;
+        if (removed > 0) {
+            PdfPageEditor.generateContent(pageHandle);
+        }
+        return removed;
     }
 }
