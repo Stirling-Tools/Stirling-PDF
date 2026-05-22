@@ -620,3 +620,10 @@ tasks.register('buildRestartHelper', Jar) {
         println "restart-helper.jar created at: ${destinationDirectory.get()}/restart-helper.jar"
     }
 }
+
+
+tasks.withType(Test).configureEach {
+    // maxParallelForks: parallelise JUnit across cores
+    // Half of available CPUs is a safe default; bump if your tests are I/O-bound.
+    maxParallelForks = Math.max(1, (Runtime.runtime.availableProcessors().intdiv(2)) as int)
+}
