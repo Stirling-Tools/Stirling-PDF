@@ -217,6 +217,26 @@ interface PdfTextEditorViewProps {
   data: PdfTextEditorViewData;
 }
 
+const getGroupInteractionBounds = (group: TextGroup) => group.bounds;
+
+interface TemporaryTextBox {
+  id: string;
+  pageIndex: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  text: string;
+}
+
+const TEMP_TEXT_BOX_MIN_WIDTH = 72;
+const TEMP_TEXT_BOX_MAX_WIDTH = 520;
+const TEMP_TEXT_BOX_HORIZONTAL_PADDING = 16;
+const TEMP_TEXT_BOX_FONT_SIZE_PX = 16;
+const TEMP_TEXT_BOX_SAVE_VERTICAL_NUDGE_PX = 4;
+const VIETNAMESE_CHARS_REGEX =
+  /[ăâđêôơưĂÂĐÊÔƠƯáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/u;
+
 const toCssBounds = (
   _page: PdfJsonPage | null | undefined,
   pageHeight: number,
@@ -345,6 +365,11 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const [activeTempBoxId, setActiveTempBoxId] = useState<string | null>(null);
+  const [editingTempBoxId, setEditingTempBoxId] = useState<string | null>(null);
+  const [temporaryTextBoxes, setTemporaryTextBoxes] = useState<
+    TemporaryTextBox[]
+  >([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
     new Set(),
   );
@@ -361,7 +386,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const measurementKeyRef = useRef<string>("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const tempEditorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const caretOffsetsRef = useRef<Map<string, number>>(new Map());
+  const tempCaretOffsetsRef = useRef<Map<string, number>>(new Map());
   const composingGroupsRef = useRef<Set<string>>(new Set());
   const lastSelectedGroupIdRef = useRef<string | null>(null);
   const widthOverridesRef = useRef<Map<string, number>>(widthOverrides);
@@ -421,12 +448,15 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     requestPagePreview,
     onSelectPage,
     onGroupEdit,
+    onCreateTextGroup,
     onGroupDelete,
     onImageTransform,
     onImageReset,
     onReset: _onReset,
     onGeneratePdf: _onGeneratePdf,
     onSaveToWorkbench,
+    onRegisterBeforeSaveHook,
+    onTemporaryDraftChange,
     onForceSingleTextElementChange: _onForceSingleTextElementChange,
     onGroupingModeChange: _onGroupingModeChange,
     onMergeGroups,
@@ -439,6 +469,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const currentPage = pages[selectedPage] ?? null;
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
+  const currentPageTemporaryTextBoxes = temporaryTextBoxes.filter(
+    (box) => box.pageIndex === selectedPage,
+  );
   const pagePreview = pagePreviews.get(selectedPage);
   const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
 
@@ -612,8 +645,12 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
 
   const resolveGroupWidth = useCallback(
     (group: TextGroup): { width: number; base: number; max: number } => {
-      const baseWidth = Math.max(group.bounds.right - group.bounds.left, 1);
-      const maxWidth = Math.max(pageWidth - group.bounds.left, baseWidth);
+      const interactionBounds = getGroupInteractionBounds(group);
+      const baseWidth = Math.max(
+        interactionBounds.right - interactionBounds.left,
+        1,
+      );
+      const maxWidth = Math.max(pageWidth - interactionBounds.left, baseWidth);
       const override = widthOverrides.get(group.id);
       const resolved = override
         ? Math.min(Math.max(override, baseWidth), maxWidth)
@@ -755,8 +792,15 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       setWidthOverrides((prev) => {
         const next = new Map(prev);
         selectedGroups.forEach((group) => {
-          const baseWidth = Math.max(group.bounds.right - group.bounds.left, 1);
-          const maxWidth = Math.max(pageWidth - group.bounds.left, baseWidth);
+          const interactionBounds = getGroupInteractionBounds(group);
+          const baseWidth = Math.max(
+            interactionBounds.right - interactionBounds.left,
+            1,
+          );
+          const maxWidth = Math.max(
+            pageWidth - interactionBounds.left,
+            baseWidth,
+          );
           if (mode === "expand") {
             next.set(group.id, maxWidth);
           } else {
@@ -1176,7 +1220,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       currentPage,
       pageHeight,
       scale,
-      firstSelected.bounds,
+      getGroupInteractionBounds(firstSelected),
     );
     const top = Math.max(bounds.top - 40, 8);
     const left = Math.min(
@@ -1215,9 +1259,28 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     setActiveGroupId(null);
     setEditingGroupId(null);
     setActiveImageId(null);
+    setActiveTempBoxId(null);
+    setEditingTempBoxId(null);
     setTextScales(new Map());
     measurementKeyRef.current = "";
   }, [selectedPage]);
+
+  useEffect(() => {
+    if (!editingTempBoxId) {
+      return;
+    }
+    const editor = tempEditorRefs.current.get(editingTempBoxId);
+    if (!editor) {
+      return;
+    }
+    editor.focus();
+    const offset = tempCaretOffsetsRef.current.get(editingTempBoxId);
+    if (offset !== undefined) {
+      setCaretOffset(editor, offset);
+    } else {
+      setCaretOffset(editor, editor.innerText.length);
+    }
+  }, [editingTempBoxId, temporaryTextBoxes]);
 
   // Measure text widths once per page/configuration and apply static scaling
   useLayoutEffect(() => {
@@ -1401,10 +1464,230 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
 
   const handleBackgroundClick = () => {
     setEditingGroupId(null);
+    setEditingTempBoxId(null);
     setActiveGroupId(null);
+    setActiveTempBoxId(null);
     setActiveImageId(null);
     clearSelection();
   };
+
+  const syncTemporaryTextBoxValue = useCallback(
+    (id: string, value: string) => {
+      setTemporaryTextBoxes((previous) =>
+        previous.map((box) => {
+          if (box.id !== id) {
+            return box;
+          }
+          const longestLineLength = Math.max(
+            1,
+            ...value
+              .split("\n")
+              .map((line) => line.trimEnd().length),
+          );
+          const estimatedWidth =
+            longestLineLength * 9 + TEMP_TEXT_BOX_HORIZONTAL_PADDING;
+          const maxWidthFromPosition = Math.max(
+            TEMP_TEXT_BOX_MIN_WIDTH,
+            scaledWidth - box.left - 8,
+          );
+          const nextWidth = Math.min(
+            Math.max(TEMP_TEXT_BOX_MIN_WIDTH, estimatedWidth),
+            Math.min(TEMP_TEXT_BOX_MAX_WIDTH, maxWidthFromPosition),
+          );
+          return {
+            ...box,
+            text: value,
+            width: nextWidth,
+          };
+        }),
+      );
+    },
+    [scaledWidth],
+  );
+
+  const commitTemporaryTextBoxes = useCallback(() => {
+    const filledBoxes = temporaryTextBoxes.filter(
+      (box) => box.text.trim().length > 0,
+    );
+
+    if (filledBoxes.length === 0) {
+      setTemporaryTextBoxes([]);
+      setActiveTempBoxId(null);
+      setEditingTempBoxId(null);
+      return;
+    }
+
+    filledBoxes.forEach((box) => {
+      const page = pages[box.pageIndex] ?? null;
+      const { width, height } = pageDimensions(page);
+      const pageScale = Math.min(MAX_RENDER_WIDTH / width, 2.5);
+      const pdfLeft = box.left / pageScale;
+      const pdfRight = (box.left + box.width) / pageScale;
+      const adjustedTopPx = box.top + TEMP_TEXT_BOX_SAVE_VERTICAL_NUDGE_PX;
+      const pdfBottom = height - adjustedTopPx / pageScale;
+      const pdfTop = pdfBottom - box.height / pageScale;
+      const boxCenterX = (pdfLeft + pdfRight) / 2;
+      const boxCenterY = (pdfTop + pdfBottom) / 2;
+      const textHasVietnamese = VIETNAMESE_CHARS_REGEX.test(box.text);
+
+      const nearbyGroups = groupsByPage[box.pageIndex] ?? [];
+      const nonEmptyGroups = nearbyGroups.filter(
+        (group) => (group.text ?? "").trim().length > 0,
+      );
+      const sameRowCandidates = nonEmptyGroups.filter((group) => {
+        const groupCenterY = (group.bounds.top + group.bounds.bottom) / 2;
+        return Math.abs(groupCenterY - boxCenterY) <= 24;
+      });
+      const referenceGroups =
+        sameRowCandidates.length > 0
+          ? sameRowCandidates
+          : nonEmptyGroups.length > 0
+            ? nonEmptyGroups
+            : nearbyGroups;
+      const vietnameseReferenceGroups = textHasVietnamese
+        ? referenceGroups.filter((group) =>
+            VIETNAMESE_CHARS_REGEX.test(group.text ?? ""),
+          )
+        : [];
+      const styleCandidates =
+        vietnameseReferenceGroups.length > 0
+          ? vietnameseReferenceGroups
+          : referenceGroups;
+
+      const closestGroup = styleCandidates.reduce<TextGroup | null>(
+        (closest, group) => {
+          const groupCenterX = (group.bounds.left + group.bounds.right) / 2;
+          const groupCenterY = (group.bounds.top + group.bounds.bottom) / 2;
+          const groupSize = group.fontMatrixSize ?? group.fontSize ?? 0;
+          const distance =
+            Math.abs(groupCenterY - boxCenterY) +
+            Math.abs(groupCenterX - boxCenterX) * 0.35 -
+            groupSize * 0.8;
+          if (!closest) {
+            return group;
+          }
+          const closestCenterX =
+            (closest.bounds.left + closest.bounds.right) / 2;
+          const closestCenterY =
+            (closest.bounds.top + closest.bounds.bottom) / 2;
+          const closestSize =
+            closest.fontMatrixSize ?? closest.fontSize ?? 0;
+          const closestDistance =
+            Math.abs(closestCenterY - boxCenterY) +
+            Math.abs(closestCenterX - boxCenterX) * 0.35 -
+            closestSize * 0.8;
+          return distance < closestDistance ? group : closest;
+        },
+        null,
+      );
+
+      const fallbackPdfFontSize = Math.max(
+        (box.height * 0.5) / pageScale,
+        8 / pageScale,
+      );
+      const nearbyFontSize =
+        closestGroup?.fontMatrixSize ?? closestGroup?.fontSize ?? null;
+      const resolvedFontSize =
+        nearbyFontSize !== null
+          ? Math.max(nearbyFontSize, fallbackPdfFontSize * 0.9)
+          : fallbackPdfFontSize;
+      const resolvedFontId = closestGroup?.fontId ?? null;
+      const resolvedColor = closestGroup?.color ?? "#111827";
+
+      onCreateTextGroup({
+        pageIndex: box.pageIndex,
+        text: box.text,
+        templateGroupId: closestGroup?.id ?? null,
+        fontId: resolvedFontId,
+        fontSize: resolvedFontSize,
+        fontMatrixSize: resolvedFontSize,
+        color: resolvedColor,
+        bounds: {
+          left: pdfLeft,
+          right: pdfRight,
+          top: pdfTop,
+          bottom: pdfBottom,
+        },
+      });
+    });
+
+    setTemporaryTextBoxes([]);
+    setActiveTempBoxId(null);
+    setEditingTempBoxId(null);
+  }, [groupsByPage, onCreateTextGroup, pages, temporaryTextBoxes]);
+
+  useEffect(() => {
+    const hasDrafts = temporaryTextBoxes.some(
+      (box) => box.text.trim().length > 0,
+    );
+    onTemporaryDraftChange(hasDrafts);
+  }, [onTemporaryDraftChange, temporaryTextBoxes]);
+
+  useEffect(() => {
+    onRegisterBeforeSaveHook(async () => {
+      commitTemporaryTextBoxes();
+    });
+
+    return () => {
+      onRegisterBeforeSaveHook(null);
+    };
+  }, [commitTemporaryTextBoxes, onRegisterBeforeSaveHook]);
+
+  const removeTemporaryTextBox = useCallback((id: string) => {
+    setTemporaryTextBoxes((previous) => previous.filter((box) => box.id !== id));
+    setActiveTempBoxId((current) => (current === id ? null : current));
+    setEditingTempBoxId((current) => (current === id ? null : current));
+    tempEditorRefs.current.delete(id);
+    tempCaretOffsetsRef.current.delete(id);
+  }, []);
+
+  const handleCreateTemporaryTextBox = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest(
+          '[data-text-group],[data-editor-group],[data-temp-text-box],[data-temp-text-editor],button,[role="button"]',
+        )
+      ) {
+        return;
+      }
+
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+
+      const rect = container.getBoundingClientRect();
+      const clickLeft = event.clientX - rect.left;
+      const clickTop = event.clientY - rect.top;
+      const defaultHeight = 32;
+      const renderedWidth = Math.min(MAX_RENDER_WIDTH, pageWidth * 2.5);
+      const renderedHeight = pageHeight * Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5);
+      const nextId = `temp-box-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      setActiveGroupId(null);
+      setEditingGroupId(null);
+      setActiveImageId(null);
+      clearSelection();
+
+      setTemporaryTextBoxes((previous) => [
+        ...previous,
+        {
+          id: nextId,
+          pageIndex: selectedPage,
+          left: Math.max(0, Math.min(clickLeft, renderedWidth - TEMP_TEXT_BOX_MIN_WIDTH)),
+          top: Math.max(0, Math.min(clickTop - defaultHeight / 2, renderedHeight - defaultHeight)),
+          width: TEMP_TEXT_BOX_MIN_WIDTH,
+          height: defaultHeight,
+          text: "",
+        },
+      ]);
+      setActiveTempBoxId(nextId);
+      setEditingTempBoxId(nextId);
+      tempCaretOffsetsRef.current.delete(nextId);
+    },
+    [clearSelection, pageHeight, pageWidth, selectedPage],
+  );
 
   const handleSelectionInteraction = useCallback(
     (groupId: string, groupIndex: number, event: React.MouseEvent): boolean => {
@@ -1452,8 +1735,12 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
 
   const handleResizeStart = useCallback(
     (event: React.MouseEvent, group: TextGroup, currentWidth: number) => {
-      const baseWidth = Math.max(group.bounds.right - group.bounds.left, 1);
-      const maxWidth = Math.max(pageWidth - group.bounds.left, baseWidth);
+      const interactionBounds = getGroupInteractionBounds(group);
+      const baseWidth = Math.max(
+        interactionBounds.right - interactionBounds.left,
+        1,
+      );
+      const maxWidth = Math.max(pageWidth - interactionBounds.left, baseWidth);
       event.stopPropagation();
       event.preventDefault();
       const startX = event.clientX;
@@ -2079,6 +2366,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                         });
                       }
                     }}
+                    onDoubleClick={handleCreateTemporaryTextBox}
                   >
                     {pagePreview && (
                       <img
@@ -2347,8 +2635,152 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                         </Rnd>
                       );
                     })}
+                    {currentPageTemporaryTextBoxes.map((box) => {
+                      const isActive =
+                        activeTempBoxId === box.id || editingTempBoxId === box.id;
+                      const isEditing = editingTempBoxId === box.id;
+
+                      return (
+                        <Rnd
+                          key={box.id}
+                          bounds="parent"
+                          position={{ x: box.left, y: box.top }}
+                          size={{ width: box.width, height: box.height }}
+                          enableResizing={false}
+                          dragHandleClassName="temp-text-box-drag-handle"
+                          onDragStart={() => {
+                            setActiveTempBoxId(box.id);
+                            setEditingTempBoxId(null);
+                          }}
+                          onDragStop={(_event, data) => {
+                            setTemporaryTextBoxes((previous) =>
+                              previous.map((candidate) =>
+                                candidate.id === box.id
+                                  ? {
+                                      ...candidate,
+                                      left: Math.max(0, data.x),
+                                      top: Math.max(0, data.y),
+                                    }
+                                  : candidate,
+                              ),
+                            );
+                            setActiveTempBoxId(box.id);
+                          }}
+                          style={{ zIndex: 2_500_000 }}
+                        >
+                          <Box
+                            className="temp-text-box-drag-handle"
+                            data-temp-text-box={box.id}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              minHeight: `${box.height}px`,
+                              padding: "4px 6px",
+                              borderRadius: 6,
+                              outline: isActive
+                                ? "2px solid var(--mantine-color-green-5)"
+                                : "1px dashed rgba(34, 197, 94, 0.85)",
+                              outlineOffset: "-1px",
+                              backgroundColor: isActive
+                                ? "rgba(240, 253, 244, 0.92)"
+                                : "rgba(240, 253, 244, 0.6)",
+                              cursor: isEditing ? "text" : "move",
+                              position: "relative",
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                            }}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setActiveTempBoxId(box.id);
+                              setEditingTempBoxId(box.id);
+                              setActiveGroupId(null);
+                              setEditingGroupId(null);
+                              setActiveImageId(null);
+                              clearSelection();
+                            }}
+                          >
+                            <div
+                              ref={(node) => {
+                                if (node) {
+                                  tempEditorRefs.current.set(box.id, node);
+                                } else {
+                                  tempEditorRefs.current.delete(box.id);
+                                }
+                              }}
+                              contentEditable={isEditing}
+                              suppressContentEditableWarning
+                              data-temp-text-editor={box.id}
+                              style={{
+                                minHeight: `${Math.max(box.height - 8, 24)}px`,
+                                outline: "none",
+                                border: "none",
+                                background: "transparent",
+                                color: "#111827",
+                                fontSize: "16px",
+                                fontFamily: "Arial, Helvetica, sans-serif",
+                                lineHeight: 1.2,
+                                cursor: "text",
+                              }}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                              }}
+                              onInput={(event) => {
+                                const value = extractTextWithSoftBreaks(
+                                  event.currentTarget,
+                                ).text;
+                                tempCaretOffsetsRef.current.set(
+                                  box.id,
+                                  getCaretOffset(event.currentTarget),
+                                );
+                                syncTemporaryTextBoxValue(box.id, value);
+                              }}
+                              onBlur={(event) => {
+                                const value = extractTextWithSoftBreaks(
+                                  event.currentTarget,
+                                ).text;
+                                syncTemporaryTextBoxValue(box.id, value);
+                                if (value.trim().length === 0) {
+                                  removeTemporaryTextBox(box.id);
+                                  return;
+                                }
+                                setEditingTempBoxId(null);
+                              }}
+                            >
+                              {box.text || "\u00A0"}
+                            </div>
+                            {activeTempBoxId === box.id && (
+                              <ActionIcon
+                                size="xs"
+                                variant="filled"
+                                color="red"
+                                radius="xl"
+                                style={{
+                                  position: "absolute",
+                                  top: -8,
+                                  right: -8,
+                                  zIndex: 9999,
+                                }}
+                                onMouseDown={(event) => {
+                                  event.stopPropagation();
+                                  event.preventDefault();
+                                  removeTemporaryTextBox(box.id);
+                                }}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  event.preventDefault();
+                                }}
+                              >
+                                <CloseIcon fontSize="inherit" />
+                              </ActionIcon>
+                            )}
+                          </Box>
+                        </Rnd>
+                      );
+                    })}
                     {visibleGroups.length === 0 &&
-                    orderedImages.length === 0 ? (
+                    orderedImages.length === 0 &&
+                    currentPageTemporaryTextBoxes.length === 0 ? (
                       <Group
                         justify="center"
                         align="center"
@@ -2365,11 +2797,12 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                       </Group>
                     ) : (
                       visibleGroups.map(({ group, pageGroupIndex }) => {
+                        const interactionBounds = getGroupInteractionBounds(group);
                         const bounds = toCssBounds(
                           currentPage,
                           pageHeight,
                           scale,
-                          group.bounds,
+                          interactionBounds,
                         );
                         const changed = group.text !== group.originalText;
                         const isActive =
@@ -2806,9 +3239,11 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                   .filter((w) => w.length > 0).length;
                                 const chars = (group.text ?? "").length;
                                 const width =
-                                  group.bounds.right - group.bounds.left;
+                                  interactionBounds.right -
+                                  interactionBounds.left;
                                 const height =
-                                  group.bounds.bottom - group.bounds.top;
+                                  interactionBounds.bottom -
+                                  interactionBounds.top;
                                 const isMultiLine = lines.length > 1;
                                 console.log(
                                   `📝 Selected Text Group "${group.id}":`,

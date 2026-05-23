@@ -170,7 +170,19 @@ export interface TextGroup {
   text: string;
   originalText: string;
   bounds: BoundingBox;
+  interactiveBounds?: BoundingBox | null;
   childLineGroups?: TextGroup[] | null;
+}
+
+export interface CreateTextGroupInput {
+  pageIndex: number;
+  text: string;
+  bounds: BoundingBox;
+  templateGroupId?: string | null;
+  fontId?: string | null;
+  fontSize?: number | null;
+  fontMatrixSize?: number | null;
+  color?: string | null;
 }
 
 export const DEFAULT_PAGE_WIDTH = 612;
@@ -206,6 +218,7 @@ export interface PdfTextEditorViewData {
   requestPagePreview: (pageIndex: number, scale: number) => void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;
+  onCreateTextGroup: (input: CreateTextGroupInput) => void;
   onGroupDelete: (pageIndex: number, groupId: string) => void;
   onImageTransform: (
     pageIndex: number,
@@ -224,6 +237,10 @@ export interface PdfTextEditorViewData {
   onGeneratePdf: () => void;
   onGeneratePdfForNavigation: () => Promise<void>;
   onSaveToWorkbench: () => Promise<void>;
+  onRegisterBeforeSaveHook: (
+    hook: (() => void | Promise<void>) | null,
+  ) => void;
+  onTemporaryDraftChange: (hasDrafts: boolean) => void;
   isSavingToWorkbench: boolean;
   onForceSingleTextElementChange: (value: boolean) => void;
   onGroupingModeChange: (value: "auto" | "paragraph" | "singleLine") => void;

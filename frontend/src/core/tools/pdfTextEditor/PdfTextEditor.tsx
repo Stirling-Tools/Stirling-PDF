@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 
@@ -25,9 +25,11 @@ import {
   PdfJsonDocument,
   PdfJsonFont,
   PdfJsonImageElement,
+  CreateTextGroupInput,
   PdfJsonPage,
   TextGroup,
   PdfTextEditorViewData,
+  PdfJsonTextElement,
   BoundingBox,
   ConversionProgress,
 } from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
@@ -276,6 +278,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     new Map(),
   );
   const [autoScaleText, setAutoScaleText] = useState(true);
+  const [hasTemporaryDrafts, setHasTemporaryDrafts] = useState(false);
 
   // Lazy loading state
   const [isLazyMode, setIsLazyMode] = useState(false);
@@ -289,6 +292,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
   const originalGroupsRef = useRef<TextGroup[][]>([]);
+  const groupsByPageRef = useRef<TextGroup[][]>(groupsByPage);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
   const lastLoadedFileRef = useRef<File | null>(null);
   const autoLoadKeyRef = useRef<string | null>(null);
@@ -310,11 +314,15 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const recoverCacheAndReloadRef = useRef<() => Promise<boolean>>(
     async () => false,
   );
+  const beforeSaveHookRef = useRef<(() => void | Promise<void>) | null>(null);
+  const saveToWorkbenchRef = useRef<() => Promise<void>>(async () => {});
 
   // Keep ref in sync with state for access in async callbacks
   useEffect(() => {
     loadedDocumentRef.current = loadedDocument;
   }, [loadedDocument]);
+
+  groupsByPageRef.current = groupsByPage;
 
   useEffect(() => {
     loadedImagePagesRef.current = new Set(loadedImagePages);
@@ -354,7 +362,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       ),
     [groupsByPage, imagesByPage],
   );
-  const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
+  const hasChanges = useMemo(
+    () => dirtyPages.some(Boolean) || hasTemporaryDrafts,
+    [dirtyPages, hasTemporaryDrafts],
+  );
   const hasDocument = loadedDocument !== null;
 
   // Sync hasChanges to navigation context so navigation guards can block
@@ -963,6 +974,124 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     [],
   );
 
+  const handleCreateTextGroup = useCallback((input: CreateTextGroupInput) => {
+    const pageIndex = input.pageIndex;
+    if (pageIndex < 0) {
+      return;
+    }
+
+    const next = groupsByPageRef.current.map((groups) => [...groups]);
+    while (next.length <= pageIndex) {
+      next.push([]);
+    }
+
+    const pageGroups = next[pageIndex] ?? [];
+    const templateGroup =
+      (input.templateGroupId
+        ? pageGroups.find((group) => group.id === input.templateGroupId)
+        : null) ??
+      pageGroups.find((group) => group.fontId === input.fontId) ??
+      [...pageGroups]
+        .filter((group) => (group.text ?? "").trim().length > 0)
+        .sort(
+          (first, second) =>
+            (second.fontMatrixSize ?? second.fontSize ?? 0) -
+            (first.fontMatrixSize ?? first.fontSize ?? 0),
+        )[0] ??
+      pageGroups[pageGroups.length - 1];
+    const templateElement = templateGroup?.originalElements?.[0];
+
+    const left = input.bounds.left;
+    const right = input.bounds.right;
+    const top = input.bounds.top;
+    const bottom = input.bounds.bottom;
+    const width = Math.max(right - left, 1);
+    const height = Math.max(bottom - top, 1);
+
+    const resolvedFontSize = valueOr(
+      input.fontSize,
+      valueOr(templateGroup?.fontSize, 12),
+    );
+    const resolvedFontMatrixSize = valueOr(
+      input.fontMatrixSize,
+      valueOr(templateGroup?.fontMatrixSize, resolvedFontSize),
+    );
+    const templateMatrix =
+      templateElement?.textMatrix && templateElement.textMatrix.length === 6
+        ? templateElement.textMatrix
+        : null;
+    const matrixA = valueOr(templateMatrix?.[0], 1);
+    const matrixB = valueOr(templateMatrix?.[1], 0);
+    const matrixC = valueOr(templateMatrix?.[2], 0);
+    const matrixD = valueOr(templateMatrix?.[3], 1);
+    const templateBaseline = valueOr(
+      templateMatrix?.[5],
+      valueOr(templateElement?.y, valueOr(templateGroup?.baseline, bottom)),
+    );
+    const templateTopEdge = valueOr(templateGroup?.bounds.bottom, bottom);
+    const baselineOffsetFromTop = Math.max(
+      0,
+      templateTopEdge - templateBaseline,
+    );
+    const fallbackOffset = resolvedFontMatrixSize * 0.22;
+    const effectiveBaselineOffset =
+      baselineOffsetFromTop > 0 ? baselineOffsetFromTop : fallbackOffset;
+    const baseline = bottom - effectiveBaselineOffset;
+
+    const originalElement: PdfJsonTextElement = {
+      ...templateElement,
+      text: "",
+      fontId: input.fontId ?? templateGroup?.fontId ?? templateElement?.fontId,
+      fontSize: Math.max(resolvedFontSize, 6),
+      fontMatrixSize: Math.max(resolvedFontMatrixSize, 6),
+      fontSizeInPt: Math.max(resolvedFontSize, 6),
+      x: left,
+      y: baseline,
+      width,
+      height,
+      textMatrix: [matrixA, matrixB, matrixC, matrixD, left, baseline],
+    };
+
+    const now = Date.now();
+    const group: TextGroup = {
+      id: `draft-${pageIndex}-${now}-${Math.random().toString(36).slice(2, 8)}`,
+      pageIndex,
+      fontId: originalElement.fontId ?? null,
+      fontSize: resolvedFontSize,
+      fontMatrixSize: resolvedFontMatrixSize,
+      lineSpacing: null,
+      lineElementCounts: null,
+      color: input.color ?? templateGroup?.color ?? null,
+      fontWeight: templateGroup?.fontWeight ?? null,
+      rotation: templateGroup?.rotation ?? 0,
+      anchor: { x: left, y: bottom },
+      baselineLength: width,
+      baseline,
+      elements: [{ ...originalElement, text: input.text }],
+      originalElements: [{ ...originalElement, text: "" }],
+      text: input.text,
+      originalText: "",
+      bounds: { left, right, top, bottom },
+      interactiveBounds: { left, right, top, bottom },
+      childLineGroups: null,
+    };
+
+    next[pageIndex] = [...pageGroups, group];
+    groupsByPageRef.current = next;
+    setGroupsByPage(next);
+  }, []);
+
+  const handleRegisterBeforeSaveHook = useCallback(
+    (hook: (() => void | Promise<void>) | null) => {
+      beforeSaveHookRef.current = hook;
+    },
+    [],
+  );
+
+  const handleTemporaryDraftChange = useCallback((hasDrafts: boolean) => {
+    setHasTemporaryDrafts(hasDrafts);
+  }, []);
+
   const handleGroupDelete = useCallback(
     (pageIndex: number, groupId: string) => {
       console.log(`🗑️ Deleting group ${groupId} from page ${pageIndex}`);
@@ -1188,7 +1317,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
     const updatedDocument = restoreGlyphElements(
       loadedDocument,
-      groupsByPage,
+      groupsByPageRef.current,
       imagesByPageRef.current,
       originalImagesRef.current,
       forceSingleTextElement,
@@ -1200,7 +1329,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       document: updatedDocument,
       filename: `${baseName}.json`,
     };
-  }, [fileName, forceSingleTextElement, groupsByPage, loadedDocument]);
+  }, [fileName, forceSingleTextElement, loadedDocument]);
 
   const handleDownloadJson = useCallback(() => {
     const payload = buildPayload();
@@ -1821,6 +1950,20 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     [hasVectorPreview, imagesByPage],
   );
 
+  useLayoutEffect(() => {
+    saveToWorkbenchRef.current = handleSaveToWorkbench;
+  }, [handleSaveToWorkbench]);
+
+  const handleSaveToWorkbenchWithDraftCommit = useCallback(async () => {
+    if (beforeSaveHookRef.current) {
+      await beforeSaveHookRef.current();
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+    }
+    await saveToWorkbenchRef.current();
+  }, []);
+
   // Re-group text when grouping mode changes without forcing a full reload
   useEffect(() => {
     const currentDocument = loadedDocumentRef.current;
@@ -1853,6 +1996,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       requestPagePreview,
       onSelectPage: handleSelectPage,
       onGroupEdit: handleGroupTextChange,
+      onCreateTextGroup: handleCreateTextGroup,
       onGroupDelete: handleGroupDelete,
       onImageTransform: handleImageTransform,
       onImageReset: handleImageReset,
@@ -1863,7 +2007,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         // Generate PDF without triggering tool completion
         await handleGeneratePdf(true);
       },
-      onSaveToWorkbench: handleSaveToWorkbench,
+      onSaveToWorkbench: handleSaveToWorkbenchWithDraftCommit,
+      onRegisterBeforeSaveHook: handleRegisterBeforeSaveHook,
+      onTemporaryDraftChange: handleTemporaryDraftChange,
       onForceSingleTextElementChange: setForceSingleTextElement,
       onGroupingModeChange: setGroupingMode,
       onMergeGroups: handleMergeGroups,
@@ -1885,10 +2031,14 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       handleDownloadJson,
       handleGeneratePdf,
       handleGroupTextChange,
+      handleCreateTextGroup,
       handleGroupDelete,
       handleImageReset,
       handleResetEdits,
       handleSelectPage,
+      handleSaveToWorkbenchWithDraftCommit,
+      handleRegisterBeforeSaveHook,
+      handleTemporaryDraftChange,
       hasChanges,
       hasDocument,
       hasVectorPreview,

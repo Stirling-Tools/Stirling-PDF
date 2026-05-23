@@ -336,6 +336,73 @@ const mergeBounds = (bounds: BoundingBox[]): BoundingBox => {
   );
 };
 
+const getInteractiveBounds = (group: TextGroup): BoundingBox =>
+  group.interactiveBounds ?? group.bounds;
+
+const getWordCount = (text: string | undefined | null): number =>
+  (text ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word.length > 0).length;
+
+const looksLikeInlineLabel = (
+  group: TextGroup,
+  pageWidth: number,
+  fallbackFontSize: number,
+): boolean => {
+  const text = (group.text ?? "").trim();
+  if (text.length === 0) {
+    return false;
+  }
+
+  const width = Math.max(group.bounds.right - group.bounds.left, 0);
+  const widthRatio = pageWidth > 0 ? width / pageWidth : 0;
+  const wordCount = getWordCount(text);
+  const fontSize = group.fontMatrixSize ?? group.fontSize ?? fallbackFontSize;
+  const shortLabelThreshold = Math.max(fontSize * 12, pageWidth * 0.35);
+
+  return (
+    text.endsWith(":") ||
+    width <= shortLabelThreshold ||
+    (wordCount <= 4 && widthRatio <= 0.45)
+  );
+};
+
+const applyLineInteractiveBounds = (
+  groups: TextGroup[],
+  pageWidth: number,
+): TextGroup[] => {
+  if (groups.length === 0) {
+    return groups;
+  }
+
+  return groups.map((group, index) => {
+    const next = groups[index + 1];
+    const fontSize = group.fontMatrixSize ?? group.fontSize ?? 12;
+    const minGapPadding = Math.max(fontSize * 0.4, 6);
+    let right = group.bounds.right;
+
+    if (next) {
+      right = Math.max(
+        right,
+        Math.min(Math.max(next.bounds.left - minGapPadding, right), pageWidth),
+      );
+    } else if (looksLikeInlineLabel(group, pageWidth, fontSize)) {
+      right = Math.max(right, pageWidth * 0.92);
+    }
+
+    return {
+      ...group,
+      interactiveBounds: {
+        left: group.bounds.left,
+        right,
+        top: group.bounds.top,
+        bottom: group.bounds.bottom,
+      },
+    };
+  });
+};
+
 const shouldInsertSpace = (
   prev: PdfJsonTextElement,
   current: PdfJsonTextElement,
@@ -582,11 +649,15 @@ const createGroup = (
     text: buildGroupText(elements, metrics),
     originalText: buildGroupText(elements, metrics),
     bounds,
+    interactiveBounds: bounds,
   };
 };
 
 const cloneLineTemplate = (line: TextGroup): TextGroup => ({
   ...line,
+  interactiveBounds: line.interactiveBounds
+    ? { ...line.interactiveBounds }
+    : line.interactiveBounds,
   childLineGroups: null,
   lineElementCounts: null,
   lineSpacing: null,
@@ -787,6 +858,9 @@ const groupLinesIntoParagraphs = (
     // Create merged group with newlines between lines
     const paragraphText = allLines.map((line) => line.text).join("\n");
     const mergedBounds = mergeBounds(allLines.map((line) => line.bounds));
+    const mergedInteractiveBounds = mergeBounds(
+      allLines.map((line) => getInteractiveBounds(line)),
+    );
     const spacingValues: number[] = [];
     for (let i = 1; i < allLines.length; i++) {
       const prevBaseline =
@@ -828,6 +902,7 @@ const groupLinesIntoParagraphs = (
       text: paragraphText,
       originalText: paragraphText,
       bounds: mergedBounds,
+      interactiveBounds: mergedInteractiveBounds,
       childLineGroups: allLines,
     };
   });
@@ -878,6 +953,7 @@ export const groupPageTextElements = (
 
   lines.forEach((line) => {
     let currentBucket: PdfJsonTextElement[] = [];
+    const groupedLine: TextGroup[] = [];
 
     line.elements.forEach((element) => {
       if (currentBucket.length === 0) {
@@ -922,7 +998,7 @@ export const groupPageTextElements = (
       }
 
       if (shouldSplit) {
-        lineGroups.push(
+        groupedLine.push(
           createGroup(pageIndex, groupCounter, currentBucket, metrics),
         );
         groupCounter += 1;
@@ -933,11 +1009,13 @@ export const groupPageTextElements = (
     });
 
     if (currentBucket.length > 0) {
-      lineGroups.push(
+      groupedLine.push(
         createGroup(pageIndex, groupCounter, currentBucket, metrics),
       );
       groupCounter += 1;
     }
+
+    lineGroups.push(...applyLineInteractiveBounds(groupedLine, pageWidth));
   });
 
   // Apply paragraph grouping based on mode
