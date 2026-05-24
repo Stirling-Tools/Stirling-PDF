@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.saml2.provider.service.authentication.Saml2ResponseAssertionAccessor;
 
 @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
@@ -15,7 +15,7 @@ public record CustomSaml2AuthenticatedPrincipal(
         String nameId,
         List<String> sessionIndexes,
         String responseValue)
-        implements Saml2ResponseAssertionAccessor, Saml2AuthenticatedPrincipal, Serializable {
+        implements Saml2ResponseAssertionAccessor, AuthenticatedPrincipal, Serializable {
 
     @Override
     public String getName() {
