@@ -25,19 +25,9 @@
   display: block;
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid
-    color-mix(in srgb, var(--mantine-color-blue-5) 40%, var(--border-subtle));
+  border: 1px solid var(--border-subtle);
   border-radius: 0.625rem;
-  background: linear-gradient(
-    135deg,
-    color-mix(
-        in srgb,
-        var(--mantine-color-blue-6) 6%,
-        var(--mantine-color-body)
-      )
-      0%,
-    var(--mantine-color-body) 100%
-  );
+  background: var(--mantine-color-body);
   transition:
     background 150ms ease-out,
     border-color 150ms ease-out;
@@ -46,19 +36,10 @@
 .agent-button:hover {
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-blue-5) 65%,
+    var(--mantine-color-gray-4) 60%,
     var(--border-subtle)
   );
-  background: linear-gradient(
-    135deg,
-    color-mix(
-        in srgb,
-        var(--mantine-color-blue-6) 12%,
-        var(--mantine-color-default-hover)
-      )
-      0%,
-    var(--mantine-color-default-hover) 100%
-  );
+  background: var(--mantine-color-default-hover);
 }
 
 .agent-button__logo {
@@ -156,34 +137,17 @@
 }
 
 [data-mantine-color-scheme="dark"] .agent-button {
+  background: transparent;
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-blue-7) 55%,
-    var(--border-subtle)
-  );
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--mantine-color-blue-9) 35%, transparent) 0%,
-    transparent 100%
+    var(--mantine-color-dark-4) 60%,
+    transparent
   );
 }
 
 [data-mantine-color-scheme="dark"] .agent-button:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--mantine-color-blue-5) 60%,
-    var(--border-subtle)
-  );
-  background: linear-gradient(
-    135deg,
-    color-mix(
-        in srgb,
-        var(--mantine-color-blue-8) 45%,
-        rgba(255, 255, 255, 0.04)
-      )
-      0%,
-    rgba(255, 255, 255, 0.04) 100%
-  );
+  border-color: var(--mantine-color-dark-3);
+  background: var(--mantine-color-dark-6);
 }
 
 [data-mantine-color-scheme="dark"] .agent-button__logo {

@@ -380,10 +380,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               </Text>
             </div>
             <SegmentedControl
-              value={themeMode === "rainbow" ? "dark" : themeMode}
-              onChange={(val) => {
-                if ((themeMode === "dark") !== (val === "dark")) toggleTheme();
-              }}
+              value={
+                themeMode === "rainbow"
+                  ? "dark"
+                  : (themeMode as string)
+              }
+              onChange={(val) =>
+                updatePreference("theme", val as "light" | "dark" | "midnight")
+              }
               data={[
                 {
                   label: t("settings.general.themeLight", "Light"),
@@ -392,6 +396,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {
                   label: t("settings.general.themeDark", "Dark"),
                   value: "dark",
+                },
+                {
+                  label: t("settings.general.themeMidnight", "Midnight"),
+                  value: "midnight",
                 },
               ]}
             />
