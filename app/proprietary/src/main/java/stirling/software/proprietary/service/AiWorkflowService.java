@@ -717,7 +717,7 @@ public class AiWorkflowService {
             String[] errorHolder) {
         try {
             JsonNode node = objectMapper.readTree(line);
-            String event = node.path("event").asText();
+            String event = node.path("event").asString();
             switch (event) {
                 case "progress" -> {
                     AiEngineProgressDetail detail =
@@ -728,7 +728,7 @@ public class AiWorkflowService {
                     JsonNode response = node.path("response");
                     resultHolder[0] = objectMapper.treeToValue(response, AiWorkflowResponse.class);
                 }
-                case "error" -> errorHolder[0] = node.path("message").asText("unknown error");
+                case "error" -> errorHolder[0] = node.path("message").asString("unknown error");
                 case "heartbeat" -> listener.onHeartbeat();
                 default -> log.warn("Ignoring unknown engine stream event: {}", event);
             }

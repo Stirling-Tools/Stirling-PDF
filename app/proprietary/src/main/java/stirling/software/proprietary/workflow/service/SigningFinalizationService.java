@@ -1042,12 +1042,12 @@ public class SigningFinalizationService {
                 if (certNode.has("p12Keystore")) {
                     submission.setP12Keystore(
                             java.util.Base64.getDecoder()
-                                    .decode(certNode.get("p12Keystore").asText()));
+                                    .decode(certNode.get("p12Keystore").asString()));
                 }
                 if (certNode.has("jksKeystore")) {
                     submission.setJksKeystore(
                             java.util.Base64.getDecoder()
-                                    .decode(certNode.get("jksKeystore").asText()));
+                                    .decode(certNode.get("jksKeystore").asString()));
                 }
                 return submission;
             }
