@@ -1,19 +1,23 @@
 package stirling.software.proprietary.security.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.proxy.HibernateProxy;
-import org.springframework.security.core.userdetails.UserDetails;
-import stirling.software.common.model.enumeration.Role;
-import stirling.software.proprietary.model.Team;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.proxy.HibernateProxy;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.*;
+
+import lombok.*;
+
+import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.model.Team;
 
 @Entity
 @Table(name = "users")
@@ -28,7 +32,6 @@ public class User implements UserDetails, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "username", unique = true)
@@ -167,8 +170,14 @@ public class User implements UserDetails, Serializable {
     public final boolean equals(Object o) {
         if (this == o) return true;
         if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        Class<?> oEffectiveClass =
+                o instanceof HibernateProxy
+                        ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass()
+                        : o.getClass();
+        Class<?> thisEffectiveClass =
+                this instanceof HibernateProxy
+                        ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass()
+                        : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         User user = (User) o;
         return getId() != null && Objects.equals(getId(), user.getId());
@@ -176,6 +185,11 @@ public class User implements UserDetails, Serializable {
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return this instanceof HibernateProxy
+                ? ((HibernateProxy) this)
+                        .getHibernateLazyInitializer()
+                        .getPersistentClass()
+                        .hashCode()
+                : getClass().hashCode();
     }
 }
