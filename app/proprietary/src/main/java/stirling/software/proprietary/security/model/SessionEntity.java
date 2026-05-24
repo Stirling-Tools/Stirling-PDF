@@ -19,13 +19,22 @@ import lombok.*;
 @NoArgsConstructor
 @Table(name = "sessions")
 public class SessionEntity implements Serializable {
-    @Id private String sessionId;
+    @Id
+    @Setter(AccessLevel.NONE)
+    private String sessionId;
 
     private String principalName;
 
     private Instant lastRequest;
 
     private boolean expired;
+
+    public void setSessionId(String sessionId) {
+        if (this.sessionId != null && !this.sessionId.equals(sessionId)) {
+            throw new IllegalStateException("sessionId is immutable once set");
+        }
+        this.sessionId = sessionId;
+    }
 
     @Override
     public final boolean equals(Object o) {
@@ -46,11 +55,6 @@ public class SessionEntity implements Serializable {
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy
-                ? ((HibernateProxy) this)
-                        .getHibernateLazyInitializer()
-                        .getPersistentClass()
-                        .hashCode()
-                : getClass().hashCode();
+        return getSessionId() != null ? getSessionId().hashCode() : getClass().hashCode();
     }
 }

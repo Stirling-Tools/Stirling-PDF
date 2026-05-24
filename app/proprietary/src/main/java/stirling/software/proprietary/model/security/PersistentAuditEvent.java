@@ -25,7 +25,7 @@ import lombok.*;
         })
 @Getter
 @Setter
-@ToString
+@ToString(onlyExplicitlyIncluded = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,15 +33,17 @@ public class PersistentAuditEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ToString.Include
     private Long id;
 
-    private String principal;
-    private String type;
+    @ToString.Include private String principal;
+
+    @ToString.Include private String type;
 
     @Column(columnDefinition = "text")
     private String data; // JSON blob
 
-    private Instant timestamp;
+    @ToString.Include private Instant timestamp;
 
     @Override
     public final boolean equals(Object o) {

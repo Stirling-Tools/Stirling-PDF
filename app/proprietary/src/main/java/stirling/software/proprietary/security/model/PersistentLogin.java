@@ -16,7 +16,7 @@ import lombok.*;
 @Table(name = "persistent_logins")
 @Getter
 @Setter
-@ToString
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 public class PersistentLogin {
 
@@ -25,12 +25,14 @@ public class PersistentLogin {
     private String series;
 
     @Column(name = "username", length = 64, nullable = false)
+    @ToString.Include
     private String username;
 
     @Column(name = "token", length = 64, nullable = false)
     private String token;
 
     @Column(name = "last_used", nullable = false)
+    @ToString.Include
     private Instant lastUsed;
 
     @Override
