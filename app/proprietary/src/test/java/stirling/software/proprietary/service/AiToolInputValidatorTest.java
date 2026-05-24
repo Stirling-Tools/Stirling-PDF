@@ -75,6 +75,6 @@ class AiToolInputValidatorTest {
                 assertThrows(
                         ResponseStatusException.class,
                         () -> AiToolInputValidator.validatePdfUpload(file));
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, ex.getStatusCode());
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, ex.getStatusCode());
     }
 }
