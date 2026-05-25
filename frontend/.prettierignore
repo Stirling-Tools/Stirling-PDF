@@ -1,13 +1,21 @@
 dist/
+dist-portal/
+editor/dist/
 # Tauri/Cargo build output (binary assets named *.js etc. confuse Prettier)
-src-tauri/target/
+editor/src-tauri/target/
+editor/src-tauri/gen/
 node_modules/
-public/vendor/
-public/pdfjs*/
-public/js/thirdParty/
-public/css/cookieconsent.css
-src-tauri/target/
+editor/public/vendor/
+editor/public/pdfjs*/
+editor/public/js/thirdParty/
+editor/public/css/cookieconsent.css
+# Build / test artifacts that may exist locally even though they're gitignored
+storybook-static/
+playwright-report/
+editor/playwright-report/
+test-results/
+editor/test-results/
 *.min.*
 *.md
 *.wxs
-src/output.css
+editor/src/output.css
