@@ -797,11 +797,7 @@ export default function AdminDatabaseSection() {
                     </Button>
                     <Button
                       leftSection={
-                        <LocalIcon
-                          icon="upload"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <LocalIcon icon="upload" width="1rem" height="1rem" />
                       }
                       onClick={handleCreateBackup}
                       loading={creatingBackup}
