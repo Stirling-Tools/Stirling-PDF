@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

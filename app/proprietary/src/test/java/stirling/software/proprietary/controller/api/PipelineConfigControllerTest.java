@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.proprietary.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
