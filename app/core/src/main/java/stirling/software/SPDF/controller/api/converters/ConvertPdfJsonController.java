@@ -32,6 +32,7 @@ import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.JobOwnershipService;
@@ -54,7 +55,10 @@ public class ConvertPdfJsonController {
     @Autowired(required = false)
     private JobOwnershipService jobOwnershipService;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/text-editor")
+    @AutoJobPostMapping(
+            consumes = "multipart/form-data",
+            value = "/pdf/text-editor",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Convert PDF to Text Editor Format",
             description =
@@ -92,7 +96,10 @@ public class ConvertPdfJsonController {
         }
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/text-editor/pdf")
+    @AutoJobPostMapping(
+            consumes = "multipart/form-data",
+            value = "/text-editor/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Convert Text Editor Format to PDF",
@@ -123,7 +130,10 @@ public class ConvertPdfJsonController {
         return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/text-editor/metadata")
+    @AutoJobPostMapping(
+            consumes = "multipart/form-data",
+            value = "/pdf/text-editor/metadata",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Extract PDF metadata for text editor lazy loading",
             description =
@@ -165,7 +175,8 @@ public class ConvertPdfJsonController {
 
     @AutoJobPostMapping(
             value = "/pdf/text-editor/partial/{jobId}",
-            consumes = MediaType.APPLICATION_JSON_VALUE)
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Apply incremental edits from text editor to a cached PDF",
@@ -184,8 +195,6 @@ public class ConvertPdfJsonController {
 
         validateJobAccess(jobId);
 
-        byte[] pdfBytes = pdfJsonConversionService.exportUpdatedPages(jobId, document);
-
         String baseName =
                 (filename != null && !filename.isBlank())
                         ? FILE_EXTENSION_PATTERN
@@ -197,13 +206,18 @@ public class ConvertPdfJsonController {
                                 .orElse("document");
         String docName = baseName.endsWith(".pdf") ? baseName : baseName + ".pdf";
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-        try {
-            Files.write(tempOut.getPath(), pdfBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.exportUpdatedPages(jobId, document, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
-        return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
+        try {
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
     }
 
     @GetMapping(value = "/pdf/text-editor/page/{jobId}/{pageNumber}")
@@ -266,7 +280,8 @@ public class ConvertPdfJsonController {
 
     @AutoJobPostMapping(
             value = "/pdf/text-editor/clear-cache/{jobId}",
-            consumes = MediaType.ALL_VALUE)
+            consumes = MediaType.ALL_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Clear cached PDF document for text editor",
             description =

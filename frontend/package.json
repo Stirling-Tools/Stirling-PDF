@@ -71,16 +71,18 @@
     "react-dom": "^19.1.1",
     "react-easy-crop": "^5.5.6",
     "react-i18next": "^15.7.3",
+    "react-markdown": "^9.0.3",
     "react-rnd": "^10.5.2",
     "react-router-dom": "^7.9.1",
     "recharts": "^3.7.0",
+    "remark-gfm": "^4.0.1",
     "signature_pad": "^5.0.4",
     "smol-toml": "^1.4.2",
     "tailwindcss": "^4.1.13",
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "update:minor": "node scripts/update-minor.js",
+    "update:minor": "node editor/scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
     "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
