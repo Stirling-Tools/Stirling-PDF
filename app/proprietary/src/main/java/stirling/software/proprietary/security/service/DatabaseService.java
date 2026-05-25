@@ -256,9 +256,13 @@ public class DatabaseService implements DatabaseServiceInterface {
     @Override
     public void exportDatabase() {
         List<FileInfo> filteredBackupList =
-                this.getBackupList().stream()
-                        .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
-                        .toList();
+                new ArrayList<>(
+                        this.getBackupList().stream()
+                                .filter(
+                                        backup ->
+                                                !backup.getFileName()
+                                                        .startsWith(BACKUP_PREFIX + "user_"))
+                                .toList());
 
         if (filteredBackupList.size() > 5) {
             deleteOldestBackup(filteredBackupList);
