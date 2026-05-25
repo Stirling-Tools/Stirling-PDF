@@ -7,7 +7,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
@@ -27,7 +26,7 @@ public class ConfigInitializer {
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // 1) If settings file doesn't exist, create from template
-        Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path destPath = Path.of(InstallationPathConfig.getSettingsPath());
 
         boolean settingsFileExists = Files.exists(destPath);
 
@@ -39,7 +38,7 @@ public class ConfigInitializer {
             if (settingsFileExists) {
                 // move settings.yml to settings.yml.{timestamp}.bak
                 Path backupPath =
-                        Paths.get(
+                        Path.of(
                                 InstallationPathConfig.getSettingsPath()
                                         + "."
                                         + System.currentTimeMillis()
@@ -95,7 +94,7 @@ public class ConfigInitializer {
         }
 
         // 3) Ensure custom settings file exists
-        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
         if (Files.notExists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
             log.info("Created custom_settings file: {}", customSettingsPath);

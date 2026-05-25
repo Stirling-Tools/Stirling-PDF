@@ -965,7 +965,7 @@ public class RedactController {
                         })
                 .map(matchResult -> new MatchRange(matchResult.start(), matchResult.end()))
                 .sorted(Comparator.comparingInt(MatchRange::getStartPos))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Object> applyRedactionsToTokens(

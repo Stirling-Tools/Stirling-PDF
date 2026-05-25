@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -361,7 +360,7 @@ public class FileStorageService {
         return files.stream()
                 .sorted(Comparator.comparing(StoredFile::getCreatedAt).reversed())
                 .map(file -> buildResponse(file, user, roleByFileId.get(file.getId())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public StoredFileResponse getAccessibleFileResponse(User user, Long fileId) {
@@ -400,7 +399,7 @@ public class FileStorageService {
                                 .filter(Objects::nonNull)
                                 .map(User::getUsername)
                                 .sorted(String.CASE_INSENSITIVE_ORDER)
-                                .collect(Collectors.toList())
+                                .toList()
                         : List.of();
         List<ShareLinkResponse> shareLinks =
                 ownedByCurrentUser && isShareLinksEnabled()
@@ -419,7 +418,7 @@ public class FileStorageService {
                                                         .expiresAt(share.getExpiresAt())
                                                         .build())
                                 .sorted(Comparator.comparing(ShareLinkResponse::getCreatedAt))
-                                .collect(Collectors.toList())
+                                .toList()
                         : List.of();
         List<SharedUserResponse> sharedUsers =
                 ownedByCurrentUser
@@ -440,7 +439,7 @@ public class FileStorageService {
                                         Comparator.comparing(
                                                 SharedUserResponse::getUsername,
                                                 String.CASE_INSENSITIVE_ORDER))
-                                .collect(Collectors.toList())
+                                .toList()
                         : List.of();
         return StoredFileResponse.builder()
                 .id(file.getId())
@@ -761,7 +760,7 @@ public class FileStorageService {
                                         .accessType(access.getAccessType().name())
                                         .accessedAt(access.getAccessedAt())
                                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<FileShareAccess> listAccessedShareLinks(User user) {
@@ -817,7 +816,7 @@ public class FileStorageService {
                                     .build();
                         })
                 .filter(response -> response.getShareToken() != null)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public void ensureSharingEnabled() {
@@ -1006,7 +1005,7 @@ public class FileStorageService {
                         file.getHistoryStorageKey(),
                         file.getAuditLogStorageKey())
                 .filter(value -> value != null && !value.isBlank())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private void cleanupStoredObject(StoredObject storedObject) {

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
@@ -77,6 +76,6 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        return Paths.get(filename).getFileName().toString();
+        return Path.of(filename).getFileName().toString();
     }
 }
