@@ -1,5 +1,6 @@
 import apiClient from "@app/services/apiClient";
 import type { SavedSignature } from "@app/types/signature";
+import { getHeaderString } from "@app/utils/httpHeaderUtils";
 
 export type StorageType = "backend" | "localStorage";
 
@@ -166,7 +167,9 @@ class SignatureStorageService {
 
             // Convert to data URL (base64) for both display and use
             const blob = new Blob([imageResponse.data], {
-              type: imageResponse.headers["content-type"] || "image/png",
+              type:
+                getHeaderString(imageResponse.headers["content-type"]) ||
+                "image/png",
             });
 
             const dataUrl = await new Promise<string>((resolve, reject) => {

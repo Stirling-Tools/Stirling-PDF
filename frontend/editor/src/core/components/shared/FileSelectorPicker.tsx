@@ -20,6 +20,7 @@ import {
   parseContentDispositionFilename,
   extractLatestFilesFromBundle,
 } from "@app/services/shareBundleUtils";
+import { getHeaderString } from "@app/utils/httpHeaderUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import styles from "@app/components/shared/FileSelectorPicker.module.css";
@@ -270,13 +271,11 @@ export function FileSelectorPicker({
             } as any,
           );
           const ct =
-            res.headers?.["content-type"] ||
-            res.headers?.["Content-Type"] ||
-            "";
+            getHeaderString(res.headers?.["content-type"]) ||
+            getHeaderString(res.headers?.["Content-Type"]);
           const disp =
-            res.headers?.["content-disposition"] ||
-            res.headers?.["Content-Disposition"] ||
-            "";
+            getHeaderString(res.headers?.["content-disposition"]) ||
+            getHeaderString(res.headers?.["Content-Disposition"]);
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || "shared-file",
@@ -294,13 +293,11 @@ export function FileSelectorPicker({
             } as any,
           );
           const ct =
-            res.headers?.["content-type"] ||
-            res.headers?.["Content-Type"] ||
-            "";
+            getHeaderString(res.headers?.["content-type"]) ||
+            getHeaderString(res.headers?.["Content-Type"]);
           const disp =
-            res.headers?.["content-disposition"] ||
-            res.headers?.["Content-Disposition"] ||
-            "";
+            getHeaderString(res.headers?.["content-disposition"]) ||
+            getHeaderString(res.headers?.["Content-Disposition"]);
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || stub.name,

@@ -9,6 +9,7 @@ import {
   loadShareBundleEntries,
   parseContentDispositionFilename,
 } from "@app/services/shareBundleUtils";
+import { getHeaderString } from "@app/utils/httpHeaderUtils";
 
 export interface ShareLinkMetadata {
   shareToken?: string;
@@ -45,14 +46,11 @@ export async function downloadShareLink(token: string): Promise<{
     skipAuthRedirect: true,
   });
   const contentType =
-    (response.headers &&
-      (response.headers["content-type"] || response.headers["Content-Type"])) ||
-    "";
+    getHeaderString(response.headers?.["content-type"]) ||
+    getHeaderString(response.headers?.["Content-Type"]);
   const disposition =
-    (response.headers &&
-      (response.headers["content-disposition"] ||
-        response.headers["Content-Disposition"])) ||
-    "";
+    getHeaderString(response.headers?.["content-disposition"]) ||
+    getHeaderString(response.headers?.["Content-Disposition"]);
   const filename =
     parseContentDispositionFilename(disposition) || "shared-file";
   const blob = response.data as Blob;
