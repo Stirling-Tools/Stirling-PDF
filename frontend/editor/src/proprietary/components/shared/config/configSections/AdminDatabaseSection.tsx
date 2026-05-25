@@ -798,7 +798,7 @@ export default function AdminDatabaseSection() {
                     <Button
                       leftSection={
                         <LocalIcon
-                          icon="cloud-upload"
+                          icon="upload"
                           width="1rem"
                           height="1rem"
                         />

@@ -1170,7 +1170,7 @@ const SignSettings = ({
             }}
           >
             <LocalIcon
-              icon="material-symbols:pause-rounded"
+              icon="pause-circle-rounded"
               width={20}
               height={20}
             />
@@ -1198,7 +1198,7 @@ const SignSettings = ({
             }}
           >
             <LocalIcon
-              icon="material-symbols:play-arrow-rounded"
+              icon="play-arrow-rounded"
               width={20}
               height={20}
             />
