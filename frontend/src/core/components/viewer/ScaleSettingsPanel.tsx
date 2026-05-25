@@ -9,7 +9,7 @@ import {
   Grid,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import type { MeasureScale } from "@app/components/viewer/RulerOverlay";
+import type { MeasureScale } from "@app/utils/measurementTypes";
 import {
   generateScaleLabel,
   parsePresetRatio,
@@ -25,12 +25,16 @@ const PRESET_SCALES = ["1:5", "1:10", "1:20", "1:50", "1:100", "1:150"];
 interface ScaleSettingsPanelProps {
   onApplyScale: (scale: MeasureScale) => void;
   onResetScale?: () => void;
+  onStartCalibration?: () => void;
+  isCalibrationActive?: boolean;
   currentScale?: MeasureScale | null;
 }
 
 export function ScaleSettingsPanel({
   onApplyScale,
   onResetScale,
+  onStartCalibration,
+  isCalibrationActive = false,
   currentScale,
 }: ScaleSettingsPanelProps) {
   const { t } = useTranslation();
@@ -153,7 +157,10 @@ export function ScaleSettingsPanel({
     } catch (err) {
       console.error("Invalid unit:", scaleUnit, err);
       setUnitError(
-        t("scaleSettings.unitInvalid", `Invalid unit: ${scaleUnit}`),
+        t("scaleSettings.unitInvalid", {
+          defaultValue: "Invalid unit: {{scaleUnit}}",
+          scaleUnit,
+        }),
       );
     }
   };
@@ -165,6 +172,11 @@ export function ScaleSettingsPanel({
     if (numValue && numValue > 0) {
       applyScale(numValue, unit);
     }
+  };
+
+  const handleStartCalibration = () => {
+    clearErrors();
+    onStartCalibration?.();
   };
 
   return (
@@ -254,18 +266,21 @@ export function ScaleSettingsPanel({
         </Text>
       </div>
 
-      {/* Calibration Mode (Reserved for future) */}
+      {/* Calibration Mode */}
       <Button
+        onClick={handleStartCalibration}
         fullWidth
-        variant="outline"
+        variant={isCalibrationActive ? "filled" : "outline"}
         size="sm"
-        disabled
+        disabled={!onStartCalibration}
         title={t(
           "scaleSettings.calibrationTooltip",
-          "Calibration mode coming soon",
+          "Measure a known distance to calculate the scale automatically",
         )}
       >
-        {t("scaleSettings.calibrate", "Calibrate")}
+        {isCalibrationActive
+          ? t("scaleSettings.calibrating", "Calibrating...")
+          : t("scaleSettings.calibrate", "Calibrate")}
       </Button>
 
       {/* Reset Button */}

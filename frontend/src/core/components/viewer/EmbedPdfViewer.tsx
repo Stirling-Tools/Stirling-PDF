@@ -38,6 +38,7 @@ import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
+import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -1033,6 +1034,12 @@ const EmbedPdfViewerContent = ({
     pageMeasureScales,
     customScale,
     handleSetCustomScale,
+    isScaleCalibrationActive,
+    scaleCalibrationMeasurement,
+    startScaleCalibration,
+    cancelScaleCalibration,
+    handleScaleCalibrationMeasurement,
+    applyScaleCalibration,
   } = useMeasurementManager({
     currentFile,
     effectiveFile,
@@ -1045,6 +1052,8 @@ const EmbedPdfViewerContent = ({
     setIsRulerActive,
     customScale,
     handleSetCustomScale,
+    isScaleCalibrationActive,
+    startScaleCalibration,
   );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
@@ -1215,8 +1224,17 @@ const EmbedPdfViewerContent = ({
               isActive={isRulerActive}
               pageMeasureScales={pageMeasureScales}
               customScale={customScale}
+              isCalibrationActive={isScaleCalibrationActive}
+              onCalibrationMeasure={handleScaleCalibrationMeasurement}
             />
           </Box>
+          <ScaleCalibrationDialog
+            opened={!!scaleCalibrationMeasurement}
+            measurement={scaleCalibrationMeasurement}
+            defaultUnit={customScale?.unit ?? "m"}
+            onApplyScale={applyScaleCalibration}
+            onClose={cancelScaleCalibration}
+          />
         </>
       )}
 

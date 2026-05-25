@@ -28,13 +28,15 @@ import StopIcon from "@mui/icons-material/Stop";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
-import type { MeasureScale } from "@app/components/viewer/RulerOverlay";
+import type { MeasureScale } from "@app/utils/measurementTypes";
 
 export function useViewerRightRailButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
   customScale?: MeasureScale | null,
   setCustomScale?: (scale: MeasureScale | null) => void,
+  isScaleCalibrationActive?: boolean,
+  startScaleCalibration?: () => void,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -134,6 +136,15 @@ export function useViewerRightRailButtons(
   const readAloudSpeedLabel = t("rightRail.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
+
+  const handleStartScaleCalibration = useCallback(() => {
+    startScaleCalibration?.();
+    setIsRulerActive?.(true);
+    if (isPanning) {
+      viewer.panActions.disablePan();
+      setIsPanning(false);
+    }
+  }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
 
   // Filter languages based on available voices
   const filteredLanguages = useMemo(
@@ -296,6 +307,8 @@ export function useViewerRightRailButtons(
                       onResetScale={() => {
                         setCustomScale?.(null);
                       }}
+                      onStartCalibration={handleStartScaleCalibration}
+                      isCalibrationActive={isScaleCalibrationActive}
                     />
                   </Popover.Dropdown>
                 </Popover>
@@ -636,8 +649,10 @@ export function useViewerRightRailButtons(
     rulerLabel,
     isRulerActive,
     setIsRulerActive,
+    handleStartScaleCalibration,
     customScale,
     setCustomScale,
+    isScaleCalibrationActive,
     readAloudLabel,
     readAloudSpeedLabel,
     isReadingAloud,

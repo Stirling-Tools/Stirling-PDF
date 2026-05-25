@@ -1,26 +1,16 @@
-/**
- * Measurement and Scale Conversion Utilities
- * Centralized constants and functions for PDF point to real-world unit conversions
- */
+// PDF point to real-world unit conversions
 
 import type {
   Measurement,
-  MeasureScaleLike,
+  MeasureScale,
   PagePoint,
+  CalibrationMetadata,
 } from "@app/utils/measurementTypes";
 
-/**
- * Base conversion: 1 PDF point in meters
- * PDF points: 1/72 inch (standard screen DPI)
- * 1 inch = 0.0254 meters
- */
+// 1 PDF point in meters (1/72 inch)
 const POINT_TO_METERS = 0.0254 / 72;
 
-/**
- * Conversion factors: how many units per 1 PDF point.
- * E.g. POINT_TO_UNIT["ft"] = how many feet in 1 PDF point
- * Source of truth for valid measurement units.
- */
+// Conversion factors: units per PDF point
 export const POINT_TO_UNIT = {
   m: POINT_TO_METERS,
   cm: POINT_TO_METERS * 100,
@@ -32,29 +22,17 @@ export const POINT_TO_UNIT = {
   mi: POINT_TO_METERS / 1609.344,
 } as const;
 
-/**
- * Valid measurement units.
- * Derived from POINT_TO_UNIT to maintain single source of truth.
- */
+// Valid measurement units from POINT_TO_UNIT
 export type MeasurementUnit = keyof typeof POINT_TO_UNIT;
 
-/**
- * Normalize unit string to lowercase and trimmed form.
- */
 function normalizeUnit(unit: string): string {
   return unit.toLowerCase().trim();
 }
 
-/**
- * Type guard to check if a string is a valid MeasurementUnit.
- */
 function isMeasurementUnit(unit: string): unit is MeasurementUnit {
   return unit in POINT_TO_UNIT;
 }
 
-/**
- * Get conversion factor for a unit, or undefined if invalid.
- */
 export function getUnitFactor(unit: string): number | undefined {
   const normalized = normalizeUnit(unit);
   if (!isMeasurementUnit(normalized)) {
@@ -63,18 +41,6 @@ export function getUnitFactor(unit: string): number | undefined {
   return POINT_TO_UNIT[normalized];
 }
 
-/**
- * Calculate conversion factor from PDF points to real-world units
- * @param ratio - Architectural scale ratio (e.g., 100 for "1:100")
- * @param unit - Unit name (e.g., "m", "ft")
- * @returns factor where: real_world_value = pdf_points * factor
- *
- * Example: ratio=100, unit="m"
- * factor = 0.000352778 * 100 = 0.0352778
- * So 1 PDF point = 0.0352778 meters in the scale
- *
- * @throws Error if unit is not supported
- */
 export function calculateScaleFactor(ratio: number, unit: string): number {
   if (!Number.isFinite(ratio) || ratio <= 0) {
     throw new Error(`Invalid scale ratio: ${ratio}`);
@@ -88,13 +54,6 @@ export function calculateScaleFactor(ratio: number, unit: string): number {
   return POINT_TO_UNIT[normalized] * ratio;
 }
 
-/**
- * Generate human-readable label for the scale
- * Preserves decimal precision for non-integer ratios
- * @example `1:100 (m)` for ratio=100
- * @example `1:12.5 (ft)` for ratio=12.5
- * @example `m` for ratio=null (unknown unit)
- */
 export function generateScaleLabel(ratio: number | null, unit: string): string {
   if (ratio === null || ratio === undefined) {
     return unit;
@@ -105,14 +64,8 @@ export function generateScaleLabel(ratio: number | null, unit: string): string {
   return `1:${display} (${unit})`;
 }
 
-/**
- * Imperial units - immutable constant
- */
+// Imperial units
 const IMPERIAL_UNITS = ["ft", "in", "yd", "mi"] as const;
-
-/**
- * Check if unit is imperial
- */
 export function isImperialUnit(unit: string): boolean {
   const normalized = normalizeUnit(unit);
   return isMeasurementUnit(normalized)
@@ -120,19 +73,6 @@ export function isImperialUnit(unit: string): boolean {
     : false;
 }
 
-/**
- * Convert a value from one unit to another.
- * Both units must exist in POINT_TO_UNIT.
- *
- * @param value - The value in sourceUnit
- * @param sourceUnit - The unit of the input value
- * @param targetUnit - The unit to convert to
- * @returns The value converted to targetUnit, or null if unit is invalid
- *
- * @example
- * convertUnit(1, 'm', 'ft') // 1 meter to feet ≈ 3.281
- * convertUnit(100, 'ft', 'in') // 100 feet to inches = 1200
- */
 export function convertUnit(
   value: number,
   sourceUnit: string,
@@ -155,12 +95,6 @@ export function convertUnit(
   return value * (targetFactor / sourceFactor);
 }
 
-/**
- * Parse architectural scale preset format (e.g., "1:100") to extract ratio
- * @example parsePresetRatio("1:100") returns 100
- * @example parsePresetRatio("1:12.5") returns 12.5
- * @returns ratio or 0 if parsing fails
- */
 export function parsePresetRatio(preset: string): number {
   const parts = preset.split(":");
 
@@ -173,10 +107,7 @@ export function parsePresetRatio(preset: string): number {
   return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
-/**
- * Unit options for UI dropdowns
- * Shared across components to ensure consistency
- */
+// UI dropdown options - shared across components
 export const UNIT_OPTIONS = [
   { value: "m", label: "Meters (m)" },
   { value: "cm", label: "Centimeters (cm)" },
@@ -188,17 +119,7 @@ export const UNIT_OPTIONS = [
   { value: "mi", label: "Miles (mi)" },
 ] as const;
 
-/**
- * Session storage helpers.
- */
-
-/**
- * Load all entries for a measurement key from sessionStorage
- * Handles parse errors gracefully - returns empty object on corruption
- *
- * @param key - Storage key (e.g., "stirling_scales", "stirling_measurements")
- * @returns Object mapping fileKey → measurement data, empty object on error
- */
+// Load entries from sessionStorage
 export function loadSessionMap(key: string): Record<string, unknown> {
   try {
     const raw = sessionStorage.getItem(key);
@@ -221,14 +142,11 @@ export function loadSessionMap(key: string): Record<string, unknown> {
   }
 }
 
-/**
- * Save a measurement entry to sessionStorage with quota management.
- * Enforces 50-file limit, keeping 40 most recent entries when exceeded.
- */
+// Save entry to sessionStorage with quota management (50-file limit)
 export function saveSessionMap(
   key: string,
   fileKey: string,
-  value: MeasureScaleLike | Measurement[] | null,
+  value: MeasureScale | Measurement[] | null,
 ): void {
   if (!fileKey) return;
 
@@ -236,9 +154,12 @@ export function saveSessionMap(
     const existing: Record<string, unknown> = {
       ...loadSessionMap(key),
     };
+
+    // Delete first to move fileKey to end (maintains insertion order recency)
+    delete existing[fileKey];
     existing[fileKey] = value;
 
-    // Enforce 50-file limit - keep only 40 most recent on exceed
+    // Enforce 50-file limit - keep only 40 most recent entries by insertion order
     const keys = Object.keys(existing);
     if (keys.length > 50) {
       const entriesToDelete = keys.slice(0, keys.length - 40);
@@ -262,13 +183,8 @@ export function saveSessionMap(
   }
 }
 
-/**
- * Validation helpers.
- */
+// Validation helpers
 
-/**
- * Validate PagePoint structure.
- */
 export function validatePagePoint(obj: unknown): obj is PagePoint {
   if (typeof obj !== "object" || obj === null) return false;
 
@@ -284,13 +200,8 @@ export function validatePagePoint(obj: unknown): obj is PagePoint {
   );
 }
 
-/**
- * Validate MeasureScale structure.
- * Accepts null (reset to default) or valid object.
- */
-export function validateMeasureScale(
-  obj: unknown,
-): obj is MeasureScaleLike | null {
+// MeasureScale can be null (reset) or valid object
+export function validateMeasureScale(obj: unknown): obj is MeasureScale | null {
   // null is allowed (reset to default)
   if (obj === null) return true;
 
@@ -328,10 +239,7 @@ export function validateMeasureScale(
   return true;
 }
 
-/**
- * Validate Measurement object.
- * Rejects cross-page measurements.
- */
+// Reject cross-page measurements
 export function validateMeasurement(obj: unknown): obj is Measurement {
   if (typeof obj !== "object" || obj === null) return false;
 
@@ -357,4 +265,96 @@ export function validateMeasurement(obj: unknown): obj is Measurement {
   }
 
   return true;
+}
+
+export function formatPaperDistance(distancePts: number): string {
+  if (!Number.isFinite(distancePts) || distancePts < 0) {
+    return "0 mm";
+  }
+
+  const inches = distancePts / 72;
+  const mm = inches * 25.4;
+
+  if (mm < 100) {
+    return `${mm.toFixed(1)} mm`;
+  }
+  if (mm < 1000) {
+    return `${(mm / 10).toFixed(1)} cm`;
+  }
+  return `${(mm / 1000).toFixed(2)} m`;
+}
+
+export function validateRealDistance(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const num = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isFinite(num) || num <= 0) {
+    return null;
+  }
+
+  return num;
+}
+
+export function deriveRatioFromFactor(
+  factor: number,
+  unit: string,
+): number | null {
+  if (!Number.isFinite(factor) || factor <= 0) {
+    return null;
+  }
+
+  const baseFactor = getUnitFactor(unit);
+  if (!baseFactor) {
+    return null;
+  }
+
+  // ratio = factor / baseFactor
+  const ratio = factor / baseFactor;
+  return Number.isFinite(ratio) && ratio > 0 ? ratio : null;
+}
+
+export function calculateCalibratedScale(
+  pdfDistancePts: number,
+  realDistance: number,
+  unit: string,
+): MeasureScale {
+  if (!Number.isFinite(pdfDistancePts) || pdfDistancePts <= 0) {
+    throw new Error("Invalid PDF distance (must be positive)");
+  }
+
+  if (!Number.isFinite(realDistance) || realDistance <= 0) {
+    throw new Error("Invalid real-world distance (must be positive)");
+  }
+
+  const baseFactor = getUnitFactor(unit);
+  if (!baseFactor) {
+    throw new Error(`Unsupported unit: ${unit}`);
+  }
+
+  const factor = realDistance / pdfDistancePts;
+  const ratio = deriveRatioFromFactor(factor, unit);
+
+  return {
+    factor,
+    ratio,
+    unit,
+  };
+}
+
+export function createCalibrationMetadata(
+  pdfDistancePts: number,
+  realDistance: number,
+  scale: MeasureScale,
+  unitUsed: string,
+): CalibrationMetadata {
+  return {
+    pdfDistancePts,
+    realDistance,
+    scale,
+    timestamp: new Date().toISOString(),
+    unitUsed,
+  };
 }

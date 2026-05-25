@@ -5,12 +5,12 @@ import {
   useState,
   type RefObject,
 } from "react";
-import type { Measurement } from "@app/utils/measurementTypes";
 import type {
-  RulerOverlayHandle,
+  Measurement,
   MeasureScale,
   PageMeasureScales,
-} from "@app/components/viewer/RulerOverlay";
+} from "@app/utils/measurementTypes";
+import type { RulerOverlayHandle } from "@app/components/viewer/RulerOverlay";
 import {
   loadSessionMap,
   saveSessionMap,
@@ -20,6 +20,7 @@ import {
 import type { StirlingFile } from "@app/types/fileContext";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import { extractPageMeasureScales } from "@app/utils/pdfMeasurementExtraction";
+import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
 
 // ─── Hook: useMeasurementManager ──────────────────────────────────────────────
 
@@ -42,6 +43,14 @@ interface UseMeasurementManagerReturn {
   pageMeasureScales: PageMeasureScales | null;
   customScale: MeasureScale | null;
   handleSetCustomScale: (scale: MeasureScale | null) => void;
+  isScaleCalibrationActive: boolean;
+  scaleCalibrationMeasurement: ScaleCalibrationMeasurement | null;
+  startScaleCalibration: () => void;
+  cancelScaleCalibration: () => void;
+  handleScaleCalibrationMeasurement: (
+    measurement: ScaleCalibrationMeasurement,
+  ) => void;
+  applyScaleCalibration: (scale: MeasureScale) => void;
 }
 
 export function useMeasurementManager({
@@ -53,6 +62,10 @@ export function useMeasurementManager({
   const [pageMeasureScales, setPageMeasureScales] =
     useState<PageMeasureScales | null>(null);
   const [customScale, setCustomScale] = useState<MeasureScale | null>(null);
+  const [isScaleCalibrationActive, setIsScaleCalibrationActive] =
+    useState(false);
+  const [scaleCalibrationMeasurement, setScaleCalibrationMeasurement] =
+    useState<ScaleCalibrationMeasurement | null>(null);
   const [scalesByFileId, setScalesByFileId] = useState<
     Map<string, MeasureScale | null>
   >(new Map());
@@ -134,14 +147,54 @@ export function useMeasurementManager({
       }
 
       setCustomScale(scale);
+      setScaleCalibrationMeasurement(null);
+      setIsScaleCalibrationActive(false);
     },
     [currentFileKey],
+  );
+
+  const handleSetRulerActive = useCallback((active: boolean) => {
+    setIsRulerActive(active);
+    if (!active) {
+      setScaleCalibrationMeasurement(null);
+      setIsScaleCalibrationActive(false);
+    }
+  }, []);
+
+  const startScaleCalibration = useCallback(() => {
+    setScaleCalibrationMeasurement(null);
+    setIsScaleCalibrationActive(true);
+    setIsRulerActive(true);
+  }, []);
+
+  const cancelScaleCalibration = useCallback(() => {
+    setScaleCalibrationMeasurement(null);
+    setIsScaleCalibrationActive(false);
+  }, []);
+
+  const handleScaleCalibrationMeasurement = useCallback(
+    (measurement: ScaleCalibrationMeasurement) => {
+      setScaleCalibrationMeasurement(measurement);
+      setIsScaleCalibrationActive(false);
+    },
+    [],
+  );
+
+  const applyScaleCalibration = useCallback(
+    (scale: MeasureScale) => {
+      handleSetCustomScale(scale);
+      setScaleCalibrationMeasurement(null);
+      setIsScaleCalibrationActive(false);
+    },
+    [handleSetCustomScale],
   );
 
   useEffect(() => {
     if (!currentFileKey) {
       setPageMeasureScales(null);
       setCustomScale(null);
+      setScaleCalibrationMeasurement(null);
+      setIsScaleCalibrationActive(false);
       setIsRulerActive(false);
       rulerOverlayRef.current?.clearAll(true);
       restoredFileKeyRef.current = null;
@@ -152,6 +205,8 @@ export function useMeasurementManager({
       return;
     }
     restoredFileKeyRef.current = currentFileKey;
+    setScaleCalibrationMeasurement(null);
+    setIsScaleCalibrationActive(false);
 
     const storedScale = readStoredScale(currentFileKey);
     const savedScale =
@@ -224,9 +279,15 @@ export function useMeasurementManager({
 
   return {
     isRulerActive,
-    setIsRulerActive,
+    setIsRulerActive: handleSetRulerActive,
     pageMeasureScales,
     customScale,
     handleSetCustomScale,
+    isScaleCalibrationActive,
+    scaleCalibrationMeasurement,
+    startScaleCalibration,
+    cancelScaleCalibration,
+    handleScaleCalibrationMeasurement,
+    applyScaleCalibration,
   };
 }

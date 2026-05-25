@@ -3,7 +3,7 @@ import type {
   PageMeasureScales,
   PageScaleInfo,
   ViewportScale,
-} from "@app/components/viewer/RulerOverlay";
+} from "@app/utils/measurementTypes";
 import { getUnitFactor } from "@app/utils/measurementUtils";
 
 type PdfLookupable = {
@@ -78,20 +78,20 @@ function readBBox(value: unknown): ViewportScale["bbox"] {
   return points as [number, number, number, number];
 }
 
-function parseScale(measureObj: unknown): MeasureScale | null {
+function parseScale(measureObj: unknown, PDFName: any): MeasureScale | null {
   if (!isLookupable(measureObj)) return null;
 
-  let fmtArray = measureObj.lookup("D");
+  let fmtArray = measureObj.lookup(PDFName.of("D"));
   if (!isArrayLike(fmtArray)) {
-    fmtArray = measureObj.lookup("X");
+    fmtArray = measureObj.lookup(PDFName.of("X"));
   }
   if (!isArrayLike(fmtArray) || fmtArray.size() === 0) return null;
 
   const firstFmt = fmtArray.lookup(0);
   if (!isLookupable(firstFmt)) return null;
 
-  const cObj = firstFmt.lookup("C");
-  const uObj = firstFmt.lookup("U");
+  const cObj = firstFmt.lookup(PDFName.of("C"));
+  const uObj = firstFmt.lookup(PDFName.of("U"));
   const factor = readNumber(cObj);
   if (factor === null || factor <= 0) return null;
 
@@ -129,7 +129,10 @@ export async function extractPageMeasureScales(
           const vpEntry = vpObj.lookup(j);
           if (!(vpEntry instanceof PDFDict)) continue;
 
-          const scale = parseScale(vpEntry.lookup(PDFName.of("Measure")));
+          const scale = parseScale(
+            vpEntry.lookup(PDFName.of("Measure")),
+            PDFName,
+          );
           if (!scale) continue;
 
           viewports.push({
@@ -140,7 +143,10 @@ export async function extractPageMeasureScales(
       }
 
       if (viewports.length === 0) {
-        const scale = parseScale(pageNode.lookup(PDFName.of("Measure")));
+        const scale = parseScale(
+          pageNode.lookup(PDFName.of("Measure")),
+          PDFName,
+        );
         if (scale) {
           viewports.push({ bbox: null, scale });
         }

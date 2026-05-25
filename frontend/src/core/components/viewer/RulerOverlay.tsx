@@ -9,6 +9,7 @@ import {
   generateScaleLabel,
   validateMeasurement,
 } from "@app/utils/measurementUtils";
+import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,8 @@ interface RulerOverlayProps {
   isActive: boolean;
   pageMeasureScales?: PageMeasureScales | null;
   customScale?: MeasureScale | null;
+  isCalibrationActive?: boolean;
+  onCalibrationMeasure?: (measurement: ScaleCalibrationMeasurement) => void;
 }
 
 // ─── Math ─────────────────────────────────────────────────────────────────────
@@ -661,7 +664,17 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
 export const RulerOverlay = React.forwardRef<
   RulerOverlayHandle,
   RulerOverlayProps
->(({ containerRef, isActive, pageMeasureScales, customScale }, ref) => {
+>(function RulerOverlayImpl(
+  {
+    containerRef,
+    isActive,
+    pageMeasureScales,
+    customScale,
+    isCalibrationActive = false,
+    onCalibrationMeasure,
+  }: RulerOverlayProps,
+  ref,
+) {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
   /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
@@ -908,31 +921,45 @@ export const RulerOverlay = React.forwardRef<
       const dp = overPage ? toDocPagePt(e) : cursorDocRef.current;
       if (!dp) return;
 
-      setFirstPt((prev) => {
-        if (!prev) {
-          firstPtRef.current = dp;
-          return dp;
-        }
+      const prev = firstPtRef.current;
+      if (!prev) {
+        firstPtRef.current = dp;
+        setFirstPt(dp);
+        return;
+      }
 
-        // CRITICAL: Reject cross-page measurements
-        // Measurements must have both points on the same page
-        if (prev.pageIndex !== dp.pageIndex) {
-          console.warn(
-            "[Ruler] Cross-page measurements not allowed. Resetting measurement.",
-            `Start: page ${prev.pageIndex}, End: page ${dp.pageIndex}`,
-          );
-          // Reset first point so user can start fresh on same page
-          firstPtRef.current = null;
-          setCursorS(null);
-          setCursorDoc(null);
-          return null;
-        }
-
+      // CRITICAL: Reject cross-page measurements
+      // Measurements must have both points on the same page
+      if (prev.pageIndex !== dp.pageIndex) {
+        console.warn(
+          "[Ruler] Cross-page measurements not allowed. Resetting measurement.",
+          `Start: page ${prev.pageIndex}, End: page ${dp.pageIndex}`,
+        );
+        // Reset first point so user can start fresh on same page
         firstPtRef.current = null;
-        const id = `ruler-${crypto.randomUUID()}`;
-        setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
-        return null;
-      });
+        setFirstPt(null);
+        setCursorS(null);
+        setCursorDoc(null);
+        return;
+      }
+
+      firstPtRef.current = null;
+      setFirstPt(null);
+
+      if (isCalibrationActive) {
+        const distancePts = dist(prev, dp);
+        if (distancePts > 0) {
+          onCalibrationMeasure?.({
+            start: prev,
+            end: dp,
+            pdfDistancePts: distancePts,
+          });
+        }
+        return;
+      }
+
+      const id = `ruler-${crypto.randomUUID()}`;
+      setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
     };
 
     const onLeave = () => {
@@ -958,7 +985,7 @@ export const RulerOverlay = React.forwardRef<
       document.removeEventListener("keydown", onKey);
       el.style.cursor = "";
     };
-  }, [containerRef, isActive]);
+  }, [containerRef, isActive, isCalibrationActive, onCalibrationMeasure]);
 
   const deleteMeasurement = useCallback((id: string) => {
     setMeasurements((prev) => prev.filter((m) => m.id !== id));
@@ -1051,7 +1078,7 @@ export const RulerOverlay = React.forwardRef<
           endS={cursorS}
           zoom={zoom}
           measureScale={
-            firstPt && cursorDoc
+            !isCalibrationActive && firstPt && cursorDoc
               ? pickScale(firstPt, cursorDoc, pageMeasureScales, customScale)
               : null
           }
