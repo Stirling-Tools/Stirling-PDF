@@ -1,8 +1,19 @@
 version: '3'
 
-
-vars:
-  GRADLEW: '{{if eq OS "windows"}}.\\gradlew.bat{{else}}./gradlew{{end}}'
+# Gradle invocation strategy:
+#   - Linux/macOS: `./gradlew` runs the POSIX shell wrapper natively.
+#   - Windows:     `cmd /c ".\gradlew.bat ..."` invokes the .bat wrapper through
+#                  cmd.exe so it inherits the user's Windows-side `JAVA_HOME`
+#                  and PATH. Routing through `bash gradlew` on Windows ends up
+#                  under WSL or Git-Bash, neither of which inherits
+#                  Adoptium/Temurin's default Windows-only Java env - gradlew
+#                  then errors with "JAVA_HOME is not set and no 'java' command
+#                  could be found".
+#
+#                  The entire `.\gradlew.bat ...` payload is double-quoted so
+#                  the leading `.\` survives mvdan/sh's POSIX backslash
+#                  stripping; cmd.exe also requires `.\` (not bare `gradlew.bat`)
+#                  because modern Windows excludes cwd from cmd's search path.
 
 tasks:
   dev:
@@ -13,46 +24,68 @@ tasks:
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
-      AIENGINE_URL: '{{.AIENGINE_URL}}'
-      AIENGINE_ENABLED: '{{if .AIENGINE_URL}}true{{else}}false{{end}}'
     cmds:
-      - '{{.GRADLEW}} :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+        platforms: [windows]
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}./gradlew :stirling-pdf:bootRun'
+        platforms: [linux, darwin]
 
   dev:bundled:
     desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
     ignore_error: true
     cmds:
-      - '{{.GRADLEW}} clean bootRun -PbuildWithFrontend=true'
+      - cmd: cmd /c ".\gradlew.bat clean bootRun -PbuildWithFrontend=true"
+        platforms: [windows]
+      - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
+        platforms: [linux, darwin]
 
   build:
     desc: "Full backend build"
     cmds:
-      - '{{.GRADLEW}} clean build'
+      - cmd: cmd /c ".\gradlew.bat clean build"
+        platforms: [windows]
+      - cmd: ./gradlew clean build
+        platforms: [linux, darwin]
 
   build:fast:
     desc: "Build without tests"
     cmds:
-      - '{{.GRADLEW}} clean build -x test'
+      - cmd: cmd /c ".\gradlew.bat clean build -x test"
+        platforms: [windows]
+      - cmd: ./gradlew clean build -x test
+        platforms: [linux, darwin]
 
   build:ci:
     desc: "Build for CI (formatting checked separately)"
     cmds:
-      - '{{.GRADLEW}} build -PnoSpotless'
+      - cmd: cmd /c ".\gradlew.bat build -PnoSpotless"
+        platforms: [windows]
+      - cmd: ./gradlew build -PnoSpotless
+        platforms: [linux, darwin]
 
   test:
     desc: "Run backend tests"
     cmds:
-      - '{{.GRADLEW}} test'
+      - cmd: cmd /c ".\gradlew.bat test"
+        platforms: [windows]
+      - cmd: ./gradlew test
+        platforms: [linux, darwin]
 
   format:
     desc: "Auto-fix code formatting"
     cmds:
-      - '{{.GRADLEW}} spotlessApply'
+      - cmd: cmd /c ".\gradlew.bat spotlessApply"
+        platforms: [windows]
+      - cmd: ./gradlew spotlessApply
+        platforms: [linux, darwin]
 
   format:check:
     desc: "Check code formatting"
     cmds:
-      - '{{.GRADLEW}} spotlessCheck'
+      - cmd: cmd /c ".\gradlew.bat spotlessCheck"
+        platforms: [windows]
+      - cmd: ./gradlew spotlessCheck
+        platforms: [linux, darwin]
 
   fix:
     desc: "Auto-fix backend"
@@ -62,7 +95,10 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - '{{.GRADLEW}} :stirling-pdf:copySwaggerDoc'
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:copySwaggerDoc
+        platforms: [linux, darwin]
     sources:
       - app/core/src/main/java/**/*.java
       - app/proprietary/src/main/java/**/*.java
@@ -80,19 +116,31 @@ tasks:
     desc: "Print project version"
     silent: true
     cmds:
-      - '{{.GRADLEW}} printVersion --quiet'
+      - cmd: cmd /c ".\gradlew.bat printVersion --quiet" | tail -1
+        platforms: [windows]
+      - cmd: ./gradlew printVersion --quiet | tail -1
+        platforms: [linux, darwin]
 
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - '{{.GRADLEW}} checkLicense --no-parallel'
+      - cmd: cmd /c ".\gradlew.bat checkLicense --no-parallel"
+        platforms: [windows]
+      - cmd: ./gradlew checkLicense --no-parallel
+        platforms: [linux, darwin]
 
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - '{{.GRADLEW}} checkLicense generateLicenseReport --no-parallel'
+      - cmd: cmd /c ".\gradlew.bat checkLicense generateLicenseReport --no-parallel"
+        platforms: [windows]
+      - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
+        platforms: [linux, darwin]
 
   clean:
     desc: "Clean build artifacts"
     cmds:
-      - '{{.GRADLEW}} clean'
+      - cmd: cmd /c ".\gradlew.bat clean"
+        platforms: [windows]
+      - cmd: ./gradlew clean
+        platforms: [linux, darwin]
