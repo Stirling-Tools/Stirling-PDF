@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { resolve } from "node:path";
 
 const VALID_MODES = [
   "core",
@@ -21,21 +22,30 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the
-  // `VITE_` prefix.
-  const env = loadEnv(mode, process.cwd(), "");
+  // Load env files relative to this config (frontend/editor/), regardless of
+  // where the build was invoked from. The previous `process.cwd()` worked when
+  // this file lived at frontend/, but after the editor was moved under
+  // frontend/editor/ the cwd-based lookup would miss editor/.env*.
+  const env = loadEnv(mode, import.meta.dirname, "");
+  const parentEnv = loadEnv(mode, resolve(import.meta.dirname, ".."), "");
 
-  // Resolve the effective build mode.
-  // Explicit --mode flags take precedence; otherwise default to proprietary
-  // unless DISABLE_ADDITIONAL_FEATURES=true, in which case default to core.
-  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(
-    mode,
-  )
+  // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
+  const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
     ? (mode as BuildMode)
-    : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
-      ? "core"
-      : "proprietary";
+    : null;
+  const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
+  const flavorMode: BuildMode | null =
+    flavor === "core" || flavor === "proprietary" || flavor === "saas"
+      ? (flavor as BuildMode)
+      : null;
+  const effectiveMode: BuildMode =
+    explicitMode ??
+    flavorMode ??
+    (process.env.ENABLE_SAAS === "true"
+      ? "saas"
+      : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
+        ? "core"
+        : "proprietary");
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
@@ -45,7 +55,10 @@ export default defineConfig(async ({ mode }) => {
   // Allow host header checks to be configured via env so LAN/reverse-proxy
   // dev setups don't require editing this file for each machine.
   const allowedHostsRaw =
-    process.env.FRONTEND_ALLOWED_HOSTS || env.FRONTEND_ALLOWED_HOSTS || "";
+    process.env.FRONTEND_ALLOWED_HOSTS ||
+    env.FRONTEND_ALLOWED_HOSTS ||
+    parentEnv.FRONTEND_ALLOWED_HOSTS ||
+    "";
   const allowedHosts = allowedHostsRaw
     .split(",")
     .map((host) => host.trim())
@@ -94,8 +107,9 @@ export default defineConfig(async ({ mode }) => {
       viteStaticCopy({
         targets: [
           {
-            //provides static pdfium so embedpdf can run without cdn
-            src: "node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
+            // node_modules is hoisted to the workspace root (frontend/), so
+            // these paths walk up one level from editor/.
+            src: "../node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
             dest: "pdfium",
           },
           {
@@ -104,16 +118,16 @@ export default defineConfig(async ({ mode }) => {
             dest: "vendor/jscanify",
           },
           {
-            // pdfjs-dist CMap data for CJK / non-latin glyph mapping — required
+            // pdfjs-dist CMap data for CJK / non-latin glyph mapping. Required
             // when rendering PDFs inside workers where the default DOM fetch paths
             // aren't available.
-            src: "node_modules/pdfjs-dist/cmaps/*",
+            src: "../node_modules/pdfjs-dist/cmaps/*",
             dest: "pdfjs/cmaps",
           },
           {
-            // pdfjs-dist standard font data (Helvetica/Times/etc.) — needed so
+            // pdfjs-dist standard font data (Helvetica/Times/etc.) needed so
             // workers can substitute non-embedded base 14 fonts without DOM access.
-            src: "node_modules/pdfjs-dist/standard_fonts/*",
+            src: "../node_modules/pdfjs-dist/standard_fonts/*",
             dest: "pdfjs/standard_fonts",
           },
         ],
