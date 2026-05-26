@@ -330,12 +330,7 @@ aiEngine:
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
-# Cluster / multi-node configuration. NOT YET ENABLED - this block is wired up
-# for an upcoming release. Setting cluster.enabled=true today only activates the
-# in-process backplane (functionally identical to single-instance mode); the full
-# multi-node Valkey backplane, sticky-410 cross-node ownership, shared artifact
-# store, and AI-engine load-balancing modes will arrive in later PRs. Leave this
-# block at its defaults for now.
+# Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
 cluster:
   enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
   backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
