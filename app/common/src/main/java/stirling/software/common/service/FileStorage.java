@@ -69,7 +69,10 @@ public class FileStorage {
 
     public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
             throws IOException {
-        AtomicReference<IOException> bodyError = new AtomicReference<>();
+        // Hold Throwable not IOException: an unchecked failure (NPE, IllegalState, OOM, etc.)
+        // from the body writer would otherwise close the pipe with EOF and the consumer would
+        // return a truncated file with no error surfaced to the caller.
+        AtomicReference<Throwable> bodyError = new AtomicReference<>();
         try (PipedOutputStream out = new PipedOutputStream();
                 PipedInputStream in = new PipedInputStream(out, 8192)) {
             var executor = Executors.newSingleThreadExecutor(Thread.ofVirtual().factory());
@@ -80,7 +83,7 @@ public class FileStorage {
                                 () -> {
                                     try {
                                         body.writeTo(out);
-                                    } catch (IOException ex) {
+                                    } catch (Throwable ex) {
                                         bodyError.set(ex);
                                     } finally {
                                         try {
@@ -91,7 +94,7 @@ public class FileStorage {
                                     }
                                 });
                 FileStore.Stored stored = fileStore.store(in, originalName);
-                IOException writerErr = bodyError.get();
+                Throwable writerErr = bodyError.get();
                 if (writerErr != null) {
                     // Body failed mid-write: the FileStore persisted a truncated entry.
                     // Best-effort delete so we don't leak partial files; never let cleanup
@@ -104,7 +107,12 @@ public class FileStorage {
                                 stored.fileId(),
                                 cleanupEx.getMessage());
                     }
-                    throw writerErr;
+                    if (writerErr instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException(
+                            "StreamingResponseBody writer failed: " + writerErr.getMessage(),
+                            writerErr);
                 }
                 log.debug("Stored StreamingResponseBody with ID: {}", stored.fileId());
                 return stored.fileId();
