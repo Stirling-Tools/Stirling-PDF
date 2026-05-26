@@ -330,6 +330,27 @@ aiEngine:
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
+# Cluster / multi-node configuration. NOT YET ENABLED - this block is wired up
+# for an upcoming release. Setting cluster.enabled=true today only activates the
+# in-process backplane (functionally identical to single-instance mode); the full
+# multi-node Valkey backplane, sticky-410 cross-node ownership, shared artifact
+# store, and AI-engine load-balancing modes will arrive in later PRs. Leave this
+# block at its defaults for now.
+cluster:
+  enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
+  backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
+  artifactStore: local # Transient cluster job-artifact backend: 'local' (per-node disk; single-node only) or 's3' (shared object store; required for multi-node). Distinct from 'storage.provider' which controls persistent user uploads - when both are 's3' they share the storage.s3.* credentials block. Multi-node deployments MUST set this to 's3'.
+  valkey:
+    url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and backplane=valkey.
+    tls:
+      skipCertVerification: false # set to 'true' to skip TLS certificate verification on Valkey connections (dev/test only)
+  node:
+    id: "" # Optional explicit node id. Blank = auto-generated UUID at startup.
+    role: both # 'web' (serves HTTP), 'worker' (runs jobs), or 'both' (default)
+    internalAddress: "" # host:port advertised in the instance registry for peer-to-peer cluster traffic. Blank = derived at startup.
+    scheme: http # 'http' or 'https' - scheme peers use to call this node's /internal/cluster/** endpoints
+    heartbeatIntervalMs: 5000 # Heartbeat publish interval for the instance registry (ms)
+
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
   cache:
