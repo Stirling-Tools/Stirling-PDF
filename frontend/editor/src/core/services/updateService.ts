@@ -1,4 +1,8 @@
-import { DOWNLOAD_BASE_URL } from "@app/constants/downloads";
+import {
+  DESKTOP_INSTALLER_FILES,
+  DOWNLOAD_BASE_URL,
+  DOWNLOAD_URLS,
+} from "@app/constants/downloads";
 
 export interface UpdateSummary {
   latest_version: string | null;
@@ -76,17 +80,14 @@ export class UpdateService {
     if (isDesktop) {
       const userAgent = navigator.userAgent.toLowerCase();
       if (userAgent.includes("win")) {
-        return DOWNLOAD_BASE_URL + "win-installer.exe";
+        return DOWNLOAD_URLS.WINDOWS;
       } else if (userAgent.includes("mac")) {
-        const isARM =
-          userAgent.includes("arm") || userAgent.includes("aarch64");
-        if (isARM) {
-          return DOWNLOAD_BASE_URL + "mac-installer.dmg";
-        } else {
-          return DOWNLOAD_BASE_URL + "mac-x86_64-installer.dmg";
-        }
+        // Universal Mac binary covers both Intel and Apple silicon, so we
+        // don't need to detect arch (which is unreliable on the web anyway -
+        // Apple-silicon Macs often report Intel in the UA).
+        return DOWNLOAD_URLS.MAC;
       } else if (userAgent.includes("linux")) {
-        return DOWNLOAD_BASE_URL + "linux-x86_64.deb";
+        return DOWNLOAD_BASE_URL + DESKTOP_INSTALLER_FILES.LINUX_DEB;
       }
       return "https://github.com/Stirling-Tools/Stirling-PDF/releases/latest";
     }
