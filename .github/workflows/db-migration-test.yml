@@ -70,6 +70,9 @@ jobs:
             ls -lah app/core/build/libs || true
             exit 1
           fi
+          # Absolute path - the migration script pushd's into a temp workdir
+          # before invoking java, which would dangle a relative path.
+          jar=$(realpath "$jar")
           echo "path=$jar" >> "$GITHUB_OUTPUT"
           echo "Built JAR: $jar"
 

@@ -27,15 +27,18 @@ log()  { printf '[migration-test] %s\n' "$*" >&2; }
 fail() { printf '[migration-test][FAIL] %s\n' "$*" >&2; exit 1; }
 
 find_jar() {
+    local candidate
     if [[ -n "$STIRLING_JAR" ]]; then
         [[ -f "$STIRLING_JAR" ]] || fail "STIRLING_JAR='$STIRLING_JAR' not found"
-        printf '%s' "$STIRLING_JAR"
-        return
+        candidate="$STIRLING_JAR"
+    else
+        candidate=$(find "$REPO_ROOT/app/core/build/libs" -maxdepth 1 -name 'Stirling-PDF*.jar' -o -name 'stirling-pdf*.jar' 2>/dev/null \
+            | grep -vE '(-plain|-sources)\.jar$' | head -n 1 || true)
+        [[ -n "$candidate" ]] || fail "No JAR under app/core/build/libs - run './gradlew :stirling-pdf:bootJar' first"
     fi
-    local candidate
-    candidate=$(find "$REPO_ROOT/app/core/build/libs" -maxdepth 1 -name 'Stirling-PDF*.jar' -not -name '*-plain.jar' -not -name '*-sources.jar' 2>/dev/null | head -n 1 || true)
-    [[ -n "$candidate" ]] || fail "No JAR under app/core/build/libs - run './gradlew :stirling-pdf:bootJar' first"
-    printf '%s' "$candidate"
+    # Resolve to an absolute path: test_fixture pushd's into a temp workdir
+    # before launching java, so a relative path here would dangle.
+    realpath "$candidate"
 }
 
 free_port() {
