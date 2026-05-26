@@ -299,7 +299,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return obj.decodeText();
+          return (obj as { decodeText(): string }).decodeText();
         return String(obj ?? "");
       };
 
@@ -385,43 +385,45 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string | null => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return obj.decodeText();
+          return (obj as { decodeText(): string }).decodeText();
         if (obj instanceof PDFName)
-          return (obj as any).asString?.() ?? obj.toString().replace(/^\//, "");
+          return (obj as any).asString?.() ?? String(obj).replace(/^\//, "");
         return null;
       };
 
       const parseActionDict = (aObj: unknown): ButtonAction | null => {
         if (!(aObj instanceof PDFDict)) return null;
-        const sObj = aObj.lookup(PDFName.of("S"));
+        // TS5.9 doesn't narrow `unknown` through instanceof in closure contexts
+        const a = aObj as any;
+        const sObj = a.lookup(PDFName.of("S"));
         if (!(sObj instanceof PDFName)) return null;
         const actionType: string =
-          (sObj as any).asString?.() ?? sObj.toString().replace(/^\//, "");
+          (sObj as any).asString?.() ?? String(sObj).replace(/^\//, "");
 
         switch (actionType) {
           case "Named": {
-            const nObj = aObj.lookup(PDFName.of("N"));
+            const nObj = a.lookup(PDFName.of("N"));
             const name =
               nObj instanceof PDFName
                 ? ((nObj as any).asString?.() ??
-                  nObj.toString().replace(/^\//, ""))
+                  String(nObj).replace(/^\//, ""))
                 : "";
             return { type: "named", namedAction: name };
           }
           case "JavaScript": {
-            const jsObj = aObj.lookup(PDFName.of("JS"));
-            const js = decodeText(jsObj) ?? jsObj?.toString() ?? "";
+            const jsObj = a.lookup(PDFName.of("JS"));
+            const js = decodeText(jsObj) ?? String(jsObj) ?? "";
             return { type: "javascript", javascript: js };
           }
           case "SubmitForm": {
-            const fObj = aObj.lookup(PDFName.of("F"));
+            const fObj = a.lookup(PDFName.of("F"));
             let url = "";
             if (fObj instanceof PDFDict) {
               url = decodeText(fObj.lookup(PDFName.of("F"))) ?? "";
             } else if (fObj) {
-              url = decodeText(fObj) ?? fObj.toString();
+              url = decodeText(fObj) ?? String(fObj);
             }
-            const flagsObj = aObj.lookup(PDFName.of("Flags"));
+            const flagsObj = a.lookup(PDFName.of("Flags"));
             const flags =
               typeof (flagsObj as any)?.asNumber === "function"
                 ? (flagsObj as any).asNumber()
@@ -431,7 +433,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
           case "ResetForm":
             return { type: "resetForm" };
           case "URI": {
-            const uriObj = aObj.lookup(PDFName.of("URI"));
+            const uriObj = a.lookup(PDFName.of("URI"));
             return { type: "uri", url: decodeText(uriObj) ?? "" };
           }
           default:
