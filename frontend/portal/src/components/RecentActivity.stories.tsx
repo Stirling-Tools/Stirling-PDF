@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import { RecentActivity } from "@app/components/RecentActivity";
+import { RecentActivity } from "@portal/components/RecentActivity";
 
 const meta: Meta<typeof RecentActivity> = {
   title: "Portal/Home/RecentActivity",

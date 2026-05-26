@@ -1,6 +1,6 @@
 import { NavItem } from "@shared/components";
-import { useView, type ViewId } from "@app/contexts/ViewContext";
-import { useTier } from "@app/contexts/TierContext";
+import { useView, type ViewId } from "@portal/contexts/ViewContext";
+import { useTier } from "@portal/contexts/TierContext";
 import {
   HomeIcon,
   EditorIcon,
@@ -12,8 +12,8 @@ import {
   DocsIcon,
   SettingsIcon,
   ChevronDownIcon,
-} from "@app/components/icons";
-import "@app/components/Sidebar.css";
+} from "@portal/components/icons";
+import "@portal/components/Sidebar.css";
 
 interface NavEntry {
   id: ViewId;

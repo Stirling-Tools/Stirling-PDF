@@ -1,6 +1,6 @@
 import { Card } from "@shared/components";
-import { VIEW_LABELS, type ViewId } from "@app/contexts/ViewContext";
-import "@app/views/Placeholder.css";
+import { VIEW_LABELS, type ViewId } from "@portal/contexts/ViewContext";
+import "@portal/views/Placeholder.css";
 
 interface PlaceholderProps {
   view: ViewId;

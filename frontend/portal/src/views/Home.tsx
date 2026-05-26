@@ -7,9 +7,9 @@ import {
   Skeleton,
   StatusBadge,
 } from "@shared/components";
-import { useTier, type Tier } from "@app/contexts/TierContext";
-import { useView, type ViewId } from "@app/contexts/ViewContext";
-import { useAsync, useSectionFlags } from "@app/hooks/useAsync";
+import { useTier, type Tier } from "@portal/contexts/TierContext";
+import { useView, type ViewId } from "@portal/contexts/ViewContext";
+import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchHomeKpis,
   fetchOnboarding,
@@ -19,13 +19,13 @@ import {
   type OnboardingStep,
   type RegionHealth,
   type UsageSeriesResponse,
-} from "@app/api/home";
-import { WelcomeCarousel } from "@app/components/WelcomeCarousel";
-import { DocumentTypeGrid } from "@app/components/DocumentTypeGrid";
-import { UsageAreaChart } from "@app/components/UsageAreaChart";
-import { RecentActivity } from "@app/components/RecentActivity";
-import { SingleOpRunner } from "@app/components/SingleOpRunner";
-import "@app/views/Home.css";
+} from "@portal/api/home";
+import { WelcomeCarousel } from "@portal/components/WelcomeCarousel";
+import { DocumentTypeGrid } from "@portal/components/DocumentTypeGrid";
+import { UsageAreaChart } from "@portal/components/UsageAreaChart";
+import { RecentActivity } from "@portal/components/RecentActivity";
+import { SingleOpRunner } from "@portal/components/SingleOpRunner";
+import "@portal/views/Home.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Product cards (Sources / Pipelines / Agents)                             */

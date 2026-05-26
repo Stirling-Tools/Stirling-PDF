@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import { NotificationsDropdown } from "@app/components/NotificationsDropdown";
-import { NOTIFICATIONS } from "@app/mocks/notifications";
+import { NotificationsDropdown } from "@portal/components/NotificationsDropdown";
+import { NOTIFICATIONS } from "@portal/mocks/notifications";
 
 const meta: Meta<typeof NotificationsDropdown> = {
   title: "Portal/Header/NotificationsDropdown",

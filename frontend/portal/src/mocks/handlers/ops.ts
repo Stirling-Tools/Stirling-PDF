@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { FEATURED_OPS, OP_RESULTS } from "@app/mocks/ops";
+import { FEATURED_OPS, OP_RESULTS } from "@portal/mocks/ops";
 
 export const opsHandlers = [
   http.get("/v1/ops/featured", async () => {

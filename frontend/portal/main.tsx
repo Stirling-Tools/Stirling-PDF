@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "@app/App";
-import { readMocksPreference } from "@app/mocks/preference";
+import { App } from "@portal/App";
+import { readMocksPreference } from "@portal/mocks/preference";
 
 import "@shared/tokens/tokens.css";
 import "@shared/tokens/base.css";
@@ -17,7 +17,7 @@ async function bootstrap(): Promise<void> {
   if (readMocksPreference()) {
     // Dynamic import keeps MSW + every handler + every fixture out of any
     // chunk that doesn't need to actually run the worker.
-    const { startMockWorker } = await import("@app/mocks/browser");
+    const { startMockWorker } = await import("@portal/mocks/browser");
     await startMockWorker();
   }
 

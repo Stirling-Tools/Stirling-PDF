@@ -4,10 +4,10 @@ import { MemoryRouter } from "react-router-dom";
 import { useEffect } from "react";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
 
-import { TierProvider, type Tier } from "@app/contexts/TierContext";
-import { ThemeProvider } from "@app/contexts/ThemeContext";
-import { UIProvider } from "@app/contexts/UIContext";
-import { handlers } from "@app/mocks/handlers";
+import { TierProvider, type Tier } from "@portal/contexts/TierContext";
+import { ThemeProvider } from "@portal/contexts/ThemeContext";
+import { UIProvider } from "@portal/contexts/UIContext";
+import { handlers } from "@portal/mocks/handlers";
 
 import "@shared/tokens/tokens.css";
 import "@shared/tokens/base.css";

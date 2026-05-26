@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Button, StatusBadge } from "@shared/components";
-import { useView, type ViewId } from "@app/contexts/ViewContext";
-import "@app/components/WelcomeCarousel.css";
+import { useView, type ViewId } from "@portal/contexts/ViewContext";
+import "@portal/components/WelcomeCarousel.css";
 
 type SlideAction =
   | { label: string; target: ViewId }

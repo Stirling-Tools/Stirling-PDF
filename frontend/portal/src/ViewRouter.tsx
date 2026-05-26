@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Home } from "@app/views/Home";
-import { Placeholder } from "@app/views/Placeholder";
-import { VIEW_PATHS, type ViewId } from "@app/contexts/ViewContext";
+import { Home } from "@portal/views/Home";
+import { Placeholder } from "@portal/views/Placeholder";
+import { VIEW_PATHS, type ViewId } from "@portal/contexts/ViewContext";
 
 const PLACEHOLDER_PHASES: Partial<Record<ViewId, string>> = {
   editor: "Phase 8 — Editor",

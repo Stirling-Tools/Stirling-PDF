@@ -1,17 +1,17 @@
 import { Avatar, Dropdown } from "@shared/components";
-import { useTheme } from "@app/contexts/ThemeContext";
-import { useTier, TIER_INFO, type Tier } from "@app/contexts/TierContext";
-import { useView, VIEW_LABELS } from "@app/contexts/ViewContext";
-import { useUI } from "@app/contexts/UIContext";
+import { useTheme } from "@portal/contexts/ThemeContext";
+import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
+import { useView, VIEW_LABELS } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 import {
   SearchIcon,
   SunIcon,
   MoonIcon,
   ChevronDownIcon,
-} from "@app/components/icons";
-import { NotificationsDropdown } from "@app/components/NotificationsDropdown";
-import { MocksToggle } from "@app/components/MocksToggle";
-import "@app/components/Header.css";
+} from "@portal/components/icons";
+import { NotificationsDropdown } from "@portal/components/NotificationsDropdown";
+import { MocksToggle } from "@portal/components/MocksToggle";
+import "@portal/components/Header.css";
 
 function ThemeToggle() {
   const { theme, toggle } = useTheme();

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Placeholder } from "@app/views/Placeholder";
+import { Placeholder } from "@portal/views/Placeholder";
 
 const meta: Meta<typeof Placeholder> = {
   title: "Portal/Views/Placeholder",

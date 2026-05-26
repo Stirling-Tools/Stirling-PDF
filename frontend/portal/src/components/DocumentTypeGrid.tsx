@@ -6,14 +6,14 @@ import {
   Tabs,
   type TabItem,
 } from "@shared/components";
-import { useAsync, useSectionFlags } from "@app/hooks/useAsync";
+import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchVerticals,
   type Endpoint,
   type Vertical,
   type VerticalKey,
-} from "@app/api/endpoints";
-import "@app/components/DocumentTypeGrid.css";
+} from "@portal/api/endpoints";
+import "@portal/components/DocumentTypeGrid.css";
 
 type ActiveTab = VerticalKey | "all";
 

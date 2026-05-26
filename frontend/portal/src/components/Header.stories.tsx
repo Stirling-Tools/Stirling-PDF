@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Header } from "@app/components/Header";
+import { Header } from "@portal/components/Header";
 
 const meta: Meta<typeof Header> = {
   title: "Portal/Shell/Header",

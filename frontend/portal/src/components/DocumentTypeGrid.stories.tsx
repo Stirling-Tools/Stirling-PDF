@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import { DocumentTypeGrid } from "@app/components/DocumentTypeGrid";
+import { DocumentTypeGrid } from "@portal/components/DocumentTypeGrid";
 
 const meta: Meta<typeof DocumentTypeGrid> = {
   title: "Portal/Home/DocumentTypeGrid",

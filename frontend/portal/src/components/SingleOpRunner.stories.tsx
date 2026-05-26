@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import { SingleOpRunner } from "@app/components/SingleOpRunner";
+import { SingleOpRunner } from "@portal/components/SingleOpRunner";
 
 const meta: Meta<typeof SingleOpRunner> = {
   title: "Portal/Home/SingleOpRunner",

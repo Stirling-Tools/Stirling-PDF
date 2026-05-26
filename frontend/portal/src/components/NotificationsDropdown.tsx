@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Dropdown, EmptyState, Skeleton } from "@shared/components";
-import { BellIcon } from "@app/components/icons";
-import { useAsync, useSectionFlags } from "@app/hooks/useAsync";
+import { BellIcon } from "@portal/components/icons";
+import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchNotifications,
   markAllNotificationsRead,
   type Notification,
   type NotificationCategory,
-} from "@app/api/notifications";
-import "@app/components/NotificationsDropdown.css";
+} from "@portal/api/notifications";
+import "@portal/components/NotificationsDropdown.css";
 
 const CATEGORY_COLOUR: Record<NotificationCategory, string> = {
   pipeline: "var(--color-blue)",

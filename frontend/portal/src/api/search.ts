@@ -1,5 +1,5 @@
-import { httpJson } from "@app/api/http";
-import type { QuickAction } from "@app/mocks/search";
+import { httpJson } from "@portal/api/http";
+import type { QuickAction } from "@portal/mocks/search";
 
 export type { QuickAction };
 

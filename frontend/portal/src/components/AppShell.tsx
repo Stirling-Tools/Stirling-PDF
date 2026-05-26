@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { Sidebar } from "@app/components/Sidebar";
-import { Header } from "@app/components/Header";
-import "@app/components/AppShell.css";
+import { Sidebar } from "@portal/components/Sidebar";
+import { Header } from "@portal/components/Header";
+import "@portal/components/AppShell.css";
 
 /**
  * Two-column layout: fixed-width sidebar on the left, sticky header + scrolling

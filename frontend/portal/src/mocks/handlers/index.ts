@@ -1,9 +1,9 @@
-import { assistantHandlers } from "@app/mocks/handlers/assistant";
-import { endpointsHandlers } from "@app/mocks/handlers/endpoints";
-import { homeHandlers } from "@app/mocks/handlers/home";
-import { notificationsHandlers } from "@app/mocks/handlers/notifications";
-import { opsHandlers } from "@app/mocks/handlers/ops";
-import { searchHandlers } from "@app/mocks/handlers/search";
+import { assistantHandlers } from "@portal/mocks/handlers/assistant";
+import { endpointsHandlers } from "@portal/mocks/handlers/endpoints";
+import { homeHandlers } from "@portal/mocks/handlers/home";
+import { notificationsHandlers } from "@portal/mocks/handlers/notifications";
+import { opsHandlers } from "@portal/mocks/handlers/ops";
+import { searchHandlers } from "@portal/mocks/handlers/search";
 
 export const handlers = [
   ...homeHandlers,
@@ -14,4 +14,4 @@ export const handlers = [
   ...endpointsHandlers,
 ];
 
-export { resetNotificationsStore } from "@app/mocks/handlers/notifications";
+export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";

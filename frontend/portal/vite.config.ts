@@ -35,7 +35,7 @@ export default defineConfig(async ({ mode }) => {
     // resolve.alias for vite to handle those too.
     resolve: {
       alias: {
-        "@app": resolve(import.meta.dirname, "src"),
+        "@portal": resolve(import.meta.dirname, "src"),
         "@shared": resolve(import.meta.dirname, "..", "shared"),
       },
     },

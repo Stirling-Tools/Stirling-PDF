@@ -1,5 +1,5 @@
-import { HttpError, httpJson } from "@app/api/http";
-import type { FeaturedOp, OpResultMap } from "@app/mocks/ops";
+import { HttpError, httpJson } from "@portal/api/http";
+import type { FeaturedOp, OpResultMap } from "@portal/mocks/ops";
 
 export type { FeaturedOp, OpResultMap };
 

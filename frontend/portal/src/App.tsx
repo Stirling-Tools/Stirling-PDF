@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider } from "@app/contexts/ThemeContext";
-import { TierProvider } from "@app/contexts/TierContext";
-import { UIProvider, useUI } from "@app/contexts/UIContext";
-import { AppShell } from "@app/components/AppShell";
-import { AssistantButton } from "@app/components/AssistantButton";
-import { AssistantPanel } from "@app/components/AssistantPanel";
-import { SearchModal } from "@app/components/SearchModal";
-import { ViewRouter } from "@app/ViewRouter";
+import { ThemeProvider } from "@portal/contexts/ThemeContext";
+import { TierProvider } from "@portal/contexts/TierContext";
+import { UIProvider, useUI } from "@portal/contexts/UIContext";
+import { AppShell } from "@portal/components/AppShell";
+import { AssistantButton } from "@portal/components/AssistantButton";
+import { AssistantPanel } from "@portal/components/AssistantPanel";
+import { SearchModal } from "@portal/components/SearchModal";
+import { ViewRouter } from "@portal/ViewRouter";
 
 /**
  * Global keyboard shortcuts. Lives below the UIProvider so it can dispatch

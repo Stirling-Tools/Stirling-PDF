@@ -2,7 +2,7 @@ import { http, HttpResponse, delay } from "msw";
 import {
   ASSISTANT_SUGGESTIONS,
   routeAssistantReply,
-} from "@app/mocks/assistant";
+} from "@portal/mocks/assistant";
 
 interface AssistantMessageBody {
   input: string;

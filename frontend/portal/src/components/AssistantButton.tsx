@@ -1,6 +1,6 @@
-import { useUI } from "@app/contexts/UIContext";
-import { SparklesIcon } from "@app/components/icons";
-import "@app/components/AssistantButton.css";
+import { useUI } from "@portal/contexts/UIContext";
+import { SparklesIcon } from "@portal/components/icons";
+import "@portal/components/AssistantButton.css";
 
 export function AssistantButton() {
   const { assistantOpen, toggleAssistant } = useUI();

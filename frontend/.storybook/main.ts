@@ -32,7 +32,7 @@ const config: StorybookConfig = {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      "@app": resolve(__dirname, "../portal/src"),
+      "@portal": resolve(__dirname, "../portal/src"),
       "@shared": resolve(__dirname, "../shared"),
     };
     return config;

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
-import type { UsagePoint } from "@app/api/home";
-import "@app/components/UsageAreaChart.css";
+import type { UsagePoint } from "@portal/api/home";
+import "@portal/components/UsageAreaChart.css";
 
 interface UsageAreaChartProps {
   data: UsagePoint[];

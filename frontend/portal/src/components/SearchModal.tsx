@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, Modal, Skeleton } from "@shared/components";
-import { useUI } from "@app/contexts/UIContext";
-import { useAsync, useSectionFlags } from "@app/hooks/useAsync";
-import { fetchQuickActions, type QuickAction } from "@app/api/search";
-import { SearchIcon } from "@app/components/icons";
-import "@app/components/SearchModal.css";
+import { useUI } from "@portal/contexts/UIContext";
+import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { fetchQuickActions, type QuickAction } from "@portal/api/search";
+import { SearchIcon } from "@portal/components/icons";
+import "@portal/components/SearchModal.css";
 
 export function SearchModal() {
   const { searchOpen, closeSearch } = useUI();

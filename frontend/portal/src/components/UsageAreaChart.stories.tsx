@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { UsageAreaChart } from "@app/components/UsageAreaChart";
-import { buildUsageSeries } from "@app/mocks/home";
+import { UsageAreaChart } from "@portal/components/UsageAreaChart";
+import { buildUsageSeries } from "@portal/mocks/home";
 
 const meta: Meta<typeof UsageAreaChart> = {
   title: "Portal/Home/UsageAreaChart",

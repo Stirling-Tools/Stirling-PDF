@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect } from "react";
 import { http, HttpResponse } from "msw";
-import { SearchModal } from "@app/components/SearchModal";
-import { useUI } from "@app/contexts/UIContext";
+import { SearchModal } from "@portal/components/SearchModal";
+import { useUI } from "@portal/contexts/UIContext";
 
 function ForceOpen() {
   const { openSearch } = useUI();

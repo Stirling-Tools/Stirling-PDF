@@ -21,10 +21,14 @@ const nodeGlobs = [
 ];
 
 const baseRestrictedImportPatterns = [
-  { regex: "^\\.", message: "Use @app/* imports instead of relative imports." },
+  {
+    regex: "^\\.",
+    message:
+      "Use a workspace alias (@app/* for editor, @portal/* for portal, @shared/*) instead of relative imports.",
+  },
   {
     regex: "^src/",
-    message: "Use @app/* imports instead of absolute src/ imports.",
+    message: "Use a workspace alias instead of absolute src/ imports.",
   },
 ];
 
@@ -115,7 +119,12 @@ export default defineConfig(
             {
               regex: "^@app/",
               message:
-                "shared/ must not depend on editor or portal layers. Use @shared/* or third-party imports only.",
+                "shared/ must not depend on the editor layer (@app/* resolves into editor/src/).",
+            },
+            {
+              regex: "^@portal/",
+              message:
+                "shared/ must not depend on the portal layer. Use @shared/* or third-party imports only.",
             },
             {
               regex: "^@core/",

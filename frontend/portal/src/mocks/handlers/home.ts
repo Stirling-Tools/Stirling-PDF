@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import type { Tier } from "@app/contexts/TierContext";
+import type { Tier } from "@portal/contexts/TierContext";
 import {
   buildUsageSeries,
   buildUsageSeriesResponse,
@@ -10,7 +10,7 @@ import {
   RECENT_ACTIVITY,
   REGION_HEALTH,
   type KpiEntry,
-} from "@app/mocks/home";
+} from "@portal/mocks/home";
 
 function kpisFor(tier: Tier): KpiEntry[] {
   if (tier === "free") return FREE_KPIS;

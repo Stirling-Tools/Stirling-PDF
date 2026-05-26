@@ -1,12 +1,12 @@
-import { httpJson } from "@app/api/http";
+import { httpJson } from "@portal/api/http";
 import type {
   ActivityEvent,
   KpiEntry,
   OnboardingStep,
   RegionHealth,
   UsageSeriesResponse,
-} from "@app/mocks/home";
-import type { Tier } from "@app/contexts/TierContext";
+} from "@portal/mocks/home";
+import type { Tier } from "@portal/contexts/TierContext";
 
 export type {
   ActivityEvent,
@@ -16,7 +16,7 @@ export type {
   RegionHealth,
   UsagePoint,
   UsageSeriesResponse,
-} from "@app/mocks/home";
+} from "@portal/mocks/home";
 
 /** GET /v1/analytics/usage?window=30d */
 export async function fetchUsageSeries(): Promise<UsageSeriesResponse> {

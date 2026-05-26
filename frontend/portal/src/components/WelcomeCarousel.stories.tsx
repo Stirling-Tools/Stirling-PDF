@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { WelcomeCarousel } from "@app/components/WelcomeCarousel";
+import { WelcomeCarousel } from "@portal/components/WelcomeCarousel";
 
 const meta: Meta<typeof WelcomeCarousel> = {
   title: "Portal/Home/WelcomeCarousel",

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useUI } from "@app/contexts/UIContext";
-import { useAsync } from "@app/hooks/useAsync";
+import { useUI } from "@portal/contexts/UIContext";
+import { useAsync } from "@portal/hooks/useAsync";
 import {
   fetchAssistantSuggestions,
   getAssistantReply,
-} from "@app/api/assistant";
-import { CloseIcon, SendIcon, SparklesIcon } from "@app/components/icons";
-import "@app/components/AssistantPanel.css";
+} from "@portal/api/assistant";
+import { CloseIcon, SendIcon, SparklesIcon } from "@portal/components/icons";
+import "@portal/components/AssistantPanel.css";
 
 interface Message {
   id: number;

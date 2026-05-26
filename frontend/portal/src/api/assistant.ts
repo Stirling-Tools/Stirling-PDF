@@ -1,4 +1,4 @@
-import { httpJson } from "@app/api/http";
+import { httpJson } from "@portal/api/http";
 
 /** GET /v1/assistant/suggestions */
 export async function fetchAssistantSuggestions(): Promise<readonly string[]> {

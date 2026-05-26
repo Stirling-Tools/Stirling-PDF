@@ -3,8 +3,8 @@ import { useState } from "react";
 import {
   readMocksPreference,
   writeMocksPreference,
-} from "@app/mocks/preference";
-import "@app/components/MocksToggle.css";
+} from "@portal/mocks/preference";
+import "@portal/components/MocksToggle.css";
 
 /**
  * Dev-only header chip that flips MSW interception on and off. Persists the

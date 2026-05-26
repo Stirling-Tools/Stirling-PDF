@@ -1,4 +1,4 @@
-import { httpJson } from "@app/api/http";
+import { httpJson } from "@portal/api/http";
 import type { Endpoint, Vertical, VerticalKey } from "@shared/data/endpoints";
 
 export type {

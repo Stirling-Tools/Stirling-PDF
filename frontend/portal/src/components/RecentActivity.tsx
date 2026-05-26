@@ -1,11 +1,11 @@
 import { Card, EmptyState, Skeleton, StatusBadge } from "@shared/components";
-import { useAsync, useSectionFlags } from "@app/hooks/useAsync";
+import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchRecentActivity,
   type ActivityEvent,
   type ActivityKind,
-} from "@app/api/home";
-import "@app/components/RecentActivity.css";
+} from "@portal/api/home";
+import "@portal/components/RecentActivity.css";
 
 const STATUS_TONE: Record<
   ActivityEvent["status"],

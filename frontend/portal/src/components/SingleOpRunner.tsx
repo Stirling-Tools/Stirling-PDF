@@ -6,15 +6,15 @@ import {
   Skeleton,
   StatusBadge,
 } from "@shared/components";
-import { useView } from "@app/contexts/ViewContext";
-import { useAsync, useSectionFlags } from "@app/hooks/useAsync";
+import { useView } from "@portal/contexts/ViewContext";
+import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchFeaturedOps,
   runSingleOp,
   type FeaturedOp,
   type OpResultMap,
-} from "@app/api/ops";
-import "@app/components/SingleOpRunner.css";
+} from "@portal/api/ops";
+import "@portal/components/SingleOpRunner.css";
 
 type Phase = "idle" | "running" | "done" | "error";
 

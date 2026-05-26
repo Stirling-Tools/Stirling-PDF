@@ -1,8 +1,8 @@
-import { httpJson } from "@app/api/http";
+import { httpJson } from "@portal/api/http";
 import type {
   Notification,
   NotificationCategory,
-} from "@app/mocks/notifications";
+} from "@portal/mocks/notifications";
 
 export type { Notification, NotificationCategory };
 

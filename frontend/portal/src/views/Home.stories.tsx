@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import { Home } from "@app/views/Home";
+import { Home } from "@portal/views/Home";
 
 const meta: Meta<typeof Home> = {
   title: "Portal/Views/Home",
