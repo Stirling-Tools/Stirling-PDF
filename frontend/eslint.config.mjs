@@ -7,7 +7,8 @@ import tseslint from "typescript-eslint";
 
 const srcGlobs = ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"];
 const nodeGlobs = [
-  "editor/scripts/**/*.{js,ts,mjs}",
+  "scripts/**/*.{js,ts,mjs,mts}",
+  "editor/scripts/**/*.{js,ts,mjs,mts}",
   "editor/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
 ];
