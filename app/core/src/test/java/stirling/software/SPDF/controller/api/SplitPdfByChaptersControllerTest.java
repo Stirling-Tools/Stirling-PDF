@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -65,6 +66,9 @@ class SplitPdfByChaptersControllerTest {
                         });
         lenient()
                 .when(pdfDocumentFactory.load(any(File.class)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+        lenient()
+                .when(pdfDocumentFactory.load(any(File.class), eq(true)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
     }
 

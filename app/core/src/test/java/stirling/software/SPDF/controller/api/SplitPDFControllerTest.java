@@ -21,7 +21,10 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -81,17 +84,49 @@ class SplitPDFControllerTest {
 
     private byte[] createPdfWithForm(int numPages) throws IOException {
         try (PDDocument doc = new PDDocument()) {
-            for (int i = 0; i < numPages; i++) {
-                doc.addPage(new PDPage(PDRectangle.A4));
-            }
             PDAcroForm acroForm = new PDAcroForm(doc);
             doc.getDocumentCatalog().setAcroForm(acroForm);
-            PDTextField field = new PDTextField(acroForm);
-            field.setPartialName("testField");
-            acroForm.getFields().add(field);
+            for (int i = 0; i < numPages; i++) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                doc.addPage(page);
+                PDTextField field = new PDTextField(acroForm);
+                field.setPartialName("text_p" + (i + 1));
+                PDAnnotationWidget widget = new PDAnnotationWidget();
+                widget.setRectangle(new PDRectangle(100, 700, 200, 20));
+                widget.setPage(page);
+                field.setWidgets(java.util.List.of(widget));
+                page.getAnnotations().add(widget);
+                acroForm.getFields().add(field);
+            }
             Path pdfPath = tempDir.resolve("input.pdf");
             doc.save(pdfPath.toFile());
             return Files.readAllBytes(pdfPath);
+        }
+    }
+
+    private List<String> fieldNamesOf(byte[] pdfBytes) throws IOException {
+        List<String> names = new ArrayList<>();
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm(null);
+            if (acroForm == null) {
+                return names;
+            }
+            for (PDField field : acroForm.getFields()) {
+                names.add(field.getFullyQualifiedName());
+            }
+        }
+        return names;
+    }
+
+    private int widgetCountOnPage(byte[] pdfBytes, int pageIndex) throws IOException {
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            int count = 0;
+            for (PDAnnotation a : doc.getPage(pageIndex).getAnnotations()) {
+                if (a instanceof PDAnnotationWidget) {
+                    count++;
+                }
+            }
+            return count;
         }
     }
 
@@ -261,7 +296,7 @@ class SplitPDFControllerTest {
     }
 
     @Test
-    @DisplayName("Should split PDF with form fields and keep form-aware path")
+    @DisplayName("Should preserve AcroForm and per-page widgets when splitting form PDF")
     void shouldSplitFormPdf() throws Exception {
         byte[] pdfBytes = createPdfWithForm(4);
         MockMultipartFile file =
@@ -278,5 +313,17 @@ class SplitPDFControllerTest {
         List<byte[]> outputs = unzip(response.getBody());
         assertThat(outputs).hasSize(2);
         assertThat(pageCountsOf(outputs)).containsExactly(2, 2);
+
+        assertThat(fieldNamesOf(outputs.get(0)))
+                .as("first split keeps fields whose widgets are on pages 1-2")
+                .containsExactlyInAnyOrder("text_p1", "text_p2");
+        assertThat(fieldNamesOf(outputs.get(1)))
+                .as("second split keeps fields whose widgets are on pages 3-4")
+                .containsExactlyInAnyOrder("text_p3", "text_p4");
+
+        assertThat(widgetCountOnPage(outputs.get(0), 0)).isEqualTo(1);
+        assertThat(widgetCountOnPage(outputs.get(0), 1)).isEqualTo(1);
+        assertThat(widgetCountOnPage(outputs.get(1), 0)).isEqualTo(1);
+        assertThat(widgetCountOnPage(outputs.get(1), 1)).isEqualTo(1);
     }
 }

@@ -6,7 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -90,8 +92,17 @@ public class SplitPDFController {
                 String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
-                    writeSplits(
-                            sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut, hasForm);
+                    if (hasForm) {
+                        // JPDFium's FPDF_ImportPagesByIndex drops the AcroForm dictionary, which
+                        // breaks Fill Forms downstream. Fall back to the PDFBox load-and-remove
+                        // path so the AcroForm (with only fields whose widgets remain on kept
+                        // pages) is preserved.
+                        writeSplitsViaPdfBox(
+                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
+                    } else {
+                        writeSplitsViaJpdfium(
+                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
+                    }
                 }
             }
 
@@ -104,64 +115,46 @@ public class SplitPDFController {
         }
     }
 
-    private void writeSplits(
-            File source,
-            List<Integer> pageNumbers,
-            String baseFilename,
-            ZipOutputStream zipOut,
-            boolean hasForm)
+    private void writeSplitsViaJpdfium(
+            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
             throws IOException {
         try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
             int previousPageNumber = 0;
             for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
                 int splitPoint = pageNumbers.get(splitIndex);
-                writeSplit(
-                        sourceDoc,
-                        previousPageNumber,
-                        splitPoint,
-                        baseFilename,
-                        splitIndex + 1,
-                        zipOut,
-                        hasForm);
+                try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
+                    try (PdfDocument splitDoc =
+                            PdfSplit.extractPageRange(sourceDoc, previousPageNumber, splitPoint)) {
+                        splitDoc.save(splitTemp.getPath());
+                    }
+                    writeEntry(zipOut, baseFilename, splitIndex + 1, splitTemp.getPath());
+                }
                 previousPageNumber = splitPoint + 1;
             }
         }
     }
 
-    private void writeSplit(
-            PdfDocument sourceDoc,
-            int fromIndex,
-            int toIndex,
-            String baseFilename,
-            int splitNumber,
-            ZipOutputStream zipOut,
-            boolean hasForm)
+    private void writeSplitsViaPdfBox(
+            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
             throws IOException {
-        try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-            try (PdfDocument splitDoc = PdfSplit.extractPageRange(sourceDoc, fromIndex, toIndex)) {
-                splitDoc.save(splitTemp.getPath());
+        int previousPageNumber = 0;
+        for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+            int splitPoint = pageNumbers.get(splitIndex);
+            Set<Integer> keep = new HashSet<>();
+            for (int i = previousPageNumber; i <= splitPoint; i++) {
+                keep.add(i);
             }
-            Path finalPath = splitTemp.getPath();
-            TempFile prunedTemp = null;
-            try {
-                if (hasForm) {
-                    prunedTemp = new TempFile(tempFileManager, ".pdf");
-                    pruneForms(splitTemp.getFile(), prunedTemp.getFile());
-                    finalPath = prunedTemp.getPath();
-                }
-                writeEntry(zipOut, baseFilename, splitNumber, finalPath);
-            } finally {
-                if (prunedTemp != null) {
-                    prunedTemp.close();
-                }
-            }
-        }
-    }
+            previousPageNumber = splitPoint + 1;
 
-    private void pruneForms(File splitFile, File outputFile) throws IOException {
-        try (PDDocument doc = pdfDocumentFactory.load(splitFile)) {
-            FormUtils.pruneOrphanedFormFields(doc);
-            doc.save(outputFile);
+            try (PDDocument splitDoc = pdfDocumentFactory.load(source)) {
+                for (int p = splitDoc.getNumberOfPages() - 1; p >= 0; p--) {
+                    if (!keep.contains(p)) {
+                        splitDoc.removePage(p);
+                    }
+                }
+                FormUtils.pruneOrphanedFormFields(splitDoc);
+                writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
+            }
         }
     }
 
@@ -169,6 +162,13 @@ public class SplitPDFController {
             throws IOException {
         zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + index + ".pdf"));
         Files.copy(pdfPath, zipOut);
+        zipOut.closeEntry();
+    }
+
+    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, PDDocument doc)
+            throws IOException {
+        zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + index + ".pdf"));
+        doc.save(zipOut);
         zipOut.closeEntry();
     }
 }

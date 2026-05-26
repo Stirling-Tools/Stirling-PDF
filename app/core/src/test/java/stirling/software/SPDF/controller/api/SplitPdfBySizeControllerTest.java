@@ -21,6 +21,10 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -160,6 +164,64 @@ class SplitPdfBySizeControllerTest {
         List<byte[]> outputs = unzip(response.getBody());
         assertThat(outputs).hasSize(3);
         assertThat(pageCountsOf(outputs)).containsExactly(3, 2, 2);
+    }
+
+    private byte[] createPdfWithForm(int numPages) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDAcroForm acroForm = new PDAcroForm(doc);
+            doc.getDocumentCatalog().setAcroForm(acroForm);
+            for (int i = 0; i < numPages; i++) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                doc.addPage(page);
+                PDTextField field = new PDTextField(acroForm);
+                field.setPartialName("text_p" + (i + 1));
+                PDAnnotationWidget widget = new PDAnnotationWidget();
+                widget.setRectangle(new PDRectangle(100, 700, 200, 20));
+                widget.setPage(page);
+                field.setWidgets(java.util.List.of(widget));
+                page.getAnnotations().add(widget);
+                acroForm.getFields().add(field);
+            }
+            Path pdfPath = tempDir.resolve("input.pdf");
+            doc.save(pdfPath.toFile());
+            return Files.readAllBytes(pdfPath);
+        }
+    }
+
+    private List<String> fieldNamesOf(byte[] pdfBytes) throws IOException {
+        List<String> names = new ArrayList<>();
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm(null);
+            if (acroForm == null) {
+                return names;
+            }
+            for (PDField field : acroForm.getFields()) {
+                names.add(field.getFullyQualifiedName());
+            }
+        }
+        return names;
+    }
+
+    @Test
+    @DisplayName("Should preserve AcroForm when splitting form PDF by page count")
+    void shouldPreserveFormFieldsWhenSplitting() throws Exception {
+        byte[] pdfBytes = createPdfWithForm(4);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        SplitPdfBySizeOrCountRequest request = new SplitPdfBySizeOrCountRequest();
+        request.setFileInput(file);
+        request.setSplitType(1);
+        request.setSplitValue("2");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(2);
+        assertThat(pageCountsOf(outputs)).containsExactly(2, 2);
+        assertThat(fieldNamesOf(outputs.get(0))).containsExactlyInAnyOrder("text_p1", "text_p2");
+        assertThat(fieldNamesOf(outputs.get(1))).containsExactlyInAnyOrder("text_p3", "text_p4");
     }
 
     @Test

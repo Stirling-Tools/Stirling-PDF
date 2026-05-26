@@ -6,7 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -87,7 +89,14 @@ public class SplitPdfBySizeController {
                         if (range.length == 0) {
                             continue;
                         }
-                        writeRange(sourceDocument, range, zipOut, filename, fileIndex++, hasForm);
+                        writeRange(
+                                sourceDocument,
+                                sourceTempFile.getFile(),
+                                range,
+                                zipOut,
+                                filename,
+                                fileIndex++,
+                                hasForm);
                     }
                 }
             }
@@ -117,31 +126,47 @@ public class SplitPdfBySizeController {
 
     private void writeRange(
             PdfDocument sourceDoc,
+            File sourceFile,
             int[] range,
             ZipOutputStream zipOut,
             String baseFilename,
             int fileIndex,
             boolean hasForm)
             throws IOException {
-        try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-            extractRangeToFile(sourceDoc, range, splitTemp.getPath());
-            Path finalPath = splitTemp.getPath();
-            TempFile prunedTemp = null;
-            try {
-                if (hasForm) {
-                    prunedTemp = new TempFile(tempFileManager, ".pdf");
-                    try (PDDocument doc = pdfDocumentFactory.load(splitTemp.getFile())) {
-                        FormUtils.pruneOrphanedFormFields(doc);
-                        doc.save(prunedTemp.getFile());
-                    }
-                    finalPath = prunedTemp.getPath();
-                }
-                writeEntry(zipOut, baseFilename, fileIndex, finalPath);
-            } finally {
-                if (prunedTemp != null) {
-                    prunedTemp.close();
+        if (hasForm) {
+            // JPDFium's FPDF_ImportPagesByIndex drops the AcroForm dictionary, breaking form
+            // fields downstream. For form-bearing PDFs, do the extract via PDFBox so the
+            // AcroForm survives (pruneOrphanedFormFields removes references to dropped pages).
+            writeRangeViaPdfBox(sourceFile, range, zipOut, baseFilename, fileIndex);
+        } else {
+            try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
+                extractRangeToFile(sourceDoc, range, splitTemp.getPath());
+                writeEntry(zipOut, baseFilename, fileIndex, splitTemp.getPath());
+            }
+        }
+    }
+
+    private void writeRangeViaPdfBox(
+            File sourceFile,
+            int[] range,
+            ZipOutputStream zipOut,
+            String baseFilename,
+            int fileIndex)
+            throws IOException {
+        Set<Integer> keep = new HashSet<>();
+        for (int p : range) {
+            keep.add(p);
+        }
+        try (PDDocument doc = pdfDocumentFactory.load(sourceFile)) {
+            for (int i = doc.getNumberOfPages() - 1; i >= 0; i--) {
+                if (!keep.contains(i)) {
+                    doc.removePage(i);
                 }
             }
+            FormUtils.pruneOrphanedFormFields(doc);
+            zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
+            doc.save(zipOut);
+            zipOut.closeEntry();
         }
     }
 
