@@ -69,8 +69,8 @@ labels:
 
   - label: 'Tauri'
     files:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src-tauri/.*'
+      - 'frontend/editor/src-tauri/**'
+      - 'frontend/editor/src-tauri/.*'
 
   - label: 'engine'
     files:
