@@ -522,6 +522,148 @@ public class TempFileCleanupServiceTest {
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Cleanup resilience: reentrancy guard, failure counter, status snapshot
+    // ---------------------------------------------------------------------
+
+    @Test
+    public void getCleanupStatus_initialStateHasNoRecordedRun() {
+        TempFileCleanupService.CleanupStatus status = cleanupService.getCleanupStatus();
+
+        assertFalse(status.running());
+        assertNull(status.lastRunStartedAt());
+        assertNull(status.lastRunCompletedAt());
+        assertEquals(0L, status.lastRunDurationMs());
+        assertEquals(0L, status.lastDeletedCount());
+        assertEquals(0L, status.totalRuns());
+        assertEquals(0L, status.totalSkipped());
+        assertEquals(0L, status.totalFailures());
+        assertEquals(0, status.consecutiveFailures());
+        assertFalse(status.abortLatched());
+        assertNull(status.lastError());
+    }
+
+    @Test
+    public void scheduledCleanup_successfulRunUpdatesStatusAndClearsFailures() {
+        // Force a known failure first so we can prove it resets.
+        ReflectionTestUtils.setField(
+                cleanupService,
+                "consecutiveFailures",
+                new java.util.concurrent.atomic.AtomicInteger(3));
+        ReflectionTestUtils.setField(
+                cleanupService,
+                "lastErrorMessage",
+                new java.util.concurrent.atomic.AtomicReference<>("prior failure"));
+        when(tempFileManager.cleanupOldTempFiles(anyLong())).thenReturn(5);
+        when(registry.getTempDirectories()).thenReturn(new HashSet<>());
+
+        cleanupService.scheduledCleanup();
+
+        TempFileCleanupService.CleanupStatus status = cleanupService.getCleanupStatus();
+        assertFalse(status.running(), "cleanupRunning flag must reset in finally");
+        assertNotNull(status.lastRunStartedAt());
+        assertNotNull(status.lastRunCompletedAt());
+        assertEquals(1L, status.totalRuns());
+        assertEquals(0L, status.totalFailures());
+        assertEquals(0, status.consecutiveFailures(), "successful run must clear failure streak");
+        assertNull(status.lastError(), "successful run must clear the prior error");
+        assertFalse(status.abortLatched());
+    }
+
+    @Test
+    public void scheduledCleanup_runtimeExceptionIncrementsConsecutiveFailures() {
+        when(tempFileManager.cleanupOldTempFiles(anyLong()))
+                .thenThrow(new RuntimeException("disk unreachable"));
+
+        cleanupService.scheduledCleanup();
+
+        TempFileCleanupService.CleanupStatus status = cleanupService.getCleanupStatus();
+        assertEquals(1, status.consecutiveFailures());
+        assertEquals(1L, status.totalFailures());
+        assertEquals(0L, status.totalRuns(), "failing runs must not increment totalRuns");
+        assertNotNull(status.lastError());
+        assertTrue(status.lastError().contains("disk unreachable"));
+        assertFalse(status.running(), "cleanupRunning flag must reset even on failure");
+    }
+
+    @Test
+    public void scheduledCleanup_skipsWhenConsecutiveFailureLimitReached() {
+        ReflectionTestUtils.setField(
+                cleanupService,
+                "consecutiveFailures",
+                new java.util.concurrent.atomic.AtomicInteger(10));
+
+        cleanupService.scheduledCleanup();
+
+        TempFileCleanupService.CleanupStatus status = cleanupService.getCleanupStatus();
+        assertEquals(1L, status.totalSkipped(), "abort-latched run must count as skipped");
+        assertEquals(0L, status.totalRuns());
+        assertTrue(status.abortLatched());
+        // tempFileManager must not be called when the abort is latched
+        verify(tempFileManager, never()).cleanupOldTempFiles(anyLong());
+    }
+
+    @Test
+    public void resetCleanupFailureCounter_clearsCounterAndReturnsPriorValue() {
+        ReflectionTestUtils.setField(
+                cleanupService,
+                "consecutiveFailures",
+                new java.util.concurrent.atomic.AtomicInteger(7));
+        ReflectionTestUtils.setField(
+                cleanupService,
+                "lastErrorMessage",
+                new java.util.concurrent.atomic.AtomicReference<>("broken mount"));
+
+        int cleared = cleanupService.resetCleanupFailureCounter();
+
+        assertEquals(7, cleared);
+        TempFileCleanupService.CleanupStatus status = cleanupService.getCleanupStatus();
+        assertEquals(0, status.consecutiveFailures());
+        assertNull(status.lastError());
+        assertFalse(status.abortLatched());
+    }
+
+    @Test
+    public void scheduledCleanup_reentrancyGuardSkipsOverlappingCycle() throws Exception {
+        java.util.concurrent.CountDownLatch firstCycleStarted =
+                new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch releaseFirstCycle =
+                new java.util.concurrent.CountDownLatch(1);
+
+        when(tempFileManager.cleanupOldTempFiles(anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            firstCycleStarted.countDown();
+                            // Hold the cycle open so the second call sees cleanupRunning == true.
+                            assertTrue(
+                                    releaseFirstCycle.await(
+                                            5, java.util.concurrent.TimeUnit.SECONDS),
+                                    "test latch timed out");
+                            return 1;
+                        });
+        when(registry.getTempDirectories()).thenReturn(new HashSet<>());
+
+        Thread firstCycle = new Thread(cleanupService::scheduledCleanup, "test-cleanup-1");
+        firstCycle.start();
+        assertTrue(
+                firstCycleStarted.await(5, java.util.concurrent.TimeUnit.SECONDS),
+                "first cycle never reached the mocked cleanup call");
+
+        // Second invocation must short-circuit because cleanupRunning is still true.
+        cleanupService.scheduledCleanup();
+        TempFileCleanupService.CleanupStatus midRun = cleanupService.getCleanupStatus();
+        assertTrue(midRun.running(), "first cycle should still be running");
+        assertEquals(1L, midRun.totalSkipped(), "second call must skip without running");
+
+        releaseFirstCycle.countDown();
+        firstCycle.join(5_000);
+
+        TempFileCleanupService.CleanupStatus afterRun = cleanupService.getCleanupStatus();
+        assertFalse(afterRun.running());
+        assertEquals(1L, afterRun.totalRuns(), "only the first cycle should count as a real run");
+        assertEquals(1L, afterRun.totalSkipped(), "skip count must not change after release");
+    }
+
     // Matcher for exact path equality
     private static Path eq(Path path) {
         return argThat(arg -> arg != null && arg.equals(path));

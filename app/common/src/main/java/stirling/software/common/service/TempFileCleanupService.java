@@ -3,10 +3,15 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -46,6 +51,29 @@ public class TempFileCleanupService {
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
+
+    // After this many consecutive failures the scheduler skips runs until a successful
+    // cycle resets the counter. Stops the service from hammering a broken FS / NFS mount
+    // and spamming the log on every fixed-delay tick.
+    private static final int MAX_CONSECUTIVE_FAILURES = 10;
+
+    // Reentrancy guard: if a cleanup cycle outlasts the configured interval the next
+    // @Scheduled tick must skip rather than overlap. Spring's @Scheduled is single-threaded
+    // by default, but operators frequently override that pool to multi-threaded for other
+    // workloads and we do not want two cleanups racing on the same paths.
+    private final AtomicBoolean cleanupRunning = new AtomicBoolean(false);
+
+    // Observability state. Kept as primitives + atomic references so reads from
+    // getCleanupStatus() never race with a running cycle.
+    private final AtomicLong totalRuns = new AtomicLong(0);
+    private final AtomicLong totalSkipped = new AtomicLong(0);
+    private final AtomicLong totalFailures = new AtomicLong(0);
+    private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
+    private final AtomicLong lastRunDurationMs = new AtomicLong(0);
+    private final AtomicLong lastDeletedCount = new AtomicLong(0);
+    private final AtomicReference<Instant> lastRunStartedAt = new AtomicReference<>(null);
+    private final AtomicReference<Instant> lastRunCompletedAt = new AtomicReference<>(null);
+    private final AtomicReference<String> lastErrorMessage = new AtomicReference<>(null);
 
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
@@ -133,44 +161,142 @@ public class TempFileCleanupService {
                     "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
     public void scheduledCleanup() {
-        log.info("Running scheduled temporary file cleanup");
-        long maxAgeMillis = tempFileManager.getMaxAgeMillis();
-
-        // Clean up registered temp files (managed by TempFileRegistry)
-        int registeredDeletedCount = tempFileManager.cleanupOldTempFiles(maxAgeMillis);
-        log.info("Cleaned up {} registered temporary files", registeredDeletedCount);
-
-        // Clean up registered temp directories
-        int directoriesDeletedCount = 0;
-        for (Path directory : registry.getTempDirectories()) {
-            try {
-                if (Files.exists(directory)) {
-                    GeneralUtils.deleteDirectory(directory);
-                    directoriesDeletedCount++;
-                    log.debug("Cleaned up temporary directory: {}", directory);
-                }
-            } catch (IOException e) {
-                log.warn("Failed to clean up temporary directory: {}", directory, e);
-            }
+        if (consecutiveFailures.get() >= MAX_CONSECUTIVE_FAILURES) {
+            // Once this latches operators must restart (or call resetCleanupFailureCounter via
+            // the management endpoint) to retry. The alternative - retrying forever - turned an
+            // unreachable NFS mount into a log-flood that masked unrelated issues.
+            totalSkipped.incrementAndGet();
+            log.warn(
+                    "Skipping scheduled cleanup: {} consecutive failures already recorded. "
+                            + "Investigate the temp directory before re-enabling.",
+                    consecutiveFailures.get());
+            return;
         }
 
-        // Clean up PDFBox cache file
-        cleanupPDFBoxCache();
+        if (!cleanupRunning.compareAndSet(false, true)) {
+            // Previous cycle still running. Skipping is correct: piling up overlapping cleanups
+            // amplifies the underlying problem (slow disk, huge backlog) rather than draining it.
+            totalSkipped.incrementAndGet();
+            log.warn(
+                    "Skipping scheduled cleanup: a previous cycle is still running"
+                            + " (last started at {})",
+                    lastRunStartedAt.get());
+            return;
+        }
 
-        // Clean up unregistered temp files based on our cleanup strategy
-        boolean containerMode = isContainerMode();
-        int unregisteredDeletedCount = cleanupUnregisteredFiles(containerMode, true, maxAgeMillis);
+        Instant start = Instant.now();
+        lastRunStartedAt.set(start);
+        try {
+            log.info("Running scheduled temporary file cleanup");
+            long maxAgeMillis = tempFileManager.getMaxAgeMillis();
 
-        if (registeredDeletedCount > 0
-                || unregisteredDeletedCount > 0
-                || directoriesDeletedCount > 0) {
-            log.info(
-                    "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
-                    registeredDeletedCount,
-                    unregisteredDeletedCount,
-                    directoriesDeletedCount);
+            // Clean up registered temp files (managed by TempFileRegistry)
+            int registeredDeletedCount = tempFileManager.cleanupOldTempFiles(maxAgeMillis);
+            log.info("Cleaned up {} registered temporary files", registeredDeletedCount);
+
+            // Clean up registered temp directories
+            int directoriesDeletedCount = 0;
+            for (Path directory : registry.getTempDirectories()) {
+                try {
+                    if (Files.exists(directory)) {
+                        GeneralUtils.deleteDirectory(directory);
+                        directoriesDeletedCount++;
+                        log.debug("Cleaned up temporary directory: {}", directory);
+                    }
+                } catch (IOException e) {
+                    log.warn("Failed to clean up temporary directory: {}", directory, e);
+                }
+            }
+
+            // Clean up PDFBox cache file
+            cleanupPDFBoxCache();
+
+            // Clean up unregistered temp files based on our cleanup strategy
+            boolean containerMode = isContainerMode();
+            int unregisteredDeletedCount =
+                    cleanupUnregisteredFiles(containerMode, true, maxAgeMillis);
+
+            int totalDeleted =
+                    registeredDeletedCount + unregisteredDeletedCount + directoriesDeletedCount;
+            lastDeletedCount.set(totalDeleted);
+
+            if (totalDeleted > 0) {
+                log.info(
+                        "Scheduled cleanup complete. Deleted {} registered files, {} unregistered"
+                                + " files, {} directories",
+                        registeredDeletedCount,
+                        unregisteredDeletedCount,
+                        directoriesDeletedCount);
+            }
+
+            consecutiveFailures.set(0);
+            lastErrorMessage.set(null);
+            totalRuns.incrementAndGet();
+        } catch (RuntimeException e) {
+            // Top-level catch so a transient failure (FS unmount, permission flip) does not
+            // poison the @Scheduled invocation chain. The inner loops already swallow per-file
+            // IOExceptions; this is the safety net for everything else.
+            int streak = consecutiveFailures.incrementAndGet();
+            totalFailures.incrementAndGet();
+            lastErrorMessage.set(e.getClass().getSimpleName() + ": " + e.getMessage());
+            log.error(
+                    "Scheduled cleanup failed (consecutive failure {}/{})",
+                    streak,
+                    MAX_CONSECUTIVE_FAILURES,
+                    e);
+        } finally {
+            Instant end = Instant.now();
+            lastRunCompletedAt.set(end);
+            lastRunDurationMs.set(Duration.between(start, end).toMillis());
+            cleanupRunning.set(false);
         }
     }
+
+    /**
+     * Snapshot of the cleanup loop's observability state. Safe to call from any thread; reads the
+     * atomic fields directly so no locking is required.
+     */
+    public CleanupStatus getCleanupStatus() {
+        return new CleanupStatus(
+                cleanupRunning.get(),
+                lastRunStartedAt.get(),
+                lastRunCompletedAt.get(),
+                lastRunDurationMs.get(),
+                lastDeletedCount.get(),
+                totalRuns.get(),
+                totalSkipped.get(),
+                totalFailures.get(),
+                consecutiveFailures.get(),
+                consecutiveFailures.get() >= MAX_CONSECUTIVE_FAILURES,
+                lastErrorMessage.get());
+    }
+
+    /**
+     * Reset the consecutive-failure counter so the scheduler resumes after a latched abort. Returns
+     * the prior streak so the caller can log what was cleared.
+     */
+    public int resetCleanupFailureCounter() {
+        int prior = consecutiveFailures.getAndSet(0);
+        lastErrorMessage.set(null);
+        if (prior > 0) {
+            log.info("Cleared {} consecutive cleanup failures; scheduler will resume", prior);
+        }
+        return prior;
+    }
+
+    /** Immutable status payload exposed via {@link #getCleanupStatus()} and the REST endpoint. */
+    public record CleanupStatus(
+            boolean running,
+            Instant lastRunStartedAt,
+            Instant lastRunCompletedAt,
+            long lastRunDurationMs,
+            long lastDeletedCount,
+            long totalRuns,
+            long totalSkipped,
+            long totalFailures,
+            int consecutiveFailures,
+            boolean abortLatched,
+            String lastError) {}
 
     /**
      * Perform startup cleanup of stale temporary files from previous runs. This is especially
