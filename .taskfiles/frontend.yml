@@ -1,5 +1,10 @@
 version: '3'
 
+# Tasks operate from the workspace root (frontend/). Editor commands pass
+# `editor` as the vite project root (positional after `build` / before the
+# mode flag) or use `--project editor/...` for tsc — so the editor lives
+# under frontend/editor/ without each task needing a cd.
+
 tasks:
   install:
     desc: "Install dependencies"
@@ -15,112 +20,97 @@ tasks:
       CI: '{{ .CI | default "false" }}'
 
   prepare:env:
-    desc: "Generate .env from example if missing"
-    run: once
+    internal: true
+    run: when_changed
     deps: [install]
+    vars:
+      MODE: '{{.MODE | default ""}}'
     cmds:
-      - npx tsx scripts/setup-env.ts
+      - npx tsx editor/scripts/setup-env.mts{{if .MODE}} --{{.MODE}}{{end}}
     sources:
-      - scripts/setup-env.ts
-      - config/.env.example
+      - editor/scripts/setup-env.mts
     generates:
-      - .env
-
-  prepare:env:saas:
-    desc: "Generate .env and .env.saas from examples if missing"
-    run: once
-    deps: [install]
-    cmds:
-      - npx tsx scripts/setup-env.ts --saas
-    sources:
-      - scripts/setup-env.ts
-      - config/.env.example
-      - config/.env.saas.example
-    generates:
-      - .env
-      - .env.saas
-
-  prepare:env:desktop:
-    desc: "Generate .env and .env.desktop from examples if missing"
-    run: once
-    deps: [install]
-    cmds:
-      - npx tsx scripts/setup-env.ts --desktop
-    sources:
-      - scripts/setup-env.ts
-      - config/.env.example
-      - config/.env.desktop.example
-    generates:
-      - .env
-      - .env.desktop
+      - editor/.env.local
+      - editor/.env{{if .MODE}}.{{.MODE}}{{end}}.local
 
   prepare:icons:
-    desc: "Generate icon bundle from source references"
+    internal: true
     run: once
     deps: [install]
     cmds:
-      - node scripts/generate-icons.js
+      - node editor/scripts/generate-icons.js
 
   prepare:
     desc: "Set up dev environment"
-    run: once
-    deps: [prepare:env, prepare:icons]
-
-  prepare:saas:
-    desc: "Prepare for SaaS mode"
-    run: once
-    deps: [prepare:env:saas, prepare:icons]
-
-  prepare:desktop:
-    desc: "Prepare for desktop mode"
-    run: once
-    deps: [prepare:env:desktop, prepare:icons]
+    run: when_changed
+    vars:
+      MODE: '{{.MODE | default ""}}'
+    deps:
+      - task: prepare:env
+        vars: { MODE: '{{.MODE}}' }
+      - prepare:icons
 
   # ============================================================
   # Development
   # ============================================================
 
+  dev:_run:
+    internal: true
+    ignore_error: true
+    vars:
+      MODE: '{{.MODE}}'
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
+    cmds:
+      - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+
   dev:
     desc: "Start frontend dev server"
-    deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite
+      - task: dev:proprietary
+        vars: { PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:core:
     desc: "Start frontend dev server in core mode"
     deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite --mode core
+      - task: dev:_run
+        vars: { MODE: core, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:proprietary:
     desc: "Start frontend dev server in proprietary mode"
     deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite --mode proprietary
+      - task: dev:_run
+        vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode"
-    deps: [prepare:saas]
-    ignore_error: true
+    deps:
+      - task: prepare
+        vars: { MODE: saas }
     cmds:
-      - npx vite --mode saas
+      - task: dev:_run
+        vars: { MODE: saas, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
-    deps: [prepare:desktop]
-    ignore_error: true
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
     cmds:
-      - npx vite --mode desktop
+      - task: dev:_run
+        vars: { MODE: desktop, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:prototypes:
     desc: "Start frontend dev server in prototypes mode"
     deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite --mode prototypes
+      - task: dev:_run
+        vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   # ============================================================
   # Build
@@ -130,37 +120,41 @@ tasks:
     desc: "Production build (default mode)"
     deps: [prepare]
     cmds:
-      - npx vite build
+      - npx vite build editor
 
   build:core:
     desc: "Build for core mode"
     deps: [prepare]
     cmds:
-      - npx vite build --mode core
+      - npx vite build editor --mode core
 
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prepare]
     cmds:
-      - npx vite build --mode proprietary
+      - npx vite build editor --mode proprietary
 
   build:saas:
     desc: "Build for SaaS mode"
-    deps: [prepare:saas]
+    deps:
+      - task: prepare
+        vars: { MODE: saas }
     cmds:
-      - npx vite build --mode saas
+      - npx vite build editor --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
-    deps: [prepare:desktop]
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
     cmds:
-      - npx vite build --mode desktop
+      - npx vite build editor --mode desktop
 
   build:prototypes:
     desc: "Build for prototypes mode"
     deps: [prepare]
     cmds:
-      - npx vite build --mode prototypes
+      - npx vite build editor --mode prototypes
 
   # ============================================================
   # Code quality
@@ -171,7 +165,7 @@ tasks:
     deps: [install]
     cmds:
       - npx eslint --max-warnings=0
-      - npx dpdm src --circular --no-warning --no-tree --exit-code circular:1
+      - npx dpdm editor/src --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -206,37 +200,41 @@ tasks:
     desc: "Typecheck core build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project src/core/tsconfig.json
+      - npx tsc --noEmit --project editor/src/core/tsconfig.json
 
   typecheck:proprietary:
     desc: "Typecheck proprietary build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project src/proprietary/tsconfig.json
+      - npx tsc --noEmit --project editor/src/proprietary/tsconfig.json
 
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
-    deps: [prepare:saas]
+    deps:
+      - task: prepare
+        vars: { MODE: saas }
     cmds:
-      - npx tsc --noEmit --project src/saas/tsconfig.json
+      - npx tsc --noEmit --project editor/src/saas/tsconfig.json
 
   typecheck:desktop:
     desc: "Typecheck desktop build variant"
-    deps: [prepare:desktop]
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
     cmds:
-      - npx tsc --noEmit --project src/desktop/tsconfig.json
+      - npx tsc --noEmit --project editor/src/desktop/tsconfig.json
 
   typecheck:scripts:
     desc: "Typecheck scripts"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project scripts/tsconfig.json
+      - npx tsc --noEmit --project editor/scripts/tsconfig.json
 
   typecheck:prototypes:
     desc: "Typecheck prototypes build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project src/prototypes/tsconfig.json
+      - npx tsc --noEmit --project editor/src/prototypes/tsconfig.json
 
   typecheck:all:
     desc: "Typecheck all build variants"
@@ -246,6 +244,7 @@ tasks:
       - task: typecheck:saas
       - task: typecheck:desktop
       - task: typecheck:scripts
+      - task: typecheck:prototypes
 
   # ============================================================
   # Quality Gate
@@ -276,31 +275,19 @@ tasks:
     desc: "Run tests"
     deps: [install]
     cmds:
-      - npx vitest run
+      - npx vitest run --root editor
 
   test:watch:
     desc: "Run tests in watch mode"
     deps: [install]
     cmds:
-      - npx vitest --watch
+      - npx vitest --watch --root editor
 
   test:coverage:
     desc: "Run tests with coverage"
     deps: [install]
     cmds:
-      - npx vitest --coverage
-
-  test:e2e:
-    desc: "Run E2E tests"
-    deps: [prepare]
-    cmds:
-      - npx playwright test {{.CLI_ARGS}}
-
-  test:e2e:install:
-    desc: "Install E2E test browsers"
-    deps: [install]
-    cmds:
-      - npx playwright install {{.CLI_ARGS}} --with-deps
+      - npx vitest --coverage --root editor
 
   # ============================================================
   # Code Generation
@@ -310,4 +297,4 @@ tasks:
     desc: "Generate frontend license report"
     deps: [install]
     cmds:
-      - node scripts/generate-licenses.js
+      - node editor/scripts/generate-licenses.js
