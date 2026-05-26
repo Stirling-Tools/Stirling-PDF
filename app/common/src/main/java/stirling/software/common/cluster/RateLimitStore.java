@@ -2,7 +2,15 @@ package stirling.software.common.cluster;
 
 import java.time.Duration;
 
-/** Token-bucket rate limiting backed by the cluster backplane. */
+/**
+ * Token-bucket rate limiting backed by the cluster backplane.
+ *
+ * <p>In-process implementations enforce a per-JVM limit (identical to today's behaviour).
+ * Distributed implementations enforce a single global limit across every node.
+ *
+ * <p>Both implementations use a Bucket4j greedy-refill token bucket so semantics match across
+ * single-node and cluster deployments (no fixed-window boundary doubling).
+ */
 public interface RateLimitStore {
 
     /**

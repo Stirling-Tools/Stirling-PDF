@@ -53,8 +53,13 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.18.0'
+    implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
+    // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
+    // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
+    // boundary doubling).
+    implementation 'com.bucket4j:bucket4j_jdk17-lettuce:8.19.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
@@ -71,6 +76,11 @@ dependencies {
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
+
+    // Testcontainers: spins up a real Valkey for LiveValkeyIntegrationTest in CI without
+    // needing a manually-started instance. Tests skip cleanly when Docker is unavailable.
+    testImplementation 'org.testcontainers:testcontainers:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

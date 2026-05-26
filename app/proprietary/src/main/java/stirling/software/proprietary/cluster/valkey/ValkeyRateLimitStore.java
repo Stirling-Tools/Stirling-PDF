@@ -1,0 +1,82 @@
+package stirling.software.proprietary.cluster.valkey;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.stereotype.Component;
+
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
+import io.lettuce.core.AbstractRedisClient;
+import io.lettuce.core.RedisClient;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import stirling.software.common.cluster.RateLimitStore;
+
+/**
+ * Valkey-backed token-bucket rate limiting via Bucket4j's Lettuce ProxyManager.
+ *
+ * <p>Replaces the earlier hand-rolled INCR+EXPIRE Lua fixed-window script. The fixed-window impl
+ * could allow a caller to spend the full bucket at second 59 of one window and the full bucket
+ * again at second 1 of the next window (effective burst of 2x capacity at boundaries). The Bucket4j
+ * token bucket refills continuously and removes that boundary doubling, giving cross-node parity
+ * with the in-process {@code InProcessRateLimitStore} which already uses Bucket4j.
+ */
+@Component
+@ConditionalOnValkeyBackplane
+public class ValkeyRateLimitStore implements RateLimitStore {
+
+    private static final String PREFIX = "stirling:rl:";
+
+    private final LettuceConnectionFactory connectionFactory;
+    private ProxyManager<byte[]> proxyManager;
+
+    public ValkeyRateLimitStore(LettuceConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
+
+    @PostConstruct
+    void initProxyManager() {
+        AbstractRedisClient client = connectionFactory.getNativeClient();
+        if (!(client instanceof RedisClient redisClient)) {
+            throw new IllegalStateException(
+                    "ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "
+                            + (client == null ? "null" : client.getClass().getName())
+                            + " (cluster client not yet supported by this rate limit impl)");
+        }
+        this.proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient).build();
+    }
+
+    @PreDestroy
+    void shutdown() {
+        // Lettuce client lifecycle is owned by Spring (LettuceConnectionFactory#destroy), so we
+        // only drop the proxy reference. No explicit close needed.
+        proxyManager = null;
+    }
+
+    @Override
+    public RateLimitDecision tryConsume(String bucketKey, long capacity, Duration refillPeriod) {
+        byte[] key = (PREFIX + bucketKey).getBytes(StandardCharsets.UTF_8);
+        // Greedy refill of capacity tokens per refillPeriod, matching InProcessRateLimitStore
+        // semantics (continuously refilling, no fixed-window boundary doubling).
+        BucketConfiguration cfg =
+                BucketConfiguration.builder()
+                        .addLimit(
+                                stage ->
+                                        stage.capacity(capacity)
+                                                .refillGreedy(capacity, refillPeriod))
+                        .build();
+        BucketProxy bucket = proxyManager.builder().build(key, () -> cfg);
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+        if (probe.isConsumed()) {
+            return new RateLimitDecision(true, probe.getRemainingTokens(), 0L);
+        }
+        return new RateLimitDecision(false, 0L, probe.getNanosToWaitForRefill());
+    }
+}

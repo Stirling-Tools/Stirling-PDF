@@ -112,25 +112,12 @@ public class JobExecutorService {
 
         log.debug("Generated jobId: {} (base: {})", scopedJobKey, baseJobId);
 
-        // Store the scoped job ID in the request for potential use by other components
+        // Store the scoped job ID in the request for potential use by other components.
+        // Ownership lives in the scoped key itself (userId:jobId) plus the cluster-visible
+        // JobStore entry, so we no longer mirror it into the HTTP session - that did not
+        // survive a node hop in cluster mode.
         if (request != null) {
             request.setAttribute("jobId", scopedJobKey);
-
-            // Also track this job ID in the user's session for authorization purposes
-            // This ensures users can only cancel their own jobs
-            if (request.getSession() != null) {
-                @SuppressWarnings("unchecked")
-                java.util.Set<String> userJobIds =
-                        (java.util.Set<String>) request.getSession().getAttribute("userJobIds");
-
-                if (userJobIds == null) {
-                    userJobIds = new java.util.concurrent.ConcurrentSkipListSet<>();
-                    request.getSession().setAttribute("userJobIds", userJobIds);
-                }
-
-                userJobIds.add(scopedJobKey);
-                log.debug("Added scoped job ID {} to user session", scopedJobKey);
-            }
         }
 
         String jobId = scopedJobKey;

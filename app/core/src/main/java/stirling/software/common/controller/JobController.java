@@ -4,6 +4,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -22,6 +23,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.cluster.ClusterBackplane;
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.JobStoreEntry;
+import stirling.software.common.cluster.StickyMissRecorder;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
@@ -42,9 +47,21 @@ public class JobController {
     private final FileStorage fileStorage;
     private final JobQueue jobQueue;
     private final HttpServletRequest request;
+    private final ClusterBackplane clusterBackplane;
+    private final JobStore jobStore;
+
+    /**
+     * Process-local short-TTL cache fronting {@link JobStore#get(String)} on the sticky-410 path.
+     * Without this every result download / status poll fires a Valkey HGETALL which doubles RTT on
+     * the hot path when the same client re-requests the same job within seconds.
+     */
+    private final JobOwnershipCache ownershipCache = new JobOwnershipCache();
 
     @Autowired(required = false)
     private JobOwnershipService jobOwnershipService;
+
+    @Autowired(required = false)
+    private StickyMissRecorder stickyMissRecorder;
 
     /**
      * Get the status of a job
@@ -55,6 +72,14 @@ public class JobController {
     @GetMapping("/job/{jobId}")
     @Operation(summary = "Get job status")
     public ResponseEntity<?> getJobStatus(@PathVariable("jobId") String jobId) {
+        // Sticky-410 must precede user-auth (403): a non-owner node has no way to verify
+        // ownership for a job it doesn't own, and a 403 here would leak job existence to
+        // unauthorized callers. Return 410 first so the LB re-routes to the owner.
+        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+        if (peerOwned.isPresent()) {
+            return peerOwned.get();
+        }
+
         // Validate job ownership
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job status: {}", jobId);
@@ -91,6 +116,14 @@ public class JobController {
     @GetMapping("/job/{jobId}/result")
     @Operation(summary = "Get job result")
     public ResponseEntity<?> getJobResult(@PathVariable("jobId") String jobId) {
+        // Sticky-410 must precede user-auth (403): a non-owner node has no way to verify
+        // ownership for a job it doesn't own, and a 403 here would leak job existence to
+        // unauthorized callers. Return 410 first so the LB re-routes to the owner.
+        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+        if (peerOwned.isPresent()) {
+            return peerOwned.get();
+        }
+
         // Validate job ownership
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job result: {}", jobId);
@@ -125,11 +158,14 @@ public class JobController {
                                     result.getAllResultFiles()));
         }
 
-        // Handle single file (download directly)
+        // Handle single file (download directly). Cross-node ownership was already resolved
+        // at the top of this method, so reaching here means we ARE the owner (or single-node)
+        // and the bytes live on our local disk.
         if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
                 List<ResultFile> files = result.getAllResultFiles();
                 ResultFile singleFile = files.get(0);
+
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
                         .header("Content-Type", singleFile.getContentType())
@@ -162,6 +198,15 @@ public class JobController {
     @Operation(summary = "Cancel a job")
     public ResponseEntity<?> cancelJob(@PathVariable("jobId") String jobId) {
         log.debug("Request to cancel job: {}", jobId);
+
+        // Sticky-410 must precede user-auth (403): a non-owner node has no way to verify
+        // ownership for a job it doesn't own, and a 403 here would leak job existence to
+        // unauthorized callers. Return 410 first so the LB re-routes to the owner who can
+        // actually cancel.
+        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+        if (peerOwned.isPresent()) {
+            return peerOwned.get();
+        }
 
         // Validate job ownership
         if (!validateJobAccess(jobId)) {
@@ -201,7 +246,9 @@ public class JobController {
                             "queuePosition",
                             queuePosition >= 0 ? queuePosition : "n/a"));
         } else {
-            // Job not found or already complete
+            // Job not found or already complete. Cross-node ownership was already resolved at
+            // the top of this method (sticky-410 precedes user-auth), so any peer-owned case
+            // has been returned already; reaching here means we ARE the owner (or single-node).
             JobResult result = taskManager.getJobResult(jobId);
             if (result == null) {
                 return ResponseEntity.notFound().build();
@@ -224,6 +271,14 @@ public class JobController {
     @GetMapping("/job/{jobId}/result/files")
     @Operation(summary = "Get job result files")
     public ResponseEntity<?> getJobFiles(@PathVariable("jobId") String jobId) {
+        // Sticky-410 must precede user-auth (403): a non-owner node has no way to verify
+        // ownership for a job it doesn't own, and a 403 here would leak job existence to
+        // unauthorized callers. Return 410 first so the LB re-routes to the owner.
+        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+        if (peerOwned.isPresent()) {
+            return peerOwned.get();
+        }
+
         // Validate job ownership
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job files: {}", jobId);
@@ -265,6 +320,14 @@ public class JobController {
             String jobKey = taskManager.findJobKeyByFileId(fileId);
             if (jobKey == null) {
                 return ResponseEntity.notFound().build();
+            }
+
+            // Sticky-410 must precede user-auth (403): a non-owner node has no way to verify
+            // ownership for a job it doesn't own, and a 403 here would leak file existence to
+            // unauthorized callers. Return 410 first so the LB re-routes to the owner.
+            Optional<ResponseEntity<?>> notOwner = guardNonOwner(jobKey);
+            if (notOwner.isPresent()) {
+                return notOwner.get();
             }
 
             if (!validateJobAccess(jobKey)) {
@@ -323,14 +386,20 @@ public class JobController {
                 return ResponseEntity.notFound().build();
             }
 
+            // Sticky-410 must precede the user-auth (403) check: a non-owner node has no way to
+            // verify ownership for a job it doesn't own, and a 403 here would leak file existence
+            // to unauthorized callers. Return 410 first so the LB re-routes to the owner where
+            // the real auth check can run.
+            Optional<ResponseEntity<?>> notOwner = guardNonOwner(jobKey);
+            if (notOwner.isPresent()) {
+                return notOwner.get();
+            }
+
             if (!validateJobAccess(jobKey)) {
                 log.warn("Unauthorized attempt to download file: {}", fileId);
                 return ResponseEntity.status(403)
                         .body(Map.of("message", "You are not authorized to access this file"));
             }
-
-            // Retrieve file content
-            byte[] fileContent = fileStorage.retrieveBytes(fileId);
 
             // Find the file metadata from any job that contains this file
             // This is for getting the original filename and content type
@@ -341,6 +410,9 @@ public class JobController {
                     resultFile != null
                             ? resultFile.getContentType()
                             : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+            // Retrieve file content from local disk
+            byte[] fileContent = fileStorage.retrieveBytes(fileId);
 
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
@@ -354,6 +426,76 @@ public class JobController {
 
     private boolean isSecurityEnabled() {
         return jobOwnershipService != null;
+    }
+
+    /**
+     * Returns {@code 410 Gone} with {@code {message, ownedBy, currentNode}} and {@code Retry-After:
+     * 0} when the job is owned by a peer node. Returns {@link Optional#empty()} when we are the
+     * owner, when cluster mode is off / JobStore has no entry, or when {@code owningNodeId} is
+     * blank (caller proceeds with its normal not-found / 200 path).
+     *
+     * <p>Wraps the {@link JobStore#get(String)} call in a short-TTL local cache and a defensive
+     * try/catch so that Valkey RTT cost is not multiplied by every download retry and so that a
+     * Valkey timeout falls through to the local-disk path instead of surfacing as 500.
+     */
+    private Optional<ResponseEntity<?>> guardNonOwner(String jobId) {
+        if (clusterBackplane == null || jobStore == null) {
+            return Optional.empty();
+        }
+        Optional<JobStoreEntry> entry;
+        Optional<Optional<JobStoreEntry>> cached = ownershipCache.get(jobId);
+        if (cached.isPresent()) {
+            entry = cached.get();
+        } else {
+            try {
+                entry = jobStore.get(jobId);
+            } catch (RuntimeException ex) {
+                // Valkey unavailable / timeout: treat as "no cluster-visible entry" so the request
+                // can proceed to the local-disk path. Surfacing a 500 here would break every
+                // download attempt during a brief Valkey blip; the worst case if we miss a real
+                // peer-owned entry is one wasted round trip + a 404 from the local node.
+                log.warn(
+                        "JobStore lookup failed for jobId={} - treating as not-found and falling"
+                                + " through to local path: {}",
+                        jobId,
+                        ex.getMessage());
+                return Optional.empty();
+            }
+            ownershipCache.put(jobId, entry);
+        }
+        if (entry.isEmpty()) {
+            return Optional.empty();
+        }
+        String owner = entry.get().owningNodeId();
+        if (owner == null || owner.isBlank()) {
+            return Optional.empty();
+        }
+        String localId = clusterBackplane.localNodeId();
+        if (owner.equals(localId)) {
+            return Optional.empty();
+        }
+        log.info(
+                "Sticky-session miss for jobId={} (owner={}, local={}); returning 410 so client"
+                        + " retries via LB affinity",
+                jobId,
+                owner,
+                localId);
+        if (stickyMissRecorder != null) {
+            stickyMissRecorder.recordStickyMiss();
+        }
+        return Optional.of(
+                ResponseEntity.status(410)
+                        .header("Retry-After", "0")
+                        .body(
+                                Map.of(
+                                        "message",
+                                        "Result lives on another node. Retry to be routed there"
+                                                + " by the load balancer's sticky-session"
+                                                + " affinity, or re-run the job.",
+                                        "ownedBy",
+                                        owner,
+                                        "currentNode",
+                                        localId == null ? "" : localId)));
     }
 
     /**
