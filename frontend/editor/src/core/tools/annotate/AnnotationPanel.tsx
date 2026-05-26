@@ -259,7 +259,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     {
       id: "square",
       label: t("annotation.square", "Square"),
-      icon: "crop-square",
+      icon: "crop-square-outline",
     },
     {
       id: "circle",
