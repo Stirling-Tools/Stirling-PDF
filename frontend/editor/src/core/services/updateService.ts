@@ -67,8 +67,30 @@ export class UpdateService {
 
   /**
    * Get download URL based on machine type and security settings
+   * If isDesktop is true, returns desktop installer URLs instead
    */
-  getDownloadUrl(machineInfo: MachineInfo): string | null {
+  getDownloadUrl(
+    machineInfo: MachineInfo,
+    isDesktop: boolean = false,
+  ): string | null {
+    if (isDesktop) {
+      const userAgent = navigator.userAgent.toLowerCase();
+      if (userAgent.includes("win")) {
+        return DOWNLOAD_BASE_URL + "win-installer.exe";
+      } else if (userAgent.includes("mac")) {
+        const isARM =
+          userAgent.includes("arm") || userAgent.includes("aarch64");
+        if (isARM) {
+          return DOWNLOAD_BASE_URL + "mac-installer.dmg";
+        } else {
+          return DOWNLOAD_BASE_URL + "mac-x86_64-installer.dmg";
+        }
+      } else if (userAgent.includes("linux")) {
+        return DOWNLOAD_BASE_URL + "linux-x86_64.deb";
+      }
+      return "https://github.com/Stirling-Tools/Stirling-PDF/releases/latest";
+    }
+
     // Only show download for non-Docker installations
     if (
       machineInfo.machineType === "Docker" ||

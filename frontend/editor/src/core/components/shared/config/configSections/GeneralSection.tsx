@@ -39,12 +39,16 @@ interface GeneralSectionProps {
   hideTitle?: boolean;
   hideUpdateSection?: boolean;
   hideAdminBanner?: boolean;
+  desktopVersion?: string | null;
+  isDesktop?: boolean;
 }
 
 const GeneralSection: React.FC<GeneralSectionProps> = ({
   hideTitle = false,
   hideUpdateSection = false,
   hideAdminBanner = false,
+  desktopVersion,
+  isDesktop = false,
 }) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
@@ -272,11 +276,25 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             )}
             <Group justify="space-between" align="center">
               <div>
-                <Text size="sm" c="dimmed">
-                  {t(
-                    "settings.general.updates.currentBackendVersion",
-                    "Current Backend Version",
-                  )}
+                {desktopVersion && (
+                  <Text size="sm" c="dimmed">
+                    {t(
+                      "settings.general.versionInfo.desktop",
+                      "Desktop Version",
+                    )}
+                    :{" "}
+                    <Text component="span" fw={500}>
+                      {desktopVersion}
+                    </Text>
+                  </Text>
+                )}
+                <Text size="sm" c="dimmed" mt={desktopVersion ? 4 : 0}>
+                  {desktopVersion
+                    ? t("settings.general.versionInfo.server", "Server Version")
+                    : t(
+                        "settings.general.updates.currentBackendVersion",
+                        "Current Backend Version",
+                      )}
                   :{" "}
                   <Text component="span" fw={500}>
                     {config.appVersion}
@@ -294,6 +312,33 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     </Text>
                   </Text>
                 )}
+                {isDesktop &&
+                  desktopVersion &&
+                  updateSummary &&
+                  (() => {
+                    const desktopNeedsUpdate =
+                      updateService.compareVersions(
+                        updateSummary.latest_version || "0",
+                        desktopVersion,
+                      ) > 0;
+                    const serverNeedsUpdate =
+                      updateService.compareVersions(
+                        updateSummary.latest_version || "0",
+                        config.appVersion || "0",
+                      ) > 0;
+
+                    if (!desktopNeedsUpdate && serverNeedsUpdate) {
+                      return (
+                        <Text size="sm" c="orange" mt={4} fw={500}>
+                          {t(
+                            "settings.general.updates.serverNeedsUpdate",
+                            "Server needs to be updated by administrator",
+                          )}
+                        </Text>
+                      );
+                    }
+                    return null;
+                  })()}
               </div>
               <Group gap="sm">
                 <Button
@@ -315,22 +360,68 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   )}
                 </Button>
                 {updateSummary && (
-                  <Button
-                    size="sm"
-                    color={
-                      updateSummary.max_priority === "urgent" ? "red" : "blue"
-                    }
-                    onClick={() => setUpdateModalOpened(true)}
-                    leftSection={
-                      <LocalIcon
-                        icon="system-update-alt-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
-                    }
-                  >
-                    {t("settings.general.updates.viewDetails", "View Details")}
-                  </Button>
+                  <>
+                    <Button
+                      size="sm"
+                      color={
+                        updateSummary.max_priority === "urgent" ? "red" : "blue"
+                      }
+                      onClick={() => setUpdateModalOpened(true)}
+                      leftSection={
+                        <LocalIcon
+                          icon="system-update-alt-rounded"
+                          width="1rem"
+                          height="1rem"
+                        />
+                      }
+                    >
+                      {t(
+                        "settings.general.updates.viewDetails",
+                        "View Details",
+                      )}
+                    </Button>
+                    {isDesktop &&
+                      desktopVersion &&
+                      (() => {
+                        const desktopNeedsUpdate =
+                          updateService.compareVersions(
+                            updateSummary.latest_version || "0",
+                            desktopVersion,
+                          ) > 0;
+
+                        if (!desktopNeedsUpdate) {
+                          return null;
+                        }
+
+                        const downloadUrl = updateService.getDownloadUrl(
+                          {
+                            machineType: config.machineType || "Unknown",
+                            activeSecurity: config.activeSecurity ?? false,
+                            licenseType: config.license ?? "NORMAL",
+                          },
+                          true,
+                        );
+
+                        return downloadUrl ? (
+                          <Button
+                            size="sm"
+                            variant="filled"
+                            component="a"
+                            href={downloadUrl}
+                            target="_blank"
+                            leftSection={
+                              <LocalIcon
+                                icon="download-rounded"
+                                width="1rem"
+                                height="1rem"
+                              />
+                            }
+                          >
+                            {t("update.downloadLatest", "Download Latest")}
+                          </Button>
+                        ) : null;
+                      })()}
+                  </>
                 )}
               </Group>
             </Group>
