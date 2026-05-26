@@ -39,6 +39,25 @@ tasks:
       - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
         platforms: [linux, darwin]
 
+  dev:saas:
+    desc: "Start backend in SaaS flavor against Supabase (loads .env.saas.local)"
+    # `dotenv:` reads from the root Taskfile's directory (".") because this
+    # subtaskfile is included with `dir: .`. Drop the file at the repo root.
+    dotenv: ['.env.saas.local']
+    ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
+      # Override to "" to run the pure `saas` profile against your own SAAS_DB_*.
+      PROFILES: '{{.PROFILES | default "dev"}}'
+    env:
+      SERVER_PORT: '{{.PORT}}'
+      STIRLING_FLAVOR: saas
+    cmds:
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILES}}--args='--spring.profiles.include={{.PROFILES}}'{{end}}
+        platforms: [linux, darwin]
+
   build:
     desc: "Full backend build"
     cmds:
