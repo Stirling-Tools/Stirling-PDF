@@ -29,6 +29,12 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .contradiction import (
+    Claim,
+    Contradiction,
+    ContradictionReport,
+    ContradictionSeverity,
+)
 from .documents import (
     DeleteDocumentResponse,
     IngestDocumentRequest,
@@ -88,6 +94,7 @@ from .pdf_questions import (
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
 )
+from .pdf_review import PdfReviewOrchestrateResponse
 from .pdf_to_markdown import (
     LayoutFragment,
     LayoutLine,
@@ -122,8 +129,12 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "Claim",
     "CommentSpec",
     "CompletedExecutionAction",
+    "Contradiction",
+    "ContradictionReport",
+    "ContradictionSeverity",
     "ConversationMessage",
     "DeleteDocumentResponse",
     "PdfToMarkdownCannotDoResponse",
@@ -178,6 +189,7 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
+    "PdfReviewOrchestrateResponse",
     "PdfTextSelection",
     "ProgressEvent",
     "Requisition",

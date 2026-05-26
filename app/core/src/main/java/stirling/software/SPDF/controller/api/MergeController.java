@@ -3,13 +3,14 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -47,6 +48,11 @@ import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfMerge;
+import stirling.software.jpdfium.doc.Bookmark;
+import stirling.software.jpdfium.doc.PdfBookmarkEditor;
+import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
 @GeneralApi
 @Slf4j
@@ -57,7 +63,6 @@ public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
         boolean success = false;
@@ -76,11 +81,8 @@ public class MergeController {
         }
     }
 
-    // Re-order files to match the explicit order provided by the front-end.
-    // fileOrder is newline-delimited original filenames in the desired order.
     private static MultipartFile[] reorderFilesByProvidedOrder(
             MultipartFile[] files, String fileOrder) {
-        // Split by various line endings and trim each entry
         String[] desired =
                 stirling.software.common.util.RegexPatternUtils.getInstance()
                         .getNewlineSplitPattern()
@@ -107,7 +109,6 @@ public class MergeController {
         return ordered.toArray(new MultipartFile[0]);
     }
 
-    // Returns a comparator for sorting MultipartFile arrays based on the given sort type
     private Comparator<MultipartFile> getSortComparator(String sortType) {
         return switch (sortType) {
             case "byFileName" ->
@@ -155,18 +156,16 @@ public class MergeController {
                             return 0;
                         }
                     };
-            case "orderProvided" -> (file1, file2) -> 0; // Default is the order provided
-            default -> (file1, file2) -> 0; // Default is the order provided
+            case "orderProvided" -> (file1, file2) -> 0;
+            default -> (file1, file2) -> 0;
         };
     }
 
-    // Parse client file IDs from JSON string
     private String[] parseClientFileIds(String clientFileIds) {
         if (clientFileIds == null || clientFileIds.trim().isEmpty()) {
             return new String[0];
         }
         try {
-            // Simple JSON array parsing - remove brackets and split by comma
             String trimmed = clientFileIds.trim();
             if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
                 String inside = trimmed.substring(1, trimmed.length() - 1).trim();
@@ -186,39 +185,29 @@ public class MergeController {
         return new String[0];
     }
 
-    // Adds a table of contents to the merged document using filenames as chapter titles
     private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
-        // Create the document outline
         PDDocumentOutline outline = new PDDocumentOutline();
         mergedDocument.getDocumentCatalog().setDocumentOutline(outline);
 
-        int pageIndex = 0; // Current page index in the merged document
-
-        // Iterate through the original files
+        int pageIndex = 0;
         for (MultipartFile file : files) {
-            // Get the filename without extension to use as bookmark title
             String filename = file.getOriginalFilename();
             String title = GeneralUtils.removeExtension(filename);
 
-            // Create an outline item for this file
             PDOutlineItem item = new PDOutlineItem();
             item.setTitle(title);
 
-            // Set the destination to the first page of this file in the merged document
             if (pageIndex < mergedDocument.getNumberOfPages()) {
                 PDPage page = mergedDocument.getPage(pageIndex);
                 item.setDestination(page);
             }
-
-            // Add the item to the outline
             outline.addLast(item);
 
-            // Increment page index for the next file
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
                 pageIndex += doc.getNumberOfPages();
             } catch (IOException e) {
                 ExceptionUtils.logException("document loading for TOC generation", e);
-                pageIndex++; // Increment by at least one if we can't determine page count
+                pageIndex++;
             }
         }
     }
@@ -236,7 +225,6 @@ public class MergeController {
                     }
                 }
 
-                // Fallback to XMP metadata if Info dates are missing
                 PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
                 if (metadata != null) {
                     try (InputStream is = metadata.createInputStream()) {
@@ -287,7 +275,7 @@ public class MergeController {
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
-        List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
+        List<File> filesToDelete = new ArrayList<>();
         TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
@@ -298,48 +286,35 @@ public class MergeController {
             files = new MultipartFile[0];
         }
 
-        // If front-end provided explicit visible order, honor it and override backend sorting
         if (fileOrder != null && !fileOrder.isBlank()) {
             log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
             log.info("Sorting files based on sortType: {}", request.getSortType());
-            Arrays.sort(
-                    files,
-                    getSortComparator(
-                            request.getSortType())); // Sort files based on requested sort type
+            Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
-            PDFMergerUtility mergerUtility = new PDFMergerUtility();
-            long totalSize = 0;
+            List<Path> inputPaths = new ArrayList<>(files.length);
             List<Integer> invalidIndexes = new ArrayList<>();
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
-                totalSize += multipartFile.getSize();
-                File tempFile =
-                        tempFileManager.convertMultipartFileToFile(
-                                multipartFile); // Convert MultipartFile to File
-                filesToDelete.add(tempFile); // Add temp file to the list for later deletion
+                File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                filesToDelete.add(tempFile);
+                inputPaths.add(tempFile.toPath());
 
-                // Pre-validate each PDF so we can report which one(s) are broken
-                // Use the original MultipartFile to avoid deleting the tempFile during validation
-                try (PDDocument ignored = pdfDocumentFactory.load(multipartFile)) {
-                    // OK
-                } catch (IOException e) {
+                try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
+                } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
                 }
-                mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
 
-            mergerUtility.setDestinationFileName(mt.getFile().getAbsolutePath());
-
+            int[] pageCounts;
             try {
-                mergerUtility.mergeDocuments(
-                        pdfDocumentFactory.getStreamCacheFunction(
-                                totalSize)); // Merge the documents
+                pageCounts =
+                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -348,10 +323,26 @@ public class MergeController {
                 throw e;
             }
 
-            // Load the merged PDF document and operate on it inside try-with-resources
-            try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
-                // Remove signatures if removeCertSign is true
-                if (removeCertSign) {
+            boolean sigFlattenNeeded = false;
+            if (removeCertSign) {
+                try (PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
+                    sigFlattenNeeded = !check.signatures().isEmpty();
+                } catch (Exception e) {
+                    log.debug(
+                            "JPDFium signature pre-check failed; falling back to PDFBox flatten:"
+                                    + " {}",
+                            e.getMessage());
+                    sigFlattenNeeded = true;
+                }
+                if (!sigFlattenNeeded) {
+                    log.info(
+                            "removeCertSign requested but merged document has no signature"
+                                    + " fields; skipping PDFBox flatten pass");
+                }
+            }
+
+            if (sigFlattenNeeded) {
+                try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
                     PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
                     PDAcroForm acroForm = catalog.getAcroForm();
                     if (acroForm != null) {
@@ -359,24 +350,26 @@ public class MergeController {
                                 acroForm.getFields().stream()
                                         .filter(PDSignatureField.class::isInstance)
                                         .toList();
-
                         if (!fieldsToRemove.isEmpty()) {
-                            acroForm.flatten(
-                                    fieldsToRemove,
-                                    false); // Flatten the fields, effectively removing them
+                            acroForm.flatten(fieldsToRemove, false);
                         }
                     }
+                    outputTempFile = new TempFile(tempFileManager, ".pdf");
+                    try {
+                        mergedDocument.save(outputTempFile.getFile());
+                    } catch (Exception e) {
+                        outputTempFile.close();
+                        outputTempFile = null;
+                        throw e;
+                    }
                 }
-
-                // Add table of contents if generateToc is true
-                if (generateToc && files.length > 0) {
-                    addTableOfContents(mergedDocument, files);
-                }
-
-                // Save the modified document to a temporary file
+            } else {
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
                 try {
-                    mergedDocument.save(outputTempFile.getFile());
+                    Files.copy(
+                            mt.getFile().toPath(),
+                            outputTempFile.getFile().toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 } catch (Exception e) {
                     outputTempFile.close();
                     outputTempFile = null;
@@ -395,7 +388,7 @@ public class MergeController {
             throw ex;
         } finally {
             for (File file : filesToDelete) {
-                tempFileManager.deleteTempFile(file); // Delete temporary files
+                tempFileManager.deleteTempFile(file);
             }
         }
 
@@ -404,5 +397,114 @@ public class MergeController {
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
+    }
+
+    private int[] mergeWithJpdfium(
+            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
+            throws IOException {
+        if (inputPaths.isEmpty()) {
+            try (PdfDocument empty = PdfDocument.open(new byte[0])) {
+                empty.save(outputPath);
+            } catch (Exception ignored) {
+                Files.write(outputPath, new byte[0]);
+            }
+            return new int[0];
+        }
+
+        List<PdfDocument> docs = new ArrayList<>(inputPaths.size());
+        int[] pageCounts = new int[inputPaths.size()];
+        int[] pageOffsets = new int[inputPaths.size()];
+        List<List<Bookmark>> sourceBookmarks = new ArrayList<>(inputPaths.size());
+        int runningOffset = 0;
+        try {
+            for (int i = 0; i < inputPaths.size(); i++) {
+                Path p = inputPaths.get(i);
+                PdfDocument doc = PdfDocument.open(p);
+                docs.add(doc);
+                pageCounts[i] = doc.pageCount();
+                pageOffsets[i] = runningOffset;
+                sourceBookmarks.add(doc.bookmarks());
+                runningOffset += pageCounts[i];
+            }
+
+            BookmarkTree combinedTree =
+                    buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
+
+            try (PdfDocument merged = PdfMerge.merge(docs)) {
+                if (combinedTree.entries().isEmpty()) {
+                    merged.save(outputPath);
+                } else {
+                    PdfBookmarkEditor.setBookmarks(merged, combinedTree, outputPath);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new IOException("JPDFium merge failed", e);
+        } finally {
+            for (PdfDocument doc : docs) {
+                try {
+                    doc.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return pageCounts;
+    }
+
+    private BookmarkTree buildCombinedBookmarkTree(
+            MultipartFile[] files,
+            int[] pageOffsets,
+            List<List<Bookmark>> sourceBookmarks,
+            boolean generateToc) {
+        BookmarkTree.Builder builder = BookmarkTree.builder();
+
+        if (generateToc) {
+            for (int i = 0; i < files.length; i++) {
+                String filename = files[i].getOriginalFilename();
+                String title = GeneralUtils.removeExtension(filename);
+                if (title == null || title.isBlank()) {
+                    title = "Document " + (i + 1);
+                }
+                builder.add(title, pageOffsets[i]);
+            }
+        }
+
+        for (int i = 0; i < sourceBookmarks.size(); i++) {
+            int offset = pageOffsets[i];
+            for (Bookmark bm : sourceBookmarks.get(i)) {
+                addBookmarkFlat(builder, bm, offset);
+            }
+        }
+
+        return builder.build();
+    }
+
+    private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark root, int offset) {
+        final int maxNodes = 100_000;
+        java.util.Deque<Bookmark> stack = new java.util.ArrayDeque<>();
+        java.util.Set<Bookmark> visited =
+                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        stack.push(root);
+        int processed = 0;
+        while (!stack.isEmpty() && processed < maxNodes) {
+            Bookmark bm = stack.pop();
+            if (!visited.add(bm)) {
+                continue;
+            }
+            processed++;
+            if (bm.isInternal() && bm.title() != null) {
+                builder.add(bm.title(), offset + bm.pageIndex());
+            }
+            if (bm.hasChildren()) {
+                List<Bookmark> children = bm.children();
+                for (int i = children.size() - 1; i >= 0; i--) {
+                    stack.push(children.get(i));
+                }
+            }
+        }
+        if (processed >= maxNodes) {
+            log.warn(
+                    "Source bookmark traversal hit {}-node cap; remaining bookmarks dropped",
+                    maxNodes);
+        }
     }
 }
