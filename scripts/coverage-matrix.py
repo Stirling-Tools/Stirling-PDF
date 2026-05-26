@@ -224,46 +224,20 @@ def render(rows: dict[str, RowBuckets], title: str) -> str:
     sep = "|---" * (len(cols) + 1) + "|"
     lines = [f"## {title}", "", header, sep]
     for row_label, row in rows.items():
-        # Backend rows on the desktop column are architecturally
-        # impossible (Tauri wraps the same core JVM - there is no
-        # desktop-only Java code), not just "missing data". Surface that
-        # explicitly so a future reader doesn't think we forgot to
-        # collect coverage.
         is_backend_row = row_label.lower().startswith("backend")
         cells = [row_label]
         for area in AREAS:
             b = row.by_area[area]
             unattr = row.unattributed
             if area == "desktop" and is_backend_row:
-                cells.append("n/a [^desktop]")
+                cells.append("n/a")
                 continue
-            # If this row has unattributed data (Playwright frontend
-            # without source maps), per-area cells can't include it;
-            # flag with the [^pw] footnote.
             if b.total == 0 and unattr.total > 0:
-                cells.append("n/a [^pw]")
+                cells.append("n/a")
             else:
                 cells.append(_cell(b))
         cells.append(_cell(row.all))
         lines.append("| " + " | ".join(cells) + " |")
-    lines.append("")
-    lines.append(
-        "**Method**: backend cells = JaCoCo METHOD counters bucketed by "
-        "package; frontend cells = vitest function counts bucketed by "
-        '`src/<area>/` path. "Both" rows sum frontend functions + backend '
-        'methods (treats them as comparable "callable units").'
-    )
-    lines.append("")
-    lines.append(
-        "[^desktop]: Desktop ships as a Tauri shell around the same core JVM, "
-        "so there is no desktop-only backend code to instrument. The desktop "
-        "column in Both rows reflects frontend coverage only."
-    )
-    lines.append(
-        "[^pw]: Playwright (live) V8 coverage has no source-map walker today, "
-        "so it can only contribute to the ALL column. Add `monocart-reporter` "
-        "or `v8-to-istanbul` to enable per-area bucketing."
-    )
     return "\n".join(lines)
 
 
