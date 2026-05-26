@@ -231,7 +231,9 @@ def main(argv: list[str] | None = None) -> int:
         sections.append("### Backend (JaCoCo)")
         sections.append(render_jacoco(jacoco_reports))
     if args.vitest is not None:
-        sections.append("### Frontend (Vitest)")
+        # Sub-heading omitted on purpose: the --title argument already
+        # disambiguates (Vitest vs Playwright vs anything else that emits
+        # a coverage-summary.json), so a generic header reads cleaner.
         sections.append(render_vitest(args.vitest))
     if len(sections) == 1:
         sections.append("_No coverage inputs provided._")
