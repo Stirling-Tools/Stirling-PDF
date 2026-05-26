@@ -23,10 +23,99 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
+// Depot remote build cache. Silently no-ops when DEPOT_TOKEN is absent
+// (local dev without depot login, and fork PRs where GitHub hides secrets),
+// so contributors without Depot access still build fine on local cache only.
+buildCache {
+    def depotToken = System.getenv('DEPOT_TOKEN')
+    local {
+        enabled = true
+    }
+    if (depotToken) {
+        remote(HttpBuildCache) {
+            url = 'https://cache.depot.dev'
+            enabled = true
+            // Only CI runs push to the shared cache; dev laptops pull-only
+            // so a misconfigured local task can't poison everyone else.
+            push = System.getenv('CI') == 'true'
+            credentials {
+                username = ''
+                password = depotToken
+            }
+        }
+    }
+}
+
 rootProject.name = 'Stirling PDF'
+
+// Flavors: core | proprietary (default) | saas.
+// Selectable via STIRLING_FLAVOR or by setting DISABLE_ADDITIONAL_FEATURES/ENABLE_SAAS directly.
+// Accepts env var, -D system property, or -P gradle property (camelCase alias too).
+
+def lookupEnvOrProperty = { String name ->
+    def value = System.getenv(name)
+    if (value == null || value.isEmpty()) {
+        value = System.getProperty(name)
+    }
+    if (value == null || value.isEmpty()) {
+        def projectProps = settings.startParameter.projectProperties
+        value = projectProps.get(name)
+        if (value == null || value.isEmpty()) {
+            def camel = name.toLowerCase().split('_').inject('') { acc, part ->
+                acc.isEmpty() ? part : acc + part.capitalize()
+            }
+            value = projectProps.get(camel)
+        }
+    }
+    return value
+}
+
+def asBool = { String value -> 'true'.equalsIgnoreCase(value) }
+
+def stirlingFlavor = lookupEnvOrProperty('STIRLING_FLAVOR')?.toLowerCase()
+
+boolean disableAdditional
+boolean enableSaas
+
+if (stirlingFlavor != null && !stirlingFlavor.isEmpty()) {
+    switch (stirlingFlavor) {
+        case 'core':
+            disableAdditional = true
+            enableSaas = false
+            break
+        case 'proprietary':
+            disableAdditional = false
+            enableSaas = false
+            break
+        case 'saas':
+            disableAdditional = false
+            enableSaas = true
+            break
+        default:
+            throw new GradleException(
+                "Unknown STIRLING_FLAVOR='${stirlingFlavor}'. Expected one of: core, proprietary, saas.")
+    }
+} else {
+    disableAdditional = asBool(lookupEnvOrProperty('DISABLE_ADDITIONAL_FEATURES'))
+    enableSaas = asBool(lookupEnvOrProperty('ENABLE_SAAS'))
+}
+
+if (enableSaas && disableAdditional) {
+    throw new GradleException(
+        "ENABLE_SAAS=true requires DISABLE_ADDITIONAL_FEATURES=false " +
+        "(SaaS builds on top of :proprietary and cannot stand alone).")
+}
+
+gradle.ext.disableAdditional = disableAdditional
+gradle.ext.enableSaas = enableSaas
 
 include 'stirling-pdf', 'common', 'proprietary'
 
 project(':stirling-pdf').projectDir = file('app/core')
 project(':common'      ).projectDir = file('app/common')
 project(':proprietary' ).projectDir = file('app/proprietary')
+
+if (enableSaas) {
+    include 'saas'
+    project(':saas').projectDir = file('app/saas')
+}

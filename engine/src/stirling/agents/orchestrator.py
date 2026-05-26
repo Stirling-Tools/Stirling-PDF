@@ -21,12 +21,12 @@ from stirling.contracts import (
     PageLayoutArtifact,
     PdfEditResponse,
     PdfQuestionOrchestrateResponse,
+    PdfReviewOrchestrateResponse,
     SupportedCapability,
     UnsupportedCapabilityResponse,
     format_conversation_history,
     format_file_names,
 )
-from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.contracts.pdf_to_markdown import PdfToMarkdownOrchestrateResponse
 from stirling.services import AppRuntime
 
@@ -169,10 +169,10 @@ class OrchestratorAgent:
     async def _run_pdf_to_markdown(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
         return await PdfToMarkdownAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+    async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> PdfReviewOrchestrateResponse:
         return await self._run_pdf_review(ctx.deps.request)
 
-    async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse:
+    async def _run_pdf_review(self, request: OrchestratorRequest) -> PdfReviewOrchestrateResponse:
         return await PdfReviewAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(
