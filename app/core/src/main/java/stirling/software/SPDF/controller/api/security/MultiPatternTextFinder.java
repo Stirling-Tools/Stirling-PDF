@@ -31,6 +31,8 @@ import stirling.software.SPDF.model.PDFText;
 final class MultiPatternTextFinder extends PDFTextStripper {
 
     private static final long REGEX_MATCH_TIMEOUT_SECONDS = 30;
+    private static final ExecutorService REGEX_EXECUTOR =
+            Executors.newVirtualThreadPerTaskExecutor();
 
     private final List<Pattern> patterns;
     private final Map<Integer, List<PDFText>> foundTextsByPage = new HashMap<>();
@@ -99,25 +101,24 @@ final class MultiPatternTextFinder extends PDFTextStripper {
      * indefinitely; per-match timeout so fast legitimate scans are unaffected.
      */
     private static boolean safeFind(Matcher matcher) throws IOException {
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        Future<Boolean> future =
+                REGEX_EXECUTOR.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
         try {
-            Future<Boolean> future =
-                    executor.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
             return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
+            future.cancel(true);
             throw new IOException(
                     "Regex match timed out after "
                             + REGEX_MATCH_TIMEOUT_SECONDS
                             + "s — pattern may cause catastrophic backtracking");
         } catch (InterruptedException e) {
+            future.cancel(true);
             Thread.currentThread().interrupt();
             throw new IOException("Regex match interrupted", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof IOException ioEx) throw ioEx;
             throw new IOException("Regex match failed: " + cause.getMessage(), cause);
-        } finally {
-            executor.shutdownNow();
         }
     }
 
