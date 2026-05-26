@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +29,8 @@ import stirling.software.SPDF.model.PDFText;
  */
 @Slf4j
 final class MultiPatternTextFinder extends PDFTextStripper {
+
+    private static final long REGEX_MATCH_TIMEOUT_SECONDS = 30;
 
     private final List<Pattern> patterns;
     private final Map<Integer, List<PDFText>> foundTextsByPage = new HashMap<>();
@@ -72,7 +80,7 @@ final class MultiPatternTextFinder extends PDFTextStripper {
             int pageIndex = getCurrentPageNo() - 1;
             for (Pattern pattern : patterns) {
                 Matcher matcher = pattern.matcher(text);
-                while (matcher.find()) {
+                while (safeFind(matcher)) {
                     PDFText pdfText = resolveMatchPosition(matcher, pageIndex);
                     if (pdfText != null) {
                         foundTextsByPage
@@ -83,6 +91,34 @@ final class MultiPatternTextFinder extends PDFTextStripper {
             }
         }
         super.endPage(page);
+    }
+
+    /**
+     * Wraps a single {@code matcher.find()} call with a {@value #REGEX_MATCH_TIMEOUT_SECONDS}
+     * second timeout. Prevents pathological regex backtracking from blocking the request
+     * indefinitely; per-match timeout so fast legitimate scans are unaffected.
+     */
+    private static boolean safeFind(Matcher matcher) throws IOException {
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        try {
+            Future<Boolean> future =
+                    executor.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
+            return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new IOException(
+                    "Regex match timed out after "
+                            + REGEX_MATCH_TIMEOUT_SECONDS
+                            + "s — pattern may cause catastrophic backtracking");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Regex match interrupted", e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException ioEx) throw ioEx;
+            throw new IOException("Regex match failed: " + cause.getMessage(), cause);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private PDFText resolveMatchPosition(Matcher matcher, int pageIndex) {

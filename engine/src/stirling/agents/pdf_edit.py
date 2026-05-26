@@ -26,7 +26,7 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.logging import Pretty
-from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
+from stirling.models import OPERATIONS, PARAMETER_HINTS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -41,12 +41,20 @@ class PdfEditPlanSelection(ApiModel):
 
 class PdfEditNeedContentSelection(ApiModel):
     """LLM-facing variant of need_content: the model signals it needs document content and gives
-    a reason; the file list is filled in by Python from the authoritative request.files so the
-    LLM can't fabricate file ids.
+    a reason. File objects are resolved by Python from request.files by matching names, so the
+    LLM can't fabricate file ids — it only selects by the display names it sees in the prompt.
     """
 
     outcome: Literal["need_content"] = "need_content"
     reason: str
+    file_names: list[str] | None = Field(
+        default=None,
+        description=(
+            "Names of files whose content is needed. "
+            "Use the exact names shown in the prompt. "
+            "Omit or leave empty to request content from all files."
+        ),
+    )
     max_pages: int | None = None
     max_characters: int | None = None
 
@@ -76,7 +84,8 @@ class PdfEditSelectionAgent:
             system_prompt += (
                 " Return need_content when planning a correct answer requires inspecting the actual PDF "
                 "page text (e.g. 'split after every page that says NEW PAGE', "
-                "'rotate pages that mention draft')."
+                "'rotate pages that mention draft'). "
+                "Set file_names to only the files that need to be read; omit it to read all files."
             )
         self.agent = Agent(
             model=runtime.smart_model,
@@ -118,24 +127,21 @@ class PdfEditParameterSelector:
         parameter_model = OPERATIONS[operation_id]
         prompt = self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps)
         logger.debug("[pdf-edit params %s] prompt:\n%s", operation_id.name, prompt)
-        instructions = (
-            f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
-            "Do not include fields from any other operation."
-        )
-        if operation_id == ToolEndpoint.REDACT_EXECUTE:
-            instructions += (
-                " For regex patterns, account for the common format variants of whatever pattern "
-                "the user asked to redact — different separators, optional prefixes/suffixes, "
-                "grouped vs unbroken digits, locale spellings, etc. — so partial matches don't "
-                "leak. Cover the realistic shapes the data appears in, not every conceivable form."
-            )
         parameter_result = await self.agent.run(
             prompt,
             output_type=NativeOutput(parameter_model),
-            instructions=instructions,
+            instructions=self._get_operation_instructions(operation_id),
         )
         logger.debug("[pdf-edit params %s] output: %s", operation_id.name, Pretty(parameter_result.output))
         return parameter_result.output
+
+    @staticmethod
+    def _get_operation_instructions(operation_id: ToolEndpoint) -> str:
+        base = (
+            f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
+            "Do not include fields from any other operation."
+        )
+        return base + PARAMETER_HINTS.get(operation_id, "")
 
     def _build_parameter_prompt(
         self,
@@ -293,7 +299,10 @@ class PdfEditAgent:
                 "Only return cannot_do when no sequence of the supported operations could achieve the request. "
                 "Do not produce operation parameters in this stage. "
                 "Return plan when a reasonable multi-step plan can be created. "
-                "Never return partial plans."
+                "Never return partial plans. "
+                "Return need_clarification only when the request is genuinely ambiguous in a way "
+                "that no reasonable interpretation could produce a correct plan — do not ask to "
+                "confirm details that are already clear from the user's message."
             ),
             allow_need_content=allow_need_content,
         )
@@ -377,14 +386,24 @@ class PdfEditAgent:
         selection: PdfEditNeedContentSelection,
         request: PdfEditRequest,
     ) -> NeedContentResponse:
-        # The file list is filled in here from request.files so the selection LLM never gets to
-        # invent file ids (it only sees file names in the prompt and would slugify them).
+        # File objects are resolved here by matching names against request.files so the LLM
+        # can't fabricate file ids — it selects by display name, Python provides the AiFile.
+        if selection.file_names:
+            requested = set(selection.file_names)
+            files = [f for f in request.files if f.name in requested]
+            if not files:
+                # Names didn't match anything; fall back to all files rather than sending nothing.
+                logger.warning(
+                    "[pdf-edit] need_content file_names %s matched no request files — using all",
+                    selection.file_names,
+                )
+                files = request.files
+        else:
+            files = request.files
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_EDIT,
             reason=selection.reason,
-            files=[
-                NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
-            ],
+            files=[NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in files],
             max_pages=selection.max_pages or self.runtime.settings.max_pages,
             max_characters=selection.max_characters or self.runtime.settings.max_characters,
         )

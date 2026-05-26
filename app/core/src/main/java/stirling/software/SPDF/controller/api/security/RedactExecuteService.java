@@ -8,12 +8,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSName;
@@ -48,8 +42,6 @@ import stirling.software.common.util.TempFile;
 @Slf4j
 @RequiredArgsConstructor
 class RedactExecuteService {
-
-    private static final long REGEX_MATCH_TIMEOUT_SECONDS = 30;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ManualRedactionService manualRedactionService;
@@ -388,42 +380,6 @@ class RedactExecuteService {
 
         if (!detectedBoxes.isEmpty()) {
             manualRedactionService.redactImageBoxes(document, detectedBoxes, imgColor);
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // ReDoS protection: per-match timeout (30 s per individual match call)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Wraps a single regex {@code matcher.find()} call with a {@value #REGEX_MATCH_TIMEOUT_SECONDS}
-     * second timeout using a virtual-thread executor. This prevents pathological backtracking (e.g.
-     * {@code (a+)+$} hanging on a long input string) from blocking the request indefinitely.
-     * Legitimate large-document scans where each individual match is fast are unaffected because
-     * the timeout is per-match, not per-document.
-     *
-     * @throws IOException if the match times out or is interrupted
-     */
-    boolean safeRegexFind(java.util.regex.Matcher matcher) throws IOException {
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        try {
-            Future<Boolean> future =
-                    executor.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
-            return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new IOException(
-                    "Regex match timed out after "
-                            + REGEX_MATCH_TIMEOUT_SECONDS
-                            + "s — pattern may cause catastrophic backtracking");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("Regex match interrupted", e);
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException ioEx) throw ioEx;
-            throw new IOException("Regex match failed: " + cause.getMessage(), cause);
-        } finally {
-            executor.shutdownNow();
         }
     }
 
