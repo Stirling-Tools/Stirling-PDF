@@ -412,7 +412,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
           }
           case "JavaScript": {
             const jsObj = a.lookup(PDFName.of("JS"));
-            const js = decodeText(jsObj) ?? String(jsObj) ?? "";
+            const js = decodeText(jsObj) ?? String(jsObj);
             return { type: "javascript", javascript: js };
           }
           case "SubmitForm": {
