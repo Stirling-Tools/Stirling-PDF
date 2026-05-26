@@ -83,8 +83,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: db-migration-app-logs
-          path: |
-            /tmp/stirling-mig-*/app.log
-            /tmp/stirling-mig-*/app.err.log
+          # Path matches the preserved workdir in run-migration-test.sh -
+          # only failing fixtures leave a directory behind.
+          path: /tmp/stirling-migration-failed-*/app.log
           retention-days: 7
           if-no-files-found: warn

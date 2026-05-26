@@ -39,10 +39,7 @@ find_jar() {
 }
 
 free_port() {
-    python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()' \
-        2>/dev/null \
-        || ss -tln 2>/dev/null | awk '{print $4}' | awk -F: '{print $NF}' | sort -n | tail -1 | awk '{print $1+1}' \
-        || printf '%s' "$((RANDOM % 10000 + 30000))"
+    python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()'
 }
 
 wait_for_url() {
@@ -55,67 +52,6 @@ wait_for_url() {
         sleep 2
     done
     return 1
-}
-
-is_windows() {
-    case "$(uname -s)" in
-        MINGW*|MSYS*|CYGWIN*) return 0 ;;
-        *) return 1 ;;
-    esac
-}
-
-# On Windows under Git Bash, `$!` is the MSYS PID, which taskkill doesn't
-# accept. Look up the Windows PID listening on our chosen port instead.
-win_pid_on_port() {
-    local port="$1"
-    netstat -ano 2>/dev/null | awk -v p="$port" '
-        $4 ~ ":"p"$" && $6 == "LISTENING" { print $7; exit }
-        $2 ~ ":"p"$" && $4 == "LISTENING" { print $5; exit }
-    '
-}
-
-stop_java() {
-    local pid="$1" port="$2"
-    [[ -z "$pid" ]] && return 0
-    # The H2 URL has DB_CLOSE_ON_EXIT=TRUE so even a forced kill flushes the
-    # file via H2's own shutdown hook - don't try to be cleverer than that.
-    if is_windows; then
-        local win_pid
-        win_pid=$(win_pid_on_port "$port")
-        if [[ -n "$win_pid" ]]; then
-            taskkill //F //PID "$win_pid" //T >/dev/null 2>&1 || true
-        fi
-        # Belt-and-braces in case the listener moved or never bound.
-        kill -KILL "$pid" 2>/dev/null || true
-    else
-        kill -TERM "$pid" 2>/dev/null || true
-        local i
-        for i in $(seq 1 15); do
-            kill -0 "$pid" 2>/dev/null || return 0
-            sleep 1
-        done
-        kill -KILL "$pid" 2>/dev/null || true
-        wait "$pid" 2>/dev/null || true
-    fi
-    # Give Windows a beat to release file handles even after the process is
-    # gone - rm -rf on its workdir was failing with EBUSY otherwise.
-    is_windows && sleep 2
-    return 0
-}
-
-cleanup_workdir() {
-    local workdir="$1"
-    [[ -z "$workdir" || ! -d "$workdir" ]] && return 0
-    # Windows holds file locks briefly after process exit; retry the rm a few
-    # times instead of failing the build over a transient handle.
-    local i
-    for i in 1 2 3 4 5; do
-        if rm -rf "$workdir" 2>/dev/null; then return 0; fi
-        sleep 1
-    done
-    # Leave the dir behind rather than failing - CI will tidy on runner reset.
-    log "  WARN: could not fully clean $workdir (file locks); leaving behind"
-    return 0
 }
 
 test_fixture() {
@@ -143,9 +79,9 @@ test_fixture() {
     # is on so any migration failure is visible in CI logs.
     #
     # pushd into the workdir so the JVM's `.` resolves to the isolated
-    # workdir - critical for InstallationPathConfig, which reads
-    # `./configs/settings.yml` relative to cwd. Without this, a developer's
-    # local `configs/` at the repo root would contaminate the test.
+    # workdir - InstallationPathConfig reads `./configs/settings.yml` relative
+    # to cwd, and we want to make sure we hit the fixture's configs/ and not
+    # whatever happens to live at the runner's working directory.
     pushd "$workdir" >/dev/null
     java -Xmx1g -jar "$jar" \
         "--server.port=$port" \
@@ -198,8 +134,28 @@ test_fixture() {
         fi
     fi
 
-    stop_java "$pid" "$port"
-    cleanup_workdir "$workdir"
+    # H2 flushes via DB_CLOSE_ON_EXIT=TRUE so a forced kill is safe.
+    kill -TERM "$pid" 2>/dev/null || true
+    local i
+    for i in $(seq 1 15); do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 1
+    done
+    kill -KILL "$pid" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
+
+    if (( rc == 0 )); then
+        rm -rf "$workdir" 2>/dev/null || true
+    else
+        # Preserve workdir so CI can upload the app log as an artifact for
+        # post-mortem. Move it to a stable name so the upload path is fixed.
+        local preserved
+        preserved="${MIGRATION_TEST_LOG_DIR:-/tmp}/stirling-migration-failed-$label"
+        rm -rf "$preserved"
+        mv "$workdir" "$preserved" 2>/dev/null || true
+        log "  preserved failing workdir at $preserved"
+    fi
+
     return $rc
 }
 

@@ -50,41 +50,61 @@ compatible with an existing user database. Common causes:
 
 ## Regenerating fixtures
 
-Use `scripts/db-migration/generate-fixtures.ps1` to produce the binaries. It
-downloads each `Stirling-PDF-with-login.jar` from the matching GitHub release,
-runs it locally on a free port, populates the core tables via the public API,
-and copies the resulting `.mv.db` here.
+There's no automated regenerator script - fixtures are rare to refresh and the
+manual steps are short. For each version you want to capture:
 
-```powershell
-$env:JAVA_HOME = "C:\Users\<you>\.gradle\jdks\eclipse_adoptium-25-amd64-windows.2"
-$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
-powershell -NoProfile -ExecutionPolicy Bypass `
-  -File scripts/db-migration/generate-fixtures.ps1 `
-  -Versions v2.0.0,v2.5.0,v2.10.0
+```bash
+# 1. Download the JAR for that release (requires `gh` authenticated against
+#    github.com/Stirling-Tools/Stirling-PDF).
+gh release download v2.10.0 \
+  --repo Stirling-Tools/Stirling-PDF \
+  --pattern 'Stirling-PDF-with-login.jar' \
+  --output /tmp/stirling-v2.10.0.jar
+
+# 2. Boot the JAR in a clean working directory. DB_CLOSE_ON_EXIT=TRUE is
+#    the only override that matters - it makes the H2 file flush on JVM exit
+#    even if you Ctrl-C instead of going through a graceful shutdown.
+workdir=$(mktemp -d)
+mkdir -p "$workdir/configs"
+cd "$workdir"
+java -jar /tmp/stirling-v2.10.0.jar \
+  --server.port=8089 \
+  --spring.datasource.url='jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL' \
+  &
+
+# 3. Wait until http://localhost:8089/login responds, then log in once to
+#    materialize whatever rows the app writes on first boot.
+curl -sf -X POST -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"stirling"}' \
+  http://localhost:8089/api/v1/auth/login
+
+# 4. Shut it down (any kill works - DB_CLOSE_ON_EXIT=TRUE handles the flush).
+kill -TERM %1 && wait %1
+
+# 5. Copy the .mv.db here, renamed for the version.
+cp "$workdir/configs/stirling-pdf-DB-2.3.232.mv.db" \
+   app/proprietary/src/test/resources/db-migration-fixtures/stirling-pdf-v2.10.0.mv.db
 ```
 
-Requirements: Java 21+ (the historical JARs target Java 17 / 21), the `gh`
-CLI authenticated against `github.com/Stirling-Tools/Stirling-PDF`, and
-PowerShell 5.1+ on Windows. The script is idempotent - already-downloaded
-JARs in `.alpha-local/migration-fixtures/jars/` are reused.
-
-The bash equivalent for Linux/macOS contributors lives at
-`scripts/db-migration/generate-fixtures.sh` (todo: port).
+Requirements: Java 21+ (the historical JARs target Java 17 / 21).
 
 ## Adding a new fixture
 
-When a new minor release ships, add another row to the table above and a new
-entry to `Versions` in the regenerator script. Keep the historical fixtures -
+When a new minor release ships, repeat the steps above for the new tag and
+add a row to the table at the top of this file. Keep the historical fixtures -
 the test gets stronger with each schema generation it covers.
 
 ## Inspecting a fixture by hand
 
-```powershell
-$h2 = "$env:USERPROFILE\.gradle\caches\modules-2\files-2.1\com.h2database\h2\2.3.232\*\h2-2.3.232.jar" |
-  Get-ChildItem | Select-Object -First 1
-java -cp $h2.FullName org.h2.tools.Shell `
-  -url 'jdbc:h2:file:./stirling-pdf-v2.10.0;ACCESS_MODE_DATA=r;MODE=PostgreSQL' `
+The H2 driver bundled with the build ships an interactive shell:
+
+```bash
+h2_jar=$(find ~/.gradle/caches/modules-2 -name 'h2-2.3.232.jar' | head -1)
+cd app/proprietary/src/test/resources/db-migration-fixtures
+java -cp "$h2_jar" org.h2.tools.Shell \
+  -url 'jdbc:h2:file:./stirling-pdf-v2.10.0;ACCESS_MODE_DATA=r;MODE=PostgreSQL' \
   -user sa
 ```
 
-(Run from this directory. `ACCESS_MODE_DATA=r` keeps the inspection read-only.)
+`ACCESS_MODE_DATA=r` keeps the inspection read-only so you can't accidentally
+mutate a committed fixture.
