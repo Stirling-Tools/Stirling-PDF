@@ -48,17 +48,18 @@ public class LocalDiskFileStore implements FileStore {
     /**
      * File-to-file copy. {@link Files#copy(Path, Path, java.nio.file.CopyOption...)} can use {@code
      * sendfile(2)} on Linux for a zero-copy kernel transfer when source and destination share a
-     * filesystem, avoiding the streaming overhead of pulling the bytes through the JVM heap.
+     * filesystem, avoiding the streaming overhead of pulling the bytes through the JVM heap. Reads
+     * the source size before copying so the post-copy stat is unnecessary.
      */
     @Override
     public Stored store(Path source, String originalName) throws IOException {
         String fileId = UUID.randomUUID().toString();
         Path filePath = resolve(fileId);
         Files.createDirectories(filePath.getParent());
+        long size = Files.size(source);
         boolean success = false;
         try {
             Files.copy(source, filePath);
-            long size = Files.size(filePath);
             success = true;
             return new Stored(fileId, size);
         } finally {

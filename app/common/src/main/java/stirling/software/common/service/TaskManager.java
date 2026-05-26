@@ -547,10 +547,15 @@ public class TaskManager {
             }
         }
         if (jobStore != null) {
+            // Propagate JobStore failures: returning null on a backplane outage would conflate
+            // "no such file" with "lookup unavailable" and the caller would respond 404 to a
+            // transient blip that should be retried. Let Spring's exception handler surface a
+            // 5xx so clients know to retry.
             try {
                 return jobStore.findJobIdByFileId(fileId).orElse(null);
             } catch (RuntimeException e) {
                 log.warn("JobStore findJobIdByFileId failed for {}: {}", fileId, e.getMessage());
+                throw e;
             }
         }
         return null;

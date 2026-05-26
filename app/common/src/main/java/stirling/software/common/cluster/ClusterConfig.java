@@ -46,6 +46,13 @@ public class ClusterConfig {
                     "cluster.enabled=true with backplane=inprocess - only the local"
                             + " JVM is coordinated. Cross-node lookups and the file proxy will fail."
                             + " Use backplane=valkey for real multi-node deployments.");
+        } else {
+            // Fail fast on typos like "valky" so Spring doesn't later report a cryptic
+            // "no ClusterBackplane bean" - the operator-facing error names the bad value.
+            throw new IllegalStateException(
+                    "cluster.enabled=true with unknown backplane '"
+                            + backplane
+                            + "'. Valid values: inprocess | valkey.");
         }
         log.info(
                 "Cluster mode enabled (backplane={}, nodeRole={}, nodeId={}).",
