@@ -185,6 +185,13 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
+      - name: Install defusedxml for coverage summary
+        # coverage-summary.py parses JaCoCo XML through defusedxml to
+        # silence security scanners that pattern-match on the stdlib
+        # xml.etree.ElementTree.parse call.
+        if: always() && matrix.flavor == 'saas'
+        run: python -m pip install --quiet defusedxml
+
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
         # superset of the core + proprietary legs (same .exec files plus

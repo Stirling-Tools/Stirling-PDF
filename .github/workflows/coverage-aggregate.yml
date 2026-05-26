@@ -59,6 +59,11 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install defusedxml for coverage scripts
+        # Both coverage-summary.py and coverage-matrix.py parse JaCoCo
+        # XML through defusedxml - see the script headers for context.
+        run: python -m pip install --quiet defusedxml
+
       # Pattern matches every artifact this PR's producers might upload:
       #   jacoco-exec-junit-jdk-25-spring-security-true
       #   jacoco-exec-junit-jdk-25-spring-security-false

@@ -21,10 +21,16 @@ import argparse
 import json
 import os
 import sys
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+
+# `defusedxml` swaps out the stdlib expat parser for one that rejects the
+# usual XML attack vectors (XXE / billion laughs / entity expansion). Even
+# though JaCoCo XML on a CI runner is trusted input, swapping the parser is
+# a one-line change that silences security scanners and costs nothing.
+from defusedxml.ElementTree import parse as _xml_parse
+from defusedxml.ElementTree import ParseError as _XMLParseError
 
 JACOCO_COUNTERS = ("LINE", "BRANCH", "METHOD", "CLASS", "INSTRUCTION", "COMPLEXITY")
 
@@ -55,8 +61,8 @@ def _parse_jacoco_xml(path: Path) -> dict[str, CounterTotals]:
     Counters are direct children of the <report> root.
     """
     try:
-        root = ET.parse(path).getroot()
-    except ET.ParseError as exc:
+        root = _xml_parse(path).getroot()
+    except _XMLParseError as exc:
         raise RuntimeError(f"Failed to parse {path}: {exc}") from exc
 
     out: dict[str, CounterTotals] = {}

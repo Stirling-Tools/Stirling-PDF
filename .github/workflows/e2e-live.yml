@@ -87,6 +87,11 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
+      - name: Install defusedxml for coverage summary
+        # coverage-summary.py uses defusedxml instead of stdlib xml.etree
+        # to dodge XXE / billion-laughs scanner findings.
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        run: python -m pip install --quiet defusedxml
       - name: e2e:live coverage step summary
         if: always() && steps.live-coverage.outputs.report == 'true'
         run: |
@@ -122,6 +127,13 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
+
+      - name: Install defusedxml for frontend coverage summary
+        # Idempotent re-install: the backend-coverage step may have
+        # installed it already, but this leg can run on its own when the
+        # backend report step skips (e.g. .exec missing).
+        if: always()
+        run: python -m pip install --quiet defusedxml
 
       - name: Aggregate Playwright frontend (V8) coverage
         # Rolls per-test V8 dumps from the test-base fixture into one

@@ -124,6 +124,11 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
+      - name: Install defusedxml for coverage summary
+        # See coverage-summary.py header - it parses XML through defusedxml
+        # to dodge the stdlib parser's exposure to XXE / billion-laughs.
+        if: always()
+        run: python -m pip install --quiet defusedxml
       - name: Vitest coverage step summary
         if: always()
         run: |

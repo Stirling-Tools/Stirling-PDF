@@ -44,10 +44,16 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+# defusedxml hardens the parser against XXE / billion-laughs / entity-
+# expansion attacks. JaCoCo XML on a CI runner is trusted input today,
+# but using the hardened parser is a one-line change and silences
+# scanners that pattern-match on `xml.etree.ElementTree.parse`.
+from defusedxml.ElementTree import parse as _xml_parse
+from defusedxml.ElementTree import ParseError as _XMLParseError
 
 AREAS = ("core", "proprietary", "saas", "desktop")
 
@@ -126,8 +132,8 @@ def parse_jacoco_methods(path: Path) -> RowBuckets:
     if not path.exists():
         return row
     try:
-        root = ET.parse(path).getroot()
-    except ET.ParseError as exc:
+        root = _xml_parse(path).getroot()
+    except _XMLParseError as exc:
         print(f"::warning::Failed to parse {path}: {exc}", file=sys.stderr)
         return row
     for pkg in root.findall("package"):

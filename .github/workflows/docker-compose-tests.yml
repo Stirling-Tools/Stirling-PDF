@@ -128,6 +128,12 @@ jobs:
             echo "report=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install defusedxml for coverage summary
+        # coverage-summary.py parses JaCoCo XML through defusedxml -
+        # see the script header for context.
+        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        run: python -m pip install --quiet defusedxml
+
       - name: Cucumber coverage step summary
         if: always() && steps.cucumber-coverage.outputs.report == 'true'
         run: |
