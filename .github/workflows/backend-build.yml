@@ -167,27 +167,35 @@ jobs:
           if-no-files-found: warn
 
       - name: JaCoCo coverage step summary
-        if: always()
-        # `if: always()` so a partial run still posts whichever modules
-        # finished. The helper script tolerates missing XMLs by listing
-        # them as "skipped" rather than failing the step.
+        # Only the security-on leg posts coverage. The matrix exists to
+        # validate the build in both modes, but `./gradlew test` runs the
+        # same per-subproject unit tests in both legs - JaCoCo's
+        # `test.exec` files come out byte-identical, so a second summary
+        # would just bury the aggregate report further down the Summary
+        # tab.
+        if: always() && matrix.spring-security == false
         run: |
           python scripts/coverage-summary.py \
-            --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }}, security=${{ matrix.spring-security == true && 'off' || 'on' }})" \
+            --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }})" \
             --jacoco "common=app/common/build/reports/jacoco/test/jacocoTestReport.xml" \
             --jacoco "core=app/core/build/reports/jacoco/test/jacocoTestReport.xml" \
             --jacoco "proprietary=app/proprietary/build/reports/jacoco/test/jacocoTestReport.xml" \
             --github-step-summary
 
       - name: Upload raw JUnit .exec for aggregate merge
+        # Same dedup rationale as the summary step: the two legs produce
+        # identical .exec files. Uploading both meant the aggregate job
+        # was merging the same JUnit data twice (harmless for JaCoCo's
+        # report, wasteful for runtime + bandwidth).
+        #
         # Separate artifact from the HTML reports so the aggregate
         # workflow can grab just the .exec files with a name pattern
         # (`jacoco-exec-*`) instead of unpacking the whole test-reports
         # tarball.
-        if: always()
+        if: always() && matrix.spring-security == false
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: jacoco-exec-junit-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
+          name: jacoco-exec-junit-jdk-${{ matrix.jdk-version }}
           path: app/*/build/jacoco/*.exec
           retention-days: 7
           if-no-files-found: warn
