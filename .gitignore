@@ -32,6 +32,7 @@ exampleYmlFiles/stirling/
 /testing/cucumber/junit/
 /testing/cucumber/report.html
 /testing/.failed_tests
+/.test-state/
 SwaggerDoc.json
 
 # Runtime storage for uploaded files and user data (not Java source code)
@@ -156,7 +157,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
-frontend/src-tauri/provisioner/target
+frontend/editor/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -173,6 +174,7 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
+!.env.saas.example
 
 # VS Code
 /.vscode/**/*
@@ -264,5 +266,11 @@ docs/type3/signatures/
 # Type3 sample PDFs (development only)
 **/type3/samples/
 
+**/application-dev-local.properties
+
 # Claude
 .claude/
+
+# Playwright MCP screenshots / traces
+.playwright-mcp/
+*.playwright-mcp.png

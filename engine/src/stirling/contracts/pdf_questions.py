@@ -7,17 +7,18 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .common import (
+    AiFile,
     ConversationMessage,
     ExtractedFileText,
-    NeedContentResponse,
+    NeedIngestResponse,
     WorkflowOutcome,
 )
+from .pdf_edit import EditPlanResponse
 
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    page_text: list[ExtractedFileText] = Field(default_factory=list)
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
 
@@ -34,6 +35,14 @@ class PdfQuestionNotFoundResponse(ApiModel):
 
 type PdfQuestionTerminalResponse = PdfQuestionAnswerResponse | PdfQuestionNotFoundResponse
 type PdfQuestionResponse = Annotated[
-    PdfQuestionTerminalResponse | NeedContentResponse,
+    PdfQuestionTerminalResponse | NeedIngestResponse,
     Field(discriminator="outcome"),
 ]
+
+
+# ``orchestrate`` may also emit an ``EditPlanResponse`` on the math-routing
+# first turn (``outcome=PLAN`` with ``resume_with=PDF_QUESTION``). It's not in
+# ``PdfQuestionTerminalResponse`` because that alias would otherwise duplicate
+# the PLAN branch already provided by ``PdfEditTerminalResponse`` in the
+# top-level :class:`OrchestratorResponse` discriminated union.
+type PdfQuestionOrchestrateResponse = PdfQuestionResponse | EditPlanResponse
