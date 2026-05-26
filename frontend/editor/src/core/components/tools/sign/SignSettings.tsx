@@ -1137,7 +1137,7 @@ const SignSettings = ({
               gap: "0.4rem",
             }}
           >
-            <LocalIcon icon="pause-rounded" width={20} height={20} />
+            <LocalIcon icon="pause-circle-rounded" width={20} height={20} />
             <Text component="span" size="sm" fw={500}>
               {translate("mode.pause", "Pause placement")}
             </Text>
