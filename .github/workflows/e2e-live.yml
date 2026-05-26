@@ -49,9 +49,64 @@ jobs:
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
-      - name: Run live E2E tests (chromium)
+      - name: Run live E2E tests (chromium) with JaCoCo agent
         id: live-tests
+        env:
+          # Attaches the JaCoCo agent to the bootRun JVM (see
+          # .taskfiles/e2e.yml live:backend). The .exec gets flushed on
+          # graceful shutdown when the runner traps EXIT/INT/TERM, so the
+          # report step below sees a populated file.
+          COVERAGE: "1"
         run: task e2e:live
+      - name: Generate JaCoCo report from e2e:live .exec
+        if: always()
+        id: live-coverage
+        # `if: always()` so even a failed test run still produces a
+        # report from whatever flows did exercise the backend before
+        # the failure. The task itself tolerates a missing .exec
+        # (jacoco emits an empty report rather than crashing) but we
+        # guard with `test -s` to keep the job log clean.
+        run: |
+          if [ -s .test-state/playwright/jacoco.exec ]; then
+            ./gradlew jacocoReportFromExec \
+              -PexecFile=.test-state/playwright/jacoco.exec \
+              -PreportDir=build/reports/jacoco/e2e-live \
+              -PnoSpotless
+            echo "report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No e2e:live .exec found at .test-state/playwright/jacoco.exec; skipping report"
+            echo "report=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Python for coverage summary
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - name: e2e:live coverage step summary
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Playwright (live backend) JaCoCo coverage" \
+            --jacoco "e2e-live=build/reports/jacoco/e2e-live/jacocoTestReport.xml" \
+            --github-step-summary
+      - name: Upload e2e:live JaCoCo report
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-e2e-live-${{ github.run_id }}
+          path: build/reports/jacoco/e2e-live/
+          retention-days: 7
+
+      - name: Upload raw e2e:live .exec for aggregate merge
+        # Picked up by the coverage-aggregate workflow via the
+        # `jacoco-exec-*` artifact name pattern.
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-exec-e2e-live
+          path: .test-state/playwright/jacoco.exec
+          retention-days: 7
+          if-no-files-found: warn
       - name: Print backend log on failure
         if: failure() && steps.live-tests.conclusion == 'failure'
         run: |

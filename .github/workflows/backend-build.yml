@@ -166,6 +166,32 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
+      - name: JaCoCo coverage step summary
+        if: always()
+        # `if: always()` so a partial run still posts whichever modules
+        # finished. The helper script tolerates missing XMLs by listing
+        # them as "skipped" rather than failing the step.
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }}, security=${{ matrix.spring-security == true && 'off' || 'on' }})" \
+            --jacoco "common=app/common/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --jacoco "core=app/core/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --jacoco "proprietary=app/proprietary/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --github-step-summary
+
+      - name: Upload raw JUnit .exec for aggregate merge
+        # Separate artifact from the HTML reports so the aggregate
+        # workflow can grab just the .exec files with a name pattern
+        # (`jacoco-exec-*`) instead of unpacking the whole test-reports
+        # tarball.
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-exec-junit-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
+          path: app/*/build/jacoco/*.exec
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
         # The action only supports the pull_request event (it posts a PR comment),
         # so skip it for merge_group runs and workflow_dispatch.
