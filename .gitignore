@@ -23,6 +23,10 @@ customFiles/
 configs/
 watchedFolders/
 clientWebUI/
+# Scratch dir used by scripts/db-migration/generate-fixtures.ps1 and
+# scripts/db-migration/run-migration-test.sh - holds downloaded JARs and
+# disposable run dirs. Never committed.
+.alpha-local/
 !cucumber/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
