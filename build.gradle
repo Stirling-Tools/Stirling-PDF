@@ -468,11 +468,21 @@ subprojects {
                 // agent options (e.g. -PjacocoExec='out.exec,sessionid=evil').
                 // Today the value only comes from our own CI workflows, but
                 // validating defensively is cheap and silences Aikido.
-                if (execFile ==~ /.*[,=\r\n ].*/) {
+                //
+                // Control characters are checked via String.contains rather
+                // than inside a slashy regex character class - a literal NULL
+                // accidentally landing in the regex killed Groovy parsing on
+                // the previous attempt.
+                def hasBadChar = execFile.find(/[,= ]/) != null ||
+                        execFile.contains('\r') ||
+                        execFile.contains('\n') ||
+                        execFile.contains('\t')
+                if (hasBadChar) {
                     throw new GradleException(
-                            "jacocoExec='${execFile}' contains characters " +
-                            "(',', '=', or control chars) that would break " +
-                            "-javaagent option parsing. Choose a different path."
+                            "jacocoExec='" + execFile + "' contains characters " +
+                            "(',', '=', whitespace, or control chars) that " +
+                            "would break -javaagent option parsing. Choose " +
+                            "a different path."
                     )
                 }
                 runtimeArgs.add("-javaagent:${agentJar}=destfile=${execFile},output=file,append=false,dumponexit=true")

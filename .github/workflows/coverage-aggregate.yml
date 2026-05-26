@@ -65,8 +65,10 @@ jobs:
         run: python -m pip install --quiet defusedxml
 
       # Pattern matches every artifact this PR's producers might upload:
-      #   jacoco-exec-junit-jdk-25-spring-security-true
-      #   jacoco-exec-junit-jdk-25-spring-security-false
+      #   jacoco-exec-junit-jdk-25            (uploaded only by the saas
+      #                                         leg of backend-build, which
+      #                                         is a strict superset of the
+      #                                         core + proprietary legs)
       #   jacoco-exec-e2e-live
       #   jacoco-exec-cucumber
       # Each lands as a sibling dir under coverage-execs/, with the .exec
@@ -119,11 +121,13 @@ jobs:
           fi
 
       - name: Compile classes for JaCoCo class lookup
-        # jacocoReportFromExec needs the compiled .class files to map exec
-        # probes back to source. Skip tests to keep this fast - we only
-        # need byte code. Runs once and is reused by both report tasks.
+        # jacocoReportFromExec only needs the compiled .class files
+        # under each subproject's build/classes/java/main/. `classes`
+        # (compileJava + processResources) is enough; we skipped the
+        # heavier `assemble` to avoid building bootJar / fat jars that
+        # add 60+ seconds per run for no gain to the report.
         if: steps.inventory.outputs.found_all == 'true'
-        run: ./gradlew assemble -x test -PnoSpotless
+        run: ./gradlew classes -PnoSpotless
 
       - name: Generate e2e-only JaCoCo report
         # "Real user-flow" coverage: only counts code reached by an actual

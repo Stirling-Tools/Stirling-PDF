@@ -291,17 +291,18 @@ tasks:
       # mode). Explicit reporter list because v8 + json-summary is what the
       # coverage-summary.py helper consumes; html/text are kept for humans.
       #
-      # No explicit reportsDirectory: vitest resolves it relative to the
-      # project root (set by --root editor), so the default ./coverage
-      # lands at frontend/editor/coverage/. An explicit ./editor/coverage
-      # double-nests into frontend/editor/editor/coverage and breaks the
-      # CI upload path.
+      # reportsDirectory is pinned to ./coverage relative to vitest's root
+      # (--root editor), so output lands at frontend/editor/coverage/. The
+      # CI upload step reads from that path. An earlier attempt with
+      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
+      # pinning future-proofs against vitest changing the default.
       - >
         npx vitest run --root editor --coverage
         --coverage.provider=v8
         --coverage.reporter=text-summary
         --coverage.reporter=json-summary
         --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage
 
   # ============================================================
   # Code Generation
