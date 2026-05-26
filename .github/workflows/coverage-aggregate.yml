@@ -177,3 +177,45 @@ jobs:
           name: jacoco-aggregate-e2e-${{ github.run_id }}
           path: build/reports/jacoco/aggregate-e2e/
           retention-days: 14
+
+      # --------------------------------------------------------------
+      # Per-area matrix: rolls backend + frontend coverage into one
+      # table indexed by core/proprietary/saas/desktop. Pulls the
+      # frontend artifacts now (after the JaCoCo step has done its
+      # work) so the per-source backend summaries still render first
+      # even if the matrix step fails.
+      # --------------------------------------------------------------
+      - name: Download vitest coverage artifact
+        # frontend-validation uploads as `frontend-coverage`. Tolerate
+        # absence so a backend-only PR still produces the matrix with
+        # just backend rows populated.
+        if: always()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
+        with:
+          name: frontend-coverage
+          path: matrix-inputs/vitest/
+        continue-on-error: true
+
+      - name: Download Playwright frontend coverage artifact
+        # e2e-live uploads as `playwright-frontend-coverage-<run_id>`.
+        # Same tolerance as vitest - matrix script handles missing inputs.
+        if: always()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
+        with:
+          name: playwright-frontend-coverage-${{ github.run_id }}
+          path: matrix-inputs/playwright/
+        continue-on-error: true
+
+      - name: Coverage matrix step summary
+        if: always()
+        # Matrix references the two aggregate JaCoCo XMLs (already
+        # generated above) plus whichever frontend artifacts landed.
+        # Every input is optional; missing ones render as "-".
+        run: |
+          python scripts/coverage-matrix.py \
+            ${{ steps.inventory.outputs.found_all == 'true' && '--jacoco-all build/reports/jacoco/aggregate-all/jacocoTestReport.xml' || '' }} \
+            ${{ steps.inventory.outputs.found_e2e == 'true' && '--jacoco-e2e build/reports/jacoco/aggregate-e2e/jacocoTestReport.xml' || '' }} \
+            --vitest matrix-inputs/vitest/coverage-summary.json \
+            --playwright-frontend matrix-inputs/playwright/coverage-pw-summary/coverage-summary.json \
+            --title "Coverage matrix (per-area, e2e vs all)" \
+            --github-step-summary

@@ -174,13 +174,18 @@ jobs:
     secrets: inherit
 
   # Coverage aggregate: merges the JUnit + e2e:live + cucumber .exec
-  # artifacts produced by the jobs above into one report. `if: always()`
-  # so a producer failing partway still gets credit for the coverage it
-  # did record. Advisory only - intentionally NOT in all-checks-passed,
-  # so a flaky aggregate run never blocks merging.
+  # artifacts produced by the jobs above into one report, plus pulls
+  # in vitest + Playwright frontend coverage for the per-area matrix.
+  # `if: always()` so a producer failing partway still gets credit
+  # for whatever did record. Advisory only - intentionally NOT in
+  # all-checks-passed, so a flaky aggregate run never blocks merging.
   coverage-aggregate:
     if: always()
-    needs: [build, playwright-e2e-live, docker-compose-tests]
+    needs:
+      - build
+      - playwright-e2e-live
+      - docker-compose-tests
+      - frontend-validation
     permissions:
       contents: read
     uses: ./.github/workflows/coverage-aggregate.yml
