@@ -19,13 +19,13 @@ from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_draft_router,
+    document_router,
     execution_router,
     ledger_router,
     orchestrator_router,
     pdf_comments_router,
     pdf_edit_router,
     pdf_question_router,
-    rag_router,
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
@@ -57,7 +57,7 @@ async def lifespan(fast_api: FastAPI):
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     yield
-    await runtime.rag_service.close()
+    await runtime.documents.close()
     if tracer_provider:
         tracer_provider.shutdown()
 
@@ -69,7 +69,7 @@ app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
 app.include_router(agent_draft_router)
 app.include_router(execution_router)
-app.include_router(rag_router)
+app.include_router(document_router)
 app.include_router(ledger_router)
 app.include_router(pdf_comments_router)
 

@@ -136,6 +136,7 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtim
         PdfEditPlanSelection(
             operations=[ToolEndpoint.ROTATE_PDF, ToolEndpoint.FLATTEN],
             summary="Rotate the PDF, then compress it.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
@@ -294,6 +295,7 @@ async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: Ap
         PdfEditPlanSelection(
             operations=[ToolEndpoint.ROTATE_PDF],
             summary="Rotate the PDF.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
@@ -390,6 +392,7 @@ async def test_pdf_edit_agent_rejects_plan_referencing_unavailable_operations(
         PdfEditPlanSelection(
             operations=[ToolEndpoint.COMPRESS_PDF],
             summary="Compress.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
@@ -420,6 +423,7 @@ async def test_pdf_edit_agent_supports_literal_find_replace(runtime: AppRuntime)
         PdfEditPlanSelection(
             operations=[ToolEndpoint.EDIT_TEXT],
             summary="Replace 2025 with 2026 throughout the document.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
@@ -466,6 +470,7 @@ async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRun
         PdfEditPlanSelection(
             operations=[ToolEndpoint.EDIT_TEXT],
             summary="Fix typos on page 3.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
@@ -515,6 +520,7 @@ async def test_pdf_edit_agent_supports_natural_language_directed_edit(runtime: A
         PdfEditPlanSelection(
             operations=[ToolEndpoint.EDIT_TEXT],
             summary="Update the company name to Acme Corp.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
@@ -551,6 +557,7 @@ async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: 
         PdfEditPlanSelection(
             operations=[ToolEndpoint.EDIT_TEXT, ToolEndpoint.ROTATE_PDF],
             summary="Remove DRAFT marker, then rotate.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
