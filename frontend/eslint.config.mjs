@@ -5,12 +5,19 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-const srcGlobs = ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"];
+const srcGlobs = [
+  "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
+  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
+  "portal/main.tsx",
+  "shared/**/*.{js,mjs,jsx,ts,tsx}",
+];
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
   "editor/*.config.{js,ts,mjs}",
+  "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
+  ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
 
 const baseRestrictedImportPatterns = [
@@ -36,6 +43,7 @@ export default defineConfig(
       "editor/src-tauri",
       "editor/playwright-report",
       "editor/test-results",
+      "portal/public",
     ],
   },
   eslint.configs.recommended,
@@ -97,7 +105,7 @@ export default defineConfig(
   // from editor or portal layers, extraction to a standalone package later
   // becomes a rewrite instead of a `git mv`.
   {
-    files: ["src/shared/**/*.{js,mjs,jsx,ts,tsx}"],
+    files: ["shared/**/*.{js,mjs,jsx,ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -107,19 +115,19 @@ export default defineConfig(
             {
               regex: "^@app/",
               message:
-                "src/shared/ must not depend on editor or portal layers. Use @shared/* or third-party imports only.",
+                "shared/ must not depend on editor or portal layers. Use @shared/* or third-party imports only.",
             },
             {
               regex: "^@core/",
-              message: "src/shared/ must not depend on src/core/.",
+              message: "shared/ must not depend on editor/src/core/.",
             },
             {
               regex: "^@proprietary/",
-              message: "src/shared/ must not depend on src/proprietary/.",
+              message: "shared/ must not depend on editor/src/proprietary/.",
             },
             {
               regex: "^@tauri-apps/",
-              message: "src/shared/ must remain web-compatible (no Tauri APIs).",
+              message: "shared/ must remain web-compatible (no Tauri APIs).",
             },
           ],
         },
@@ -133,10 +141,8 @@ export default defineConfig(
       "editor/src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
-      // Portal + shared globs still reference src/ here; Phase 3 will update
-      // them after src/portal → portal/src and src/shared → shared.
-      "src/portal/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/shared/**/*.{js,mjs,jsx,ts,tsx}",
+      "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
+      "shared/**/*.{js,mjs,jsx,ts,tsx}",
     ],
     languageOptions: {
       parserOptions: {

@@ -1,0 +1,96 @@
+.sui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.sui-chip--sm {
+  padding: var(--space-0_5) var(--space-2);
+  font-size: 0.6875rem;
+}
+.sui-chip--md {
+  padding: var(--space-1) var(--space-2_5, 0.5rem);
+  font-size: 0.75rem;
+}
+.sui-chip--md {
+  padding: var(--space-1) 0.625rem;
+  font-size: 0.75rem;
+}
+
+.sui-chip--neutral {
+  background: var(--color-bg-muted);
+  color: var(--color-text-2);
+  border-color: var(--color-border);
+}
+.sui-chip--blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+  border-color: var(--color-blue-border);
+}
+.sui-chip--purple {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border-color: var(--color-purple-border);
+}
+.sui-chip--green {
+  background: var(--color-green-light);
+  color: var(--color-green);
+  border-color: var(--color-green-border);
+}
+.sui-chip--amber {
+  background: var(--color-amber-light);
+  color: var(--color-amber-dark);
+  border-color: var(--color-amber-border);
+}
+.sui-chip--red {
+  background: var(--color-red-light);
+  color: var(--color-red);
+  border-color: var(--color-red-border);
+}
+
+.sui-chip--interactive {
+  cursor: pointer;
+}
+.sui-chip--interactive:hover {
+  transform: translateY(-0.0625rem);
+  filter: brightness(1.05);
+}
+
+.sui-chip__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.sui-chip__icon {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.sui-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  color: inherit;
+  opacity: 0.6;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+.sui-chip__remove:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}

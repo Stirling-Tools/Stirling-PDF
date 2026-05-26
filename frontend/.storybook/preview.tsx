@@ -4,23 +4,16 @@ import { MemoryRouter } from "react-router-dom";
 import { useEffect } from "react";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
 
-import {
-  TierProvider,
-  useTier,
-  type Tier,
-} from "@app/contexts/TierContext";
+import { TierProvider, type Tier } from "@app/contexts/TierContext";
 import { ThemeProvider } from "@app/contexts/ThemeContext";
 import { UIProvider } from "@app/contexts/UIContext";
 import { handlers } from "@app/mocks/handlers";
 
-import "../src/shared/tokens/tokens.css";
-import "../src/shared/tokens/base.css";
+import "@shared/tokens/tokens.css";
+import "@shared/tokens/base.css";
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
-initialize(
-  { onUnhandledRequest: "bypass" },
-  handlers,
-);
+initialize({ onUnhandledRequest: "bypass" }, handlers);
 
 /**
  * Bridge between Storybook's `tier` global toolbar and the actual TierProvider.

@@ -114,10 +114,9 @@ tasks:
 
   dev:portal:
     desc: "Start developer portal dev server"
-    deps: [prepare]
+    deps: [install]
     cmds:
-      - task: dev:_run
-        vars: { MODE: portal, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+      - npx vite portal --port {{.PORT | default "5173"}}{{if .OPEN}} --open{{end}}
 
   # ============================================================
   # Build
@@ -165,9 +164,9 @@ tasks:
 
   build:portal:
     desc: "Build developer portal"
-    deps: [prepare]
+    deps: [install]
     cmds:
-      - npx vite build --mode portal
+      - npx vite build portal
 
   storybook:
     desc: "Start Storybook dev server"
@@ -263,9 +262,9 @@ tasks:
 
   typecheck:portal:
     desc: "Typecheck developer portal build variant"
-    deps: [prepare]
+    deps: [install]
     cmds:
-      - npx tsc --noEmit --project src/portal/tsconfig.json
+      - npx tsc --noEmit --project portal/tsconfig.json
 
   typecheck:all:
     desc: "Typecheck all build variants"
