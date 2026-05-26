@@ -1,6 +1,4 @@
-import {
-  AdjustPageScaleParameters,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import { AdjustPageScaleParameters } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 export const buildAdjustPageScaleFormData = (
   parameters: AdjustPageScaleParameters,
