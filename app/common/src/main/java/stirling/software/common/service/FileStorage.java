@@ -34,6 +34,28 @@ public class FileStorage {
     private final FileStore fileStore;
 
     public String storeFile(MultipartFile file) throws IOException {
+        // Fast path: when Spring buffered the multipart to disk (typical for large uploads), the
+        // backing Resource exposes a real File. Hand the Path to the FileStore so it can do a
+        // file-to-file copy (Linux sendfile, no copy through Java heap) rather than streaming
+        // the bytes through an 8K buffer. Falls back to the InputStream path for in-memory
+        // multiparts, exotic Resource impls, and anything that does not back onto a File.
+        Resource res;
+        try {
+            res = file.getResource();
+        } catch (RuntimeException ignored) {
+            res = null;
+        }
+        if (res != null && res.isFile()) {
+            try {
+                FileStore.Stored stored =
+                        fileStore.store(res.getFile().toPath(), file.getOriginalFilename());
+                log.debug("Stored file with ID: {} (fast path)", stored.fileId());
+                return stored.fileId();
+            } catch (IOException ex) {
+                // Some Resource impls advertise isFile()=true but throw on getFile(); fall through.
+                log.debug("Resource fast path failed, falling back to stream copy", ex);
+            }
+        }
         try (InputStream in = file.getInputStream()) {
             FileStore.Stored stored = fileStore.store(in, file.getOriginalFilename());
             log.debug("Stored file with ID: {}", stored.fileId());

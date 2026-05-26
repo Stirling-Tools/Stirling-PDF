@@ -45,6 +45,36 @@ public class LocalDiskFileStore implements FileStore {
         }
     }
 
+    /**
+     * File-to-file copy. {@link Files#copy(Path, Path, java.nio.file.CopyOption...)} can use {@code
+     * sendfile(2)} on Linux for a zero-copy kernel transfer when source and destination share a
+     * filesystem, avoiding the streaming overhead of pulling the bytes through the JVM heap.
+     */
+    @Override
+    public Stored store(Path source, String originalName) throws IOException {
+        String fileId = UUID.randomUUID().toString();
+        Path filePath = resolve(fileId);
+        Files.createDirectories(filePath.getParent());
+        boolean success = false;
+        try {
+            Files.copy(source, filePath);
+            long size = Files.size(filePath);
+            success = true;
+            return new Stored(fileId, size);
+        } finally {
+            if (!success) {
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
+            }
+        }
+    }
+
     @Override
     public InputStream retrieve(String fileId) throws IOException {
         return new BufferedInputStream(Files.newInputStream(resolve(fileId)));
