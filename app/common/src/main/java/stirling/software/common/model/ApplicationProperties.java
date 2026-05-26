@@ -97,7 +97,14 @@ public class ApplicationProperties {
         EncodedResource encodedResource = new EncodedResource(resource);
         PropertySource<?> propertySource =
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
-        environment.getPropertySources().addFirst(propertySource);
+
+        boolean saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        if (saasActive) {
+            // Saas-pinned values in application-saas.properties must beat settings.yml.
+            environment.getPropertySources().addLast(propertySource);
+        } else {
+            environment.getPropertySources().addFirst(propertySource);
+        }
 
         log.debug("Loaded properties: {}", propertySource.getSource());
 

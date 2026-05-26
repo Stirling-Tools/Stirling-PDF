@@ -59,4 +59,25 @@ dependencies {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         exclude group: 'com.google.code.gson', module: 'gson'
     }
+
+    api 'com.stirling:jpdfium:1.0.0'
+
+    // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
+    def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
+    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
+    def jpdfiumPlatforms = jpdfiumPlatformsProp == 'all'
+            ? jpdfiumAllPlatforms
+            : jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
+    def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
+    if (jpdfiumInvalid) {
+        throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
+                "Valid: ${jpdfiumAllPlatforms.join(', ')} or 'all'.")
+    }
+    logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms.join(', ')}")
+    jpdfiumPlatforms.each { platform ->
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.0"
+    }
+
+    // ArchUnit: enforces module dependency direction (see ArchitectureTest)
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }
