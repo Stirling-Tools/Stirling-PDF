@@ -15,14 +15,30 @@ const path = require("path");
 
 const REMOVE = process.argv.includes("--remove");
 const CHECK = process.argv.includes("--check");
-const VERBOSE = process.argv.includes("--verbose") || process.argv.includes("-v");
+const VERBOSE =
+  process.argv.includes("--verbose") || process.argv.includes("-v");
 
 const EDITOR_ROOT = path.join(__dirname, "..");
 const THEME_CSS_PATH = path.join(EDITOR_ROOT, "src/core/styles/theme.css");
 
-const SCAN_EXTENSIONS = new Set([".ts", ".tsx", ".css", ".js", ".jsx", ".mts", ".mjs"]);
+const SCAN_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".css",
+  ".js",
+  ".jsx",
+  ".mts",
+  ".mjs",
+]);
 
-const SKIP_DIRS = new Set(["node_modules", "dist", ".git", "target", "coverage", ".turbo"]);
+const SKIP_DIRS = new Set([
+  "node_modules",
+  "dist",
+  ".git",
+  "target",
+  "coverage",
+  ".turbo",
+]);
 
 // ─── Parse declarations ───────────────────────────────────────────────────────
 
@@ -161,18 +177,27 @@ function main() {
   const sortedUnused = [...unused].sort();
   console.log(`\nUnused variables (${unused.size}):`);
   for (const name of sortedUnused) {
-    const lineNums = declarations.get(name).map((i) => i + 1).join(", ");
-    console.log(`  ${name}  (line${declarations.get(name).length > 1 ? "s" : ""} ${lineNums})`);
+    const lineNums = declarations
+      .get(name)
+      .map((i) => i + 1)
+      .join(", ");
+    console.log(
+      `  ${name}  (line${declarations.get(name).length > 1 ? "s" : ""} ${lineNums})`,
+    );
   }
 
   if (CHECK) {
-    console.error("\ntheme.css has unused CSS variables. Run the following to fix:");
+    console.error(
+      "\ntheme.css has unused CSS variables. Run the following to fix:",
+    );
     console.error("\n  task frontend:theme:clean-unused-vars REMOVE=true\n");
     process.exit(1);
   }
 
   if (!REMOVE) {
-    console.log("\nDry run — no changes written. Re-run with --remove to delete unused declarations.");
+    console.log(
+      "\nDry run — no changes written. Re-run with --remove to delete unused declarations.",
+    );
     return;
   }
 

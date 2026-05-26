@@ -295,6 +295,11 @@
   flex-shrink: 0;
 }
 
+[data-mantine-color-scheme="dark"] .tool-panel__active-tool-pill {
+  background: transparent;
+  border-color: var(--border-subtle);
+}
+
 [data-mantine-color-scheme="dark"] .tool-panel__active-tool-pill-icon {
   background: color-mix(
     in srgb,

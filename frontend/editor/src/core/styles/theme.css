@@ -350,12 +350,12 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  /* Dark theme gray scale (inverted) */
-  --gray-50: 17 24 39;
-  --gray-100: 31 35 41;
-  --gray-200: 42 47 54;
-  --gray-300: 55 65 81;
-  --gray-400: 75 85 99;
+  /* Dark theme gray scale — very dark, near-black */
+  --gray-50: 7 10 14;
+  --gray-100: 10 13 18;
+  --gray-200: 15 19 24;
+  --gray-300: 22 28 36;
+  --gray-400: 36 44 58;
   --gray-500: 107 114 128;
   --gray-600: 156 163 175;
   --gray-700: 209 213 219;
@@ -363,9 +363,9 @@
   --gray-900: 243 244 246;
 
   /* Dark semantic colors for Tailwind */
-  --surface: 31 35 41;
-  --background: 42 47 54;
-  --border: 55 65 81;
+  --surface: 15 19 24;
+  --background: 10 13 18;
+  --border: 22 28 36;
 
   /* Dark theme Mantine colors */
   --color-red-50: #2d1b1b;
@@ -379,11 +379,11 @@
   --color-red-800: #991b1b;
   --color-red-900: #7f1d1d;
 
-  --color-gray-50: #111827;
-  --color-gray-100: #1f2329;
-  --color-gray-200: #2a2f36;
-  --color-gray-300: #374151;
-  --color-gray-400: #4b5563;
+  --color-gray-50: #070a0e;
+  --color-gray-100: #0a0d12;
+  --color-gray-200: #0f1318;
+  --color-gray-300: #161c24;
+  --color-gray-400: #242c3a;
   --color-gray-500: #6b7280;
   --color-gray-600: #9ca3af;
   --color-gray-700: #d1d5db;
@@ -391,20 +391,20 @@
   --color-gray-900: #f3f4f6;
 
   /* Category colors - same as light mode for consistency */
-  --category-color-removal: #ef4444; /* Red for removal tools */
-  --category-color-security: #f59e0b; /* Orange for security tools */
-  --category-color-formatting: #8b5cf6; /* Purple for formatting tools */
-  --category-color-extraction: #06b6d4; /* Cyan for extraction tools */
-  --category-color-signing: #10b981; /* Green for signing tools */
-  --category-color-general: #3b82f6; /* Blue for general tools */
-  --category-color-verification: #f97316; /* Orange for verification tools */
-  --category-color-automation: #ec4899; /* Pink for automation tools */
-  --category-color-developer: #6b7280; /* Gray for developer tools */
-  --category-color-default: #6b7280; /* Default gray */
+  --category-color-removal: #ef4444;
+  --category-color-security: #f59e0b;
+  --category-color-formatting: #8b5cf6;
+  --category-color-extraction: #06b6d4;
+  --category-color-signing: #10b981;
+  --category-color-general: #3b82f6;
+  --category-color-verification: #f97316;
+  --category-color-automation: #ec4899;
+  --category-color-developer: #6b7280;
+  --category-color-default: #6b7280;
 
   /* Special section colors - same as light mode for consistency */
-  --special-color-favorites: #ffc107; /* Yellow/gold for favorites */
-  --special-color-recommended: #1bb1d4; /* Cyan for recommended */
+  --special-color-favorites: #ffc107;
+  --special-color-recommended: #1bb1d4;
 
   /* Success (green) - dark */
   --color-green-50: #052e16;
@@ -431,40 +431,39 @@
   --color-yellow-900: #fef9c3;
 
   /* Dark theme semantic colors */
-  --bg-surface: #2a2f36;
-  --bg-raised: #1f2329;
-  --bg-muted: #1f2329;
-  --bg-background: #2a2f36;
-  --bg-toolbar: #1f2329;
-  --bg-file-manager: #1f2329;
-  --bg-file-list: #2a2f36;
+  --bg-surface: #0f1318;
+  --bg-raised: #0a0d12;
+  --bg-muted: #0a0d12;
+  --bg-background: #0a0d12;
+  --bg-toolbar: #0a0d12;
+  --bg-file-manager: #0a0d12;
+  --bg-file-list: #0f1318;
   --btn-open-file: #0a8bff;
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
-  /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
+  --text-primary: #f0f2f5;
+  --text-secondary: #c5ccd6;
+  --text-muted: #8b96a3;
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2a2f36;
-  --border-default: #3a4047;
-  --border-strong: #4b5563;
-  --hover-bg: #374151;
-  --active-bg: #4b5563;
+  --border-subtle: #0f1318;
+  --border-default: #161c24;
+  --border-strong: #242c3a;
+  --hover-bg: #13181f;
+  --active-bg: #1a2030;
   --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
-  --icon-user-bg: #2a2f36;
-  --icon-user-color: #6e7581;
-  --icon-tools-bg: #4b525a;
-  --icon-tools-color: #eaeaea;
-  --icon-files-color: #eaeaea;
+  --icon-user-bg: #0f1318;
+  --icon-user-color: #5a6475;
+  --icon-tools-bg: #161c24;
+  --icon-tools-color: #d8dce4;
+  --icon-files-color: #d8dce4;
 
   /* Inactive icon colors for dark mode */
-  --icon-inactive-bg: #2a2f36;
-  --icon-inactive-color: #6e7581;
+  --icon-inactive-bg: #0f1318;
+  --icon-inactive-color: #5a6475;
 
   /* Dark mode tooltip colors */
-  --tooltip-title-bg: #4b525a;
+  --tooltip-title-bg: #161c24;
   --tooltip-title-color: #fff;
   --tooltip-header-bg: var(--bg-raised);
   --tooltip-header-color: var(--text-primary);
@@ -480,43 +479,40 @@
 
   /* container */
   --landing-inner-paper-bg: var(--bg-raised);
-  --landing-inner-paper-border: #2d3237;
+  --landing-inner-paper-border: #161c24;
 
   /* landing dark overrides */
   --landing-doc-shadow-back-idle:
-    0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+    0 4px 20px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
   --landing-doc-shadow-front-idle:
-    0 8px 30px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3),
+    0 8px 30px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.04);
   --landing-button-color: #ffffff;
 
   /* selected file header colors for dark */
   --header-selected-bg: #1e88e5;
   --header-selected-fg: #ffffff;
-  /* file card background (dark) */
-  --file-card-bg: #1f2329;
-  --accordion-item-bg: #373d45; /* accordion item background - more distinguishable */
-
-  /* shadows */
+  --file-card-bg: #0a0d12;
+  --accordion-item-bg: #13181f;
 
   /* Adjust shadows for dark mode */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
 
   --tools-text-and-icon-color: var(--text-primary);
 
   /* Tool picker sticky header variables (dark mode) */
-  --tool-header-border: #3a4047;
-  --tool-header-text: #d0d6dc;
-  --tool-header-badge-bg: #4b525a;
-  --tool-header-badge-text: #ffffff;
+  --tool-header-border: #161c24;
+  --tool-header-text: #c5ccd6;
+  --tool-header-badge-bg: #161c24;
+  --tool-header-badge-text: #f0f2f5;
 
   /* Subcategory title styling (dark mode) */
-  --tool-subcategory-text-color: #9ca3af; /* lighter text in dark mode as well */
-  --tool-subcategory-rule-color: #3a4047; /* doubly lighter (relative) line in dark */
+  --tool-subcategory-text-color: #8b96a3;
+  --tool-subcategory-rule-color: #161c24;
 
   /* PDF text selection colors (dark mode) */
   --pdf-selection-bg: rgba(96, 165, 250, 0.25);
@@ -524,69 +520,67 @@
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #ffffff !important;
-  --input-bg: #4b525a;
+  --input-bg: #161c24;
 
   /* Tool panel search bar background colors (dark mode) */
-  --tool-panel-search-bg: #1f2329;
-  --tool-panel-search-border-bottom: #4b525a;
+  --tool-panel-search-bg: #0a0d12;
+  --tool-panel-search-border-bottom: #242c3a;
 
-  --information-text-bg: #292e34;
-  --information-text-color: #ececec;
+  --information-text-bg: #0a0d12;
+  --information-text-color: #d8dce4;
 
   /* Bulk selection panel specific colors (dark mode) */
-  --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */
-  --bulk-card-bg: var(--bg-raised); /* dark background for cards */
-  --bulk-card-border: var(
-    --border-default
-  ); /* default border for cards and buttons */
-  --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
-  --unsupported-bar-bg: #1f2329;
-  --unsupported-bar-border: #4b525a;
+  --bulk-panel-bg: var(--bg-raised);
+  --bulk-card-bg: var(--bg-raised);
+  --bulk-card-border: var(--border-default);
+  --bulk-card-hover-border: var(--border-strong);
+  --unsupported-bar-bg: #0a0d12;
+  --unsupported-bar-border: #242c3a;
 
   /* Config Modal colors (dark mode) */
-  --modal-nav-bg: #1f2329;
-  --modal-nav-section-title: #9ca3af;
-  --modal-nav-item: #d0d6dc;
+  --modal-nav-bg: #0a0d12;
+  --modal-nav-section-title: #8b96a3;
+  --modal-nav-item: #c5ccd6;
   --modal-nav-item-active: #0a8bff;
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
-  --modal-content-bg: #2a2f36;
+  --modal-content-bg: #0f1318;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
   /* Onboarding (dark mode) */
-  --onboarding-title: #f9fafb;
-  --onboarding-body: #d1d5db;
+  --onboarding-title: #f0f2f5;
+  --onboarding-body: #c5ccd6;
   --onboarding-primary-button-bg: #ffffff;
-  --onboarding-primary-button-text: #0b1220;
+  --onboarding-primary-button-text: #0a0d12;
   --onboarding-secondary-button-bg: transparent;
-  --onboarding-secondary-button-text: #e5e7eb;
-  --onboarding-secondary-button-border: #3a4047;
-  --onboarding-step-active: #e5e7eb;
-  --onboarding-step-inactive: #4b5563;
+  --onboarding-secondary-button-text: #d8dce4;
+  --onboarding-secondary-button-border: #161c24;
+  --onboarding-step-active: #d8dce4;
+  --onboarding-step-inactive: #242c3a;
+
   /* API Keys section colors (dark mode) */
-  --api-keys-card-bg: #2a2f36;
-  --api-keys-card-border: #3a4047;
+  --api-keys-card-bg: #0f1318;
+  --api-keys-card-border: #161c24;
   --api-keys-card-shadow: none;
-  --api-keys-input-bg: #1f2329;
-  --api-keys-input-border: #3a4047;
-  --api-keys-button-bg: #3a4047;
-  --api-keys-button-color: #d0d6dc;
+  --api-keys-input-bg: #0a0d12;
+  --api-keys-input-border: #161c24;
+  --api-keys-button-bg: #161c24;
+  --api-keys-button-color: #c5ccd6;
 
   /* Code token colors (dark mode - Cursor-like) */
-  --code-kw-color: #c792ea; /* purple */
-  --code-str-color: #c3e88d; /* green */
-  --code-num-color: #f78c6c; /* orange */
-  --code-com-color: #697098; /* muted gray-blue */
-  /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
+  --code-kw-color: #c792ea;
+  --code-str-color: #c3e88d;
+  --code-num-color: #f78c6c;
+  --code-com-color: #697098;
 
-  /* Compare page label chip (dark mode): slightly darker than surrounding rows */
-  --compare-page-label-bg: #1f2329;
+  /* Compare page label chip (dark mode) */
+  --compare-page-label-bg: #0a0d12;
   --compare-page-label-fg: var(--text-secondary);
 
   /* Status indicator dot ring shadow (dark) */
   --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.18);
 
   /* Input element styling (dark) */
-  --input-bg: #4b525a;
+  --input-bg: #161c24;
 
   /* Select/dropdown placeholder state (dark) */
   --select-placeholder-bg: var(--mantine-color-dark-5);
@@ -600,6 +594,195 @@
   --dropdown-panel-bg: var(--mantine-color-dark-7);
   --dropdown-panel-border: var(--mantine-color-dark-4);
   --dropdown-group-label: var(--mantine-color-dark-2);
+}
+
+/* ── Midnight theme — blue-tinted dark workbench ── */
+/* Applied on top of dark mode: html has both data-mantine-color-scheme="dark"
+   and data-color-scheme="midnight" */
+[data-color-scheme="midnight"] {
+  --gray-50: 21 26 38;
+  --gray-100: 30 36 52;
+  --gray-200: 45 50 72;
+  --gray-300: 58 65 90;
+  --gray-400: 75 85 99;
+  --gray-500: 107 114 128;
+  --gray-600: 156 163 175;
+  --gray-700: 209 213 219;
+  --gray-800: 229 231 235;
+  --gray-900: 243 244 246;
+
+  --surface: 30 36 52;
+  --background: 21 26 38;
+  --border: 58 65 90;
+
+  --color-gray-50: #151a24;
+  --color-gray-100: #1a2030;
+  --color-gray-200: #1e2435;
+  --color-gray-300: #252836;
+  --color-gray-400: #2d3340;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #9ca3af;
+  --color-gray-700: #d1d5db;
+  --color-gray-800: #e5e7eb;
+  --color-gray-900: #f3f4f6;
+
+  --category-color-general: #4b77e6;
+
+  --bg-surface: #1e2435;
+  --bg-raised: #1a2030;
+  --bg-muted: #1a2030;
+  --bg-background: #151a24;
+  --bg-toolbar: #1e2435;
+  --bg-file-manager: #1a2030;
+  --bg-file-list: #1e2435;
+  --btn-open-file: #4b77e6;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-always-dark: #1f2937;
+  --text-always-dark-muted: #6b7280;
+  --border-subtle: #2d3340;
+  --border-default: #3a4152;
+  --border-strong: #4a5568;
+  --hover-bg: #252836;
+  --active-bg: #2d3340;
+  --automation-entry-hover-bg: var(--color-gray-200);
+
+  --icon-user-bg: #1e2435;
+  --icon-user-color: #6b7280;
+  --icon-tools-bg: #2d3340;
+  --icon-tools-color: #cbd5e1;
+  --icon-files-color: #4b77e6;
+  --icon-inactive-bg: #1e2435;
+  --icon-inactive-color: #6b7280;
+
+  --tooltip-title-bg: #252836;
+  --tooltip-title-color: #f1f5f9;
+  --tooltip-header-bg: #1a2030;
+  --tooltip-header-color: #f1f5f9;
+  --tooltip-border: var(--border-default);
+
+  --accent-interactive: #4b77e6;
+  --text-instruction: #4b77e6;
+  --text-brand-accent: #60a5fa;
+
+  --spdf-compare-removed-badge-fg: var(--color-red-500);
+  --spdf-compare-added-badge-fg: var(--color-green-500);
+
+  --landing-inner-paper-bg: #1a2030;
+  --landing-inner-paper-border: #3a4152;
+  --landing-button-bg: #252836;
+  --landing-button-color: #f1f5f9;
+  --landing-button-border: #3a4152;
+  --landing-drop-inner-paper-bg: #1e2435;
+  --landing-drop-inner-paper-border: #3a4152;
+
+  --landing-doc-shadow-back-idle:
+    0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --landing-doc-shadow-front-idle:
+    0 8px 30px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(75, 119, 230, 0.08);
+
+  --header-selected-bg: #4b77e6;
+  --header-selected-fg: #ffffff;
+  --file-card-bg: #1a2030;
+  --accordion-item-bg: #252836;
+
+  --card-selected-border: #4b77e6;
+  --checkbox-checked-bg: #4b77e6;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+
+  --tools-text-and-icon-color: #cbd5e1;
+
+  --tool-header-border: #3a4152;
+  --tool-header-text: #cbd5e1;
+  --tool-header-badge-bg: #252836;
+  --tool-header-badge-text: #f1f5f9;
+
+  --tool-subcategory-text-color: #94a3b8;
+  --tool-subcategory-rule-color: #3a4152;
+
+  --pdf-selection-bg: rgba(75, 119, 230, 0.25);
+  --pdf-selection-ring: rgba(75, 119, 230, 0.28);
+
+  --search-text-and-icon-color: #f1f5f9 !important;
+  --input-bg: #252836;
+
+  --tool-panel-search-bg: #1a2030;
+  --tool-panel-search-border-bottom: #3a4152;
+
+  --information-text-bg: #1e2435;
+  --information-text-color: #cbd5e1;
+
+  --bulk-panel-bg: var(--bg-raised);
+  --bulk-card-bg: var(--bg-raised);
+  --bulk-card-border: var(--border-default);
+  --bulk-card-hover-border: var(--border-strong);
+  --unsupported-bar-bg: #1a2030;
+  --unsupported-bar-border: #3a4152;
+
+  --modal-nav-bg: #1a2030;
+  --modal-nav-section-title: #94a3b8;
+  --modal-nav-item: #cbd5e1;
+  --modal-nav-item-active: #4b77e6;
+  --modal-nav-item-active-bg: rgba(75, 119, 230, 0.18);
+  --modal-content-bg: #1e2435;
+  --modal-header-border: rgba(255, 255, 255, 0.08);
+
+  --onboarding-title: #f1f5f9;
+  --onboarding-body: #cbd5e1;
+  --onboarding-primary-button-bg: #4b77e6;
+  --onboarding-primary-button-text: #ffffff;
+  --onboarding-secondary-button-bg: transparent;
+  --onboarding-secondary-button-text: #cbd5e1;
+  --onboarding-secondary-button-border: #3a4152;
+  --onboarding-step-active: #cbd5e1;
+  --onboarding-step-inactive: #3a4152;
+
+  --api-keys-card-bg: #1e2435;
+  --api-keys-card-border: #3a4152;
+  --api-keys-card-shadow: none;
+  --api-keys-input-bg: #1a2030;
+  --api-keys-input-border: #3a4152;
+  --api-keys-button-bg: #252836;
+  --api-keys-button-color: #cbd5e1;
+
+  --code-kw-color: #7aa2f7;
+  --code-str-color: #9ece6a;
+  --code-num-color: #ff9e64;
+  --code-com-color: #565f89;
+
+  --compare-page-label-bg: #1a2030;
+  --compare-page-label-fg: var(--text-secondary);
+
+  --status-dot-ring: 0 0 0 2px rgba(75, 119, 230, 0.25);
+
+  --select-placeholder-bg: var(--mantine-color-dark-5);
+  --select-placeholder-text: var(--mantine-color-dark-2);
+
+  --dropdown-trigger-bg: var(--mantine-color-dark-6);
+  --dropdown-trigger-text: var(--mantine-color-dark-0);
+  --dropdown-trigger-text-disabled: var(--mantine-color-dark-1);
+  --dropdown-trigger-icon: var(--mantine-color-dark-2);
+  --dropdown-panel-bg: var(--mantine-color-dark-7);
+  --dropdown-panel-border: var(--mantine-color-dark-4);
+  --dropdown-group-label: var(--mantine-color-dark-2);
+
+  --link-hover-bg: rgba(75, 119, 230, 0.06);
+  --link-hover-border: rgba(75, 119, 230, 0.2);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(75, 119, 230, 0.1), 0 1px 3px rgba(75, 119, 230, 0.08);
+  --link-focus-ring: rgba(75, 119, 230, 0.35);
+  --link-toolbar-bg: rgba(21, 26, 36, 0.94);
+  --link-toolbar-border: rgba(255, 255, 255, 0.1);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(75, 119, 230, 0.08);
 }
 
 /* Dropzone drop state styling */
@@ -629,6 +812,19 @@
 [data-mantine-color-scheme="dark"]
   .plan-button:not(:disabled):not([data-disabled]) {
   background-color: #1c598e !important;
+}
+
+[data-color-scheme="midnight"]
+  .plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #4b77e6 !important;
+}
+
+/* Override Mantine's internal body/surface colors for midnight */
+[data-color-scheme="midnight"] {
+  --mantine-color-body: #151a24;
+  --mantine-color-dark-6: #1e2435;
+  --mantine-color-dark-7: #151a24;
+  --mantine-color-dark-9: #0f1318;
 }
 
 /* Lighter grey for disabled plan buttons */
@@ -679,12 +875,14 @@
   border-radius: 8px;
 }
 
-/* Smooth transitions for theme switching */
+/* Smooth transitions for theme switching - backgrounds and borders only.
+   Color (text) is intentionally excluded: Mantine applies the color scheme
+   after the first paint, so a color transition would cause text to visibly
+   crawl from the wrong colour on every page load. */
 * {
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+    border-color 0.2s ease;
 }
 /* ── PDF Link Overlay (viewer) ── */
 :root {
@@ -884,8 +1082,13 @@
   --shadow-color: rgba(15, 23, 42, 0.55);
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-color-scheme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
+}
+
+[data-color-scheme="midnight"] {
+  --shadow-color: rgba(0, 0, 0, 0.85);
 }
 
 /* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */

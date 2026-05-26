@@ -6905,6 +6905,7 @@ theme = "Theme"
 themeDark = "Dark"
 themeDescription = "Switch between light and dark mode"
 themeLight = "Light"
+themeMidnight = "Midnight"
 title = "General"
 user = "User"
 
