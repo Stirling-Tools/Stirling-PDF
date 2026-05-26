@@ -31,14 +31,14 @@ if [ -n "${1:-}" ]; then
     BOOTJARS+=("$1")
 else
     for cand in app/core/build/libs/stirling-pdf-*.jar \
-                frontend/src-tauri/libs/stirling-pdf-*.jar; do
+                frontend/editor/src-tauri/libs/stirling-pdf-*.jar; do
         [ -f "$cand" ] || continue
         BOOTJARS+=("$cand")
     done
 fi
 if [ "${#BOOTJARS[@]:-0}" = 0 ]; then
     echo "bootJar not found (expected app/core/build/libs/stirling-pdf-*.jar" \
-         "or frontend/src-tauri/libs/stirling-pdf-*.jar)"
+         "or frontend/editor/src-tauri/libs/stirling-pdf-*.jar)"
     exit 0
 fi
 
