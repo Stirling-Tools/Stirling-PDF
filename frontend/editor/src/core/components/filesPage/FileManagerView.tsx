@@ -1658,8 +1658,12 @@ function Breadcrumbs() {
                       );
                     });
                 } else if (payload.kind === "folder") {
-                  void folders
-                    .moveFolder(payload.folderId, entry.id)
+                  // Route through moveFolderTo so the client-side cycle guard fires
+                  // before the server call - otherwise dragging an ancestor onto a
+                  // child crumb shows the generic banner instead of the localized
+                  // "Can't move a folder into one of its own subfolders." message.
+                  void filesPage
+                    .moveFolderTo(payload.folderId, entry.id)
                     .catch((err) => {
                       console.error("[breadcrumb] folder drop failed", err);
                       folders.setError(

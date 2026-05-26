@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,10 +48,10 @@ public class FolderService {
     private static final long MAX_FOLDERS_PER_USER = 5_000L;
 
     /**
-     * Hard cap on chain depth from the root to any folder. Bounds the lazy-proxy walks in {@link
-     * #wouldCreateCycle} and {@link #enforceDepth} - otherwise a user could build a chain up to
-     * MAX_FOLDERS_PER_USER deep and force one Hibernate SELECT per ancestor on every reparent
-     * (5,000+ SELECTs == seconds of DB time per request, per-account weaponizable as DoS).
+     * Hard cap on chain depth from the root to any folder. Bounds the lazy-proxy walk in {@link
+     * #enforceDepthAndCycle} - otherwise a user could build a chain up to MAX_FOLDERS_PER_USER deep
+     * and force one Hibernate SELECT per ancestor on every reparent (5,000+ SELECTs == seconds of
+     * DB time per request, per-account weaponizable as DoS).
      */
     private static final int MAX_FOLDER_DEPTH = 64;
 
@@ -96,6 +97,15 @@ public class FolderService {
     public FolderResponse createFolder(CreateFolderRequest request) {
         ensureStorageEnabled();
         User user = requireAuthenticatedUser();
+        // Reject self-parenting up-front. Without this, a client posting
+        // {id: X, parentFolderId: X} for a folder X they already own would silently
+        // get the existing folder back (idempotent path) and never learn that the
+        // parentFolderId they sent was ignored. For new ids the parent lookup would
+        // 404, but the message is misleading.
+        if (request.getId() != null && request.getId().equals(request.getParentFolderId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
+        }
         Folder parent = resolveParent(request.getParentFolderId(), user, null);
 
         UUID id = request.getId() != null ? request.getId() : UUID.randomUUID();
@@ -276,7 +286,18 @@ public class FolderService {
             f.setFolder(target);
             ownedIds.add(f.getId());
         }
-        storedFileRepository.saveAll(owned);
+        // If the target folder was deleted concurrently between resolveOwnedFolder and the
+        // flush, the FK constraint fires as DataIntegrityViolationException. Surface that as
+        // 409 Conflict so the caller sees an actionable error instead of a 500 stack.
+        try {
+            storedFileRepository.saveAll(owned);
+            storedFileRepository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Target folder no longer exists; refresh and try again",
+                    ex);
+        }
 
         List<Long> moved = owned.stream().map(StoredFile::getId).toList();
         List<Long> skipped = fileIds.stream().filter(id -> !ownedIds.contains(id)).toList();
@@ -338,22 +359,29 @@ public class FolderService {
         // Reject before the child is created/moved if attaching it would push the chain past the
         // depth cap. Done in one pass that also returns the cycle answer so we don't walk the
         // lazy-proxy chain twice.
-        enforceDepthAndCycle(parent, forbidId);
+        enforceDepthAndCycle(parent, user, forbidId);
         return parent;
     }
 
     /**
      * Single pass that walks the parent chain to root and (a) rejects if attaching a child here
      * would exceed MAX_FOLDER_DEPTH, (b) rejects if {@code forbidId} appears in the chain (cycle on
-     * reparent), and (c) rejects on a broken graph. The walk is hard-bounded at MAX_FOLDER_DEPTH so
-     * a corrupted database (chain longer than the API would allow) can never produce an unbounded
-     * SELECT loop.
+     * reparent), (c) rejects on a broken graph, and (d) rejects if any ancestor is owned by a
+     * different user (defense-in-depth: callers always pass a parent already ownership-checked, but
+     * the parent chain is followed via lazy proxy without re-checking ownership at each hop, so any
+     * stray cross-owner edge in the database would otherwise leak ancestor folder ids through the
+     * cycle error message). The walk is hard-bounded at MAX_FOLDER_DEPTH so a corrupted database
+     * (chain longer than the API would allow) can never produce an unbounded SELECT loop.
      */
-    private void enforceDepthAndCycle(Folder candidateParent, UUID forbidId) {
+    private void enforceDepthAndCycle(Folder candidateParent, User user, UUID forbidId) {
         Folder cursor = candidateParent;
         Set<UUID> seen = new HashSet<>();
         int depth = 0;
         while (cursor != null) {
+            if (cursor.getOwner() == null || !cursor.getOwner().getId().equals(user.getId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Folder hierarchy is corrupted; contact support");
+            }
             if (forbidId != null && cursor.getId().equals(forbidId)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
