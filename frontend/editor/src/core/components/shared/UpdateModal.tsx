@@ -108,10 +108,11 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
         ) > 0
       : false;
 
-  const downloadUrl =
-    isDesktop && desktopNeedsUpdate
+  const downloadUrl = isDesktop
+    ? desktopNeedsUpdate
       ? updateService.getDownloadUrl(machineInfo, true)
-      : null;
+      : null
+    : updateService.getDownloadUrl(machineInfo);
 
   return (
     <Modal
