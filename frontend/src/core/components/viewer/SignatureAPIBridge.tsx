@@ -16,6 +16,7 @@ import type {
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { shouldAutoExitPlacement } from "@app/components/viewer/signaturePlacement";
 
 /**
  * Connects the PDF signature (stamp/ink) tools to the shared ViewerContext and SignatureContext.
@@ -565,14 +566,7 @@ export const SignatureAPIBridge = forwardRef<
       if (event.type === "create") {
         setSignaturesApplied(false);
 
-        // Auto-exit placement mode after a single STAMP placement unless the
-        // user opted into "place multiple". Only stamps trigger this — ink
-        // strokes (signatureInk) are also create events but a multi-stroke
-        // signature would break if we deactivated after the first stroke.
-        const annotationType =
-          annotation?.type ?? annotation?.object?.type ?? null;
-        const isStamp = annotationType === PdfAnnotationSubtype.STAMP;
-        if (isStamp && !placeMultipleRef.current) {
+        if (shouldAutoExitPlacement(annotation, placeMultipleRef.current)) {
           annotationApi.setActiveTool(null);
           setPlacementMode(false);
         }
