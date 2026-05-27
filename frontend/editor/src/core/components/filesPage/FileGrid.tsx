@@ -86,8 +86,7 @@ interface FileGridProps {
     | "cloud"
     | "recent"
     | "shared"
-    | "sharedByMe"
-    | "imSharing";
+    | "sharedByMe";
   /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
@@ -191,8 +190,7 @@ interface EmptyStateProps {
     | "cloud"
     | "recent"
     | "shared"
-    | "sharedByMe"
-    | "imSharing";
+    | "sharedByMe";
   /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
@@ -252,18 +250,10 @@ function EmptyState({
       case "sharedByMe":
         return {
           titleKey: "filesPage.empty.sharedByMe.title",
-          titleFallback: "No share links yet",
+          titleFallback: "You haven't shared any files yet",
           hintKey: "filesPage.empty.sharedByMe.hint",
           hintFallback:
-            "Create a share link on any of your files to surface it here.",
-        };
-      case "imSharing":
-        return {
-          titleKey: "filesPage.empty.imSharing.title",
-          titleFallback: "Not sharing with anyone yet",
-          hintKey: "filesPage.empty.imSharing.hint",
-          hintFallback:
-            "Invite a teammate to one of your files to see it listed here.",
+            "Create a share link or invite a teammate from any of your files to see it here.",
         };
       case "all":
       default:
@@ -278,10 +268,7 @@ function EmptyState({
   })();
   // Recent/Shared tabs are read-only filters; Local is cloud-only for folders.
   const readOnlyTab =
-    tab === "recent" ||
-    tab === "shared" ||
-    tab === "sharedByMe" ||
-    tab === "imSharing";
+    tab === "recent" || tab === "shared" || tab === "sharedByMe";
   const showUpload = Boolean(onUpload) && !readOnlyTab;
   const showCreateFolder =
     Boolean(onCreateFolder) && !readOnlyTab && tab !== "local";

@@ -46,8 +46,7 @@ export type FilesPageTab =
   | "cloud"
   | "recent"
   | "shared"
-  | "sharedByMe"
-  | "imSharing";
+  | "sharedByMe";
 
 export interface FolderNameDialogState {
   mode: "new" | "rename" | null;
