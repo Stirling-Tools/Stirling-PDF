@@ -185,29 +185,34 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
   const comparisonTitle =
     comparisonStub?.name || result?.comparison?.fileName || "";
 
-  // During diff processing, show compact spinners in the dropdown badges
-  const baseDropdownPlaceholder =
-    isOperationLoading || !result ? (
-      <span className="inline-flex flex-row items-center gap-1">
-        {t("compare.dropdown.deletionsLabel", "Deletions")}{" "}
-        <Loader size="xs" color="currentColor" />
-      </span>
-    ) : (
-      t("compare.dropdown.deletions", "Deletions ({{count}})", {
-        count: baseWordChanges.length,
-      })
-    );
-  const comparisonDropdownPlaceholder =
-    isOperationLoading || !result ? (
-      <span className="inline-flex flex-row items-center gap-1">
-        {t("compare.dropdown.additionsLabel", "Additions")}{" "}
-        <Loader size="xs" color="currentColor" />
-      </span>
-    ) : (
-      t("compare.dropdown.additions", "Additions ({{count}})", {
-        count: comparisonWordChanges.length,
-      })
-    );
+  // During diff processing, show compact spinners in the dropdown badges.
+  // If the operation finished without a result (e.g. errored — the toast
+  // already told the user why), show the bare label so the dropdowns don't
+  // spin forever waiting for a result that will never arrive.
+  const baseDropdownPlaceholder = isOperationLoading ? (
+    <span className="inline-flex flex-row items-center gap-1">
+      {t("compare.dropdown.deletionsLabel", "Deletions")}{" "}
+      <Loader size="xs" color="currentColor" />
+    </span>
+  ) : result ? (
+    t("compare.dropdown.deletions", "Deletions ({{count}})", {
+      count: baseWordChanges.length,
+    })
+  ) : (
+    t("compare.dropdown.deletionsLabel", "Deletions")
+  );
+  const comparisonDropdownPlaceholder = isOperationLoading ? (
+    <span className="inline-flex flex-row items-center gap-1">
+      {t("compare.dropdown.additionsLabel", "Additions")}{" "}
+      <Loader size="xs" color="currentColor" />
+    </span>
+  ) : result ? (
+    t("compare.dropdown.additions", "Additions ({{count}})", {
+      count: comparisonWordChanges.length,
+    })
+  ) : (
+    t("compare.dropdown.additionsLabel", "Additions")
+  );
 
   const workbenchBarButtons = useCompareWorkbenchBarButtons({
     layout,

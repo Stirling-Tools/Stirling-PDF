@@ -18,7 +18,10 @@ import { fileStorage } from "@app/services/fileStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { reconcileServerFiles } from "@app/services/fileSyncService";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import {
+  useIndexedDB,
+  useIndexedDBRevision,
+} from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -134,6 +137,7 @@ const FilesPageContext = createContext<FilesPageContextValue | null>(null);
 export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const indexedDB = useIndexedDB();
+  const indexedDBRevision = useIndexedDBRevision();
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { config: appConfig } = useAppConfig();
@@ -182,7 +186,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void refresh();
-  }, [refresh, indexedDB.revision]);
+  }, [refresh, indexedDBRevision]);
 
   const fileMap = useMemo(() => {
     const map = new Map<FileId, StirlingFileStub>();
