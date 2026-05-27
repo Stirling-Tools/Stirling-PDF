@@ -259,43 +259,47 @@ async function consumeSSEStream(
   let buffer = "";
   let currentEvent = "";
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-    // SSE frames are separated by double newlines
-    let boundary = buffer.indexOf("\n\n");
-    while (boundary !== -1) {
-      const frame = buffer.slice(0, boundary);
-      buffer = buffer.slice(boundary + 2);
+      // SSE frames are separated by double newlines
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary !== -1) {
+        const frame = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
 
-      let dataPayload = "";
-      for (const line of frame.split("\n")) {
-        if (line.startsWith("event:")) {
-          currentEvent = line.slice(6).trim();
-        } else if (line.startsWith("data:")) {
-          dataPayload += line.slice(5);
-        }
-      }
-
-      if (dataPayload) {
-        try {
-          const parsed = JSON.parse(dataPayload);
-          if (currentEvent === "progress") {
-            handlers.onProgress(parsed);
-          } else if (currentEvent === "result") {
-            handlers.onResult(parsed);
-          } else if (currentEvent === "error") {
-            handlers.onError(parsed);
+        let dataPayload = "";
+        for (const line of frame.split("\n")) {
+          if (line.startsWith("event:")) {
+            currentEvent = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            dataPayload += line.slice(5);
           }
-        } catch {
-          // Skip malformed JSON frames
         }
+
+        if (dataPayload) {
+          try {
+            const parsed = JSON.parse(dataPayload);
+            if (currentEvent === "progress") {
+              handlers.onProgress(parsed);
+            } else if (currentEvent === "result") {
+              handlers.onResult(parsed);
+            } else if (currentEvent === "error") {
+              handlers.onError(parsed);
+            }
+          } catch {
+            // Skip malformed JSON frames
+          }
+        }
+        currentEvent = "";
+        boundary = buffer.indexOf("\n\n");
       }
-      currentEvent = "";
-      boundary = buffer.indexOf("\n\n");
     }
+  } finally {
+    reader.releaseLock();
   }
 }
 
