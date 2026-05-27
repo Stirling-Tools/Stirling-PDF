@@ -40,3 +40,5 @@ test-results
 # auto-generated files
 /editor/src/assets/material-symbols-icons.json
 /editor/src/assets/material-symbols-icons.d.ts
+/src/assets/material-symbols-icons.json
+/src/assets/material-symbols-icons.d.ts

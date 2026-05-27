@@ -1014,7 +1014,7 @@ class RedactOperation(ApiModel):
 
 
 class RedactPages(RedactOperation):
-    page_numbers: list[int] | None = Field(None, description="1-indexed page numbers to wipe entirely")
+    page_numbers: list[int] = Field(..., description="1-indexed page numbers to wipe entirely")
 
 
 class RedactionArea(ApiModel):
@@ -1376,22 +1376,22 @@ class RedactByRange(RedactOperation):
 
 
 class RedactByRegex(RedactOperation):
-    patterns: list[str] | None = Field(
-        None,
+    patterns: list[str] = Field(
+        ...,
         description="Regex patterns — each match is redacted. Account for common format variants: different separators, optional prefixes/suffixes, grouped vs unbroken digits, locale spellings, etc.",
     )
 
 
 class RedactByText(RedactOperation):
-    values: list[str] | None = Field(None, description="Exact strings to redact")
+    values: list[str] = Field(..., description="Exact strings to redact")
 
 
 class RedactImageBox(RedactOperation):
-    page_index: int | None = Field(None, description="0-indexed page number")
-    x1: float | None = None
-    x2: float | None = None
-    y1: float | None = None
-    y2: float | None = None
+    page_index: int = Field(..., description="0-indexed page number")
+    x1: float = Field(...)
+    x2: float = Field(...)
+    y1: float = Field(...)
+    y2: float = Field(...)
 
 
 class RedactExecuteParams(ApiModel):

@@ -22,6 +22,20 @@ import type {
   ButtonAction,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
+import type {
+  PDFDict,
+  PDFString,
+  PDFHexString,
+  PDFName,
+} from "@cantoo/pdf-lib";
+
+interface PDFAcroField {
+  dict: PDFDict;
+  getWidgets?: () => Array<{ dict: PDFDict }>;
+}
+interface PDFFieldInternal {
+  acroField?: PDFAcroField;
+}
 import {
   closeDocAndFreeBuffer,
   extractFormFields,
@@ -238,7 +252,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
                 );
                 const altName = readUtf16(m, altBuf, altLen);
                 m.pdfium.wasmExports.free(altBuf);
-                (nameToField.get(name) as any)._tooltip = altName || null;
+                (nameToField.get(name) as PdfiumFormField & { _tooltip?: string | null })._tooltip = altName || null;
               }
               enriched.add(name);
             }
@@ -299,7 +313,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return (obj as { decodeText(): string }).decodeText();
+          return (obj as PDFString | PDFHexString).decodeText();
         return String(obj ?? "");
       };
 
@@ -312,7 +326,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
           )
             continue;
 
-          const acroDict = (field.acroField as any).dict;
+          const acroDict = (field as unknown as PDFFieldInternal).acroField!.dict;
           const optRaw = acroDict.lookup(PDFName.of("Opt"));
           if (!(optRaw instanceof PDFArray)) continue;
 
@@ -374,7 +388,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
     if (buttons.length === 0) return result;
 
     try {
-      const { PDFDocument, PDFName, PDFString, PDFHexString, PDFDict } =
+      const { PDFDocument, PDFName, PDFString, PDFHexString, PDFDict, PDFNumber } =
         await import("@cantoo/pdf-lib");
 
       const doc = await PDFDocument.load(data, {
@@ -385,34 +399,34 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string | null => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return (obj as { decodeText(): string }).decodeText();
+          return (obj as PDFString | PDFHexString).decodeText();
         if (obj instanceof PDFName)
-          return (obj as any).asString?.() ?? String(obj).replace(/^\//, "");
+          return (obj as PDFName).asString() ?? String(obj).replace(/^\//, "");
         return null;
       };
 
       const parseActionDict = (aObj: unknown): ButtonAction | null => {
         if (!(aObj instanceof PDFDict)) return null;
-        // TS5.9 doesn't narrow `unknown` through instanceof in closure contexts
-        const a = aObj as any;
+        // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
+        const a = aObj as PDFDict;
         const sObj = a.lookup(PDFName.of("S"));
         if (!(sObj instanceof PDFName)) return null;
         const actionType: string =
-          (sObj as any).asString?.() ?? String(sObj).replace(/^\//, "");
+          (sObj as PDFName).asString() ?? String(sObj).replace(/^\//, "");
 
         switch (actionType) {
           case "Named": {
             const nObj = a.lookup(PDFName.of("N"));
             const name =
               nObj instanceof PDFName
-                ? ((nObj as any).asString?.() ??
+                ? ((nObj as PDFName).asString() ??
                   String(nObj).replace(/^\//, ""))
                 : "";
             return { type: "named", namedAction: name };
           }
           case "JavaScript": {
             const jsObj = a.lookup(PDFName.of("JS"));
-            const js = decodeText(jsObj) ?? String(jsObj);
+            const js = decodeText(jsObj) ?? jsObj?.toString() ?? "";
             return { type: "javascript", javascript: js };
           }
           case "SubmitForm": {
@@ -424,10 +438,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
               url = decodeText(fObj) ?? String(fObj);
             }
             const flagsObj = a.lookup(PDFName.of("Flags"));
-            const flags =
-              typeof (flagsObj as any)?.asNumber === "function"
-                ? (flagsObj as any).asNumber()
-                : 0;
+            const flags = flagsObj instanceof PDFNumber ? flagsObj.asNumber() : 0;
             return { type: "submitForm", url, submitFlags: flags };
           }
           case "ResetForm":
@@ -441,7 +452,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
         }
       };
 
-      const getMkCaption = (dict: any): string | null => {
+      const getMkCaption = (dict: PDFDict): string | null => {
         try {
           const mkObj = dict.lookup(PDFName.of("MK"));
           if (!(mkObj instanceof PDFDict)) return null;
@@ -452,7 +463,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
         }
       };
 
-      const getActionFromDict = (dict: any): ButtonAction | null => {
+      const getActionFromDict = (dict: PDFDict): ButtonAction | null => {
         try {
           return parseActionDict(dict.lookup(PDFName.of("A")));
         } catch {
@@ -467,13 +478,13 @@ export class PdfiumFormProvider implements IFormDataProvider {
         if (!buttonNames.has(name)) continue;
 
         try {
-          const acroField = (field as any).acroField;
+          const acroField = (field as unknown as PDFFieldInternal).acroField;
           if (!acroField?.dict) continue;
 
           const info: { label?: string; action?: ButtonAction } = {};
 
           // Try widget dicts first (each widget can have its own /MK and /A)
-          const widgets: any[] = (acroField as any).getWidgets?.() ?? [];
+          const widgets = acroField.getWidgets?.() ?? [];
           for (const widget of widgets) {
             if (!info.label) {
               const label = getMkCaption(widget.dict);

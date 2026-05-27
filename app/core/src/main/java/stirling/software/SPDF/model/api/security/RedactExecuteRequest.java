@@ -40,7 +40,11 @@ public class RedactExecuteRequest extends PDFFile {
                     RedactImageBox,
                     RedactAllImages {}
 
-    public record RedactByText(@Schema(description = "Exact strings to redact") List<String> values)
+    public record RedactByText(
+            @Schema(
+                            description = "Exact strings to redact",
+                            requiredMode = Schema.RequiredMode.REQUIRED)
+                    List<String> values)
             implements RedactOperation {}
 
     public record RedactByRegex(
@@ -48,12 +52,15 @@ public class RedactExecuteRequest extends PDFFile {
                             description =
                                     "Regex patterns — each match is redacted. "
                                             + "Account for common format variants: different separators, optional "
-                                            + "prefixes/suffixes, grouped vs unbroken digits, locale spellings, etc.")
+                                            + "prefixes/suffixes, grouped vs unbroken digits, locale spellings, etc.",
+                            requiredMode = Schema.RequiredMode.REQUIRED)
                     List<String> patterns)
             implements RedactOperation {}
 
     public record RedactPages(
-            @Schema(description = "1-indexed page numbers to wipe entirely")
+            @Schema(
+                            description = "1-indexed page numbers to wipe entirely",
+                            requiredMode = Schema.RequiredMode.REQUIRED)
                     List<Integer> pageNumbers)
             implements RedactOperation {}
 
@@ -72,11 +79,14 @@ public class RedactExecuteRequest extends PDFFile {
     }
 
     public record RedactImageBox(
-            @Schema(description = "0-indexed page number") int pageIndex,
-            float x1,
-            float y1,
-            float x2,
-            float y2)
+            @Schema(
+                            description = "0-indexed page number",
+                            requiredMode = Schema.RequiredMode.REQUIRED)
+                    int pageIndex,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) float x1,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) float y1,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) float x2,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) float y2)
             implements RedactOperation {}
 
     public record RedactAllImages(

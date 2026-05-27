@@ -64,7 +64,7 @@ async function extractPageMeasureScales(
     // Parse a Measure dict into a MeasureScale, or return null if malformed.
     const parseScale = (measureObj: unknown) => {
       if (!(measureObj instanceof PDFDict)) return null;
-      // TS5.9 doesn't narrow `unknown` through instanceof in closure contexts
+      // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
       const m = measureObj as PDFDict;
       const rObj = m.lookup(PDFName.of("R"));
       const ratioLabel =
