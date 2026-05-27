@@ -41,5 +41,10 @@ dependencies {
     api 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
+    // ShedLock — prevents a multi-instance deploy from firing scheduled credit resets twice.
+    // JDBC provider stores the lock in a stirling_pdf.shedlock table; see V10__saas_shedlock.sql.
+    api 'net.javacrumbs.shedlock:shedlock-spring:7.7.0'
+    api 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.7.0'
+
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }

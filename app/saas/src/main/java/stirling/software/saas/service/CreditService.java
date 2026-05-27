@@ -15,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -55,6 +57,7 @@ public class CreditService {
     private final Counter creditsConsumedCounter;
     private final Counter creditConsumptionFailuresCounter;
     private final Counter cycleResetCounter;
+    private final Counter stripeReportFailuresCounter;
 
     public CreditService(
             UserCreditRepository userCreditRepository,
@@ -89,6 +92,15 @@ public class CreditService {
         this.cycleResetCounter =
                 Counter.builder("credits.cycle_reset")
                         .description("Number of credit cycle resets performed")
+                        .register(meterRegistry);
+        // Posted after the DB commit succeeds but Stripe rejects/times-out — money the customer
+        // owes us that we haven't billed yet. Operations watches this; sustained non-zero means
+        // either Stripe is degraded or the meter-usage Edge Function is misconfigured.
+        this.stripeReportFailuresCounter =
+                Counter.builder("credits.stripe_report.failures")
+                        .description(
+                                "Stripe meter event failed after DB commit; usage is owed but"
+                                        + " unbilled until a retry succeeds")
                         .register(meterRegistry);
 
         // Active gauges for current credit levels
@@ -296,7 +308,10 @@ public class CreditService {
                         return true;
                     }
                 } else {
-                    // Partial or full overage: consume free credits and report overage to Stripe
+                    // Partial or full overage: consume free credits in this tx, report to Stripe
+                    // *after* the tx commits (see scheduleStripeReportAfterCommit). Holding the
+                    // row lock open across an HTTP call to Stripe was the source of the
+                    // PR #6384 review's "Stripe-before-DB ordering" finding.
                     int freeCreditsUsed =
                             userCredits.getCycleCreditsRemaining() != null
                                     ? userCredits.getCycleCreditsRemaining()
@@ -328,55 +343,33 @@ public class CreditService {
                         }
                     }
 
-                    // Stable idempotency key per (user, amount, operation) so retries dedupe.
+                    // Stable idempotency key per (user, overage, request). The CorrelationIdFilter
+                    // guarantees MDC.requestId is set on every request, so the key is reproducible
+                    // across retries — Stripe collapses duplicates by this key.
                     String operationId = MDC.get("requestId");
-                    if (operationId == null || operationId.isBlank()) {
-                        operationId = UUID.randomUUID().toString();
-                    }
                     String idempotencyKey =
                             stripeUsageReportingService.generateIdempotencyKey(
                                     supabaseId, overageCredits, operationId);
 
-                    log.info(
-                            "[CREDIT-CONSUME] Calling Stripe reporting service - User: {}, Overage credits: {}, Idempotency key: {}",
+                    scheduleStripeReportAfterCommit(
                             supabaseId,
                             overageCredits,
-                            idempotencyKey);
-
-                    boolean reported =
-                            stripeUsageReportingService.reportUsageToStripe(
-                                    supabaseId, overageCredits, idempotencyKey);
-
-                    log.info(
-                            "[CREDIT-CONSUME] Stripe reporting result: {} for user: {}",
-                            reported ? "SUCCESS" : "FAILED",
-                            supabaseId);
-
-                    if (reported) {
-                        creditsConsumedCounter.increment(creditAmount);
-                        log.info(
-                                "[USAGE-BASED] User {} consumed {} free + {} overage credits (total: {})",
-                                supabaseId,
-                                freeCreditsUsed,
-                                overageCredits,
-                                creditAmount);
-                        return true;
-                    } else {
-                        log.error(
-                                "[USAGE-BASED] Failed to report {} overage credits to Stripe for user: {}",
-                                overageCredits,
-                                supabaseId);
-                        log.error(
-                                "[USAGE-BASED] Throwing exception to fail the operation; metering must succeed");
-                        creditConsumptionFailuresCounter.increment();
-                        throw new RuntimeException(
-                                "Unable to report usage to Stripe. Operation cannot proceed without metering. Please try again or contact support if the issue persists.");
-                    }
+                            idempotencyKey,
+                            creditAmount,
+                            freeCreditsUsed);
+                    return true;
                 }
 
-                // Free credits were sufficient; already consumed and returned above
-                // If we reach here, there's a logic error
-                log.error("[USAGE-BASED] Unexpected code path reached for user: {}", supabaseId);
+                // Free-tier branch fell through with rowsUpdated != 1: the in-memory
+                // getCycleCreditsRemaining() read saw enough credits, but the atomic SQL UPDATE
+                // saw the balance after a concurrent debit drained it. Not a logic error — the
+                // race is expected under concurrency. The atomic update's WHERE clause did its
+                // job; surface the failure to the caller so they can retry.
+                log.warn(
+                        "[USAGE-BASED] Concurrent-debit race lost the free-tier consumption for"
+                                + " user {}; caller should retry.",
+                        supabaseId);
+                creditConsumptionFailuresCounter.increment();
                 return false;
             }
 
@@ -411,17 +404,10 @@ public class CreditService {
             creditConsumptionFailuresCounter.increment();
             return false;
         } catch (RuntimeException e) {
-            // Metering failures are critical and should fail the operation.
-            // This ensures users aren't charged for operations that weren't metered.
-            if (e.getMessage() != null
-                    && e.getMessage().contains("Unable to report usage to Stripe")) {
-                log.error(
-                        "[CREDIT-CONSUME] Metering failure; rethrowing exception to fail operation");
-                throw e;
-            }
-
-            // Other runtime exceptions are logged but don't fail the operation.
-            // This prevents transient errors from blocking user operations.
+            // Stripe reporting now runs in afterCommit (not synchronously), so a RuntimeException
+            // here is no longer a metering failure — it's a transient DB error or similar. Log,
+            // metric, and return false; the caller decides whether to retry. The HTTP response
+            // surfaces as 5xx, which is appropriate for a transient outage.
             log.error(
                     "[CREDIT-CONSUME] Unexpected runtime error consuming credits for user: {} - {}",
                     supabaseId,
@@ -449,6 +435,106 @@ public class CreditService {
      */
     private boolean hasMeteredBillingEnabled(User user) {
         return saasUserExtensionService.isMeteredBillingEnabled(user);
+    }
+
+    /**
+     * Post the Stripe meter event for an overage debit, after the DB transaction commits.
+     *
+     * <p>Why after-commit:
+     *
+     * <ul>
+     *   <li><b>No row-lock held across HTTP.</b> Calling Stripe inside the transaction holds the
+     *       {@code user_credits} row lock for the duration of the HTTP round-trip. Under load that
+     *       starves concurrent debits.
+     *   <li><b>No spurious rollback.</b> A network blip used to throw a {@code RuntimeException},
+     *       rolling back the (correct) free-credit consumption. The caller would retry, getting a
+     *       fresh request — but with the same MDC requestId on a true client retry, so Stripe still
+     *       dedupes. We accept the small risk that a Stripe outage past the retry window leaves
+     *       usage owed-but-unbilled (visible on {@code credits.stripe_report.failures}).
+     *   <li><b>Idempotency unchanged.</b> The idempotency key still comes from {@code (supabaseId,
+     *       overageCredits, MDC.requestId)} — captured at registration time, so a future async
+     *       retry posts the same key.
+     * </ul>
+     *
+     * <p>If no transaction is active (e.g. tests calling this from outside {@code @Transactional}),
+     * we fall back to immediate execution so the meter event still fires.
+     */
+    private void scheduleStripeReportAfterCommit(
+            String supabaseId,
+            int overageCredits,
+            String idempotencyKey,
+            int creditAmount,
+            int freeCreditsUsed) {
+
+        Runnable reportToStripe =
+                () -> {
+                    log.info(
+                            "[CREDIT-CONSUME] Posting Stripe meter event - User: {}, Overage: {},"
+                                    + " Idempotency: {}",
+                            supabaseId,
+                            overageCredits,
+                            idempotencyKey);
+
+                    boolean reported;
+                    try {
+                        reported =
+                                stripeUsageReportingService.reportUsageToStripe(
+                                        supabaseId, overageCredits, idempotencyKey);
+                    } catch (RuntimeException e) {
+                        // Defensive: the reporting service catches its own exceptions, but if a
+                        // future change ever throws, we don't want it to take down the afterCommit
+                        // chain (which would mask the success of the actual DB debit).
+                        log.error(
+                                "[CREDIT-CONSUME] Stripe meter post threw for user {} (overage {});"
+                                        + " usage owed-but-unbilled until a retry succeeds",
+                                supabaseId,
+                                overageCredits,
+                                e);
+                        stripeReportFailuresCounter.increment();
+                        return;
+                    }
+
+                    if (reported) {
+                        creditsConsumedCounter.increment(creditAmount);
+                        log.info(
+                                "[USAGE-BASED] User {} consumed {} free + {} overage credits"
+                                        + " (total: {}); Stripe meter posted.",
+                                supabaseId,
+                                freeCreditsUsed,
+                                overageCredits,
+                                creditAmount);
+                    } else {
+                        // Reporting service returned false — DB has the debit, Stripe doesn't.
+                        // The idempotency key is stable, so a manual replay (or a future automated
+                        // retry queue) will catch up.
+                        stripeReportFailuresCounter.increment();
+                        log.error(
+                                "[USAGE-BASED] Failed to post Stripe meter event for user {}"
+                                        + " (overage {}); usage owed-but-unbilled. Idempotency key"
+                                        + " is stable: replay with key '{}' to recover.",
+                                supabaseId,
+                                overageCredits,
+                                idempotencyKey);
+                    }
+                };
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            reportToStripe.run();
+                        }
+                    });
+        } else {
+            // No active transaction (e.g. a test calling consume directly). Run synchronously
+            // so the meter event still fires; the historical behaviour is preserved for this
+            // edge case.
+            log.warn(
+                    "[CREDIT-CONSUME] No active transaction; reporting Stripe usage synchronously."
+                            + " This is expected only in tests.");
+            reportToStripe.run();
+        }
     }
 
     /** Check if a user has credits available by Supabase ID (unified approach). */
@@ -1054,48 +1140,26 @@ public class CreditService {
         // STEP 4: Try metered billing (check flag, not role)
         if (saasUserExtensionService.isMeteredBillingEnabled(user)) {
             log.info(
-                    "[WATERFALL] User {} has metered billing enabled; reporting {} credits to Stripe",
+                    "[WATERFALL] User {} has metered billing enabled; scheduling {} credits for"
+                            + " Stripe report (after commit)",
                     user.getUsername(),
                     creditAmount);
 
-            try {
-                String operationId = MDC.get("requestId");
-                if (operationId == null || operationId.isBlank()) {
-                    operationId = UUID.randomUUID().toString();
-                }
-                String idempotencyKey =
-                        stripeUsageReportingService.generateIdempotencyKey(
-                                supabaseId.toString(), creditAmount, operationId);
+            // MDC.requestId is set by CorrelationIdFilter on every authenticated request, so it
+            // is always populated here. No UUID fallback needed — and no fallback means a true
+            // client retry of the same request produces the same idempotency key (Stripe dedupes).
+            String operationId = MDC.get("requestId");
+            String idempotencyKey =
+                    stripeUsageReportingService.generateIdempotencyKey(
+                            supabaseId.toString(), creditAmount, operationId);
 
-                boolean reported =
-                        stripeUsageReportingService.reportUsageToStripe(
-                                supabaseId.toString(), creditAmount, idempotencyKey);
-
-                if (reported) {
-                    creditsConsumedCounter.increment(creditAmount);
-
-                    log.info(
-                            "[WATERFALL] Reported {} overage credits to Stripe for user: {}",
-                            creditAmount,
-                            user.getUsername());
-                    return CreditConsumptionResult.success("METERED_SUBSCRIPTION");
-                } else {
-                    log.error(
-                            "[WATERFALL] Failed to report usage to Stripe for user: {}",
-                            user.getUsername());
-                    creditConsumptionFailuresCounter.increment();
-                    return CreditConsumptionResult.failure("Failed to report usage to Stripe");
-                }
-            } catch (Exception e) {
-                log.error(
-                        "[WATERFALL] Exception while reporting to Stripe for user {}: {}",
-                        user.getUsername(),
-                        e.getMessage(),
-                        e);
-                creditConsumptionFailuresCounter.increment();
-                return CreditConsumptionResult.failure(
-                        "Error reporting usage to Stripe: " + e.getMessage());
-            }
+            scheduleStripeReportAfterCommit(
+                    supabaseId.toString(),
+                    creditAmount,
+                    idempotencyKey,
+                    creditAmount,
+                    /* freeCreditsUsed= */ 0);
+            return CreditConsumptionResult.success("METERED_SUBSCRIPTION");
         } else if (user.getRolesAsString().contains("ROLE_PRO_USER")) {
             // Pro user without metered billing enabled; reject with helpful message
             log.warn(

@@ -32,6 +32,7 @@ import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.general.EditTextOperation;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -75,7 +76,10 @@ public class EditTextController {
                 new StringToArrayListPropertyEditor<>(EditTextOperation.class));
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/edit-text")
+    @AutoJobPostMapping(
+            consumes = "multipart/form-data",
+            value = "/edit-text",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Edit text in a PDF via find and replace",

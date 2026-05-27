@@ -77,6 +77,11 @@ public @interface AutoJobPostMapping {
     /**
      * Relative resource weight (1-100). See {@link
      * stirling.software.common.enumeration.ResourceWeight} for the standard tiers.
+     *
+     * <p>The default is a sentinel ({@link Integer#MIN_VALUE}) so that {@code
+     * AutoJobPostMappingWeightTest} can fail the build whenever an endpoint forgets to declare a
+     * weight. Readers clamp the value to {@code [1, 100]}, so an un-linted sentinel still behaves
+     * like {@code SMALL_WEIGHT} at runtime — the test is the contract, the clamp is the safety net.
      */
-    int resourceWeight() default 1;
+    int resourceWeight() default Integer.MIN_VALUE;
 }
