@@ -21,9 +21,11 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 
 /**
  * Build-time guardrail: every {@link AutoJobPostMapping} must declare an explicit {@code
- * resourceWeight}. PAYG charging multiplies this against the document-units classifier, so silently
- * inheriting a fallthrough default would systematically under- or over-bill an endpoint the moment
- * a new one is added.
+ * resourceWeight}. The current credits engine multiplies it into the per-call charge; once PAYG
+ * lands the field becomes a pure resource-management hint (queue admission, back-pressure, job
+ * sizing) per the PR-R5 retirement plan in {@code notes/PAYG_DESIGN.md}. Either way, a silent
+ * fallthrough is wrong — it either mis-charges today, or it lies to whatever scheduling logic
+ * eventually consumes it. Forcing an explicit value keeps the choice deliberate.
  *
  * <p>The annotation's default is {@link Integer#MIN_VALUE} (a sentinel). Runtime readers clamp into
  * {@code [1, 100]} so a missed declaration doesn't crash production — this test is the contract,
