@@ -79,6 +79,7 @@ dependencies {
 
     testImplementation "org.testcontainers:minio:$testcontainersMinioVersion"
     testImplementation "org.testcontainers:junit-jupiter:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:localstack:$testcontainersMinioVersion"
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}
