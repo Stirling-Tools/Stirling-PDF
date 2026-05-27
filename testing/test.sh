@@ -442,9 +442,10 @@ compare_file_lists() {
             echo "New files created during test:"
             cat "${diff_file}.added" | sed 's/^> //'
 
-            # Exclude JPDFium native cache (deleteOnExit-registered, not a leak).
+            # Exclude JPDFium native cache + merge seed temp files
+            # (both deleteOnExit-registered, not leaks).
             grep -i "tmp\|temp" "${diff_file}.added" \
-                | grep -v '/jpdfium-[0-9]\+/' \
+                | grep -v '/jpdfium-' \
                 > "${diff_file}.tmp" || true
             if [ -s "${diff_file}.tmp" ]; then
                 echo "WARNING: Temporary files detected:"
