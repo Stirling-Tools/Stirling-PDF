@@ -10,12 +10,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.proprietary.security.model.User;
 
-public interface StorageProvider {
+public interface StorageProvider extends AutoCloseable {
     StoredObject store(User owner, MultipartFile file) throws IOException;
 
     Resource load(String storageKey) throws IOException;
 
     void delete(String storageKey) throws IOException;
+
+    /**
+     * Releases any backend-specific resources. Default no-op so {@link LocalStorageProvider} and
+     * {@link DatabaseStorageProvider} (which hold no closeable handles) satisfy Spring's
+     * {@code @Bean(destroyMethod = "close")} signature requirement without ceremony.
+     * {@code S3StorageProvider} overrides this to close the underlying SDK client + presigner.
+     */
+    @Override
+    default void close() {}
 
     /**
      * Returns a presigned download URL valid for {@code ttl}, or {@link Optional#empty()} if the
