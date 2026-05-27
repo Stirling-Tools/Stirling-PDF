@@ -34,6 +34,7 @@ export default defineConfig(
       "editor/dist",
       "editor/public",
       "editor/src-tauri",
+      "src-tauri/target",
       "editor/playwright-report",
       "editor/test-results",
     ],
