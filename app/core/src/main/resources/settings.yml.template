@@ -20,6 +20,7 @@ security:
     password: "" # initial password for the first login
   oauth2:
     enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    debugLogging: false # set to 'true' to log full ID token and UserInfo claims during OAuth2/OIDC login. Use this to diagnose claim issues (e.g. "Attribute value for 'email' cannot be null" with ADFS). WARNING: writes PII (sub, email, name) to logs; disable after troubleshooting.
     client:
       keycloak:
         issuer: "" # URL of the Keycloak realm's OpenID Connect Discovery endpoint
