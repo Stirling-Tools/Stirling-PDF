@@ -335,6 +335,8 @@ cluster:
   enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
   backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
   artifactStore: local # Transient cluster job-artifact backend: 'local' (per-node disk; single-node only) or 's3' (shared object store; required for multi-node). Distinct from 'storage.provider' which controls persistent user uploads - when both are 's3' they share the storage.s3.* credentials block. Multi-node deployments MUST set this to 's3'.
+  s3:
+    keyPrefix: transient/ # Bucket key prefix used by the cluster artifact store when artifactStore=s3. Trailing slash recommended. Lets a single bucket host both persistent uploads (storage.s3.*) and transient job artifacts under separate prefixes.
   valkey:
     url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and backplane=valkey.
     tls:

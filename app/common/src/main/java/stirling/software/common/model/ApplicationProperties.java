@@ -778,6 +778,7 @@ public class ApplicationProperties {
         private boolean enabled = false;
         private String provider = "local";
         private Local local = new Local();
+        private S3 s3 = new S3();
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
         private Signing signing = new Signing();
@@ -785,6 +786,38 @@ public class ApplicationProperties {
         @Data
         public static class Local {
             private String basePath = InstallationPathConfig.getPath() + "storage";
+        }
+
+        @Data
+        public static class S3 {
+            /**
+             * Optional custom endpoint (e.g. {@code https://<account>.r2.cloudflarestorage.com},
+             * {@code https://<project>.supabase.co/storage/v1/s3}, or {@code http://localhost:9000}
+             * for MinIO). Blank = use AWS regional default.
+             */
+            private String endpoint = "";
+
+            private String bucket = "";
+
+            private String region = "us-east-1";
+
+            private String accessKey = "";
+            private String secretKey = "";
+
+            /**
+             * When {@code true} use path-style URLs ({@code <endpoint>/<bucket>/<key>}) instead of
+             * virtual-hosted ({@code <bucket>.<endpoint>/<key>}). MinIO and most S3-compatible
+             * gateways require path-style; AWS S3 prefers virtual-hosted.
+             */
+            private boolean pathStyleAccess = false;
+
+            /**
+             * When {@code false} (default), {@code endpoint} hostnames that resolve to private,
+             * loopback, or link-local addresses are rejected at startup to block SSRF attacks via
+             * the cloud metadata service (e.g. {@code http://169.254.169.254/}). Set to {@code
+             * true} to opt in for MinIO / in-cluster S3 endpoints on private networks.
+             */
+            private boolean allowPrivateEndpoints = false;
         }
 
         @Data
