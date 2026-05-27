@@ -18,7 +18,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
-import ToolPanel from "@app/components/tools/ToolPanel";
+import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -290,7 +290,7 @@ export default function HomePage() {
               aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
             >
               <div className="mobile-slide-content">
-                <ToolPanel />
+                <RightSidebar />
               </div>
             </div>
             <div
@@ -381,7 +381,7 @@ export default function HomePage() {
             onOpenSettings={() => setConfigModalOpen(true)}
           />
           <Workbench />
-          {!hideToolPanel && <ToolPanel />}
+          {!hideToolPanel && <RightSidebar />}
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
           <AppConfigModal
             opened={configModalOpen}
