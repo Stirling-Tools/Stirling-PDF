@@ -252,7 +252,11 @@ export class PdfiumFormProvider implements IFormDataProvider {
                 );
                 const altName = readUtf16(m, altBuf, altLen);
                 m.pdfium.wasmExports.free(altBuf);
-                (nameToField.get(name) as PdfiumFormField & { _tooltip?: string | null })._tooltip = altName || null;
+                (
+                  nameToField.get(name) as PdfiumFormField & {
+                    _tooltip?: string | null;
+                  }
+                )._tooltip = altName || null;
               }
               enriched.add(name);
             }
@@ -326,7 +330,8 @@ export class PdfiumFormProvider implements IFormDataProvider {
           )
             continue;
 
-          const acroDict = (field as unknown as PDFFieldInternal).acroField!.dict;
+          const acroDict = (field as unknown as PDFFieldInternal).acroField!
+            .dict;
           const optRaw = acroDict.lookup(PDFName.of("Opt"));
           if (!(optRaw instanceof PDFArray)) continue;
 
@@ -388,8 +393,14 @@ export class PdfiumFormProvider implements IFormDataProvider {
     if (buttons.length === 0) return result;
 
     try {
-      const { PDFDocument, PDFName, PDFString, PDFHexString, PDFDict, PDFNumber } =
-        await import("@cantoo/pdf-lib");
+      const {
+        PDFDocument,
+        PDFName,
+        PDFString,
+        PDFHexString,
+        PDFDict,
+        PDFNumber,
+      } = await import("@cantoo/pdf-lib");
 
       const doc = await PDFDocument.load(data, {
         ignoreEncryption: true,
@@ -438,7 +449,8 @@ export class PdfiumFormProvider implements IFormDataProvider {
               url = decodeText(fObj) ?? String(fObj);
             }
             const flagsObj = a.lookup(PDFName.of("Flags"));
-            const flags = flagsObj instanceof PDFNumber ? flagsObj.asNumber() : 0;
+            const flags =
+              flagsObj instanceof PDFNumber ? flagsObj.asNumber() : 0;
             return { type: "submitForm", url, submitFlags: flags };
           }
           case "ResetForm":

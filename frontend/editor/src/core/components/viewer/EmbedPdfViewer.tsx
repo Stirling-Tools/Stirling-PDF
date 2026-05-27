@@ -73,8 +73,7 @@ async function extractPageMeasureScales(
           : "";
       // D = distance array, X = x-axis fallback
       let fmtArray = m.lookup(PDFName.of("D"));
-      if (!(fmtArray instanceof PDFArray))
-        fmtArray = m.lookup(PDFName.of("X"));
+      if (!(fmtArray instanceof PDFArray)) fmtArray = m.lookup(PDFName.of("X"));
       if (!(fmtArray instanceof PDFArray)) return null;
       const firstFmt = fmtArray.lookup(0);
       if (!(firstFmt instanceof PDFDict)) return null;
