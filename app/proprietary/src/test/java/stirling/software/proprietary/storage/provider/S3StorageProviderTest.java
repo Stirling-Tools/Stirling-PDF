@@ -101,8 +101,13 @@ class S3StorageProviderTest {
 
         StoredObject stored = provider.store(owner, file);
 
-        assertThat(stored.getStorageKey()).startsWith("42/");
-        assertThat(stored.getStorageKey()).endsWith("_sample.pdf");
+        // Key is intentionally opaque ({ownerId}/{uuid}) - the filename is preserved on
+        // StoredObject.originalFilename for display, never in the S3 key, so vendors that
+        // restrict key charset (e.g. Supabase: ASCII only) accept any filename.
+        assertThat(stored.getStorageKey())
+                .matches(
+                        "42/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+        assertThat(stored.getStorageKey()).doesNotContain("sample.pdf");
         assertThat(stored.getOriginalFilename()).isEqualTo("sample.pdf");
         assertThat(stored.getContentType()).isEqualTo("application/pdf");
         assertThat(stored.getSizeBytes()).isEqualTo(content.length);
@@ -117,6 +122,29 @@ class S3StorageProviderTest {
     void load_unknownKey_throwsIOException() {
         assertThatThrownBy(() -> provider.load("does/not/exist.txt"))
                 .isInstanceOf(IOException.class);
+    }
+
+    @Test
+    void store_unicodeFilename_yieldsAsciiOnlyKey_andPreservesOriginalName() throws Exception {
+        // Regression: Supabase Storage rejects S3 keys containing non-ASCII chars (400
+        // Invalid key). Locking in that the storage key never embeds the filename so any
+        // unicode display name still uploads successfully.
+        User owner = new User();
+        owner.setId(99L);
+        String unicodeName = "résumé-日本語-é.pdf";
+        byte[] payload = "u".getBytes(StandardCharsets.UTF_8);
+        MockMultipartFile file =
+                new MockMultipartFile("file", unicodeName, "application/pdf", payload);
+
+        StoredObject stored = provider.store(owner, file);
+
+        assertThat(stored.getStorageKey())
+                .matches(
+                        "99/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+        assertThat(stored.getOriginalFilename()).isEqualTo(unicodeName);
+        try (InputStream in = provider.load(stored.getStorageKey()).getInputStream()) {
+            assertThat(in.readAllBytes()).isEqualTo(payload);
+        }
     }
 
     @Test

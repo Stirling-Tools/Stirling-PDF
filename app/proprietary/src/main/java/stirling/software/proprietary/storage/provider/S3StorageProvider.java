@@ -52,12 +52,10 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
             throw new IllegalArgumentException("owner.id is required for S3 storage key");
         }
         String originalFilename = sanitizeFilename(file.getOriginalFilename());
-        String storageKey =
-                owner.getId()
-                        + "/"
-                        + UUID.randomUUID()
-                        + "_"
-                        + Optional.ofNullable(originalFilename).orElse("file");
+        // Key is opaque ({ownerId}/{uuid}) so non-ASCII filenames don't break vendors that
+        // restrict key charset (e.g. Supabase Storage returns 400 Invalid key on unicode).
+        // The display name is preserved in StoredObject.originalFilename and the DB row.
+        String storageKey = owner.getId() + "/" + UUID.randomUUID();
 
         PutObjectRequest.Builder request =
                 PutObjectRequest.builder().bucket(bucket).key(storageKey);
