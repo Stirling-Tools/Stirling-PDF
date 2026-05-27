@@ -66,10 +66,10 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const location = useLocation();
-  // Collapse the sidebar when mounting directly on /files.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(() =>
-    location.pathname.startsWith("/files"),
-  );
+  // Start expanded; the transition effect below collapses on entering /files.
+  // Initialising from the URL would conflate "user collapsed it" with "auto-
+  // collapsed on direct mount", breaking the restore-on-leave snapshot.
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(false);
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
@@ -102,9 +102,6 @@ export default function HomePage() {
   ]);
 
   // Auto-collapse the FileSidebar on /files; snapshot prior state for restore.
-  // When the user lands directly on /files (deep link or refresh) the snapshot
-  // is never taken, so on leaving we fall back to expanded - the alternative
-  // (stuck collapsed forever until the user finds the toggle) is worse.
   const previousSidebarCollapsedRef = useRef<boolean | null>(null);
   const prevWorkbenchRef = useRef(navigationState.workbench);
   useEffect(() => {
