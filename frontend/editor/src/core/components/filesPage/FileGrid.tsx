@@ -30,6 +30,7 @@ import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
+import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 
 export type FilesPageViewMode = "grid" | "list";
@@ -632,6 +633,7 @@ function FileCard({
 
   const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
   const isPdf = extension === "PDF";
+  const resolvedThumbnail = useLazyThumbnail(file.id, file.size, file.thumbnailUrl);
 
   const kebabRef = useRef<HTMLButtonElement>(null);
   const handleContextMenu = useCallback(
@@ -699,9 +701,9 @@ function FileCard({
         </div>
       )}
       <div className="files-page-card-thumb">
-        {file.thumbnailUrl ? (
+        {resolvedThumbnail ? (
           // draggable={false} so card's onDragStart fires, not native image drag.
-          <img src={file.thumbnailUrl} alt="" draggable={false} />
+          <img src={resolvedThumbnail} alt="" draggable={false} />
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
@@ -1176,6 +1178,7 @@ function FileRow({
     [file.lastModified],
   );
   const ext = (file.name.split(".").pop() ?? "").toUpperCase();
+  const resolvedThumbnail = useLazyThumbnail(file.id, file.size, file.thumbnailUrl);
   return (
     <div
       role="row"
@@ -1240,9 +1243,9 @@ function FileRow({
           minWidth: 0,
         }}
       >
-        {file.thumbnailUrl ? (
+        {resolvedThumbnail ? (
           <img
-            src={file.thumbnailUrl}
+            src={resolvedThumbnail}
             alt=""
             // draggable={false} so row's onDragStart fires, not native image drag.
             draggable={false}
