@@ -1,7 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
-import type { Measurement, PagePoint } from "@app/utils/measurementTypes";
+import type {
+  MeasureScale,
+  Measurement,
+  PageMeasureScales,
+  PagePoint,
+} from "@app/utils/measurementTypes";
 import {
   POINT_TO_UNIT,
   isImperialUnit,
@@ -16,6 +21,20 @@ import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCa
 interface Point {
   x: number;
   y: number;
+}
+
+let rulerMeasurementIdCounter = 0;
+
+function createRulerMeasurementId(): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return `ruler-${crypto.randomUUID()}`;
+  }
+
+  rulerMeasurementIdCounter += 1;
+  return `ruler-${Date.now().toString(36)}-${rulerMeasurementIdCounter.toString(36)}`;
 }
 
 export interface RulerOverlayHandle {
@@ -73,29 +92,6 @@ function formatInches(pts: number): string {
   if (inches < 12) return `${inches.toFixed(2)} in`;
   return `${(inches / 12).toFixed(2)} ft`;
 }
-
-export interface MeasureScale {
-  /** Raw PDF factor (PDF points -> unit). Used directly for precise calculations. */
-  factor: number;
-  /** Computed ratio (factor / baseFactor). Used ONLY for display labels. null if unit unknown. */
-  ratio: number | null;
-  /** e.g. "ft", "m", "cm", etc. */
-  unit: string;
-}
-
-export interface ViewportScale {
-  /** BBox in PDF user space (bottom-left origin). null = entire page. */
-  bbox: [number, number, number, number] | null;
-  scale: MeasureScale;
-}
-
-export interface PageScaleInfo {
-  viewports: ViewportScale[];
-  /** Page height in PDF points — used to flip screen-y (top=0) to PDF-y (bottom=0). */
-  pageHeight: number;
-}
-
-export type PageMeasureScales = Map<number, PageScaleInfo>;
 
 /**
  * Given the start/end PagePoints of a measurement, find the scale from the
@@ -958,7 +954,7 @@ export const RulerOverlay = React.forwardRef<
         return;
       }
 
-      const id = `ruler-${crypto.randomUUID()}`;
+      const id = createRulerMeasurementId();
       setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
     };
 

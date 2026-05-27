@@ -119,6 +119,25 @@ export const UNIT_OPTIONS = [
   { value: "mi", label: "Miles (mi)" },
 ] as const;
 
+/**
+ * Detect quota exceeded errors across browser implementations.
+ * Handles: name "QuotaExceededError", code 22, "NS_ERROR_DOM_QUOTA_REACHED"
+ */
+function isQuotaExceededError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+
+  // Check by name (modern browsers, standard DOMException)
+  if (error.name === "QuotaExceededError") return true;
+
+  // Check by code (legacy DOMException code 22 for QuotaExceededError)
+  if ("code" in error && (error as any).code === 22) return true;
+
+  // Check for Safari/older implementation variants
+  if (error.name === "NS_ERROR_DOM_QUOTA_REACHED") return true;
+
+  return false;
+}
+
 // Load entries from sessionStorage
 export function loadSessionMap(key: string): Record<string, unknown> {
   try {
@@ -168,8 +187,8 @@ export function saveSessionMap(
 
     sessionStorage.setItem(key, JSON.stringify(existing));
   } catch (e) {
-    // QuotaExceededError - try clearing and retrying
-    if (e instanceof Error && e.name === "QuotaExceededError") {
+    // Quota exceeded - try clearing and retrying (handles cross-browser error variants)
+    if (isQuotaExceededError(e)) {
       try {
         sessionStorage.removeItem(key);
         // Retry with fresh storage

@@ -265,8 +265,8 @@ export function useViewerWorkbenchBarButtons(
             {
               id: "viewer-ruler-settings",
               icon: <SettingsIcon sx={{ fontSize: "1.5rem" }} />,
-              tooltip: t("rightRail.rulerSettings", "Scale Settings"),
-              ariaLabel: t("rightRail.rulerSettings", "Scale Settings"),
+              tooltip: t("workbenchBar.rulerSettings", "Scale Settings"),
+              ariaLabel: t("workbenchBar.rulerSettings", "Scale Settings"),
               section: "top" as const,
               order: 25.5,
               render: ({ disabled }: { disabled?: boolean }) => (
@@ -280,7 +280,10 @@ export function useViewerWorkbenchBarButtons(
                   <Popover.Target>
                     <div style={{ display: "inline-flex" }}>
                       <Tooltip
-                        content={t("rightRail.rulerSettings", "Scale Settings")}
+                        content={t(
+                          "workbenchBar.rulerSettings",
+                          "Scale Settings",
+                        )}
                         position={tooltipPosition}
                         offset={12}
                         arrow
@@ -293,7 +296,7 @@ export function useViewerWorkbenchBarButtons(
                           className="right-rail-icon"
                           disabled={disabled}
                           aria-label={t(
-                            "rightRail.rulerSettings",
+                            "workbenchBar.rulerSettings",
                             "Scale Settings",
                           )}
                         >

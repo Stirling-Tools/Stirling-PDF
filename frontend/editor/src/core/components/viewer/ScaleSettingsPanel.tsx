@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Group,
   Button,
@@ -38,9 +38,8 @@ export function ScaleSettingsPanel({
   currentScale,
 }: ScaleSettingsPanelProps) {
   const { t } = useTranslation();
-  const ratioInputRef = useRef<HTMLInputElement>(null);
-  const [ratio, setRatio] = useState<number | null>(
-    currentScale?.ratio ?? null,
+  const [ratio, setRatio] = useState<string | number>(
+    currentScale?.ratio ?? "",
   );
   const [unit, setUnit] = useState<string>(currentScale?.unit || "m");
   const [presetSelected, setPresetSelected] = useState<string | null>(null);
@@ -65,7 +64,7 @@ export function ScaleSettingsPanel({
   useEffect(() => {
     if (currentScale) {
       // ratio can be null, so only set it if it exists
-      setRatio(currentScale.ratio ?? null);
+      setRatio(currentScale.ratio ?? "");
       setUnit(currentScale.unit);
       clearErrors();
 
@@ -78,7 +77,7 @@ export function ScaleSettingsPanel({
       setPresetSelected(matchedPreset ?? null);
     } else {
       // Reset to defaults when no active scale
-      setRatio(null);
+      setRatio("");
       setUnit("m");
       setPresetSelected(null);
       clearErrors();
@@ -94,21 +93,28 @@ export function ScaleSettingsPanel({
     applyScale(presetRatio, unit);
   };
 
-  const handleRatioChange = (value: string | number | undefined) => {
+  const handleRatioChange = (value: string | number) => {
     clearRatioError();
 
-    if (value === undefined || value === "") {
-      setRatio(null);
+    if (value === "") {
+      setRatio("");
       setPresetSelected(null);
       return;
     }
 
-    const numValue = typeof value === "string" ? parseFloat(value) : value;
-    if (!isNaN(numValue)) {
-      setRatio(numValue);
-    }
+    setRatio(value);
     // Clear preset selection when user enters custom value
     setPresetSelected(null);
+  };
+
+  const parseRatioValue = (value: string | number): number | null => {
+    if (typeof value === "number") return Number.isNaN(value) ? null : value;
+
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return null;
+
+    const numValue = Number(trimmedValue);
+    return Number.isNaN(numValue) ? null : numValue;
   };
 
   const handleUnitChange = (val: string | null) => {
@@ -116,27 +122,25 @@ export function ScaleSettingsPanel({
     setUnit(val);
     clearUnitError();
     // Auto-apply immediately if ratio is set (better UX consistency)
-    if (ratio && ratio > 0) {
-      applyScale(ratio, val);
+    const numValue = parseRatioValue(ratio);
+    if (numValue && numValue > 0) {
+      applyScale(numValue, val);
     }
   };
 
-  const validateRatio = (): boolean => {
-    // Read value directly from input to ensure it's synchronized
-    const inputValue = ratioInputRef.current?.value;
-    const numValue = inputValue ? parseFloat(inputValue) : null;
-
+  const validateRatio = (): number | null => {
+    const numValue = parseRatioValue(ratio);
     if (numValue === null || numValue === undefined || isNaN(numValue)) {
       setRatioError(t("scaleSettings.ratioRequired", "Ratio is required"));
-      return false;
+      return null;
     }
     if (numValue <= 0) {
       setRatioError(
         t("scaleSettings.ratioPositive", "Ratio must be greater than zero"),
       );
-      return false;
+      return null;
     }
-    return true;
+    return numValue;
   };
 
   const applyScale = (scaleRatio: number, scaleUnit: string) => {
@@ -166,12 +170,9 @@ export function ScaleSettingsPanel({
   };
 
   const handleApply = () => {
-    if (!validateRatio()) return;
-    const inputValue = ratioInputRef.current?.value;
-    const numValue = inputValue ? parseFloat(inputValue) : null;
-    if (numValue && numValue > 0) {
-      applyScale(numValue, unit);
-    }
+    const numValue = validateRatio();
+    if (numValue === null) return;
+    applyScale(numValue, unit);
   };
 
   const handleStartCalibration = () => {
@@ -210,11 +211,10 @@ export function ScaleSettingsPanel({
         <Group grow>
           <div>
             <NumberInput
-              ref={ratioInputRef}
               key={`ratio-${currentScale?.ratio ?? "empty"}`}
               label={t("scaleSettings.ratio", "Ratio")}
               placeholder={t("scaleSettings.ratioPlaceholder", "e.g., 100")}
-              value={ratio ?? undefined}
+              value={ratio}
               onChange={handleRatioChange}
               min={0.1}
               step={1}
