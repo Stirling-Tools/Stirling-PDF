@@ -345,6 +345,8 @@ cluster:
     internalAddress: "" # host:port advertised in the instance registry for peer-to-peer cluster traffic. Blank = derived at startup.
     scheme: http # 'http' or 'https' - scheme peers use to call this node's /internal/cluster/** endpoints
     heartbeatIntervalMs: 5000 # Heartbeat publish interval for the instance registry (ms)
+  engine:
+    sharedSecret: "" # Shared secret for Java <-> Python AI engine auth. Generate via 'openssl rand -hex 32' and set BOTH this value and the engine pod's STIRLING_ENGINE_SHARED_SECRET env var to the same string. Blank = dev mode (auth disabled, NEVER in production).
 
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font

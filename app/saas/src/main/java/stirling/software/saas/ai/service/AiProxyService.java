@@ -20,9 +20,20 @@ import jakarta.servlet.http.Part;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.service.UserService;
 
+/**
+ * Proxies saas-side HTTP requests to the AI engine and enforces the auth-header contract:
+ *
+ * <ul>
+ *   <li>Client-supplied {@code Authorization} and {@code X-API-KEY} are stripped; the server-
+ *       resolved API key is stamped so callers cannot spoof identity downstream.
+ *   <li>{@code X-Engine-Auth} is stamped when the cluster shared secret is configured.
+ *   <li>{@code X-User-Id} is stamped for authenticated principals; omitted for anonymous.
+ * </ul>
+ */
 @Service
 @Profile("saas")
 @Slf4j
@@ -30,21 +41,29 @@ public class AiProxyService {
 
     private static final String DEFAULT_AI_BASE_URL = "http://localhost:5001";
 
+    private static final String ENGINE_AUTH_HEADER = "X-Engine-Auth";
+    private static final String USER_ID_HEADER = "X-User-Id";
+    private static final String API_KEY_HEADER = "X-API-KEY";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+
     private final String aiServiceBaseUrl;
 
     private final HttpClient httpClient;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final ApplicationProperties applicationProperties;
 
     public AiProxyService(
             @Value("${app.ai.service-base-url:" + DEFAULT_AI_BASE_URL + "}")
                     String aiServiceBaseUrl,
             UserRepository userRepository,
-            UserService userService) {
+            UserService userService,
+            ApplicationProperties applicationProperties) {
         this.aiServiceBaseUrl = aiServiceBaseUrl;
         this.httpClient = HttpClient.newBuilder().build();
         this.userRepository = userRepository;
         this.userService = userService;
+        this.applicationProperties = applicationProperties;
     }
 
     public HttpResponse<InputStream> forward(
@@ -54,21 +73,6 @@ public class AiProxyService {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(targetUrl));
 
         String contentType = request.getContentType();
-
-        String authorization = request.getHeader("Authorization");
-        if (authorization != null && !authorization.isBlank()) {
-            builder.header("Authorization", authorization);
-        }
-
-        // Extract user API key from authenticated user and forward to AI backend
-        String apiKey = request.getHeader("X-API-KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            apiKey = extractUserApiKey();
-        }
-        if (apiKey != null && !apiKey.isBlank()) {
-            builder.header("X-API-KEY", apiKey);
-            log.debug("Forwarding X-API-KEY header to AI backend");
-        }
 
         String accept = request.getHeader("Accept");
         if (acceptEventStream) {
@@ -84,8 +88,66 @@ public class AiProxyService {
             builder.header("Content-Type", contentType);
         }
         builder.method(method, body.publisher);
+
+        // INVARIANT: stamp auth headers LAST. setHeader() overrides any previously-set value,
+        // including any caller-supplied Authorization / X-API-KEY that arrived via this proxy.
+        // Any .header(...) call AFTER this point would defeat the strip-on-output guarantee.
+        stampAuthHeaders(builder);
+
         log.debug("Proxying AI request {} {}", method, targetUrl);
         return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofInputStream());
+    }
+
+    private void stampAuthHeaders(HttpRequest.Builder builder) {
+        // setHeader (not header) with empty string causes the JDK builder to omit the header
+        // entirely in the built request, dropping any caller-supplied value.
+        builder.setHeader(AUTHORIZATION_HEADER, "");
+
+        String apiKey = extractUserApiKey();
+        if (apiKey != null && !apiKey.isBlank()) {
+            builder.setHeader(API_KEY_HEADER, apiKey);
+            log.debug("Attaching server-resolved X-API-KEY for the engine call");
+        } else {
+            builder.setHeader(API_KEY_HEADER, "");
+        }
+
+        String engineSecret = resolveEngineSecret();
+        if (engineSecret != null && !engineSecret.isBlank()) {
+            builder.setHeader(ENGINE_AUTH_HEADER, engineSecret);
+        }
+
+        try {
+            String username = userService.getCurrentUsername();
+            if (username != null && !username.isBlank() && !"anonymousUser".equals(username)) {
+                builder.setHeader(USER_ID_HEADER, username);
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Could not resolve current username for X-User-Id header", ex);
+        }
+    }
+
+    private String resolveEngineSecret() {
+        ApplicationProperties.Cluster cluster = applicationProperties.getCluster();
+        if (cluster == null || cluster.getEngine() == null) {
+            return "";
+        }
+        return cluster.getEngine().getSharedSecret();
+    }
+
+    private String extractUserApiKey() {
+        try {
+            String username = userService.getCurrentUsername();
+            if (username == null || username.isBlank()) {
+                log.debug("No authenticated user found for API key extraction");
+                return null;
+            }
+            String apiKey = userService.getApiKeyForUser(username);
+            log.debug("Retrieved API key for user: {}", username);
+            return apiKey;
+        } catch (Exception e) {
+            log.error("Failed to extract or create user API key", e);
+            return null;
+        }
     }
 
     private String buildTargetUrl(String path, String queryString) {
@@ -174,34 +236,6 @@ public class AiProxyService {
     private void writeLine(ByteArrayOutputStream output, String value) throws IOException {
         output.write(value.getBytes(StandardCharsets.UTF_8));
         output.write("\r\n".getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * Extract the authenticated user's API key from the database. If the user doesn't have an API
-     * key, one will be created automatically.
-     *
-     * @return The user's API key, or null if not authenticated or key creation fails
-     */
-    private String extractUserApiKey() {
-        try {
-            // Use getCurrentUsername() which handles all auth types including anonymous users
-            String username = userService.getCurrentUsername();
-            if (username == null || username.isBlank()) {
-                log.debug("No authenticated user found for API key extraction");
-                return null;
-            }
-
-            // getApiKeyForUser will create a key if it doesn't exist
-            String apiKey = userService.getApiKeyForUser(username);
-            log.debug("Retrieved API key for user: {}", username);
-            return apiKey;
-        } catch (Exception e) {
-            log.error(
-                    "Failed to extract or create user API key for user: {}",
-                    userService.getCurrentUsername(),
-                    e);
-            return null;
-        }
     }
 
     private static class BodyPublisherWithContentType {

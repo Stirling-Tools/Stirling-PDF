@@ -283,6 +283,7 @@ public class ApplicationProperties {
 
         private Valkey valkey = new Valkey();
         private Node node = new Node();
+        private Engine engine = new Engine();
 
         private transient String cachedNodeId;
 
@@ -353,6 +354,16 @@ public class ApplicationProperties {
 
             /** Heartbeat publish interval for the instance registry, in milliseconds. */
             private long heartbeatIntervalMs = 5000;
+        }
+
+        @Data
+        public static class Engine {
+            /**
+             * Shared secret for the {@code X-Engine-Auth} header on Java -&gt; Python engine calls.
+             * Must match {@code STIRLING_ENGINE_SHARED_SECRET} on the engine pod. Blank = dev mode
+             * (no auth) - never leave blank in production.
+             */
+            private String sharedSecret = "";
         }
     }
 

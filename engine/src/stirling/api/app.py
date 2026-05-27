@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
-from typing import Annotated
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
 
@@ -16,7 +16,7 @@ from stirling.agents import (
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
-from stirling.api.middleware import UserIdMiddleware
+from stirling.api.middleware import EngineAuthMiddleware, UserIdMiddleware
 from stirling.api.routes import (
     agent_draft_router,
     document_router,
@@ -63,7 +63,21 @@ async def lifespan(fast_api: FastAPI):
 
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
+
+try:
+    _engine_shared_secret = load_settings().engine_shared_secret or ""
+except (AttributeError, KeyError) as cfg_err:
+    raise RuntimeError(
+        "engine_shared_secret missing from settings; ensure STIRLING_ENGINE_SHARED_SECRET "
+        "is declared in the env (blank value is allowed for dev mode)."
+    ) from cfg_err
+if not _engine_shared_secret:
+    logging.getLogger(__name__).warning(
+        "STIRLING_ENGINE_SHARED_SECRET is blank - running in dev (open) mode."
+    )
+
 app.add_middleware(UserIdMiddleware)
+app.add_middleware(EngineAuthMiddleware, expected_secret=_engine_shared_secret)
 app.include_router(orchestrator_router)
 app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
@@ -75,9 +89,5 @@ app.include_router(pdf_comments_router)
 
 
 @app.get("/health", response_model=HealthResponse)
-async def healthcheck(settings: Annotated[AppSettings, Depends(load_settings)]) -> HealthResponse:
-    return HealthResponse(
-        status="ok",
-        smart_model=settings.smart_model_name,
-        fast_model=settings.fast_model_name,
-    )
+async def healthcheck() -> HealthResponse:
+    return HealthResponse(status="ok")

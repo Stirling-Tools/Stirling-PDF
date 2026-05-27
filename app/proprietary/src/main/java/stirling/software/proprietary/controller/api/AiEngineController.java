@@ -87,7 +87,7 @@ public class AiEngineController {
     @GetMapping("/health")
     @Operation(
             summary = "AI engine health check",
-            description = "Returns the health status of the AI engine including configured models")
+            description = "Returns the health status of the AI engine.")
     public ResponseEntity<String> health() throws IOException {
         String response = aiEngineClient.get("/health");
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);

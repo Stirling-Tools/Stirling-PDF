@@ -38,8 +38,8 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.repository.AiCreateSessionRepository;
-import stirling.software.saas.ai.service.AiCreateProxyService;
 import stirling.software.saas.ai.service.AiCreateSessionService;
+import stirling.software.saas.ai.service.AiProxyService;
 import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -53,7 +53,7 @@ import stirling.software.saas.util.CreditHeaderUtils;
 public class AiCreateController {
 
     private final AiCreateSessionService sessionService;
-    private final AiCreateProxyService proxyService;
+    private final AiProxyService proxyService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final CreditService creditService;
     private final TeamCreditService teamCreditService;
