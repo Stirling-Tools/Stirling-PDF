@@ -97,4 +97,71 @@ class InProcessDistributedLockTest {
         h1.release();
         assertFalse(h1.renew(Duration.ofSeconds(30)), "renew on a released handle must fail");
     }
+
+    /**
+     * Concurrency stress: many threads contending on the same key with each holder respecting the
+     * lease (hold &lt;&lt; lease). The lock behaves as a strict mutex in this regime so asserting
+     * mutual exclusion is meaningful. A separate test ({@link
+     * #leaseExpiryAllowsTakeoverEvenWithoutRelease}) covers the takeover-across-expiry branch,
+     * which legitimately allows two holders momentarily and is split-brain behaviour inherent to
+     * any lease-based lock.
+     */
+    @Test
+    void concurrentContentionPreservesMutualExclusion() throws InterruptedException {
+        DistributedLock lock = new InProcessDistributedLock();
+        int threads = 16;
+        int attemptsPerThread = 200;
+        // Lease far exceeds any plausible hold time, so the takeover branch never triggers in
+        // this test and the lock acts as a strict mutex.
+        Duration lease = Duration.ofSeconds(5);
+        java.util.concurrent.atomic.AtomicInteger concurrentHolders =
+                new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.atomic.AtomicInteger maxConcurrent =
+                new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.atomic.AtomicInteger acquires =
+                new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.atomic.AtomicReference<Throwable> firstFailure =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(threads);
+
+        for (int i = 0; i < threads; i++) {
+            new Thread(
+                            () -> {
+                                try {
+                                    start.await();
+                                    for (int j = 0; j < attemptsPerThread; j++) {
+                                        Optional<DistributedLock.LockHandle> h =
+                                                lock.tryAcquire("hot", lease);
+                                        if (h.isPresent()) {
+                                            int now = concurrentHolders.incrementAndGet();
+                                            maxConcurrent.accumulateAndGet(now, Math::max);
+                                            acquires.incrementAndGet();
+                                            // Trivial critical section; well within lease.
+                                            concurrentHolders.decrementAndGet();
+                                            h.get().release();
+                                        }
+                                    }
+                                } catch (Throwable t) {
+                                    firstFailure.compareAndSet(null, t);
+                                } finally {
+                                    done.countDown();
+                                }
+                            },
+                            "lock-stress-" + i)
+                    .start();
+        }
+        start.countDown();
+        assertTrue(done.await(30, TimeUnit.SECONDS), "stress workers must finish in time");
+        org.junit.jupiter.api.Assertions.assertNull(firstFailure.get(), "no worker may throw");
+        org.junit.jupiter.api.Assertions.assertEquals(
+                1,
+                maxConcurrent.get(),
+                "mutual exclusion violated: more than one holder observed simultaneously");
+        assertTrue(
+                acquires.get() > 0,
+                "at least some acquires must succeed under contention (saw "
+                        + acquires.get()
+                        + ")");
+    }
 }
