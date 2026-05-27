@@ -3,6 +3,7 @@ package stirling.software.proprietary.storage.provider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Optional;
@@ -92,11 +93,6 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
                 public long contentLength() {
                     return contentLength;
                 }
-
-                @Override
-                public String getFilename() {
-                    return storageKey;
-                }
             };
         } catch (NoSuchKeyException e) {
             throw new IOException("File not found", e);
@@ -143,7 +139,7 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
                             .build();
             PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
             return Optional.of(presigned.url().toURI());
-        } catch (Exception e) {
+        } catch (SdkException | URISyntaxException e) {
             log.warn("Failed to create presigned S3 GET URL for key {}", storageKey, e);
             return Optional.empty();
         }

@@ -150,9 +150,6 @@ public class S3FileStore implements FileStore, AutoCloseable {
             return false;
         }
         try {
-            if (!exists(fileId)) {
-                return false;
-            }
             s3Client.deleteObject(
                     DeleteObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build());
             return true;

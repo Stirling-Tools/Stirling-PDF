@@ -143,8 +143,10 @@ class S3FileStoreTest {
     }
 
     @Test
-    void delete_unknownKey_returnsFalse() {
-        assertThat(store.delete("00000000-0000-0000-0000-000000000000")).isFalse();
+    void delete_unknownKey_isIdempotentReturnsTrue() {
+        // S3 DeleteObject is idempotent (returns 204 whether or not the object existed).
+        // The store reflects S3's behaviour rather than racing a HEAD before each DELETE.
+        assertThat(store.delete("00000000-0000-0000-0000-000000000000")).isTrue();
     }
 
     @Test
