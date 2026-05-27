@@ -12,6 +12,8 @@ import stirling.software.common.model.ApplicationProperties;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -63,11 +65,18 @@ public final class S3Clients {
         S3Configuration s3Configuration =
                 S3Configuration.builder().pathStyleAccessEnabled(cfg.isPathStyleAccess()).build();
 
+        RequestChecksumCalculation requestChecksum =
+                parseRequestChecksum(cfg.getRequestChecksumCalculation());
+        ResponseChecksumValidation responseChecksum =
+                parseResponseChecksum(cfg.getResponseChecksumValidation());
+
         S3ClientBuilder clientBuilder =
                 S3Client.builder()
                         .httpClient(UrlConnectionHttpClient.create())
                         .region(Region.of(region))
-                        .serviceConfiguration(s3Configuration);
+                        .serviceConfiguration(s3Configuration)
+                        .requestChecksumCalculation(requestChecksum)
+                        .responseChecksumValidation(responseChecksum);
 
         S3Presigner.Builder presignerBuilder =
                 S3Presigner.builder()
@@ -157,5 +166,35 @@ public final class S3Clients {
                 || address.isSiteLocalAddress()
                 || address.isAnyLocalAddress()
                 || address.isMulticastAddress();
+    }
+
+    static RequestChecksumCalculation parseRequestChecksum(String value) {
+        if (value == null || value.isBlank()) {
+            return RequestChecksumCalculation.WHEN_SUPPORTED;
+        }
+        try {
+            return RequestChecksumCalculation.valueOf(
+                    value.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            log.warn(
+                    "Unknown storage.s3.request-checksum-calculation value '{}', falling back to WHEN_SUPPORTED",
+                    value);
+            return RequestChecksumCalculation.WHEN_SUPPORTED;
+        }
+    }
+
+    static ResponseChecksumValidation parseResponseChecksum(String value) {
+        if (value == null || value.isBlank()) {
+            return ResponseChecksumValidation.WHEN_SUPPORTED;
+        }
+        try {
+            return ResponseChecksumValidation.valueOf(
+                    value.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            log.warn(
+                    "Unknown storage.s3.response-checksum-validation value '{}', falling back to WHEN_SUPPORTED",
+                    value);
+            return ResponseChecksumValidation.WHEN_SUPPORTED;
+        }
     }
 }
