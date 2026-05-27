@@ -4,6 +4,9 @@ import { createRoot } from "react-dom/client";
 import { App } from "@portal/App";
 import { readMocksPreference } from "@portal/mocks/preference";
 
+// Mantine's prebuilt styles load first so SUI tokens/base can override on
+// conflicts — SUI is the primary design language, Mantine the escape hatch.
+import "@mantine/core/styles.css";
 import "@shared/tokens/tokens.css";
 import "@shared/tokens/base.css";
 

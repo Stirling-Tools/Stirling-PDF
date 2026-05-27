@@ -5,7 +5,7 @@
       "@app/*": ["src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"],
-      "@shared/*": ["src/shared/*"]
+      "@shared/*": ["../shared/*"]
     }
   },
   "exclude": [

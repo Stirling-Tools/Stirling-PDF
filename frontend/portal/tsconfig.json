@@ -6,7 +6,7 @@
     "moduleResolution": "bundler",
     "baseUrl": "./",
     "paths": {
-      "@portal/*": ["src/*", "../shared/*"],
+      "@portal/*": ["src/*"],
       "@shared/*": ["../shared/*"]
     },
     "resolveJsonModule": true,

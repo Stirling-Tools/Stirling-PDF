@@ -3,7 +3,7 @@
   "compilerOptions": {
     "paths": {
       "@app/*": ["src/core/*"],
-      "@shared/*": ["src/shared/*"]
+      "@shared/*": ["../shared/*"]
     }
   },
   "exclude": ["src/proprietary", "src/desktop", "node_modules"]

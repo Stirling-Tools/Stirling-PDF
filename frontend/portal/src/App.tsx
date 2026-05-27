@@ -1,13 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider } from "@portal/contexts/ThemeContext";
+import { MantineProvider } from "@mantine/core";
+import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
+import { mantineTheme } from "@portal/theme/mantineTheme";
 import { AppShell } from "@portal/components/AppShell";
 import { AssistantButton } from "@portal/components/AssistantButton";
 import { AssistantPanel } from "@portal/components/AssistantPanel";
 import { SearchModal } from "@portal/components/SearchModal";
 import { ViewRouter } from "@portal/ViewRouter";
+
+/**
+ * Binds Mantine's colour scheme to the portal's own ThemeProvider so Mantine
+ * components follow the same light/dark switch as the SUI primitives. Must sit
+ * inside <ThemeProvider> to read useTheme().
+ */
+function PortalMantineProvider({ children }: { children: ReactNode }) {
+  const { theme } = useTheme();
+  return (
+    <MantineProvider theme={mantineTheme} forceColorScheme={theme}>
+      {children}
+    </MantineProvider>
+  );
+}
 
 /**
  * Global keyboard shortcuts. Lives below the UIProvider so it can dispatch
@@ -39,19 +55,21 @@ function GlobalShortcuts() {
 export function App() {
   return (
     <ThemeProvider>
-      <TierProvider initialTier="pro">
-        <BrowserRouter>
-          <UIProvider>
-            <GlobalShortcuts />
-            <AppShell>
-              <ViewRouter />
-            </AppShell>
-            <AssistantButton />
-            <AssistantPanel />
-            <SearchModal />
-          </UIProvider>
-        </BrowserRouter>
-      </TierProvider>
+      <PortalMantineProvider>
+        <TierProvider initialTier="pro">
+          <BrowserRouter>
+            <UIProvider>
+              <GlobalShortcuts />
+              <AppShell>
+                <ViewRouter />
+              </AppShell>
+              <AssistantButton />
+              <AssistantPanel />
+              <SearchModal />
+            </UIProvider>
+          </BrowserRouter>
+        </TierProvider>
+      </PortalMantineProvider>
     </ThemeProvider>
   );
 }

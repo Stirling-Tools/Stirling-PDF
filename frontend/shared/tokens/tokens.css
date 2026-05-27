@@ -172,7 +172,11 @@
   --color-amber: #fbbf24;
   --color-amber-light: #2d2006;
   --color-amber-border: #78350f;
-  --color-amber-dark: #fbbf24;
+  /* Deeper than the base so it stays distinct (hover shade + amber text on
+     dark surfaces). ~7.4:1 on --color-amber-light, passes WCAG AA. Was
+     #fbbf24 — identical to the base — which left Mantine's amber hover a
+     no-op in dark mode. */
+  --color-amber-dark: #f59e0b;
 
   --color-bg: #090c14;
   --color-bg-alt: #0d1120;
