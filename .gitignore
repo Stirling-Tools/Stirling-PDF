@@ -59,6 +59,10 @@ app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
+# Tauri build artifacts
+frontend/src-tauri/target/
+frontend/editor/src-tauri/target/
+
 # Gradle
 .gradle
 .gradle-home
@@ -161,7 +165,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
-frontend/editor/src-tauri/provisioner/target
+frontend/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
