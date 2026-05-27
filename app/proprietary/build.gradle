@@ -44,6 +44,7 @@ dependencies {
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
     api 'org.springframework.session:spring-session-core'
+    implementation 'org.springframework.session:spring-session-data-redis'
     api "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
     api "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
     api 'org.springframework.boot:spring-boot-starter-jetty'

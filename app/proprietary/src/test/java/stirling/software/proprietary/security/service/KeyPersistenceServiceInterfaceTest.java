@@ -71,7 +71,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
 
             assertEquals(keystoreEnabled, keyPersistenceService.isKeystoreEnabled());
         }
@@ -84,7 +85,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
             keyPersistenceService.initializeKeystore();
 
             JwtVerificationKey result = keyPersistenceService.getActiveKey();
@@ -113,7 +115,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
             keyPersistenceService.initializeKeystore();
 
             JwtVerificationKey result = keyPersistenceService.getActiveKey();
@@ -141,7 +144,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
 
             keyPersistenceService
                     .getClass()
@@ -167,7 +171,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
 
             Optional<KeyPair> result = keyPersistenceService.getKeyPair(keyId);
 
@@ -184,7 +189,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
 
             Optional<KeyPair> result = keyPersistenceService.getKeyPair("any-key");
 
@@ -199,12 +205,35 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
             keyPersistenceService.initializeKeystore();
 
             assertTrue(Files.exists(tempDir));
             assertTrue(Files.isDirectory(tempDir));
         }
+    }
+
+    @Test
+    void writeAtomically_writesFinalFile_andLeavesNoTempFile() throws IOException {
+        Path target = tempDir.resolve("jwt-key-test.key");
+        KeyPersistenceService.writeAtomically(target, "payload-bytes");
+
+        assertTrue(Files.exists(target), "final file must exist after atomic write");
+        assertEquals("payload-bytes", Files.readString(target));
+        assertFalse(
+                Files.exists(target.resolveSibling("jwt-key-test.key.tmp")),
+                "tmp file must not survive a successful move");
+    }
+
+    @Test
+    void writeAtomically_overwritesExistingFinalFile() throws IOException {
+        Path target = tempDir.resolve("jwt-key-overwrite.key");
+        Files.writeString(target, "old-content");
+
+        KeyPersistenceService.writeAtomically(target, "new-content");
+
+        assertEquals("new-content", Files.readString(target));
     }
 
     @Test
@@ -220,7 +249,8 @@ class KeyPersistenceServiceInterfaceTest {
             mockedStatic
                     .when(InstallationPathConfig::getPrivateKeyPath)
                     .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
+            keyPersistenceService =
+                    new KeyPersistenceService(applicationProperties, cacheManager, null);
             keyPersistenceService.initializeKeystore();
 
             JwtVerificationKey result = keyPersistenceService.getActiveKey();

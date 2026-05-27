@@ -290,4 +290,27 @@ class UserServiceTest {
         verify(userRepository, never()).delete(any());
         verify(workflowSessionRepository, never()).findByOwnerOrderByCreatedAtDesc(any());
     }
+
+    @Test
+    void validateApiKeyForUser_acceptsExactMatch_rejectsWrongKey_rejectsNullKey() {
+        User user = new User();
+        user.setUsername("svc");
+        user.setApiKey("real-correct-api-key-xyzzy");
+        when(userRepository.findByUsernameIgnoreCase("svc")).thenReturn(Optional.of(user));
+
+        assertTrue(userService.validateApiKeyForUser("svc", "real-correct-api-key-xyzzy"));
+        assertFalse(userService.validateApiKeyForUser("svc", "real-incorrect-api-key-vvv"));
+        assertFalse(userService.validateApiKeyForUser("svc", "short"));
+        assertFalse(userService.validateApiKeyForUser("svc", null));
+    }
+
+    @Test
+    void validateApiKeyForUser_rejectsWhenUserHasNullStoredKey() {
+        User user = new User();
+        user.setUsername("svc");
+        user.setApiKey(null);
+        when(userRepository.findByUsernameIgnoreCase("svc")).thenReturn(Optional.of(user));
+
+        assertFalse(userService.validateApiKeyForUser("svc", "any-key"));
+    }
 }

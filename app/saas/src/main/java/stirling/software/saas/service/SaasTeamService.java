@@ -161,13 +161,12 @@ public class SaasTeamService {
                     "Cannot invite members: personal team or no available seats");
         }
 
-        // Check rate limit (10 invitations per hour, 50 per day)
         if (!rateLimitService.allowInvitation(teamId)) {
-            int remaining = rateLimitService.getRemainingInvitations(teamId);
+            int limitPerHour = rateLimitService.getInvitationLimitPerHour();
             throw new IllegalStateException(
                     String.format(
-                            "Rate limit exceeded. Please try again later. (Remaining: %d)",
-                            remaining));
+                            "Rate limit exceeded. Please try again later. (Limit: %d/hour)",
+                            limitPerHour));
         }
 
         // Check if there's already a pending invitation

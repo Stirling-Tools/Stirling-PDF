@@ -2,9 +2,9 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -15,9 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
 import io.github.pixee.security.Newlines;
 
 import jakarta.servlet.FilterChain;
@@ -25,22 +22,28 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.common.cluster.RateLimitStore;
+import stirling.software.common.cluster.RateLimitStore.RateLimitDecision;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.proprietary.cluster.ClusterMetrics;
 
 @Component
 @Profile("!saas")
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
-    private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
-
-    private final Map<String, Bucket> webBuckets = new ConcurrentHashMap<>();
+    private final RateLimitStore rateLimitStore;
 
     @Qualifier("rateLimit")
     private final boolean rateLimit;
 
-    public UserBasedRateLimitingFilter(@Qualifier("rateLimit") boolean rateLimit) {
+    @Autowired(required = false)
+    private ClusterMetrics clusterMetrics;
+
+    public UserBasedRateLimitingFilter(
+            @Qualifier("rateLimit") boolean rateLimit, RateLimitStore rateLimitStore) {
         this.rateLimit = rateLimit;
+        this.rateLimitStore = rateLimitStore;
     }
 
     @Override
@@ -48,54 +51,44 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         if (!rateLimit) {
-            // If rateLimit is not enabled, just pass all requests without rate limiting
             filterChain.doFilter(request, response);
             return;
         }
         String method = request.getMethod();
         if (!"POST".equalsIgnoreCase(method)) {
-            // If the request is not a POST, just pass it through without rate limiting
             filterChain.doFilter(request, response);
             return;
         }
-        String identifier = null;
-        // Check for API key in the request headers
+        String identifier;
         String apiKey = request.getHeader("X-API-KEY");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
-            identifier = // Prefix to distinguish between API keys and usernames
-                    "API_KEY_" + apiKey;
+            // Hash the API key so the raw value never appears in any Valkey rate-limit bucket key.
+            identifier = "API_KEY_" + DigestUtils.sha256Hex(apiKey);
         } else {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            // AnonymousAuthenticationToken.isAuthenticated() == true but principal is
+            // "anonymousUser";
+            // guard the cast so anonymous requests fall through to the remote-addr branch.
+            if (authentication != null
+                    && authentication.isAuthenticated()
+                    && authentication.getPrincipal() instanceof UserDetails userDetails) {
                 identifier = userDetails.getUsername();
+            } else {
+                identifier = request.getRemoteAddr();
             }
-        }
-        // If neither API key nor an authenticated user is present, use IP address
-        if (identifier == null) {
-            identifier = request.getRemoteAddr();
         }
         Role userRole =
                 getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
+        String scope;
+        int limitPerDay;
         if (request.getHeader("X-API-KEY") != null) {
-            // It's an API call
-            processRequest(
-                    userRole.getApiCallsPerDay(),
-                    identifier,
-                    apiBuckets,
-                    request,
-                    response,
-                    filterChain);
+            scope = "api:";
+            limitPerDay = userRole.getApiCallsPerDay();
         } else {
-            // It's a Web UI call
-            processRequest(
-                    userRole.getWebCallsPerDay(),
-                    identifier,
-                    webBuckets,
-                    request,
-                    response,
-                    filterChain);
+            scope = "web:";
+            limitPerDay = userRole.getWebCallsPerDay();
         }
+        processRequest(limitPerDay, scope + identifier, request, response, filterChain);
     }
 
     private Role getRoleFromAuthentication(Authentication authentication) {
@@ -108,41 +101,34 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
                 }
             }
         }
-        throw new IllegalStateException("User does not have a valid role.");
+        return Role.WEB_ONLY_USER; // no matching authority - use most restrictive bucket
     }
 
     private void processRequest(
             int limitPerDay,
-            String identifier,
-            Map<String, Bucket> buckets,
+            String bucketKey,
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)
             throws IOException, ServletException {
-        Bucket userBucket = buckets.computeIfAbsent(identifier, k -> createUserBucket(limitPerDay));
-        ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);
-        if (probe.isConsumed()) {
+        RateLimitDecision probe =
+                rateLimitStore.tryConsume(bucketKey, limitPerDay, Duration.ofDays(1));
+        if (probe.allowed()) {
             response.setHeader(
                     "X-Rate-Limit-Remaining",
-                    stripNewlines(Newlines.stripAll(Long.toString(probe.getRemainingTokens()))));
+                    stripNewlines(Newlines.stripAll(Long.toString(probe.remainingTokens()))));
             filterChain.doFilter(request, response);
         } else {
-            long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
+            long waitForRefill = probe.nanosToWaitForRefill() / 1_000_000_000;
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader(
                     "X-Rate-Limit-Retry-After-Seconds",
                     Newlines.stripAll(String.valueOf(waitForRefill)));
             response.getWriter().write("Rate limit exceeded for POST requests.");
+            if (clusterMetrics != null) {
+                clusterMetrics.recordRateLimitReject();
+            }
         }
-    }
-
-    private Bucket createUserBucket(int limitPerDay) {
-        Bandwidth limit =
-                Bandwidth.builder()
-                        .capacity(limitPerDay)
-                        .refillIntervally(limitPerDay, Duration.ofDays(1))
-                        .build();
-        return Bucket.builder().addLimit(limit).build();
     }
 
     private static String stripNewlines(final String s) {

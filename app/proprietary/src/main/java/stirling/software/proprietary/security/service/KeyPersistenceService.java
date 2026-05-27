@@ -1,9 +1,11 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -15,6 +17,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -28,16 +31,21 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.cluster.KeyValueCache;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 
+/**
+ * SECURITY: the {@link #JWT_PUBKEY_NAMESPACE} cluster cache is trust-on-publish. Operators MUST
+ * restrict Valkey ACL writes to app pods, enable AUTH + TLS, and network-isolate the deployment.
+ * Future hardening: HMAC-signed broadcasts with a cluster master secret.
+ */
 @Slf4j
 @Service
 public class KeyPersistenceService implements KeyPersistenceServiceInterface {
@@ -45,18 +53,28 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     public static final String KEY_SUFFIX = ".key";
     public static final String PUB_KEY_SUFFIX = ".pub";
 
+    private static final Duration JWT_PUBKEY_CLUSTER_TTL = Duration.ofHours(24);
+
+    /** Cluster KeyValueCache namespace used to broadcast public keys to peers. */
+    public static final String JWT_PUBKEY_NAMESPACE = "jwtkey";
+
     private final ApplicationProperties.Security.Jwt jwtProperties;
     private final CacheManager cacheManager;
     private final Cache verifyingKeyCache;
+
+    private final KeyValueCache clusterKeyCache; // null in single-instance mode
 
     private volatile JwtVerificationKey activeKey;
 
     @Autowired
     public KeyPersistenceService(
-            ApplicationProperties applicationProperties, CacheManager cacheManager) {
+            ApplicationProperties applicationProperties,
+            CacheManager cacheManager,
+            @Autowired(required = false) KeyValueCache clusterKeyCache) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
         this.cacheManager = cacheManager;
         this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
+        this.clusterKeyCache = clusterKeyCache;
     }
 
     @PostConstruct
@@ -74,12 +92,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         }
     }
 
-    /**
-     * Load all existing JWT keys from disk into memory on startup.
-     *
-     * <p>This ensures tokens signed with previous keys remain valid after server restart. If no
-     * keys exist on disk, generates a new keypair.
-     */
     private void loadExistingKeysFromDisk() {
         try {
             Path keyDirectory = Paths.get(InstallationPathConfig.getPrivateKeyPath());
@@ -94,11 +106,8 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             try (var stream = Files.list(keyDirectory)) {
                 keyFiles =
                         stream.filter(path -> path.toString().endsWith(KEY_SUFFIX))
-                                .sorted(
-                                        (a, b) ->
-                                                b.getFileName().compareTo(a.getFileName())) // Most
-                                // recent
-                                // first
+                                // most recent first
+                                .sorted((a, b) -> b.getFileName().compareTo(a.getFileName()))
                                 .collect(Collectors.toList());
             }
 
@@ -115,11 +124,10 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 try {
                     String keyId = keyFile.getFileName().toString().replace(KEY_SUFFIX, "");
 
-                    // Load private key first
                     PrivateKey privateKey = loadPrivateKey(keyId);
 
-                    // Try to load public key, or generate it from private key if missing
-                    // (migration)
+                    // Try to load public key; generate from private key if missing (legacy
+                    // migration).
                     String encodedPublicKey;
                     try {
                         encodedPublicKey = loadPublicKey(keyId);
@@ -139,13 +147,11 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                         log.info("Successfully migrated key: {}", keyId);
                     }
 
-                    // Create verification key and add to cache
                     JwtVerificationKey verifyingKey =
                             new JwtVerificationKey(keyId, encodedPublicKey);
                     verifyingKeyCache.put(keyId, verifyingKey);
                     loadedCount++;
 
-                    // Set the most recent key as active (first in sorted list)
                     if (activeKey == null) {
                         activeKey = verifyingKey;
                         log.info("Set active JWT signing key: {}", keyId);
@@ -179,7 +185,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         }
     }
 
-    @Transactional
     private JwtVerificationKey generateAndStoreKeypair() {
         JwtVerificationKey verifyingKey = null;
 
@@ -188,15 +193,35 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             String keyId = generateKeyId();
 
             storeKeyPair(keyId, keyPair);
-            verifyingKey = new JwtVerificationKey(keyId, encodePublicKey(keyPair.getPublic()));
+            String encodedPublicKey = encodePublicKey(keyPair.getPublic());
+            verifyingKey = new JwtVerificationKey(keyId, encodedPublicKey);
             verifyingKeyCache.put(keyId, verifyingKey);
             activeKey = verifyingKey;
+            // Broadcast so peer nodes can verify tokens we sign without waiting for restart.
+            publishToCluster(keyId, encodedPublicKey);
             log.info("Generated and stored new JWT keypair: {}", keyId);
         } catch (IOException e) {
             log.error("Failed to generate and store keypair", e);
         }
 
         return verifyingKey;
+    }
+
+    private void publishToCluster(String keyId, String encodedPublicKey) {
+        if (clusterKeyCache == null) {
+            return;
+        }
+        try {
+            clusterKeyCache.put(
+                    JWT_PUBKEY_NAMESPACE, keyId, encodedPublicKey, JWT_PUBKEY_CLUSTER_TTL);
+            log.info("Broadcast JWT public key to cluster KeyValueCache: {}", keyId);
+        } catch (RuntimeException e) {
+            // Non-fatal: we still serve tokens locally; peers catch up on their next restart.
+            log.warn(
+                    "Failed to broadcast JWT public key {} to cluster cache: {}",
+                    keyId,
+                    e.getMessage());
+        }
     }
 
     @Override
@@ -249,6 +274,17 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             condition = "#root.target.isKeystoreEnabled()")
     public void removeKey(String keyId) {
         verifyingKeyCache.evict(keyId);
+        // Evict cluster broadcast so peers don't keep serving the removed key for up to 24h.
+        if (clusterKeyCache != null && keyId != null) {
+            try {
+                clusterKeyCache.evict(JWT_PUBKEY_NAMESPACE, keyId);
+            } catch (RuntimeException e) {
+                log.warn(
+                        "Failed to evict JWT public key {} from cluster cache: {}",
+                        keyId,
+                        e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -305,33 +341,29 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     }
 
     /**
-     * Store both private and public keys to disk.
+     * Store both private and public keys to disk using a temp-then-atomic-rename pattern.
      *
-     * <p>Private key stored as: keyId.key
-     *
-     * <p>Public key stored as: keyId.pub
+     * <p>The caller broadcasts the public key to peers immediately after this returns. If a peer
+     * learned about the keyId before the private key was fully durable, a crash mid-write followed
+     * by restart would lose the key while peers still serve tokens signed with it. Writing to
+     * {@code <file>.tmp} and moving with {@link StandardCopyOption#ATOMIC_MOVE} guarantees the
+     * final path either contains the fully-written payload or does not exist at all.
      */
     private void storeKeyPair(String keyId, KeyPair keyPair) throws IOException {
         Path keyDirectory = Paths.get(InstallationPathConfig.getPrivateKeyPath());
 
-        // Store private key
         Path privateKeyFile = keyDirectory.resolve(keyId + KEY_SUFFIX);
         String encodedPrivateKey =
                 Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
-        Files.writeString(privateKeyFile, encodedPrivateKey);
-
-        // Set read/write to only the owner (security)
+        writeAtomically(privateKeyFile, encodedPrivateKey);
         privateKeyFile.toFile().setReadable(true, true);
         privateKeyFile.toFile().setWritable(true, true);
         privateKeyFile.toFile().setExecutable(false, false);
 
-        // Store public key
         Path publicKeyFile = keyDirectory.resolve(keyId + PUB_KEY_SUFFIX);
         String encodedPublicKey =
                 Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
-        Files.writeString(publicKeyFile, encodedPublicKey);
-
-        // Public key can be more permissive but still restrict to owner
+        writeAtomically(publicKeyFile, encodedPublicKey);
         publicKeyFile.toFile().setReadable(true, true);
         publicKeyFile.toFile().setWritable(true, true);
         publicKeyFile.toFile().setExecutable(false, false);
@@ -341,6 +373,31 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 keyId,
                 privateKeyFile.getFileName(),
                 publicKeyFile.getFileName());
+    }
+
+    /**
+     * Write {@code contents} to {@code finalPath} so that the final path either contains the full
+     * payload or does not exist. Writes to a sibling {@code .tmp} file first and renames it.
+     * Returns silently after falling back to a non-atomic move if the filesystem does not support
+     * {@link StandardCopyOption#ATOMIC_MOVE}.
+     */
+    static void writeAtomically(Path finalPath, String contents) throws IOException {
+        Path tmp = finalPath.resolveSibling(finalPath.getFileName().toString() + ".tmp");
+        Files.writeString(tmp, contents);
+        try {
+            Files.move(
+                    tmp,
+                    finalPath,
+                    StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            log.warn(
+                    "Filesystem does not support atomic move for {}; falling back to non-atomic"
+                            + " replace. A crash between rename and fsync may leave the key partially"
+                            + " written.",
+                    finalPath);
+            Files.move(tmp, finalPath, StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     private PrivateKey loadPrivateKey(String keyId)
@@ -360,13 +417,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         return keyFactory.generatePrivate(keySpec);
     }
 
-    /**
-     * Load public key from disk.
-     *
-     * @param keyId the key identifier
-     * @return Base64-encoded public key string
-     * @throws IOException if the public key file is not found
-     */
     private String loadPublicKey(String keyId) throws IOException {
         Path publicKeyFile =
                 Paths.get(InstallationPathConfig.getPrivateKeyPath())
@@ -379,29 +429,12 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         return Files.readString(publicKeyFile).trim();
     }
 
-    /**
-     * Reconstruct a KeyPair from a PrivateKey.
-     *
-     * <p>For RSA keys, derives the public key from the private key.
-     *
-     * @param privateKey the RSA private key
-     * @return reconstructed KeyPair
-     * @throws NoSuchAlgorithmException if RSA algorithm is not available
-     * @throws InvalidKeySpecException if the key specification is invalid
-     */
     private KeyPair reconstructKeyPair(PrivateKey privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
-        // For RSA, we can derive the public key from the private key
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-        // Get the private key spec
         RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey) privateKey;
-
-        // Create public key spec from private key parameters
         RSAPublicKeySpec publicKeySpec =
                 new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
-
-        // Generate public key
         PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
 
         return new KeyPair(publicKey, privateKey);
@@ -417,5 +450,51 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
+    }
+
+    @Override
+    public Optional<PublicKey> resolvePublicKey(String keyId) {
+        if (keyId == null || keyId.isBlank()) {
+            return Optional.empty();
+        }
+        // 1. Local in-memory cache (warm path - same node that signed, or already learnt).
+        JwtVerificationKey local = verifyingKeyCache.get(keyId, JwtVerificationKey.class);
+        if (local != null) {
+            return decodeQuietly(local.getVerifyingKey(), keyId);
+        }
+        // 2. Local disk (cold path on restart).
+        try {
+            String onDisk = loadPublicKey(keyId);
+            JwtVerificationKey rebuilt = new JwtVerificationKey(keyId, onDisk);
+            verifyingKeyCache.put(keyId, rebuilt);
+            return decodeQuietly(onDisk, keyId);
+        } catch (IOException ignored) {
+            // not on this node's disk - try the cluster cache
+        }
+        // 3. Cluster cache. NOT written to local cache: expireAfterWrite would outlive the
+        // broadcast TTL and serve stale keys after peer rotation. Valkey faults return empty.
+        if (clusterKeyCache != null) {
+            try {
+                Optional<String> remote = clusterKeyCache.get(JWT_PUBKEY_NAMESPACE, keyId);
+                if (remote.isPresent()) {
+                    String encoded = remote.get();
+                    log.debug("Resolved JWT public key {} from cluster KeyValueCache", keyId);
+                    return decodeQuietly(encoded, keyId);
+                }
+            } catch (RuntimeException e) {
+                log.warn("Cluster key cache unavailable for keyId {}: {}", keyId, e.getMessage());
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<PublicKey> decodeQuietly(String encoded, String keyId) {
+        try {
+            return Optional.of(decodePublicKey(encoded));
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            log.warn("Could not decode public key for {}: {}", keyId, e.getMessage());
+            return Optional.empty();
+        }
     }
 }

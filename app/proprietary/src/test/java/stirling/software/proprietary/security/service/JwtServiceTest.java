@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -294,35 +295,47 @@ class JwtServiceTest {
     }
 
     @Test
-    void testTokenVerificationFallsBackToActiveKeyWhenKeyIdNotFound() throws Exception {
+    void tokenVerification_preferringLocalKeyPair_overRotation() throws Exception {
+        // First getKeyPair misses (cold verifyingKeyCache), third succeeds; rotation must not fire.
         String username = "testuser";
         Map<String, Object> claims = new HashMap<>();
 
-        // First, generate a token successfully
         when(keystoreService.getActiveKey()).thenReturn(testVerificationKey);
-        when(keystoreService.getKeyPair("test-key-id")).thenReturn(Optional.of(testKeyPair));
+        when(keystoreService.getKeyPair("test-key-id"))
+                .thenReturn(Optional.of(testKeyPair)) // signing
+                .thenReturn(Optional.empty()) // first validation lookup: miss
+                .thenReturn(Optional.of(testKeyPair)); // recovery lookup: hit
+        when(keystoreService.resolvePublicKey("test-key-id")).thenReturn(Optional.empty());
         when(authentication.getPrincipal()).thenReturn(userDetails);
         when(userDetails.getUsername()).thenReturn(username);
 
         String token = jwtService.generateToken(authentication, claims);
+        assertDoesNotThrow(() -> jwtService.validateToken(token));
+        verify(keystoreService, never()).refreshActiveKeyPair();
+    }
 
-        // Now mock the scenario for validation - key not found, but fallback works
-        // Create a fallback key pair that can be used
-        JwtVerificationKey fallbackKey =
+    @Test
+    void rotationStillHappens_whenKeyGenuinelyMissingEverywhere() throws Exception {
+        String username = "testuser";
+        Map<String, Object> claims = new HashMap<>();
+
+        JwtVerificationKey rotatedKey =
                 new JwtVerificationKey(
-                        "fallback-key",
+                        "rotated-key",
                         Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded()));
 
-        // Mock the specific key lookup to fail, but the active key should work
-        when(keystoreService.getKeyPair("test-key-id")).thenReturn(Optional.empty());
-        when(keystoreService.refreshActiveKeyPair()).thenReturn(fallbackKey);
-        when(keystoreService.getKeyPair("fallback-key")).thenReturn(Optional.of(testKeyPair));
+        when(keystoreService.getActiveKey()).thenReturn(testVerificationKey);
+        when(keystoreService.getKeyPair("test-key-id"))
+                .thenReturn(Optional.of(testKeyPair)) // signing
+                .thenReturn(Optional.empty()); // all later lookups miss - key is gone
+        when(keystoreService.resolvePublicKey("test-key-id")).thenReturn(Optional.empty());
+        when(keystoreService.refreshActiveKeyPair()).thenReturn(rotatedKey);
+        when(keystoreService.getKeyPair("rotated-key")).thenReturn(Optional.of(testKeyPair));
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(userDetails.getUsername()).thenReturn(username);
 
-        // Should still work by falling back to the active keypair
+        String token = jwtService.generateToken(authentication, claims);
         assertDoesNotThrow(() -> jwtService.validateToken(token));
-        assertEquals(username, jwtService.extractUsername(token));
-
-        // Verify fallback logic was used
-        verify(keystoreService, atLeast(1)).getActiveKey();
+        verify(keystoreService, atLeast(1)).refreshActiveKeyPair();
     }
 }

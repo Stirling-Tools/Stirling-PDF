@@ -60,7 +60,7 @@ public class CustomPDFDocumentFactory {
         this(pdfMetadataService, null);
     }
 
-    /** Documents ≤ this size are loaded entirely into heap — no temp files needed. */
+    /** Documents ≤ this size are loaded entirely into heap - no temp files needed. */
     public static final long SMALL_FILE_THRESHOLD = 10L * 1024 * 1024; // 10 MB
 
     /** Upper boundary of the "mixed" memory+file zone; above this always file-backed. */
@@ -130,7 +130,6 @@ public class CustomPDFDocumentFactory {
         MemorySnapshot mem = MemorySnapshot.capture();
         // Use the overridable method so that test spies (SpyPDFDocumentFactory) can intercept.
         StreamCacheCreateFunction cache = getStreamCacheFunction(size, mem);
-        // Non-destructive — caller's file is never deleted
         RandomAccessReadBufferedFile raf = new RandomAccessReadBufferedFile(file);
         PDDocument doc;
         try {

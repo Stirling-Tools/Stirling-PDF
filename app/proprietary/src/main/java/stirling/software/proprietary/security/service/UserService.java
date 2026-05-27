@@ -5,7 +5,10 @@ import static stirling.software.proprietary.security.service.MfaService.MFA_LAST
 import static stirling.software.proprietary.security.service.MfaService.MFA_REQUIRED_KEY;
 import static stirling.software.proprietary.security.service.MfaService.MFA_SECRET_KEY;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -34,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.cluster.KeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -78,6 +83,13 @@ public class UserService implements UserServiceInterface {
     private final DatabaseServiceInterface databaseService;
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
+
+    private final KeyValueCache keyValueCache;
+
+    private static final String API_KEY_CACHE_NS = "apikey";
+    private static final Duration API_KEY_TTL = Duration.ofSeconds(60);
+    private static final Duration API_KEY_NEGATIVE_TTL = Duration.ofSeconds(10);
+    private static final String API_KEY_NEGATIVE_MARKER = "__none__";
 
     private final PersistentLoginRepository persistentLoginRepository;
     private final UserServerCertificateService userServerCertificateService;
@@ -143,11 +155,7 @@ public class UserService implements UserServiceInterface {
         if (user.isEmpty()) {
             throw new UsernameNotFoundException("API key is not valid");
         }
-        // Convert the user into an Authentication object
-        return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-                user, // credentials (we don't expose the password or API key here)
-                null, // user's authorities (roles/permissions)
-                getAuthorities(user.get()));
+        return new UsernamePasswordAuthenticationToken(user, null, getAuthorities(user.get()));
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
@@ -176,14 +184,19 @@ public class UserService implements UserServiceInterface {
 
     private User saveUser(Optional<User> user, String apiKey) {
         if (user.isPresent()) {
+            String previousKey = user.get().getApiKey();
             user.get().setApiKey(apiKey);
-            return userRepository.save(user.get());
+            User saved = userRepository.save(user.get());
+            // Evict the previously cached entry so peers see the rotation within negative TTL.
+            if (previousKey != null && !previousKey.isBlank()) {
+                evictApiKeyCache(previousKey);
+            }
+            return saved;
         }
         throw new UsernameNotFoundException("User not found");
     }
 
     public User refreshApiKeyForUser(String username) {
-        // reuse the add API key method for refreshing
         return addApiKeyToUser(username);
     }
 
@@ -208,25 +221,71 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean isValidApiKey(String apiKey) {
-        return userRepository.findByApiKey(apiKey).isPresent();
+        return getUserByApiKey(apiKey).isPresent();
     }
 
     public Optional<User> getUserByApiKey(String apiKey) {
-        return userRepository.findByApiKey(apiKey);
+        return findByApiKeyCached(apiKey);
     }
 
     public Optional<User> loadUserByApiKey(String apiKey) {
-        Optional<User> user = userRepository.findByApiKey(apiKey);
+        Optional<User> user = findByApiKeyCached(apiKey);
         if (user.isPresent()) {
             return user;
         }
-        // or throw an exception
         return null;
+    }
+
+    private Optional<User> findByApiKeyCached(String apiKey) {
+        if (apiKey == null || apiKey.isBlank() || keyValueCache == null) {
+            return userRepository.findByApiKey(apiKey);
+        }
+        String keyHash = DigestUtils.sha256Hex(apiKey);
+        Optional<String> cached = keyValueCache.get(API_KEY_CACHE_NS, keyHash);
+        if (cached.isPresent()) {
+            String value = cached.get();
+            if (API_KEY_NEGATIVE_MARKER.equals(value)) {
+                return Optional.empty();
+            }
+            Optional<User> user = userRepository.findByUsernameIgnoreCase(value);
+            if (user.isPresent() && constantTimeEquals(apiKey, user.get().getApiKey())) {
+                return user;
+            }
+            keyValueCache.evict(API_KEY_CACHE_NS, keyHash);
+        }
+        Optional<User> user = userRepository.findByApiKey(apiKey);
+        if (user.isPresent()) {
+            keyValueCache.put(API_KEY_CACHE_NS, keyHash, user.get().getUsername(), API_KEY_TTL);
+        } else {
+            keyValueCache.put(
+                    API_KEY_CACHE_NS, keyHash, API_KEY_NEGATIVE_MARKER, API_KEY_NEGATIVE_TTL);
+        }
+        return user;
+    }
+
+    /** Invalidate the cached API-key entry on rotation. */
+    public void evictApiKeyCache(String apiKey) {
+        if (apiKey != null && !apiKey.isBlank() && keyValueCache != null) {
+            keyValueCache.evict(API_KEY_CACHE_NS, DigestUtils.sha256Hex(apiKey));
+        }
     }
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
-        return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
+        return userOpt.isPresent() && constantTimeEquals(apiKey, userOpt.get().getApiKey());
+    }
+
+    /**
+     * Constant-time comparison of two API keys. {@link MessageDigest#isEqual} short-circuits only
+     * on null/empty inputs; for equal-length and unequal-length non-empty strings it scans every
+     * byte, so a remote attacker cannot infer the stored key via response-time differences.
+     */
+    private static boolean constantTimeEquals(String provided, String stored) {
+        if (provided == null || stored == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                provided.getBytes(StandardCharsets.UTF_8), stored.getBytes(StandardCharsets.UTF_8));
     }
 
     @Transactional
@@ -706,8 +765,13 @@ public class UserService implements UserServiceInterface {
                     User updatedUser = existingUser.get();
 
                     if (!customApiKey.equals(updatedUser.getApiKey())) {
+                        // Capture before mutation so we can evict the prior cache entry.
+                        String previousKey = updatedUser.getApiKey();
                         updatedUser.setApiKey(customApiKey);
                         userRepository.save(updatedUser);
+                        if (previousKey != null && !previousKey.isBlank()) {
+                            evictApiKeyCache(previousKey);
+                        }
                     }
                 },
                 () -> {

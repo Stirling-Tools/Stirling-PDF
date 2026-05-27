@@ -26,4 +26,10 @@ public interface KeyPersistenceServiceInterface {
 
     PublicKey decodePublicKey(String encodedKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException;
+
+    /**
+     * Resolve a public key by id, consulting the cluster cache when the key is unknown locally.
+     * Returns empty if the keyId is unknown anywhere.
+     */
+    Optional<PublicKey> resolvePublicKey(String keyId);
 }

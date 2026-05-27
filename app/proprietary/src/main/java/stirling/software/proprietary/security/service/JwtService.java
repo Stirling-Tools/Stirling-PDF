@@ -210,20 +210,37 @@ public class JwtService implements JwtServiceInterface {
                 if (specificKeyPair.isPresent()) {
                     keyPair = specificKeyPair.get();
                 } else {
+                    Optional<PublicKey> peerKey = keyPersistenceService.resolvePublicKey(keyId);
+                    if (peerKey.isPresent()) {
+                        return Jwts.parser()
+                                .verifyWith(peerKey.get())
+                                .clockSkewSeconds(getAllowedClockSkewSeconds())
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload();
+                    }
                     log.warn(
                             "Key ID {} not found in keystore, token may have been signed with an expired key",
                             keyId);
 
                     if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {
-                        JwtVerificationKey verificationKey =
-                                keyPersistenceService.refreshActiveKeyPair();
-                        Optional<KeyPair> refreshedKeyPair =
-                                keyPersistenceService.getKeyPair(verificationKey.getKeyId());
-                        if (refreshedKeyPair.isPresent()) {
-                            keyPair = refreshedKeyPair.get();
+                        // Re-check local store before rotating: rotating a key still on disk
+                        // invalidates every in-flight token signed with it.
+                        Optional<KeyPair> localActivePair = keyPersistenceService.getKeyPair(keyId);
+                        if (localActivePair.isPresent()) {
+                            keyPair = localActivePair.get();
                         } else {
-                            throw new AuthenticationFailureException(
-                                    "Failed to retrieve refreshed key pair");
+                            // Key missing everywhere - rotate to restore signing capability.
+                            JwtVerificationKey verificationKey =
+                                    keyPersistenceService.refreshActiveKeyPair();
+                            Optional<KeyPair> refreshedKeyPair =
+                                    keyPersistenceService.getKeyPair(verificationKey.getKeyId());
+                            if (refreshedKeyPair.isPresent()) {
+                                keyPair = refreshedKeyPair.get();
+                            } else {
+                                throw new AuthenticationFailureException(
+                                        "Failed to retrieve refreshed key pair");
+                            }
                         }
                     } else {
                         // Try to use active key as fallback
@@ -240,7 +257,6 @@ public class JwtService implements JwtServiceInterface {
                 }
             } else {
                 log.debug("No key ID in token header, trying all available keys");
-                // Try all available keys when no keyId is present
                 return tryAllKeys(token, allowExpired);
             }
 
@@ -299,8 +315,6 @@ public class JwtService implements JwtServiceInterface {
                 | NoSuchAlgorithmException
                 | InvalidKeySpecException activeKeyException) {
             log.debug("Active key failed, trying all available keys from cache");
-
-            // If active key fails, try all available keys from cache
             List<JwtVerificationKey> allKeys =
                     keyPersistenceService.getKeysEligibleForCleanup(
                             LocalDateTime.now().plusDays(1));
@@ -339,13 +353,10 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        // Extract from Authorization header Bearer token
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // Remove "Bearer " prefix
-            return token;
+            return authHeader.substring(7);
         }
-
         return null;
     }
 
@@ -354,22 +365,11 @@ public class JwtService implements JwtServiceInterface {
         return v2Enabled;
     }
 
-    /**
-     * Extract key ID from JWT header without validating the token.
-     *
-     * <p>Parses the Base64-encoded JWT header to retrieve the "kid" (key ID) claim. Returns null if
-     * the header cannot be parsed or does not contain a key ID.
-     *
-     * @param token the JWT token
-     * @return the key ID, or null if not found or parsing fails
-     */
+    /** Return the {@code kid} claim from the JWT header, or null if absent or unparseable. */
     private String extractKeyId(String token) {
         try {
             String[] tokenParts = token.split("\\.");
             if (tokenParts.length < 2) {
-                log.debug(
-                        "Token does not have enough parts (expected at least 2, got {})",
-                        tokenParts.length);
                 return null;
             }
 
