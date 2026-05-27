@@ -39,6 +39,24 @@ import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import "@app/pages/HomePage.css";
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
+
+function readPersistedSidebarCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writePersistedSidebarCollapsed(collapsed: boolean): void {
+  try {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
+  } catch {
+    // private mode / quota: silently no-op
+  }
+}
+
 type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
@@ -66,10 +84,13 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const location = useLocation();
-  // Start expanded; the transition effect below collapses on entering /files.
-  // Initialising from the URL would conflate "user collapsed it" with "auto-
-  // collapsed on direct mount", breaking the restore-on-leave snapshot.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(false);
+  // Persisted user preference for the FileSidebar collapsed state. Auto-
+  // collapse on /files is layered on top in the transition effect below and
+  // doesn't write to storage, so deep-linking to /files won't overwrite what
+  // the user actually chose last time.
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
+    readPersistedSidebarCollapsed,
+  );
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
@@ -101,19 +122,17 @@ export default function HomePage() {
     activeFiles.length,
   ]);
 
-  // Auto-collapse the FileSidebar on /files; snapshot prior state for restore.
-  const previousSidebarCollapsedRef = useRef<boolean | null>(null);
+  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
+  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
+  // to /files won't overwrite what the user actually chose.
   const prevWorkbenchRef = useRef(navigationState.workbench);
   useEffect(() => {
     const prev = prevWorkbenchRef.current;
     const curr = navigationState.workbench;
     if (curr === "myFiles" && prev !== "myFiles") {
-      previousSidebarCollapsedRef.current = fileSidebarCollapsed;
       if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
     } else if (curr !== "myFiles" && prev === "myFiles") {
-      const restore = previousSidebarCollapsedRef.current ?? false;
-      setFileSidebarCollapsed(restore);
-      previousSidebarCollapsedRef.current = null;
+      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
     }
     prevWorkbenchRef.current = curr;
     // fileSidebarCollapsed read as snapshot on transition only.
@@ -476,7 +495,11 @@ export default function HomePage() {
                   navigate("/");
                   return;
                 }
-                setFileSidebarCollapsed((c) => !c);
+                setFileSidebarCollapsed((c) => {
+                  const next = !c;
+                  writePersistedSidebarCollapsed(next);
+                  return next;
+                });
               }}
               onOpenSettings={() => setConfigModalOpen(true)}
             />
