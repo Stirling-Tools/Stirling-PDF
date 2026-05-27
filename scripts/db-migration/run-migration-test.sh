@@ -132,7 +132,12 @@ test_fixture() {
                 local status_code
                 status_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$base_url/api/v1/info/status" || echo "000")
                 log "  GET /api/v1/info/status -> HTTP $status_code"
-                log "  PASS: $label migrated and admin login succeeded"
+                if [[ "$status_code" != "200" ]]; then
+                    log "  sanity check failed: /api/v1/info/status returned non-200"
+                    rc=1
+                else
+                    log "  PASS: $label migrated and admin login succeeded"
+                fi
             fi
         fi
     fi
