@@ -528,6 +528,16 @@ public class ApplicationProperties {
             private String provider;
             private Client client = new Client();
 
+            /**
+             * When true, the OAuth2/OIDC login flow logs the full set of ID token and UserInfo
+             * claims at INFO level (and again at ERROR level if the username attribute cannot be
+             * resolved). Used to diagnose provider misconfiguration (for example ADFS not returning
+             * an {@code email} claim). WARNING: writes PII (sub, email, name) to application logs.
+             * Leave disabled in production; enable only while actively troubleshooting and disable
+             * again afterwards.
+             */
+            private Boolean debugLogging = false;
+
             public void setScopes(String scopes) {
                 List<String> scopesList =
                         Arrays.stream(scopes.split(",")).map(String::trim).toList();
