@@ -162,9 +162,7 @@ export default function FileManagerView() {
   useEffect(() => {
     if (
       !sharingEnabled &&
-      (currentTab === "shared" ||
-        currentTab === "sharedByMe" ||
-        currentTab === "imSharing")
+      (currentTab === "shared" || currentTab === "sharedByMe")
     ) {
       setCurrentTab("all");
     }
@@ -211,8 +209,7 @@ export default function FileManagerView() {
       currentTab === "local" ||
       currentTab === "recent" ||
       currentTab === "shared" ||
-      currentTab === "sharedByMe" ||
-      currentTab === "imSharing"
+      currentTab === "sharedByMe"
     ) {
       return [];
     }
@@ -260,28 +257,30 @@ export default function FileManagerView() {
       case "shared":
         return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
       case "sharedByMe":
-        // Files I own that have at least one outgoing public share link.
+        // Files I own that I've shared in any way - either with a public link
+        // or with a specific user. (Previously split across two visually
+        // identical tabs; merged here so the same idea lives in one place.)
         return allFiles.filter(
           (f) =>
             f.remoteOwnedByCurrentUser !== false &&
-            f.remoteHasShareLinks === true,
-        );
-      case "imSharing":
-        // Files I own that I've shared directly with specific users.
-        return allFiles.filter(
-          (f) =>
-            f.remoteOwnedByCurrentUser !== false &&
-            f.remoteHasUserShares === true,
+            (f.remoteHasShareLinks === true || f.remoteHasUserShares === true),
         );
       case "all":
       default:
         // Search widens to the subtree.
+        // Files with a dangling folderId (folder deleted, or stale local IDB
+        // row) fall back to root so they aren't permanently invisible.
         return allFiles.filter((f) => {
-          if (search) return subtreeFolderIds.has(f.folderId ?? null);
-          return (f.folderId ?? null) === (currentFolderId ?? null);
+          const rawFolder = f.folderId ?? null;
+          const effectiveFolder =
+            rawFolder !== null && !foldersById.has(rawFolder)
+              ? null
+              : rawFolder;
+          if (search) return subtreeFolderIds.has(effectiveFolder);
+          return effectiveFolder === (currentFolderId ?? null);
         });
     }
-  }, [allFiles, currentFolderId, currentTab, search, subtreeFolderIds]);
+  }, [allFiles, currentFolderId, currentTab, search, subtreeFolderIds, foldersById]);
 
   const availableTypes = useMemo(() => {
     const set = new Set<string>();
@@ -786,8 +785,7 @@ export default function FileManagerView() {
     if (
       currentTab === "recent" ||
       currentTab === "shared" ||
-      currentTab === "sharedByMe" ||
-      currentTab === "imSharing"
+      currentTab === "sharedByMe"
     ) {
       return t(
         "filesPage.newFolderTabUnavailable",
@@ -811,8 +809,7 @@ export default function FileManagerView() {
         {(currentTab === "local" ||
           currentTab === "recent" ||
           currentTab === "shared" ||
-          currentTab === "sharedByMe" ||
-          currentTab === "imSharing") && (
+          currentTab === "sharedByMe") && (
           <div
             style={{
               fontSize: "0.95rem",
@@ -827,9 +824,7 @@ export default function FileManagerView() {
                 ? t("filesPage.tabName.recent", "Recent")
                 : currentTab === "shared"
                   ? t("filesPage.tabName.shared", "Shared with me")
-                  : currentTab === "sharedByMe"
-                    ? t("filesPage.tabName.sharedByMe", "Shared by me")
-                    : t("filesPage.tabName.imSharing", "Sharing")}
+                  : t("filesPage.tabName.sharedByMe", "Shared by me")}
           </div>
         )}
         {(() => {
@@ -986,10 +981,6 @@ export default function FileManagerView() {
                     {
                       id: "sharedByMe" as const,
                       label: t("filesPage.tabs.sharedByMe", "Shared by me"),
-                    },
-                    {
-                      id: "imSharing" as const,
-                      label: t("filesPage.tabs.imSharing", "Sharing"),
                     },
                   ]
                 : []),
