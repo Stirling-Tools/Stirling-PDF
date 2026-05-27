@@ -1,6 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {
+  clearFilesPageReturnRoute,
+  getFilesPageReturnRoute,
+  subscribeFilesPageReturnRoute,
+} from "@app/components/filesPage/filesPageReturnRoute";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import {
   useFileState,
@@ -66,6 +79,18 @@ export default function WorkbenchBar({
   hasFiles,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const returnRoute = useSyncExternalStore(
+    subscribeFilesPageReturnRoute,
+    getFilesPageReturnRoute,
+    () => null,
+  );
+  const handleBackToFiles = useCallback(() => {
+    if (!returnRoute) return;
+    const target = returnRoute.route;
+    clearFilesPageReturnRoute();
+    navigate(target);
+  }, [returnRoute, navigate]);
   const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
   const {
     pageEditorFunctions,
@@ -356,8 +381,36 @@ export default function WorkbenchBar({
       data-wrapped="true"
       data-tour="workbench-bar"
     >
-      {/* Left: View switcher */}
+      {/* Left: optional "Back to My Files" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
+        {returnRoute && hasFiles && (
+          <>
+            <button
+              type="button"
+              className="workbench-bar-view-btn workbench-bar-back-btn"
+              onClick={handleBackToFiles}
+              aria-label={t(
+                returnRoute.label
+                  ? "filesPage.backToFolder"
+                  : "filesPage.backToMyFiles",
+                returnRoute.label
+                  ? `Back to ${returnRoute.label}`
+                  : "Back to My Files",
+                { folder: returnRoute.label ?? "" },
+              )}
+            >
+              <ArrowBackIcon style={{ fontSize: "1.1rem" }} />
+              <span className="workbench-bar-view-label">
+                {returnRoute.label
+                  ? t("filesPage.backToFolder", "Back to {{folder}}", {
+                      folder: returnRoute.label,
+                    })
+                  : t("filesPage.backToMyFiles", "Back to My Files")}
+              </span>
+            </button>
+            <div className="workbench-bar-divider" />
+          </>
+        )}
         {hasFiles &&
           viewOptions.map((opt) => (
             <button
@@ -373,7 +426,7 @@ export default function WorkbenchBar({
           ))}
       </div>
 
-      {/* Tool buttons — second row, only rendered when buttons exist */}
+      {/* Tool buttons - second row, only rendered when buttons exist */}
       {sectionsWithButtons.length > 0 && (
         <div className="workbench-bar-center">
           {sectionsWithButtons.map(
@@ -395,7 +448,7 @@ export default function WorkbenchBar({
         </div>
       )}
 
-      {/* Right: Global buttons — export group left, close anchored right */}
+      {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
         {/* Print */}
         {currentView === "viewer" &&
