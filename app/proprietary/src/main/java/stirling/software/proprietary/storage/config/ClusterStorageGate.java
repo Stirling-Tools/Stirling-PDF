@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
 /**
@@ -44,11 +43,11 @@ public class ClusterStorageGate {
         if (storage != null && storage.isEnabled()) {
             String provider = normalize(storage.getProvider());
             if ("s3".equals(provider) || "database".equals(provider)) {
-                requireProLicense("storage.provider=" + provider);
+                licenseKeyChecker.requireProOrEnterprise("storage.provider=" + provider);
             }
         }
         if ("s3".equals(normalize(clusterArtifactStore))) {
-            requireProLicense("cluster.artifactStore=s3");
+            licenseKeyChecker.requireProOrEnterprise("cluster.artifactStore=s3");
         }
 
         if (!clusterEnabled) {
@@ -71,13 +70,6 @@ public class ClusterStorageGate {
                         + " a follow-up request to a different node. Configure"
                         + " cluster.artifactStore=s3 (reuses storage.s3.* config)"
                         + " before enabling clustering.");
-    }
-
-    private void requireProLicense(String configuredAs) {
-        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
-        if (license != License.SERVER && license != License.ENTERPRISE) {
-            throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
-        }
     }
 
     private static String normalize(String value) {

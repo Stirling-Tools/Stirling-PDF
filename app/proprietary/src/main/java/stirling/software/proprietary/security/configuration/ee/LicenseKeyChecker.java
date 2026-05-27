@@ -133,4 +133,16 @@ public class LicenseKeyChecker {
     public License getPremiumLicenseEnabledResult() {
         return premiumEnabledResult;
     }
+
+    /**
+     * Throws {@link IllegalStateException} if the current license is not Pro or Enterprise. Used by
+     * boot-time gates to fail fast when an operator enables a premium-only setting without a valid
+     * license. {@code configuredAs} is the human-readable property path (e.g. {@code
+     * "storage.provider=s3"}) and appears in the exception message.
+     */
+    public void requireProOrEnterprise(String configuredAs) {
+        if (premiumEnabledResult != License.SERVER && premiumEnabledResult != License.ENTERPRISE) {
+            throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
+        }
+    }
 }

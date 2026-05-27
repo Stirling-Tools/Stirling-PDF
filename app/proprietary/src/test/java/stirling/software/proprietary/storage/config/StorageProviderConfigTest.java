@@ -3,6 +3,9 @@ package stirling.software.proprietary.storage.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -95,6 +98,19 @@ class StorageProviderConfigTest {
         StoredFileBlobRepository repo = mock(StoredFileBlobRepository.class);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
         when(checker.getPremiumLicenseEnabledResult()).thenReturn(license);
+        if (license == License.SERVER || license == License.ENTERPRISE) {
+            doNothing().when(checker).requireProOrEnterprise(anyString());
+        } else {
+            // Mirror real LicenseKeyChecker.requireProOrEnterprise so message assertions match.
+            doAnswer(
+                            inv -> {
+                                throw new IllegalStateException(
+                                        inv.getArgument(0)
+                                                + " requires a Pro or Enterprise license");
+                            })
+                    .when(checker)
+                    .requireProOrEnterprise(anyString());
+        }
         return new StorageProviderConfig(props, repo, checker);
     }
 }

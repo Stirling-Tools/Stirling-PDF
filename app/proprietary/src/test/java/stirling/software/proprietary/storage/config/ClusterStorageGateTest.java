@@ -3,6 +3,8 @@ package stirling.software.proprietary.storage.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -104,9 +106,7 @@ class ClusterStorageGateTest {
     void clusterEnabled_nullStorageObject_passesProviderCheck_butArtifactStoreStillEvaluated() {
         ApplicationProperties props = new ApplicationProperties();
         props.setStorage(null);
-        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
-        when(checker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
-        ClusterStorageGate gate = new ClusterStorageGate(props, checker);
+        ClusterStorageGate gate = new ClusterStorageGate(props, mockLicenseChecker(License.SERVER));
         setClusterEnabled(gate, true);
         setClusterArtifactStore(gate, "s3");
         assertThatCode(gate::validate).doesNotThrowAnyException();
@@ -201,12 +201,30 @@ class ClusterStorageGateTest {
         storage.setEnabled(storageEnabled);
         storage.setProvider(provider);
         props.setStorage(storage);
-        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
-        when(checker.getPremiumLicenseEnabledResult()).thenReturn(license);
+        LicenseKeyChecker checker = mockLicenseChecker(license);
         ClusterStorageGate gate = new ClusterStorageGate(props, checker);
         setClusterEnabled(gate, clusterEnabled);
         setClusterArtifactStore(gate, clusterArtifactStore);
         return gate;
+    }
+
+    private static LicenseKeyChecker mockLicenseChecker(License license) {
+        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
+        when(checker.getPremiumLicenseEnabledResult()).thenReturn(license);
+        if (license == License.SERVER || license == License.ENTERPRISE) {
+            doNothing().when(checker).requireProOrEnterprise(anyString());
+        } else {
+            // Mirror real LicenseKeyChecker.requireProOrEnterprise so message assertions match.
+            org.mockito.Mockito.doAnswer(
+                            inv -> {
+                                throw new IllegalStateException(
+                                        inv.getArgument(0)
+                                                + " requires a Pro or Enterprise license");
+                            })
+                    .when(checker)
+                    .requireProOrEnterprise(anyString());
+        }
+        return checker;
     }
 
     private static void setClusterEnabled(ClusterStorageGate gate, boolean enabled) {

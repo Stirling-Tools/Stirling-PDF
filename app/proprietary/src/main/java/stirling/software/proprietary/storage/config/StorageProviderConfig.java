@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
-import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
@@ -42,11 +41,11 @@ public class StorageProviderConfig {
                         .trim()
                         .toLowerCase(Locale.ROOT);
         if ("database".equals(providerName)) {
-            requireProLicense("storage.provider=database");
+            licenseKeyChecker.requireProOrEnterprise("storage.provider=database");
             return new DatabaseStorageProvider(storedFileBlobRepository);
         }
         if ("s3".equals(providerName)) {
-            requireProLicense("storage.provider=s3");
+            licenseKeyChecker.requireProOrEnterprise("storage.provider=s3");
             return buildS3Provider(applicationProperties.getStorage().getS3());
         }
         if (!"local".equals(providerName)) {
@@ -85,13 +84,5 @@ public class StorageProviderConfig {
     private S3StorageProvider buildS3Provider(ApplicationProperties.Storage.S3 cfg) {
         S3Clients.Bundle bundle = S3Clients.build(cfg, "storage provider");
         return new S3StorageProvider(bundle.client(), bundle.presigner(), cfg.getBucket());
-    }
-
-    /** Fails fast when a premium storage backend is configured without a valid Pro license. */
-    private void requireProLicense(String configuredAs) {
-        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
-        if (license != License.SERVER && license != License.ENTERPRISE) {
-            throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
-        }
     }
 }
