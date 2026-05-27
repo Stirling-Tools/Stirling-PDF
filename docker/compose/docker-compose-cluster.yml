@@ -1,0 +1,194 @@
+# Reference clustered deployment: load balancer + N app + N engine + Valkey + Postgres.
+# Non-k8s enterprise self-host blueprint. /internal/* stays off the LB.
+#
+# Required env vars (set in a .env beside this file or via your secret store):
+#   CLUSTER_ENGINE_SHAREDSECRET  - generate: openssl rand -hex 32
+#   STIRLING_VALKEY_PASSWORD     - generate: openssl rand -hex 32
+#   POSTGRES_PASSWORD            - required
+#   STIRLING_PREMIUM_KEY         - SERVER/ENTERPRISE license key (cluster mode is a paid feature)
+
+services:
+  valkey:
+    image: valkey/valkey:8.0-alpine
+    container_name: stirling-valkey
+    restart: unless-stopped
+    command:
+      [
+        "valkey-server",
+        "--requirepass",
+        "${STIRLING_VALKEY_PASSWORD:?STIRLING_VALKEY_PASSWORD must be set in production}",
+        "--maxmemory",
+        "256mb",
+        "--maxmemory-policy",
+        "allkeys-lru"
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "valkey-cli",
+          "-a",
+          "${STIRLING_VALKEY_PASSWORD:?required}",
+          "--no-auth-warning",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # Do not publish 6379 in prod. Uncomment only for local valkey-cli introspection.
+    # ports:
+    #   - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+        reservations:
+          memory: 128m
+    volumes:
+      - valkey-data:/data
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: stirling-postgres
+    environment:
+      POSTGRES_USER: stirling
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: stirling
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 256m
+
+  app-1:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.unified
+    container_name: stirling-app-1
+    restart: unless-stopped
+    environment:
+      MODE: BOTH
+      CLUSTER_ENABLED: "true"
+      CLUSTER_BACKPLANE: valkey
+      CLUSTER_VALKEY_URL: redis://:${STIRLING_VALKEY_PASSWORD:?required}@valkey:6379
+      CLUSTER_NODE_ID: app-1
+      CLUSTER_NODE_INTERNALADDRESS: app-1:8080
+      CLUSTER_ENGINE_SHAREDSECRET: ${CLUSTER_ENGINE_SHAREDSECRET:?required}
+      AIENGINE_URL: http://engine-lb:5001
+      STIRLING_PREMIUM_KEY: ${STIRLING_PREMIUM_KEY:?STIRLING_PREMIUM_KEY required for cluster mode}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/stirling
+      SPRING_DATASOURCE_USERNAME: stirling
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    depends_on:
+      valkey:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      engine-lb:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 512m
+
+  app-2:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.unified
+    container_name: stirling-app-2
+    restart: unless-stopped
+    environment:
+      MODE: BOTH
+      CLUSTER_ENABLED: "true"
+      CLUSTER_BACKPLANE: valkey
+      CLUSTER_VALKEY_URL: redis://:${STIRLING_VALKEY_PASSWORD:?required}@valkey:6379
+      CLUSTER_NODE_ID: app-2
+      CLUSTER_NODE_INTERNALADDRESS: app-2:8080
+      CLUSTER_ENGINE_SHAREDSECRET: ${CLUSTER_ENGINE_SHAREDSECRET:?required}
+      AIENGINE_URL: http://engine-lb:5001
+      STIRLING_PREMIUM_KEY: ${STIRLING_PREMIUM_KEY:?STIRLING_PREMIUM_KEY required for cluster mode}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/stirling
+      SPRING_DATASOURCE_USERNAME: stirling
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    depends_on:
+      valkey:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      engine-lb:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 512m
+
+  engine-1:
+    build:
+      context: ../../engine
+      dockerfile: Dockerfile.dev
+    container_name: stirling-engine-1
+    env_file: ../../engine/.env
+    environment:
+      STIRLING_ENGINE_SHARED_SECRET: ${CLUSTER_ENGINE_SHAREDSECRET:?required}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  engine-2:
+    build:
+      context: ../../engine
+      dockerfile: Dockerfile.dev
+    container_name: stirling-engine-2
+    env_file: ../../engine/.env
+    environment:
+      STIRLING_ENGINE_SHARED_SECRET: ${CLUSTER_ENGINE_SHAREDSECRET:?required}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  # Internal round-robin LB for the engine tier - not exposed to the host.
+  engine-lb:
+    image: nginx:1.27-alpine
+    container_name: stirling-engine-lb
+    volumes:
+      - ./engine-nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - engine-1
+      - engine-2
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+  lb:
+    image: nginx:1.27-alpine
+    container_name: stirling-lb
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app-1
+      - app-2
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+volumes:
+  valkey-data:
+  postgres-data:

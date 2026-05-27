@@ -1,0 +1,91 @@
+# Stirling-PDF Helm chart - clustered install (web + worker + AI engine + Valkey behind Ingress).
+# Single-instance deploys can run the standard container directly without this chart.
+
+image:
+  repository: stirlingtools/stirling-pdf
+  # Leave blank to default to .Chart.AppVersion. Override per release.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+engine:
+  image:
+    repository: stirlingtools/stirling-pdf-ai-engine
+    tag: ""
+  replicas: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+
+web:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+worker:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+cluster:
+  enabled: true
+  backplane: valkey
+  valkey:
+    # WARNING: bundled Valkey is a single-replica StatefulSet (SPOF) - DEV / EVAL ONLY.
+    # Production: set bundled=false and point externalUrl at HA Valkey/Redis.
+    # See deploy/aws/README.md for managed options (ElastiCache, Memorystore, etc.).
+    bundled: true
+    # Required when bundled=false. Use rediss:// for TLS.
+    externalUrl: ""
+    # Auto-generated on first install if empty (stable across upgrades via Secret lookup).
+    # Set explicitly via --set or values file when using your own secret manager.
+    password: ""
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClassName: ""
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 384Mi
+  # Java <-> AI engine auth secret. Auto-generated if empty (see NOTES.txt for retrieval).
+  engineSharedSecret: ""
+
+ingress:
+  enabled: true
+  host: stirling.example.com
+  className: nginx
+  tls:
+    # WARNING: TLS MUST be on in production - cookies, JWTs, and API keys cross the wire.
+    # Provision the secret below (cert-manager, kubectl create secret tls, etc.) before helm install.
+    # tls.enabled=false is HTTP-only - dev/loopback ONLY.
+    enabled: true
+    secretName: stirling-pdf-tls
+    # Defaults to [ingress.host] when empty.
+    hosts: []

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: stirling-pdf
+description: Stirling-PDF clustered deployment (web + worker + AI engine + Valkey).
+type: application
+version: 0.1.0
+appVersion: "2.11.0"

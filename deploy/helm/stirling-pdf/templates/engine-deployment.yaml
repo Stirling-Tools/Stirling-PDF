@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-engine
+spec:
+  replicas: {{ .Values.engine.replicas }}
+  selector:
+    matchLabels:
+      app: stirling-pdf
+      role: engine
+  template:
+    metadata:
+      labels:
+        app: stirling-pdf
+        role: engine
+    spec:
+      containers:
+        - name: engine
+          image: {{ .Values.engine.image.repository }}:{{ .Values.engine.image.tag | default .Chart.AppVersion }}
+          env:
+            - name: STIRLING_ENGINE_SHARED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-cluster-secrets
+                  key: engineSharedSecret
+          ports:
+            - containerPort: 5001
+          # Startup probe: 30 x 5s = 150s grace for model-load warm-up. Requires k8s >= 1.18.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            periodSeconds: 10
+            failureThreshold: 10
+          {{- with .Values.engine.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-engine
+spec:
+  selector:
+    app: stirling-pdf
+    role: engine
+  ports:
+    - port: 5001
+      targetPort: 5001

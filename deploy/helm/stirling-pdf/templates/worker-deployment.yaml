@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-worker
+  labels:
+    app: stirling-pdf
+    role: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app: stirling-pdf
+      role: worker
+  template:
+    metadata:
+      labels:
+        app: stirling-pdf
+        role: worker
+    spec:
+      containers:
+        - name: app
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: MODE
+              value: BACKEND
+            - name: CLUSTER_ENABLED
+              value: {{ .Values.cluster.enabled | quote }}
+            - name: CLUSTER_BACKPLANE
+              value: {{ .Values.cluster.backplane }}
+            {{- if and .Values.cluster.enabled (eq .Values.cluster.backplane "valkey") .Values.cluster.valkey.bundled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-cluster-secrets
+                  key: valkeyPassword
+            {{- end }}
+            - name: CLUSTER_VALKEY_URL
+              value: {{ include "stirling-pdf.valkeyUrl" . | quote }}
+            - name: CLUSTER_NODE_ROLE
+              value: worker
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: CLUSTER_ENGINE_SHAREDSECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-cluster-secrets
+                  key: engineSharedSecret
+          ports:
+            - containerPort: 8080
+          # Startup probe: 30 x 5s = 150s grace for Spring Boot + Valkey warm-up. Requires k8s >= 1.18.
+          startupProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 10
+          {{- with .Values.worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

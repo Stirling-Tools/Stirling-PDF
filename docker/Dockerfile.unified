@@ -1,0 +1,95 @@
+# Stirling-PDF unified container. MODE env var selects role: FRONTEND, BACKEND, or BOTH.
+
+ARG BASE_VERSION=1.0.2
+ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
+
+# Stage 1: Build the Java application
+FROM gradle:9.3.1-jdk25 AS app-build
+
+ARG TASK_VERSION=3.49.1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && update-ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
+    && dpkg -i /tmp/task.deb \
+    && rm /tmp/task.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+
+WORKDIR /app
+
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle/                               gradle/
+COPY app/core/build.gradle                  app/core/
+COPY app/common/build.gradle                app/common/
+COPY app/proprietary/build.gradle           app/proprietary/
+
+COPY . .
+
+ARG STIRLING_FLAVOR=proprietary
+ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
+
+RUN STIRLING_FLAVOR=${STIRLING_FLAVOR} \
+    gradle clean build \
+      -PbuildWithFrontend=true \
+      -x spotlessApply -x spotlessCheck -x test -x sonarqube \
+      --no-daemon
+
+# Stage 2: Extract Spring Boot layers
+FROM eclipse-temurin:25-jre-noble AS jar-extract
+WORKDIR /tmp
+COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
+RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
+
+# Stage 3: Runtime
+FROM ${BASE_IMAGE}
+
+ARG VERSION_TAG
+
+WORKDIR /app
+
+COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+
+COPY --link --chown=1000:1000 scripts/ /scripts/
+
+ENV MODE=BOTH \
+    BACKEND_INTERNAL_PORT=8081 \
+    STIRLING_AOT_ENABLE="false" \
+    STIRLING_JVM_PROFILE="balanced" \
+    JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf
+
+RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
+
+LABEL org.opencontainers.image.title="Stirling-PDF Unified" \
+      org.opencontainers.image.description="Unified container - selectable role via MODE env var." \
+      org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="Stirling-Tools" \
+      org.opencontainers.image.version="${VERSION_TAG}"
+
+EXPOSE 8080/tcp
+STOPSIGNAL SIGTERM
+
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+  CMD curl -fs --max-time 10 http://localhost:8080${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status || exit 1
+
+# Map MODE to cluster node role at container start.
+ENTRYPOINT ["sh", "-c", "case \"$MODE\" in BACKEND) export CLUSTER_NODE_ROLE=worker;; FRONTEND) export CLUSTER_NODE_ROLE=web;; *) export CLUSTER_NODE_ROLE=both;; esac; exec tini -- /scripts/init.sh"]
+CMD []

@@ -1,0 +1,80 @@
+{{- if and .Values.cluster.enabled .Values.cluster.valkey.bundled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-valkey
+spec:
+  serviceName: {{ .Release.Name }}-valkey
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stirling-valkey
+  template:
+    metadata:
+      labels:
+        app: stirling-valkey
+    spec:
+      containers:
+        - name: valkey
+          image: valkey/valkey:8.0-alpine
+          command:
+            - sh
+            - -c
+            - "exec valkey-server --requirepass \"$REDIS_PASSWORD\" --maxmemory 256mb --maxmemory-policy allkeys-lru"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-cluster-secrets
+                  key: valkeyPassword
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "valkey-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping"
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "valkey-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping"
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.cluster.valkey.resources | nindent 12 }}
+          {{- if .Values.cluster.valkey.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
+  {{- if .Values.cluster.valkey.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.cluster.valkey.persistence.storageClassName }}
+        storageClassName: {{ .Values.cluster.valkey.persistence.storageClassName }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.cluster.valkey.persistence.size }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-valkey
+spec:
+  type: ClusterIP
+  selector:
+    app: stirling-valkey
+  ports:
+    - port: 6379
+      targetPort: 6379
+{{- end }}

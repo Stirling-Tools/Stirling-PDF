@@ -1,0 +1,44 @@
+Stirling-PDF release "{{ .Release.Name }}" has been deployed.
+
+{{- if .Values.ingress.enabled }}
+Front door: https://{{ .Values.ingress.host }}/  (via Ingress class "{{ .Values.ingress.className }}")
+{{- if not .Values.ingress.tls.enabled }}
+
+WARNING: TLS is disabled on the Ingress (ingress.tls.enabled=false).
+  Cookies, JWTs, and API keys will cross the wire in plaintext. Acceptable
+  for dev / loopback only. Re-enable TLS and provide a secret named
+  "{{ .Values.ingress.tls.secretName }}" (cert-manager or kubectl create secret tls).
+{{- end }}
+{{- end }}
+
+{{- if and .Values.cluster.enabled (eq .Values.cluster.backplane "valkey") .Values.cluster.valkey.bundled }}
+
+WARNING: bundled Valkey is a single-replica StatefulSet (SPOF) - DEV / EVAL ONLY.
+  Production deployments MUST use an external HA Valkey/Redis: set
+    cluster.valkey.bundled=false
+    cluster.valkey.externalUrl=rediss://<managed-endpoint>:6379
+  Managed options: AWS ElastiCache for Valkey, GCP Memorystore, the Valkey
+  Operator with multi-replica + Sentinel, or any other HA Redis-protocol service.
+  See deploy/aws/README.md for the recommended managed paths.
+{{- end }}
+
+{{- if and .Values.cluster.enabled (not .Values.cluster.engineSharedSecret) }}
+
+INFO: cluster.engineSharedSecret was auto-generated and stored in the Secret
+  "{{ .Release.Name }}-cluster-secrets". It is stable across `helm upgrade`
+  (the chart reads the existing Secret on each render) but will regenerate on
+  `helm uninstall` + reinstall. To pin it, retrieve with:
+    kubectl get secret {{ .Release.Name }}-cluster-secrets \
+      -o jsonpath='{.data.engineSharedSecret}' | base64 -d
+  and store it in your secret manager / values file for future installs.
+{{- end }}
+
+{{- if and .Values.cluster.enabled (eq .Values.cluster.backplane "valkey") .Values.cluster.valkey.bundled (not .Values.cluster.valkey.password) }}
+
+INFO: cluster.valkey.password was auto-generated for the bundled Valkey and
+  stored in "{{ .Release.Name }}-cluster-secrets". Stable across upgrades but
+  regenerates on uninstall + reinstall (which would orphan the persisted
+  Valkey PVC). Pin it explicitly before going beyond eval/dev:
+    kubectl get secret {{ .Release.Name }}-cluster-secrets \
+      -o jsonpath='{.data.valkeyPassword}' | base64 -d
+{{- end }}

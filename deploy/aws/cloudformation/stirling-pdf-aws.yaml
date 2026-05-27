@@ -1,0 +1,507 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Stirling-PDF clustered deployment on AWS. Provisions an ECS Fargate service
+  (2+ app tasks) + ElastiCache for Valkey + RDS PostgreSQL + ALB. Single
+  CloudFormation stack - click Launch Stack and fill in 4 fields.
+
+  Cost estimate (us-east-1, default sizing): ~$120-160 / month.
+  Tear-down: delete the stack. Everything except the RDS final snapshot goes.
+
+Parameters:
+  AppImage:
+    Type: String
+    Default: stirlingtools/stirling-pdf:2.11.0
+    Description: Container image with the Phase 1 cluster code. Use your ECR URI for private builds. Pin to an exact version - never :latest in production.
+
+  EngineImage:
+    Type: String
+    Default: stirlingtools/stirling-pdf-ai-engine:2.11.0
+    Description: AI engine image. Leave default if you do not use AI features. Pin to an exact version - never :latest in production.
+
+  DbSecretArn:
+    Type: String
+    AllowedPattern: "^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]+:secret:.+$"
+    Description: >
+      ARN of a Secrets Manager secret holding the Postgres password as plain SecretString.
+      Create: aws secretsmanager create-secret --name stirling/db-password --secret-string "$(openssl rand -base64 24)"
+      Passing the ARN keeps plaintext out of the rendered template and CloudTrail.
+
+  ValkeyAuthSecretArn:
+    Type: String
+    AllowedPattern: "^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]+:secret:.+$"
+    Description: >
+      ARN of a Secrets Manager secret holding the ElastiCache AUTH token (16-128 chars).
+      Create: aws secretsmanager create-secret --name stirling/valkey-auth --secret-string "$(openssl rand -hex 32)"
+      Passing the ARN keeps plaintext out of the rendered template and CloudTrail.
+
+  AppCount:
+    Type: Number
+    Default: 2
+    MinValue: 2
+    MaxValue: 10
+    Description: Number of Stirling-PDF app tasks. Multi-instance requires at least 2.
+
+  AppCpu:
+    Type: Number
+    Default: 1024
+    AllowedValues: [512, 1024, 2048, 4096]
+    Description: Fargate CPU units per app task (1024 = 1 vCPU).
+
+  AppMemory:
+    Type: Number
+    Default: 4096
+    AllowedValues: [1024, 2048, 4096, 8192]
+    Description: Fargate memory MiB per app task.
+
+  EnableAiEngine:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Set true to also run the AI engine service.
+
+Conditions:
+  WithAiEngine: !Equals [!Ref EnableAiEngine, "true"]
+
+Resources:
+
+  # ----- networking: use default VPC + its subnets to stay simple -----
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.42.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: [{Key: Name, Value: !Sub "${AWS::StackName}-vpc"}]
+
+  Igw:
+    Type: AWS::EC2::InternetGateway
+  IgwAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: {VpcId: !Ref Vpc, InternetGatewayId: !Ref Igw}
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: 10.42.1.0/24
+      MapPublicIpOnLaunch: true
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: 10.42.2.0/24
+      MapPublicIpOnLaunch: true
+
+  PublicRt:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref Vpc}
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IgwAttach
+    Properties:
+      RouteTableId: !Ref PublicRt
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Igw
+  RtAssocA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref SubnetA, RouteTableId: !Ref PublicRt}
+  RtAssocB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref SubnetB, RouteTableId: !Ref PublicRt}
+
+  # ----- security groups -----
+  AlbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public ALB
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+        - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+
+  AppSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Stirling app tasks
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourceSecurityGroupId: !Ref AlbSg}
+          - {IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourceSecurityGroupId: !GetAtt InternalSelfSg.GroupId}
+
+  InternalSelfSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow app tasks to reach each other internally
+      VpcId: !Ref Vpc
+
+  ValkeySg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Valkey ElastiCache
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 6379, ToPort: 6379, SourceSecurityGroupId: !Ref AppSg}
+
+  DbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref AppSg}
+
+  EngineLbSg:
+    Type: AWS::EC2::SecurityGroup
+    Condition: WithAiEngine
+    Properties:
+      GroupDescription: Internal ALB in front of the engine tier - only reachable from app tasks
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 5001, ToPort: 5001, SourceSecurityGroupId: !Ref AppSg}
+
+  EngineSg:
+    Type: AWS::EC2::SecurityGroup
+    Condition: WithAiEngine
+    Properties:
+      GroupDescription: AI engine - only reachable from the internal engine LB
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 5001, ToPort: 5001, SourceSecurityGroupId: !Ref EngineLbSg}
+
+  # ----- managed Valkey -----
+  ValkeySubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Stirling Valkey subnet group
+      SubnetIds: [!Ref SubnetA, !Ref SubnetB]
+
+  Valkey:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupDescription: Stirling Valkey
+      Engine: valkey
+      EngineVersion: "8.0"
+      CacheNodeType: cache.t4g.small
+      NumCacheClusters: 1
+      AutomaticFailoverEnabled: false
+      CacheSubnetGroupName: !Ref ValkeySubnetGroup
+      SecurityGroupIds: [!Ref ValkeySg]
+      AtRestEncryptionEnabled: true
+      # TLS in flight required when AuthToken is set (ElastiCache enforces this).
+      TransitEncryptionEnabled: true
+      AuthToken: !Sub "{{resolve:secretsmanager:${ValkeyAuthSecretArn}}}"
+
+  # ----- managed Postgres -----
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Stirling Postgres subnet group
+      SubnetIds: [!Ref SubnetA, !Ref SubnetB]
+
+  Postgres:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub "${AWS::StackName}-pg"
+      AllocatedStorage: 20
+      DBInstanceClass: db.t4g.micro
+      Engine: postgres
+      EngineVersion: "17.2"
+      MasterUsername: stirling
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DbSecretArn}}}"
+      DBName: stirling
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups: [!Ref DbSg]
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+
+  # ----- secrets -----
+  EngineSharedSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}-engine-secret"
+      Description: X-Engine-Auth shared secret between app and AI engine. Generated by CFN, never passed in.
+      GenerateSecretString:
+        PasswordLength: 64
+        ExcludePunctuation: true
+
+
+  # ----- ECS cluster + roles -----
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${AWS::StackName}-cluster"
+      ClusterSettings:
+        - {Name: containerInsights, Value: enabled}
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ecs-tasks.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: ReadSecrets
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: [secretsmanager:GetSecretValue]
+                Resource:
+                  - !Ref EngineSharedSecret
+                  - !Ref DbSecretArn
+                  - !Ref ValkeyAuthSecretArn
+
+  TaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${AWS::StackName}"
+      RetentionInDays: 14
+
+  # ----- ALB -----
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets: [!Ref SubnetA, !Ref SubnetB]
+      SecurityGroups: [!Ref AlbSg]
+      Type: application
+
+  AppTg:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref Vpc
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /api/v1/info/status
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
+      Matcher: {HttpCode: "200"}
+      # Sticky sessions required - see deploy/aws/README.md.
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: 'true'
+        - Key: stickiness.type
+          Value: lb_cookie
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: '86400'
+
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AppTg
+
+  AlbBlockInternalRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref AlbListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values: ["/internal/*"]
+      Actions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            StatusCode: "404"
+            ContentType: text/plain
+            MessageBody: "Not Found"
+
+  # ----- ECS task definition for the Stirling app -----
+  AppTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${AWS::StackName}-app"
+      Cpu: !Ref AppCpu
+      Memory: !Ref AppMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: stirling
+          Image: !Ref AppImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: app
+          Environment:
+            - {Name: CLUSTER_ENABLED, Value: "true"}
+            - {Name: CLUSTER_BACKPLANE, Value: valkey}
+            # rediss:// = TLS. REDIS_PASSWORD injected separately via Secrets below.
+            - {Name: CLUSTER_VALKEY_URL, Value: !Sub "rediss://${Valkey.PrimaryEndPoint.Address}:6379"}
+            - {Name: SPRING_DATASOURCE_URL, Value: !Sub "jdbc:postgresql://${Postgres.Endpoint.Address}:5432/stirling"}
+            - {Name: SPRING_DATASOURCE_USERNAME, Value: stirling}
+            - {Name: DOCKER_ENABLE_SECURITY, Value: "true"}
+            - {Name: SYSTEM_DEFAULTLOCALE, Value: en-US}
+            - !If
+              - WithAiEngine
+              - {Name: AIENGINE_URL, Value: !Sub "http://${EngineAlb.DNSName}:5001"}
+              - !Ref AWS::NoValue
+          Secrets:
+            - {Name: CLUSTER_ENGINE_SHAREDSECRET, ValueFrom: !Ref EngineSharedSecret}
+            - {Name: SPRING_DATASOURCE_PASSWORD, ValueFrom: !Ref DbSecretArn}
+            - {Name: REDIS_PASSWORD, ValueFrom: !Ref ValkeyAuthSecretArn}
+
+  AppService:
+    Type: AWS::ECS::Service
+    DependsOn: AlbListener
+    Properties:
+      ServiceName: !Sub "${AWS::StackName}-app"
+      Cluster: !Ref EcsCluster
+      DesiredCount: !Ref AppCount
+      LaunchType: FARGATE
+      TaskDefinition: !Ref AppTaskDef
+      # Grace period covers Spring Boot warm-up + Valkey handshake (~60-90s total).
+      HealthCheckGracePeriodSeconds: 120
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 50
+        MaximumPercent: 200
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref SubnetA, !Ref SubnetB]
+          SecurityGroups: [!Ref AppSg, !Ref InternalSelfSg]
+      LoadBalancers:
+        - ContainerName: stirling
+          ContainerPort: 8080
+          TargetGroupArn: !Ref AppTg
+
+  # ----- optional AI engine service -----
+  EngineAlb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition: WithAiEngine
+    Properties:
+      Scheme: internal
+      Subnets: [!Ref SubnetA, !Ref SubnetB]
+      SecurityGroups: [!Ref EngineLbSg]
+      Type: application
+
+  EngineTg:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: WithAiEngine
+    Properties:
+      VpcId: !Ref Vpc
+      Port: 5001
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
+      Matcher: {HttpCode: "200"}
+
+  EngineAlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: WithAiEngine
+    Properties:
+      LoadBalancerArn: !Ref EngineAlb
+      Port: 5001
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref EngineTg
+
+  EngineTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Condition: WithAiEngine
+    Properties:
+      Family: !Sub "${AWS::StackName}-engine"
+      Cpu: 1024
+      Memory: 2048
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: engine
+          Image: !Ref EngineImage
+          PortMappings: [{ContainerPort: 5001, Protocol: tcp}]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: engine
+          Secrets:
+            - {Name: STIRLING_ENGINE_SHARED_SECRET, ValueFrom: !Ref EngineSharedSecret}
+
+  EngineService:
+    Type: AWS::ECS::Service
+    Condition: WithAiEngine
+    DependsOn: EngineAlbListener
+    Properties:
+      ServiceName: !Sub "${AWS::StackName}-engine"
+      Cluster: !Ref EcsCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !Ref EngineTaskDef
+      # Engine model-load warm-up can take 60-90s.
+      HealthCheckGracePeriodSeconds: 120
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref SubnetA, !Ref SubnetB]
+          SecurityGroups: [!Ref EngineSg]
+      LoadBalancers:
+        - ContainerName: engine
+          ContainerPort: 5001
+          TargetGroupArn: !Ref EngineTg
+
+  # ----- HPA-equivalent: target tracking on CPU -----
+  AppScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 10
+      MinCapacity: !Ref AppCount
+      ResourceId: !Sub "service/${EcsCluster}/${AppService.Name}"
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+
+  AppScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub "${AWS::StackName}-cpu-target"
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AppScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+
+Outputs:
+  AppUrl:
+    Description: Open this URL - Stirling-PDF cluster front door
+    Value: !Sub "http://${Alb.DNSName}/"
+  ClusterName:
+    Value: !Ref EcsCluster
+  ValkeyEndpoint:
+    Value: !GetAtt Valkey.PrimaryEndPoint.Address
+  PostgresEndpoint:
+    Value: !GetAtt Postgres.Endpoint.Address
+  StackTeardown:
+    Description: To delete everything (RDS keeps a final snapshot)
+    Value: !Sub "aws cloudformation delete-stack --stack-name ${AWS::StackName}"
