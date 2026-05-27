@@ -3,12 +3,16 @@ package stirling.software.proprietary.storage.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
 class ClusterStorageGateTest {
 
@@ -100,10 +104,78 @@ class ClusterStorageGateTest {
     void clusterEnabled_nullStorageObject_passesProviderCheck_butArtifactStoreStillEvaluated() {
         ApplicationProperties props = new ApplicationProperties();
         props.setStorage(null);
-        ClusterStorageGate gate = new ClusterStorageGate(props);
+        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
+        when(checker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        ClusterStorageGate gate = new ClusterStorageGate(props, checker);
         setClusterEnabled(gate, true);
         setClusterArtifactStore(gate, "s3");
         assertThatCode(gate::validate).doesNotThrowAnyException();
+    }
+
+    // ----- License gating for premium storage backends -----
+
+    @Test
+    void storageProviderS3_withoutProLicense_throws() {
+        ClusterStorageGate gate = newGate(false, true, "s3", "local", License.NORMAL);
+        assertThatThrownBy(gate::validate)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("storage.provider=s3 requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void storageProviderDatabase_withoutProLicense_throws() {
+        ClusterStorageGate gate = newGate(false, true, "database", "local", License.NORMAL);
+        assertThatThrownBy(gate::validate)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(
+                        "storage.provider=database requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void storageProviderS3_withServerLicense_passes() {
+        ClusterStorageGate gate = newGate(false, true, "s3", "local", License.SERVER);
+        assertThatCode(gate::validate).doesNotThrowAnyException();
+    }
+
+    @Test
+    void storageProviderS3_withEnterpriseLicense_passes() {
+        ClusterStorageGate gate = newGate(false, true, "s3", "local", License.ENTERPRISE);
+        assertThatCode(gate::validate).doesNotThrowAnyException();
+    }
+
+    @Test
+    void storageProviderDatabase_withServerLicense_passes() {
+        ClusterStorageGate gate = newGate(false, true, "database", "local", License.SERVER);
+        assertThatCode(gate::validate).doesNotThrowAnyException();
+    }
+
+    @Test
+    void clusterArtifactStoreS3_withoutProLicense_throws() {
+        ClusterStorageGate gate = newGate(false, false, "local", "s3", License.NORMAL);
+        assertThatThrownBy(gate::validate)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(
+                        "cluster.artifactStore=s3 requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void clusterArtifactStoreS3_withServerLicense_passes() {
+        ClusterStorageGate gate = newGate(false, false, "local", "s3", License.SERVER);
+        assertThatCode(gate::validate).doesNotThrowAnyException();
+    }
+
+    @Test
+    void localOnly_normalLicense_passes_licenseNotChecked() {
+        ClusterStorageGate gate = newGate(false, true, "local", "local", License.NORMAL);
+        assertThatCode(gate::validate).doesNotThrowAnyException();
+    }
+
+    @Test
+    void storageDisabled_butArtifactStoreS3_withoutLicense_stillThrows() {
+        ClusterStorageGate gate = newGate(false, false, "local", "s3", License.NORMAL);
+        assertThatThrownBy(gate::validate)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cluster.artifactStore=s3");
     }
 
     private static ClusterStorageGate newGate(
@@ -111,12 +183,27 @@ class ClusterStorageGateTest {
             boolean storageEnabled,
             String provider,
             String clusterArtifactStore) {
+        // Default to a SERVER license so existing tests (which assert clustering / artifact-store
+        // rules independently of license) continue to pass. License-specific tests below build
+        // gates with explicit license tiers.
+        return newGate(
+                clusterEnabled, storageEnabled, provider, clusterArtifactStore, License.SERVER);
+    }
+
+    private static ClusterStorageGate newGate(
+            boolean clusterEnabled,
+            boolean storageEnabled,
+            String provider,
+            String clusterArtifactStore,
+            License license) {
         ApplicationProperties props = new ApplicationProperties();
         ApplicationProperties.Storage storage = new ApplicationProperties.Storage();
         storage.setEnabled(storageEnabled);
         storage.setProvider(provider);
         props.setStorage(storage);
-        ClusterStorageGate gate = new ClusterStorageGate(props);
+        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
+        when(checker.getPremiumLicenseEnabledResult()).thenReturn(license);
+        ClusterStorageGate gate = new ClusterStorageGate(props, checker);
         setClusterEnabled(gate, clusterEnabled);
         setClusterArtifactStore(gate, clusterArtifactStore);
         return gate;

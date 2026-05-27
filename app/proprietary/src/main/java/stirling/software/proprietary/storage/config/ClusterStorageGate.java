@@ -12,11 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
 /**
  * Fails fast at boot if cluster mode is enabled with node-local storage. Validates both {@code
  * storage.provider} (persistent uploads) and {@code cluster.artifactStore} (transient job-result
- * files): neither may be {@code local} when {@code cluster.enabled=true}.
+ * files): neither may be {@code local} when {@code cluster.enabled=true}. Additionally enforces
+ * that any S3-backed configuration ({@code storage.provider=s3} or {@code
+ * cluster.artifactStore=s3}) is accompanied by a valid Pro / Enterprise license.
  */
 @Configuration
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class ClusterStorageGate {
 
     private final ApplicationProperties applicationProperties;
+    private final LicenseKeyChecker licenseKeyChecker;
 
     @Value("${cluster.enabled:false}")
     private boolean clusterEnabled;
@@ -33,10 +38,22 @@ public class ClusterStorageGate {
 
     @PostConstruct
     void validate() {
+        // License enforcement runs regardless of cluster.enabled: even a single-node setup that
+        // selects a remote backend must hold a Pro or higher license.
+        ApplicationProperties.Storage storage = applicationProperties.getStorage();
+        if (storage != null && storage.isEnabled()) {
+            String provider = normalize(storage.getProvider());
+            if ("s3".equals(provider) || "database".equals(provider)) {
+                requireProLicense("storage.provider=" + provider);
+            }
+        }
+        if ("s3".equals(normalize(clusterArtifactStore))) {
+            requireProLicense("cluster.artifactStore=s3");
+        }
+
         if (!clusterEnabled) {
             return;
         }
-        ApplicationProperties.Storage storage = applicationProperties.getStorage();
         if (storage != null && storage.isEnabled()) {
             validate(
                     "storage.provider",
@@ -54,6 +71,17 @@ public class ClusterStorageGate {
                         + " a follow-up request to a different node. Configure"
                         + " cluster.artifactStore=s3 (reuses storage.s3.* config)"
                         + " before enabling clustering.");
+    }
+
+    private void requireProLicense(String configuredAs) {
+        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+        if (license != License.SERVER && license != License.ENTERPRISE) {
+            throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
+        }
+    }
+
+    private static String normalize(String value) {
+        return Optional.ofNullable(value).orElse("local").trim().toLowerCase(Locale.ROOT);
     }
 
     private static void validate(String propertyName, String configuredValue, String remediation) {
