@@ -25,9 +25,9 @@ tasks:
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true AIENGINE_TIMEOUTSECONDS=120 {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true AIENGINE_TIMEOUTSECONDS=120 {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   dev:bundled:
