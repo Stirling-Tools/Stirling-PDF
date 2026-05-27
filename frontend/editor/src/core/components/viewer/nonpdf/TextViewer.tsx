@@ -92,8 +92,10 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
               maxWidth: 800,
               margin: "0 auto",
               padding: "20px 28px",
-              background: "#ffffff",
+              background: "var(--bg-surface)",
+              color: "var(--text-primary)",
               borderRadius: 6,
+              border: "1px solid var(--border-subtle)",
             }}
           >
             {renderedMarkdown}

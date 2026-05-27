@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
 import { MantineProvider } from "@mantine/core";
 import { useRainbowTheme } from "@app/hooks/useRainbowTheme";
 import { mantineTheme } from "@app/theme/mantineTheme";
@@ -36,9 +36,20 @@ interface RainbowThemeProviderProps {
 export function RainbowThemeProvider({ children }: RainbowThemeProviderProps) {
   const rainbowTheme = useRainbowTheme();
 
-  // Determine the Mantine color scheme
+  // Determine the Mantine color scheme (midnight and rainbow both use Mantine dark)
   const mantineColorScheme =
-    rainbowTheme.themeMode === "rainbow" ? "dark" : rainbowTheme.themeMode;
+    rainbowTheme.themeMode === "rainbow" ||
+    rainbowTheme.themeMode === "midnight"
+      ? "dark"
+      : rainbowTheme.themeMode;
+
+  // Apply data-color-scheme attribute to html element for CSS midnight overrides
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-color-scheme",
+      rainbowTheme.themeMode,
+    );
+  }, [rainbowTheme.themeMode]);
 
   return (
     <RainbowThemeContext.Provider value={rainbowTheme}>

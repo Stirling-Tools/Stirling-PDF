@@ -75,7 +75,7 @@
   box-shadow: var(--shadow-md);
   overflow: hidden;
   position: relative;
-  background: var(--bg-surface);
+  background: white;
   transition:
     box-shadow 0.15s ease,
     transform 0.2s ease;

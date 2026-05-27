@@ -55,10 +55,6 @@ app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
-# Tauri build artifacts
-frontend/src-tauri/target/
-frontend/editor/src-tauri/target/
-
 # Gradle
 .gradle
 .gradle-home
@@ -162,6 +158,8 @@ common/build
 proprietary/build
 stirling-pdf/build
 frontend/src-tauri/provisioner/target
+frontend/src-tauri/target
+frontend/src-tauri/runtime/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -178,7 +176,6 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
-!.env.saas.example
 
 # VS Code
 /.vscode/**/*

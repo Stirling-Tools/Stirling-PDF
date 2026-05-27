@@ -257,6 +257,7 @@ tasks:
       - task: lint
       - task: format:check
       - task: test
+      - task: theme:check-unused-vars
 
   check:all:
     desc: "Full CI quality gate"
@@ -298,3 +299,17 @@ tasks:
     deps: [install]
     cmds:
       - node editor/scripts/generate-licenses.js
+
+  theme:clean-unused-vars:
+    desc: "Remove unused CSS variables from theme.css"
+    deps: [install]
+    vars:
+      REMOVE: '{{.REMOVE | default "false"}}'
+    cmds:
+      - node editor/scripts/clean-unused-theme-vars.js{{if eq .REMOVE "true"}} --remove{{end}} {{.CLI_ARGS}}
+
+  theme:check-unused-vars:
+    desc: "Fail if theme.css contains unused CSS variables"
+    deps: [install]
+    cmds:
+      - node editor/scripts/clean-unused-theme-vars.js --check

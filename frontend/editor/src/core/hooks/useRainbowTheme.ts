@@ -175,9 +175,13 @@ export function useRainbowTheme(): RainbowThemeHook {
       return;
     }
 
-    // Normal theme switching
-    const nextTheme = themeMode === "light" ? "dark" : "light";
-    updatePreference("theme", nextTheme);
+    // Normal theme switching: light → dark → midnight → light
+    const cycle: Record<string, ThemeMode> = {
+      light: "dark",
+      dark: "midnight",
+      midnight: "light",
+    };
+    updatePreference("theme", cycle[themeMode] ?? "light");
   }, [themeMode, updatePreference]);
 
   const activateRainbow = useCallback(() => {

@@ -53,6 +53,19 @@ const gray: MantineColorsTuple = [
   "var(--color-gray-900)",
 ];
 
+const dark: MantineColorsTuple = [
+  "#c4c9d2",
+  "#9aa3b0",
+  "#9ca3af",
+  "#6b7280",
+  "#242c3a",
+  "#161c24",
+  "#0f1318",
+  "#0a0d12",
+  "#070a0e",
+  "#040507",
+];
+
 export const mantineTheme = createTheme({
   // Primary color
   primaryColor: "primary",
@@ -63,6 +76,7 @@ export const mantineTheme = createTheme({
     green,
     yellow,
     gray,
+    dark,
   },
 
   // Spacing system - uses CSS variables
