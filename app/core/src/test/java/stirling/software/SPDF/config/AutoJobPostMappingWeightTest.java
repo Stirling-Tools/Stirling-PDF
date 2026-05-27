@@ -29,33 +29,33 @@ import stirling.software.common.annotations.AutoJobPostMapping;
  *   <li>{@code UnifiedCreditInterceptor} — multiplies it into the per-call credit charge on the
  *       legacy credits engine. This is the only live consumer today.
  *   <li>{@code JobExecutorService} → {@code ResourceMonitor.shouldQueueJob(weight)} — would gate
- *       queue admission, BUT only when the endpoint sets {@code queueable=true}. No endpoint in
- *       the codebase currently does, so this path is wired but dormant.
+ *       queue admission, BUT only when the endpoint sets {@code queueable=true}. No endpoint in the
+ *       codebase currently does, so this path is wired but dormant.
  * </ul>
  *
  * <p>Under PAYG (per {@code notes/PAYG_DESIGN.md} §3.4 + PR-R5) the field is dropped from the
- * charging path entirely — PAYG bills per-document × per-process, not per-weight. The queueing
- * path remains as the field's only theoretical future consumer, and only the day someone enables
- * {@code queueable=true} on an endpoint.
+ * charging path entirely — PAYG bills per-document × per-process, not per-weight. The queueing path
+ * remains as the field's only theoretical future consumer, and only the day someone enables {@code
+ * queueable=true} on an endpoint.
  *
- * <p>Either way, a silent fallthrough is wrong: today it mis-charges legacy customers (the PR
- * #6384 review caught the smoking-gun version, where a {@code 1} default combined with
- * 50-magnitude intent meant heavy endpoints under-charged 50×), and after PAYG it would lie to
- * the queueing path the moment {@code queueable=true} gets adopted. Forcing an explicit value
- * keeps the choice deliberate.
+ * <p>Either way, a silent fallthrough is wrong: today it mis-charges legacy customers (the PR #6384
+ * review caught the smoking-gun version, where a {@code 1} default combined with 50-magnitude
+ * intent meant heavy endpoints under-charged 50×), and after PAYG it would lie to the queueing path
+ * the moment {@code queueable=true} gets adopted. Forcing an explicit value keeps the choice
+ * deliberate.
  *
- * <p>The annotation's default is {@link Integer#MIN_VALUE} (a sentinel). Runtime readers clamp
- * into {@code [1, 100]} so a missed declaration doesn't crash production — this test is the
- * contract, the clamp is the safety net.
+ * <p>The annotation's default is {@link Integer#MIN_VALUE} (a sentinel). Runtime readers clamp into
+ * {@code [1, 100]} so a missed declaration doesn't crash production — this test is the contract,
+ * the clamp is the safety net.
  *
  * <p>Lives in {@code :stirling-pdf} (core) because that's the module whose compile classpath
  * transitively sees every other module's controllers ({@code :common}, {@code :proprietary}, and
  * {@code :saas} when enabled).
  *
  * <p>Note: not every {@code @AutoJobPostMapping} is a PDF-tool run — the annotation also covers
- * lightweight metadata operations (e.g. {@code listAttachments}, {@code sendEmail}). The
- * guardrail applies uniformly because the credits interceptor doesn't discriminate by endpoint
- * shape, only by annotation presence.
+ * lightweight metadata operations (e.g. {@code listAttachments}, {@code sendEmail}). The guardrail
+ * applies uniformly because the credits interceptor doesn't discriminate by endpoint shape, only by
+ * annotation presence.
  */
 class AutoJobPostMappingWeightTest {
 
