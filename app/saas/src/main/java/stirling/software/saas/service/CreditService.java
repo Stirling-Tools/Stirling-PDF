@@ -93,14 +93,9 @@ public class CreditService {
                 Counter.builder("credits.cycle_reset")
                         .description("Number of credit cycle resets performed")
                         .register(meterRegistry);
-        // Posted after the DB commit succeeds but Stripe rejects/times-out — money the customer
-        // owes us that we haven't billed yet. Operations watches this; sustained non-zero means
-        // either Stripe is degraded or the meter-usage Edge Function is misconfigured.
         this.stripeReportFailuresCounter =
                 Counter.builder("credits.stripe_report.failures")
-                        .description(
-                                "Stripe meter event failed after DB commit; usage is owed but"
-                                        + " unbilled until a retry succeeds")
+                        .description("Stripe meter post failed after the DB debit committed")
                         .register(meterRegistry);
 
         // Active gauges for current credit levels
@@ -308,10 +303,8 @@ public class CreditService {
                         return true;
                     }
                 } else {
-                    // Partial or full overage: consume free credits in this tx, report to Stripe
-                    // *after* the tx commits (see scheduleStripeReportAfterCommit). Holding the
-                    // row lock open across an HTTP call to Stripe was the source of the
-                    // PR #6384 review's "Stripe-before-DB ordering" finding.
+                    // Partial or full overage: consume free credits in this tx, report the overage
+                    // to Stripe after commit (see scheduleStripeReportAfterCommit).
                     int freeCreditsUsed =
                             userCredits.getCycleCreditsRemaining() != null
                                     ? userCredits.getCycleCreditsRemaining()
@@ -343,9 +336,6 @@ public class CreditService {
                         }
                     }
 
-                    // Stable idempotency key per (user, overage, request). The CorrelationIdFilter
-                    // guarantees MDC.requestId is set on every request, so the key is reproducible
-                    // across retries — Stripe collapses duplicates by this key.
                     String operationId = MDC.get("requestId");
                     String idempotencyKey =
                             stripeUsageReportingService.generateIdempotencyKey(
@@ -360,11 +350,8 @@ public class CreditService {
                     return true;
                 }
 
-                // Free-tier branch fell through with rowsUpdated != 1: the in-memory
-                // getCycleCreditsRemaining() read saw enough credits, but the atomic SQL UPDATE
-                // saw the balance after a concurrent debit drained it. Not a logic error — the
-                // race is expected under concurrency. The atomic update's WHERE clause did its
-                // job; surface the failure to the caller so they can retry.
+                // Lost a concurrent-debit race: the in-memory balance check passed but the atomic
+                // UPDATE found insufficient credits. Surface the failure so the caller can retry.
                 log.warn(
                         "[USAGE-BASED] Concurrent-debit race lost the free-tier consumption for"
                                 + " user {}; caller should retry.",
@@ -404,10 +391,6 @@ public class CreditService {
             creditConsumptionFailuresCounter.increment();
             return false;
         } catch (RuntimeException e) {
-            // Stripe reporting now runs in afterCommit (not synchronously), so a RuntimeException
-            // here is no longer a metering failure — it's a transient DB error or similar. Log,
-            // metric, and return false; the caller decides whether to retry. The HTTP response
-            // surfaces as 5xx, which is appropriate for a transient outage.
             log.error(
                     "[CREDIT-CONSUME] Unexpected runtime error consuming credits for user: {} - {}",
                     supabaseId,
@@ -438,26 +421,11 @@ public class CreditService {
     }
 
     /**
-     * Post the Stripe meter event for an overage debit, after the DB transaction commits.
+     * Posts the Stripe meter event for an overage debit in a {@code TransactionSynchronization}
+     * afterCommit hook, so the DB row lock is released before the HTTP call to Stripe.
      *
-     * <p>Why after-commit:
-     *
-     * <ul>
-     *   <li><b>No row-lock held across HTTP.</b> Calling Stripe inside the transaction holds the
-     *       {@code user_credits} row lock for the duration of the HTTP round-trip. Under load that
-     *       starves concurrent debits.
-     *   <li><b>No spurious rollback.</b> A network blip used to throw a {@code RuntimeException},
-     *       rolling back the (correct) free-credit consumption. The caller would retry, getting a
-     *       fresh request — but with the same MDC requestId on a true client retry, so Stripe still
-     *       dedupes. We accept the small risk that a Stripe outage past the retry window leaves
-     *       usage owed-but-unbilled (visible on {@code credits.stripe_report.failures}).
-     *   <li><b>Idempotency unchanged.</b> The idempotency key still comes from {@code (supabaseId,
-     *       overageCredits, MDC.requestId)} — captured at registration time, so a future async
-     *       retry posts the same key.
-     * </ul>
-     *
-     * <p>If no transaction is active (e.g. tests calling this from outside {@code @Transactional}),
-     * we fall back to immediate execution so the meter event still fires.
+     * <p>If no transaction is active (e.g. a test calling consume directly) the report runs
+     * synchronously instead, so the meter event still fires.
      */
     private void scheduleStripeReportAfterCommit(
             String supabaseId,
@@ -481,9 +449,8 @@ public class CreditService {
                                 stripeUsageReportingService.reportUsageToStripe(
                                         supabaseId, overageCredits, idempotencyKey);
                     } catch (RuntimeException e) {
-                        // Defensive: the reporting service catches its own exceptions, but if a
-                        // future change ever throws, we don't want it to take down the afterCommit
-                        // chain (which would mask the success of the actual DB debit).
+                        // Don't let a Stripe exception unwind the afterCommit chain — the DB
+                        // debit has already committed.
                         log.error(
                                 "[CREDIT-CONSUME] Stripe meter post threw for user {} (overage {});"
                                         + " usage owed-but-unbilled until a retry succeeds",
@@ -504,9 +471,9 @@ public class CreditService {
                                 overageCredits,
                                 creditAmount);
                     } else {
-                        // Reporting service returned false — DB has the debit, Stripe doesn't.
-                        // The idempotency key is stable, so a manual replay (or a future automated
-                        // retry queue) will catch up.
+                        // DB has the debit, Stripe doesn't. The idempotency key is stable, so a
+                        // replay with the same key recovers the meter event without
+                        // double-charging.
                         stripeReportFailuresCounter.increment();
                         log.error(
                                 "[USAGE-BASED] Failed to post Stripe meter event for user {}"
@@ -527,12 +494,9 @@ public class CreditService {
                         }
                     });
         } else {
-            // No active transaction (e.g. a test calling consume directly). Run synchronously
-            // so the meter event still fires; the historical behaviour is preserved for this
-            // edge case.
             log.warn(
                     "[CREDIT-CONSUME] No active transaction; reporting Stripe usage synchronously."
-                            + " This is expected only in tests.");
+                            + " Expected only in tests.");
             reportToStripe.run();
         }
     }
@@ -1145,9 +1109,6 @@ public class CreditService {
                     user.getUsername(),
                     creditAmount);
 
-            // MDC.requestId is set by CorrelationIdFilter on every authenticated request, so it
-            // is always populated here. No UUID fallback needed — and no fallback means a true
-            // client retry of the same request produces the same idempotency key (Stripe dedupes).
             String operationId = MDC.get("requestId");
             String idempotencyKey =
                     stripeUsageReportingService.generateIdempotencyKey(

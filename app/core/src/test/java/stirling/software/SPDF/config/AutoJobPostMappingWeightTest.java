@@ -72,9 +72,7 @@ class AutoJobPostMappingWeightTest {
     }
 
     /**
-     * Scan all classes under {@link #SCAN_BASE_PACKAGE} without requiring them to be Spring
-     * components. We use Spring's class-file reader directly so the test doesn't depend on bean
-     * configuration and stays cheap.
+     * Returns every class under {@link #SCAN_BASE_PACKAGE} that has an @AutoJobPostMapping method.
      */
     private List<Class<?>> scanForCandidateClasses() throws IOException, ClassNotFoundException {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
@@ -83,10 +81,8 @@ class AutoJobPostMappingWeightTest {
         String pattern = "classpath*:" + SCAN_BASE_PACKAGE.replace('.', '/') + "/**/*.class";
         Resource[] resources = resolver.getResources(pattern);
 
-        // Lightweight pre-filter: keep only classes that mention @AutoJobPostMapping in their
-        // bytecode (Spring's MetadataReader exposes annotated-method info without classloading).
-        // This avoids initialising every class on the test classpath, which would otherwise touch
-        // Spring beans, JDBC drivers, etc. just for a static lint.
+        // Pre-filter by reading annotation metadata from the class file so we don't have to load
+        // every class on the test classpath just to find the few that are annotated.
         TypeFilter mentionsAutoJobPostMapping =
                 (reader, factory) ->
                         reader.getAnnotationMetadata()
@@ -109,9 +105,8 @@ class AutoJobPostMappingWeightTest {
     }
 
     /**
-     * Self-check: prove the scanner actually finds {@code @AutoJobPostMapping} methods. If a future
-     * refactor breaks scanning, the main test would pass vacuously (zero offenders found because
-     * zero candidates found) — this guards against that silent regression.
+     * Sanity check that the classpath scan returns non-empty; otherwise the main test passes
+     * vacuously.
      */
     @Test
     void scannerFindsAtLeastOneAutoJobPostMapping() throws Exception {

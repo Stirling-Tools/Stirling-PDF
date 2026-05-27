@@ -9,13 +9,9 @@ import stirling.software.saas.billing.service.StripeUsageReportingService;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 
 /**
- * Pins the shape of the Stripe meter-event idempotency key. The PAYG design and the PR #6384 review
- * both require this key to be deterministic across retries — same Supabase user, same overage
- * amount, same request → same key, so Stripe collapses duplicates.
- *
- * <p>If this contract slips (wall-clock millis sneak back in, fresh UUIDs per call, etc.) Stripe
- * stops deduping and customers get double-billed on a retry. Tests are cheap; the contract is
- * load-bearing.
+ * Pins the Stripe meter-event idempotency key as a deterministic function of (Supabase user,
+ * overage amount, request id). Stripe collapses duplicates by this key, so a regression here means
+ * customers get double-billed on a retry.
  */
 class StripeUsageIdempotencyKeyTest {
 
@@ -42,8 +38,6 @@ class StripeUsageIdempotencyKeyTest {
 
     @Test
     void differentOverageAmounts_produceDifferentKeys() {
-        // Two debits of different sizes within the same request must not collapse — Stripe would
-        // skip the second meter event otherwise.
         String tenCredits = service.generateIdempotencyKey("user-123", 10, "req-abc");
         String elevenCredits = service.generateIdempotencyKey("user-123", 11, "req-abc");
 
@@ -60,8 +54,7 @@ class StripeUsageIdempotencyKeyTest {
 
     @Test
     void keyShapeIncludesAllThreeDimensions() {
-        // Smoke check: make sure no future "simplification" silently drops a dimension.
-        // Format today: usage_{supabaseId}_{credits}_{operationId}
+        // Format: usage_{supabaseId}_{credits}_{operationId}
         String key = service.generateIdempotencyKey("user-123", 42, "req-abc");
 
         assertThat(key).contains("user-123").contains("42").contains("req-abc");
