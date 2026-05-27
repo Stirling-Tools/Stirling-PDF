@@ -20,8 +20,8 @@ public interface StorageProvider extends AutoCloseable {
     /**
      * Releases any backend-specific resources. Default no-op so {@link LocalStorageProvider} and
      * {@link DatabaseStorageProvider} (which hold no closeable handles) satisfy Spring's
-     * {@code @Bean(destroyMethod = "close")} signature requirement without ceremony.
-     * {@code S3StorageProvider} overrides this to close the underlying SDK client + presigner.
+     * {@code @Bean(destroyMethod = "close")} signature requirement without ceremony. {@code
+     * S3StorageProvider} overrides this to close the underlying SDK client + presigner.
      */
     @Override
     default void close() {}
