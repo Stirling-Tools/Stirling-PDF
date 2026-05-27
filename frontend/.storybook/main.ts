@@ -27,7 +27,7 @@ const config: StorybookConfig = {
   // network calls the same way the dev portal does.
   staticDirs: ["../portal/public"],
   viteFinal: async (config) => {
-    // Wire @app/* and @shared/* aliases directly on the Storybook bundler so
+    // Wire @portal/* and @shared/* aliases directly on the Storybook bundler so
     // story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {

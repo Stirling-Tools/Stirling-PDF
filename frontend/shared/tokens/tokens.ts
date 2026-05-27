@@ -6,9 +6,10 @@
  * across both themes — the document types they represent are stable concepts,
  * so their colour is part of their identity rather than a UI affordance.
  *
- * These TS constants are the source of truth; tokens.css mirrors them as CSS
- * custom properties for runtime theme switching. Keep them in sync (run
- * `pnpm gen:tokens` if/when a generator script lands).
+ * tokens.css is the runtime source of truth — every component reads the CSS
+ * custom properties, which flip under `[data-theme="dark"]`. These TS constants
+ * are a partial mirror retained for the values consumed in TS (currently the
+ * tier mapping below); keep any values here in sync with tokens.css.
  */
 
 export type ColorMode = "light" | "dark";
@@ -133,7 +134,7 @@ export const COLORS_LIGHT: ColorPalette = {
   text2: "#1a202c",
   text3: "#475569",
   text4: "#64748b",
-  text5: "#94a3b8",
+  text5: "#64748b",
   text6: "#6b7280",
   textMuted: "#8b92a1",
   textPlaceholder: "#9ca3af",
@@ -238,7 +239,7 @@ export const COLORS_DARK: ColorPalette = {
   text2: "#e2e8f0",
   text3: "#94a3b8",
   text4: "#64748b",
-  text5: "#475569",
+  text5: "#7c869a",
   text6: "#94a3b8",
   textMuted: "#64748b",
   textPlaceholder: "#475569",
@@ -260,7 +261,7 @@ export const COLORS_DARK: ColorPalette = {
   amber: "#fbbf24",
   amberLight: "#2d2006",
   amberBorder: "#78350f",
-  amberDark: "#fbbf24",
+  amberDark: "#f59e0b",
 
   // Category accents — intentionally identical across themes; document
   // categories are stable concepts, not mode-aware UI.

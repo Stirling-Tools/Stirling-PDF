@@ -7,16 +7,6 @@ import {
 } from "@portal/api/home";
 import "@portal/components/RecentActivity.css";
 
-const STATUS_TONE: Record<
-  ActivityEvent["status"],
-  "success" | "warning" | "danger" | "info"
-> = {
-  success: "success",
-  warning: "warning",
-  danger: "danger",
-  info: "info",
-};
-
 const KIND_COLOUR: Record<ActivityKind, string> = {
   "pipeline-run": "var(--color-blue)",
   deploy: "var(--color-green)",
@@ -90,7 +80,7 @@ export function RecentActivity() {
                   <span className="portal-activity__detail">
                     {event.detail}
                   </span>
-                  <StatusBadge tone={STATUS_TONE[event.status]} size="sm">
+                  <StatusBadge tone={event.status} size="sm">
                     {event.status}
                   </StatusBadge>
                 </div>

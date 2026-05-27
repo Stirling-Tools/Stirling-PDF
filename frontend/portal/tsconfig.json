@@ -15,6 +15,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src", "main.tsx", "vite.config.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src", "main.tsx", "vite.config.ts"]
 }

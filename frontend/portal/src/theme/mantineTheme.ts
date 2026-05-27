@@ -12,6 +12,11 @@ import { createTheme, type MantineColorsTuple } from "@mantine/core";
  * the base brand colour. Because every slot is a `var(--color-*)` reference and
  * those variables flip under `[data-theme="dark"]`, the Mantine theme follows
  * SUI's light/dark switch automatically with no extra wiring.
+ *
+ * Caveat: every shade is a `var(--color-*)` reference, not a literal colour, so
+ * Mantine's JS colour maths can't read it. Don't enable `autoContrast` or rely
+ * on `theme.fn.lighten/darken/alpha` for these palettes — they need real hex
+ * values. CSS `color-mix()` variants work fine.
  */
 function tuple(
   light: string,
@@ -49,8 +54,7 @@ const red = tuple(
   "--color-red-light",
   "--color-red-border",
   "--color-red",
-  // SUI has no --color-red-dark; fall back to the base shade.
-  "--color-red",
+  "--color-red-dark",
 );
 const amber = tuple(
   "--color-amber-light",
@@ -62,8 +66,7 @@ const purple = tuple(
   "--color-purple-light",
   "--color-purple-border",
   "--color-purple",
-  // SUI has no --color-purple-dark; fall back to the base shade.
-  "--color-purple",
+  "--color-purple-dark",
 );
 
 export const mantineTheme = createTheme({

@@ -14,7 +14,6 @@
     "src/proprietary/**/*.test.ts*",
     "src/proprietary/**/*.spec.ts*",
     "src/desktop",
-    "src/saas",
-    "node_modules"
+    "src/saas"
   ]
 }

@@ -266,6 +266,12 @@ tasks:
     cmds:
       - npx tsc --noEmit --project portal/tsconfig.json
 
+  typecheck:shared:
+    desc: "Typecheck the shared design system"
+    deps: [install]
+    cmds:
+      - npx tsc --noEmit --project shared/tsconfig.json
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -276,6 +282,7 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
+      - task: typecheck:shared
 
   # ============================================================
   # Quality Gate
@@ -296,6 +303,7 @@ tasks:
       - task: lint
       - task: format:check
       - task: build
+      - task: build:portal
       - task: test
       - task: storybook:build
 

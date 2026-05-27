@@ -6,5 +6,5 @@
       "@shared/*": ["../shared/*"]
     }
   },
-  "exclude": ["src/proprietary", "src/desktop", "node_modules"]
+  "exclude": ["src/proprietary", "src/desktop"]
 }

@@ -159,7 +159,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "portal\\public"
+      "portal/public"
     ]
   }
 }

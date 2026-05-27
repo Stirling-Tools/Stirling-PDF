@@ -1,8 +1,10 @@
 /**
- * Mock data sources for the home dashboard. Imported only by api/home.ts —
- * components never reach into this module directly.
+ * Home dashboard fixtures and the types api/home.ts shares with them.
+ * api/home.ts imports the types; the MSW handlers in mocks/handlers/ serve the
+ * fixture data over the intercepted httpJson() calls. Components never reach
+ * into this module directly.
  *
- * Once a backend exists, api/home.ts swaps to httpJson() calls and these
+ * Once a real backend exists, the MSW handlers stop being registered and these
  * fixtures can be deleted (or kept as test seeds).
  */
 

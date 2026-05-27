@@ -67,10 +67,14 @@ function ThemeWatcher() {
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
+  // withThemeByDataAttribute exposes the toolbar theme as the `theme` global.
+  // Bind Mantine's color scheme to it so Mantine chrome (inputs, focus rings,
+  // default surfaces) follows the dark toggle alongside the SUI CSS variables.
+  const colorScheme = (context.globals.theme as "light" | "dark") ?? "light";
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
-        <MantineProvider theme={mantineTheme}>
+        <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
           <TierKey tier={tier}>
             <UIProvider>
               <ThemeWatcher />

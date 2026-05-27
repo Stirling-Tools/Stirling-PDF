@@ -13,7 +13,6 @@
     "src/core/**/*.spec.ts*",
     "src/proprietary/**/*.test.ts*",
     "src/proprietary/**/*.spec.ts*",
-    "src/desktop",
-    "node_modules"
+    "src/desktop"
   ]
 }
