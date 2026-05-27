@@ -21,6 +21,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
@@ -58,6 +59,9 @@ import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
+import MobileUploadModal from "@app/components/shared/MobileUploadModal";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
@@ -98,6 +102,10 @@ export default function FileManagerView() {
     [activeWorkspaceFileIds],
   );
   const { addFiles } = useFileHandler();
+  const { config: appConfig } = useAppConfig();
+  const isMobile = useIsMobile();
+  const isMobileUploadAvailable = Boolean(appConfig?.enableMobileScanner) && !isMobile;
+  const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
   const { setActiveFileId } = useViewer();
@@ -917,6 +925,25 @@ export default function FileManagerView() {
                 >
                   {t("filesPage.upload", "Upload")}
                 </Button>
+                {isMobileUploadAvailable && (
+                  <Tooltip
+                    label={t("filesPage.uploadFromMobile", "Upload from Mobile")}
+                    withinPortal
+                  >
+                    <ActionIcon
+                      size="lg"
+                      variant="default"
+                      radius="md"
+                      onClick={() => setMobileUploadModalOpen(true)}
+                      aria-label={t(
+                        "filesPage.uploadFromMobile",
+                        "Upload from Mobile",
+                      )}
+                    >
+                      <QrCode2Icon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1561,6 +1588,16 @@ export default function FileManagerView() {
         onClose={() => setSaveToServerTarget(null)}
         files={saveToServerTarget ?? []}
         onUploaded={refresh}
+      />
+
+      <MobileUploadModal
+        opened={mobileUploadModalOpen}
+        onClose={() => setMobileUploadModalOpen(false)}
+        onFilesReceived={(files) => {
+          if (files.length > 0) {
+            void addFiles(files);
+          }
+        }}
       />
     </div>
   );
