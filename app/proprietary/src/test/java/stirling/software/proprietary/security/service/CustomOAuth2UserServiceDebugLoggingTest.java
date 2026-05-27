@@ -131,6 +131,30 @@ class CustomOAuth2UserServiceDebugLoggingTest {
         assertThat(hintLine).contains("preferred_username").doesNotContain("upn");
     }
 
+    @Test
+    void invalidUseAsUsername_isWrappedAsOAuth2AuthenticationException() {
+        // Regression: an earlier draft moved UsernameAttribute.valueOf(...) outside the try/catch,
+        // so a typo'd or null useAsUsername leaked as a raw IllegalArgumentException instead of
+        // being wrapped, breaking Spring's authentication exception handling. This test pins the
+        // post-fix behaviour: valueOf() failures stay inside the guarded section.
+        ApplicationProperties.Security.OAUTH2 props = oauthProps("not_a_real_attribute", true);
+        CustomOAuth2UserService service =
+                new CustomOAuth2UserService(props, userService, loginAttemptService);
+        lenient().when(userRequest.getClientRegistration()).thenReturn(stubRegistration());
+        // No need to stub the OIDC delegate — control flow shouldn't reach it.
+
+        OAuth2AuthenticationException thrown =
+                assertThrows(
+                        OAuth2AuthenticationException.class, () -> service.loadUser(userRequest));
+        assertThat(thrown.getCause()).isInstanceOf(IllegalArgumentException.class);
+        // We deliberately do NOT emit the claim dump in this case (we have no resolved
+        // usernameAttributeKey to compare against, and the IllegalArgumentException message
+        // already explains the misconfiguration).
+        assertThat(appender.list)
+                .as("no claim dump when useAsUsername itself is invalid")
+                .noneMatch(e -> e.getFormattedMessage().contains("[OAUTH2 DEBUG]"));
+    }
+
     // ---------- helpers ----------
 
     private static ApplicationProperties.Security.OAUTH2 oauthProps(

@@ -46,12 +46,16 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        String usernameAttributeKey =
-                UsernameAttribute.valueOf(oauth2Properties.getUseAsUsername().toUpperCase())
-                        .getName();
         boolean debugLogging = Boolean.TRUE.equals(oauth2Properties.getDebugLogging());
+        // Resolved inside the try so a bad/null useAsUsername (IllegalArgumentException from
+        // valueOf, or NPE on toUpperCase) is caught and wrapped as OAuth2AuthenticationException
+        // by the existing handlers below, matching the pre-debugLogging behaviour.
+        String usernameAttributeKey = null;
 
         try {
+            usernameAttributeKey =
+                    UsernameAttribute.valueOf(oauth2Properties.getUseAsUsername().toUpperCase())
+                            .getName();
             OidcUser user = delegate.loadUser(userRequest);
 
             if (debugLogging) {
@@ -98,7 +102,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                     usernameAttributeKey);
         } catch (IllegalArgumentException e) {
             log.error("Error loading OIDC user: {}", e.getMessage());
-            if (debugLogging) {
+            // Only emit the claim dump if we successfully resolved usernameAttributeKey. A null
+            // value here means UsernameAttribute.valueOf rejected the configured useAsUsername
+            // before delegate.loadUser ran — that error message is self-explanatory and a claim
+            // dump would have no resolved-key to compare against.
+            if (debugLogging && usernameAttributeKey != null) {
                 // The DefaultOidcUser constructor (or our own checks) rejected the chosen
                 // username attribute. Dump the claims we DID receive so the operator can pick
                 // a different value for security.oauth2.useAsUsername.
@@ -116,7 +124,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);
         } catch (Exception e) {
             log.error("Unexpected error loading OIDC user", e);
-            if (debugLogging && userRequest.getIdToken() != null) {
+            if (debugLogging && usernameAttributeKey != null && userRequest.getIdToken() != null) {
                 logClaimDump(
                         "OAuth2/OIDC login FAILED (unexpected error) - dumping ID token claims",
                         registrationId,
