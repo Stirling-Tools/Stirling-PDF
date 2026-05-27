@@ -102,6 +102,9 @@ export default function HomePage() {
   ]);
 
   // Auto-collapse the FileSidebar on /files; snapshot prior state for restore.
+  // When the user lands directly on /files (deep link or refresh) the snapshot
+  // is never taken, so on leaving we fall back to expanded - the alternative
+  // (stuck collapsed forever until the user finds the toggle) is worse.
   const previousSidebarCollapsedRef = useRef<boolean | null>(null);
   const prevWorkbenchRef = useRef(navigationState.workbench);
   useEffect(() => {
@@ -110,12 +113,9 @@ export default function HomePage() {
     if (curr === "myFiles" && prev !== "myFiles") {
       previousSidebarCollapsedRef.current = fileSidebarCollapsed;
       if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (
-      curr !== "myFiles" &&
-      prev === "myFiles" &&
-      previousSidebarCollapsedRef.current !== null
-    ) {
-      setFileSidebarCollapsed(previousSidebarCollapsedRef.current);
+    } else if (curr !== "myFiles" && prev === "myFiles") {
+      const restore = previousSidebarCollapsedRef.current ?? false;
+      setFileSidebarCollapsed(restore);
       previousSidebarCollapsedRef.current = null;
     }
     prevWorkbenchRef.current = curr;
