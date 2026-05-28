@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -91,6 +93,44 @@ public class ConfigController {
         return null;
     }
 
+    /**
+     * Resolve the frontend URL the client should advertise to phones / share-link recipients.
+     * Priority: explicit system.frontendUrl, then the Host the user is already using to reach this
+     * server (works for Docker, reverse proxies, and bare-metal LANs), then a detected site-local
+     * IPv4, then empty.
+     */
+    // visible for testing
+    String resolveFrontendUrl(HttpServletRequest request, AppConfig appConfig) {
+        String configured = applicationProperties.getSystem().getFrontendUrl();
+        if (configured != null && !configured.isBlank()) {
+            return configured;
+        }
+        if (request != null) {
+            String host = request.getServerName();
+            if (host != null && !host.isBlank() && !isLoopbackHost(host)) {
+                String scheme = request.getScheme();
+                int port = request.getServerPort();
+                boolean defaultPort =
+                        ("http".equals(scheme) && port == 80)
+                                || ("https".equals(scheme) && port == 443);
+                return defaultPort ? scheme + "://" + host : scheme + "://" + host + ":" + port;
+            }
+        }
+        String localIp = GeneralUtils.getLocalNetworkIp();
+        if (localIp != null) {
+            String scheme = appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
+            return scheme + "://" + localIp + ":" + appConfig.getServerPort();
+        }
+        return "";
+    }
+
+    private static boolean isLoopbackHost(String host) {
+        return "localhost".equalsIgnoreCase(host)
+                || "127.0.0.1".equals(host)
+                || "::1".equals(host)
+                || "0:0:0:0:0:0:0:1".equals(host);
+    }
+
     /** Check if running Enterprise edition dynamically. */
     private Boolean isRunningEE() {
         // Use LicenseService for fresh license status if available
@@ -107,7 +147,7 @@ public class ConfigController {
     }
 
     @GetMapping("/app-config")
-    public ResponseEntity<Map<String, Object>> getAppConfig() {
+    public ResponseEntity<Map<String, Object>> getAppConfig(HttpServletRequest request) {
         Map<String, Object> configData = new HashMap<>();
 
         try {
@@ -124,17 +164,7 @@ public class ConfigController {
             configData.put("serverPort", appConfig.getServerPort());
 
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
-            if ((frontendUrl == null || frontendUrl.isBlank())
-                    && Boolean.parseBoolean(
-                            System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
-                String localIp = GeneralUtils.getLocalNetworkIp();
-                if (localIp != null) {
-                    String scheme =
-                            appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
-                    frontendUrl = scheme + "://" + localIp + ":" + appConfig.getServerPort();
-                }
-            }
-            configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
+            configData.put("frontendUrl", resolveFrontendUrl(request, appConfig));
 
             // Add mobile scanner settings
             configData.put(

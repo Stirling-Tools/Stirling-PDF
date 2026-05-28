@@ -289,7 +289,7 @@ export function FileDetailsPanel({
             <Tooltip
               label={t(
                 "filesPage.shareDisabledHint",
-                "File sharing isn't enabled on this server. Ask your admin to set storage.sharing.enabled=true to turn on share links and per-user access.",
+                "File sharing isn't enabled on this server. Ask your admin to enable it.",
               )}
               disabled={sharingEnabled}
               withinPortal

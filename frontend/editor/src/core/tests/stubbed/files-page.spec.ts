@@ -758,17 +758,17 @@ test.describe("Files page", () => {
         page.locator(".files-page-card:not(.is-folder)"),
       ).toHaveCount(4, { timeout: 5_000 });
 
-      // "Shared by me" -> only link-shared.pdf
+      // "Shared by me" -> link-shared.pdf AND user-shared.pdf
+      // (The previously-separate "Shared by me" / "I'm sharing" tabs are now
+      // merged into a single Shared-by-me view that shows both link shares
+      // and direct user shares.)
       await page.locator("#filesPage-tab-sharedByMe").click();
       const sharedByMeCards = page.locator(".files-page-card:not(.is-folder)");
-      await expect(sharedByMeCards).toHaveCount(1, { timeout: 3_000 });
-      await expect(sharedByMeCards.first()).toContainText("link-shared.pdf");
-
-      // "I'm sharing" -> only user-shared.pdf
-      await page.locator("#filesPage-tab-imSharing").click();
-      const imSharingCards = page.locator(".files-page-card:not(.is-folder)");
-      await expect(imSharingCards).toHaveCount(1, { timeout: 3_000 });
-      await expect(imSharingCards.first()).toContainText("user-shared.pdf");
+      await expect(sharedByMeCards).toHaveCount(2, { timeout: 3_000 });
+      await expect(sharedByMeCards).toContainText([
+        "link-shared.pdf",
+        "user-shared.pdf",
+      ]);
 
       // "Shared with me" -> only from-someone-else.pdf
       await page.locator("#filesPage-tab-shared").click();
