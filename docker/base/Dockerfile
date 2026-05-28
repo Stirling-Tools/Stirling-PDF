@@ -630,9 +630,10 @@ RUN set -eux; \
 RUN set -eux; \
     mkdir -p /configs /configs/cache /configs/heap_dumps /logs /customFiles \
              /pipeline/watchedFolders /pipeline/finishedFolders \
+             /storage \
              /tmp/stirling-pdf/heap_dumps; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
-      /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
+      /home/stirlingpdfuser /configs /logs /customFiles /pipeline /storage \
       /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps
