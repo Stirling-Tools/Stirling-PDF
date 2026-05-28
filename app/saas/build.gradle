@@ -40,6 +40,10 @@ dependencies {
 
     api 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+    // PgJDBC is bundled at runtime via :proprietary. We need `org.postgresql.PGConnection` at
+    // compile time for the LISTEN/NOTIFY runner (PricingPolicyService cache invalidation) —
+    // `compileOnly` keeps the artifact out of our build output.
+    compileOnly 'org.postgresql:postgresql:42.7.11'
 
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }
