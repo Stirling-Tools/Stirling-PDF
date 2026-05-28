@@ -550,7 +550,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (event === "SIGNED_IN") {
             console.debug("[Auth Debug] User signed in successfully");
             if (newSession?.user) {
-              setLoading(true);
+              // Note: we deliberately do NOT toggle `loading` here. Supabase
+              // also fires SIGNED_IN on tab visibility / token-refresh wakeups
+              // (per its docs: "SIGNED_IN is fired when a user signs in OR
+              // when the access token is refreshed"), and gating the UI on
+              // `loading` would unmount Landing -> HomePage every time the
+              // user switches tabs back. Initial-mount loading is handled by
+              // `initializeAuth` above; downstream fetches expose their own
+              // null/loading states.
 
               // Sync OAuth avatar in background (don't block other fetches)
               syncOAuthAvatar(newSession.user).catch((err) => {
@@ -568,7 +575,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Use a small delay to allow avatar sync to finish if it's quick
                 setTimeout(() => {
                   fetchProfilePicture(newSession).finally(() => {
-                    setLoading(false);
                     console.debug(
                       "[Auth Debug] User data fully loaded after sign in",
                     );

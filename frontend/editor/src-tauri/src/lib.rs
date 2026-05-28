@@ -1,7 +1,7 @@
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 
 mod utils;
-mod commands;
+pub mod commands;
 mod state;
 
 use commands::{

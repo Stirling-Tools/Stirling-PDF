@@ -23,6 +23,10 @@ customFiles/
 configs/
 watchedFolders/
 clientWebUI/
+# Scratch dir used by local fixture-regeneration runs (see
+# app/proprietary/src/test/resources/db-migration-fixtures/README.md).
+# Holds downloaded JARs and disposable workdirs. Never committed.
+.alpha-local/
 !cucumber/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
@@ -174,7 +178,6 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
-!.env.saas.example
 
 # VS Code
 /.vscode/**/*
@@ -274,3 +277,6 @@ docs/type3/signatures/
 # Playwright MCP screenshots / traces
 .playwright-mcp/
 *.playwright-mcp.png
+
+# Local screenshot artifacts from *-screenshots.spec.ts
+frontend/screenshots/
