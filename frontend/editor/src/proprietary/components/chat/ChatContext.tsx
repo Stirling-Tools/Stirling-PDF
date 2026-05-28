@@ -453,7 +453,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         });
 
         if (!response.ok) {
-          throw new Error(`AI engine request failed: ${response.status}`);
+          let detail: string | undefined;
+          try {
+            const body = await response.json();
+            detail =
+              body?.message ??
+              body?.detail ??
+              body?.error ??
+              (Array.isArray(body?.errors)
+                ? body.errors[0]?.message
+                : undefined);
+          } catch {
+            // non-JSON body — ignore
+          }
+          throw new Error(
+            detail ?? `AI engine request failed: ${response.status}`,
+          );
         }
 
         let receivedResult = false;
@@ -528,14 +543,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
+        const err = e as Error;
+        const isEngineError =
+          err.message.startsWith("AI engine request failed:") ||
+          err.message === "Stream ended without a result";
+        const content = isEngineError
+          ? "Failed to get a response. The AI engine may not be available yet."
+          : (err.message ??
+            "Failed to get a response. The AI engine may not be available yet.");
         dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
           message: {
             id: crypto.randomUUID(),
             role: "assistant",
-            content:
-              "Failed to get a response. The AI engine may not be available yet.",
+            content,
             timestamp: Date.now(),
           },
         });
