@@ -261,7 +261,10 @@ public class RedactController {
         }
     }
 
-    @AutoJobPostMapping(value = "/redact-execute", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/redact-execute",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
             operationId = "redactExecute",
