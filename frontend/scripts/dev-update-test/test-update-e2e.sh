@@ -113,7 +113,7 @@ if [ "$SKIP_BUILD" = false ] || ! ls $JAR_GLOB >/dev/null 2>&1 || [ ! -f "$JRE_J
   cd "$REPO_ROOT"
   DISABLE_ADDITIONAL_FEATURES=true ./gradlew bootJar -x test --no-daemon 2>&1 | tail -3
 
-  BUILT_JAR=$(ls -t app/core/build/libs/stirling-pdf-*.jar 2>/dev/null | head -1)
+  BUILT_JAR=$(ls -t app/core/build/libs/stirling-pdf-*.jar 2>/dev/null | head -1 || true)
   if [ -z "$BUILT_JAR" ]; then echo "Error: JAR not found"; exit 1; fi
 
   mkdir -p "$TAURI_DIR/libs"
@@ -141,7 +141,7 @@ fi
 
 # ── Step 2: Build signed update bundle ────────────────────────────────────────
 mkdir -p "$OUTPUT_DIR"
-BUNDLE_FILE=$(ls "$OUTPUT_DIR"/$BUNDLE_GLOB 2>/dev/null | head -1)
+BUNDLE_FILE=$(ls "$OUTPUT_DIR"/$BUNDLE_GLOB 2>/dev/null | head -1 || true)
 
 if [ "$SKIP_BUILD" = false ] || [ -z "$BUNDLE_FILE" ]; then
   echo ""
@@ -151,6 +151,9 @@ if [ "$SKIP_BUILD" = false ] || [ -z "$BUNDLE_FILE" ]; then
   PRIVATE_KEY="$(cat "$KEYS_DIR/dev-update-key")"
 
   cd "$FRONTEND_DIR/editor"
+  # Build the Windows installer provisioner + thumbnail-handler (no-op on macOS/Linux).
+  # The WiX fragment references these binaries, so light.exe fails to bind without them.
+  node scripts/build-provisioner.mjs
   TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_KEY" \
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD="" \
   npx tauri build \
