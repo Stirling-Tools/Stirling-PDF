@@ -42,11 +42,11 @@ class RedactExecuteServiceTest {
             new RedactExecuteService(null, null, new TextRedactionService());
 
     @Nested
-    @DisplayName("Single-column documents (regression: must match the original behaviour)")
+    @DisplayName("Single-column documents")
     class SingleColumn {
 
         @Test
-        void redactBetweenMarkers_onlyLinesBetweenMarkersAreRedacted() throws IOException {
+        void redactBetweenMarkers_inclusive() throws IOException {
             try (PDDocument doc = buildSingleColumnDoc()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
                 List<PDFText> blocks =
@@ -59,15 +59,17 @@ class RedactExecuteServiceTest {
                 // Blocks are in screen coords (top-left, Y down). START-HERE is drawn at the top
                 // of the page; STOP-HERE four lines below. Screen Y grows downward, so the
                 // anchors' screen-Y tops sit roughly around screenTop(0) and screenTop(4).
+                // The end anchor is inclusive, so blocks may extend to the bottom of line 4.
                 float screenTopOfStart = screenTopOfLine(0);
-                float screenTopOfEnd = screenTopOfLine(4);
+                float screenBottomOfEnd = screenTopOfLine(4) + LINE_HEIGHT;
                 for (PDFText block : blocks) {
                     assertThat(block.getY1())
                             .as("block top must be at or below the start anchor's top")
                             .isGreaterThanOrEqualTo(screenTopOfStart - 1f);
                     assertThat(block.getY2())
-                            .as("block bottom must be strictly above the end anchor's top")
-                            .isLessThanOrEqualTo(screenTopOfEnd);
+                            .as(
+                                    "block bottom must not extend past the end anchor's bottom (end is inclusive)")
+                            .isLessThanOrEqualTo(screenBottomOfEnd + 1f);
                     assertThat(block.getX2())
                             .as("block should not extend into a hypothetical right column")
                             .isLessThan(PAGE_WIDTH / 2f + 50f);

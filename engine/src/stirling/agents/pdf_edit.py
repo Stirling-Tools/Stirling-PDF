@@ -137,11 +137,10 @@ class PdfEditParameterSelector:
 
     @staticmethod
     def _get_operation_instructions(operation_id: ToolEndpoint) -> str:
-        base = (
+        return (
             f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
             "Do not include fields from any other operation."
         )
-        return base
 
     def _build_parameter_prompt(
         self,

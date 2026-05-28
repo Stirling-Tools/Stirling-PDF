@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,14 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactAllImages;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactByRange;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactByRegex;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactByText;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactImageBox;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactOperation;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactPages;
+import stirling.software.SPDF.model.api.security.RedactExecuteRequest.ImageBox;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyle;
+import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -48,11 +44,22 @@ class RedactExecuteService {
     private final TextRedactionService textRedactionService;
 
     TempFile execute(RedactExecuteRequest request) throws IOException {
-        List<RedactOperation> operations =
-                request.getOperations() != null ? request.getOperations() : List.of();
         RedactStyle style = request.getStyle() != null ? request.getStyle() : new RedactStyle();
+        List<String> textValues = orEmpty(request.getTextValues());
+        List<String> regexPatterns = orEmpty(request.getRegexPatterns());
+        List<Integer> wipePages = orEmpty(request.getWipePages());
+        List<TextRange> ranges = orEmpty(request.getRanges());
+        List<ImageBox> imageBoxes = orEmpty(request.getImageBoxes());
 
-        if (operations.isEmpty()) {
+        boolean hasTargets =
+                !textValues.isEmpty()
+                        || !regexPatterns.isEmpty()
+                        || !wipePages.isEmpty()
+                        || !ranges.isEmpty()
+                        || !imageBoxes.isEmpty()
+                        || request.getRedactImagePages() != null;
+
+        if (!hasTargets) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.redaction.no.targets", "No redaction targets provided");
         }
@@ -63,11 +70,17 @@ class RedactExecuteService {
                 RedactExecuteRequest.RedactionStrategy.IMAGE_FINALIZE.equals(style.getStrategy());
         boolean convertToImage = imageFinalize || style.isConvertToImage();
 
+        boolean hasTextOps = !textValues.isEmpty() || !regexPatterns.isEmpty();
+
         log.info(
-                "[redact/execute] strategy={} ops={} imageFinalize={}",
+                "[redact/execute] strategy={} textValues={} regexPatterns={} wipePages={} ranges={} imageBoxes={} imagePages={}",
                 style.getStrategy(),
-                operations.size(),
-                convertToImage);
+                textValues.size(),
+                regexPatterns.size(),
+                wipePages.size(),
+                ranges.size(),
+                imageBoxes.size(),
+                request.getRedactImagePages());
 
         if (request.getFileInput() == null) {
             throw ExceptionUtils.createFileNullOrEmptyException();
@@ -77,9 +90,10 @@ class RedactExecuteService {
         try {
             document = pdfDocumentFactory.load(request.getFileInput());
 
-            // Single-pass text scan: collect all text-based operations first so we run the PDF
-            // stripper only once across the entire execute() call rather than once per operation.
-            Map<Integer, List<PDFText>> foundTexts = collectTextMatches(document, operations);
+            // Single-pass text scan: collect all text-based targets so we run the PDF
+            // stripper only once across the entire execute() call rather than once per target.
+            Map<Integer, List<PDFText>> foundTexts =
+                    hasTextOps ? collectTextMatches(document, request) : new HashMap<>();
 
             int totalMatches = foundTexts.values().stream().mapToInt(List::size).sum();
             log.info(
@@ -89,8 +103,8 @@ class RedactExecuteService {
 
             // Text removal (content-stream rewriting) — skipped in overlay-only mode.
             boolean needsOverlayOnly = overlayOnly;
-            if (!foundTexts.isEmpty() && !overlayOnly) {
-                needsOverlayOnly = applyTextRemoval(document, operations);
+            if (hasTextOps && !foundTexts.isEmpty() && !overlayOnly) {
+                needsOverlayOnly = applyTextRemoval(document, request);
             } else if (overlayOnly) {
                 log.info(
                         "[redact/execute] overlay-only mode requested — skipping content-stream rewriting");
@@ -102,25 +116,28 @@ class RedactExecuteService {
                 document.close();
                 document = pdfDocumentFactory.load(request.getFileInput());
                 foundTexts.clear();
-                foundTexts.putAll(collectTextMatches(document, operations));
+                if (hasTextOps) {
+                    foundTexts.putAll(collectTextMatches(document, request));
+                }
             }
 
-            // Per-operation dispatch.
+            // Non-text operations.
             Map<Integer, PageColumnLayout> layoutCache = new HashMap<>();
-            for (RedactOperation op : operations) {
-                switch (op) {
-                    case RedactByText t -> {
-                        /* handled by text scan + overlay finalization */
-                    }
-                    case RedactByRegex r -> {
-                        /* handled by text scan + overlay finalization */
-                    }
-                    case RedactPages p -> applyPageWipe(document, p, style);
-                    case RedactByRange rng ->
-                            applyRangeRedaction(document, rng, style, layoutCache);
-                    case RedactImageBox ib -> applyImageBoxRedaction(document, ib, style);
-                    case RedactAllImages ai -> applyAllImagesRedaction(document, ai, style);
-                }
+
+            if (!wipePages.isEmpty()) {
+                applyPageWipe(document, wipePages, style);
+            }
+
+            for (TextRange range : ranges) {
+                applyRangeRedaction(document, range, style, layoutCache);
+            }
+
+            for (ImageBox box : imageBoxes) {
+                applyImageBoxRedaction(document, box, style);
+            }
+
+            if (request.getRedactImagePages() != null) {
+                applyAllImagesRedaction(document, request.getRedactImagePages(), style);
             }
 
             return manualRedactionService.finalizeRedaction(
@@ -150,42 +167,33 @@ class RedactExecuteService {
     // -----------------------------------------------------------------------
 
     /**
-     * Runs a single PDF text-stripper pass over all text-based operations (text, regex) and returns
-     * the merged hit map. Range-based operations locate their anchors via separate targeted
-     * searches in {@link #applyRangeRedaction}.
+     * Runs a single PDF text-stripper pass over all text-based targets and returns the merged hit
+     * map.
      */
     private Map<Integer, List<PDFText>> collectTextMatches(
-            PDDocument document, List<RedactOperation> operations) {
+            PDDocument document, RedactExecuteRequest request) {
         Map<Integer, List<PDFText>> found = new HashMap<>();
-        for (RedactOperation op : operations) {
-            switch (op) {
-                case RedactByText t -> {
-                    String[] terms = cleanStrings(t.values());
-                    if (terms.length > 0) {
-                        textRedactionService
-                                .findTextToRedact(document, terms, false, false)
-                                .forEach(
-                                        (page, hits) ->
-                                                found.computeIfAbsent(page, k -> new ArrayList<>())
-                                                        .addAll(hits));
-                    }
-                }
-                case RedactByRegex r -> {
-                    String[] patterns = cleanStrings(r.patterns());
-                    if (patterns.length > 0) {
-                        textRedactionService
-                                .findTextToRedact(document, patterns, true, false)
-                                .forEach(
-                                        (page, hits) ->
-                                                found.computeIfAbsent(page, k -> new ArrayList<>())
-                                                        .addAll(hits));
-                    }
-                }
-                default -> {
-                    /* non-text operations handled in dispatch */
-                }
-            }
+
+        String[] terms = cleanStrings(request.getTextValues());
+        if (terms.length > 0) {
+            textRedactionService
+                    .findTextToRedact(document, terms, false, false)
+                    .forEach(
+                            (page, hits) ->
+                                    found.computeIfAbsent(page, k -> new ArrayList<>())
+                                            .addAll(hits));
         }
+
+        String[] patterns = cleanStrings(request.getRegexPatterns());
+        if (patterns.length > 0) {
+            textRedactionService
+                    .findTextToRedact(document, patterns, true, false)
+                    .forEach(
+                            (page, hits) ->
+                                    found.computeIfAbsent(page, k -> new ArrayList<>())
+                                            .addAll(hits));
+        }
+
         return found;
     }
 
@@ -194,43 +202,35 @@ class RedactExecuteService {
     // -----------------------------------------------------------------------
 
     /**
-     * Attempts content-stream text removal for all text/regex operations. Returns {@code true} if
-     * the document fell back to overlay-only mode.
+     * Attempts content-stream text removal for all text/regex targets. Returns {@code true} if the
+     * document fell back to overlay-only mode.
      */
-    private boolean applyTextRemoval(PDDocument document, List<RedactOperation> operations) {
+    private boolean applyTextRemoval(PDDocument document, RedactExecuteRequest request) {
         try {
             boolean fallback = false;
-            for (RedactOperation op : operations) {
-                switch (op) {
-                    case RedactByText t -> {
-                        String[] terms = cleanStrings(t.values());
-                        if (terms.length > 0) {
-                            Map<Integer, List<PDFText>> exactFound =
-                                    textRedactionService.findTextToRedact(
-                                            document, terms, false, false);
-                            if (!exactFound.isEmpty()) {
-                                fallback |=
-                                        textRedactionService.performTextReplacement(
-                                                document, exactFound, terms, false, false);
-                            }
-                        }
-                    }
-                    case RedactByRegex r -> {
-                        String[] patterns = cleanStrings(r.patterns());
-                        if (patterns.length > 0) {
-                            Map<Integer, List<PDFText>> regexFound =
-                                    textRedactionService.findTextToRedact(
-                                            document, patterns, true, false);
-                            if (!regexFound.isEmpty()) {
-                                fallback |=
-                                        textRedactionService.performTextReplacement(
-                                                document, regexFound, patterns, true, false);
-                            }
-                        }
-                    }
-                    default -> {}
+
+            String[] terms = cleanStrings(request.getTextValues());
+            if (terms.length > 0) {
+                Map<Integer, List<PDFText>> exactFound =
+                        textRedactionService.findTextToRedact(document, terms, false, false);
+                if (!exactFound.isEmpty()) {
+                    fallback |=
+                            textRedactionService.performTextReplacement(
+                                    document, exactFound, terms, false, false);
                 }
             }
+
+            String[] patterns = cleanStrings(request.getRegexPatterns());
+            if (patterns.length > 0) {
+                Map<Integer, List<PDFText>> regexFound =
+                        textRedactionService.findTextToRedact(document, patterns, true, false);
+                if (!regexFound.isEmpty()) {
+                    fallback |=
+                            textRedactionService.performTextReplacement(
+                                    document, regexFound, patterns, true, false);
+                }
+            }
+
             if (fallback) {
                 log.warn(
                         "[redact/execute] font compatibility issue — falling back to overlay-only");
@@ -250,9 +250,9 @@ class RedactExecuteService {
     // Per-operation dispatch methods
     // -----------------------------------------------------------------------
 
-    private void applyPageWipe(PDDocument document, RedactPages op, RedactStyle style)
+    private void applyPageWipe(PDDocument document, List<Integer> pageNumbers, RedactStyle style)
             throws IOException {
-        List<Integer> pageIndices = toZeroBasedIndices(op.pageNumbers());
+        List<Integer> pageIndices = toZeroBasedIndices(pageNumbers);
         if (pageIndices.isEmpty()) return;
 
         PDPageTree allPages = document.getDocumentCatalog().getPages();
@@ -306,12 +306,12 @@ class RedactExecuteService {
 
     private void applyRangeRedaction(
             PDDocument document,
-            RedactByRange op,
+            TextRange range,
             RedactStyle style,
             Map<Integer, PageColumnLayout> layoutCache)
             throws IOException {
-        String rangeStart = trimOrEmpty(op.startString());
-        String rangeEnd = trimOrEmpty(op.endString());
+        String rangeStart = trimOrEmpty(range.startString());
+        String rangeEnd = trimOrEmpty(range.endString());
         log.info("[redact/execute] range redaction: start='{}' end='{}'", rangeStart, rangeEnd);
         try {
             List<PDFText> blocks = collectRangeBlocks(document, rangeStart, rangeEnd, layoutCache);
@@ -333,21 +333,24 @@ class RedactExecuteService {
         }
     }
 
-    private void applyImageBoxRedaction(PDDocument document, RedactImageBox op, RedactStyle style)
+    private void applyImageBoxRedaction(PDDocument document, ImageBox box, RedactStyle style)
             throws IOException {
         List<float[]> boxes =
-                List.of(new float[] {(float) op.pageIndex(), op.x1(), op.y1(), op.x2(), op.y2()});
-        log.info("[redact/execute] image box overlay on page {}", op.pageIndex());
+                List.of(
+                        new float[] {
+                            (float) box.pageIndex(), box.x1(), box.y1(), box.x2(), box.y2()
+                        });
+        log.info("[redact/execute] image box overlay on page {}", box.pageIndex());
         Color boxColor = ManualRedactionService.decodeOrDefault(style.getColor());
         manualRedactionService.redactImageBoxes(document, boxes, boxColor);
     }
 
-    private void applyAllImagesRedaction(PDDocument document, RedactAllImages op, RedactStyle style)
-            throws IOException {
+    private void applyAllImagesRedaction(
+            PDDocument document, List<Integer> pageNumbers, RedactStyle style) throws IOException {
         PDPageTree allPages = document.getDocumentCatalog().getPages();
         Color imgColor = ManualRedactionService.decodeOrDefault(style.getColor());
 
-        List<Integer> imagePageIndices = toZeroBasedIndices(op.pageNumbers());
+        List<Integer> imagePageIndices = toZeroBasedIndices(pageNumbers);
         if (imagePageIndices.isEmpty()) {
             imagePageIndices = new ArrayList<>();
             for (int i = 0; i < allPages.getCount(); i++) {
@@ -504,7 +507,8 @@ class RedactExecuteService {
         int endCol =
                 openEnded ? layoutFor(document, endPage, layoutCache).columnCount() - 1 : end.col;
         float startY = start.y;
-        float endY = openEnded ? Float.POSITIVE_INFINITY : end.y;
+        // Use bottom of end anchor so the end anchor line itself is included (inclusive range).
+        float endY = openEnded ? Float.POSITIVE_INFINITY : end.text.getY2();
 
         // Line-box cache: populated lazily per page, reused across range iterations.
         // Cannot use computeIfAbsent because AllTextLineExtractor's constructor throws IOException.
@@ -579,7 +583,7 @@ class RedactExecuteService {
 
     /**
      * Reading-order predicate: true when (col, yBottom) on page {@code pageIdx} sits between the
-     * start anchor (inclusive) and end anchor (exclusive).
+     * start anchor (inclusive) and end anchor (inclusive).
      */
     static boolean inColumnZone(
             int pageIdx,
@@ -595,12 +599,12 @@ class RedactExecuteService {
         if (pageIdx > startPage && pageIdx < endPage) return true;
         if (pageIdx == startPage && pageIdx == endPage) {
             if (startCol == endCol) {
-                return col == startCol && yBottom >= startY && yBottom < endY;
+                return col == startCol && yBottom >= startY && yBottom <= endY;
             }
             if (startCol < endCol) {
                 if (col < startCol || col > endCol) return false;
                 if (col == startCol) return yBottom >= startY;
-                if (col == endCol) return yBottom < endY;
+                if (col == endCol) return yBottom <= endY;
                 return true;
             }
             return col == startCol && yBottom >= startY;
@@ -610,7 +614,7 @@ class RedactExecuteService {
             return col > startCol;
         }
         if (pageIdx == endPage) {
-            if (col == endCol) return yBottom < endY;
+            if (col == endCol) return yBottom <= endY;
             return col < endCol;
         }
         return false;
@@ -699,6 +703,29 @@ class RedactExecuteService {
             candidates.add(new Candidate(tolerant, true));
         }
 
+        // If the anchor spans multiple lines (model provided entire paragraph instead of a short
+        // phrase), try just the first non-empty line — it's usually sufficient to locate the
+        // position and avoids mismatches from mid-paragraph text extraction artifacts.
+        if (trimmed.contains("\n")) {
+            String firstLine =
+                    Arrays.stream(trimmed.split("\n"))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .findFirst()
+                            .orElse(null);
+            if (firstLine != null && firstLine.length() >= 4) {
+                String firstLineCollapsed = collapseLetterSpacing(firstLine);
+                String firstLineTolerant = punctuationTolerantRegex(firstLine);
+                candidates.add(new Candidate(firstLine, false));
+                if (!firstLineCollapsed.equals(firstLine)) {
+                    candidates.add(new Candidate(firstLineCollapsed, false));
+                }
+                if (firstLineTolerant != null && !firstLineTolerant.equals(firstLine)) {
+                    candidates.add(new Candidate(firstLineTolerant, true));
+                }
+            }
+        }
+
         for (Candidate c : candidates) {
             Map<Integer, List<PDFText>> m =
                     textRedactionService.findTextToRedact(
@@ -783,6 +810,10 @@ class RedactExecuteService {
             result.append(current);
         }
         return result.toString().trim();
+    }
+
+    private static <T> List<T> orEmpty(List<T> list) {
+        return list != null ? list : List.of();
     }
 
     private static String[] cleanStrings(List<String> input) {

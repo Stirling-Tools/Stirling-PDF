@@ -542,6 +542,18 @@ class HtmlToPdfParams(ApiModel):
     zoom: float = Field(1, description="Zoom level for displaying the website. Default is '1'.")
 
 
+class ImageBox(ApiModel):
+    """
+    Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+    """
+
+    page_index: int = Field(..., description="0-indexed page number (first page = 0).")
+    x1: float = Field(..., description="Left x coordinate of the redaction rectangle in PDF user-space points.")
+    x2: float = Field(..., description="Right x coordinate of the redaction rectangle in PDF user-space points.")
+    y1: float = Field(..., description="Top y coordinate of the redaction rectangle in PDF user-space points.")
+    y2: float = Field(..., description="Bottom y coordinate of the redaction rectangle in PDF user-space points.")
+
+
 class ColorType(StrEnum):
     """
     The color type of the output image(s)
@@ -1005,18 +1017,6 @@ class Style(ApiModel):
     strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
 
 
-class RedactOperation(ApiModel):
-    """
-    Ordered list of redaction operations to apply
-    """
-
-    type: str
-
-
-class RedactPages(RedactOperation):
-    page_numbers: list[int] = Field(..., description="1-indexed page numbers to wipe entirely")
-
-
 class RedactionArea(ApiModel):
     """
     A list of areas that should be redacted
@@ -1299,6 +1299,23 @@ class SvgToPdfParams(ApiModel):
     )
 
 
+class TextRange(ApiModel):
+    """
+    Text ranges to redact. Each entry specifies a short start and end anchor phrase (5–15 words each) taken from the extracted page text; all content between them (inclusive) is redacted. Keep anchors short and distinctive — do NOT use entire paragraphs. Both anchors must be exact short phrases present in the extracted text.
+    """
+
+    end_string: str = Field(
+        ...,
+        description="A short phrase (5–15 words) marking where redaction ends (inclusive). Copy it verbatim from the extracted page text — do not paraphrase or reconstruct from memory. Use a phrase from within the body text — shorter is more reliable. Do not combine a section heading with body text in a single anchor.",
+        min_length=1,
+    )
+    start_string: str = Field(
+        ...,
+        description="A short phrase (5–15 words) marking where redaction begins (inclusive). Copy it verbatim from the extracted page text — do not paraphrase or reconstruct from memory. Use either a section heading alone (e.g. '#6: Image resolution') or a short phrase from within the body text alone — never combine a heading with the following body text in a single anchor, as they may not be contiguous in the extracted text.",
+        min_length=1,
+    )
+
+
 class TimestampPdfParams(ApiModel):
     tsa_url: str = Field(
         "http://timestamp.digicert.com",
@@ -1366,32 +1383,29 @@ class VectorToPdfParams(ApiModel):
     prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
-class RedactAllImages(RedactOperation):
-    page_numbers: list[int] | None = Field(None, description="1-indexed page numbers; empty = all pages")
-
-
-class RedactByRange(RedactOperation):
-    end_string: str = Field("", description="Anchor text where redaction ends; empty = to end of document")
-    start_string: str | None = Field(None, description="Anchor text where redaction begins (inclusive)")
-
-
-class RedactByRegex(RedactOperation):
-    patterns: list[str] = Field(
-        ...,
-        description="Regex patterns — each match is redacted. Account for common format variants: different separators, optional prefixes/suffixes, grouped vs unbroken digits, locale spellings, etc.",
+class RedactExecuteParams(ApiModel):
+    image_boxes: list[ImageBox] | None = Field(
+        None, description="Rectangular areas to black out, each defined by a page number and bounding box coordinates."
     )
-
-
-class RedactByText(RedactOperation):
-    values: list[str] = Field(..., description="Exact strings to redact")
-
-
-class RedactImageBox(RedactOperation):
-    page_index: int = Field(..., description="0-indexed page number")
-    x1: float
-    x2: float
-    y1: float
-    y2: float
+    ranges: list[TextRange] | None = Field(
+        None,
+        description="Text ranges to redact. Each entry specifies a short start and end anchor phrase (5–15 words each) taken from the extracted page text; all content between them (inclusive) is redacted. Keep anchors short and distinctive — do NOT use entire paragraphs. Both anchors must be exact short phrases present in the extracted text.",
+    )
+    redact_image_pages: list[int] | None = Field(
+        None,
+        description="1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.",
+    )
+    regex_patterns: list[str] | None = Field(
+        None,
+        description="Regex patterns — each match in the document is redacted. Use Java/PCRE syntax. Account for format variants: different separators, optional prefixes/suffixes, grouped vs ungrouped digits, locale spellings, etc.",
+    )
+    style: Style | None = Field(None, description="Redaction style options")
+    text_values: list[str] | None = Field(
+        None, description="Exact strings to find and black out. One entry per phrase to redact."
+    )
+    wipe_pages: list[int] | None = Field(
+        None, description="1-indexed page numbers to wipe entirely (all content removed from those pages)."
+    )
 
 
 class RedactParams(ApiModel):
@@ -1402,13 +1416,6 @@ class RedactParams(ApiModel):
     )
     page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
     redactions: list[RedactionArea] = Field(..., description="A list of areas that should be redacted")
-
-
-class RedactExecuteParams(ApiModel):
-    operations: list[RedactAllImages | RedactByRange | RedactByRegex | RedactByText | RedactImageBox | RedactPages] = (
-        Field([], description="Ordered list of redaction operations to apply", validate_default=True)
-    )
-    style: Style | None = Field(None, description="Redaction style options")
 
 
 class Model(

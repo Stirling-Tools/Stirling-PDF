@@ -25,8 +25,9 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
-import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactOperation;
+import stirling.software.SPDF.model.api.security.RedactExecuteRequest.ImageBox;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyle;
+import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
@@ -66,8 +67,12 @@ public class RedactController {
                 new JsonListPropertyEditor<>(new TypeReference<List<RedactionArea>>() {}));
         binder.registerCustomEditor(
                 List.class,
-                "operations",
-                new JsonListPropertyEditor<>(new TypeReference<List<RedactOperation>>() {}));
+                "ranges",
+                new JsonListPropertyEditor<>(new TypeReference<List<TextRange>>() {}));
+        binder.registerCustomEditor(
+                List.class,
+                "imageBoxes",
+                new JsonListPropertyEditor<>(new TypeReference<List<ImageBox>>() {}));
         binder.registerCustomEditor(
                 RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
     }
