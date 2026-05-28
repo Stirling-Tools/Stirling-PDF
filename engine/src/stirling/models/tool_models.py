@@ -1388,17 +1388,10 @@ class RedactByText(RedactOperation):
 
 class RedactImageBox(RedactOperation):
     page_index: int = Field(..., description="0-indexed page number")
-    x1: float = Field(...)
-    x2: float = Field(...)
-    y1: float = Field(...)
-    y2: float = Field(...)
-
-
-class RedactExecuteParams(ApiModel):
-    operations: list[RedactAllImages | RedactByRange | RedactByRegex | RedactByText | RedactImageBox | RedactPages] = (
-        Field([], description="Ordered list of redaction operations to apply", validate_default=True)
-    )
-    style: Style | None = Field(None, description="Redaction style options")
+    x1: float
+    x2: float
+    y1: float
+    y2: float
 
 
 class RedactParams(ApiModel):
@@ -1409,6 +1402,13 @@ class RedactParams(ApiModel):
     )
     page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
     redactions: list[RedactionArea] = Field(..., description="A list of areas that should be redacted")
+
+
+class RedactExecuteParams(ApiModel):
+    operations: list[RedactAllImages | RedactByRange | RedactByRegex | RedactByText | RedactImageBox | RedactPages] = (
+        Field([], description="Ordered list of redaction operations to apply", validate_default=True)
+    )
+    style: Style | None = Field(None, description="Redaction style options")
 
 
 class Model(
