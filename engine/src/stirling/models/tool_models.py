@@ -984,39 +984,6 @@ class RearrangePagesParams(ApiModel):
     )
 
 
-class Strategy(StrEnum):
-    """
-    Execution strategy hint for the redaction pipeline
-    """
-
-    auto = "AUTO"
-    overlay_only = "OVERLAY_ONLY"
-    image_finalize = "IMAGE_FINALIZE"
-
-
-class Style(ApiModel):
-    """
-    Redaction style options
-    """
-
-    color: str = Field("#000000", description="Hex redaction box color")
-    convert_to_image: bool = Field(False, description="Rasterize output to prevent text extraction")
-    padding: float = Field(0, description="Extra padding around each box in points")
-    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
-
-
-class RedactOperation(ApiModel):
-    """
-    Ordered list of redaction operations to apply
-    """
-
-    type: str
-
-
-class RedactPages(RedactOperation):
-    page_numbers: list[int] = Field(..., description="1-indexed page numbers to wipe entirely")
-
-
 class RedactionArea(ApiModel):
     """
     A list of areas that should be redacted
@@ -1379,34 +1346,6 @@ class VectorToPdfParams(ApiModel):
     prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
-class RedactAllImages(RedactOperation):
-    page_numbers: list[int] | None = Field(None, description="1-indexed page numbers; empty = all pages")
-
-
-class RedactByRange(RedactOperation):
-    end_string: str = Field("", description="Anchor text where redaction ends; empty = to end of document")
-    start_string: str | None = Field(None, description="Anchor text where redaction begins (inclusive)")
-
-
-class RedactByRegex(RedactOperation):
-    patterns: list[str] = Field(
-        ...,
-        description="Regex patterns — each match is redacted. Account for common format variants: different separators, optional prefixes/suffixes, grouped vs unbroken digits, locale spellings, etc.",
-    )
-
-
-class RedactByText(RedactOperation):
-    values: list[str] = Field(..., description="Exact strings to redact")
-
-
-class RedactImageBox(RedactOperation):
-    page_index: int = Field(..., description="0-indexed page number")
-    x1: float
-    x2: float
-    y1: float
-    y2: float
-
-
 class RedactParams(ApiModel):
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
     page_numbers: str = Field(
@@ -1415,13 +1354,6 @@ class RedactParams(ApiModel):
     )
     page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
     redactions: list[RedactionArea] = Field(..., description="A list of areas that should be redacted")
-
-
-class RedactExecuteParams(ApiModel):
-    operations: list[RedactAllImages | RedactByRange | RedactByRegex | RedactByText | RedactImageBox | RedactPages] = (
-        Field([], description="Ordered list of redaction operations to apply", validate_default=True)
-    )
-    style: Style | None = Field(None, description="Redaction style options")
 
 
 class Model(
@@ -1488,7 +1420,6 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
-        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1557,7 +1488,6 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
-        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1627,7 +1557,6 @@ type ParamToolModel = (
     | SessionsParams
     | ValidateCertificateParams
     | RedactParams
-    | RedactExecuteParams
     | RemovePasswordParams
     | SanitizePdfParams
     | TimestampPdfParams
@@ -1698,7 +1627,6 @@ class ToolEndpoint(StrEnum):
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
-    REDACT_EXECUTE = "/api/v1/security/redact-execute"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
@@ -1767,7 +1695,6 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
-    ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
     ToolEndpoint.TIMESTAMP_PDF: TimestampPdfParams,

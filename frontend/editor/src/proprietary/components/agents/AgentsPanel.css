@@ -1,13 +1,44 @@
 /* ─── Chat takeover ─────────────────────────────────────────────────────── */
 
 .agents-takeover {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   background: var(--bg-toolbar);
-  z-index: 5;
+  border-left: 1px solid var(--border-subtle);
+  z-index: 100;
   view-transition-name: agents-rail;
+}
+
+.agents-takeover__resize-handle {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.agents-takeover__resize-handle::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: transparent;
+  transition: background 150ms ease, width 150ms ease, left 150ms ease;
+}
+
+.agents-takeover__resize-handle:hover::after {
+  left: 2px;
+  width: 3px;
+  background: var(--mantine-color-blue-4);
+  opacity: 0.6;
 }
 
 /* ─── Sidebar agents section ─────────────────────────────────────────────── */

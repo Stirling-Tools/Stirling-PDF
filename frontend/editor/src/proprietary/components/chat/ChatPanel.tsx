@@ -5,6 +5,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -181,11 +182,23 @@ function ChatMessageBubble({
   resolveToolName: ToolNameResolver;
   t: TranslateFn;
 }) {
+  if (role === "user") {
+    return (
+      <div className="chat-message chat-message-user">
+        <Paper className="chat-bubble chat-bubble-user" p="xs" radius="md">
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {content}
+          </Text>
+        </Paper>
+      </div>
+    );
+  }
+
   return (
-    <div className={`chat-message chat-message-${role}`}>
-      <Paper className={`chat-bubble chat-bubble-${role}`} p="xs" radius="md">
-        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-          {content}
+    <div className="chat-message chat-message-assistant">
+      <div className="chat-assistant-content">
+        <Text size="sm" component="div">
+          {renderMarkdown(content)}
         </Text>
         {toolsUsed && toolsUsed.length > 0 && (
           <ToolsUsedBlock
@@ -194,7 +207,7 @@ function ChatMessageBubble({
             t={t}
           />
         )}
-      </Paper>
+      </div>
     </div>
   );
 }

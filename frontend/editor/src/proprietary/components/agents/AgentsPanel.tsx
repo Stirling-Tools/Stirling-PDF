@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { ElementType } from "react";
 import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
@@ -271,18 +271,81 @@ export function AgentsFullscreenSection() {
   );
 }
 
+const DEFAULT_CHAT_WIDTH = 18.5 * 16; // 18.5rem in px
+const MIN_CHAT_WIDTH = 240;
+const MAX_CHAT_WIDTH = 720;
+
 /** Full-rail chat overlay rendered inside ToolPanel. */
 export function AgentsChatOverlay() {
   const { t } = useTranslation();
   const { isOpen, setOpen } = useChat();
   const enabled = useAgentsEnabled();
+  const [widthPx, setWidthPx] = useState(DEFAULT_CHAT_WIDTH);
+  const [isClosing, setIsClosing] = useState(false);
+  const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
 
-  if (!enabled || !isOpen) return null;
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setWidthPx(DEFAULT_CHAT_WIDTH);
+    setTimeout(() => {
+      setIsClosing(false);
+      withViewTransition(() => setOpen(false));
+    }, 280);
+  }, [setOpen]);
+
+  const handleResizePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      dragState.current = { startX: e.clientX, startWidth: widthPx };
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+
+      const onMove = (ev: PointerEvent) => {
+        if (!dragState.current) return;
+        const delta = dragState.current.startX - ev.clientX;
+        setWidthPx(
+          Math.max(
+            MIN_CHAT_WIDTH,
+            Math.min(MAX_CHAT_WIDTH, dragState.current.startWidth + delta),
+          ),
+        );
+      };
+
+      const onUp = () => {
+        dragState.current = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [widthPx],
+  );
+
+  if (!enabled || (!isOpen && !isClosing)) return null;
 
   return (
-    <Box className="agents-takeover">
+    <Box
+      className="agents-takeover"
+      style={{
+        width: widthPx,
+        transition: isClosing
+          ? "width 280ms cubic-bezier(0.32, 0.72, 0, 1)"
+          : "none",
+      }}
+    >
+      <div
+        className="agents-takeover__resize-handle"
+        onPointerDown={handleResizePointerDown}
+        role="separator"
+        aria-label={t("chat.resize", "Resize chat panel")}
+        aria-orientation="vertical"
+      />
       <ChatPanel
-        onBack={() => withViewTransition(() => setOpen(false))}
+        onBack={handleClose}
         backLabel={t("agents.back_to_tools", "Back to tools")}
       />
     </Box>
