@@ -13,7 +13,7 @@ Usage:
 """
 
 # Sample for Windows:
-# python .github/scripts/check_language_toml.py --reference-file frontend/public/locales/en-GB/translation.toml --branch "" --files frontend/public/locales/de-DE/translation.toml frontend/public/locales/fr-FR/translation.toml
+# python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-GB/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
 
 import argparse
 import glob
@@ -308,7 +308,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
-            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-GB/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/public/locales/en-GB/translation.toml)"
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-GB/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/editor/public/locales/en-GB/translation.toml)"
         )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")

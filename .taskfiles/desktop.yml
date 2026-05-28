@@ -78,6 +78,13 @@ tasks:
     cmds:
       - npx tauri build --bundles appimage
 
+  test:
+    desc: "Run Tauri/Cargo tests"
+    deps: [prepare]
+    dir: editor/src-tauri
+    cmds:
+      - cargo test
+
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
     dir: editor

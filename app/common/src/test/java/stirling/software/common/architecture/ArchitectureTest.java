@@ -56,4 +56,17 @@ class ArchitectureTest {
                         .resideInAPackage("stirling.software.saas..");
         rule.check(commonClasses);
     }
+
+    @Test
+    void clusterInterfacesHaveNoImplementationDependencies() {
+        ArchRule rule =
+                noClasses()
+                        .that()
+                        .resideInAPackage("stirling.software.common.cluster..")
+                        .should()
+                        .dependOnClassesThat()
+                        .resideInAnyPackage(
+                                "stirling.software.proprietary..", "stirling.software.saas..");
+        rule.check(commonClasses);
+    }
 }

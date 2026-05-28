@@ -39,7 +39,7 @@ const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({
         onClick={handleDismissAllErrors}
         style={{
           position: "absolute",
-          top: "1rem",
+          top: "calc(48px + 1rem)", // Sit below the 48px-tall WorkbenchBar (top toolbar)
           right: "1rem",
           zIndex: Z_INDEX_TOAST,
           pointerEvents: "auto",

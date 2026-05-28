@@ -1,69 +1,8 @@
-// Re-export from core for compatibility
-// Override VALID_NAV_KEYS to include saas-specific keys
-export const VALID_NAV_KEYS = [
-  "overview",
-  "password-security",
-  "preferences",
-  "notifications",
-  "connections",
-  "general",
-  "people",
-  "teams",
-  "security",
-  "identity",
-  "plan",
-  "payments",
-  "requests",
-  "developer",
-  "api-keys",
-  "hotkeys",
-  "adminGeneral",
-  "adminSecurity",
-  "adminConnections",
-  "adminPrivacy",
-  "adminDatabase",
-  "adminAdvanced",
-  "adminLegal",
-  "adminPremium",
-  "adminFeatures",
-  "adminPlan",
-  "adminAudit",
-  "adminUsage",
-  "adminEndpoints",
-  "help",
-] as const;
+import { VALID_NAV_KEYS as CORE_NAV_KEYS } from "@core/components/shared/config/types";
 
-// Extend NavKey to include saas-specific keys
-export type NavKey =
-  | "overview"
-  | "password-security"
-  | "preferences"
-  | "notifications"
-  | "connections"
-  | "general"
-  | "people"
-  | "teams"
-  | "security"
-  | "identity"
-  | "plan"
-  | "payments"
-  | "requests"
-  | "developer"
-  | "api-keys"
-  | "hotkeys"
-  | "adminGeneral"
-  | "adminSecurity"
-  | "adminConnections"
-  | "adminPrivacy"
-  | "adminDatabase"
-  | "adminAdvanced"
-  | "adminLegal"
-  | "adminPremium"
-  | "adminFeatures"
-  | "adminPlan"
-  | "adminAudit"
-  | "adminUsage"
-  | "adminEndpoints"
-  | "help";
+// SaaS adds an "overview" account section. All other keys (including ones
+// SaaS doesn't render today) come from core - subtracting them here would
+// just break the type union without affecting runtime nav.
+export const VALID_NAV_KEYS = [...CORE_NAV_KEYS, "overview"] as const;
 
-// some of these are not used yet, but appear in figma designs
+export type NavKey = (typeof VALID_NAV_KEYS)[number];
