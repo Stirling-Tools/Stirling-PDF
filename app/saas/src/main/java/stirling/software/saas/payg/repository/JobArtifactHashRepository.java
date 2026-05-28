@@ -1,6 +1,7 @@
 package stirling.software.saas.payg.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.job.JobArtifactHash;
 import stirling.software.saas.payg.job.JobArtifactHash.JobArtifactHashId;
+import stirling.software.saas.payg.lineage.LineageMatch;
 import stirling.software.saas.payg.model.JobStatus;
 
 @Repository
@@ -18,21 +20,25 @@ public interface JobArtifactHashRepository
         extends JpaRepository<JobArtifactHash, JobArtifactHashId> {
 
     /**
-     * Lineage lookup: find the open job (if any) whose recorded input/output hashes include the
-     * supplied content hash, scoped to one user and the workflow window.
+     * Lineage lookup: find open jobs (owned by {@code userId}, {@code last_step_at > since}) whose
+     * recorded artifacts include any of the supplied storage-form signature keys. Ordered by job
+     * activity recency so the caller's {@code findFirst()} picks the freshest match.
      */
     @Query(
-            "SELECT j.ownerUserId, h.id.jobId FROM JobArtifactHash h"
+            "SELECT new stirling.software.saas.payg.lineage.LineageMatch("
+                    + " h.id.jobId, h.id.kind, j.lastStepAt)"
+                    + " FROM JobArtifactHash h"
                     + " JOIN ProcessingJob j ON j.id = h.id.jobId"
                     + " WHERE j.ownerUserId = :userId"
                     + " AND j.status = :openStatus"
                     + " AND j.lastStepAt > :since"
-                    + " AND h.id.contentHash = :contentHash")
-    List<Object[]> findLineageMatches(
+                    + " AND h.id.contentHash IN :signatures"
+                    + " ORDER BY j.lastStepAt DESC")
+    List<LineageMatch> findOpenJobsForSignatures(
             @Param("userId") Long userId,
             @Param("openStatus") JobStatus openStatus,
             @Param("since") LocalDateTime since,
-            @Param("contentHash") String contentHash);
+            @Param("signatures") Collection<String> signatures);
 
     /** Prunes rows older than {@code cutoff}; run from a scheduled task. */
     @Modifying

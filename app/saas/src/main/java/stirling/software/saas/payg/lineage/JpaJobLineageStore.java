@@ -1,0 +1,78 @@
+package stirling.software.saas.payg.lineage;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
+
+import stirling.software.saas.payg.job.JobArtifactHash;
+import stirling.software.saas.payg.job.JobArtifactHash.JobArtifactHashId;
+import stirling.software.saas.payg.model.ArtifactKind;
+import stirling.software.saas.payg.model.JobStatus;
+import stirling.software.saas.payg.repository.JobArtifactHashRepository;
+
+/**
+ * JPA-backed {@link JobLineageStore} against the {@code job_artifact_hash} table. The lookup runs
+ * as a single joined query against {@code processing_job} so status + window filtering happens at
+ * the database, not in-process.
+ *
+ * <p>Signatures are persisted using {@link LineageSignature#asStorageKey()} ({@code "type:value"})
+ * so multiple signature types coexist on the same column without a schema change.
+ */
+@Component
+@RequiredArgsConstructor
+public class JpaJobLineageStore implements JobLineageStore {
+
+    private final JobArtifactHashRepository hashRepository;
+
+    @Override
+    public void record(UUID jobId, Set<LineageSignature> signatures, ArtifactKind kind) {
+        Objects.requireNonNull(jobId, "jobId");
+        Objects.requireNonNull(signatures, "signatures");
+        Objects.requireNonNull(kind, "kind");
+        for (LineageSignature signature : signatures) {
+            JobArtifactHash row = new JobArtifactHash();
+            row.setId(new JobArtifactHashId(jobId, signature.asStorageKey(), kind));
+            hashRepository.save(row);
+        }
+    }
+
+    @Override
+    public Optional<LineageMatch> findOpenJobForSignatures(
+            Long userId, Set<LineageSignature> candidates, Duration workflowWindow) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(candidates, "candidates");
+        Objects.requireNonNull(workflowWindow, "workflowWindow");
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<String> storageKeys =
+                candidates.stream()
+                        .map(LineageSignature::asStorageKey)
+                        .collect(Collectors.toList());
+        LocalDateTime since = LocalDateTime.now().minus(workflowWindow);
+
+        List<LineageMatch> matches =
+                hashRepository.findOpenJobsForSignatures(
+                        userId, JobStatus.OPEN, since, storageKeys);
+        return matches.isEmpty() ? Optional.empty() : Optional.of(matches.get(0));
+    }
+
+    @Override
+    public int pruneOlderThan(Instant cutoff) {
+        Objects.requireNonNull(cutoff, "cutoff");
+        return hashRepository.deleteOlderThan(
+                LocalDateTime.ofInstant(cutoff, ZoneId.systemDefault()));
+    }
+}
