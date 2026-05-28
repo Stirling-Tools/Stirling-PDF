@@ -1,9 +1,12 @@
 -- PAYG data model: pricing policy, processing jobs + lineage, wallet ledger, wallet policy,
--- entitlement snapshots, shadow-mode comparison rows, and column adds to teams + team_memberships.
+-- entitlement snapshots, shadow-mode comparison rows, plus a payg_team_extensions sidecar table
+-- carrying team-level PAYG fields, and a cap_units column on team_memberships.
 --
--- Everything here is purely additive. No existing rows are modified, no columns are dropped, and
--- the new tables have no FKs into legacy data the running application uses. Safe to apply while
--- the previous engine continues to run unchanged.
+-- Sidecar pattern (mirrors saas_team_extensions): PAYG-only team fields don't sit directly on
+-- `teams`, so OSS deployments running Hibernate ddl-auto=update against the proprietary Team
+-- entity never see PAYG columns they don't have entities for.
+--
+-- Everything is purely additive. No existing rows are modified, no columns are dropped.
 
 -- ---------------------------------------------------------------------------------------------
 -- 1. pricing_policy — versioned economic config (units, step limits, Stripe price IDs).
@@ -25,26 +28,29 @@ CREATE TABLE IF NOT EXISTS pricing_policy (
     created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Exactly one row may carry is_default = TRUE.
 CREATE UNIQUE INDEX IF NOT EXISTS uq_pricing_policy_default
     ON pricing_policy (is_default) WHERE is_default = TRUE;
 
 -- ---------------------------------------------------------------------------------------------
--- 2. teams column additions: pricing policy override + Stripe customer link.
+-- 2. payg_team_extensions — sidecar carrying PAYG-only team fields. 1:1 with teams via shared PK.
 -- ---------------------------------------------------------------------------------------------
-ALTER TABLE teams
-    ADD COLUMN IF NOT EXISTS pricing_policy_id BIGINT
-        REFERENCES pricing_policy(policy_id);
-COMMENT ON COLUMN teams.pricing_policy_id IS
-    'Override policy for this team. NULL means use the row in pricing_policy with is_default=TRUE.';
+CREATE TABLE IF NOT EXISTS payg_team_extensions (
+    team_id              BIGINT       PRIMARY KEY REFERENCES teams(team_id) ON DELETE CASCADE,
+    pricing_policy_id    BIGINT       REFERENCES pricing_policy(policy_id),
+    stripe_customer_id   VARCHAR(128) UNIQUE,
+    created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version              BIGINT       NOT NULL DEFAULT 0
+);
 
-ALTER TABLE teams
-    ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(128) UNIQUE;
-COMMENT ON COLUMN teams.stripe_customer_id IS
+COMMENT ON COLUMN payg_team_extensions.pricing_policy_id IS
+    'Override policy for this team. NULL means use the row in pricing_policy with is_default=TRUE.';
+COMMENT ON COLUMN payg_team_extensions.stripe_customer_id IS
     'Stripe customer id for this team. Eager-created so every team has billing identity on file.';
 
 -- ---------------------------------------------------------------------------------------------
--- 3. team_memberships column addition: optional per-member sub-cap.
+-- 3. team_memberships column addition: optional per-member sub-cap. Lives directly on the table
+-- because team_memberships is already a SaaS-only table.
 -- ---------------------------------------------------------------------------------------------
 ALTER TABLE team_memberships
     ADD COLUMN IF NOT EXISTS cap_units BIGINT;
@@ -52,8 +58,7 @@ COMMENT ON COLUMN team_memberships.cap_units IS
     'Per-period spend cap for this member inside their team wallet, in doc units. NULL = no member-level cap.';
 
 -- ---------------------------------------------------------------------------------------------
--- 4. processing_job — one process; billed once at open. step_count and last_step_at track the
---    workflow window; status drives lifecycle.
+-- 4. processing_job — one billable process; step_count and last_step_at track the workflow window.
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS processing_job (
     job_id                 UUID         PRIMARY KEY,
@@ -101,7 +106,6 @@ CREATE INDEX IF NOT EXISTS idx_processing_job_step_job
 
 -- ---------------------------------------------------------------------------------------------
 -- 6. job_artifact_hash — per-step input/output content hashes used by the lineage detector.
---    Rows older than the workflow window are pruned by a scheduled task.
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS job_artifact_hash (
     job_id        UUID         NOT NULL REFERENCES processing_job(job_id) ON DELETE CASCADE,
@@ -116,11 +120,10 @@ CREATE INDEX IF NOT EXISTS idx_artifact_hash_lookup
 
 -- ---------------------------------------------------------------------------------------------
 -- 7. wallet_ledger — append-only signed-amount ledger keyed on team_id.
---    Two unique indexes kill double-posting (reference triple + stripe event id).
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS wallet_ledger (
     entry_id           BIGSERIAL    PRIMARY KEY,
-    team_id            BIGINT       NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    team_id            BIGINT       NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
     actor_user_id      BIGINT,
     entry_type         VARCHAR(32)  NOT NULL,
     bucket             VARCHAR(16)  NOT NULL,
@@ -150,7 +153,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_wallet_ledger_stripe_event
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS wallet_policy (
     policy_id              BIGSERIAL    PRIMARY KEY,
-    team_id                BIGINT       NOT NULL UNIQUE REFERENCES teams(id) ON DELETE CASCADE,
+    team_id                BIGINT       NOT NULL UNIQUE REFERENCES teams(team_id) ON DELETE CASCADE,
     engine                 VARCHAR(16)  NOT NULL DEFAULT 'LEGACY',
     cap_period             VARCHAR(16)  NOT NULL DEFAULT 'CALENDAR_MONTH',
     cap_units              BIGINT,
@@ -166,11 +169,11 @@ CREATE TABLE IF NOT EXISTS wallet_policy (
 
 -- ---------------------------------------------------------------------------------------------
 -- 9. wallet_entitlement_snapshot — hot-path state for the entitlement guard.
---    Composite PK uses 0 as the team-wide sentinel for user_id so the constraint works under
---    Postgres' NULL-is-not-equal-to-NULL semantics.
+--    user_id = 0 is the team-wide sentinel (Postgres treats NULL as not-equal-to-NULL in unique
+--    constraints, so 0 is the cleaner choice for a composite PK).
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS wallet_entitlement_snapshot (
-    team_id               BIGINT       NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    team_id               BIGINT       NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
     user_id               BIGINT       NOT NULL DEFAULT 0,
     period_start          TIMESTAMP    NOT NULL,
     period_end            TIMESTAMP    NOT NULL,
@@ -184,12 +187,11 @@ CREATE TABLE IF NOT EXISTS wallet_entitlement_snapshot (
 );
 
 -- ---------------------------------------------------------------------------------------------
--- 10. payg_shadow_charge — per-job legacy-vs-PAYG diff during shadow mode. Built up during
---     PAYG_SHADOW engine state; aggregated by the reconciliation report.
+-- 10. payg_shadow_charge — per-job legacy-vs-PAYG diff during PAYG_SHADOW engine mode.
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS payg_shadow_charge (
     shadow_id                BIGSERIAL    PRIMARY KEY,
-    team_id                  BIGINT       NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    team_id                  BIGINT       NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
     job_id                   UUID         NOT NULL,
     policy_id                BIGINT       NOT NULL REFERENCES pricing_policy(policy_id),
     payg_units               INTEGER      NOT NULL,

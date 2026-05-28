@@ -27,12 +27,12 @@ import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
 
 /**
- * Cached entitlement state for the team (one row with {@code user_id = NULL}) plus optional per-
- * member rows when a member sub-cap is configured. Read on the hot path by the entitlement guard.
+ * Cached entitlement state for the team (one row with {@code user_id = 0}, the team-wide sentinel)
+ * plus optional per-member rows when a member sub-cap is configured. Read on the hot path by the
+ * entitlement guard.
  *
- * <p>Composite PK {@code (team_id, user_id)} where {@code user_id} is 0 for the team-wide row —
- * Postgres treats {@code NULL} as not-equal-to-NULL in unique constraints, so we use 0 as the
- * canonical sentinel for "team-wide."
+ * <p>Composite PK {@code (team_id, user_id)} uses 0 as the team-wide sentinel because Postgres
+ * treats {@code NULL} as not-equal-to-NULL in unique constraints — 0 keeps the PK well-defined.
  */
 @Entity
 @Table(name = "wallet_entitlement_snapshot")
