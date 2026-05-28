@@ -1,0 +1,70 @@
+name: _runner-pick
+
+# Tiny reusable workflow that classifies the trigger as either a "fork PR
+# from an untrusted contributor" or a "trusted commit" so downstream jobs
+# can pick a runner class without each one duplicating the 200-char gate
+# expression in their own `runs-on:`.
+#
+# Caller pattern:
+#
+#   jobs:
+#     pick:
+#       uses: ./.github/workflows/_runner-pick.yml
+#
+#     real-work:
+#       needs: pick
+#       runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-8' }}
+#       steps: [...]
+#
+# Output:
+#   is_fork: "true" when the trigger is a pull_request from a fork or an
+#            untrusted author_association, "false" otherwise.
+
+on:
+  workflow_call:
+    outputs:
+      is_fork:
+        description: '"true" if the trigger is an untrusted fork PR.'
+        value: ${{ jobs.pick.outputs.is_fork }}
+
+permissions:
+  contents: read
+
+jobs:
+  pick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      is_fork: ${{ steps.decide.outputs.is_fork }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Classify the trigger
+        id: decide
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REPO_FORK: ${{ github.event.pull_request.head.repo.fork }}
+          AUTHOR_ASSOC: ${{ github.event.pull_request.author_association }}
+        run: |
+          set -eu
+          if [ -z "${PR_NUMBER:-}" ]; then
+            # Not a pull_request event at all (push, schedule, workflow_dispatch,
+            # workflow_call from a non-PR trigger) -> trusted by default.
+            echo "is_fork=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${HEAD_REPO_FORK}" = "true" ]; then
+            echo "is_fork=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "${AUTHOR_ASSOC}" in
+            OWNER|MEMBER|COLLABORATOR)
+              echo "is_fork=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "is_fork=true" >> "$GITHUB_OUTPUT"
+              ;;
+          esac

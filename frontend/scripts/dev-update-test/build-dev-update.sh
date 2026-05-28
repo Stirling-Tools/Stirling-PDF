@@ -47,10 +47,10 @@ echo "Building signed update bundle (version $VERSION, platform $TAURI_PLATFORM)
 echo "This takes a few minutes — Rust is compiling."
 echo ""
 
-cd "$FRONTEND_DIR"
+cd "$FRONTEND_DIR/editor"
 
 # Prepare desktop env/assets before building
-npm run prep:desktop
+npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js
 
 TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_KEY" \
 TAURI_SIGNING_PRIVATE_KEY_PASSWORD="" \

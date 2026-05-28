@@ -6,14 +6,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEYS_DIR="$SCRIPT_DIR/.keys"
 FRONTEND_DIR="$SCRIPT_DIR/../.."
-TAURI_CONF_OVERRIDE="$FRONTEND_DIR/src-tauri/tauri.conf.dev-update.json"
+TAURI_CONF_OVERRIDE="$FRONTEND_DIR/editor/src-tauri/tauri.conf.dev-update.json"
 
 mkdir -p "$KEYS_DIR"
 
 echo "Generating Tauri Ed25519 signing key pair for dev update testing..."
 
 # Generate key pair — private key goes to .keys/dev-update-key, public key to .keys/dev-update-key.pub
-(cd "$FRONTEND_DIR" && npx tauri signer generate -w "$KEYS_DIR/dev-update-key" --ci -p "")
+(cd "$FRONTEND_DIR/editor" && npx tauri signer generate -w "$KEYS_DIR/dev-update-key" --ci -p "")
 
 PUBKEY=$(cat "$KEYS_DIR/dev-update-key.pub")
 echo ""
@@ -36,7 +36,7 @@ cat > "$TAURI_CONF_OVERRIDE" << EOF
 }
 EOF
 
-echo "Created: src-tauri/tauri.conf.dev-update.json"
+echo "Created: editor/src-tauri/tauri.conf.dev-update.json"
 echo ""
 echo "Next steps:"
 echo "  1. In a separate terminal: npm run tauri:serve-dev-update"

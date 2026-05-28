@@ -10,14 +10,14 @@ When adding tools, follow this systematic approach using the established pattern
 
 Create these files in the correct directories:
 ```
-frontend/src/hooks/tools/[toolName]/
+frontend/editor/src/hooks/tools/[toolName]/
   ├── use[ToolName]Parameters.ts     # Parameter definitions and validation
   └── use[ToolName]Operation.ts      # Tool operation logic using useToolOperation
 
-frontend/src/components/tools/[toolName]/
+frontend/editor/src/components/tools/[toolName]/
   └── [ToolName]Settings.tsx         # Settings UI component (if needed)
 
-frontend/src/tools/
+frontend/editor/src/tools/
   └── [ToolName].tsx                 # Main tool component
 ```
 
@@ -128,7 +128,7 @@ export default [ToolName] as ToolComponent;
 ## 3. Register Tool in System
 Update these files to register your new tool:
 
-**Tool Registry** (`frontend/src/data/useTranslatedToolRegistry.tsx`):
+**Tool Registry** (`frontend/editor/src/data/useTranslatedToolRegistry.tsx`):
 1. Add imports at the top:
 ```typescript
 import [ToolName] from "../tools/[ToolName]";
@@ -155,7 +155,7 @@ import [ToolName]Settings from "../components/tools/[toolName]/[ToolName]Setting
 ## 4. Add Tooltips (Optional but Recommended)
 Create user-friendly tooltips to help non-technical users understand your tool. **Use simple, clear language - avoid technical jargon:**
 
-**Tooltip Hook** (`frontend/src/components/tooltips/use[ToolName]Tips.ts`):
+**Tooltip Hook** (`frontend/editor/src/components/tooltips/use[ToolName]Tips.ts`):
 ```typescript
 import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '../../types/tips';
@@ -202,7 +202,7 @@ const [ToolName] = (props: BaseToolProps) => {
 ## 5. Add Translations
 Update translation files. **Important: Only update `en-GB` files** - other languages are handled separately.
 
-**File to update:** `frontend/public/locales/en-GB/translation.toml`
+**File to update:** `frontend/editor/public/locales/en-GB/translation.toml`
 
 **Required Translation Keys**:
 ```toml

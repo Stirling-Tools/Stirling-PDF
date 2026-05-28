@@ -3,7 +3,6 @@ package stirling.software.proprietary.service;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -21,30 +21,39 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.pdf.parser.PdfIngester;
+import stirling.software.SPDF.pdf.parser.PdfModels.ParsedPage;
+import stirling.software.SPDF.pdf.parser.PdfModels.RawLine;
+import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
+import stirling.software.SPDF.pdf.parser.PdfModels.TextFragment;
+import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.proprietary.model.api.ai.FolioType;
-import stirling.software.proprietary.pdf.FlexibleCSVWriter;
-
-import technology.tabula.ObjectExtractor;
-import technology.tabula.Page;
-import technology.tabula.Table;
-import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PdfContentExtractor {
+
+    private final TabulaTableParser tabulaTableParser;
+    private final PdfIngester pdfIngester;
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
 
     private static final int TEXT_PRESENCE_THRESHOLD = 20;
 
-    record LoadedFile(String fileName, PDDocument document) {}
+    /**
+     * A loaded PDF alongside the opaque file id used by the AI engine as its RAG collection key.
+     * Keyed by id (not name) because filenames aren't unique across an upload.
+     */
+    record LoadedFile(String id, String fileName, PDDocument document) {}
 
     // -----------------------------------------------------------------------
     // Low-level extraction methods (usable by any agent)
@@ -97,21 +106,21 @@ public class PdfContentExtractor {
      * @return list of CSV strings (one per table), empty if no tables found
      */
     public List<String> extractTablesAsCsv(PDDocument document, int pageNumber) throws IOException {
-        SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
+        List<TableFragment> fragments = tabulaTableParser.parse(document, pageNumber);
+        if (fragments.isEmpty()) return List.of();
+
         CSVFormat format =
                 CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
         List<String> csvStrings = new ArrayList<>();
 
-        try (ObjectExtractor extractor = new ObjectExtractor(document)) {
-            Page tabulaPage = extractor.extract(pageNumber);
-            List<Table> tables = sea.extract(tabulaPage);
-
-            for (Table table : tables) {
-                StringWriter sw = new StringWriter();
-                FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
-                csvWriter.write(sw, Collections.singletonList(table));
-                csvStrings.add(sw.toString());
+        for (TableFragment fragment : fragments) {
+            StringWriter sw = new StringWriter();
+            try (CSVPrinter printer = format.print(sw)) {
+                for (List<String> row : fragment.rawRows()) {
+                    printer.printRecord(row);
+                }
             }
+            csvStrings.add(sw.toString());
         }
         return csvStrings;
     }
@@ -126,7 +135,7 @@ public class PdfContentExtractor {
      */
     List<PdfContentResult> extractContent(
             List<LoadedFile> loadedFiles,
-            Map<String, AiWorkflowFileRequest> requestedByName,
+            Map<String, AiWorkflowFileRequest> requestedById,
             int maxPages,
             int maxCharacters)
             throws IOException {
@@ -136,7 +145,7 @@ public class PdfContentExtractor {
 
         for (LoadedFile lf : loadedFiles) {
             if (remainingPages <= 0 || remainingCharacters <= 0) break;
-            AiWorkflowFileRequest fileReq = requestedByName.get(lf.fileName());
+            AiWorkflowFileRequest fileReq = requestedById.get(lf.id());
             List<AiPdfContentType> contentTypes =
                     fileReq != null && !fileReq.getContentTypes().isEmpty()
                             ? fileReq.getContentTypes()
@@ -179,6 +188,8 @@ public class PdfContentExtractor {
             case PAGE_TEXT, FULL_TEXT ->
                     Optional.<PdfContentResult>ofNullable(
                             extractText(lf, fileReq, remainingPages, remainingCharacters));
+            case PAGE_LAYOUT ->
+                    Optional.<PdfContentResult>ofNullable(extractPageLayout(lf, remainingPages));
             default -> {
                 log.warn(
                         "Content type {} not yet implemented, skipping for {}",
@@ -203,6 +214,35 @@ public class PdfContentExtractor {
         return extracted.isEmpty() ? null : buildExtractedFileText(lf.fileName(), extracted);
     }
 
+    private PageLayoutFileResult extractPageLayout(LoadedFile lf, int maxPages) throws IOException {
+        List<ParsedPage> parsedPages = pdfIngester.parse(lf.document(), maxPages);
+        List<LayoutPage> pages = new ArrayList<>();
+        for (ParsedPage pp : parsedPages) {
+            if (pp.layoutLines().isEmpty()) continue;
+            List<LayoutLine> lines = new ArrayList<>();
+            for (RawLine rawLine : pp.layoutLines()) {
+                List<LayoutFragment> fragments = new ArrayList<>();
+                for (TextFragment tf : rawLine.fragments()) {
+                    fragments.add(
+                            new LayoutFragment(
+                                    tf.text(),
+                                    tf.bounds().x(),
+                                    tf.bounds().y(),
+                                    tf.bounds().width(),
+                                    tf.fontSize(),
+                                    tf.bold()));
+                }
+                lines.add(new LayoutLine(rawLine.bounds().y(), fragments));
+            }
+            pages.add(new LayoutPage(pp.pageNumber(), lines));
+        }
+        if (pages.isEmpty()) return null;
+        PageLayoutFileResult result = new PageLayoutFileResult();
+        result.setFileName(lf.fileName());
+        result.setPages(pages);
+        return result;
+    }
+
     private WorkflowArtifact buildArtifact(ArtifactKind kind, List<PdfContentResult> results) {
         return switch (kind) {
             case EXTRACTED_TEXT -> {
@@ -210,6 +250,14 @@ public class PdfContentExtractor {
                 artifact.setFiles(results.stream().map(ExtractedFileText.class::cast).toList());
                 yield artifact;
             }
+            case PAGE_LAYOUT -> {
+                PageLayoutArtifact artifact = new PageLayoutArtifact();
+                artifact.setFiles(results.stream().map(PageLayoutFileResult.class::cast).toList());
+                yield artifact;
+            }
+            case TOOL_REPORT ->
+                    throw new IllegalArgumentException(
+                            "TOOL_REPORT artifacts are not produced by PdfContentExtractor");
         };
     }
 
@@ -320,7 +368,9 @@ public class PdfContentExtractor {
      * Values MUST match {@code ArtifactKind} in {@code engine/src/stirling/contracts/common.py}.
      */
     enum ArtifactKind {
-        EXTRACTED_TEXT("extracted_text");
+        EXTRACTED_TEXT("extracted_text"),
+        PAGE_LAYOUT("page_layout"),
+        TOOL_REPORT("tool_report");
 
         private final String value;
 
@@ -363,5 +413,60 @@ public class PdfContentExtractor {
     static final class ExtractedTextArtifact implements WorkflowArtifact {
         private final ArtifactKind kind = ArtifactKind.EXTRACTED_TEXT;
         private List<ExtractedFileText> files = new ArrayList<>();
+    }
+
+    /**
+     * Carries a structured report produced by a specialist tool back to the orchestrator on a
+     * resume turn. Shape matches {@code engine/src/stirling/contracts/common.py ToolReportArtifact}
+     * — {@code sourceTool} must be a valid endpoint path string.
+     */
+    @Data
+    static final class ToolReportArtifact implements WorkflowArtifact {
+        private final ArtifactKind kind = ArtifactKind.TOOL_REPORT;
+        private String sourceTool;
+        private tools.jackson.databind.JsonNode report;
+
+        ToolReportArtifact() {}
+
+        ToolReportArtifact(String sourceTool, tools.jackson.databind.JsonNode report) {
+            this.sourceTool = sourceTool;
+            this.report = report;
+        }
+    }
+
+    // Serialization contract with the Python engine — see PageLayoutArtifactContractTest.
+
+    /** One text fragment with its bounding-box geometry and font properties. */
+    record LayoutFragment(
+            String text, float x, float y, float width, float fontSize, boolean bold) {}
+
+    /** A visual line on the page: y-coordinate and all fragments on that line. */
+    record LayoutLine(float y, List<LayoutFragment> fragments) {}
+
+    /** All layout lines for a single page. */
+    record LayoutPage(int pageNumber, List<LayoutLine> lines) {}
+
+    /** Page layout data for one file, as a PdfContentResult. */
+    @Data
+    static final class PageLayoutFileResult implements PdfContentResult {
+        private String fileName;
+        private List<LayoutPage> pages = new ArrayList<>();
+
+        @Override
+        public ArtifactKind getArtifactKind() {
+            return ArtifactKind.PAGE_LAYOUT;
+        }
+
+        @Override
+        public int pagesConsumed() {
+            return pages.size();
+        }
+    }
+
+    /** Artifact carrying full spatial page layout for all input files. */
+    @Data
+    static final class PageLayoutArtifact implements WorkflowArtifact {
+        private final ArtifactKind kind = ArtifactKind.PAGE_LAYOUT;
+        private List<PageLayoutFileResult> files = new ArrayList<>();
     }
 }

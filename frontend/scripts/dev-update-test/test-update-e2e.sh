@@ -28,7 +28,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPO_ROOT="$(cd "$FRONTEND_DIR/.." && pwd)"
-TAURI_DIR="$FRONTEND_DIR/src-tauri"
+TAURI_DIR="$FRONTEND_DIR/editor/src-tauri"
 OUTPUT_DIR="$SCRIPT_DIR/.update-dist"
 KEYS_DIR="$SCRIPT_DIR/.keys"
 PORT=8090
@@ -150,7 +150,7 @@ if [ "$SKIP_BUILD" = false ] || [ -z "$BUNDLE_FILE" ]; then
 
   PRIVATE_KEY="$(cat "$KEYS_DIR/dev-update-key")"
 
-  cd "$FRONTEND_DIR"
+  cd "$FRONTEND_DIR/editor"
   TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_KEY" \
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD="" \
   npx tauri build \
@@ -215,7 +215,7 @@ echo "  Server: OK (PID $SERVER_PID)"
 # ── Step 4: Start Tauri app ──────────────────────────────────────────────────
 echo ""
 echo "=== Starting Tauri app (v0.0.1) ==="
-cd "$FRONTEND_DIR"
+cd "$FRONTEND_DIR/editor"
 
 # Enable WebView remote debugging (platform-specific)
 if [ -n "$WEBVIEW_DEBUG_ENV" ]; then

@@ -6,6 +6,8 @@ This file provides guidance to AI Agents when working with code in this reposito
 
 This project uses [Task](https://taskfile.dev/) as a unified command runner. All build, dev, test, lint, and docker commands can be run from the repo root via `task <command>`. Run `task --list` to see all available commands.
 
+Task `desc:` fields should describe **what** the task does, not **how** it does it. Keep them generic and stable: don't reference implementation details like aliases, internal helpers, mode flags, or which other task delegates to which. The description is for users picking a command from `task --list`, not a changelog of refactors.
+
 ### Quick Reference
 - `task install` — install all dependencies
 - `task dev` — start backend + frontend concurrently
@@ -136,19 +138,21 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
   - **Development**: `task desktop:dev` for desktop dev mode
 
 #### Environment Variables
-- All `VITE_*` variables must be declared in the appropriate example file:
-  - `frontend/config/.env.example` — core, proprietary, and shared vars
-  - `frontend/config/.env.saas.example` — SaaS-only vars
-  - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
-- Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
-- `task frontend:prepare` / `prepare:saas` / `prepare:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
+- All `VITE_*` variables must be declared in the appropriate committed env file:
+  - `frontend/editor/.env` — core, proprietary, and shared vars
+  - `frontend/editor/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
+  - `frontend/editor/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
+- These files are committed to Git and must not contain private keys
+- Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
+- Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
+- `task frontend:prepare` creates empty `.local` override files on first run; pass `MODE=saas` or `MODE=desktop` to also create the mode-specific `.local` file
 - Prepare runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
 
-For a broader explanation of the frontend layering and override architecture, see [frontend/DeveloperGuide.md](frontend/DeveloperGuide.md).
+For a broader explanation of the frontend layering and override architecture, see [frontend/editor/DeveloperGuide.md](frontend/editor/DeveloperGuide.md).
 
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
@@ -179,26 +183,26 @@ Use this pattern for desktop-specific or proprietary-specific features WITHOUT r
 **Example - Desktop-specific footer:**
 
 ```typescript
-// core/components/rightRail/RightRailFooterExtensions.tsx (stub)
-interface RightRailFooterExtensionsProps {
+// core/components/workbenchBar/WorkbenchBarFooterExtensions.tsx (stub)
+interface WorkbenchBarFooterExtensionsProps {
   className?: string;
 }
 
-export function RightRailFooterExtensions(_props: RightRailFooterExtensionsProps) {
+export function WorkbenchBarFooterExtensions(_props: WorkbenchBarFooterExtensionsProps) {
   return null; // Stub - does nothing in web builds
 }
 ```
 
 ```tsx
-// desktop/components/rightRail/RightRailFooterExtensions.tsx (real implementation)
+// desktop/components/workbenchBar/WorkbenchBarFooterExtensions.tsx (real implementation)
 import { Box } from '@mantine/core';
 import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
 
-interface RightRailFooterExtensionsProps {
+interface WorkbenchBarFooterExtensionsProps {
   className?: string;
 }
 
-export function RightRailFooterExtensions({ className }: RightRailFooterExtensionsProps) {
+export function WorkbenchBarFooterExtensions({ className }: WorkbenchBarFooterExtensionsProps) {
   return (
     <Box className={className}>
       <BackendHealthIndicator />
@@ -208,15 +212,15 @@ export function RightRailFooterExtensions({ className }: RightRailFooterExtensio
 ```
 
 ```tsx
-// core/components/shared/RightRail.tsx (usage - works in ALL builds)
-import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
+// core/components/shared/WorkbenchBar.tsx (usage - works in ALL builds)
+import { WorkbenchBarFooterExtensions } from '@app/components/workbenchBar/WorkbenchBarFooterExtensions';
 
-export function RightRail() {
+export function WorkbenchBar() {
   return (
     <div>
       {/* In web builds: renders nothing (stub returns null) */}
       {/* In desktop builds: renders BackendHealthIndicator */}
-      <RightRailFooterExtensions className="right-rail-footer" />
+      <WorkbenchBarFooterExtensions className="workbench-bar-footer" />
     </div>
   );
 }
@@ -239,7 +243,7 @@ Frontend designed for **stateful document processing**:
 - No file reloading between tools - performance critical for large PDFs (up to 100GB+)
 
 #### FileContext - Central State Management
-**Location**: `frontend/src/core/contexts/FileContext.tsx`
+**Location**: `frontend/editor/src/core/contexts/FileContext.tsx`
 - **Active files**: Currently loaded PDFs and their variants
 - **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
 - **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
@@ -264,7 +268,7 @@ Without cleanup: browser crashes with memory leaks.
 
 **Architecture**: Modular hook-based system with clear separation of concerns:
 
-- **useToolOperation** (`frontend/src/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+- **useToolOperation** (`frontend/editor/src/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
   - Coordinates all tool operations with consistent interface
   - Integrates with FileContext for operation tracking
   - Handles validation, error handling, and UI state management
@@ -352,7 +356,7 @@ return useToolOperation({
 ### Frontend Directory Structure
 The frontend is organized with a clear separation of concerns:
 
-- **`frontend/src/core/`**: Main application code (shared, production-ready components)
+- **`frontend/editor/src/core/`**: Main application code (shared, production-ready components)
   - **`core/components/`**: React components organized by feature
     - `core/components/tools/`: Individual PDF tool implementations
     - `core/components/viewer/`: PDF viewer components
@@ -370,17 +374,17 @@ The frontend is organized with a clear separation of concerns:
   - **`core/data/`**: Static data (tool taxonomy, etc.)
   - **`core/services/`**: Business logic services (PDF processing, storage, etc.)
 
-- **`frontend/src/desktop/`**: Desktop-specific (Tauri) code
-- **`frontend/src/proprietary/`**: Proprietary/licensed features
-- **`frontend/src-tauri/`**: Tauri (Rust) native desktop application code
-- **`frontend/public/`**: Static assets served directly
+- **`frontend/editor/src/desktop/`**: Desktop-specific (Tauri) code
+- **`frontend/editor/src/proprietary/`**: Proprietary/licensed features
+- **`frontend/editor/src-tauri/`**: Tauri (Rust) native desktop application code
+- **`frontend/editor/public/`**: Static assets served directly
   - `public/locales/`: Translation JSON files
 
 ### Component Architecture
-- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/public/` (modern)
+- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/editor/public/` (modern)
 - **Internationalization**:
   - Backend: `messages_*.properties` files
-  - Frontend: JSON files in `frontend/public/locales/` (converted from .properties)
+  - Frontend: JSON files in `frontend/editor/public/locales/` (converted from .properties)
   - Conversion Script: `scripts/convert_properties_to_json.py`
 
 ### Configuration Modes
@@ -405,7 +409,7 @@ The frontend is organized with a clear separation of concerns:
 4. **Code Style**: Spotless enforces Google Java Format automatically (`task backend:format`)
 5. **Translations**:
    - Backend: Use helper scripts in `/scripts` for multi-language updates
-   - Frontend: Update JSON files in `frontend/public/locales/` or use conversion script
+   - Frontend: Update JSON files in `frontend/editor/public/locales/` or use conversion script
 6. **Documentation**: API docs auto-generated and available at `/swagger-ui/index.html`
 
 ## Frontend Architecture Status
@@ -423,11 +427,11 @@ The frontend is organized with a clear separation of concerns:
 ## Translation Rules
 
 - **CRITICAL**: Always update translations in `en-GB` only, never `en-US`
-- Translation files are located in `frontend/public/locales/`
+- Translation files are located in `frontend/editor/public/locales/`
 
 ## Important Notes
 
-- **Java Version**: Minimum JDK 21, supports and recommends JDK 25
+- **Java Version**: Requires JDK 25.
 - **Lombok**: Used extensively - ensure IDE plugin is installed
 - **File Persistence**:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
@@ -454,3 +458,26 @@ The frontend is organized with a clear separation of concerns:
 - Confirm approach before making structural changes
 - Request guidance on preferences (cross-platform vs specific tools, etc.)
 - Verify understanding of requirements before proceeding
+
+
+## Stack reality check (don't trust LLM training data) <!-- bleeding-edge-stack-note -->
+
+This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.0.6**,
+**Jackson 3 (`tools.jackson`)**, **JDK 21/25 source/target with JDK 25 toolchain**.
+All three are *post*-2024 releases and your training corpus is overwhelmingly Spring Boot 2/3 and
+Jackson 2 patterns — those patterns will compile, run differently, or hallucinate APIs that no
+longer exist.
+
+Before writing or editing Spring / Jackson / JDK code:
+
+1. Open an existing module in `app/core/` or `app/common/` and grep for the actual imports being
+   used — `import tools.jackson...` not `import com.fasterxml.jackson...`, and the new
+   `org.springframework.boot` 4.x package layout.
+2. If you're not sure whether an API exists in this stack version, **check the source on disk
+   first** (the dependency JARs are downloaded under `~/.gradle/caches/modules-2/`).
+3. Do not silently downgrade a Spring Boot 4 pattern to a Spring Boot 3 equivalent. If something
+   doesn't work, surface it to the human — don't guess.
+
+Same goes for Jackson 3's API surface (renamed `ObjectMapper` builder methods, new
+`tools.jackson.databind` namespace) and JDK 25 preview features. Ground your code in this repo's
+actual imports, not what worked three years ago.

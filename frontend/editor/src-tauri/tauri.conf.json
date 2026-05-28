@@ -1,0 +1,98 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Stirling-PDF",
+  "version": "2.11.0",
+  "identifier": "stirling.pdf.dev",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npx vite --mode desktop",
+    "beforeBuildCommand": "npx vite build --mode desktop"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Stirling-PDF",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature"
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "publisher": "Stirling PDF Inc.",
+    "targets": ["deb", "rpm", "appimage", "dmg", "msi"],
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/16x16.png",
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/192x192.png"
+    ],
+    "resources": ["libs/*.jar", "runtime/jre/**/*"],
+    "fileAssociations": [
+      {
+        "ext": ["pdf"],
+        "name": "PDF Document",
+        "role": "Editor",
+        "mimeType": "application/pdf"
+      }
+    ],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "stirling-pdf.desktop"
+      },
+      "rpm": {
+        "desktopTemplate": "stirling-pdf.desktop"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "wix": {
+        "fragmentPaths": ["windows/wix/provisioning.wxs"],
+        "componentGroupRefs": ["ProvisioningComponentGroup"]
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": null,
+      "entitlements": null,
+      "providerShortName": null,
+      "infoPlist": "Info.plist"
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    },
+    "fs": {
+      "requireLiteralLeadingDot": false
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["stirlingpdf"]
+      }
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/Stirling-Tools/Stirling-PDF/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZEREM2QTgwNjdGNzdCOUQKUldTZGUvZG5nR3JjYmZ4TlZ3YVpHTVIzd2hBT2c4c000RDNIN2tLZENEblE4ZXFhU3J5V0lQanEK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

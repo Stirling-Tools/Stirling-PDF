@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
+
+import tools.jackson.databind.JsonNode;
 
 @Data
 @Schema(description = "Structured AI workflow result")
@@ -17,6 +21,14 @@ public class AiWorkflowResponse {
 
     @Schema(description = "Answer returned by the AI workflow when applicable")
     private String answer;
+
+    @JsonProperty("content")
+    @Schema(description = "Text content to package as a file (generate_file outcomes)")
+    private String generatedContent;
+
+    @JsonProperty("filename")
+    @Schema(description = "Desired output filename for generate_file outcomes")
+    private String generatedFilename;
 
     @Schema(description = "Summary returned by the AI workflow when applicable")
     private String summary;
@@ -71,6 +83,12 @@ public class AiWorkflowResponse {
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
 
+    @Schema(
+            description =
+                    "Files the AI engine requires to be ingested into RAG before it can continue"
+                            + " the workflow. Populated on need_ingest outcomes.")
+    private List<AiFile> filesToIngest = new ArrayList<>();
+
     @Schema(description = "Maximum number of pages the AI engine wants text extracted from")
     private Integer maxPages;
 
@@ -79,4 +97,12 @@ public class AiWorkflowResponse {
 
     @Schema(description = "AI engine capability to resume with on the next turn")
     private String resumeWith;
+
+    @Schema(
+            description =
+                    "Optional structured report from the tool (e.g. math-auditor Verdict, PDF"
+                            + " comment-agent summary). Tools surface this either via a JSON response"
+                            + " body or via the X-Stirling-Tool-Report header. May be null for tools"
+                            + " that produce only a file.")
+    private JsonNode report;
 }
