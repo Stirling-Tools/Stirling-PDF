@@ -32,7 +32,10 @@ public class LicenseKeyChecker {
 
     private final UserLicenseSettingsService licenseSettingsService;
 
-    private License premiumEnabledResult = License.NORMAL;
+    // volatile: written by evaluateLicense() on the @Scheduled refresh thread, read by request
+    // threads via getPremiumLicenseEnabledResult() / requireProOrEnterprise(). Ensures readers see
+    // the latest tier rather than a stale cached value.
+    private volatile License premiumEnabledResult = License.NORMAL;
 
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
