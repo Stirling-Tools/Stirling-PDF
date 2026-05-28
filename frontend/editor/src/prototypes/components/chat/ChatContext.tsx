@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import { generateId } from "@app/utils/generateId";
 import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
@@ -419,7 +420,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const priorMessages = messagesRef.current;
 
       const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         role: "user",
         content,
         timestamp: Date.now(),
@@ -480,7 +481,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: replyContent,
                 timestamp: Date.now(),
@@ -493,7 +494,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 dispatch({
                   type: "ADD_MESSAGE",
                   message: {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     role: "assistant",
                     content:
                       "The file was processed but I couldn't download it.",
@@ -509,7 +510,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: data.message || "Something went wrong.",
                 timestamp: Date.now(),
@@ -529,7 +530,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: "Cancelled.",
                 timestamp: Date.now(),
@@ -542,7 +543,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         dispatch({
           type: "ADD_MESSAGE",
           message: {
-            id: crypto.randomUUID(),
+            id: generateId(),
             role: "assistant",
             content:
               "Failed to get a response. The AI engine may not be available yet.",

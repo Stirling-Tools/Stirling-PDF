@@ -2747,6 +2747,15 @@ whole_doc_read_done = "Finished reading the document..."
 whole_doc_read_started = "Reading the document..."
 whole_doc_slice_done = "Reading the document... ({{percent}}% complete)"
 
+[chat.responses]
+done = "Done."
+need_clarification = "Could you clarify your request?"
+cannot_do = "I'm unable to do that."
+not_found = "I couldn't find the requested information."
+unsupported_capability = "Unsupported capability: {{capability}}"
+cannot_continue = "Something went wrong and I can't continue."
+processing = "Processing ({{outcome}})..."
+
 [chat.toolsUsed]
 summary = "Ran {{count}} tools"
 summary_one = "Ran 1 tool"

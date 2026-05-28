@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { generateId } from "@app/utils/generateId";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
@@ -199,16 +200,6 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 }
 
 type TranslateFn = ReturnType<typeof useTranslation>["t"];
-
-function generateId(): string {
-  if (typeof window !== "undefined" && typeof window.crypto?.randomUUID === "function") {
-    return window.crypto.randomUUID();
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
 
 function formatWorkflowResponse(
   data: AiWorkflowResponse,

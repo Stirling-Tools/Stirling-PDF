@@ -5,6 +5,8 @@
  * and may reference a parent folder; a `null` parent means the root.
  */
 
+import { generateId } from "@app/utils/generateId";
+
 declare const folderTag: unique symbol;
 export type FolderId = string & { readonly [folderTag]: "FolderId" };
 
@@ -81,17 +83,7 @@ export function parseFolderId(value: unknown): FolderId {
 }
 
 export function createFolderId(): FolderId {
-  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
-    return window.crypto.randomUUID() as FolderId;
-  }
-  // Math.random fallback is non-cryptographic but acceptable here - these ids are
-  // not used as security tokens, only as opaque local handles. The brand is the
-  // contract; the entropy is best-effort.
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  }) as FolderId;
+  return generateId() as FolderId;
 }
 
 export function pickFolderColor(seed: string): FolderPaletteColor {
