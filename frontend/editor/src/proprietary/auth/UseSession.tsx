@@ -6,6 +6,8 @@ import {
   ReactNode,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { springAuth } from "@app/auth/springAuthClient";
 import { clearPlatformAuthOnLoginInit } from "@app/extensions/authSessionCleanup";
 import type {
@@ -22,15 +24,33 @@ import type {
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  /** Human-readable name for the signed-in user, or null for anonymous/signed-out. */
+  displayName: string | null;
   loading: boolean;
   error: AuthError | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
 
+/**
+ * Derive a display name from the Spring user. Anonymous users get the
+ * localised "User" placeholder (proprietary's chosen label for unsigned-in
+ * sessions); returns null only when there is no user object at all so
+ * consumers can pick their own fallback.
+ */
+function deriveDisplayName(
+  user: User | null | undefined,
+  t: TFunction,
+): string | null {
+  if (!user) return null;
+  if (user.is_anonymous) return t("auth.displayName.user", "User");
+  return user.username || user.email || null;
+}
+
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
+  displayName: null,
   loading: true,
   error: null,
   signOut: async () => {},
@@ -248,9 +268,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const { t } = useTranslation();
+  const user = session?.user ?? null;
   const value: AuthContextType = {
     session,
-    user: session?.user ?? null,
+    user,
+    displayName: deriveDisplayName(user, t),
     loading,
     error,
     signOut,

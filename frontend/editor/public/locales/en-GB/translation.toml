@@ -1759,6 +1759,10 @@ insufficientPermissions = "You do not have permission to perform this action."
 pleaseLoginAgain = "Please login again."
 sessionExpired = "Session Expired"
 
+[auth.displayName]
+guest = "Guest"
+user = "User"
+
 [auto-rename]
 description = "Automatically finds the title from your PDF content and uses it as the filename."
 header = "Auto Rename PDF"
