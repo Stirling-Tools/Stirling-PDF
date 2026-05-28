@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -34,14 +35,14 @@ class PaygEntitiesSmokeTest {
         p.setDocPagesPerUnit(25);
         p.setDocBytesPerUnit(10L * 1024 * 1024);
         p.setStepLimits(Map.of(JobSource.WEB, 10, JobSource.API, 20));
-        p.setStripePriceIds(Map.of("USD", "price_abc"));
+        p.setStripePriceIds(Set.of("price_abc", "price_def"));
 
         assertThat(p.getVersion()).isEqualTo("v1-2026-06");
         assertThat(p.getStepLimits())
                 .containsEntry(JobSource.WEB, 10)
                 .containsEntry(JobSource.API, 20)
                 .hasSize(2);
-        assertThat(p.getStripePriceIds()).containsEntry("USD", "price_abc");
+        assertThat(p.getStripePriceIds()).containsExactlyInAnyOrder("price_abc", "price_def");
     }
 
     @Test

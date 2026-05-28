@@ -3,7 +3,9 @@ package stirling.software.saas.payg.policy;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -88,20 +90,19 @@ public class PricingPolicy implements Serializable {
     private Map<JobSource, Integer> stepLimits = new HashMap<>();
 
     /**
-     * Per-currency Stripe Price IDs (ISO 4217 code → price ID). All prices in this map must share
-     * the same Billing Meter and the same free-tier upper bound in units. A deploy-time check
-     * enforces that consistency.
+     * Stripe Price IDs this policy resolves to — one per currency we support. Currency is not
+     * stored here; it comes from {@code stripe.prices.currency} via Sync Engine when picking the
+     * right Price for a customer's subscription. All prices must share the same Billing Meter and
+     * the same free-tier upper bound in units (enforced by a deploy-time CI check).
      *
-     * <p>Persisted as a normalized child table {@code pricing_policy_stripe_price (policy_id,
-     * currency, stripe_price_id)} rather than JSONB.
+     * <p>Persisted as {@code pricing_policy_stripe_price (policy_id, stripe_price_id)}.
      */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "pricing_policy_stripe_price",
             joinColumns = @JoinColumn(name = "policy_id"))
-    @MapKeyColumn(name = "currency", length = 3)
     @Column(name = "stripe_price_id", nullable = false, length = 128)
-    private Map<String, String> stripePriceIds = new HashMap<>();
+    private Set<String> stripePriceIds = new HashSet<>();
 
     /**
      * Exactly one row in the table has {@code is_default = true}; enforced by partial unique idx.

@@ -39,13 +39,14 @@ CREATE TABLE IF NOT EXISTS pricing_policy_step_limit (
     PRIMARY KEY (policy_id, job_source)
 );
 
--- Per-currency Stripe Price IDs. All prices in one policy share the same Billing Meter and
--- the same first-tier upper bound in units (enforced by a deploy-time CI check).
+-- Stripe Price IDs this policy resolves to, one per supported currency. Currency itself isn't
+-- stored here — it lives on stripe.prices.currency and is looked up via Sync Engine when picking
+-- the right Price for a customer's subscription. All prices in one policy must share the same
+-- Billing Meter and the same first-tier upper bound in units (deploy-time CI check).
 CREATE TABLE IF NOT EXISTS pricing_policy_stripe_price (
     policy_id          BIGINT       NOT NULL REFERENCES pricing_policy(policy_id) ON DELETE CASCADE,
-    currency           CHAR(3)      NOT NULL,
     stripe_price_id    VARCHAR(128) NOT NULL,
-    PRIMARY KEY (policy_id, currency)
+    PRIMARY KEY (policy_id, stripe_price_id)
 );
 
 -- ---------------------------------------------------------------------------------------------
