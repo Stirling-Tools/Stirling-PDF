@@ -4,6 +4,10 @@ name: Build Tauri Applications
 # Linux). Called from build.yml on PRs that touch desktop sources (gated
 # via the `tauri` filter in .github/config/.files.yaml). Also runnable
 # on demand via workflow_dispatch with a per-platform selector.
+#
+# Note: editing this file is itself enough to make the `tauri` path filter
+# match, which is how non-desktop PRs (e.g. backend-only fixes) opt into a
+# desktop smoke build.
 on:
   workflow_call:
     inputs:
@@ -152,6 +156,9 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:prepare
+
+      - name: Run Tauri/Cargo tests
+        run: task desktop:test
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker

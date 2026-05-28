@@ -230,11 +230,28 @@ const Compare = (props: BaseToolProps) => {
       });
       return;
     }
+
+    // Operation finished without producing a fresh result (e.g. it errored).
+    // Without this branch, `prepareWorkbenchForRun` leaves `isLoading: true`
+    // and the workbench spins forever.
+    const previous = lastWorkbenchDataRef.current;
+    if (previous?.isLoading) {
+      updateWorkbenchData({
+        ...previous,
+        baseFileId,
+        comparisonFileId,
+        baseLocalFile: baseSlot?.stirlingFile ?? previous.baseLocalFile ?? null,
+        comparisonLocalFile:
+          compSlot?.stirlingFile ?? previous.comparisonLocalFile ?? null,
+        isLoading: false,
+      });
+    }
   }, [
     base.operation.isLoading,
     baseSlot,
     clearCustomWorkbenchViewData,
     compSlot,
+    operation.errorMessage,
     operation.result,
     params.baseFileId,
     params.comparisonFileId,
