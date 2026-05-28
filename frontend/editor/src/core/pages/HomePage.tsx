@@ -20,7 +20,7 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
-import ToolPanel from "@app/components/tools/ToolPanel";
+import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -380,7 +380,7 @@ export default function HomePage() {
                   )}
                 >
                   <div className="mobile-slide-content">
-                    <ToolPanel />
+                    <RightSidebar />
                   </div>
                 </div>
                 <div
@@ -510,7 +510,7 @@ export default function HomePage() {
             />
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
-            {!hideToolPanel && <ToolPanel />}
+            {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
