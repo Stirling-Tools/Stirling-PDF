@@ -765,7 +765,10 @@ test.describe("Files page", () => {
       await page.locator("#filesPage-tab-sharedByMe").click();
       const sharedByMeCards = page.locator(".files-page-card:not(.is-folder)");
       await expect(sharedByMeCards).toHaveCount(2, { timeout: 3_000 });
-      await expect(sharedByMeCards).toContainText(["link-shared.pdf", "user-shared.pdf"]);
+      await expect(sharedByMeCards).toContainText([
+        "link-shared.pdf",
+        "user-shared.pdf",
+      ]);
 
       // "Shared with me" -> only from-someone-else.pdf
       await page.locator("#filesPage-tab-shared").click();

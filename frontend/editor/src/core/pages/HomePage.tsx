@@ -43,7 +43,9 @@ const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 
 function readPersistedSidebarCollapsed(): boolean {
   try {
-    return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true";
+    return (
+      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
+    );
   } catch {
     return false;
   }
@@ -51,7 +53,10 @@ function readPersistedSidebarCollapsed(): boolean {
 
 function writePersistedSidebarCollapsed(collapsed: boolean): void {
   try {
-    window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
+    window.localStorage.setItem(
+      SIDEBAR_COLLAPSED_STORAGE_KEY,
+      String(collapsed),
+    );
   } catch {
     // private mode / quota: silently no-op
   }

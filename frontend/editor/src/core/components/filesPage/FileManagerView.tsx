@@ -104,7 +104,8 @@ export default function FileManagerView() {
   const { addFiles } = useFileHandler();
   const { config: appConfig } = useAppConfig();
   const isMobile = useIsMobile();
-  const isMobileUploadAvailable = Boolean(appConfig?.enableMobileScanner) && !isMobile;
+  const isMobileUploadAvailable =
+    Boolean(appConfig?.enableMobileScanner) && !isMobile;
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
@@ -288,7 +289,14 @@ export default function FileManagerView() {
           return effectiveFolder === (currentFolderId ?? null);
         });
     }
-  }, [allFiles, currentFolderId, currentTab, search, subtreeFolderIds, foldersById]);
+  }, [
+    allFiles,
+    currentFolderId,
+    currentTab,
+    search,
+    subtreeFolderIds,
+    foldersById,
+  ]);
 
   const availableTypes = useMemo(() => {
     const set = new Set<string>();
@@ -927,7 +935,10 @@ export default function FileManagerView() {
                 </Button>
                 {isMobileUploadAvailable && (
                   <Tooltip
-                    label={t("filesPage.uploadFromMobile", "Upload from Mobile")}
+                    label={t(
+                      "filesPage.uploadFromMobile",
+                      "Upload from Mobile",
+                    )}
                     withinPortal
                   >
                     <ActionIcon

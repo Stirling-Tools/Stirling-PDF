@@ -81,13 +81,7 @@ interface FileGridProps {
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
-  currentTab?:
-    | "all"
-    | "local"
-    | "cloud"
-    | "recent"
-    | "shared"
-    | "sharedByMe";
+  currentTab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
   /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
@@ -185,13 +179,7 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 
 interface EmptyStateProps {
   /** Drives copy + iconography. */
-  tab?:
-    | "all"
-    | "local"
-    | "cloud"
-    | "recent"
-    | "shared"
-    | "sharedByMe";
+  tab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
   /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
@@ -633,7 +621,11 @@ function FileCard({
 
   const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
   const isPdf = extension === "PDF";
-  const resolvedThumbnail = useLazyThumbnail(file.id, file.size, file.thumbnailUrl);
+  const resolvedThumbnail = useLazyThumbnail(
+    file.id,
+    file.size,
+    file.thumbnailUrl,
+  );
 
   const kebabRef = useRef<HTMLButtonElement>(null);
   const handleContextMenu = useCallback(
@@ -1178,7 +1170,11 @@ function FileRow({
     [file.lastModified],
   );
   const ext = (file.name.split(".").pop() ?? "").toUpperCase();
-  const resolvedThumbnail = useLazyThumbnail(file.id, file.size, file.thumbnailUrl);
+  const resolvedThumbnail = useLazyThumbnail(
+    file.id,
+    file.size,
+    file.thumbnailUrl,
+  );
   return (
     <div
       role="row"
