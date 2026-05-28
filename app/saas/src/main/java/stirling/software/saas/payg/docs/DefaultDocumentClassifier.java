@@ -2,49 +2,52 @@ package stirling.software.saas.payg.docs;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.PdfDocument;
 import stirling.software.saas.payg.policy.PricingPolicy;
 
 /**
- * Reads pages via PDFBox for PDF inputs; treats every other content type as bytes-only.
+ * Reads pages via jpdfium for PDF inputs; treats every other content type as bytes-only.
  *
  * <p>For PDFs, units are the larger of {@code ceil(pages / docPagesPerUnit)} and {@code ceil(bytes
- * / docBytesPerUnit)}. For non-PDFs, only the bytes axis contributes. The result is clamped to
- * {@code [1, policy.fileUnitCap]}.
+ * / docBytesPerUnit)}. For non-PDFs, only the bytes axis contributes. A single file is clamped to
+ * {@code [1, policy.fileUnitCap]}; a multi-file group is clamped to {@code [1, policy.fileUnitCap *
+ * file_count]} applied to the sum of raw per-file units.
  *
  * <p>Malformed or encrypted PDFs fall back to bytes-only classification — the file still has a size
  * we can charge against, and the caller decides whether to reject the upload on other grounds.
  */
 @Slf4j
 @Component
-@Profile("saas")
+@RequiredArgsConstructor
 public class DefaultDocumentClassifier implements DocumentClassifier {
 
     private static final String PDF_CONTENT_TYPE = "application/pdf";
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+
+    private final TempFileManager tempFileManager;
 
     @Override
     public DocumentMetrics classify(MultipartFile file, PricingPolicy policy) {
         Objects.requireNonNull(file, "file");
         Objects.requireNonNull(policy, "policy");
 
-        long bytes = file.getSize();
-        String contentType =
-                file.getContentType() != null ? file.getContentType() : DEFAULT_CONTENT_TYPE;
-        int pages = isPdf(contentType, file.getOriginalFilename()) ? readPageCount(file) : 0;
-
-        int units = computeUnits(pages, bytes, policy);
-        return new DocumentMetrics(pages, bytes, contentType, units);
+        FileFacts facts = inspect(file);
+        long rawUnits = computeRawUnits(facts.pages, facts.bytes, policy);
+        int units = (int) Math.max(1, Math.min(policy.fileUnitCap(), rawUnits));
+        return new DocumentMetrics(facts.pages, facts.bytes, facts.contentType, units);
     }
 
     @Override
@@ -57,21 +60,24 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
 
         int totalPages = 0;
         long totalBytes = 0;
-        long unitsSum = 0;
+        long rawUnitsSum = 0;
         String firstContentType = null;
 
         for (MultipartFile file : files) {
-            DocumentMetrics m = classify(file, policy);
-            totalPages = saturatedAdd(totalPages, m.pages());
-            totalBytes = saturatedAdd(totalBytes, m.bytes());
-            unitsSum += m.docUnits();
+            FileFacts facts = inspect(file);
+            // Sum the *raw* (unclamped) per-file units so the group cap below can actually bind.
+            // Per-file clamping in this loop would make the group cap a no-op.
+            rawUnitsSum =
+                    saturatedAdd(rawUnitsSum, computeRawUnits(facts.pages, facts.bytes, policy));
+            totalPages = saturatedAdd(totalPages, facts.pages);
+            totalBytes = saturatedAdd(totalBytes, facts.bytes);
             if (firstContentType == null) {
-                firstContentType = m.contentType();
+                firstContentType = facts.contentType;
             }
         }
 
         long groupCap = (long) policy.fileUnitCap() * files.size();
-        int totalUnits = (int) Math.max(1, Math.min(groupCap, unitsSum));
+        int totalUnits = (int) Math.max(1L, Math.min(groupCap, rawUnitsSum));
 
         return new DocumentMetrics(
                 totalPages,
@@ -80,12 +86,18 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
                 totalUnits);
     }
 
-    private static int computeUnits(int pages, long bytes, PricingPolicy policy) {
+    private FileFacts inspect(MultipartFile file) {
+        long bytes = file.getSize();
+        String contentType =
+                file.getContentType() != null ? file.getContentType() : DEFAULT_CONTENT_TYPE;
+        int pages = isPdf(contentType, file.getOriginalFilename()) ? readPageCount(file) : 0;
+        return new FileFacts(pages, bytes, contentType);
+    }
+
+    private static long computeRawUnits(int pages, long bytes, PricingPolicy policy) {
         long pageUnits = pages > 0 ? ceilDiv(pages, policy.docPagesPerUnit()) : 0L;
         long byteUnits = ceilDiv(bytes, policy.docBytesPerUnit());
-        long raw = Math.max(pageUnits, byteUnits);
-        long clamped = Math.max(1L, Math.min(policy.fileUnitCap(), raw));
-        return (int) clamped;
+        return Math.max(pageUnits, byteUnits);
     }
 
     private static long ceilDiv(long numerator, long divisor) {
@@ -103,14 +115,18 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
     }
 
     /**
-     * Reads the page count via PDFBox. Returns 0 if the file can't be parsed — the caller still has
-     * a byte-derived unit count, and the upload handler will surface the parse error on its own
-     * validation path.
+     * Materialises the upload to a managed temp file and asks jpdfium for the page count. Returns 0
+     * if the file can't be parsed — the byte-derived axis still produces a charge.
      */
-    private static int readPageCount(MultipartFile file) {
-        try (InputStream in = file.getInputStream();
-                PDDocument document = Loader.loadPDF(in.readAllBytes())) {
-            return document.getNumberOfPages();
+    private int readPageCount(MultipartFile file) {
+        try (TempFile temp = tempFileManager.createManagedTempFile(".pdf")) {
+            try (InputStream in = file.getInputStream();
+                    OutputStream out = Files.newOutputStream(temp.getPath())) {
+                in.transferTo(out);
+            }
+            try (PdfDocument doc = PdfDocument.open(temp.getPath())) {
+                return doc.pageCount();
+            }
         } catch (IOException | RuntimeException e) {
             log.debug(
                     "Could not read PDF page count for {} ({}); falling back to bytes-only units",
@@ -135,4 +151,6 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
             return Long.MAX_VALUE;
         }
     }
+
+    private record FileFacts(int pages, long bytes, String contentType) {}
 }
