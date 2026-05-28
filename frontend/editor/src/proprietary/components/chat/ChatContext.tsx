@@ -6,6 +6,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
@@ -197,24 +198,41 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
   }
 }
 
-function formatWorkflowResponse(data: AiWorkflowResponse): string {
+type TranslateFn = ReturnType<typeof useTranslation>["t"];
+
+function generateId(): string {
+  if (typeof window !== "undefined" && typeof window.crypto?.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+function formatWorkflowResponse(
+  data: AiWorkflowResponse,
+  t: TranslateFn,
+): string {
   switch (data.outcome) {
     case "answer":
     case "completed":
-      return data.answer ?? data.summary ?? "Done.";
+      return data.answer ?? data.summary ?? t("chat.responses.done");
     case "need_clarification":
-      return data.question ?? "Could you clarify your request?";
+      return data.question ?? t("chat.responses.need_clarification");
     case "cannot_do":
-      return data.reason ?? "I'm unable to do that.";
+      return data.reason ?? t("chat.responses.cannot_do");
     case "not_found":
-      return data.reason ?? "I couldn't find the requested information.";
+      return data.reason ?? t("chat.responses.not_found");
     case "unsupported_capability":
       return (
         data.message ??
-        `Unsupported capability: ${data.capability ?? "unknown"}`
+        t("chat.responses.unsupported_capability", {
+          capability: data.capability ?? "unknown",
+        })
       );
     case "cannot_continue":
-      return data.reason ?? "Something went wrong and I can't continue.";
+      return data.reason ?? t("chat.responses.cannot_continue");
     case "plan":
       return data.rationale
         ? `${data.rationale}\n\n${(data.steps ?? []).map((s, i) => `${i + 1}. ${JSON.stringify(s)}`).join("\n")}`
@@ -222,7 +240,9 @@ function formatWorkflowResponse(data: AiWorkflowResponse): string {
     case "need_content":
     case "tool_call":
       return (
-        data.rationale ?? data.summary ?? `Processing (${data.outcome})...`
+        data.rationale ??
+        data.summary ??
+        t("chat.responses.processing", { outcome: data.outcome })
       );
     default:
       return (
@@ -325,6 +345,7 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
@@ -424,7 +445,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const priorMessages = messagesRef.current;
 
       const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         role: "user",
         content,
         timestamp: Date.now(),
@@ -496,11 +517,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           onResult: (data) => {
             receivedResult = true;
             dispatch({ type: "SET_PROGRESS", progress: null });
-            const replyContent = formatWorkflowResponse(data);
+            const replyContent = formatWorkflowResponse(data, t);
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: replyContent,
                 timestamp: Date.now(),
@@ -513,7 +534,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 dispatch({
                   type: "ADD_MESSAGE",
                   message: {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     role: "assistant",
                     content:
                       "The file was processed but I couldn't download it.",
@@ -529,7 +550,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: data.message || "Something went wrong.",
                 timestamp: Date.now(),
@@ -555,7 +576,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         dispatch({
           type: "ADD_MESSAGE",
           message: {
-            id: crypto.randomUUID(),
+            id: generateId(),
             role: "assistant",
             content,
             timestamp: Date.now(),

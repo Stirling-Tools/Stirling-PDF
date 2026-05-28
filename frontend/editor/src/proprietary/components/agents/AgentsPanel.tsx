@@ -18,46 +18,46 @@ import "@app/components/agents/AgentsPanel.css";
 
 interface ComingSoonAgent {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   Icon: ElementType;
 }
 
 const COMING_SOON_AGENTS: ComingSoonAgent[] = [
   {
     id: "data-extraction",
-    name: "Data Extraction",
-    description: "Extract tables & structured data",
+    nameKey: "agents.data_extraction_name",
+    descriptionKey: "agents.data_extraction_description",
     Icon: TableChartRoundedIcon,
   },
   {
     id: "doc-summary",
-    name: "Summariser",
-    description: "Summarise long documents",
+    nameKey: "agents.doc_summary_name",
+    descriptionKey: "agents.doc_summary_description",
     Icon: SummarizeRoundedIcon,
   },
   {
     id: "auto-redaction",
-    name: "Auto Redaction",
-    description: "Redact PII automatically",
+    nameKey: "agents.auto_redaction_name",
+    descriptionKey: "agents.auto_redaction_description",
     Icon: VisibilityOffRoundedIcon,
   },
   {
     id: "compliance",
-    name: "Compliance Check",
-    description: "Audit documents for compliance",
+    nameKey: "agents.compliance_name",
+    descriptionKey: "agents.compliance_description",
     Icon: GavelRoundedIcon,
   },
   {
     id: "form-filler",
-    name: "Form Filler",
-    description: "Fill PDF forms intelligently",
+    nameKey: "agents.form_filler_name",
+    descriptionKey: "agents.form_filler_description",
     Icon: AssignmentRoundedIcon,
   },
   {
     id: "pdf-to-markdown",
-    name: "PDF to Markdown",
-    description: "Convert PDFs to clean Markdown",
+    nameKey: "agents.pdf_to_markdown_name",
+    descriptionKey: "agents.pdf_to_markdown_description",
     Icon: CodeRoundedIcon,
   },
 ];
@@ -116,7 +116,7 @@ export function AgentsSection() {
 
       {/* Coming-soon agents */}
       <div className="agents-sidebar-list">
-        {visibleAgents.map(({ id, name, description, Icon }) => (
+        {visibleAgents.map(({ id, nameKey, descriptionKey, Icon }) => (
           <AppTooltip
             key={id}
             content={comingSoonLabel}
@@ -135,10 +135,10 @@ export function AgentsSection() {
                 </Box>
                 <Box style={{ minWidth: 0, flex: 1 }}>
                   <Text size="sm" fw={500} truncate>
-                    {name}
+                    {t(nameKey)}
                   </Text>
                   <Text size="xs" c="dimmed" truncate>
-                    {description}
+                    {t(descriptionKey)}
                   </Text>
                 </Box>
               </Group>
@@ -238,7 +238,7 @@ export function AgentsFullscreenSection() {
 
         {/* Right: 2×3 grid of coming-soon agents */}
         <div className="agents-hero__grid">
-          {COMING_SOON_AGENTS.map(({ id, name, description, Icon }) => (
+          {COMING_SOON_AGENTS.map(({ id, nameKey, descriptionKey, Icon }) => (
             <AppTooltip
               key={id}
               content={comingSoonLabel}
@@ -256,10 +256,10 @@ export function AgentsFullscreenSection() {
                 </span>
                 <div className="agents-hero__grid-body">
                   <Text size="sm" fw={500} truncate>
-                    {name}
+                    {t(nameKey)}
                   </Text>
                   <Text size="xs" c="dimmed" truncate>
-                    {description}
+                    {t(descriptionKey)}
                   </Text>
                 </div>
               </button>

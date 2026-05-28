@@ -119,16 +119,14 @@ public class AiWorkflowService {
         // by id in every response shape that asks Java to look a file up again.
         Map<String, MultipartFile> filesById = new LinkedHashMap<>();
         List<AiFile> files = new ArrayList<>();
-        if (request.getFileInputs() != null) {
-            for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
-                MultipartFile multipartFile = fileInput.getFileInput();
-                AiFile aiFile =
-                        new AiFile(
-                                fileIdStrategy.idFor(multipartFile),
-                                multipartFile.getOriginalFilename());
-                filesById.put(aiFile.getId(), multipartFile);
-                files.add(aiFile);
-            }
+        for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
+            MultipartFile multipartFile = fileInput.getFileInput();
+            AiFile aiFile =
+                    new AiFile(
+                            fileIdStrategy.idFor(multipartFile),
+                            multipartFile.getOriginalFilename());
+            filesById.put(aiFile.getId(), multipartFile);
+            files.add(aiFile);
         }
 
         WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
@@ -672,7 +670,6 @@ public class AiWorkflowService {
     }
 
     private void validateRequest(AiWorkflowRequest request) {
-        if (request.getFileInputs() == null) return;
         for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
             if (fileInput.getFileInput().isEmpty()) {
                 throw ExceptionUtils.createFileNullOrEmptyException();
