@@ -4,6 +4,7 @@ import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
+  useAllFiles,
   useFileSelection,
   useFileManagement,
   useFileContext,
@@ -12,6 +13,7 @@ import {
   useNavigationActions,
   useNavigationState,
 } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { getDefaultWorkbench } from "@app/types/workbench";
@@ -382,6 +384,25 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     [t],
   );
   const { selectedFiles } = useFileSelection();
+  const { files: allFiles } = useAllFiles();
+  const { activeFileId } = useViewer();
+
+  // The file the tool should auto-load: prefer the sidebar selection, then
+  // whatever the viewer is currently showing (so opening PDF Editor from the
+  // viewer picks up that file), then the single workbench file if there is
+  // only one. Returns null if the choice is ambiguous (no selection, no
+  // viewer file, and multiple files in the workbench).
+  const autoLoadFile = useMemo(() => {
+    if (selectedFiles[0]) return selectedFiles[0];
+    if (activeFileId) {
+      const viewerFile = allFiles.find(
+        (f) => (f.fileId as string) === activeFileId,
+      );
+      if (viewerFile) return viewerFile;
+    }
+    if (allFiles.length === 1) return allFiles[0];
+    return null;
+  }, [selectedFiles, activeFileId, allFiles]);
 
   const resetToDocument = useCallback(
     (
@@ -1917,7 +1938,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, [isLazyMode, loadedDocument, selectedPage, loadImagesForPage]);
 
   useEffect(() => {
-    if (selectedFiles.length === 0) {
+    if (!autoLoadFile) {
       autoLoadKeyRef.current = null;
       sourceFileIdRef.current = null;
       return;
@@ -1927,21 +1948,16 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       return;
     }
 
-    const file = selectedFiles[0];
-    if (!file) {
-      return;
-    }
-
-    const fileKey = getAutoLoadKey(file);
+    const fileKey = getAutoLoadKey(autoLoadFile);
     if (autoLoadKeyRef.current === fileKey) {
       return;
     }
 
     autoLoadKeyRef.current = fileKey;
     // Capture the source file ID for save-to-workbench functionality
-    sourceFileIdRef.current = (file as any).fileId ?? null;
-    void handleLoadFile(file);
-  }, [selectedFiles, navigationState.selectedTool, handleLoadFile]);
+    sourceFileIdRef.current = (autoLoadFile as any).fileId ?? null;
+    void handleLoadFile(autoLoadFile);
+  }, [autoLoadFile, navigationState.selectedTool, handleLoadFile]);
 
   // Auto-navigate to workbench when tool is selected
   const hasAutoOpenedWorkbenchRef = useRef(false);

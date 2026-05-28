@@ -59,12 +59,18 @@ interface IndexedDBContextValue {
   ) => Promise<FileId[]>;
   clearFolderForFiles: (folderIds: FolderId[]) => Promise<number>;
 
-  // Incremented after any write or delete - subscribe to trigger re-reads
-  revision: number;
+  // Bumped after any write or delete. Subscribe to changes via
+  // `useIndexedDBRevision()` - exposing the value here would force the
+  // entire API context to invalidate on every write, cascading downstream
+  // useCallback deps and creating refetch loops.
   bumpRevision: () => void;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
+
+// Separate context for the revision number so consumers that only need the
+// stable method API are not re-rendered when revision bumps.
+const IndexedDBRevisionContext = createContext<number>(0);
 
 interface IndexedDBProviderProps {
   children: React.ReactNode;
@@ -271,8 +277,14 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [bumpRevision],
   );
 
-  // Memoise so identity-based context propagation doesn't re-render every
-  // downstream consumer on each parent render.
+  // Memoize the context value so consumers' useIndexedDB() reference stays
+  // stable across renders. Without this, every IndexedDBProvider render
+  // (e.g. on bumpRevision after a thumbnail write) hands every consumer a
+  // brand-new object, invalidating downstream useCallback deps that include
+  // `indexedDB` (notably useFileManager.loadRecentFiles), which can cascade
+  // into infinite refetch loops in components that depend on those callbacks.
+  // `revision` is intentionally NOT a dep here - consume it via
+  // `useIndexedDBRevision()` so revision bumps don't churn the API value.
   const value = useMemo<IndexedDBContextValue>(
     () => ({
       saveFile,
@@ -288,7 +300,6 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       markFileAsProcessed,
       moveFilesToFolder,
       clearFolderForFiles,
-      revision,
       bumpRevision,
     }),
     [
@@ -305,14 +316,15 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       markFileAsProcessed,
       moveFilesToFolder,
       clearFolderForFiles,
-      revision,
       bumpRevision,
     ],
   );
 
   return (
     <IndexedDBContext.Provider value={value}>
-      {children}
+      <IndexedDBRevisionContext.Provider value={revision}>
+        {children}
+      </IndexedDBRevisionContext.Provider>
     </IndexedDBContext.Provider>
   );
 }
@@ -323,4 +335,12 @@ export function useIndexedDB() {
     throw new Error("useIndexedDB must be used within an IndexedDBProvider");
   }
   return context;
+}
+
+/**
+ * Subscribe to IndexedDB write revisions. The number increments after any
+ * write or delete; use it as a `useEffect` dep to refetch stubs etc.
+ */
+export function useIndexedDBRevision(): number {
+  return useContext(IndexedDBRevisionContext);
 }
