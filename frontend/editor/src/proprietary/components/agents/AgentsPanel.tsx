@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { ElementType } from "react";
 import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
@@ -14,6 +15,7 @@ import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
 import { withViewTransition } from "@app/utils/viewTransition";
+import { Z_INDEX_AGENTS_CHAT_OVERLAY } from "@app/styles/zIndex";
 import "@app/components/agents/AgentsPanel.css";
 
 interface ComingSoonAgent {
@@ -311,26 +313,29 @@ export function AgentsChatOverlay() {
         );
       };
 
-      const onUp = () => {
+      const cleanup = () => {
         dragState.current = null;
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
+        document.body.style.removeProperty("cursor");
+        document.body.style.removeProperty("user-select");
         window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointerup", cleanup);
+        window.removeEventListener("pointercancel", cleanup);
       };
 
       window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointerup", cleanup);
+      window.addEventListener("pointercancel", cleanup);
     },
     [widthPx],
   );
 
   if (!enabled || (!isOpen && !isClosing)) return null;
 
-  return (
+  return createPortal(
     <Box
       className="agents-takeover"
       style={{
+        zIndex: Z_INDEX_AGENTS_CHAT_OVERLAY,
         width: widthPx,
         transition: isClosing
           ? "width 280ms cubic-bezier(0.32, 0.72, 0, 1)"
@@ -348,6 +353,7 @@ export function AgentsChatOverlay() {
         onBack={handleClose}
         backLabel={t("agents.back_to_tools", "Back to tools")}
       />
-    </Box>
+    </Box>,
+    document.body,
   );
 }

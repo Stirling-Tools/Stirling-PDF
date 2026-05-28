@@ -9,7 +9,6 @@
   flex-direction: column;
   background: var(--bg-toolbar);
   border-left: 1px solid var(--border-subtle);
-  z-index: 100;
   view-transition-name: agents-rail;
 }
 
@@ -21,6 +20,7 @@
   width: 7px;
   cursor: col-resize;
   z-index: 10;
+  touch-action: none;
 }
 
 .agents-takeover__resize-handle::after {
