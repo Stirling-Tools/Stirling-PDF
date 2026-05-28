@@ -56,7 +56,7 @@ jobs:
         continue-on-error: true
         run: git diff --exit-code engine/src/stirling/models/tool_models.py
 
-      - name: Comment on tool models out of date
+      - name: Comment on tool models check failure
         # Only post a comment on PRs. github-script's PR helpers need an
         # issue/PR number, which doesn't exist on merge_group runs.
         if: steps.tool-models-check.outcome == 'failure' && github.event_name == 'pull_request'
@@ -67,11 +67,11 @@ jobs:
             const marker = '<!-- tool-models-check -->';
             const body = [
               marker,
-              '### Tool Models Out Of Date',
+              '### Tool Models Check Failed',
               '',
-              '`engine/src/stirling/models/tool_models.py` is out of date with the Java OpenAPI spec.',
+              'The generated `engine/src/stirling/models/tool_models.py` is out of date with the Java OpenAPI spec and will need to be regenerated before it can be merged in.',
               '',
-              'Run `task engine:tool-models` locally and commit the updated file.',
+              'Run `task engine:tool-models` to regenerate, then commit the updated file.',
             ].join('\n');
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -95,22 +95,23 @@ jobs:
               });
             }
 
-      - name: Fail if tool models are out of date
+      - name: Fail if tool models check failed
         if: steps.tool-models-check.outcome == 'failure'
         run: |
           echo "============================================"
-          echo "  Tool Models Out Of Date"
+          echo "  Tool Models Check Failed"
           echo "============================================"
           echo ""
-          echo "engine/src/stirling/models/tool_models.py is"
-          echo "out of date with the Java OpenAPI spec."
+          echo "The generated engine/src/stirling/models/tool_models.py"
+          echo "is out of date with the Java OpenAPI spec and will"
+          echo "need to be regenerated before it can be merged in."
           echo ""
-          echo "Run 'task engine:tool-models' locally and"
+          echo "Run 'task engine:tool-models' to regenerate, then"
           echo "commit the updated file."
           echo "============================================"
           exit 1
 
-      - name: Remove tool models comment on success
+      - name: Remove tool models check comment on success
         if: steps.tool-models-check.outcome == 'success' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
