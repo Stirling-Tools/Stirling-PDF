@@ -125,31 +125,34 @@ public class ValkeyJobStore implements JobStore {
                             (RedisCallback<Boolean>)
                                     connection -> {
                                         connection.watch(jobKeyBytes);
-                                        Map<byte[], byte[]> hash =
-                                                connection.hashCommands().hGetAll(jobKeyBytes);
+                                        // Read the single fileIds field with hGet rather than
+                                        // hGetAll + map.get: hGetAll returns a Map<byte[],byte[]>
+                                        // whose keys compare by identity, so a fresh
+                                        // "fileIds".getBytes() lookup never matches and the reverse
+                                        // index would be left orphaned. hGet resolves the field
+                                        // server-side.
+                                        byte[] fileIdsBytes =
+                                                connection
+                                                        .hashCommands()
+                                                        .hGet(
+                                                                jobKeyBytes,
+                                                                "fileIds"
+                                                                        .getBytes(
+                                                                                StandardCharsets
+                                                                                        .UTF_8));
                                         List<byte[]> keysToDelete = new ArrayList<>();
                                         keysToDelete.add(jobKeyBytes);
-                                        if (hash != null) {
-                                            byte[] fileIdsBytes =
-                                                    hash.get(
-                                                            "fileIds"
-                                                                    .getBytes(
-                                                                            StandardCharsets
-                                                                                    .UTF_8));
-                                            if (fileIdsBytes != null) {
-                                                List<String> fileIds =
-                                                        readJsonList(
-                                                                new String(
-                                                                        fileIdsBytes,
-                                                                        StandardCharsets.UTF_8),
-                                                                jobKey);
-                                                for (String fileId : fileIds) {
-                                                    keysToDelete.add(
-                                                            (FILE_INDEX_PREFIX + fileId)
-                                                                    .getBytes(
-                                                                            StandardCharsets
-                                                                                    .UTF_8));
-                                                }
+                                        if (fileIdsBytes != null) {
+                                            List<String> fileIds =
+                                                    readJsonList(
+                                                            new String(
+                                                                    fileIdsBytes,
+                                                                    StandardCharsets.UTF_8),
+                                                            jobKey);
+                                            for (String fileId : fileIds) {
+                                                keysToDelete.add(
+                                                        (FILE_INDEX_PREFIX + fileId)
+                                                                .getBytes(StandardCharsets.UTF_8));
                                             }
                                         }
                                         connection.multi();
