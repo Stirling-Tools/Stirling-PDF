@@ -18,7 +18,10 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import {
+  useIndexedDB,
+  useIndexedDBRevision,
+} from "@app/contexts/IndexedDBContext";
 import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -143,9 +146,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     }, [indexedDB, state.files.ids, state.files.byId]);
 
     // Refresh on mount, workbench changes, or external IndexedDB writes
+    const indexedDBRevision = useIndexedDBRevision();
     useEffect(() => {
       refreshStubs();
-    }, [refreshStubs, indexedDB.revision]);
+    }, [refreshStubs, indexedDBRevision]);
 
     // Once a pending file lands in state, open it in the viewer.
     useEffect(() => {
