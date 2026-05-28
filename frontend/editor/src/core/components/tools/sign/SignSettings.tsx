@@ -37,6 +37,7 @@ import {
   AddSignatureResult,
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
+import { shouldPausePlacementAfterExit } from "@app/components/tools/sign/placementMode";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
 
 type SignatureDrafts = {
@@ -828,6 +829,34 @@ const SignSettings = ({
     canvasSignatureData,
     imageSignatureData,
     onParameterChange,
+  ]);
+
+  // After a single placement (when "place multiple" is off) the
+  // SignatureAPIBridge drops out of placement mode. Without pausing here, the
+  // auto-activate effect below would immediately pull the user back into
+  // placement mode - so single placement would never stick and the "place
+  // multiple" checkbox would appear to do nothing.
+  const wasPlacementModeRef = useRef(isPlacementMode);
+  useEffect(() => {
+    const shouldPause = shouldPausePlacementAfterExit({
+      wasInPlacementMode: wasPlacementModeRef.current,
+      isInPlacementMode: isPlacementMode,
+      placeMultiple,
+      signaturesApplied,
+      placementEnabled: shouldEnablePlacement,
+      alreadyPaused: isPlacementManuallyPaused,
+    });
+    wasPlacementModeRef.current = isPlacementMode;
+
+    if (shouldPause) {
+      setPlacementManuallyPaused(true);
+    }
+  }, [
+    isPlacementMode,
+    placeMultiple,
+    signaturesApplied,
+    shouldEnablePlacement,
+    isPlacementManuallyPaused,
   ]);
 
   useEffect(() => {
