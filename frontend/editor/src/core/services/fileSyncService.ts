@@ -193,7 +193,10 @@ export async function reconcileServerFiles(
           typeof updatedAtMs === "number" && Number.isFinite(updatedAtMs)
             ? updatedAtMs
             : stub.remoteStorageUpdatedAt,
-        folderId: safeParseFolderId(serverFile.folderId) ?? stub.folderId,
+        // Server is authoritative for cloud-stored files. Don't fall back to
+        // stub.folderId on null - that would resurrect a stale folder pointer
+        // after the server SET_NULL'd it (e.g. owner deleted the folder).
+        folderId: safeParseFolderId(serverFile.folderId),
       };
     });
 

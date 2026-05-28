@@ -55,6 +55,15 @@
   flex: 1 1 auto;
 }
 
+/* Selected tool highlight — theme-aware via CSS variable */
+:root {
+  --tool-button-selected-bg: var(--mantine-color-gray-2);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --tool-button-selected-bg: var(--mantine-color-dark-4);
+}
+
 /* Compact tool buttons */
 .tool-button {
   font-size: 0.875rem;
@@ -95,4 +104,38 @@
 .search-input-container {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.tool-button__description {
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.35;
+  margin-top: 0.15rem;
+  white-space: normal;
+  text-align: left;
+}
+
+/* Resting / compact tool list — taller rows, room for description. */
+.tool-picker__compact {
+  padding: 0.5rem var(--mantine-spacing-sm) var(--mantine-spacing-sm);
+}
+
+.tool-picker__compact .tool-button {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  height: auto;
+}
+
+.tool-picker__compact .tool-button .mantine-Button-label {
+  align-items: center;
+}
+
+.tool-picker__compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tool-picker__view-all {
+  margin-top: 0.75rem;
 }

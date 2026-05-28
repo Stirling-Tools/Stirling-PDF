@@ -20,7 +20,7 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
-import ToolPanel from "@app/components/tools/ToolPanel";
+import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -38,6 +38,29 @@ import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import "@app/pages/HomePage.css";
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
+
+function readPersistedSidebarCollapsed(): boolean {
+  try {
+    return (
+      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function writePersistedSidebarCollapsed(collapsed: boolean): void {
+  try {
+    window.localStorage.setItem(
+      SIDEBAR_COLLAPSED_STORAGE_KEY,
+      String(collapsed),
+    );
+  } catch {
+    // private mode / quota: silently no-op
+  }
+}
 
 type MobileView = "tools" | "workbench";
 
@@ -66,9 +89,12 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const location = useLocation();
-  // Collapse the sidebar when mounting directly on /files.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(() =>
-    location.pathname.startsWith("/files"),
+  // Persisted user preference for the FileSidebar collapsed state. Auto-
+  // collapse on /files is layered on top in the transition effect below and
+  // doesn't write to storage, so deep-linking to /files won't overwrite what
+  // the user actually chose last time.
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
+    readPersistedSidebarCollapsed,
   );
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
@@ -101,22 +127,17 @@ export default function HomePage() {
     activeFiles.length,
   ]);
 
-  // Auto-collapse the FileSidebar on /files; snapshot prior state for restore.
-  const previousSidebarCollapsedRef = useRef<boolean | null>(null);
+  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
+  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
+  // to /files won't overwrite what the user actually chose.
   const prevWorkbenchRef = useRef(navigationState.workbench);
   useEffect(() => {
     const prev = prevWorkbenchRef.current;
     const curr = navigationState.workbench;
     if (curr === "myFiles" && prev !== "myFiles") {
-      previousSidebarCollapsedRef.current = fileSidebarCollapsed;
       if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (
-      curr !== "myFiles" &&
-      prev === "myFiles" &&
-      previousSidebarCollapsedRef.current !== null
-    ) {
-      setFileSidebarCollapsed(previousSidebarCollapsedRef.current);
-      previousSidebarCollapsedRef.current = null;
+    } else if (curr !== "myFiles" && prev === "myFiles") {
+      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
     }
     prevWorkbenchRef.current = curr;
     // fileSidebarCollapsed read as snapshot on transition only.
@@ -359,7 +380,7 @@ export default function HomePage() {
                   )}
                 >
                   <div className="mobile-slide-content">
-                    <ToolPanel />
+                    <RightSidebar />
                   </div>
                 </div>
                 <div
@@ -479,13 +500,17 @@ export default function HomePage() {
                   navigate("/");
                   return;
                 }
-                setFileSidebarCollapsed((c) => !c);
+                setFileSidebarCollapsed((c) => {
+                  const next = !c;
+                  writePersistedSidebarCollapsed(next);
+                  return next;
+                });
               }}
               onOpenSettings={() => setConfigModalOpen(true)}
             />
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
-            {!hideToolPanel && <ToolPanel />}
+            {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}

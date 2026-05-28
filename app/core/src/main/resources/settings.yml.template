@@ -94,8 +94,8 @@ premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
   proFeatures:
-    SSOAutoLogin: false
-    CustomMetadata:
+    ssoAutoLogin: false
+    customMetadata:
       autoUpdateMetadata: false
       author: username
       creator: Stirling-PDF

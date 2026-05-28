@@ -91,7 +91,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
-      - task: frontend:dev:prototypes
+      - task: frontend:dev
         vars:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'

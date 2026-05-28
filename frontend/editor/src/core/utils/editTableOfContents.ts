@@ -1,3 +1,5 @@
+import { generateId } from "@app/utils/generateId";
+
 export interface BookmarkPayload {
   title: string;
   pageNumber: number;
@@ -12,13 +14,7 @@ export interface BookmarkNode {
   expanded: boolean;
 }
 
-const createBookmarkId = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `bookmark-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-};
+const createBookmarkId = () => generateId();
 
 export const createBookmarkNode = (
   bookmark?: Partial<BookmarkNode>,
