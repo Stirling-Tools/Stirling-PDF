@@ -31,6 +31,7 @@ import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
+import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 
 export type FilesPageViewMode = "grid" | "list";
 
@@ -777,6 +778,7 @@ function FileCard({
             >
               {t("filesPage.quickView", "Quick view")}
             </Menu.Item>
+            <OpenInNewWindowMenuItem file={file} />
             <Menu.Item
               leftSection={<DriveFileMoveIcon fontSize="small" />}
               onClick={(e) => {
@@ -1338,6 +1340,7 @@ function FileRow({
           >
             {t("filesPage.quickView", "Quick view")}
           </Menu.Item>
+          <OpenInNewWindowMenuItem file={file} />
           <Menu.Item
             leftSection={<DriveFileMoveIcon fontSize="small" />}
             onClick={(e) => {
