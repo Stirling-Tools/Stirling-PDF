@@ -296,4 +296,24 @@ class UserBasedRateLimitingFilterTest {
         assertEquals(-1, header.indexOf('\n'));
         assertEquals(-1, header.indexOf('\r'));
     }
+
+    @Test
+    void backendOutage_failsOpen_allowsRequest_notFiveHundred() throws Exception {
+        // Cluster mode with Valkey unreachable: tryConsume throws. The filter must NOT 500 every
+        // POST - it fails open (allows the request) so a backplane outage doesn't take the API
+        // down.
+        authenticateAs("dora", Role.WEB_ONLY_USER.getRoleId());
+        when(rateLimitStore.tryConsume(anyString(), anyLong(), any()))
+                .thenThrow(new RuntimeException("Valkey command timeout"));
+
+        MockHttpServletRequest req = postRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req, res, chain);
+
+        assertEquals(200, res.getStatus(), "rate-limit backend outage must fail open, not 500");
+        assertNotNull(chain.getRequest(), "request must pass downstream when backend is down");
+        verify(clusterMetrics, never()).recordRateLimitReject();
+    }
 }

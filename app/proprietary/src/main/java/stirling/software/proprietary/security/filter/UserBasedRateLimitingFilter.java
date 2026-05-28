@@ -111,8 +111,22 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain)
             throws IOException, ServletException {
-        RateLimitDecision probe =
-                rateLimitStore.tryConsume(bucketKey, limitPerDay, Duration.ofDays(1));
+        RateLimitDecision probe;
+        try {
+            probe = rateLimitStore.tryConsume(bucketKey, limitPerDay, Duration.ofDays(1));
+        } catch (RuntimeException ex) {
+            // Fail OPEN: a rate-limit backend outage (e.g. Valkey unreachable in cluster mode)
+            // must not turn every POST into a 500. Availability beats strict enforcement here -
+            // allow the request through and log so the outage stays visible. The in-process store
+            // never throws, so single-node behaviour is unchanged.
+            logger.warn(
+                    "Rate-limit backend unavailable for "
+                            + bucketKey
+                            + "; allowing request (fail-open): "
+                            + ex.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
         if (probe.allowed()) {
             response.setHeader(
                     "X-Rate-Limit-Remaining",
