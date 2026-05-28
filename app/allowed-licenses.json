@@ -45,6 +45,10 @@
       "moduleLicense": "The MIT License"
     },
     {
+      "moduleName": ".*",
+      "moduleLicense": "MIT-0"
+    },
+    {
       "moduleName": "com.github.jai-imageio:jai-imageio-core",
       "moduleLicense": "LICENSE.txt"
     },
