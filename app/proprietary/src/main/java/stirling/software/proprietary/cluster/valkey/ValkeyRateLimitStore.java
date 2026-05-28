@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.AbstractRedisClient;
@@ -50,7 +51,15 @@ public class ValkeyRateLimitStore implements RateLimitStore {
                             + (client == null ? "null" : client.getClass().getName())
                             + " (cluster client not yet supported by this rate limit impl)");
         }
-        this.proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient).build();
+        // Expire idle bucket keys so they do not accumulate forever in Valkey (one key per
+        // user / API-key / IP). TTL tracks the time to refill the bucket from empty, capped at
+        // 25h to cover the longest (daily) rate-limit window; an idle bucket evicts after that.
+        this.proxyManager =
+                Bucket4jLettuce.casBasedBuilder(redisClient)
+                        .expirationAfterWrite(
+                                ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(
+                                        Duration.ofHours(25)))
+                        .build();
     }
 
     @PreDestroy

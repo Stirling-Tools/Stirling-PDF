@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
  * Composite condition: cluster.enabled=true AND cluster.backplane=valkey.
  *
  * <p>Either condition alone is insufficient - enabled=true with backplane=inprocess would crash at
- * boot with no StringRedisTemplate, and enabled=false must skip all Valkey beans entirely.
- * Spring's @ConditionalOnProperty cannot be applied twice, so we use @ConditionalOnExpression.
+ * boot with no StringRedisTemplate, and enabled=false must skip all Valkey beans entirely. A
+ * single @ConditionalOnExpression keeps the combined enabled+backplane guard in one place.
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

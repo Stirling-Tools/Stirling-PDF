@@ -1,6 +1,7 @@
 package stirling.software.proprietary.cluster.valkey;
 
 import java.net.URI;
+import java.time.Duration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -78,6 +79,11 @@ public class ValkeyConnectionConfiguration {
             boolean tls, boolean skipCertVerification) {
         LettuceClientConfiguration.LettuceClientConfigurationBuilder clientBuilder =
                 LettuceClientConfiguration.builder();
+        // Bound every backplane command. Lettuce defaults to 60s; without this a partitioned or
+        // slow Valkey would stall hot-path calls (e.g. JobController.guardNonOwner -> jobStore.get
+        // on each request) for up to a minute, exhausting request threads. All backplane ops are
+        // non-blocking single commands, so a short timeout is safe.
+        clientBuilder.commandTimeout(Duration.ofSeconds(2));
         if (tls) {
             clientBuilder
                     .useSsl()

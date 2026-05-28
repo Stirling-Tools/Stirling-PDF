@@ -64,7 +64,17 @@ public class ValkeyDistributedLock implements DistributedLock {
                 return;
             }
             released = true;
-            template.execute(RELEASE_SCRIPT, Collections.singletonList(key), value);
+            // Swallow + log: LockHandle is AutoCloseable, so release() runs from close() inside
+            // try-with-resources. An uncaught Valkey error here would mask the body's exception.
+            // The lease TTL-expires anyway, so a failed explicit release is safe.
+            try {
+                template.execute(RELEASE_SCRIPT, Collections.singletonList(key), value);
+            } catch (RuntimeException ex) {
+                log.warn(
+                        "Lock release failed for {} (lease will TTL-expire): {}",
+                        key,
+                        ex.getMessage());
+            }
         }
 
         @Override

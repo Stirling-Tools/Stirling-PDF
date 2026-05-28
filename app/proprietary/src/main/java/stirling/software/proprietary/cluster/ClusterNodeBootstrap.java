@@ -51,9 +51,12 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         this.applicationProperties = applicationProperties;
         this.instanceRegistry = instanceRegistry;
         Cluster cluster = applicationProperties.getCluster();
+        // Default must match the @Scheduled fallback below AND the model default
+        // (ApplicationProperties.Cluster.Node.heartbeatIntervalMs = 5000); otherwise the TTL is
+        // computed from a different interval than the scheduler runs at and the 3x margin breaks.
         long heartbeatMs =
-                cluster.getNode() == null ? 10_000L : cluster.getNode().getHeartbeatIntervalMs();
-        // TTL = 3x heartbeat: tolerate one missed tick before the node drops out of the registry.
+                cluster.getNode() == null ? 5000L : cluster.getNode().getHeartbeatIntervalMs();
+        // TTL = 3x heartbeat: tolerate two missed ticks before the node drops out of the registry.
         this.heartbeatTtl = Duration.ofMillis(heartbeatMs * 3);
     }
 
@@ -64,7 +67,7 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         registerSelf("register");
     }
 
-    @Scheduled(fixedDelayString = "${cluster.node.heartbeat-interval-ms:10000}")
+    @Scheduled(fixedDelayString = "${cluster.node.heartbeat-interval-ms:5000}")
     public void heartbeat() {
         // Heartbeat-after-stop race: SmartLifecycle.stop() deregisters, but the @Scheduled
         // tick keeps firing during a slow drain. Without this guard, the next tick re-registers

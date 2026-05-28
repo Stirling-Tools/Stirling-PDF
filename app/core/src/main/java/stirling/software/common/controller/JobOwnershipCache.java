@@ -43,9 +43,5 @@ final class JobOwnershipCache {
         entries.put(jobId, new Entry(value, System.nanoTime()));
     }
 
-    void invalidate(String jobId) {
-        entries.remove(jobId);
-    }
-
     private record Entry(Optional<JobStoreEntry> value, long storedAtNanos) {}
 }
