@@ -1,0 +1,202 @@
+-- PAYG data model: pricing policy, processing jobs + lineage, wallet ledger, wallet policy,
+-- entitlement snapshots, shadow-mode comparison rows, and column adds to teams + team_memberships.
+--
+-- Everything here is purely additive. No existing rows are modified, no columns are dropped, and
+-- the new tables have no FKs into legacy data the running application uses. Safe to apply while
+-- the previous engine continues to run unchanged.
+
+-- ---------------------------------------------------------------------------------------------
+-- 1. pricing_policy — versioned economic config (units, step limits, Stripe price IDs).
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pricing_policy (
+    policy_id            BIGSERIAL    PRIMARY KEY,
+    version              VARCHAR(32)  NOT NULL UNIQUE,
+    effective_from       TIMESTAMP    NOT NULL,
+    effective_to         TIMESTAMP,
+    doc_pages_per_unit   INTEGER      NOT NULL,
+    doc_bytes_per_unit   BIGINT       NOT NULL,
+    min_charge_units     INTEGER      NOT NULL DEFAULT 1,
+    file_unit_cap        INTEGER      NOT NULL DEFAULT 1000,
+    step_limits          JSONB        NOT NULL,
+    stripe_price_ids     JSONB        NOT NULL,
+    is_default           BOOLEAN      NOT NULL DEFAULT FALSE,
+    notes                TEXT,
+    created_by           VARCHAR(255),
+    created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Exactly one row may carry is_default = TRUE.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pricing_policy_default
+    ON pricing_policy (is_default) WHERE is_default = TRUE;
+
+-- ---------------------------------------------------------------------------------------------
+-- 2. teams column additions: pricing policy override + Stripe customer link.
+-- ---------------------------------------------------------------------------------------------
+ALTER TABLE teams
+    ADD COLUMN IF NOT EXISTS pricing_policy_id BIGINT
+        REFERENCES pricing_policy(policy_id);
+COMMENT ON COLUMN teams.pricing_policy_id IS
+    'Override policy for this team. NULL means use the row in pricing_policy with is_default=TRUE.';
+
+ALTER TABLE teams
+    ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(128) UNIQUE;
+COMMENT ON COLUMN teams.stripe_customer_id IS
+    'Stripe customer id for this team. Eager-created so every team has billing identity on file.';
+
+-- ---------------------------------------------------------------------------------------------
+-- 3. team_memberships column addition: optional per-member sub-cap.
+-- ---------------------------------------------------------------------------------------------
+ALTER TABLE team_memberships
+    ADD COLUMN IF NOT EXISTS cap_units BIGINT;
+COMMENT ON COLUMN team_memberships.cap_units IS
+    'Per-period spend cap for this member inside their team wallet, in doc units. NULL = no member-level cap.';
+
+-- ---------------------------------------------------------------------------------------------
+-- 4. processing_job — one process; billed once at open. step_count and last_step_at track the
+--    workflow window; status drives lifecycle.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS processing_job (
+    job_id                 UUID         PRIMARY KEY,
+    owner_user_id          BIGINT       NOT NULL,
+    owner_team_id          BIGINT,
+    process_type           VARCHAR(32)  NOT NULL,
+    source                 VARCHAR(32)  NOT NULL,
+    document_fingerprint   VARCHAR(64),
+    doc_units              INTEGER      NOT NULL DEFAULT 0,
+    step_count             INTEGER      NOT NULL DEFAULT 0,
+    started_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_step_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    closed_at              TIMESTAMP,
+    policy_id              BIGINT       NOT NULL REFERENCES pricing_policy(policy_id),
+    charged_units          INTEGER,
+    charged_cents          INTEGER,
+    status                 VARCHAR(32)  NOT NULL,
+    idempotency_key        VARCHAR(128) UNIQUE,
+    metadata               JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_processing_job_owner_open
+    ON processing_job (owner_user_id, status) WHERE status = 'OPEN';
+
+CREATE INDEX IF NOT EXISTS idx_processing_job_last_step
+    ON processing_job (status, last_step_at) WHERE status = 'OPEN';
+
+-- ---------------------------------------------------------------------------------------------
+-- 5. processing_job_step — per-tool-call audit within a job.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS processing_job_step (
+    step_id         BIGSERIAL    PRIMARY KEY,
+    job_id          UUID         NOT NULL REFERENCES processing_job(job_id) ON DELETE CASCADE,
+    tool_id         VARCHAR(128) NOT NULL,
+    status          VARCHAR(32)  NOT NULL,
+    started_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at    TIMESTAMP,
+    input_pages     INTEGER,
+    input_bytes     BIGINT,
+    error_code      VARCHAR(64)
+);
+
+CREATE INDEX IF NOT EXISTS idx_processing_job_step_job
+    ON processing_job_step (job_id);
+
+-- ---------------------------------------------------------------------------------------------
+-- 6. job_artifact_hash — per-step input/output content hashes used by the lineage detector.
+--    Rows older than the workflow window are pruned by a scheduled task.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS job_artifact_hash (
+    job_id        UUID         NOT NULL REFERENCES processing_job(job_id) ON DELETE CASCADE,
+    content_hash  CHAR(64)     NOT NULL,
+    kind          VARCHAR(8)   NOT NULL,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (job_id, content_hash, kind)
+);
+
+CREATE INDEX IF NOT EXISTS idx_artifact_hash_lookup
+    ON job_artifact_hash (content_hash, created_at);
+
+-- ---------------------------------------------------------------------------------------------
+-- 7. wallet_ledger — append-only signed-amount ledger keyed on team_id.
+--    Two unique indexes kill double-posting (reference triple + stripe event id).
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wallet_ledger (
+    entry_id           BIGSERIAL    PRIMARY KEY,
+    team_id            BIGINT       NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    actor_user_id      BIGINT,
+    entry_type         VARCHAR(32)  NOT NULL,
+    bucket             VARCHAR(16)  NOT NULL,
+    amount_units       INTEGER      NOT NULL,
+    reference_type     VARCHAR(32)  NOT NULL,
+    reference_id       VARCHAR(128) NOT NULL,
+    policy_id          BIGINT,
+    stripe_event_id    VARCHAR(128),
+    occurred_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    metadata           JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_ledger_team
+    ON wallet_ledger (team_id, occurred_at);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_ledger_actor
+    ON wallet_ledger (team_id, actor_user_id, occurred_at) WHERE actor_user_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_wallet_ledger_ref
+    ON wallet_ledger (reference_type, reference_id, entry_type, bucket);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_wallet_ledger_stripe_event
+    ON wallet_ledger (stripe_event_id) WHERE stripe_event_id IS NOT NULL;
+
+-- ---------------------------------------------------------------------------------------------
+-- 8. wallet_policy — per-team charging engine, cap, degradation rules, lineage strategy.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wallet_policy (
+    policy_id              BIGSERIAL    PRIMARY KEY,
+    team_id                BIGINT       NOT NULL UNIQUE REFERENCES teams(id) ON DELETE CASCADE,
+    engine                 VARCHAR(16)  NOT NULL DEFAULT 'LEGACY',
+    cap_period             VARCHAR(16)  NOT NULL DEFAULT 'CALENDAR_MONTH',
+    cap_units              BIGINT,
+    cap_source_money       BIGINT,
+    cap_source_currency    CHAR(3),
+    warn_at_pct            INTEGER      NOT NULL DEFAULT 80,
+    degrade_at_pct         INTEGER      NOT NULL DEFAULT 100,
+    degraded_feature_set   VARCHAR(32)  NOT NULL DEFAULT 'MINIMAL',
+    auto_group_strategy    VARCHAR(16)  NOT NULL DEFAULT 'AUTO',
+    notification_emails    JSONB        NOT NULL DEFAULT '[]'::jsonb,
+    updated_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------------------------------------------------------------------------------------------
+-- 9. wallet_entitlement_snapshot — hot-path state for the entitlement guard.
+--    Composite PK uses 0 as the team-wide sentinel for user_id so the constraint works under
+--    Postgres' NULL-is-not-equal-to-NULL semantics.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wallet_entitlement_snapshot (
+    team_id               BIGINT       NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    user_id               BIGINT       NOT NULL DEFAULT 0,
+    period_start          TIMESTAMP    NOT NULL,
+    period_end            TIMESTAMP    NOT NULL,
+    period_spend_units    BIGINT       NOT NULL DEFAULT 0,
+    period_cap_units      BIGINT,
+    state                 VARCHAR(16)  NOT NULL DEFAULT 'FULL',
+    feature_set           VARCHAR(32)  NOT NULL DEFAULT 'FULL',
+    enabled_gates         JSONB        NOT NULL DEFAULT '[]'::jsonb,
+    computed_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (team_id, user_id)
+);
+
+-- ---------------------------------------------------------------------------------------------
+-- 10. payg_shadow_charge — per-job legacy-vs-PAYG diff during shadow mode. Built up during
+--     PAYG_SHADOW engine state; aggregated by the reconciliation report.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS payg_shadow_charge (
+    shadow_id                BIGSERIAL    PRIMARY KEY,
+    team_id                  BIGINT       NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    job_id                   UUID         NOT NULL,
+    policy_id                BIGINT       NOT NULL REFERENCES pricing_policy(policy_id),
+    payg_units               INTEGER      NOT NULL,
+    legacy_credits_charged   INTEGER      NOT NULL,
+    diff_pct                 INTEGER      NOT NULL,
+    occurred_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_payg_shadow_team_time
+    ON payg_shadow_charge (team_id, occurred_at);

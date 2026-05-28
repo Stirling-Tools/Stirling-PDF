@@ -46,7 +46,7 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
 
         FileFacts facts = inspect(file);
         long rawUnits = computeRawUnits(facts.pages, facts.bytes, policy);
-        int units = (int) Math.max(1, Math.min(policy.fileUnitCap(), rawUnits));
+        int units = (int) Math.max(1, Math.min(policy.getFileUnitCap(), rawUnits));
         return new DocumentMetrics(facts.pages, facts.bytes, facts.contentType, units);
     }
 
@@ -76,7 +76,7 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
             }
         }
 
-        long groupCap = (long) policy.fileUnitCap() * files.size();
+        long groupCap = (long) policy.getFileUnitCap() * files.size();
         int totalUnits = (int) Math.max(1L, Math.min(groupCap, rawUnitsSum));
 
         return new DocumentMetrics(
@@ -95,8 +95,8 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
     }
 
     private static long computeRawUnits(int pages, long bytes, PricingPolicy policy) {
-        long pageUnits = pages > 0 ? ceilDiv(pages, policy.docPagesPerUnit()) : 0L;
-        long byteUnits = ceilDiv(bytes, policy.docBytesPerUnit());
+        long pageUnits = pages > 0 ? ceilDiv(pages, policy.getDocPagesPerUnit()) : 0L;
+        long byteUnits = ceilDiv(bytes, policy.getDocBytesPerUnit());
         return Math.max(pageUnits, byteUnits);
     }
 
