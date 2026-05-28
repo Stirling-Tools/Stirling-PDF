@@ -39,14 +39,24 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
             List<LineageSignatureExtractor> extractors,
             JobLineageStore store,
             @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow) {
-        if (Objects.requireNonNull(extractors, "extractors").isEmpty()) {
+        Objects.requireNonNull(extractors, "extractors");
+        Objects.requireNonNull(store, "store");
+        Objects.requireNonNull(workflowWindow, "workflowWindow");
+        if (extractors.isEmpty()) {
             throw new IllegalStateException(
                     "DefaultHashLineageDetector requires at least one LineageSignatureExtractor"
                             + " bean — none registered.");
         }
+        if (workflowWindow.isNegative() || workflowWindow.isZero()) {
+            // A non-positive window would mean "since = now + |window|", so the > comparison
+            // only matches jobs in the future — i.e. nothing matches, silently. Fail loud
+            // instead.
+            throw new IllegalArgumentException(
+                    "payg.lineage.workflow-window must be positive, got " + workflowWindow);
+        }
         this.extractors = List.copyOf(extractors);
-        this.store = Objects.requireNonNull(store, "store");
-        this.workflowWindow = Objects.requireNonNull(workflowWindow, "workflowWindow");
+        this.store = store;
+        this.workflowWindow = workflowWindow;
     }
 
     @Override
@@ -82,14 +92,16 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
         store.record(jobId, signatures, kind);
     }
 
-    private Set<LineageSignature> extractAll(Path file) throws IOException {
+    private Set<LineageSignature> extractAll(Path file) {
         Set<LineageSignature> union = new HashSet<>();
         for (LineageSignatureExtractor extractor : extractors) {
             try {
                 union.addAll(extractor.extract(file));
             } catch (IOException e) {
-                // A single extractor failing (e.g. PDF-aware extractor on a malformed PDF) must
-                // not block the byte-hash extractor from contributing. Log and continue.
+                // A single extractor failing on file IO / format parse (e.g. PDF-aware extractor
+                // on a malformed PDF) must not block other extractors from contributing. Log and
+                // continue. RuntimeExceptions deliberately propagate — they signal bugs we want
+                // to surface, not "expected" extractor-doesn't-fit-this-content failures.
                 log.debug(
                         "Extractor '{}' failed on {} ({}); continuing with other extractors.",
                         extractor.name(),

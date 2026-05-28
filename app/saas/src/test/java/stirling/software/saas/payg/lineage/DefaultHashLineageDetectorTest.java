@@ -206,6 +206,26 @@ class DefaultHashLineageDetectorTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
+    @Test
+    void constructor_rejectsNonPositiveWorkflowWindow() {
+        // Zero window: since == now, `> :since` never matches.
+        assertThatThrownBy(
+                        () ->
+                                new DefaultHashLineageDetector(
+                                        List.of(extractor), store, Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be positive");
+
+        // Negative window: since == now + |window|, `> :since` only matches the future. Silent
+        // no-match — must fail loud at startup instead.
+        assertThatThrownBy(
+                        () ->
+                                new DefaultHashLineageDetector(
+                                        List.of(extractor), store, Duration.ofMinutes(5).negated()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be positive");
+    }
+
     // --- helpers --------------------------------------------------------------------------------
 
     private UUID openJobForUser(long userId, LocalDateTime lastStepAt) {

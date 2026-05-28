@@ -4,14 +4,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,15 +37,23 @@ public class JpaJobLineageStore implements JobLineageStore {
     private final JobArtifactHashRepository hashRepository;
 
     @Override
+    @Transactional
     public void record(UUID jobId, Set<LineageSignature> signatures, ArtifactKind kind) {
         Objects.requireNonNull(jobId, "jobId");
         Objects.requireNonNull(signatures, "signatures");
         Objects.requireNonNull(kind, "kind");
+        if (signatures.isEmpty()) {
+            return;
+        }
+        // saveAll + @Transactional → one transaction, all-or-nothing. Without this, a multi-
+        // signature record() could leave partial state if a save mid-way fails.
+        List<JobArtifactHash> rows = new ArrayList<>(signatures.size());
         for (LineageSignature signature : signatures) {
             JobArtifactHash row = new JobArtifactHash();
             row.setId(new JobArtifactHashId(jobId, signature.asStorageKey(), kind));
-            hashRepository.save(row);
+            rows.add(row);
         }
+        hashRepository.saveAll(rows);
     }
 
     @Override
@@ -57,10 +66,7 @@ public class JpaJobLineageStore implements JobLineageStore {
             return Optional.empty();
         }
 
-        List<String> storageKeys =
-                candidates.stream()
-                        .map(LineageSignature::asStorageKey)
-                        .collect(Collectors.toList());
+        List<String> storageKeys = candidates.stream().map(LineageSignature::asStorageKey).toList();
         LocalDateTime since = LocalDateTime.now().minus(workflowWindow);
 
         List<LineageMatch> matches =
