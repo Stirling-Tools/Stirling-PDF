@@ -126,8 +126,20 @@ tasks:
         --no-header-files
         --no-man-pages
         --output runtime/jre
+      # jlink emits its files mode 444 (read-only). Tauri's build-script
+      # resource copier preserves source permissions when staging
+      # `runtime/jre/**/*` into `target/<profile>/runtime/jre/...`, so the
+      # staged copies are read-only too. On any subsequent incremental
+      # build the copier tries to overwrite them and fails with a bare
+      # `Permission denied (os error 13)` (Rust's io::Error Display drops
+      # the path, so the failure is opaque). Make the source writable here
+      # so the staged destinations are writable and can be overwritten.
+      - cmd: chmod -R u+w runtime/jre
+        platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+        platforms: [windows]
     status:
-      - test -d editor/src-tauri/runtime/jre
+      - test -f runtime/jre/release
 
   jlink:clean:
     desc: "Remove JLink runtime and bundled JARs"
