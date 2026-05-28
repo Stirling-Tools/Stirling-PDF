@@ -2835,6 +2835,7 @@ selectBaseFirst = "Select original PDF first"
 filesMissing = "Unable to locate the selected files. Please re-select them."
 generic = "Unable to compare these files."
 selectRequired = "Select a original and edited document."
+title = "Comparison failed"
 
 [compare.large.file]
 message = "One or Both of the provided documents are too large to process"
@@ -2900,6 +2901,7 @@ title = "Still working…"
 
 [compare.status]
 complete = "Comparison ready"
+error = "Comparison failed"
 extracting = "Extracting text..."
 processing = "Analysing differences..."
 

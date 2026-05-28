@@ -301,6 +301,7 @@ interface ChatContextValue {
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
+  cancelMessage: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -317,6 +318,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
+  // Tracks the specific controller the user explicitly cancelled, so we can
+  // distinguish a user-initiated cancel from an abort triggered by a new
+  // message superseding the in-flight one.
+  const userCancelledRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<ChatMessage[]>(state.messages);
   messagesRef.current = state.messages;
 
@@ -396,6 +401,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     (open: boolean) => dispatch({ type: "SET_OPEN", open }),
     [],
   );
+
+  const cancelMessage = useCallback(() => {
+    const controller = abortRef.current;
+    if (!controller) return;
+    userCancelledRef.current = controller;
+    controller.abort();
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -510,7 +522,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           throw new Error("Stream ended without a result");
         }
       } catch (e) {
-        if ((e as Error).name === "AbortError") return;
+        if ((e as Error).name === "AbortError") {
+          if (userCancelledRef.current === controller) {
+            userCancelledRef.current = null;
+            dispatch({ type: "SET_PROGRESS", progress: null });
+            dispatch({
+              type: "ADD_MESSAGE",
+              message: {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: "Cancelled.",
+                timestamp: Date.now(),
+              },
+            });
+          }
+          return;
+        }
         dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
@@ -542,6 +569,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         toggleOpen,
         setOpen,
         sendMessage,
+        cancelMessage,
       }}
     >
       {children}
