@@ -60,13 +60,13 @@ public class WalletPolicy implements Serializable {
     @Column(name = "cap_units")
     private Long capUnits;
 
-    /** Original money cap input ("$50/month") in smallest currency unit; null if set as units. */
+    /**
+     * Original money cap input ("$50/month") in smallest currency unit; null if set as units. The
+     * currency comes from {@code stripe.customers.currency} at recompute time — we don't duplicate
+     * it here.
+     */
     @Column(name = "cap_source_money")
     private Long capSourceMoney;
-
-    /** ISO 4217 code; required iff {@code capSourceMoney} is set. */
-    @Column(name = "cap_source_currency", length = 3)
-    private String capSourceCurrency;
 
     @Column(name = "warn_at_pct", nullable = false)
     private Integer warnAtPct = 80;

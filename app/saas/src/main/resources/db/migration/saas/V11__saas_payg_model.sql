@@ -9,7 +9,9 @@
 -- Everything is purely additive. No existing rows are modified, no columns are dropped.
 
 -- ---------------------------------------------------------------------------------------------
--- 1. pricing_policy — versioned economic config (units, step limits, Stripe price IDs).
+-- 1. pricing_policy — versioned economic config (units, lifecycle metadata).
+--    step_limits and stripe_price_ids live on normalised child tables below — typed columns, no
+--    JSON parsing, queryable directly.
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pricing_policy (
     policy_id            BIGSERIAL    PRIMARY KEY,
@@ -20,8 +22,6 @@ CREATE TABLE IF NOT EXISTS pricing_policy (
     doc_bytes_per_unit   BIGINT       NOT NULL,
     min_charge_units     INTEGER      NOT NULL DEFAULT 1,
     file_unit_cap        INTEGER      NOT NULL DEFAULT 1000,
-    step_limits          JSONB        NOT NULL,
-    stripe_price_ids     JSONB        NOT NULL,
     is_default           BOOLEAN      NOT NULL DEFAULT FALSE,
     notes                TEXT,
     created_by           VARCHAR(255),
@@ -30,6 +30,23 @@ CREATE TABLE IF NOT EXISTS pricing_policy (
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_pricing_policy_default
     ON pricing_policy (is_default) WHERE is_default = TRUE;
+
+-- Max steps allowed per process for each caller surface (JobSource).
+CREATE TABLE IF NOT EXISTS pricing_policy_step_limit (
+    policy_id    BIGINT       NOT NULL REFERENCES pricing_policy(policy_id) ON DELETE CASCADE,
+    job_source   VARCHAR(32)  NOT NULL,
+    step_limit   INTEGER      NOT NULL,
+    PRIMARY KEY (policy_id, job_source)
+);
+
+-- Per-currency Stripe Price IDs. All prices in one policy share the same Billing Meter and
+-- the same first-tier upper bound in units (enforced by a deploy-time CI check).
+CREATE TABLE IF NOT EXISTS pricing_policy_stripe_price (
+    policy_id          BIGINT       NOT NULL REFERENCES pricing_policy(policy_id) ON DELETE CASCADE,
+    currency           CHAR(3)      NOT NULL,
+    stripe_price_id    VARCHAR(128) NOT NULL,
+    PRIMARY KEY (policy_id, currency)
+);
 
 -- ---------------------------------------------------------------------------------------------
 -- 2. payg_team_extensions — sidecar carrying PAYG-only team fields. 1:1 with teams via shared PK.
@@ -157,8 +174,9 @@ CREATE TABLE IF NOT EXISTS wallet_policy (
     engine                 VARCHAR(16)  NOT NULL DEFAULT 'LEGACY',
     cap_period             VARCHAR(16)  NOT NULL DEFAULT 'CALENDAR_MONTH',
     cap_units              BIGINT,
+    -- Customer's money intent ("I want $50/month"); the currency comes from the team's Stripe
+    -- customer at recompute time, not stored separately here.
     cap_source_money       BIGINT,
-    cap_source_currency    CHAR(3),
     warn_at_pct            INTEGER      NOT NULL DEFAULT 80,
     degrade_at_pct         INTEGER      NOT NULL DEFAULT 100,
     degraded_feature_set   VARCHAR(32)  NOT NULL DEFAULT 'MINIMAL',

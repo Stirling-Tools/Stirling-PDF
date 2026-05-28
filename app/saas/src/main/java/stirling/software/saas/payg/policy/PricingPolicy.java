@@ -6,16 +6,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.Table;
 
@@ -71,21 +73,34 @@ public class PricingPolicy implements Serializable {
 
     /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
-     * JobSource}. Self-hosted (DESKTOP) typically gets a higher limit than WEB or API.
+     * JobSource}. Self-hosted teams typically get a higher limit via a per-team policy override.
+     *
+     * <p>Persisted as a normalized child table {@code pricing_policy_step_limit (policy_id,
+     * job_source, step_limit)} rather than JSONB — values are typed and queryable directly.
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "step_limits", columnDefinition = "jsonb", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "pricing_policy_step_limit",
+            joinColumns = @JoinColumn(name = "policy_id"))
     @MapKeyEnumerated(EnumType.STRING)
+    @MapKeyColumn(name = "job_source", length = 32)
+    @Column(name = "step_limit", nullable = false)
     private Map<JobSource, Integer> stepLimits = new HashMap<>();
 
     /**
      * Per-currency Stripe Price IDs (ISO 4217 code → price ID). All prices in this map must share
      * the same Billing Meter and the same free-tier upper bound in units. A deploy-time check
      * enforces that consistency.
+     *
+     * <p>Persisted as a normalized child table {@code pricing_policy_stripe_price (policy_id,
+     * currency, stripe_price_id)} rather than JSONB.
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "stripe_price_ids", columnDefinition = "jsonb", nullable = false)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "pricing_policy_stripe_price",
+            joinColumns = @JoinColumn(name = "policy_id"))
+    @MapKeyColumn(name = "currency", length = 3)
+    @Column(name = "stripe_price_id", nullable = false, length = 128)
     private Map<String, String> stripePriceIds = new HashMap<>();
 
     /**
