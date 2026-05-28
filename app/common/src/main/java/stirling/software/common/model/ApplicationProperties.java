@@ -788,6 +788,7 @@ public class ApplicationProperties {
         private boolean enabled = false;
         private String provider = "local";
         private Local local = new Local();
+        private S3 s3 = new S3();
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
         private Signing signing = new Signing();
@@ -795,6 +796,57 @@ public class ApplicationProperties {
         @Data
         public static class Local {
             private String basePath = InstallationPathConfig.getPath() + "storage";
+        }
+
+        @Data
+        public static class S3 {
+            /**
+             * Optional custom endpoint (e.g. {@code https://<account>.r2.cloudflarestorage.com},
+             * {@code https://<project>.supabase.co/storage/v1/s3}, or {@code http://localhost:9000}
+             * for MinIO). Blank = use AWS regional default.
+             */
+            private String endpoint = "";
+
+            private String bucket = "";
+
+            private String region = "us-east-1";
+
+            private String accessKey = "";
+            private String secretKey = "";
+
+            /**
+             * When {@code true} use path-style URLs ({@code <endpoint>/<bucket>/<key>}) instead of
+             * virtual-hosted ({@code <bucket>.<endpoint>/<key>}). MinIO and most S3-compatible
+             * gateways require path-style; AWS S3 prefers virtual-hosted.
+             */
+            private boolean pathStyleAccess = false;
+
+            /**
+             * When {@code false} (default), {@code endpoint} hostnames that resolve to private,
+             * loopback, or link-local addresses are rejected at startup to block SSRF attacks via
+             * the cloud metadata service (e.g. {@code http://169.254.169.254/}). Set to {@code
+             * true} to opt in for MinIO / in-cluster S3 endpoints on private networks.
+             */
+            private boolean allowPrivateEndpoints = false;
+
+            /**
+             * Controls when the SDK adds an {@code x-amz-checksum-*} header on PUT/UploadPart.
+             * Default {@code WHEN_SUPPORTED} (the SDK default since 2.30) makes the SDK send a
+             * CRC32 checksum on every upload - this works on AWS S3, MinIO, current Supabase,
+             * Backblaze B2 (post-July-2025), and modern R2. Set to {@code WHEN_REQUIRED} to
+             * suppress the auto-checksum on vendors that reject unknown {@code x-amz-checksum-*}
+             * headers (older Backblaze B2, some R2 corner cases, GCS S3 endpoint). Invalid values
+             * fall back to {@code WHEN_SUPPORTED}.
+             */
+            private String requestChecksumCalculation = "WHEN_SUPPORTED";
+
+            /**
+             * Controls when the SDK validates returned {@code x-amz-checksum-*} headers on GET
+             * responses. Default {@code WHEN_SUPPORTED}. Set to {@code WHEN_REQUIRED} if your
+             * vendor never returns these headers and you see false-positive checksum-mismatch
+             * errors. Invalid values fall back to {@code WHEN_SUPPORTED}.
+             */
+            private String responseChecksumValidation = "WHEN_SUPPORTED";
         }
 
         @Data

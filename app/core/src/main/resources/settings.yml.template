@@ -246,6 +246,39 @@ storage:
   provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
   local:
     basePath: './storage' # base directory for stored files
+  # ====================================================================================
+  # S3-COMPATIBLE OBJECT STORAGE - PRO / ENTERPRISE LICENSE REQUIRED
+  # storage.provider=s3, storage.provider=database, and cluster.artifactStore=s3 all
+  # require a valid Pro or Enterprise license.
+  # ====================================================================================
+  # Used when provider=s3 (persistent user uploads) and/or cluster.artifactStore=s3
+  # (transient cluster artifacts). The two consumers share this block.
+  # Vendor cheat sheet (set the highlighted flags to taste):
+  #   AWS S3              -> endpoint='' region='<your-region>' pathStyleAccess=false
+  #   Cloudflare R2       -> endpoint='https://<acct>.r2.cloudflarestorage.com' region='auto'
+  #                          pathStyleAccess=false; if uploads fail with 'unsupported header
+  #                          x-amz-checksum-*' set requestChecksumCalculation=WHEN_REQUIRED
+  #   Supabase Storage    -> endpoint='https://<project>.supabase.co/storage/v1/s3'
+  #                          region='<project-region>' pathStyleAccess=true
+  #                          (filenames with non-ASCII display fine - the storage key is opaque)
+  #   MinIO (in-cluster)  -> endpoint='http://minio:9000' region='us-east-1'
+  #                          pathStyleAccess=true allowPrivateEndpoints=true
+  #   Backblaze B2        -> endpoint='https://s3.<region>.backblazeb2.com'
+  #                          If on a B2 deployment older than July-2025 and uploads return
+  #                          'Unsupported header x-amz-checksum-crc32', set
+  #                          requestChecksumCalculation=WHEN_REQUIRED
+  #   DigitalOcean Spaces -> endpoint='https://<region>.digitaloceanspaces.com'
+  #                          Note: 5GB per-object cap (regardless of multipart)
+  s3:
+    endpoint: "" # blank = use AWS regional default; otherwise full URL incl. https://
+    bucket: "" # required when provider=s3 or cluster.artifactStore=s3
+    region: us-east-1
+    accessKey: "" # blank = fall back to AWS DefaultCredentialsProvider (env / profile / IMDS)
+    secretKey: ""
+    pathStyleAccess: false # true for MinIO and Supabase; false for AWS/R2/most CDNs
+    allowPrivateEndpoints: false # true required when endpoint resolves to a private/loopback IP (e.g. in-cluster MinIO). SSRF guard - leave false for any internet-facing vendor.
+    requestChecksumCalculation: WHEN_SUPPORTED # WHEN_SUPPORTED|WHEN_REQUIRED|DISABLED. Set WHEN_REQUIRED if your vendor rejects auto-added x-amz-checksum-* headers (older Backblaze B2, some R2 corner cases).
+    responseChecksumValidation: WHEN_SUPPORTED # WHEN_SUPPORTED|WHEN_REQUIRED|DISABLED. Set WHEN_REQUIRED if you see false-positive checksum-mismatch errors on GET from a vendor that never returns checksum headers.
   quotas:
     maxStorageMbPerUser: -1 # Max storage per user in MB; -1 disables per-user cap
     maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
@@ -336,6 +369,8 @@ cluster:
   enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
   backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
   artifactStore: local # Transient cluster job-artifact backend: 'local' (per-node disk; single-node only) or 's3' (shared object store; required for multi-node). Distinct from 'storage.provider' which controls persistent user uploads - when both are 's3' they share the storage.s3.* credentials block. Multi-node deployments MUST set this to 's3'.
+  s3:
+    keyPrefix: transient/ # Bucket key prefix used by the cluster artifact store when artifactStore=s3. Trailing slash recommended. Lets a single bucket host both persistent uploads (storage.s3.*) and transient job artifacts under separate prefixes.
   valkey:
     url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and backplane=valkey.
     tls:
