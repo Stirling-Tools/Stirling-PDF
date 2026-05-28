@@ -3856,6 +3856,7 @@ syncPartial = "Folder sync partial: {{failed}} of {{total}} folders could not be
 tree = "Folders"
 upload = "Upload"
 uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
+uploadFromMobile = "Upload from Mobile"
 versionActions = "Version actions"
 versionCollapse = "Collapse middle versions"
 versionOrigin = "Original upload"
