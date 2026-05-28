@@ -6,8 +6,9 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import { useTranslation } from "react-i18next";
 import { generateId } from "@app/utils/generateId";
+import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
@@ -178,7 +179,8 @@ type ChatAction =
   | { type: "SET_LOADING"; loading: boolean }
   | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
   | { type: "TOGGLE_OPEN" }
-  | { type: "SET_OPEN"; open: boolean };
+  | { type: "SET_OPEN"; open: boolean }
+  | { type: "CLEAR" };
 
 function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
@@ -192,27 +194,36 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return { ...state, isOpen: !state.isOpen };
     case "SET_OPEN":
       return { ...state, isOpen: action.open };
+    case "CLEAR":
+      return { ...state, messages: [], isLoading: false, progress: null };
   }
 }
 
-function formatWorkflowResponse(data: AiWorkflowResponse): string {
+type TranslateFn = ReturnType<typeof useTranslation>["t"];
+
+function formatWorkflowResponse(
+  data: AiWorkflowResponse,
+  t: TranslateFn,
+): string {
   switch (data.outcome) {
     case "answer":
     case "completed":
-      return data.answer ?? data.summary ?? "Done.";
+      return data.answer ?? data.summary ?? t("chat.responses.done");
     case "need_clarification":
-      return data.question ?? "Could you clarify your request?";
+      return data.question ?? t("chat.responses.need_clarification");
     case "cannot_do":
-      return data.reason ?? "I'm unable to do that.";
+      return data.reason ?? t("chat.responses.cannot_do");
     case "not_found":
-      return data.reason ?? "I couldn't find the requested information.";
+      return data.reason ?? t("chat.responses.not_found");
     case "unsupported_capability":
       return (
         data.message ??
-        `Unsupported capability: ${data.capability ?? "unknown"}`
+        t("chat.responses.unsupported_capability", {
+          capability: data.capability ?? "unknown",
+        })
       );
     case "cannot_continue":
-      return data.reason ?? "Something went wrong and I can't continue.";
+      return data.reason ?? t("chat.responses.cannot_continue");
     case "plan":
       return data.rationale
         ? `${data.rationale}\n\n${(data.steps ?? []).map((s, i) => `${i + 1}. ${JSON.stringify(s)}`).join("\n")}`
@@ -220,7 +231,9 @@ function formatWorkflowResponse(data: AiWorkflowResponse): string {
     case "need_content":
     case "tool_call":
       return (
-        data.rationale ?? data.summary ?? `Processing (${data.outcome})...`
+        data.rationale ??
+        data.summary ??
+        t("chat.responses.processing", { outcome: data.outcome })
       );
     default:
       return (
@@ -249,48 +262,55 @@ async function consumeSSEStream(
     onError: (data: { message: string }) => void;
   },
 ) {
-  const reader = response.body!.getReader();
+  if (!response.body) {
+    throw new Error("Response body is null");
+  }
+  const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   let currentEvent = "";
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-    // SSE frames are separated by double newlines
-    let boundary = buffer.indexOf("\n\n");
-    while (boundary !== -1) {
-      const frame = buffer.slice(0, boundary);
-      buffer = buffer.slice(boundary + 2);
+      // SSE frames are separated by double newlines
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary !== -1) {
+        const frame = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
 
-      let dataPayload = "";
-      for (const line of frame.split("\n")) {
-        if (line.startsWith("event:")) {
-          currentEvent = line.slice(6).trim();
-        } else if (line.startsWith("data:")) {
-          dataPayload += line.slice(5);
-        }
-      }
-
-      if (dataPayload) {
-        try {
-          const parsed = JSON.parse(dataPayload);
-          if (currentEvent === "progress") {
-            handlers.onProgress(parsed);
-          } else if (currentEvent === "result") {
-            handlers.onResult(parsed);
-          } else if (currentEvent === "error") {
-            handlers.onError(parsed);
+        let dataPayload = "";
+        for (const line of frame.split("\n")) {
+          if (line.startsWith("event:")) {
+            currentEvent = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            dataPayload += line.slice(5);
           }
-        } catch {
-          // Skip malformed JSON frames
         }
+
+        if (dataPayload) {
+          try {
+            const parsed = JSON.parse(dataPayload);
+            if (currentEvent === "progress") {
+              handlers.onProgress(parsed);
+            } else if (currentEvent === "result") {
+              handlers.onResult(parsed);
+            } else if (currentEvent === "error") {
+              handlers.onError(parsed);
+            }
+          } catch {
+            // Skip malformed JSON frames
+          }
+        }
+        currentEvent = "";
+        boundary = buffer.indexOf("\n\n");
       }
-      currentEvent = "";
-      boundary = buffer.indexOf("\n\n");
     }
+  } finally {
+    reader.releaseLock();
   }
 }
 
@@ -302,7 +322,8 @@ interface ChatContextValue {
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
-  cancelMessage: () => void;
+  /** Abort any in-flight request and reset the chat to an empty conversation. */
+  clearChat: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -315,14 +336,11 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
-  // Tracks the specific controller the user explicitly cancelled, so we can
-  // distinguish a user-initiated cancel from an abort triggered by a new
-  // message superseding the in-flight one.
-  const userCancelledRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<ChatMessage[]>(state.messages);
   messagesRef.current = state.messages;
 
@@ -402,12 +420,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     (open: boolean) => dispatch({ type: "SET_OPEN", open }),
     [],
   );
-
-  const cancelMessage = useCallback(() => {
-    const controller = abortRef.current;
-    if (!controller) return;
-    userCancelledRef.current = controller;
-    controller.abort();
+  const clearChat = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    dispatch({ type: "CLEAR" });
   }, []);
 
   const sendMessage = useCallback(
@@ -449,7 +465,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         });
 
         if (!response.ok) {
-          throw new Error(`AI engine request failed: ${response.status}`);
+          let detail: string | undefined;
+          try {
+            const body = await response.json();
+            detail =
+              body?.message ??
+              body?.detail ??
+              body?.error ??
+              (Array.isArray(body?.errors)
+                ? body.errors[0]?.message
+                : undefined);
+          } catch {
+            // non-JSON body — ignore
+          }
+          throw new Error(
+            detail ?? `AI engine request failed: ${response.status}`,
+          );
         }
 
         let receivedResult = false;
@@ -477,7 +508,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           onResult: (data) => {
             receivedResult = true;
             dispatch({ type: "SET_PROGRESS", progress: null });
-            const replyContent = formatWorkflowResponse(data);
+            const replyContent = formatWorkflowResponse(data, t);
             dispatch({
               type: "ADD_MESSAGE",
               message: {
@@ -523,30 +554,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           throw new Error("Stream ended without a result");
         }
       } catch (e) {
-        if ((e as Error).name === "AbortError") {
-          if (userCancelledRef.current === controller) {
-            userCancelledRef.current = null;
-            dispatch({ type: "SET_PROGRESS", progress: null });
-            dispatch({
-              type: "ADD_MESSAGE",
-              message: {
-                id: generateId(),
-                role: "assistant",
-                content: "Cancelled.",
-                timestamp: Date.now(),
-              },
-            });
-          }
-          return;
-        }
+        if ((e as Error).name === "AbortError") return;
+        const err = e as Error;
+        const isEngineError =
+          err.message.startsWith("AI engine request failed:") ||
+          err.message === "Stream ended without a result";
+        const content = isEngineError
+          ? "Failed to get a response. The AI engine may not be available yet."
+          : (err.message ??
+            "Failed to get a response. The AI engine may not be available yet.");
         dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
           message: {
             id: generateId(),
             role: "assistant",
-            content:
-              "Failed to get a response. The AI engine may not be available yet.",
+            content,
             timestamp: Date.now(),
           },
         });
@@ -570,7 +593,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         toggleOpen,
         setOpen,
         sendMessage,
-        cancelMessage,
+        clearChat,
       }}
     >
       {children}
