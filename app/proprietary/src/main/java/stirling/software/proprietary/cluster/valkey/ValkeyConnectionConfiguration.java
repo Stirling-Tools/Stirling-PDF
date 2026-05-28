@@ -1,6 +1,7 @@
 package stirling.software.proprietary.cluster.valkey;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,40 +36,86 @@ public class ValkeyConnectionConfiguration {
     @ConditionalOnProperty(name = "cluster.backplane", havingValue = "valkey")
     public LettuceConnectionFactory valkeyConnectionFactory() {
         Cluster cluster = applicationProperties.getCluster();
-        String url = cluster.getValkey().getUrl();
-        if (url == null || url.isBlank()) {
-            throw new IllegalStateException("cluster.valkey.url must be set when backplane=valkey");
+        Endpoint endpoint = parseUrl(cluster.getValkey().getUrl());
+        RedisStandaloneConfiguration cfg =
+                new RedisStandaloneConfiguration(endpoint.host(), endpoint.port());
+        if (endpoint.username() != null) {
+            cfg.setUsername(endpoint.username());
         }
-        URI uri = URI.create(url);
-        boolean tls = "rediss".equalsIgnoreCase(uri.getScheme());
-        int port = uri.getPort() <= 0 ? 6379 : uri.getPort();
-        RedisStandaloneConfiguration cfg = new RedisStandaloneConfiguration(uri.getHost(), port);
-        if (uri.getUserInfo() != null) {
-            String[] parts = uri.getUserInfo().split(":", 2);
-            if (parts.length == 2) {
-                cfg.setUsername(parts[0]);
-                cfg.setPassword(RedisPassword.of(parts[1]));
-            } else if (parts.length == 1 && !parts[0].isBlank()) {
-                cfg.setPassword(RedisPassword.of(parts[0]));
-            }
+        if (endpoint.password() != null) {
+            cfg.setPassword(RedisPassword.of(endpoint.password()));
         }
         boolean skipCertVerification =
                 cluster.getValkey().getTls() != null
                         && cluster.getValkey().getTls().isSkipCertVerification();
         LettuceClientConfiguration clientConfig =
-                buildClientConfiguration(tls, skipCertVerification);
+                buildClientConfiguration(endpoint.tls(), skipCertVerification);
         LettuceConnectionFactory factory = new LettuceConnectionFactory(cfg, clientConfig);
         factory.afterPropertiesSet();
         // Eager handshake with retry tolerates docker-compose DNS races; fails boot loudly
         // if Valkey is genuinely unreachable.
-        eagerHandshake(factory, uri.getHost(), port, tls);
+        eagerHandshake(factory, endpoint.host(), endpoint.port(), endpoint.tls());
         log.info(
                 "Valkey connection configured: {}:{} tls={} verifyPeer={}",
-                uri.getHost(),
-                port,
-                tls,
-                tls ? clientConfig.getVerifyMode() : "n/a");
+                endpoint.host(),
+                endpoint.port(),
+                endpoint.tls(),
+                endpoint.tls() ? clientConfig.getVerifyMode() : "n/a");
         return factory;
+    }
+
+    /** Parsed connection endpoint; username/password are null when absent. */
+    record Endpoint(String host, int port, boolean tls, String username, String password) {}
+
+    /**
+     * Parses {@code redis://[user:password@]host[:port]} (or {@code rediss://} for TLS) into an
+     * {@link Endpoint}. Package-private and side-effect-free so URL handling is unit-testable.
+     *
+     * <ul>
+     *   <li>Missing port defaults to 6379.
+     *   <li>{@code rediss} scheme selects TLS.
+     *   <li>Userinfo {@code :password@} (empty user) is treated as password-only auth against the
+     *       default user, not a login with an empty username.
+     *   <li>Reserved characters in the password ({@code @ : / # ?}) must be percent-encoded; {@link
+     *       URI} parses them structurally otherwise (e.g. {@code #} starts the fragment).
+     * </ul>
+     *
+     * @throws IllegalStateException if the URL is blank, syntactically invalid, or has no host
+     */
+    static Endpoint parseUrl(String url) {
+        if (url == null || url.isBlank()) {
+            throw new IllegalStateException("cluster.valkey.url must be set when backplane=valkey");
+        }
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException ex) {
+            throw new IllegalStateException(
+                    "cluster.valkey.url is not a valid URI: " + url + " (" + ex.getMessage() + ")",
+                    ex);
+        }
+        String host = uri.getHost();
+        if (host == null || host.isBlank()) {
+            throw new IllegalStateException(
+                    "cluster.valkey.url has no host: "
+                            + url
+                            + " (expected redis://[user:password@]host[:port])");
+        }
+        boolean tls = "rediss".equalsIgnoreCase(uri.getScheme());
+        int port = uri.getPort() <= 0 ? 6379 : uri.getPort();
+        String username = null;
+        String password = null;
+        String userInfo = uri.getUserInfo();
+        if (userInfo != null) {
+            String[] parts = userInfo.split(":", 2);
+            if (parts.length == 2) {
+                username = parts[0].isEmpty() ? null : parts[0];
+                password = parts[1];
+            } else if (!parts[0].isBlank()) {
+                password = parts[0];
+            }
+        }
+        return new Endpoint(host, port, tls, username, password);
     }
 
     /**

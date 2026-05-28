@@ -1,6 +1,8 @@
 package stirling.software.proprietary.cluster.valkey;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -19,6 +22,8 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.SslVerifyMode;
+
+import stirling.software.proprietary.cluster.valkey.ValkeyConnectionConfiguration.Endpoint;
 
 /**
  * Verifies auth-fast-fail on WRONGPASS/NOAUTH/NOPERM: these are unrecoverable so the handshake must
@@ -166,5 +171,128 @@ class ValkeyConnectionConfigurationTest {
         LettuceClientConfiguration cfg =
                 ValkeyConnectionConfiguration.buildClientConfiguration(false, true);
         assertFalse(cfg.isUseSsl());
+    }
+
+    @Nested
+    @DisplayName("parseUrl()")
+    class ParseUrl {
+
+        @Test
+        @DisplayName("host + explicit port, no auth, no TLS")
+        void hostAndPort() {
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://valkey.internal:6380");
+            assertEquals("valkey.internal", e.host());
+            assertEquals(6380, e.port());
+            assertFalse(e.tls());
+            assertNull(e.username());
+            assertNull(e.password());
+        }
+
+        @Test
+        @DisplayName("missing port defaults to 6379")
+        void defaultPort() {
+            assertEquals(6379, ValkeyConnectionConfiguration.parseUrl("redis://host").port());
+        }
+
+        @Test
+        @DisplayName("rediss:// scheme selects TLS")
+        void redissSelectsTls() {
+            assertTrue(ValkeyConnectionConfiguration.parseUrl("rediss://host:6379").tls());
+        }
+
+        @Test
+        @DisplayName("user:password@ sets both credentials")
+        void userAndPassword() {
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://alice:s3cret@host");
+            assertEquals("alice", e.username());
+            assertEquals("s3cret", e.password());
+        }
+
+        @Test
+        @DisplayName("empty user (:pw@) is password-only auth, username stays null")
+        void passwordOnlyEmptyUser() {
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://:s3cret@host");
+            assertNull(e.username(), "empty user must NOT become an empty-string username");
+            assertEquals("s3cret", e.password());
+        }
+
+        @Test
+        @DisplayName("single userinfo token (no colon) is treated as the password")
+        void passwordOnlyNoColon() {
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://s3cret@host");
+            assertNull(e.username());
+            assertEquals("s3cret", e.password());
+        }
+
+        @Test
+        @DisplayName("only the first colon splits user/password (colons allowed in password)")
+        void colonInPassword() {
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://user:pa:ss:word@host");
+            assertEquals("user", e.username());
+            assertEquals("pa:ss:word", e.password());
+        }
+
+        @Test
+        @DisplayName("percent-encoded reserved chars are decoded in the password")
+        void percentEncodedPassword() {
+            // %40 -> '@', %23 -> '#': both must be encoded or URI parses them structurally.
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://:p%40ss%23word@host");
+            assertNull(e.username());
+            assertEquals("p@ss#word", e.password());
+        }
+
+        @Test
+        @DisplayName("blank url throws with a backplane-config message")
+        void blankUrlThrows() {
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () -> ValkeyConnectionConfiguration.parseUrl("   "));
+            assertTrue(ex.getMessage().contains("cluster.valkey.url must be set"));
+        }
+
+        @Test
+        @DisplayName("null url throws")
+        void nullUrlThrows() {
+            assertThrows(
+                    IllegalStateException.class,
+                    () -> ValkeyConnectionConfiguration.parseUrl(null));
+        }
+
+        @Test
+        @DisplayName("url with no host throws a clear error (scheme-less host:port pitfall)")
+        void noHostThrows() {
+            // "localhost:6379" parses 'localhost' as the scheme, leaving no authority/host.
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () -> ValkeyConnectionConfiguration.parseUrl("localhost:6379"));
+            assertTrue(
+                    ex.getMessage().contains("has no host"),
+                    "message must name the missing host; got: " + ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("non-numeric port yields no host (URI registry-authority fallback)")
+        void nonNumericPortHasNoHost() {
+            // java.net.URI does not throw on a bad port; it falls back to registry authority and
+            // reports host=null, so this must surface as the clear no-host error, not a NPE later.
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () -> ValkeyConnectionConfiguration.parseUrl("redis://host:notaport"));
+            assertTrue(ex.getMessage().contains("has no host"));
+        }
+
+        @Test
+        @DisplayName("syntactically invalid uri throws with the offending url")
+        void invalidUriThrows() {
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () -> ValkeyConnectionConfiguration.parseUrl("redis://ho st:6379"));
+            assertTrue(ex.getMessage().contains("not a valid URI"));
+            assertTrue(ex.getMessage().contains("redis://ho st:6379"));
+        }
     }
 }

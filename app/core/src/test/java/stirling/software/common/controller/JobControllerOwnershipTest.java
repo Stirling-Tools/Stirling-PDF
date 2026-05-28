@@ -409,4 +409,38 @@ class JobControllerOwnershipTest {
         verify(fileStorage).retrieveBytes(FILE_ID);
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
+
+    @Test
+    @DisplayName(
+            "downloadFile: findJobKeyByFileId throws (backplane down) → 503 + Retry-After,"
+                    + " not 404/500, storage untouched")
+    void downloadFile_findJobKeyThrows_returns503Retryable() throws Exception {
+        when(taskManager.findJobKeyByFileId(FILE_ID))
+                .thenThrow(new RuntimeException("Valkey command timeout"));
+
+        ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertEquals("1", response.getHeaders().getFirst("Retry-After"));
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertTrue(((String) body.get("message")).toLowerCase().contains("unavailable"));
+        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+    }
+
+    @Test
+    @DisplayName(
+            "getFileMetadata: findJobKeyByFileId throws (backplane down) → 503 + Retry-After,"
+                    + " not 404/500")
+    void getFileMetadata_findJobKeyThrows_returns503Retryable() throws Exception {
+        when(taskManager.findJobKeyByFileId(FILE_ID))
+                .thenThrow(new RuntimeException("Valkey command timeout"));
+
+        ResponseEntity<?> response = makeController().getFileMetadata(FILE_ID);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertEquals("1", response.getHeaders().getFirst("Retry-After"));
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertTrue(((String) body.get("message")).toLowerCase().contains("unavailable"));
+        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+    }
 }

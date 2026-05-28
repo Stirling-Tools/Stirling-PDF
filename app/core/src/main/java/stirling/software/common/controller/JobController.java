@@ -252,7 +252,12 @@ public class JobController {
     @Operation(summary = "Get file metadata")
     public ResponseEntity<?> getFileMetadata(@PathVariable("fileId") String fileId) {
         try {
-            String jobKey = taskManager.findJobKeyByFileId(fileId);
+            String jobKey;
+            try {
+                jobKey = taskManager.findJobKeyByFileId(fileId);
+            } catch (RuntimeException backplaneEx) {
+                return backplaneUnavailable(fileId, backplaneEx);
+            }
             if (jobKey == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -304,7 +309,12 @@ public class JobController {
     @Operation(summary = "Download a file")
     public ResponseEntity<?> downloadFile(@PathVariable("fileId") String fileId) {
         try {
-            String jobKey = taskManager.findJobKeyByFileId(fileId);
+            String jobKey;
+            try {
+                jobKey = taskManager.findJobKeyByFileId(fileId);
+            } catch (RuntimeException backplaneEx) {
+                return backplaneUnavailable(fileId, backplaneEx);
+            }
             if (jobKey == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -405,6 +415,25 @@ public class JobController {
                                         owner,
                                         "currentNode",
                                         localId == null ? "" : localId)));
+    }
+
+    /**
+     * file -> job lookup only consults the backplane on a local-map miss, i.e. the file lives on a
+     * peer or does not exist. If the backplane is down we cannot tell which, and serving without an
+     * ownership check would be unsafe - so return a retryable 503 (consistent with the sticky-410
+     * retry model) rather than a misleading 404 or a generic 500.
+     */
+    private ResponseEntity<?> backplaneUnavailable(String fileId, RuntimeException ex) {
+        log.warn(
+                "Backplane lookup failed for fileId={}; returning 503 (retryable): {}",
+                fileId,
+                ex.getMessage());
+        return ResponseEntity.status(503)
+                .header("Retry-After", "1")
+                .body(
+                        Map.of(
+                                "message",
+                                "Cluster backplane temporarily unavailable; retry shortly."));
     }
 
     private String createContentDispositionHeader(String fileName) {

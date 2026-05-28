@@ -197,6 +197,52 @@ class LiveValkeyIntegrationTest {
     }
 
     @Test
+    @DisplayName("renew() extends the lease TTL well beyond the original")
+    void distributedLockRenewExtendsLease() {
+        ValkeyDistributedLock lock = new ValkeyDistributedLock(templateA);
+        String key = "renew-" + java.util.UUID.randomUUID();
+        Optional<DistributedLock.LockHandle> held = lock.tryAcquire(key, Duration.ofSeconds(1));
+        assertTrue(held.isPresent());
+
+        assertTrue(held.get().renew(Duration.ofSeconds(30)), "renew on a held lock must succeed");
+        Long ttlMs =
+                templateA.getExpire(
+                        "stirling:lock:" + key, java.util.concurrent.TimeUnit.MILLISECONDS);
+        assertNotNull(ttlMs);
+        assertTrue(
+                ttlMs > 1500 && ttlMs <= 30_000,
+                "renew must reset TTL to the new 30s lease, got " + ttlMs + " ms");
+        held.get().release();
+    }
+
+    @Test
+    @DisplayName("value-check prevents a stale owner from releasing/renewing a re-acquired lock")
+    void distributedLockStealPrevention() throws InterruptedException {
+        ValkeyDistributedLock lockA = new ValkeyDistributedLock(templateA);
+        ValkeyDistributedLock lockB = new ValkeyDistributedLock(templateB);
+        String key = "steal-" + java.util.UUID.randomUUID();
+
+        Optional<DistributedLock.LockHandle> a = lockA.tryAcquire(key, Duration.ofMillis(500));
+        assertTrue(a.isPresent());
+
+        // Let A's 500ms lease TTL-expire so Valkey drops the key, then B takes a fresh lock.
+        Thread.sleep(800);
+        Optional<DistributedLock.LockHandle> b = lockB.tryAcquire(key, Duration.ofSeconds(30));
+        assertTrue(b.isPresent(), "B must acquire after A's lease expired");
+
+        // A's stale handle (different UUID value) must touch neither B's renew nor B's key.
+        assertFalse(
+                a.get().renew(Duration.ofSeconds(30)),
+                "stale owner must not be able to renew a lock now owned by B");
+        a.get().release(); // value-checked DEL: must be a no-op, must NOT delete B's key
+
+        assertFalse(
+                lockA.tryAcquire(key, Duration.ofMillis(100)).isPresent(),
+                "B must still hold the lock; A's stale release must not have stolen it");
+        b.get().release();
+    }
+
+    @Test
     @DisplayName("register is atomic (hash + TTL committed together, no orphan keys on crash)")
     void registryRegisterIsAtomic() {
         ValkeyInstanceRegistry reg = new ValkeyInstanceRegistry(templateA);
