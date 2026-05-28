@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -77,6 +78,7 @@ public class ApplicationProperties {
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private InternalApi internalApi = new InternalApi();
+    private Cluster cluster = new Cluster();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -255,6 +257,106 @@ public class ApplicationProperties {
     }
 
     /**
+     * Cluster backplane configuration. All keys live under the top-level {@code cluster.*} prefix
+     * (e.g. env var {@code CLUSTER_ENABLED}). The master switch is {@link #enabled} and defaults to
+     * off; when off the in-process backplane is wired and no other cluster keys are required.
+     */
+    @Data
+    public static class Cluster {
+
+        /** Master switch. When {@code false} (default) the in-process backplane is wired. */
+        private boolean enabled = false;
+
+        /** Backplane implementation selector. Valid values: {@code inprocess} | {@code valkey}. */
+        private String backplane = "inprocess";
+
+        /**
+         * Transient cluster job-artifact store selector. Valid values: {@code local} | {@code s3}.
+         *
+         * <p>This is distinct from {@code storage.provider}, which selects the backend for
+         * persistent user-uploaded files. The two switches exist because the user-facing storage
+         * feature is optional ({@code storage.enabled=false} is common) but every multi-node
+         * cluster still needs a shared artifact store to serve cross-node downloads. Both
+         * implementations share credentials from {@code storage.s3.*} when set to {@code s3}.
+         */
+        private String artifactStore = "local";
+
+        private Valkey valkey = new Valkey();
+        private Node node = new Node();
+
+        private transient String cachedNodeId;
+
+        public NodeRole resolvedRole() {
+            if (node == null || node.getRole() == null) {
+                return NodeRole.BOTH;
+            }
+            String value = node.getRole().trim().toUpperCase(Locale.ROOT);
+            try {
+                return NodeRole.valueOf(value);
+            } catch (IllegalArgumentException ex) {
+                return NodeRole.BOTH;
+            }
+        }
+
+        public synchronized String resolvedNodeId() {
+            if (node != null && node.getId() != null && !node.getId().isBlank()) {
+                return node.getId();
+            }
+            if (cachedNodeId == null) {
+                cachedNodeId = UUID.randomUUID().toString();
+            }
+            return cachedNodeId;
+        }
+
+        public enum NodeRole {
+            WEB,
+            WORKER,
+            BOTH
+        }
+
+        @Data
+        public static class Valkey {
+            /**
+             * {@code redis://host:6379} or {@code rediss://...} for TLS. Required when cluster mode
+             * is on and backplane is valkey.
+             */
+            private String url = "";
+
+            private Tls tls = new Tls();
+
+            @Data
+            public static class Tls {
+                /**
+                 * When {@code true}, skip Valkey/Redis TLS certificate verification (dev/test
+                 * only). Leave {@code false} in production.
+                 */
+                private boolean skipCertVerification = false;
+            }
+        }
+
+        @Data
+        public static class Node {
+            /** Optional explicit node id. Blank = auto-generated UUID at startup. */
+            private String id = "";
+
+            /** {@code web} | {@code worker} | {@code both}. */
+            private String role = "both";
+
+            /**
+             * Internal cluster address advertised in the instance registry (host:port). Blank =
+             * derived at startup.
+             */
+            private String internalAddress = "";
+
+            /** {@code http} | {@code https} - scheme used when peers call this node. */
+            private String scheme = "http";
+
+            /** Heartbeat publish interval for the instance registry, in milliseconds. */
+            private long heartbeatIntervalMs = 5000;
+        }
+    }
+
+    /**
      * HTTP timeouts for loopback calls to internal Stirling API endpoints, used by the AI workflow
      * executor and the pipeline processor. A bounded read timeout prevents a hung tool (e.g. an
      * infinite loop in a PDF processing service) from stalling the entire chat workflow forever.
@@ -425,6 +527,16 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+
+            /**
+             * When true, the OAuth2/OIDC login flow logs the full set of ID token and UserInfo
+             * claims at INFO level (and again at ERROR level if the username attribute cannot be
+             * resolved). Used to diagnose provider misconfiguration (for example ADFS not returning
+             * an {@code email} claim). WARNING: writes PII (sub, email, name) to application logs.
+             * Leave disabled in production; enable only while actively troubleshooting and disable
+             * again afterwards.
+             */
+            private Boolean debugLogging = false;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
