@@ -26,7 +26,7 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.logging import Pretty
-from stirling.models import OPERATIONS, PARAMETER_HINTS, ApiModel, ParamToolModel, ToolEndpoint
+from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ class PdfEditParameterSelector:
             f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
             "Do not include fields from any other operation."
         )
-        return base + PARAMETER_HINTS.get(operation_id, "")
+        return base
 
     def _build_parameter_prompt(
         self,
