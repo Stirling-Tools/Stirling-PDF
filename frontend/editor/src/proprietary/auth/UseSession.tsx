@@ -120,15 +120,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { error } = await springAuth.signOut();
 
+      // Always clear the in-memory session: springAuth.signOut() removes the
+      // local token and platform user_info even when the backend POST fails,
+      // so the user is effectively signed out either way. Leaving session
+      // populated on error would mean the UI keeps the old user's badge until
+      // a manual reload (the SIGNED_OUT notifyListeners call also covers this
+      // path now, but clearing here is defence in depth).
+      setSession(null);
+
       if (error) {
         console.error("[Auth] Sign out error:", error);
         setError(error);
       } else {
         console.debug("[Auth] Signed out successfully");
-        setSession(null);
       }
     } catch (err) {
       console.error("[Auth] Unexpected error during sign out:", err);
+      setSession(null);
       setError(err as AuthError);
     }
   }, []);

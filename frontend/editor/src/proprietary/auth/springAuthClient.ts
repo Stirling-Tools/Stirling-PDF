@@ -352,9 +352,13 @@ class SpringAuthClient {
               platformUser?.email ||
               platformUser?.username ||
               "desktop-saas-user",
-            email: platformUser?.email || "",
-            username: platformUser?.username || platformUser?.email || "User",
+            email: platformUser?.email ?? "",
+            // Username may be empty when the platform layer can't identify
+            // the user - downstream displayName derivation handles that
+            // case and falls back to a generic placeholder.
+            username: platformUser?.username ?? "",
             role: "USER",
+            is_anonymous: platformUser?.is_anonymous,
           },
           access_token: token,
           expires_in: tokenExpiry.expiresIn,
@@ -641,6 +645,12 @@ class SpringAuthClient {
           cleanupError,
         );
       }
+      // The user is logged out *locally* even if the backend call failed
+      // (token + platform user_info are gone). The previous version skipped
+      // this notification on error - the AuthProvider then never cleared
+      // its session state, leaving the UI claiming the user was still signed
+      // in until a full reload.
+      this.notifyListeners("SIGNED_OUT", null);
       return {
         error: { message: getErrorMessage(error, "Logout failed") },
       };

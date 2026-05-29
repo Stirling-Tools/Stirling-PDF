@@ -15,19 +15,80 @@ export async function isDesktopSaaSAuthMode(): Promise<boolean> {
   }
 }
 
-export async function getPlatformSessionUser(): Promise<PlatformSessionUser | null> {
+/**
+ * Supabase JWT payload claims we care about. Desktop knows it issues
+ * Supabase-shaped tokens, so it can read them with proper types here -
+ * proprietary's auth client never needs to learn about user_metadata.
+ */
+interface SupabaseJwtClaims {
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+  };
+  is_anonymous?: boolean;
+}
+
+function decodeSupabaseJwt(token: string): SupabaseJwtClaims | null {
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
   try {
-    const userInfo = await authService.getUserInfo();
-    if (!userInfo) {
-      return null;
-    }
-    return {
-      username: userInfo.username,
-      email: userInfo.email,
-    };
+    const base64 = parts[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(parts[1].length / 4) * 4, "=");
+    return JSON.parse(atob(base64)) as SupabaseJwtClaims;
   } catch {
     return null;
   }
+}
+
+export async function getPlatformSessionUser(): Promise<PlatformSessionUser | null> {
+  // Preferred source: the Tauri-cached user_info written at login time.
+  let cachedUser: { username: string; email: string | undefined } | null = null;
+  try {
+    const userInfo = await authService.getUserInfo();
+    if (userInfo) {
+      cachedUser = {
+        username: userInfo.username,
+        email: userInfo.email,
+      };
+    }
+  } catch {
+    /* fall through to JWT decode */
+  }
+
+  // Fallback: decode the JWT itself. The cache can lag (the
+  // jwt-available event fires before save_user_info in OAuth login) or be
+  // missing entirely (older tokens minted before user_info caching was
+  // wired up). The token always carries enough to identify the account.
+  let jwtClaims: SupabaseJwtClaims | null = null;
+  const token =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("stirling_jwt")
+      : null;
+  if (token) {
+    jwtClaims = decodeSupabaseJwt(token);
+  }
+
+  if (!cachedUser && !jwtClaims) {
+    return null;
+  }
+
+  const email = cachedUser?.email || jwtClaims?.email;
+  const metadata = jwtClaims?.user_metadata;
+  const username =
+    cachedUser?.username ||
+    metadata?.full_name ||
+    metadata?.name ||
+    email ||
+    "";
+
+  return {
+    username,
+    email,
+    is_anonymous: jwtClaims?.is_anonymous === true,
+  };
 }
 
 export async function refreshPlatformSession(): Promise<boolean> {

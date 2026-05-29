@@ -1,6 +1,16 @@
+/**
+ * Resolved identity for the current session, as understood by the platform
+ * layer (desktop) that owns the underlying token format. The proprietary
+ * auth client treats these fields as opaque - it does NOT inspect the JWT
+ * directly. Each platform decides how to populate this from whatever
+ * token/user storage it owns (e.g. desktop reads the Tauri user_info store
+ * plus the Supabase JWT claims; web has no platform layer).
+ */
 export interface PlatformSessionUser {
   username: string;
   email?: string;
+  /** True for anonymous/guest sessions (e.g. Supabase anonymous sign-in). */
+  is_anonymous?: boolean;
 }
 
 /**

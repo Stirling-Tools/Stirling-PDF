@@ -118,15 +118,27 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
 
     useEffect(() => {
-      if (!config?.enableLogin) return;
-      if (authDisplayName) return;
+      if (!config?.enableLogin) {
+        setAccountUsername(null);
+        return;
+      }
+      if (authDisplayName) {
+        // The auth context has a name; don't bother hitting the REST
+        // endpoint, but clear any stale cached value from a prior call.
+        setAccountUsername(null);
+        return;
+      }
       accountService
         .getAccountData()
         .then((data) => {
-          if (data?.username) setAccountUsername(data.username);
+          // Always reflect the latest result - including clearing it on
+          // sign-out, when the endpoint returns no username (or 401s into
+          // the catch branch below). Without this, signing out would leave
+          // the old username on screen.
+          setAccountUsername(data?.username ?? null);
         })
         .catch(() => {
-          /* not logged in or security disabled */
+          setAccountUsername(null);
         });
     }, [config?.enableLogin, authDisplayName]);
 

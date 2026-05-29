@@ -166,6 +166,18 @@ export class ConnectionModeService {
 
     this.notifyListeners();
 
+    // Re-dispatch `jwt-available` so the proprietary AuthProvider re-runs
+    // getSession() now that the mode is "saas". During OAuth login,
+    // authService.saveTokenEverywhere fires the initial `jwt-available`
+    // BEFORE switchToSaaS runs - at that point getSession sees mode="local"
+    // and takes the standard Spring path, which fails for Supabase JWTs.
+    // Without re-firing here the AuthProvider's session state stays null
+    // until a manual reload. Only re-fire when there's actually a token to
+    // validate.
+    if (typeof window !== "undefined" && localStorage.getItem("stirling_jwt")) {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+    }
+
     console.log("Switched to SaaS mode successfully");
   }
 
@@ -230,6 +242,13 @@ export class ConnectionModeService {
     selfHostedServerMonitor.start(serverConfig.url);
 
     this.notifyListeners();
+
+    // See the comment in switchToSaaS: re-fire `jwt-available` so the
+    // AuthProvider re-validates its session in the new mode. The same race
+    // applies to the self-hosted OAuth flow.
+    if (typeof window !== "undefined" && localStorage.getItem("stirling_jwt")) {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+    }
 
     console.log("Switched to self-hosted mode successfully");
   }
