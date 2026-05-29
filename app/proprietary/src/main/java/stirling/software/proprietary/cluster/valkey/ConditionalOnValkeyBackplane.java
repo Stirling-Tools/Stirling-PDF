@@ -8,11 +8,9 @@ import java.lang.annotation.Target;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 
 /**
- * Composite condition: cluster.enabled=true AND cluster.backplane=valkey.
- *
- * <p>Either condition alone is insufficient - enabled=true with backplane=inprocess would crash at
- * boot with no StringRedisTemplate, and enabled=false must skip all Valkey beans entirely. A
- * single @ConditionalOnExpression keeps the combined enabled+backplane guard in one place.
+ * Composite condition: matches only when cluster.enabled=true AND cluster.backplane=valkey. Both
+ * checks are required (enabled alone may select the in-process backplane, which must not load
+ * Valkey beans); a single {@code @ConditionalOnExpression} keeps the guard in one place.
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

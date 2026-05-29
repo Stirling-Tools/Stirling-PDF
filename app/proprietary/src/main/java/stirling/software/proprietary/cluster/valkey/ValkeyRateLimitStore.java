@@ -21,13 +21,9 @@ import jakarta.annotation.PreDestroy;
 import stirling.software.common.cluster.RateLimitStore;
 
 /**
- * Valkey-backed token-bucket rate limiting via Bucket4j's Lettuce ProxyManager.
- *
- * <p>Replaces the earlier hand-rolled INCR+EXPIRE Lua fixed-window script. The fixed-window impl
- * could allow a caller to spend the full bucket at second 59 of one window and the full bucket
- * again at second 1 of the next window (effective burst of 2x capacity at boundaries). The Bucket4j
- * token bucket refills continuously and removes that boundary doubling, giving cross-node parity
- * with the in-process {@code InProcessRateLimitStore} which already uses Bucket4j.
+ * Valkey-backed token-bucket rate limiting via Bucket4j's Lettuce ProxyManager. The token bucket
+ * refills continuously and enforces one global limit across nodes, with the same semantics as the
+ * in-process {@code InProcessRateLimitStore} (which also uses Bucket4j).
  */
 @Component
 @ConditionalOnValkeyBackplane
@@ -49,7 +45,7 @@ public class ValkeyRateLimitStore implements RateLimitStore {
             throw new IllegalStateException(
                     "ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "
                             + (client == null ? "null" : client.getClass().getName())
-                            + " (cluster client not yet supported by this rate limit impl)");
+                            + " (cluster client not supported by this rate limit impl)");
         }
         // Expire idle bucket keys so they do not accumulate forever in Valkey (one key per
         // user / API-key / IP). TTL tracks the time to refill the bucket from empty, capped at
