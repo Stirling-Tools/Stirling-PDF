@@ -18,7 +18,8 @@
  * The Vite dev server must be running (handled by playwright.config.ts webServer).
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@app/tests/helpers/test-base";
+import type { Page } from "@playwright/test";
 import path from "path";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
 

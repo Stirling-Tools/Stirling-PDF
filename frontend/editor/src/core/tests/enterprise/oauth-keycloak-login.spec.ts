@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "@app/tests/helpers/test-base";
 import { ensureCookieConsent } from "@app/tests/helpers/login";
 import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
 

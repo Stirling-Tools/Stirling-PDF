@@ -6,7 +6,8 @@
  *   STIRLING_FLAVOR=saas ./gradlew :stirling-pdf:bootRun --args="--server.port=18083 --spring.profiles.include=dev"
  *   STIRLING_SAAS_URL=http://localhost:18083 npx playwright test --project=stubbed saas-backend-smoke
  */
-import { test, expect, request } from "@playwright/test";
+import { test, expect } from "@app/tests/helpers/test-base";
+import { request } from "@playwright/test";
 
 const SAAS_URL = process.env.STIRLING_SAAS_URL ?? "http://localhost:18083";
 

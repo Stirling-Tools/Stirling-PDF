@@ -1,8 +1,7 @@
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect } from "@app/tests/helpers/test-base";
 import {
   bypassOnboarding,
   mockAppApis,
-  seedCookieConsent,
   skipOnboarding,
   type MockAppApiOptions,
 } from "@app/tests/helpers/api-stubs";
@@ -57,7 +56,8 @@ export const test = base.extend<StubFixtures>({
   seedJwt: [false, { option: true }],
 
   page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
-    await seedCookieConsent(page);
+    // `page` comes from test-base, which has already seeded cookie consent
+    // and attached the console-error recorder before any navigation runs.
     if (seedJwt) {
       // Logged-in users hit the orchestrator path that surfaces the
       // analytics opt-in / MFA prompts — use the stronger bypass-all flag
