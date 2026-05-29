@@ -5,7 +5,7 @@ import logging
 from stirling.contracts.documents import Page, PageRange, PageText
 from stirling.documents.embedder import EmbeddingService
 from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
-from stirling.models import FileId, UserId
+from stirling.models import FileId, OwnerId, PrincipalId
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,8 @@ PAGE_TEXT_CONTENT_TYPE = "page_text"
 class DocumentService:
     """Top-level facade for stored document content.
 
-    Holds two representations of every document under a single ``collection``:
+    Holds two representations of every document under a single
+    ``(collection, owner_id)`` pair:
 
     * **Vector chunks** for RAG-style semantic retrieval (``search``).
     * **Ordered pages** for whole-document reading (``read_pages``).
@@ -25,6 +26,15 @@ class DocumentService:
     Both are populated by :meth:`ingest` from a single ``pages`` payload. Agents
     pick the strategy that fits the question; they don't need to know which
     storage they're hitting.
+
+    **Owner vs principal.** ``owner_id`` is the tenant (a user or an org).
+    ``principals`` is the caller's accessible principal set, matched against
+    the ACL on every read. Personal-doc behaviour: ingest with
+    ``owner_id=user:bob`` and the route grants ``user:bob`` read access; Bob's
+    later searches pass ``principals=[user:bob]`` and find his docs.
+    Org-doc behaviour: ingest with ``owner_id=org:acme`` and grant read to
+    whichever groups should see it (``group:engineering``, etc.); members'
+    principal sets pick the doc up automatically.
     """
 
     def __init__(self, embedder: EmbeddingService, store: DocumentStore, default_top_k: int = 5) -> None:
@@ -37,21 +47,31 @@ class DocumentService:
         collection: FileId,
         pages: list[PageText],
         source: str,
-        user_id: UserId,
+        owner_id: OwnerId,
+        read_principals: list[PrincipalId],
     ) -> int:
         """Replace-ingest a document. Returns the number of vector chunks indexed.
 
-        This wipes any previously-stored content for ``collection`` under
-        ``user_id`` and writes both the vector-chunk and page-text
-        representations from the same ``pages`` payload. Pages with
-        empty/whitespace-only text are skipped for chunking but still written
-        to the page store so page numbering is preserved end-to-end.
+        Wipes any previously-stored content for ``(collection, owner_id)`` and
+        writes both the vector-chunk and page-text representations from the
+        same ``pages`` payload. Pages with empty/whitespace-only text are
+        skipped for chunking but still written to the page store so page
+        numbering is preserved end-to-end.
+
+        ``read_principals`` is required: the caller must declare who can read
+        this doc. For personal uploads pass ``[PrincipalId(owner_id)]``; for
+        org-shared docs pass the target groups/users explicitly. We never
+        derive an ACL silently from ``owner_id``.
         """
-        await self._store.delete_collection(collection, user_id)
-        await self._store.ensure_collection(collection, source, user_id)
+        if not read_principals:
+            raise ValueError("read_principals must not be empty — every doc needs at least one reader")
+
+        await self._store.delete_collection(collection, owner_id)
+        await self._store.ensure_collection(collection, source, owner_id)
 
         stored_pages = [StoredPage(page_number=p.page_number, text=p.text, char_count=len(p.text)) for p in pages]
-        await self._store.add_pages(collection, stored_pages, user_id)
+        await self._store.add_pages(collection, stored_pages, owner_id)
+        await self._store.grant_read(collection, owner_id, read_principals)
 
         chunks: list[Document] = []
         for page in pages:
@@ -71,72 +91,88 @@ class DocumentService:
         if not chunks:
             return 0
         embeddings = await self._embedder.embed_documents([doc.text for doc in chunks])
-        await self._store.add_documents(collection, chunks, embeddings, user_id)
+        await self._store.add_documents(collection, chunks, embeddings, owner_id)
         return len(chunks)
 
     async def search(
         self,
         query: str,
-        user_id: UserId,
+        principals: list[PrincipalId],
         collection: FileId | None = None,
         top_k: int | None = None,
     ) -> list[SearchResult]:
-        """Embed query and search ``user_id``'s collections.
+        """Embed query and search collections readable by ``principals``.
 
-        If ``collection`` is supplied, search only that collection. If ``None``,
-        merge results across every collection owned by ``user_id``.
+        If ``collection`` is supplied, search only that collection (and only
+        if at least one principal can read it). If ``None``, search every
+        collection any principal in ``principals`` can read, merge, and
+        return the top-k.
         """
         k = top_k if top_k is not None else self._default_top_k
         query_embedding = await self._embedder.embed_query(query)
 
         if collection is not None:
-            if not await self._store.has_collection(collection, user_id):
+            if not await self._store.has_collection(collection, principals):
                 return []
-            return await self._store.search(collection, query_embedding, k, user_id)
+            return await self._store.search(collection, query_embedding, k, principals)
 
-        # Search every collection owned by this user, skipping any that error
+        # Search every collection the caller can read, skipping any that error
         # (e.g. dimension mismatch).
-        collections = await self._store.list_collections(user_id)
+        collections = await self._store.list_collections(principals)
         all_results: list[SearchResult] = []
         for col_name in collections:
             try:
-                results = await self._store.search(col_name, query_embedding, k, user_id)
+                results = await self._store.search(col_name, query_embedding, k, principals)
                 all_results.extend(results)
             except Exception:  # noqa: BLE001 - any backend error on one collection should not stop the others
                 logger.warning(
-                    "Skipping collection %s during cross-collection search for user %s",
+                    "Skipping collection %s during cross-collection search",
                     col_name,
-                    user_id,
                     exc_info=True,
                 )
 
-        # Sort by score descending, return top_k across all of the user's collections
+        # Sort by score descending, return top_k across all the caller's collections
         all_results.sort(key=lambda r: r.score, reverse=True)
         return all_results[:k]
 
     async def read_pages(
         self,
         collection: FileId,
-        user_id: UserId,
+        principals: list[PrincipalId],
         page_range: PageRange | None = None,
     ) -> list[Page]:
-        """Return ordered page text for ``collection`` owned by ``user_id``.
+        """Return ordered page text for ``collection`` if any principal can read it."""
+        return await self._store.read_pages(collection, page_range, principals)
 
-        Empty list if the collection has no stored pages for this user.
-        """
-        return await self._store.read_pages(collection, page_range, user_id)
+    async def delete_collection(self, collection: FileId, owner_id: OwnerId) -> None:
+        """Remove a collection (chunks, pages, ACL). Owner-only operation."""
+        await self._store.delete_collection(collection, owner_id)
 
-    async def delete_collection(self, collection: FileId, user_id: UserId) -> None:
-        """Remove a user's collection (chunks and pages)."""
-        await self._store.delete_collection(collection, user_id)
+    async def has_collection(self, collection: FileId, principals: list[PrincipalId]) -> bool:
+        """Check whether at least one principal can read this collection."""
+        return await self._store.has_collection(collection, principals)
 
-    async def has_collection(self, collection: FileId, user_id: UserId) -> bool:
-        """Check whether ``user_id`` owns this collection."""
-        return await self._store.has_collection(collection, user_id)
+    async def list_collections(self, principals: list[PrincipalId]) -> list[FileId]:
+        """List collections readable by at least one of ``principals``."""
+        return [FileId(name) for name in await self._store.list_collections(principals)]
 
-    async def list_collections(self, user_id: UserId) -> list[FileId]:
-        """List collections owned by ``user_id``."""
-        return [FileId(name) for name in await self._store.list_collections(user_id)]
+    async def grant_read(
+        self,
+        collection: FileId,
+        owner_id: OwnerId,
+        principals: list[PrincipalId],
+    ) -> None:
+        """Grant read access to additional principals on an existing doc."""
+        await self._store.grant_read(collection, owner_id, principals)
+
+    async def revoke(
+        self,
+        collection: FileId,
+        owner_id: OwnerId,
+        principal: PrincipalId,
+    ) -> None:
+        """Revoke a principal's access on an existing doc."""
+        await self._store.revoke(collection, owner_id, principal)
 
     async def close(self) -> None:
         """Release the underlying store's resources."""

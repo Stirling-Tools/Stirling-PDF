@@ -11,7 +11,7 @@ from stirling.contracts import (
     IngestDocumentResponse,
 )
 from stirling.documents import DocumentService
-from stirling.models import FileId, UserId
+from stirling.models import FileId, OwnerId, PrincipalId, UserId
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
@@ -20,23 +20,28 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 async def ingest_document(
     request: IngestDocumentRequest,
     documents: Annotated[DocumentService, Depends(get_document_service)],
-    user_id: Annotated[UserId, Depends(require_user_id)],
+    _user_id: Annotated[UserId, Depends(require_user_id)],
 ) -> IngestDocumentResponse:
-    """Replace-ingest a document's content under ``document_id`` for the caller.
+    """Replace-ingest a document's content under ``(owner_id, read_principals)``.
 
     Stores both representations in one shot:
       * embedded chunks for RAG search,
-      * ordered page text for whole-document reading.
-    Any previously-stored content for this document (under the same user) is
-    removed first. The same ``document_id`` belonging to a different user is
-    untouched.
+      * ordered page text for whole-document reading,
+    plus the ACL row(s) that grant read access.
+
+    ``owner_id`` and ``read_principals`` are required on the request body —
+    the engine never defaults them. For personal uploads the caller sets
+    both to its user id; for org-shared uploads it sets owner to the org
+    and grantees to the target groups (``group:engineering``, etc.). We
+    still require ``X-User-Id`` on the request so the caller is
+    authenticated and PostHog tracks the right user.
     """
-    pages = request.page_text or []
     chunks_indexed = await documents.ingest(
         collection=request.document_id,
-        pages=pages,
+        pages=request.page_text or [],
         source=request.source,
-        user_id=user_id,
+        owner_id=request.owner_id,
+        read_principals=request.read_principals,
     )
     return IngestDocumentResponse(document_id=request.document_id, chunks_indexed=chunks_indexed)
 
@@ -47,8 +52,16 @@ async def delete_document(
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],
 ) -> DeleteDocumentResponse:
-    """Remove the caller's copy of this document. Idempotent."""
-    existed = await documents.has_collection(document_id, user_id)
+    """Remove the caller's copy of this document. Idempotent.
+
+    Owner is inferred from the caller - only personal-doc deletes go through
+    here. Org-doc deletes will need an explicit owner_id once we add the
+    admin endpoints for them; for now this route can't reach docs owned by
+    a different principal.
+    """
+    owner_id = OwnerId(user_id)
+    principals = [PrincipalId(user_id)]
+    existed = await documents.has_collection(document_id, principals=principals)
     if existed:
-        await documents.delete_collection(document_id, user_id)
+        await documents.delete_collection(document_id, owner_id=owner_id)
     return DeleteDocumentResponse(document_id=document_id, deleted=existed)

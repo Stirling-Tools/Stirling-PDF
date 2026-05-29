@@ -334,10 +334,19 @@ public class AiWorkflowService {
                 }
             }
         }
+        // Personal-doc semantics for AI workflows today: caller owns the doc and is its only
+        // grantee. When org / shared-doc ingestion lands, the caller chooses owner and
+        // grantees explicitly.
+        String callerId = currentUserId();
         AiDocumentIngestRequest ingestRequest =
-                new AiDocumentIngestRequest(file.getId(), file.getName(), pages);
+                new AiDocumentIngestRequest(
+                        file.getId(),
+                        file.getName(),
+                        pages,
+                        callerId,
+                        callerId == null ? List.of() : List.of(callerId));
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, currentUserId());
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
         log.debug(
                 "Ingested document: id={}, name={}, pages={}",
                 file.getId(),

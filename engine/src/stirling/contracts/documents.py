@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from stirling.models import ApiModel
+from stirling.models import ApiModel, OwnerId, PrincipalId
 
 from .common import FileId
 
@@ -35,20 +35,28 @@ class PageRange(ApiModel):
 
 
 class IngestDocumentRequest(ApiModel):
-    """Replace-ingest a document's content under the given ``document_id``.
+    """Replace-ingest a document's content under ``(document_id, owner_id)``.
 
-    Each call wipes any previously-stored content for the document and writes
+    Each call wipes any previously-stored content for the pair and writes
     both the vector-chunk and ordered-page representations from the supplied
     pages.
 
     ``source`` is a human-readable label (typically the original filename)
     that flows into chunk metadata so search results are readable when
     ``document_id`` is a hash.
+
+    ``owner_id`` and ``read_principals`` are required: the engine never
+    defaults them. Callers must declare ownership and access explicitly,
+    even for personal uploads (``owner_id = user id``, ``read_principals =
+    [user id]``). This keeps a forgetful caller from silently writing a
+    personal-doc copy of org content (or vice versa).
     """
 
     document_id: FileId = Field(min_length=1)
     source: str = Field(min_length=1)
     page_text: list[PageText] | None = None
+    owner_id: OwnerId = Field(min_length=1)
+    read_principals: list[PrincipalId] = Field(min_length=1)
 
 
 class IngestDocumentResponse(ApiModel):

@@ -49,7 +49,7 @@ from stirling.contracts import (
     Verdict,
 )
 from stirling.contracts.ledger import Discrepancy
-from stirling.models import ApiModel, ToolEndpoint
+from stirling.models import ApiModel, PrincipalId, ToolEndpoint
 from stirling.models.agent_tool_models import (
     AgentToolId,
     MathAuditorAgentParams,
@@ -160,7 +160,7 @@ class PdfReviewAgent:
                 )
             report = await self._contradiction_detector.detect(
                 request.files,
-                user_id=require_current_user_id(),
+                principals=[PrincipalId(require_current_user_id())],
                 query=request.user_message,
             )
             comments_json = await self._build_contradiction_comments_payload(request.user_message, report)
@@ -197,10 +197,10 @@ class PdfReviewAgent:
         )
 
     async def _find_missing_files(self, files: list[AiFile]) -> list[AiFile]:
-        user_id = require_current_user_id()
+        principals = [PrincipalId(require_current_user_id())]
         missing: list[AiFile] = []
         for file in files:
-            if not await self.runtime.documents.has_collection(file.id, user_id=user_id):
+            if not await self.runtime.documents.has_collection(file.id, principals=principals):
                 missing.append(file)
         return missing
 

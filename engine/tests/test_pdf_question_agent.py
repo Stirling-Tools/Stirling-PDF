@@ -20,11 +20,13 @@ from stirling.contracts import (
     SupportedCapability,
 )
 from stirling.documents import Document, DocumentService, SqliteVecStore
-from stirling.models import FileId, UserId
+from stirling.models import FileId, OwnerId, PrincipalId, UserId
 from stirling.services import current_user_id
 from stirling.services.runtime import AppRuntime
 
 USER = UserId("test-user")
+OWNER = OwnerId("test-user")
+OWNER_PRINCIPALS = [PrincipalId("test-user")]
 
 
 @pytest.fixture(autouse=True)
@@ -109,7 +111,8 @@ async def test_reports_only_missing_files(runtime_with_stub_rag: AppRuntime) -> 
         FileId("present-id"),
         [PageText(page_number=1, text="Invoice total: 120.00.")],
         source="present.pdf",
-        user_id=USER,
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
     )
     agent = PdfQuestionAgent(runtime_with_stub_rag)
 
@@ -127,7 +130,8 @@ async def test_returns_grounded_answer_when_all_files_ingested(runtime_with_stub
         FileId("invoice-id"),
         [PageText(page_number=1, text="Invoice total: 120.00.")],
         source="invoice.pdf",
-        user_id=USER,
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
     )
     agent = StubPdfQuestionAgent(
         runtime_with_stub_rag,
@@ -159,7 +163,8 @@ async def test_returns_not_found_when_answer_not_in_doc(runtime_with_stub_rag: A
         FileId("shipping-id"),
         [PageText(page_number=1, text="This page contains only a shipping address.")],
         source="shipping.pdf",
-        user_id=USER,
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
     )
     agent = StubPdfQuestionAgent(
         runtime_with_stub_rag,

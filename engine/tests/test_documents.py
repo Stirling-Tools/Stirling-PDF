@@ -8,10 +8,17 @@ from stirling.documents.rag_capability import RagCapability
 from stirling.documents.service import DocumentService
 from stirling.documents.sqlite_vec_store import SqliteVecStore
 from stirling.documents.store import Document, SearchResult
-from stirling.models import FileId, UserId
+from stirling.models import FileId, OwnerId, PrincipalId
 
-USER = UserId("test-user")
-OTHER_USER = UserId("other-user")
+# Personal-doc tests reuse the same opaque string in all three roles — keeps the
+# defaults of ingest() exercised and tests honest about what the same id means
+# (caller, tenant, single ACL grantee). Org-doc tests construct ad-hoc owners
+# and principal sets inline.
+OWNER = OwnerId("test-user")
+OWNER_PRINCIPALS = [PrincipalId("test-user")]
+OTHER_OWNER = OwnerId("other-user")
+OTHER_OWNER_PRINCIPALS = [PrincipalId("other-user")]
+
 
 # chunk_text
 
@@ -59,7 +66,8 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_add_and_search(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("test-col", "test.pdf", USER)
+        await store.ensure_collection("test-col", "test.pdf", OWNER)
+        await store.grant_read("test-col", OWNER, OWNER_PRINCIPALS)
         docs = [
             Document(id="1", text="Python is a programming language", metadata={"source": "test"}),
             Document(id="2", text="Java is another programming language", metadata={"source": "test"}),
@@ -70,9 +78,9 @@ class TestSqliteVecStore:
             [0.9, 0.1, 0.0],
             [0.0, 0.0, 1.0],
         ]
-        await store.add_documents("test-col", docs, embeddings, USER)
+        await store.add_documents("test-col", docs, embeddings, OWNER)
 
-        results = await store.search("test-col", [1.0, 0.05, 0.0], top_k=2, user_id=USER)
+        results = await store.search("test-col", [1.0, 0.05, 0.0], top_k=2, principals=OWNER_PRINCIPALS)
         assert len(results) == 2
         assert isinstance(results[0], SearchResult)
         assert results[0].document.id == "1"
@@ -81,33 +89,36 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_list_and_has_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("my-collection", "test.pdf", USER)
+        await store.ensure_collection("my-collection", "test.pdf", OWNER)
+        await store.grant_read("my-collection", OWNER, OWNER_PRINCIPALS)
         docs = [Document(id="1", text="test", metadata={})]
-        await store.add_documents("my-collection", docs, [[1.0, 0.0]], USER)
+        await store.add_documents("my-collection", docs, [[1.0, 0.0]], OWNER)
 
-        collections = await store.list_collections(USER)
+        collections = await store.list_collections(OWNER_PRINCIPALS)
         assert "my-collection" in collections
-        assert await store.has_collection("my-collection", USER) is True
-        assert await store.has_collection("nonexistent", USER) is False
+        assert await store.has_collection("my-collection", OWNER_PRINCIPALS) is True
+        assert await store.has_collection("nonexistent", OWNER_PRINCIPALS) is False
 
     @pytest.mark.anyio
     async def test_delete_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("to-delete", "test.pdf", USER)
+        await store.ensure_collection("to-delete", "test.pdf", OWNER)
+        await store.grant_read("to-delete", OWNER, OWNER_PRINCIPALS)
         docs = [Document(id="1", text="test", metadata={})]
-        await store.add_documents("to-delete", docs, [[1.0]], USER)
+        await store.add_documents("to-delete", docs, [[1.0]], OWNER)
 
-        assert await store.has_collection("to-delete", USER) is True
-        await store.delete_collection("to-delete", USER)
-        assert await store.has_collection("to-delete", USER) is False
+        assert await store.has_collection("to-delete", OWNER_PRINCIPALS) is True
+        await store.delete_collection("to-delete", OWNER)
+        assert await store.has_collection("to-delete", OWNER_PRINCIPALS) is False
 
     @pytest.mark.anyio
     async def test_search_empty_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("empty-test", "test.pdf", USER)
+        await store.ensure_collection("empty-test", "test.pdf", OWNER)
+        await store.grant_read("empty-test", OWNER, OWNER_PRINCIPALS)
         docs = [Document(id="1", text="test", metadata={})]
-        await store.add_documents("empty-test", docs, [[1.0, 0.0]], USER)
-        results = await store.search("empty-test", [1.0, 0.0], top_k=5, user_id=USER)
+        await store.add_documents("empty-test", docs, [[1.0, 0.0]], OWNER)
+        results = await store.search("empty-test", [1.0, 0.0], top_k=5, principals=OWNER_PRINCIPALS)
         assert len(results) == 1
 
     @pytest.mark.anyio
@@ -115,37 +126,66 @@ class TestSqliteVecStore:
         store = SqliteVecStore.ephemeral()
         docs = [Document(id="1", text="test", metadata={})]
         with pytest.raises(ValueError, match="documents.*embeddings"):
-            await store.add_documents("bad", docs, [[1.0], [2.0]], USER)
+            await store.add_documents("bad", docs, [[1.0], [2.0]], OWNER)
 
     @pytest.mark.anyio
-    async def test_collections_isolated_by_user(self) -> None:
-        """Two users can store the same collection id without seeing each other's data."""
+    async def test_collections_isolated_by_owner(self) -> None:
+        """Two owners can store the same collection id; reads stay scoped to ACL."""
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("shared-id", "alice.pdf", USER)
-        await store.ensure_collection("shared-id", "bob.pdf", OTHER_USER)
+        await store.ensure_collection("shared-id", "alice.pdf", OWNER)
+        await store.grant_read("shared-id", OWNER, OWNER_PRINCIPALS)
+        await store.ensure_collection("shared-id", "bob.pdf", OTHER_OWNER)
+        await store.grant_read("shared-id", OTHER_OWNER, OTHER_OWNER_PRINCIPALS)
         await store.add_documents(
             "shared-id",
             [Document(id="1", text="alice content", metadata={})],
             [[1.0, 0.0]],
-            USER,
+            OWNER,
         )
         await store.add_documents(
             "shared-id",
             [Document(id="1", text="bob content", metadata={})],
             [[1.0, 0.0]],
-            OTHER_USER,
+            OTHER_OWNER,
         )
 
-        alice_results = await store.search("shared-id", [1.0, 0.0], top_k=5, user_id=USER)
-        bob_results = await store.search("shared-id", [1.0, 0.0], top_k=5, user_id=OTHER_USER)
+        alice_results = await store.search("shared-id", [1.0, 0.0], top_k=5, principals=OWNER_PRINCIPALS)
+        bob_results = await store.search("shared-id", [1.0, 0.0], top_k=5, principals=OTHER_OWNER_PRINCIPALS)
         assert [r.document.text for r in alice_results] == ["alice content"]
         assert [r.document.text for r in bob_results] == ["bob content"]
-        assert await store.list_collections(USER) == ["shared-id"]
-        assert await store.list_collections(OTHER_USER) == ["shared-id"]
+        assert await store.list_collections(OWNER_PRINCIPALS) == ["shared-id"]
+        assert await store.list_collections(OTHER_OWNER_PRINCIPALS) == ["shared-id"]
 
-        await store.delete_collection("shared-id", USER)
-        assert await store.has_collection("shared-id", USER) is False
-        assert await store.has_collection("shared-id", OTHER_USER) is True
+        await store.delete_collection("shared-id", OWNER)
+        assert await store.has_collection("shared-id", OWNER_PRINCIPALS) is False
+        assert await store.has_collection("shared-id", OTHER_OWNER_PRINCIPALS) is True
+
+    @pytest.mark.anyio
+    async def test_acl_grants_read_to_extra_principal(self) -> None:
+        """A principal without an ACL row can't read; once granted, they can."""
+        store = SqliteVecStore.ephemeral()
+        team_principal = PrincipalId("group:engineering")
+        await store.ensure_collection("doc", "engineering-runbook.pdf", OWNER)
+        await store.grant_read("doc", OWNER, OWNER_PRINCIPALS)
+        await store.add_documents(
+            "doc",
+            [Document(id="1", text="how to deploy", metadata={})],
+            [[1.0, 0.0]],
+            OWNER,
+        )
+
+        # Engineering can't see it yet.
+        assert await store.has_collection("doc", [team_principal]) is False
+
+        # Owner grants engineering read access.
+        await store.grant_read("doc", OWNER, [team_principal])
+        assert await store.has_collection("doc", [team_principal]) is True
+
+        # Revoke kills it.
+        await store.revoke("doc", OWNER, team_principal)
+        assert await store.has_collection("doc", [team_principal]) is False
+        # Owner still can.
+        assert await store.has_collection("doc", OWNER_PRINCIPALS) is True
 
 
 # DocumentService (with stub embedder)
@@ -196,41 +236,67 @@ class TestDocumentService:
     @pytest.mark.anyio
     async def test_ingest_and_search(self, documents: DocumentService) -> None:
         text = "Python is great for data science. It has many libraries like pandas and numpy."
-        count = await documents.ingest(FileId("docs"), _pages(text), source="guide.pdf", user_id=USER)
+        count = await documents.ingest(
+            FileId("docs"), _pages(text), source="guide.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
         assert count > 0
 
-        results = await documents.search("Python libraries", user_id=USER, collection=FileId("docs"))
+        results = await documents.search("Python libraries", principals=OWNER_PRINCIPALS, collection=FileId("docs"))
         assert len(results) > 0
         assert results[0].document.text
 
     @pytest.mark.anyio
     async def test_ingest_empty_text_returns_zero_chunks(self, documents: DocumentService) -> None:
-        count = await documents.ingest(FileId("docs"), _pages(""), source="empty.pdf", user_id=USER)
+        count = await documents.ingest(
+            FileId("docs"), _pages(""), source="empty.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
         assert count == 0
 
     @pytest.mark.anyio
     async def test_search_nonexistent_collection_returns_empty(self, documents: DocumentService) -> None:
-        results = await documents.search("anything", user_id=USER, collection=FileId("nonexistent"))
+        results = await documents.search("anything", principals=OWNER_PRINCIPALS, collection=FileId("nonexistent"))
         assert results == []
 
     @pytest.mark.anyio
-    async def test_search_all_collections_for_user(self, documents: DocumentService) -> None:
-        await documents.ingest(FileId("col-a"), _pages("Machine learning overview."), source="ml.pdf", user_id=USER)
+    async def test_search_all_collections_for_principal(self, documents: DocumentService) -> None:
         await documents.ingest(
-            FileId("col-b"), _pages("Deep learning with neural networks."), source="dl.pdf", user_id=USER
+            FileId("col-a"),
+            _pages("Machine learning overview."),
+            source="ml.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+        )
+        await documents.ingest(
+            FileId("col-b"),
+            _pages("Deep learning with neural networks."),
+            source="dl.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
         )
 
-        results = await documents.search("neural networks", user_id=USER)
+        results = await documents.search("neural networks", principals=OWNER_PRINCIPALS)
         assert len(results) > 0
 
     @pytest.mark.anyio
-    async def test_search_does_not_cross_user_boundary(self, documents: DocumentService) -> None:
-        """A search by user A must never return user B's content, even with collection=None."""
-        await documents.ingest(FileId("col-a"), _pages("Alice's private notes."), source="alice.pdf", user_id=USER)
-        await documents.ingest(FileId("col-b"), _pages("Bob's private notes."), source="bob.pdf", user_id=OTHER_USER)
+    async def test_search_does_not_cross_owner_boundary(self, documents: DocumentService) -> None:
+        """A search by one principal set never returns docs owned by an unrelated owner."""
+        await documents.ingest(
+            FileId("col-a"),
+            _pages("Alice's private notes."),
+            source="alice.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+        )
+        await documents.ingest(
+            FileId("col-b"),
+            _pages("Bob's private notes."),
+            source="bob.pdf",
+            owner_id=OTHER_OWNER,
+            read_principals=OTHER_OWNER_PRINCIPALS,
+        )
 
-        alice_results = await documents.search("notes", user_id=USER)
-        bob_results = await documents.search("notes", user_id=OTHER_USER)
+        alice_results = await documents.search("notes", principals=OWNER_PRINCIPALS)
+        bob_results = await documents.search("notes", principals=OTHER_OWNER_PRINCIPALS)
         alice_texts = [r.document.text for r in alice_results]
         bob_texts = [r.document.text for r in bob_results]
         assert any("Alice" in t for t in alice_texts)
@@ -239,13 +305,46 @@ class TestDocumentService:
         assert not any("Alice" in t for t in bob_texts)
 
     @pytest.mark.anyio
+    async def test_org_doc_visible_only_to_granted_group(self, documents: DocumentService) -> None:
+        """Org-owned doc with explicit ACL: only granted principals see it."""
+        org_owner = OwnerId("org:acme")
+        eng_group = PrincipalId("group:engineering")
+        hr_group = PrincipalId("group:hr")
+
+        await documents.ingest(
+            FileId("runbook"),
+            _pages("Production deploy steps."),
+            source="runbook.pdf",
+            owner_id=org_owner,
+            read_principals=[eng_group],
+        )
+
+        # Engineering can read.
+        eng_results = await documents.search("deploy", principals=[eng_group])
+        assert len(eng_results) > 0
+
+        # HR cannot.
+        hr_results = await documents.search("deploy", principals=[hr_group])
+        assert hr_results == []
+
+        # Caller with both memberships (or org-wide principal) still sees it via eng.
+        multi_results = await documents.search("deploy", principals=[hr_group, eng_group])
+        assert len(multi_results) > 0
+
+    @pytest.mark.anyio
     async def test_delete_collection(self, documents: DocumentService) -> None:
-        await documents.ingest(FileId("temp"), _pages("Temporary data."), source="tmp.pdf", user_id=USER)
-        collections = await documents.list_collections(USER)
+        await documents.ingest(
+            FileId("temp"),
+            _pages("Temporary data."),
+            source="tmp.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+        )
+        collections = await documents.list_collections(OWNER_PRINCIPALS)
         assert "temp" in collections
 
-        await documents.delete_collection(FileId("temp"), user_id=USER)
-        collections = await documents.list_collections(USER)
+        await documents.delete_collection(FileId("temp"), owner_id=OWNER)
+        collections = await documents.list_collections(OWNER_PRINCIPALS)
         assert "temp" not in collections
 
     @pytest.mark.anyio
@@ -255,9 +354,11 @@ class TestDocumentService:
             PageText(page_number=2, text="Second page text."),
             PageText(page_number=3, text="Third page text."),
         ]
-        await documents.ingest(FileId("ordered"), pages, source="ordered.pdf", user_id=USER)
+        await documents.ingest(
+            FileId("ordered"), pages, source="ordered.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
 
-        stored = await documents.read_pages(FileId("ordered"), user_id=USER)
+        stored = await documents.read_pages(FileId("ordered"), principals=OWNER_PRINCIPALS)
         assert [p.page_number for p in stored] == [1, 2, 3]
         assert stored[0].text == "First page text."
         assert stored[0].char_count == len("First page text.")
@@ -267,9 +368,13 @@ class TestDocumentService:
         from stirling.contracts import PageRange
 
         pages = [PageText(page_number=i, text=f"page {i}") for i in range(1, 6)]
-        await documents.ingest(FileId("ranged"), pages, source="r.pdf", user_id=USER)
+        await documents.ingest(
+            FileId("ranged"), pages, source="r.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
 
-        subset = await documents.read_pages(FileId("ranged"), user_id=USER, page_range=PageRange(start=2, end=4))
+        subset = await documents.read_pages(
+            FileId("ranged"), principals=OWNER_PRINCIPALS, page_range=PageRange(start=2, end=4)
+        )
         assert [p.page_number for p in subset] == [2, 3, 4]
 
     @pytest.mark.anyio
@@ -278,16 +383,18 @@ class TestDocumentService:
             FileId("doc"),
             [PageText(page_number=1, text="old"), PageText(page_number=2, text="old2")],
             source="v1.pdf",
-            user_id=USER,
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
         )
         await documents.ingest(
             FileId("doc"),
             [PageText(page_number=1, text="new")],
             source="v2.pdf",
-            user_id=USER,
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
         )
 
-        stored = await documents.read_pages(FileId("doc"), user_id=USER)
+        stored = await documents.read_pages(FileId("doc"), principals=OWNER_PRINCIPALS)
         assert [p.page_number for p in stored] == [1]
         assert stored[0].text == "new"
 
@@ -300,9 +407,11 @@ class TestDocumentService:
             PageText(page_number=2, text="   "),
             PageText(page_number=3, text="Real text on page 3."),
         ]
-        await documents.ingest(FileId("with-blanks"), pages, source="blanks.pdf", user_id=USER)
+        await documents.ingest(
+            FileId("with-blanks"), pages, source="blanks.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
 
-        stored = await documents.read_pages(FileId("with-blanks"), user_id=USER)
+        stored = await documents.read_pages(FileId("with-blanks"), principals=OWNER_PRINCIPALS)
         assert [p.page_number for p in stored] == [1, 2, 3]
         assert stored[1].text.strip() == ""
 
@@ -322,22 +431,26 @@ async def _invoke_search_knowledge(capability: RagCapability, query: str, max_re
 
 class TestRagCapability:
     def test_instructions_static_when_collections_pinned(self, documents: DocumentService) -> None:
-        cap = RagCapability(documents, user_id=USER, collections=[FileId("docs"), FileId("manuals")])
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=[FileId("docs"), FileId("manuals")])
         instructions = cap.instructions
         assert isinstance(instructions, str)
         assert "docs, manuals" in instructions
         assert "search_knowledge" in instructions
 
     def test_instructions_dynamic_when_no_collections(self, documents: DocumentService) -> None:
-        cap = RagCapability(documents, user_id=USER)
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         instructions = cap.instructions
         assert callable(instructions)
 
     @pytest.mark.anyio
     async def test_dynamic_instructions_list_available_collections(self, documents: DocumentService) -> None:
-        await documents.ingest(FileId("col-a"), _pages("Alpha content."), source="a.pdf", user_id=USER)
-        await documents.ingest(FileId("col-b"), _pages("Beta content."), source="b.pdf", user_id=USER)
-        cap = RagCapability(documents, user_id=USER)
+        await documents.ingest(
+            FileId("col-a"), _pages("Alpha content."), source="a.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
+        await documents.ingest(
+            FileId("col-b"), _pages("Beta content."), source="b.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         instructions_fn = cap.instructions
         assert callable(instructions_fn)
         text = await instructions_fn()
@@ -346,7 +459,7 @@ class TestRagCapability:
 
     @pytest.mark.anyio
     async def test_dynamic_instructions_when_store_empty(self, documents: DocumentService) -> None:
-        cap = RagCapability(documents, user_id=USER)
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         instructions_fn = cap.instructions
         assert callable(instructions_fn)
         text = await instructions_fn()
@@ -354,16 +467,20 @@ class TestRagCapability:
 
     @pytest.mark.anyio
     async def test_search_knowledge_returns_no_results_message_when_empty(self, documents: DocumentService) -> None:
-        cap = RagCapability(documents, user_id=USER)
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         output = await _invoke_search_knowledge(cap, "anything")
         assert output == "No relevant results found in the knowledge base."
 
     @pytest.mark.anyio
     async def test_search_knowledge_formats_results_with_source_and_score(self, documents: DocumentService) -> None:
         await documents.ingest(
-            FileId("docs"), _pages("Python is a programming language."), source="guide.pdf", user_id=USER
+            FileId("docs"),
+            _pages("Python is a programming language."),
+            source="guide.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
         )
-        cap = RagCapability(documents, user_id=USER)
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         output = await _invoke_search_knowledge(cap, "Python")
         assert "[Result 1" in output
         assert "source: guide.pdf" in output
@@ -373,13 +490,21 @@ class TestRagCapability:
     @pytest.mark.anyio
     async def test_search_knowledge_restricts_to_pinned_collections(self, documents: DocumentService) -> None:
         await documents.ingest(
-            FileId("pinned"), _pages("Pinned collection content."), source="pinned.pdf", user_id=USER
+            FileId("pinned"),
+            _pages("Pinned collection content."),
+            source="pinned.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
         )
         await documents.ingest(
-            FileId("other"), _pages("Content in another collection."), source="other.pdf", user_id=USER
+            FileId("other"),
+            _pages("Content in another collection."),
+            source="other.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
         )
 
-        cap = RagCapability(documents, user_id=USER, collections=[FileId("pinned")])
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=[FileId("pinned")])
         output = await _invoke_search_knowledge(cap, "content")
         assert "pinned.pdf" in output
         assert "other.pdf" not in output
@@ -387,9 +512,11 @@ class TestRagCapability:
     @pytest.mark.anyio
     async def test_search_knowledge_respects_max_results(self, documents: DocumentService) -> None:
         paragraphs = "\n\n".join(f"Paragraph {i} about topic." for i in range(10))
-        await documents.ingest(FileId("bulk"), _pages(paragraphs), source="bulk.pdf", user_id=USER)
+        await documents.ingest(
+            FileId("bulk"), _pages(paragraphs), source="bulk.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
 
-        cap = RagCapability(documents, user_id=USER)
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         output = await _invoke_search_knowledge(cap, "topic", max_results=2)
         assert "[Result 1" in output
         assert "[Result 2" in output
@@ -399,8 +526,10 @@ class TestRagCapability:
     async def test_search_knowledge_tool_is_hidden_after_budget_exhausted(self, documents: DocumentService) -> None:
         """The prepare callback must return None once max_searches has been reached
         so the agent can no longer call the tool on subsequent turns."""
-        await documents.ingest(FileId("docs"), _pages("Some content."), source="x.pdf", user_id=USER)
-        cap = RagCapability(documents, user_id=USER, max_searches=2)
+        await documents.ingest(
+            FileId("docs"), _pages("Some content."), source="x.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+        )
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, max_searches=2)
         tool_def = _dummy_tool_def()
 
         assert await cap._prepare_search_knowledge(None, tool_def) is tool_def  # type: ignore[arg-type]

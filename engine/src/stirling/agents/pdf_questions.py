@@ -27,6 +27,7 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.documents import RagCapability
+from stirling.models import PrincipalId
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime, require_current_user_id
 
@@ -161,10 +162,10 @@ class PdfQuestionAgent:
         )
 
     async def _find_missing_files(self, files: list[AiFile]) -> list[AiFile]:
-        user_id = require_current_user_id()
+        principals = [PrincipalId(require_current_user_id())]
         missing: list[AiFile] = []
         for file in files:
-            if not await self.runtime.documents.has_collection(file.id, user_id=user_id):
+            if not await self.runtime.documents.has_collection(file.id, principals=principals):
                 missing.append(file)
         return missing
 
@@ -176,10 +177,10 @@ class PdfQuestionAgent:
         upstream classifier keeps that judgement in the same call that writes
         the answer, and lets the agent mix tools when the question warrants it.
         """
-        user_id = require_current_user_id()
+        principals = [PrincipalId(require_current_user_id())]
         rag = RagCapability(
             documents=self.runtime.documents,
-            user_id=user_id,
+            principals=principals,
             collections=[file.id for file in request.files],
             top_k=self.runtime.settings.rag_default_top_k,
             max_searches=self.runtime.settings.rag_max_searches,
@@ -187,13 +188,13 @@ class PdfQuestionAgent:
         whole_doc = WholeDocReaderCapability(
             runtime=self.runtime,
             files=request.files,
-            user_id=user_id,
+            principals=principals,
             reasoner=self._chunked_reasoner,
         )
         contradiction = ContradictionCapability(
             detector=self._contradiction_detector,
             files=request.files,
-            user_id=user_id,
+            principals=principals,
         )
         agent = Agent(
             model=self.runtime.smart_model,

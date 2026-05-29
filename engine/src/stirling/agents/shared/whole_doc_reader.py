@@ -19,7 +19,7 @@ from pydantic_ai.toolsets import AbstractToolset
 
 from stirling.agents.shared.chunked_reasoner import ChunkedReasoner
 from stirling.contracts import AiFile
-from stirling.models import UserId
+from stirling.models import PrincipalId
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -48,14 +48,14 @@ class WholeDocReaderCapability:
         self,
         runtime: AppRuntime,
         files: list[AiFile],
-        user_id: UserId,
+        principals: list[PrincipalId],
         *,
         reasoner: ChunkedReasoner | None = None,
         max_reads: int = DEFAULT_MAX_READS,
     ) -> None:
         self._runtime = runtime
         self._files = files
-        self._user_id = user_id
+        self._principals = principals
         self._reasoner = reasoner if reasoner is not None else ChunkedReasoner(runtime)
         self._max_reads = max_reads
         self._read_count = 0
@@ -118,7 +118,7 @@ class WholeDocReaderCapability:
 
         sections: list[str] = []
         for file in self._files:
-            pages = await self._runtime.documents.read_pages(file.id, user_id=self._user_id)
+            pages = await self._runtime.documents.read_pages(file.id, principals=self._principals)
             if not pages:
                 logger.info(
                     "[whole-doc-reader] no stored pages for %s (id=%s); skipping",

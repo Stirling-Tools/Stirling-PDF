@@ -28,13 +28,15 @@ from stirling.contracts import (
 )
 from stirling.contracts.contradiction import Claim
 from stirling.documents import DocumentService, SqliteVecStore
-from stirling.models import FileId, ToolEndpoint, UserId
+from stirling.models import FileId, OwnerId, PrincipalId, ToolEndpoint, UserId
 from stirling.models.tool_models import AddCommentsParams
 from stirling.services import current_user_id
 from stirling.services.runtime import AppRuntime
 from tests.test_pdf_question_agent import StubEmbedder
 
 USER = UserId("test-user")
+OWNER = OwnerId("test-user")
+OWNER_PRINCIPALS = [PrincipalId("test-user")]
 
 
 @pytest.fixture(autouse=True)
@@ -101,7 +103,8 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
         file.id,
         [PageText(page_number=1, text="x")],
         source=file.name,
-        user_id=USER,
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -173,7 +176,8 @@ async def test_contradiction_intent_emits_add_comments_plan(
         file.id,
         [PageText(page_number=1, text="ignored"), PageText(page_number=5, text="ignored")],
         source=file.name,
-        user_id=USER,
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -279,7 +283,8 @@ async def test_contradiction_takes_precedence_over_math(
         file.id,
         [PageText(page_number=1, text="x")],
         source=file.name,
-        user_id=USER,
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)

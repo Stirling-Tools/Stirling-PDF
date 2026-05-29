@@ -11,10 +11,21 @@ from pydantic.alias_generators import to_camel
 FileId = NewType("FileId", str)
 
 # Stable, opaque identifier for the calling user, supplied by the Java backend via the
-# X-User-Id header (and stamped into a ContextVar by UserIdMiddleware). Every per-user
-# storage operation in the document store is keyed by this so two users with the same
-# FileId remain isolated.
+# X-User-Id header (and stamped into a ContextVar by UserIdMiddleware). Used as both
+# the default OwnerId and PrincipalId for personal documents.
 UserId = NewType("UserId", str)
+
+# Tenant that owns a document. May be a user (``user:bob``) or an org (``org:acme``);
+# the engine treats it as an opaque string. Determines the physical row in
+# ``documents_meta`` and is the only principal who can delete the doc.
+OwnerId = NewType("OwnerId", str)
+
+# An entity that can hold permissions on a document — a user, a group, a role, an
+# org. Stored in ``document_acl`` rows; matched against the caller's principal set
+# on every read. The engine doesn't interpret the string; Java decides what set of
+# principals a caller has (membership in groups, etc.) and which set to grant on
+# ingest.
+PrincipalId = NewType("PrincipalId", str)
 
 
 class ApiModel(BaseModel):

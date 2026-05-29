@@ -8,7 +8,7 @@ from pydantic_ai.toolsets import AbstractToolset
 
 from stirling.documents.service import DocumentService
 from stirling.documents.store import SearchResult
-from stirling.models import FileId, UserId
+from stirling.models import FileId, PrincipalId
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 class RagCapability:
     """Bundles RAG instructions and the ``search_knowledge`` toolset for agent injection.
 
-    Agents construct one per run, scoped to the caller's user, as::
+    Agents construct one per run, scoped to the caller's principal set, as::
 
         rag = RagCapability(
             documents=self.runtime.documents,
-            user_id=require_current_user_id(),
+            principals=current_principals(),
             collections=[file.id for file in request.files],
         )
         Agent(
@@ -30,22 +30,22 @@ class RagCapability:
         )
 
     When no collections are pinned, the instructions are generated dynamically at
-    run time so the agent sees the current user's collections in the store.
+    run time so the agent sees the collections the caller can read.
 
     Lifecycle: a ``RagCapability`` instance is intended to live for the duration of a
-    single agent run and binds to one user.
+    single agent run and binds to one caller's principal set.
     """
 
     def __init__(
         self,
         documents: DocumentService,
-        user_id: UserId,
+        principals: list[PrincipalId],
         collections: list[FileId] | None = None,
         top_k: int = 5,
         max_searches: int = 5,
     ) -> None:
         self._documents = documents
-        self._user_id = user_id
+        self._principals = principals
         self._collections = collections
         self._top_k = top_k
         self._max_searches = max_searches
@@ -80,7 +80,7 @@ class RagCapability:
         )
 
     async def _dynamic_instructions(self) -> str:
-        collections = await self._documents.list_collections(self._user_id)
+        collections = await self._documents.list_collections(self._principals)
         if collections:
             names = ", ".join(collections)
             collection_desc = f"the following knowledge base collections: {names}"
@@ -121,12 +121,12 @@ class RagCapability:
         if self._collections:
             all_results = []
             for col in self._collections:
-                col_results = await self._documents.search(query, user_id=self._user_id, collection=col, top_k=k)
+                col_results = await self._documents.search(query, principals=self._principals, collection=col, top_k=k)
                 all_results.extend(col_results)
             all_results.sort(key=lambda r: r.score, reverse=True)
             results = all_results[:k]
         else:
-            results = await self._documents.search(query, user_id=self._user_id, top_k=k)
+            results = await self._documents.search(query, principals=self._principals, top_k=k)
 
         if not results:
             logger.info("[rag] search_knowledge query=%r -> 0 results", query)

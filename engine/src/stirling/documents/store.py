@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 from stirling.contracts.documents import Page, PageRange
-from stirling.models import UserId
+from stirling.models import OwnerId, PrincipalId
 
 
 @dataclass
@@ -42,20 +42,42 @@ class DocumentStore(ABC):
     * **Ordered pages** - the original page text retained in document order,
       used for whole-document reading.
 
-    Both representations live under the same ``collection`` (file id) and are
-    rooted at a single parent row in ``documents_meta``. Removing that parent
-    row cascades to both child representations, so :meth:`delete_collection`
-    is one logical delete.
+    Both representations live under the same ``(collection, owner_id)`` parent
+    row in ``documents_meta``. Removing that parent row cascades, so
+    :meth:`delete_collection` is one logical delete.
+
+    **Tenancy / ownership.** ``owner_id`` is the tenant a doc belongs to
+    (``user:bob``, ``org:acme``, etc.). The same ``collection`` value under two
+    different owners is two physically-distinct rows. Only the owner can delete.
+
+    **Access control.** Reads are governed by a separate ``document_acl`` table
+    that maps ``(collection, owner_id) -> principal_id``. Read methods take a
+    ``principals`` list — the caller's accessible principal set — and return a
+    row only when at least one of those principals has been granted access in
+    the ACL. The engine treats principal strings as opaque; Java decides what
+    set of principals a given caller has (membership in groups, etc.).
+
+    Personal-doc semantics fall out for free: on ingest, the route grants the
+    owner read access to its own doc, so ``principals=[owner_id]`` returns
+    exactly that user's documents.
     """
 
+    # ── lifecycle of the (collection, owner_id) row ────────────────────────
+
     @abstractmethod
-    async def ensure_collection(self, collection: str, source: str, user_id: UserId) -> None:
-        """Upsert the top-level ``documents_meta`` row for this collection under ``user_id``.
+    async def ensure_collection(self, collection: str, source: str, owner_id: OwnerId) -> None:
+        """Upsert the top-level ``documents_meta`` row for ``(collection, owner_id)``.
 
         Must be called before :meth:`add_pages` or :meth:`add_documents`. Both
-        of those write into child tables that hold a foreign key to the parent
-        row, so it must exist first.
+        write into child tables that hold a foreign key to the parent row, so
+        it must exist first.
         """
+
+    @abstractmethod
+    async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
+        """Remove a collection's chunks, pages, and ACL rows. Owner-only."""
+
+    # ── write paths (scoped by owner) ──────────────────────────────────────
 
     @abstractmethod
     async def add_documents(
@@ -63,9 +85,35 @@ class DocumentStore(ABC):
         collection: str,
         documents: list[Document],
         embeddings: list[list[float]],
-        user_id: UserId,
+        owner_id: OwnerId,
     ) -> None:
-        """Store vector chunks with their embeddings in the named collection."""
+        """Store vector chunks with their embeddings under the owner's collection."""
+
+    @abstractmethod
+    async def add_pages(self, collection: str, pages: list[StoredPage], owner_id: OwnerId) -> None:
+        """Replace the stored pages for ``(collection, owner_id)`` with the supplied pages."""
+
+    # ── ACL management ─────────────────────────────────────────────────────
+
+    @abstractmethod
+    async def grant_read(
+        self,
+        collection: str,
+        owner_id: OwnerId,
+        principals: list[PrincipalId],
+    ) -> None:
+        """Grant read access on ``(collection, owner_id)`` to each principal. Idempotent."""
+
+    @abstractmethod
+    async def revoke(
+        self,
+        collection: str,
+        owner_id: OwnerId,
+        principal: PrincipalId,
+    ) -> None:
+        """Remove every permission this principal has on ``(collection, owner_id)``."""
+
+    # ── read paths (scoped by ACL principal set) ───────────────────────────
 
     @abstractmethod
     async def search(
@@ -73,17 +121,12 @@ class DocumentStore(ABC):
         collection: str,
         query_embedding: list[float],
         top_k: int,
-        user_id: UserId,
+        principals: list[PrincipalId],
     ) -> list[SearchResult]:
-        """Return the top_k most similar vector chunks from the collection."""
+        """Top-k similar vector chunks from ``collection`` that any principal can read.
 
-    @abstractmethod
-    async def add_pages(self, collection: str, pages: list[StoredPage], user_id: UserId) -> None:
-        """Replace the stored pages for ``collection`` with the supplied pages.
-
-        Implementations must remove any previously-stored pages for the
-        collection before writing, so callers can re-ingest by calling this
-        method again.
+        Returns an empty list when no principal in ``principals`` has a read
+        ACL row for this collection (regardless of which owner backs it).
         """
 
     @abstractmethod
@@ -91,26 +134,19 @@ class DocumentStore(ABC):
         self,
         collection: str,
         page_range: PageRange | None,
-        user_id: UserId,
+        principals: list[PrincipalId],
     ) -> list[Page]:
-        """Return ordered pages for ``collection``.
-
-        If ``page_range`` is ``None`` all pages are returned. Otherwise only
-        pages whose ``page_number`` falls within the inclusive range are
-        returned. Pages are always ordered by ``page_number`` ascending.
-        """
+        """Return ordered pages for ``collection``. Empty list when no read ACL match."""
 
     @abstractmethod
-    async def delete_collection(self, collection: str, user_id: UserId) -> None:
-        """Remove a collection's chunks and pages."""
+    async def has_collection(self, collection: str, principals: list[PrincipalId]) -> bool:
+        """Check whether any principal in ``principals`` can read this collection."""
 
     @abstractmethod
-    async def list_collections(self, user_id: UserId) -> list[str]:
-        """Return names of collections owned by ``user_id``."""
+    async def list_collections(self, principals: list[PrincipalId]) -> list[str]:
+        """Return collection names readable by at least one of ``principals``."""
 
-    @abstractmethod
-    async def has_collection(self, collection: str, user_id: UserId) -> bool:
-        """Check whether ``user_id`` owns a collection with this name."""
+    # ── lifecycle ──────────────────────────────────────────────────────────
 
     @abstractmethod
     async def close(self) -> None:
