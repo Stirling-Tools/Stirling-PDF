@@ -70,8 +70,12 @@ public class PolicyChangeListener {
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private ExecutorService executor;
-    // Volatile: read by the poll thread, written by stop() on the container shutdown thread.
-    private volatile Connection listenConnection;
+    // Connection lifecycle (open / close / null-out) is mutated by both the poll thread and
+    // stop() on the container shutdown thread. All read/write of the field happens inside
+    // synchronized(connectionLock); the actual blocking I/O on the returned reference runs
+    // outside the lock so stop() can close the connection while the poll thread is mid-read.
+    private final Object connectionLock = new Object();
+    private Connection listenConnection;
 
     public PolicyChangeListener(
             @Value("${spring.datasource.url}") String jdbcUrl,
@@ -126,10 +130,8 @@ public class PolicyChangeListener {
     private void pollLoop() {
         while (running.get()) {
             try {
-                if (listenConnection == null || listenConnection.isClosed()) {
-                    listenConnection = openListenConnection();
-                }
-                drainNotifications(listenConnection);
+                Connection conn = acquireConnection();
+                drainNotifications(conn);
             } catch (SQLException e) {
                 log.warn(
                         "PolicyChangeListener IO error ({}). Reconnecting in {}ms.",
@@ -143,6 +145,19 @@ public class PolicyChangeListener {
                 closeConnectionQuietly();
                 sleepQuietly(RECONNECT_BACKOFF_MS);
             }
+        }
+    }
+
+    /**
+     * Returns the current LISTEN connection, opening one if absent or closed. The check + open +
+     * assign run inside the lock so {@link #closeConnectionQuietly()} can't slip between them.
+     */
+    private Connection acquireConnection() throws SQLException {
+        synchronized (connectionLock) {
+            if (listenConnection == null || listenConnection.isClosed()) {
+                listenConnection = openListenConnection();
+            }
+            return listenConnection;
         }
     }
 
@@ -175,13 +190,15 @@ public class PolicyChangeListener {
     }
 
     private void closeConnectionQuietly() {
-        if (listenConnection != null) {
-            try {
-                listenConnection.close();
-            } catch (SQLException e) {
-                log.debug("Ignoring close error on listen connection: {}", e.getMessage());
+        synchronized (connectionLock) {
+            if (listenConnection != null) {
+                try {
+                    listenConnection.close();
+                } catch (SQLException e) {
+                    log.debug("Ignoring close error on listen connection: {}", e.getMessage());
+                }
+                listenConnection = null;
             }
-            listenConnection = null;
         }
     }
 
