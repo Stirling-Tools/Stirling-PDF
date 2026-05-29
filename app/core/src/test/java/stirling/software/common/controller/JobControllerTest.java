@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -141,7 +143,9 @@ class JobControllerTest {
                 fileId, originalFileName, contentType, fileContent.length);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
-        when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
+        when(fileStorage.getFileSize(fileId)).thenReturn((long) fileContent.length);
+        when(fileStorage.retrieveInputStream(fileId))
+                .thenReturn(new ByteArrayInputStream(fileContent));
 
         // Act
         ResponseEntity<?> response = controller.getJobResult(jobId);
@@ -151,7 +155,11 @@ class JobControllerTest {
         assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
         assertTrue(
                 response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
-        assertEquals(fileContent, response.getBody());
+        assertEquals((long) fileContent.length, response.getHeaders().getContentLength());
+        // Body is now an InputStreamResource backed by fileContent — drain and compare.
+        Resource body = (Resource) response.getBody();
+        assertNotNull(body);
+        assertArrayEquals(fileContent, body.getInputStream().readAllBytes());
     }
 
     @Test
@@ -219,7 +227,8 @@ class JobControllerTest {
         mockResult.completeWithSingleFile(fileId, originalFileName, contentType, 1024L);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
-        when(fileStorage.retrieveBytes(fileId)).thenThrow(new RuntimeException("File not found"));
+        when(fileStorage.getFileSize(fileId))
+                .thenThrow(new RuntimeException("File not found"));
 
         // Act
         ResponseEntity<?> response = controller.getJobResult(jobId);
@@ -420,7 +429,8 @@ class JobControllerTest {
         ResponseEntity<?> response = controller.downloadFile(fileId);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        verify(fileStorage, never()).retrieveBytes(eq(fileId));
+        verify(fileStorage, never()).getFileSize(eq(fileId));
+        verify(fileStorage, never()).retrieveInputStream(eq(fileId));
     }
 
     @Test
