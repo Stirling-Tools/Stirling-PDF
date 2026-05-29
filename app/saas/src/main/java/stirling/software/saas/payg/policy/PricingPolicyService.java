@@ -25,11 +25,11 @@ import stirling.software.saas.payg.repository.PricingPolicyRepository;
  * policy applies to this team right now?" — answered by either the team's per-team override (via
  * {@link PaygTeamExtensions#getPricingPolicyId()}) or the row with {@code is_default = TRUE}.
  *
- * <p>Reads are cached per-{@code teamId} for {@value #CACHE_TTL_SECONDS} seconds (a correctness
- * floor: even with no invalidation, a policy change is visible everywhere within that window). The
- * cache is also explicitly invalidated on {@link PolicyChangedEvent} — published either by admin
- * REST mutations directly or by the Postgres LISTEN runner ({@link PolicyChangeListener}) when a
- * row changes outside this JVM.
+ * <p>Reads are cached per-{@code teamId} for {@value #CACHE_TTL_SECONDS} seconds. The TTL is the
+ * correctness floor: a policy change is visible on every instance within that window without any
+ * coordination. Admin writes additionally fire a {@link PolicyChangedEvent} after commit so the
+ * instance handling the write sees its own change immediately; other instances pick it up on the
+ * next TTL expiry.
  *
  * <p><b>Writes are transactional and publish a {@link PolicyChangedEvent} after commit.</b> The
  * after-commit timing matters: publishing inside the tx would clear caches on instances that

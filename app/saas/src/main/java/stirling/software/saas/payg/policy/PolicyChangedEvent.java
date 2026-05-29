@@ -3,13 +3,13 @@ package stirling.software.saas.payg.policy;
 import org.springframework.context.ApplicationEvent;
 
 /**
- * Fires when a {@code pricing_policy*} or {@code payg_team_extensions.pricing_policy_id} row
- * changes — published by the Postgres LISTEN runner (see {@link PolicyChangeListener}) or by admin
- * REST mutations directly. {@link PricingPolicyService} listens and invalidates its cache.
+ * Fires after a successful admin write to a {@code pricing_policy*} or {@code
+ * payg_team_extensions.pricing_policy_id} row. {@link PricingPolicyService} listens and invalidates
+ * its in-process cache so the writer instance reflects the change immediately. Other instances pick
+ * up the change on the next 30-second TTL expiry.
  *
- * <p>The {@code payload} echoes whatever the {@code pg_notify} channel carried (kept loose because
- * the invalidation strategy is "blow the whole cache" — payload detail doesn't change behaviour).
- * Field is exposed for logging/observability only.
+ * <p>{@code payload} is informational only ({@code "create:42"}, {@code "setDefault:7"}, etc.) —
+ * the invalidation strategy is "blow the whole cache" regardless of what changed.
  */
 public class PolicyChangedEvent extends ApplicationEvent {
 
