@@ -227,6 +227,13 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      # Cache compiled cargo deps so the cold ~40min build (webkit2gtk bindings
+      # dominate on Linux) is reused across runs; only the app crates recompile.
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: "frontend/editor/src-tauri -> target"
+
       # x86_64 JDK is set up first so the aarch64 step below can leave its
       # JAVA_HOME as the active one. The macOS universal JRE build needs
       # jmods from both arches; the x64 path is captured into the env
