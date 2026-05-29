@@ -244,4 +244,52 @@ class ConfigControllerTest {
         assertNotNull(result);
         assertFalse(result.contains("localhost"));
     }
+
+    @Test
+    void resolveFrontendUrl_usesActualPortWhenServerPortIsEphemeral() {
+        System sys = mock(System.class);
+        when(applicationProperties.getSystem()).thenReturn(sys);
+        when(sys.getFrontendUrl()).thenReturn(null);
+
+        // Loopback host forces the detected-LAN-IP branch, which is where an
+        // ephemeral server.port=0 would otherwise leak through as ":0".
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getServerName()).thenReturn("localhost");
+
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getBackendUrl()).thenReturn("http://localhost");
+        when(appConfig.getServerPort()).thenReturn("0");
+
+        org.springframework.core.env.Environment environment =
+                mock(org.springframework.core.env.Environment.class);
+        when(applicationContext.getEnvironment()).thenReturn(environment);
+        when(environment.getProperty("local.server.port")).thenReturn("54321");
+
+        String result = configController.resolveFrontendUrl(req, appConfig);
+        assertNotNull(result);
+        assertTrue(result.endsWith(":54321"));
+        assertFalse(result.contains(":0"));
+    }
+
+    @Test
+    void resolveEffectiveServerPort_prefersActualBoundPortWhenConfiguredZero() {
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getServerPort()).thenReturn("0");
+
+        org.springframework.core.env.Environment environment =
+                mock(org.springframework.core.env.Environment.class);
+        when(applicationContext.getEnvironment()).thenReturn(environment);
+        when(environment.getProperty("local.server.port")).thenReturn("54321");
+
+        assertEquals("54321", configController.resolveEffectiveServerPort(appConfig));
+    }
+
+    @Test
+    void resolveEffectiveServerPort_keepsConfiguredNonZeroPort() {
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getServerPort()).thenReturn("8080");
+
+        // Non-zero configured port is authoritative; the runtime env is never consulted.
+        assertEquals("8080", configController.resolveEffectiveServerPort(appConfig));
+    }
 }

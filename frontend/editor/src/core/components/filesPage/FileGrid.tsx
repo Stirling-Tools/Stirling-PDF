@@ -78,6 +78,8 @@ interface FileGridProps {
   onPromptMoveFiles: (fileIds: FileId[]) => void;
   /** Per-file Save to server; hidden when file already has remoteStorageId. */
   onSaveToServer?: (file: StirlingFileStub) => void;
+  /** When set, the Save to server item renders disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
   /** When supplied the list-view column headers become sortable. */
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
@@ -334,6 +336,7 @@ function GridView({
   onRemoveFiles,
   onPromptMoveFiles,
   onSaveToServer,
+  saveToServerDisabledReason,
 }: FileGridProps) {
   return (
     <div className="files-page-grid" role="list">
@@ -386,6 +389,7 @@ function GridView({
               onSaveToServer={
                 onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
               }
+              saveToServerDisabledReason={saveToServerDisabledReason}
             />
           );
         }
@@ -584,6 +588,8 @@ interface FileCardProps {
   onMove: () => void;
   /** Kebab Save to server; only fires when file is local-only. */
   onSaveToServer?: () => void;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
 }
 
 function FileCard({
@@ -599,6 +605,7 @@ function FileCard({
   onRemove,
   onMove,
   onSaveToServer,
+  saveToServerDisabledReason,
 }: FileCardProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -769,17 +776,33 @@ function FileCard({
             >
               {t("filesPage.moveTo", "Move to…")}
             </Menu.Item>
-            {/* Per-file Save to server; hidden when already on server. */}
+            {/* Per-file Save to server; shown for local-only files. When
+                storage is off it stays visible but disabled with a tooltip. */}
             {onSaveToServer && file.remoteStorageId == null && (
-              <Menu.Item
-                leftSection={<CloudUploadIcon fontSize="small" />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSaveToServer();
-                }}
+              <Tooltip
+                label={saveToServerDisabledReason}
+                disabled={!saveToServerDisabledReason}
+                withinPortal
+                position="left"
+                multiline
+                w={240}
               >
-                {t("filesPage.saveToServer", "Save to server")}
-              </Menu.Item>
+                <Menu.Item
+                  leftSection={<CloudUploadIcon fontSize="small" />}
+                  disabled={Boolean(saveToServerDisabledReason)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSaveToServer();
+                  }}
+                  style={
+                    saveToServerDisabledReason
+                      ? { pointerEvents: "auto" }
+                      : undefined
+                  }
+                >
+                  {t("filesPage.saveToServer", "Save to server")}
+                </Menu.Item>
+              </Tooltip>
             )}
             <Menu.Divider />
             <Menu.Item
@@ -813,6 +836,7 @@ function ListView({
   onRenameFolder,
   onDeleteFolder,
   onSaveToServer,
+  saveToServerDisabledReason,
   onChangeFolderAppearance,
   onRemoveFiles,
   onPromptMoveFiles,
@@ -946,6 +970,7 @@ function ListView({
               onSaveToServer={
                 onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
               }
+              saveToServerDisabledReason={saveToServerDisabledReason}
             />
           );
         }
@@ -1148,6 +1173,8 @@ interface FileRowProps {
   onMove: () => void;
   /** Kebab Save to server; only fires when file is local-only. */
   onSaveToServer?: () => void;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
 }
 
 function FileRow({
@@ -1163,6 +1190,7 @@ function FileRow({
   onRemove,
   onMove,
   onSaveToServer,
+  saveToServerDisabledReason,
 }: FileRowProps) {
   const { t } = useTranslation();
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1336,17 +1364,33 @@ function FileRow({
           >
             {t("filesPage.moveTo", "Move to…")}
           </Menu.Item>
-          {/* Per-file Save to server; hidden when already on server. */}
+          {/* Per-file Save to server; shown for local-only files. When
+              storage is off it stays visible but disabled with a tooltip. */}
           {onSaveToServer && file.remoteStorageId == null && (
-            <Menu.Item
-              leftSection={<CloudUploadIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSaveToServer();
-              }}
+            <Tooltip
+              label={saveToServerDisabledReason}
+              disabled={!saveToServerDisabledReason}
+              withinPortal
+              position="left"
+              multiline
+              w={240}
             >
-              {t("filesPage.saveToServer", "Save to server")}
-            </Menu.Item>
+              <Menu.Item
+                leftSection={<CloudUploadIcon fontSize="small" />}
+                disabled={Boolean(saveToServerDisabledReason)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSaveToServer();
+                }}
+                style={
+                  saveToServerDisabledReason
+                    ? { pointerEvents: "auto" }
+                    : undefined
+                }
+              >
+                {t("filesPage.saveToServer", "Save to server")}
+              </Menu.Item>
+            </Tooltip>
           )}
           <Menu.Divider />
           <Menu.Item
