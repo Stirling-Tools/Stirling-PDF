@@ -5,18 +5,20 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { createPortal } from "react-dom";
 import {
   Box,
   Text,
   Stack,
   Group,
   Button,
+  ActionIcon,
+  Modal,
   ScrollArea,
   Loader,
   TextInput,
   Select,
 } from "@mantine/core";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 import { useCardModalAnimation } from "@app/hooks/useCardModalAnimation";
 import { CardExpansionModal } from "@app/components/smartFolders/CardExpansionModal";
@@ -36,6 +38,7 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import PauseIcon from "@mui/icons-material/Pause";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 import JSZip from "jszip";
 import { useSmartFolders } from "@app/hooks/useSmartFolders";
 import { useFolderData } from "@app/hooks/useFolderData";
@@ -861,23 +864,15 @@ export function SmartFolderWorkbenchView({
       >
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
-            <button
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              color="gray"
               onClick={goHome}
               aria-label={t("smartFolders.actions.back", "Back")}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "0.25rem",
-                borderRadius: "0.25rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--mantine-color-dimmed)",
-              }}
             >
               <ArrowBackIcon style={{ fontSize: "1rem" }} />
-            </button>
+            </ActionIcon>
 
             {/* Icon with status dot */}
             <Box style={{ position: "relative", flexShrink: 0 }}>
@@ -985,42 +980,27 @@ export function SmartFolderWorkbenchView({
 
           {/* Add files + pause/resume */}
           <Group gap="sm" align="center">
-            <button
-              onClick={handlePauseResume}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.25rem",
-                fontSize: "0.75rem",
-                padding: "0.25rem 0.625rem",
-                borderRadius: "0.25rem",
-                cursor: "pointer",
-                border: "0.0625rem solid",
-                ...(folder.isPaused
-                  ? {
-                      backgroundColor: "var(--color-green-500)",
-                      borderColor: "var(--color-green-500)",
-                      color: "#fff",
-                    }
-                  : {
-                      backgroundColor: "transparent",
-                      borderColor: "var(--border-subtle)",
-                      color: "var(--mantine-color-dimmed)",
-                    }),
-              }}
-            >
-              {folder.isPaused ? (
-                <>
-                  <PlayArrowIcon style={{ fontSize: "0.875rem" }} />
-                  {t("smartFolders.workbench.resume", "Resume")}
-                </>
-              ) : (
-                <>
-                  <PauseIcon style={{ fontSize: "0.875rem" }} />
-                  {t("smartFolders.workbench.pause", "Pause")}
-                </>
-              )}
-            </button>
+            {folder.isPaused ? (
+              <Button
+                size="xs"
+                variant="light"
+                color="green"
+                onClick={handlePauseResume}
+                leftSection={<PlayArrowIcon style={{ fontSize: "0.875rem" }} />}
+              >
+                {t("smartFolders.workbench.resume", "Resume")}
+              </Button>
+            ) : (
+              <Button
+                size="xs"
+                variant="subtle"
+                color="gray"
+                onClick={handlePauseResume}
+                leftSection={<PauseIcon style={{ fontSize: "0.875rem" }} />}
+              >
+                {t("smartFolders.workbench.pause", "Pause")}
+              </Button>
+            )}
             <Button
               size="xs"
               variant="light"
@@ -1301,73 +1281,45 @@ export function SmartFolderWorkbenchView({
             </Text>
             {activityStatusFilter === "error" &&
               filteredActivityIds.length > 0 && (
-                <button
+                <Button
+                  size="xs"
+                  variant="outline"
                   onClick={handleRetryAllFiltered}
-                  style={{
-                    background: "none",
-                    border: "0.0625rem solid var(--mantine-color-blue-filled)",
-                    borderRadius: "0.25rem",
-                    cursor: "pointer",
-                    padding: "0.125rem 0.5rem",
-                    fontSize: "0.6875rem",
-                    color: "var(--mantine-color-blue-filled)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                  }}
+                  leftSection={<ReplayIcon style={{ fontSize: "0.75rem" }} />}
                 >
-                  <ReplayIcon style={{ fontSize: "0.75rem" }} />{" "}
                   {t("smartFolders.workbench.retryAll", "Retry all")}
-                </button>
+                </Button>
               )}
             {activityStatusFilter === "processed" &&
               filteredActivityIds.length > 0 && (
                 <>
-                  <button
+                  <Button
+                    size="xs"
+                    variant="outline"
                     onClick={() =>
                       void handleBatchDownload(filteredActivityIds)
                     }
-                    style={{
-                      background: "none",
-                      border:
-                        "0.0625rem solid var(--mantine-color-blue-filled)",
-                      borderRadius: "0.25rem",
-                      cursor: "pointer",
-                      padding: "0.125rem 0.5rem",
-                      fontSize: "0.6875rem",
-                      color: "var(--mantine-color-blue-filled)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.25rem",
-                    }}
+                    leftSection={
+                      <DownloadIcon style={{ fontSize: "0.75rem" }} />
+                    }
                   >
-                    <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
                     {t("smartFolders.workbench.exportZip", "Export zip")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="outline"
                     onClick={() =>
                       void handleBatchDownloadSeparate(filteredActivityIds)
                     }
-                    style={{
-                      background: "none",
-                      border:
-                        "0.0625rem solid var(--mantine-color-blue-filled)",
-                      borderRadius: "0.25rem",
-                      cursor: "pointer",
-                      padding: "0.125rem 0.5rem",
-                      fontSize: "0.6875rem",
-                      color: "var(--mantine-color-blue-filled)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.25rem",
-                    }}
+                    leftSection={
+                      <DownloadIcon style={{ fontSize: "0.75rem" }} />
+                    }
                   >
-                    <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
                     {t(
                       "smartFolders.workbench.exportSeparately",
                       "Export separately",
                     )}
-                  </button>
+                  </Button>
                 </>
               )}
           </Box>
@@ -1436,129 +1388,82 @@ export function SmartFolderWorkbenchView({
                     })}
                   </Text>
                   {selectedActivityIds.size < filteredActivityIds.length && (
-                    <button
+                    <Button
+                      size="xs"
+                      variant="subtle"
                       onClick={() =>
                         setSelectedActivityIds(new Set(filteredActivityIds))
                       }
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "0.125rem 0.25rem",
-                        fontSize: "0.6875rem",
-                        color: "var(--mantine-color-blue-filled)",
-                        textDecoration: "underline",
-                      }}
                     >
                       {t("smartFolders.workbench.selectAll", {
                         count: filteredActivityIds.length,
                         defaultValue: `Select all ${filteredActivityIds.length}`,
                       })}
-                    </button>
+                    </Button>
                   )}
                   <Box style={{ flex: 1 }} />
                   {showRetry && (
-                    <button
+                    <Button
+                      size="xs"
+                      variant="outline"
                       onClick={handleBatchRetry}
-                      style={{
-                        background: "none",
-                        border:
-                          "0.0625rem solid var(--mantine-color-blue-filled)",
-                        borderRadius: "0.25rem",
-                        cursor: "pointer",
-                        padding: "0.125rem 0.5rem",
-                        fontSize: "0.6875rem",
-                        color: "var(--mantine-color-blue-filled)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.25rem",
-                      }}
+                      leftSection={
+                        <ReplayIcon style={{ fontSize: "0.75rem" }} />
+                      }
                     >
-                      <ReplayIcon style={{ fontSize: "0.75rem" }} />{" "}
                       {t("smartFolders.actions.retry", "Retry")}
-                    </button>
+                    </Button>
                   )}
                   {showExport && (
                     <>
-                      <button
+                      <Button
+                        size="xs"
+                        variant="outline"
                         onClick={() => void handleBatchDownload()}
-                        style={{
-                          background: "none",
-                          border:
-                            "0.0625rem solid var(--mantine-color-blue-filled)",
-                          borderRadius: "0.25rem",
-                          cursor: "pointer",
-                          padding: "0.125rem 0.5rem",
-                          fontSize: "0.6875rem",
-                          color: "var(--mantine-color-blue-filled)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem",
-                        }}
+                        leftSection={
+                          <DownloadIcon style={{ fontSize: "0.75rem" }} />
+                        }
                       >
-                        <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
                         {t("smartFolders.workbench.exportZip", "Export zip")}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        size="xs"
+                        variant="outline"
                         onClick={() => void handleBatchDownloadSeparate()}
-                        style={{
-                          background: "none",
-                          border:
-                            "0.0625rem solid var(--mantine-color-blue-filled)",
-                          borderRadius: "0.25rem",
-                          cursor: "pointer",
-                          padding: "0.125rem 0.5rem",
-                          fontSize: "0.6875rem",
-                          color: "var(--mantine-color-blue-filled)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem",
-                        }}
+                        leftSection={
+                          <DownloadIcon style={{ fontSize: "0.75rem" }} />
+                        }
                       >
-                        <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
                         {t(
                           "smartFolders.workbench.exportSeparately",
                           "Export separately",
                         )}
-                      </button>
+                      </Button>
                     </>
                   )}
-                  <button
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    color="red"
                     onClick={() => void handleBatchDelete()}
-                    style={{
-                      background: "none",
-                      border: "0.0625rem solid var(--color-red-500)",
-                      borderRadius: "0.25rem",
-                      cursor: "pointer",
-                      padding: "0.125rem 0.5rem",
-                      fontSize: "0.6875rem",
-                      color: "var(--color-red-500)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.25rem",
-                    }}
+                    leftSection={
+                      <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} />
+                    }
                   >
-                    <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} />{" "}
                     {t("smartFolders.workbench.delete", "Delete")}
-                  </button>
-                  <button
+                  </Button>
+                  <ActionIcon
+                    variant="subtle"
+                    size="sm"
+                    color="gray"
                     onClick={() => setSelectedActivityIds(new Set())}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "0.125rem",
-                      fontSize: "0.75rem",
-                      color: "var(--mantine-color-dimmed)",
-                      lineHeight: 1,
-                    }}
-                    title={t(
+                    aria-label={t(
                       "smartFolders.workbench.clearSelection",
                       "Clear selection",
                     )}
                   >
-                    ×
-                  </button>
+                    <CloseIcon style={{ fontSize: "0.875rem" }} />
+                  </ActionIcon>
                 </Box>
               );
             })()}
@@ -1634,23 +1539,16 @@ export function SmartFolderWorkbenchView({
                             })
                           }
                         >
-                          <button
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: "0.2rem",
-                              borderRadius: "0.25rem",
-                              display: "flex",
-                              alignItems: "center",
-                              color: "var(--mantine-color-dimmed)",
-                              flexShrink: 0,
-                            }}
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            color="gray"
+                            style={{ flexShrink: 0 }}
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleActivityRow(fileId);
                             }}
-                            title={
+                            aria-label={
                               isExpanded
                                 ? t("smartFolders.actions.collapse", "Collapse")
                                 : t("smartFolders.actions.expand", "Expand")
@@ -1665,7 +1563,7 @@ export function SmartFolderWorkbenchView({
                                 transition: "transform 0.15s",
                               }}
                             />
-                          </button>
+                          </ActionIcon>
                           {status === "processed" && (
                             <CheckCircleOutlineIcon
                               style={{
@@ -1768,22 +1666,15 @@ export function SmartFolderWorkbenchView({
                               }}
                             >
                               {!isExpanded && primaryFile && (
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.2rem",
-                                    borderRadius: "0.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    color: "var(--mantine-color-dimmed)",
-                                  }}
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(primaryFile);
                                   }}
-                                  title={t(
+                                  aria-label={t(
                                     "smartFolders.workbench.preview",
                                     "Preview",
                                   )}
@@ -1791,20 +1682,13 @@ export function SmartFolderWorkbenchView({
                                   <VisibilityIcon
                                     style={{ fontSize: "0.875rem" }}
                                   />
-                                </button>
+                                </ActionIcon>
                               )}
                               {!isExpanded && primaryFile && (
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.2rem",
-                                    borderRadius: "0.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    color: "var(--mantine-color-dimmed)",
-                                  }}
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     void handleDownload(
@@ -1812,7 +1696,7 @@ export function SmartFolderWorkbenchView({
                                       primaryFile.name,
                                     );
                                   }}
-                                  title={t(
+                                  aria-label={t(
                                     "smartFolders.workbench.export",
                                     "Export",
                                   )}
@@ -1820,24 +1704,17 @@ export function SmartFolderWorkbenchView({
                                   <DownloadIcon
                                     style={{ fontSize: "0.875rem" }}
                                   />
-                                </button>
+                                </ActionIcon>
                               )}
-                              <button
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  padding: "0.2rem",
-                                  borderRadius: "0.25rem",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  color: "var(--mantine-color-dimmed)",
-                                }}
+                              <ActionIcon
+                                variant="subtle"
+                                size="sm"
+                                color="gray"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   void handleDeleteOne(fileId);
                                 }}
-                                title={t(
+                                aria-label={t(
                                   "smartFolders.workbench.delete",
                                   "Delete",
                                 )}
@@ -1845,7 +1722,7 @@ export function SmartFolderWorkbenchView({
                                 <DeleteOutlineIcon
                                   style={{ fontSize: "0.875rem" }}
                                 />
-                              </button>
+                              </ActionIcon>
                             </Box>
                           )}
                         </Box>
@@ -1900,22 +1777,15 @@ export function SmartFolderWorkbenchView({
                                 >
                                   {formatBytes(inputFile.size)}
                                 </Text>
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.2rem",
-                                    borderRadius: "0.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    color: "var(--mantine-color-dimmed)",
-                                  }}
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(inputFile);
                                   }}
-                                  title={t(
+                                  aria-label={t(
                                     "smartFolders.workbench.previewInput",
                                     "Preview input",
                                   )}
@@ -1923,23 +1793,16 @@ export function SmartFolderWorkbenchView({
                                   <VisibilityIcon
                                     style={{ fontSize: "0.875rem" }}
                                   />
-                                </button>
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.2rem",
-                                    borderRadius: "0.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    color: "var(--mantine-color-dimmed)",
-                                  }}
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDownload(inputFile, inputFile.name);
                                   }}
-                                  title={t(
+                                  aria-label={t(
                                     "smartFolders.actions.downloadInput",
                                     "Download input",
                                   )}
@@ -1947,7 +1810,7 @@ export function SmartFolderWorkbenchView({
                                   <DownloadIcon
                                     style={{ fontSize: "0.875rem" }}
                                   />
-                                </button>
+                                </ActionIcon>
                               </Box>
                             )}
                             {/* Output files (stored in IDB) */}
@@ -1989,22 +1852,15 @@ export function SmartFolderWorkbenchView({
                                 >
                                   {formatBytes(out.size)}
                                 </Text>
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.2rem",
-                                    borderRadius: "0.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    color: "var(--mantine-color-dimmed)",
-                                  }}
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(out);
                                   }}
-                                  title={t(
+                                  aria-label={t(
                                     "smartFolders.workbench.previewOutput",
                                     "Preview output",
                                   )}
@@ -2012,23 +1868,16 @@ export function SmartFolderWorkbenchView({
                                   <VisibilityIcon
                                     style={{ fontSize: "0.875rem" }}
                                   />
-                                </button>
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.2rem",
-                                    borderRadius: "0.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    color: "var(--mantine-color-dimmed)",
-                                  }}
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDownload(out, out.name);
                                   }}
-                                  title={t(
+                                  aria-label={t(
                                     "smartFolders.actions.downloadOutput",
                                     "Download output",
                                   )}
@@ -2036,7 +1885,7 @@ export function SmartFolderWorkbenchView({
                                   <DownloadIcon
                                     style={{ fontSize: "0.875rem" }}
                                   />
-                                </button>
+                                </ActionIcon>
                               </Box>
                             ))}
                             {/* Error detail + retry */}
@@ -2066,21 +1915,15 @@ export function SmartFolderWorkbenchView({
                                   </Text>
                                 )}
                                 {inputFile && (
-                                  <button
-                                    style={{
-                                      background:
-                                        "var(--mantine-color-blue-light)",
-                                      border: "none",
-                                      cursor: "pointer",
-                                      padding: "0.2rem 0.4rem",
-                                      borderRadius: "0.25rem",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "0.25rem",
-                                      fontSize: "0.6875rem",
-                                      color: "var(--mantine-color-blue-filled)",
-                                      flexShrink: 0,
-                                    }}
+                                  <Button
+                                    size="xs"
+                                    variant="light"
+                                    style={{ flexShrink: 0 }}
+                                    leftSection={
+                                      <ReplayIcon
+                                        style={{ fontSize: "0.75rem" }}
+                                      />
+                                    }
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       updateFileMetadata(fileId, {
@@ -2096,11 +1939,8 @@ export function SmartFolderWorkbenchView({
                                       );
                                     }}
                                   >
-                                    <ReplayIcon
-                                      style={{ fontSize: "0.75rem" }}
-                                    />{" "}
                                     {t("smartFolders.actions.retry", "Retry")}
-                                  </button>
+                                  </Button>
                                 )}
                               </Box>
                             )}
@@ -2159,30 +1999,17 @@ export function SmartFolderWorkbenchView({
           <Box style={{ padding: "0.625rem 0.75rem" }}>
             <Group gap="0.375rem">
               {(["24h", "7d", "30d", "all"] as const).map((p) => (
-                <button
+                <Button
                   key={p}
+                  size="xs"
+                  variant={statsPeriod === p ? "light" : "subtle"}
+                  color={statsPeriod === p ? "blue" : "gray"}
                   onClick={() => setStatsPeriod(p)}
-                  style={{
-                    padding: "0.125rem 0.5rem",
-                    borderRadius: "999px",
-                    border: `0.0625rem solid ${statsPeriod === p ? "var(--mantine-color-blue-filled)" : "var(--border-subtle)"}`,
-                    backgroundColor:
-                      statsPeriod === p
-                        ? "var(--mantine-color-blue-light-hover)"
-                        : "transparent",
-                    color:
-                      statsPeriod === p
-                        ? "var(--mantine-color-blue-filled)"
-                        : "var(--mantine-color-dimmed)",
-                    fontSize: "0.6875rem",
-                    fontWeight: statsPeriod === p ? 600 : 400,
-                    cursor: "pointer",
-                  }}
                 >
                   {p === "all"
                     ? t("smartFolders.workbench.allTime", "All time")
                     : p}
-                </button>
+                </Button>
               ))}
             </Group>
           </Box>
@@ -2565,107 +2392,52 @@ export function SmartFolderWorkbenchView({
       />
 
       {/* Delete confirmation */}
-      {deleteConfirm &&
-        createPortal(
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 500,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div
-              onClick={() => setDeleteConfirm(null)}
-              style={{
-                position: "absolute",
-                inset: 0,
-                backgroundColor: "rgba(0,0,0,0.45)",
-              }}
-            />
-            <div
-              style={{
-                position: "relative",
-                backgroundColor: "var(--bg-toolbar)",
-                border: "0.0625rem solid var(--border-subtle)",
-                borderRadius: "var(--mantine-radius-md)",
-                padding: "2rem 2.5rem",
-                width: "36rem",
-                boxShadow: "0 1rem 2rem rgba(0,0,0,0.25)",
-              }}
+      <Modal
+        opened={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title={
+          deleteConfirm && deleteConfirm.ids.length === 1
+            ? t("smartFolders.workbench.removeEntry", "Remove entry")
+            : t("smartFolders.workbench.removeEntries", {
+                count: deleteConfirm?.ids.length ?? 0,
+                defaultValue: `Remove ${deleteConfirm?.ids.length ?? 0} entries`,
+              })
+        }
+        zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t(
+              "smartFolders.workbench.deleteConfirmBody",
+              "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched.",
+            )}
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setDeleteConfirm(null)}>
+              {t("smartFolders.workbench.cancel", "Cancel")}
+            </Button>
+            <Button
+              variant="default"
+              onClick={() =>
+                deleteConfirm && void execDelete(deleteConfirm.ids, false)
+              }
             >
-              <Text fw={600} mb="0.25rem">
-                {deleteConfirm.ids.length === 1
-                  ? t("smartFolders.workbench.removeEntry", "Remove entry")
-                  : t("smartFolders.workbench.removeEntries", {
-                      count: deleteConfirm.ids.length,
-                      defaultValue: `Remove ${deleteConfirm.ids.length} entries`,
-                    })}
-              </Text>
-              <Text size="sm" c="dimmed" mb="1rem">
-                {t(
-                  "smartFolders.workbench.deleteConfirmBody",
-                  "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched.",
-                )}
-              </Text>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "0.5rem",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <button
-                  onClick={() => setDeleteConfirm(null)}
-                  style={{
-                    background: "none",
-                    border: "0.0625rem solid var(--border-subtle)",
-                    borderRadius: "var(--mantine-radius-sm)",
-                    cursor: "pointer",
-                    padding: "0.375rem 0.75rem",
-                    fontSize: "0.8125rem",
-                  }}
-                >
-                  {t("smartFolders.workbench.cancel", "Cancel")}
-                </button>
-                <button
-                  onClick={() => void execDelete(deleteConfirm.ids, false)}
-                  style={{
-                    background: "none",
-                    border: "0.0625rem solid var(--border-subtle)",
-                    borderRadius: "var(--mantine-radius-sm)",
-                    cursor: "pointer",
-                    padding: "0.375rem 0.75rem",
-                    fontSize: "0.8125rem",
-                  }}
-                >
-                  {t(
-                    "smartFolders.workbench.removeNotificationsOnly",
-                    "Remove notifications only",
-                  )}
-                </button>
-                <button
-                  onClick={() => void execDelete(deleteConfirm.ids, true)}
-                  style={{
-                    backgroundColor: "var(--color-red-500)",
-                    border: "none",
-                    borderRadius: "var(--mantine-radius-sm)",
-                    cursor: "pointer",
-                    padding: "0.375rem 0.75rem",
-                    fontSize: "0.8125rem",
-                    color: "#fff",
-                    fontWeight: 600,
-                  }}
-                >
-                  {t("smartFolders.workbench.deleteOutputs", "Delete outputs")}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+              {t(
+                "smartFolders.workbench.removeNotificationsOnly",
+                "Remove notifications only",
+              )}
+            </Button>
+            <Button
+              color="red"
+              onClick={() =>
+                deleteConfirm && void execDelete(deleteConfirm.ids, true)
+              }
+            >
+              {t("smartFolders.workbench.deleteOutputs", "Delete outputs")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 }
