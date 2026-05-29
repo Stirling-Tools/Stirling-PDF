@@ -23,14 +23,6 @@ import { useTranslation } from "react-i18next";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { FileId, StirlingFileStub } from "@app/types/fileContext";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
-import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { iconMap } from "@app/components/tools/automate/iconMap";
-import {
-  SMART_FOLDER_VIEW_ID,
-  SMART_FOLDER_WORKBENCH_ID,
-} from "@app/components/smartFolders/SmartFoldersRegistration";
 import { zipFileService } from "@app/services/zipFileService";
 import ToolChain from "@app/components/shared/ToolChain";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
@@ -82,9 +74,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
     refreshRecentFiles,
   } = useFileManagerContext();
   const { removeFiles } = useFileManagement();
-  const smartFolders = useAllSmartFolders();
-  const { setCustomWorkbenchViewData } = useToolWorkflow();
-  const { actions: navigationActions } = useNavigationActions();
 
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -95,8 +84,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
   ).toLowerCase();
   const isCBZ = extLower === "cbz";
   const isCBR = extLower === "cbr";
-  const isPdf = extLower === "pdf";
-  const showSmartFolders = isPdf && smartFolders.length > 0;
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
@@ -475,43 +462,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   >
                     {t("fileManager.unzip", "Unzip")}
                   </Menu.Item>
-                  <Menu.Divider />
-                </>
-              )}
-
-              {showSmartFolders && (
-                <>
-                  <Menu.Divider />
-                  <Menu.Label>
-                    {t("fileManager.addToSmartFolder", "Add to Watch Folder")}
-                  </Menu.Label>
-                  {smartFolders.map((folder) => {
-                    const FolderItemIcon =
-                      iconMap[folder.icon as keyof typeof iconMap] ||
-                      iconMap.FolderIcon;
-                    return (
-                      <Menu.Item
-                        key={folder.id}
-                        leftSection={
-                          <FolderItemIcon
-                            style={{ fontSize: 16, color: folder.accentColor }}
-                          />
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, {
-                            folderId: folder.id,
-                            pendingFileId: file.id,
-                          });
-                          navigationActions.setWorkbench(
-                            SMART_FOLDER_WORKBENCH_ID,
-                          );
-                        }}
-                      >
-                        {folder.name}
-                      </Menu.Item>
-                    );
-                  })}
                   <Menu.Divider />
                 </>
               )}

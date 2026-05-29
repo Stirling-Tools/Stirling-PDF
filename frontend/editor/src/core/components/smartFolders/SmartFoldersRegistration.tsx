@@ -40,6 +40,7 @@ export default function SmartFoldersRegistration() {
       label: t("smartFolders.sidebarTitle", "Watch Folders"),
       component: SmartFolderWorkbenchView,
       hideTopControls: true,
+      hideToolPanel: true,
     });
     return () => {
       clearRef.current(SMART_FOLDER_VIEW_ID);

@@ -26,16 +26,22 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
 const COLLAPSED_WIDTH = "3.5rem";
 const EXPANDED_WIDTH = "16.25rem"; // ~260px
+
+// Inlined to avoid a circular import with SmartFoldersRegistration.
+const SMART_FOLDER_VIEW_ID = "smartFolder";
+const SMART_FOLDER_WORKBENCH_ID = "custom:smartFolder";
 
 export interface FileSidebarProps {
   collapsed?: boolean;
@@ -67,7 +73,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
+    const { setCustomWorkbenchViewData } = useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const isWatchFoldersActive = currentWorkbench === SMART_FOLDER_WORKBENCH_ID;
+
+    const openWatchFolders = useCallback(() => {
+      if (collapsed && onToggleCollapse) onToggleCollapse();
+      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
+      navActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+    }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
     const isMultiTool =
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
@@ -449,6 +463,30 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </>
             }
+
+            {/* Watch Folders entry */}
+            <div
+              className="file-sidebar-action-row"
+              data-testid="watchFolders-button"
+              data-active={isWatchFoldersActive}
+              onClick={openWatchFolders}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && openWatchFolders()}
+              aria-label={t("smartFolders.sidebarTitle", "Watch Folders")}
+              style={
+                isWatchFoldersActive
+                  ? { backgroundColor: "var(--active-bg)" }
+                  : undefined
+              }
+            >
+              <FolderSpecialIcon className="file-sidebar-action-icon" />
+              {!collapsed && (
+                <span className="file-sidebar-action-label sidebar-content-fade">
+                  {t("smartFolders.sidebarTitle", "Watch Folders")}
+                </span>
+              )}
+            </div>
 
             {/* Files section - always visible when expanded */}
             {!collapsed && (
