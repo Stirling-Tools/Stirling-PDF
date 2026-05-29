@@ -174,6 +174,8 @@ class JobControllerOwnershipTest {
         DOWNLOAD_FILE,
         GET_JOB_RESULT,
         GET_JOB_STATUS,
+        GET_JOB_FILES,
+        GET_FILE_METADATA,
         CANCEL_JOB
     }
 
@@ -182,6 +184,8 @@ class JobControllerOwnershipTest {
                 Arguments.of(Endpoint.DOWNLOAD_FILE),
                 Arguments.of(Endpoint.GET_JOB_RESULT),
                 Arguments.of(Endpoint.GET_JOB_STATUS),
+                Arguments.of(Endpoint.GET_JOB_FILES),
+                Arguments.of(Endpoint.GET_FILE_METADATA),
                 Arguments.of(Endpoint.CANCEL_JOB));
     }
 
@@ -191,10 +195,12 @@ class JobControllerOwnershipTest {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(PEER_NODE)));
         switch (endpoint) {
-            case DOWNLOAD_FILE -> when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
+            case DOWNLOAD_FILE, GET_FILE_METADATA ->
+                    when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
             case GET_JOB_RESULT ->
                     when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
-            case GET_JOB_STATUS -> when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
+            case GET_JOB_STATUS, GET_JOB_FILES ->
+                    when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
             case CANCEL_JOB -> {
                 when(jobQueue.isJobQueued(JOB_ID)).thenReturn(false);
                 when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
@@ -206,6 +212,8 @@ class JobControllerOwnershipTest {
                     case DOWNLOAD_FILE -> makeController().downloadFile(FILE_ID);
                     case GET_JOB_RESULT -> makeController().getJobResult(JOB_ID);
                     case GET_JOB_STATUS -> makeController().getJobStatus(JOB_ID);
+                    case GET_JOB_FILES -> makeController().getJobFiles(JOB_ID);
+                    case GET_FILE_METADATA -> makeController().getFileMetadata(FILE_ID);
                     case CANCEL_JOB -> makeController().cancelJob(JOB_ID);
                 };
 
@@ -401,6 +409,7 @@ class JobControllerOwnershipTest {
     void guardNonOwner_jobStoreException_fallsThroughToLocalPath() throws Exception {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
+        when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
         ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
@@ -408,6 +417,30 @@ class JobControllerOwnershipTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(fileStorage).retrieveBytes(FILE_ID);
         verify(stickyMissRecorder, never()).recordStickyMiss();
+    }
+
+    @Test
+    @DisplayName("backplane down + job NOT held locally → 503 retryable (not a misleading 404)")
+    void jobEndpoint_backplaneDown_notLocal_returns503() {
+        when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
+        when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
+
+        ResponseEntity<?> response = makeController().getJobStatus(JOB_ID);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertEquals("1", response.getHeaders().getFirst("Retry-After"));
+        verify(stickyMissRecorder, never()).recordStickyMiss();
+    }
+
+    @Test
+    @DisplayName("backplane down but job held locally → owner still serves (not 503)")
+    void jobEndpoint_backplaneDown_local_servesLocally() {
+        when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
+        when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
+
+        ResponseEntity<?> response = makeController().getJobStatus(JOB_ID);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test

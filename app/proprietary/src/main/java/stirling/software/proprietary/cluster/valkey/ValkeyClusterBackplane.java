@@ -1,6 +1,5 @@
 package stirling.software.proprietary.cluster.valkey;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -14,10 +13,7 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "cluster.enabled", havingValue = "true")
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
-        name = "cluster.backplane",
-        havingValue = "valkey")
+@ConditionalOnValkeyBackplane
 public class ValkeyClusterBackplane implements ClusterBackplane {
 
     private final ApplicationProperties applicationProperties;

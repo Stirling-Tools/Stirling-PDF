@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -154,7 +155,13 @@ public class ValkeyConnectionConfiguration {
         RuntimeException last = null;
         for (int attempt = 1; attempt <= 10; attempt++) {
             try {
-                String pong = factory.getConnection().ping();
+                String pong;
+                RedisConnection conn = factory.getConnection();
+                try {
+                    pong = conn.ping();
+                } finally {
+                    conn.close();
+                }
                 if (!"PONG".equalsIgnoreCase(pong)) {
                     throw new IllegalStateException(
                             "Valkey PING returned '" + pong + "' (expected PONG)");

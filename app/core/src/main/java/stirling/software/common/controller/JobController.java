@@ -356,8 +356,8 @@ public class JobController {
 
     /**
      * Returns 410 Gone when the job is owned by a peer node, empty otherwise. Uses a short-TTL
-     * local cache to avoid repeated Valkey lookups on the hot download path. A Valkey timeout falls
-     * through to the local-disk path rather than surfacing as 500.
+     * local cache to avoid repeated Valkey lookups on the hot download path. When the backplane is
+     * unreachable, a locally-held job is still served and anything else gets a retryable 503.
      */
     private Optional<ResponseEntity<?>> guardNonOwner(String jobId) {
         if (clusterBackplane == null || jobStore == null) {
@@ -371,11 +371,13 @@ public class JobController {
             try {
                 entry = jobStore.get(jobId);
             } catch (RuntimeException ex) {
-                // Valkey timeout: fall through to local-disk path rather than returning 500.
-                // Worst case is a 404 from the wrong node; far better than breaking all downloads.
+                // Backplane unreachable: if we hold the job locally serve it, otherwise return a
+                // retryable 503 (same contract as the file endpoints) instead of a misleading 404.
+                if (taskManager.getJobResult(jobId) == null) {
+                    return Optional.of(backplaneUnavailable(jobId, ex));
+                }
                 log.warn(
-                        "JobStore lookup failed for jobId={} - treating as not-found and falling"
-                                + " through to local path: {}",
+                        "JobStore lookup failed for jobId={}; serving locally-held job: {}",
                         jobId,
                         ex.getMessage());
                 return Optional.empty();
@@ -418,15 +420,14 @@ public class JobController {
     }
 
     /**
-     * file -> job lookup only consults the backplane on a local-map miss, i.e. the file lives on a
-     * peer or does not exist. If the backplane is down we cannot tell which, and serving without an
-     * ownership check would be unsafe - so return a retryable 503 (consistent with the sticky-410
-     * retry model) rather than a misleading 404 or a generic 500.
+     * When the backplane is unreachable we cannot resolve ownership or existence, and serving
+     * without that check would be unsafe - so return a retryable 503 (consistent with the
+     * sticky-410 retry model) rather than a misleading 404 or a generic 500.
      */
-    private ResponseEntity<?> backplaneUnavailable(String fileId, RuntimeException ex) {
+    private ResponseEntity<?> backplaneUnavailable(String id, RuntimeException ex) {
         log.warn(
-                "Backplane lookup failed for fileId={}; returning 503 (retryable): {}",
-                fileId,
+                "Backplane lookup failed for {}; returning 503 (retryable): {}",
+                id,
                 ex.getMessage());
         return ResponseEntity.status(503)
                 .header("Retry-After", "1")
