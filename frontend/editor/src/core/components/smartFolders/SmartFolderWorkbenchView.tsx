@@ -874,10 +874,10 @@ export function SmartFolderWorkbenchView({
                     height: "0.4375rem",
                     borderRadius: "50%",
                     backgroundColor: folder.isPaused
-                      ? "#f59e0b"
+                      ? "var(--color-yellow-500)"
                       : isProcessingAny
-                        ? "#3b82f6"
-                        : "#22c55e",
+                        ? "var(--mantine-color-blue-filled)"
+                        : "var(--color-green-500)",
                   }}
                 />
               </Box>
@@ -949,8 +949,8 @@ export function SmartFolderWorkbenchView({
                 border: "0.0625rem solid",
                 ...(folder.isPaused
                   ? {
-                      backgroundColor: "#22c55e",
-                      borderColor: "#22c55e",
+                      backgroundColor: "var(--color-green-500)",
+                      borderColor: "var(--color-green-500)",
                       color: "#fff",
                     }
                   : {
@@ -1005,11 +1005,11 @@ export function SmartFolderWorkbenchView({
             flexDirection: "column",
             overflow: "hidden",
             outline: isDragOver
-              ? "0.125rem dashed rgba(59,130,246,0.6)"
+              ? "0.125rem dashed var(--mantine-color-blue-filled)"
               : "none",
             outlineOffset: "-0.25rem",
             backgroundColor: isDragOver
-              ? "rgba(59,130,246,0.10)"
+              ? "var(--mantine-color-blue-light)"
               : "transparent",
             transition: "background-color 0.15s ease",
           }}
@@ -1064,12 +1064,15 @@ export function SmartFolderWorkbenchView({
               <StatCard
                 icon={
                   <TaskAltIcon
-                    style={{ fontSize: "1.125rem", color: "#22c55e" }}
+                    style={{
+                      fontSize: "1.125rem",
+                      color: "var(--color-green-500)",
+                    }}
                   />
                 }
                 count={outputFiles.length}
                 label={t("smartFolders.workbench.outputs", "Outputs")}
-                hoverColor="#22c55e"
+                hoverColor="var(--color-green-500)"
                 isActive={activityStatusFilter === "processed"}
                 onClick={() => {
                   setActivityStatusFilter(
@@ -1087,14 +1090,14 @@ export function SmartFolderWorkbenchView({
                       fontSize: "1.125rem",
                       color:
                         failedFileIds.length > 0
-                          ? "#ef4444"
+                          ? "var(--color-red-500)"
                           : "var(--mantine-color-dimmed)",
                     }}
                   />
                 }
                 count={failedFileIds.length}
                 label={t("smartFolders.workbench.failed", "Failed")}
-                hoverColor="#ef4444"
+                hoverColor="var(--color-red-500)"
                 isActive={activityStatusFilter === "error"}
                 onClick={
                   failedFileIds.length > 0
@@ -1117,7 +1120,7 @@ export function SmartFolderWorkbenchView({
                         fontSize: "1.125rem",
                         color:
                           dataSavedBytes > 0
-                            ? "#22c55e"
+                            ? "var(--color-green-500)"
                             : "var(--mantine-color-dimmed)",
                       }}
                     />
@@ -1231,7 +1234,7 @@ export function SmartFolderWorkbenchView({
                 fontSize: "0.75rem",
                 flex: 1,
                 color: isDragOver
-                  ? "#3b82f6"
+                  ? "var(--mantine-color-blue-filled)"
                   : "var(--tool-subcategory-text-color)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
@@ -1451,12 +1454,12 @@ export function SmartFolderWorkbenchView({
                     onClick={() => void handleBatchDelete()}
                     style={{
                       background: "none",
-                      border: "0.0625rem solid #ef4444",
+                      border: "0.0625rem solid var(--color-red-500)",
                       borderRadius: "0.25rem",
                       cursor: "pointer",
                       padding: "0.125rem 0.5rem",
                       fontSize: "0.6875rem",
-                      color: "#ef4444",
+                      color: "var(--color-red-500)",
                       display: "flex",
                       alignItems: "center",
                       gap: "0.25rem",
@@ -1525,7 +1528,7 @@ export function SmartFolderWorkbenchView({
                         key={fileId}
                         style={{
                           borderRadius: "var(--mantine-radius-sm)",
-                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "rgba(239,68,68,0.45)" : "var(--border-subtle)"}`,
+                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
                           backgroundColor: isSelected
                             ? "var(--mantine-color-blue-light)"
                             : "var(--bg-toolbar)",
@@ -1586,7 +1589,7 @@ export function SmartFolderWorkbenchView({
                             <CheckCircleOutlineIcon
                               style={{
                                 fontSize: "0.875rem",
-                                color: "#22c55e",
+                                color: "var(--color-green-500)",
                                 flexShrink: 0,
                               }}
                             />
@@ -1598,7 +1601,7 @@ export function SmartFolderWorkbenchView({
                             <ErrorOutlineIcon
                               style={{
                                 fontSize: "0.875rem",
-                                color: "#ef4444",
+                                color: "var(--color-red-500)",
                                 flexShrink: 0,
                               }}
                             />
@@ -1607,7 +1610,7 @@ export function SmartFolderWorkbenchView({
                             <ReplayIcon
                               style={{
                                 fontSize: "0.875rem",
-                                color: "#f59e0b",
+                                color: "var(--color-yellow-500)",
                                 flexShrink: 0,
                               }}
                             />
@@ -1637,9 +1640,10 @@ export function SmartFolderWorkbenchView({
                                 style={{
                                   padding: "0.0625rem 0.3rem",
                                   borderRadius: "0.25rem",
-                                  backgroundColor: "rgba(239,68,68,0.22)",
+                                  backgroundColor:
+                                    "var(--mantine-color-red-light)",
                                   border:
-                                    "0.0625rem solid rgba(239,68,68,0.45)",
+                                    "0.0625rem solid var(--mantine-color-red-light)",
                                   flexShrink: 0,
                                 }}
                               >
@@ -1647,7 +1651,7 @@ export function SmartFolderWorkbenchView({
                                   style={{
                                     fontSize: "0.625rem",
                                     fontWeight: 700,
-                                    color: "#ef4444",
+                                    color: "var(--color-red-500)",
                                     letterSpacing: "0.03em",
                                   }}
                                 >
@@ -1759,7 +1763,7 @@ export function SmartFolderWorkbenchView({
                         {isExpanded && (
                           <Box
                             style={{
-                              borderTop: `0.0625rem solid ${status === "error" ? "rgba(239,68,68,0.25)" : "var(--border-subtle)"}`,
+                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
                               padding: "0.375rem 0.625rem 0.375rem 2rem",
                               backgroundColor: "var(--bg-app)",
                             }}
@@ -1862,7 +1866,7 @@ export function SmartFolderWorkbenchView({
                                   style={{
                                     fontSize: "0.625rem",
                                     letterSpacing: "0.04em",
-                                    color: "#22c55e",
+                                    color: "var(--color-green-500)",
                                     textTransform: "uppercase",
                                     flexShrink: 0,
                                   }}
@@ -1956,7 +1960,8 @@ export function SmartFolderWorkbenchView({
                                 {inputFile && (
                                   <button
                                     style={{
-                                      background: "rgba(59,130,246,0.12)",
+                                      background:
+                                        "var(--mantine-color-blue-light)",
                                       border: "none",
                                       cursor: "pointer",
                                       padding: "0.2rem 0.4rem",
@@ -1965,7 +1970,7 @@ export function SmartFolderWorkbenchView({
                                       alignItems: "center",
                                       gap: "0.25rem",
                                       fontSize: "0.6875rem",
-                                      color: "#3b82f6",
+                                      color: "var(--mantine-color-blue-filled)",
                                       flexShrink: 0,
                                     }}
                                     onClick={(e) => {
@@ -2079,7 +2084,7 @@ export function SmartFolderWorkbenchView({
               >
                 Done
               </Text>
-              <Text size="xl" fw={800} c="#22c55e">
+              <Text size="xl" fw={800} c="var(--color-green-500)">
                 {dashboardStats.processed}
               </Text>
             </Box>
@@ -2138,7 +2143,7 @@ export function SmartFolderWorkbenchView({
                 >
                   Saved
                 </Text>
-                <Text size="xl" fw={800} c="#22c55e">
+                <Text size="xl" fw={800} c="var(--color-green-500)">
                   ↓ {formatBytes(dashboardStats.saved)}
                 </Text>
               </Box>
@@ -2344,7 +2349,7 @@ export function SmartFolderWorkbenchView({
                               <div
                                 style={{
                                   flex: b.failed,
-                                  backgroundColor: "#ef4444",
+                                  backgroundColor: "var(--color-red-500)",
                                   minHeight: "2px",
                                 }}
                               />
@@ -2353,7 +2358,7 @@ export function SmartFolderWorkbenchView({
                               <div
                                 style={{
                                   flex: b.processed,
-                                  backgroundColor: "#22c55e",
+                                  backgroundColor: "var(--color-green-500)",
                                   minHeight: "2px",
                                 }}
                               />
@@ -2403,7 +2408,7 @@ export function SmartFolderWorkbenchView({
                         width: "0.5rem",
                         height: "0.5rem",
                         borderRadius: "2px",
-                        backgroundColor: "#22c55e",
+                        backgroundColor: "var(--color-green-500)",
                       }}
                     />
                     <Text size="xs" c="dimmed">
@@ -2416,7 +2421,7 @@ export function SmartFolderWorkbenchView({
                         width: "0.5rem",
                         height: "0.5rem",
                         borderRadius: "2px",
-                        backgroundColor: "#ef4444",
+                        backgroundColor: "var(--color-red-500)",
                       }}
                     />
                     <Text size="xs" c="dimmed">
@@ -2519,7 +2524,7 @@ export function SmartFolderWorkbenchView({
                 <button
                   onClick={() => void execDelete(deleteConfirm.ids, true)}
                   style={{
-                    backgroundColor: "#ef4444",
+                    backgroundColor: "var(--color-red-500)",
                     border: "none",
                     borderRadius: "var(--mantine-radius-sm)",
                     cursor: "pointer",

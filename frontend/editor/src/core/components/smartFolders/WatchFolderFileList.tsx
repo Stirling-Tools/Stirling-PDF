@@ -635,14 +635,14 @@ export function WatchFolderFileList({
           return (a.size ?? 0) - (b.size ?? 0);
         case "date-asc":
           return (
-            ((a as any).createdAt ?? a.lastModified ?? 0) -
-            ((b as any).createdAt ?? b.lastModified ?? 0)
+            (a.createdAt ?? a.lastModified ?? 0) -
+            (b.createdAt ?? b.lastModified ?? 0)
           );
         case "date-desc":
         default:
           return (
-            ((b as any).createdAt ?? b.lastModified ?? 0) -
-            ((a as any).createdAt ?? a.lastModified ?? 0)
+            (b.createdAt ?? b.lastModified ?? 0) -
+            (a.createdAt ?? a.lastModified ?? 0)
           );
       }
     });

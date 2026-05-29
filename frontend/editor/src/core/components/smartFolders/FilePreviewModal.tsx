@@ -5,6 +5,7 @@ import { fileStorage } from "@app/services/fileStorage";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 interface FilePreviewModalProps {
   fileId?: FileId | null;
@@ -57,7 +58,7 @@ export function FilePreviewModal({
       onClose={onClose}
       title={fileName}
       size="90%"
-      zIndex={400}
+      zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
       styles={{
         body: {
           height: "82vh",

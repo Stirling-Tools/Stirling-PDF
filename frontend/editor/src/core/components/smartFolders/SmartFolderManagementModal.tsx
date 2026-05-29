@@ -503,10 +503,10 @@ export function SmartFolderManagementModal({
                           style={{
                             padding: "0.5rem 0.75rem",
                             borderRadius: "var(--mantine-radius-sm)",
-                            border: `0.0625rem solid ${inputDirName ? "rgba(34,197,94,0.4)" : "var(--mantine-color-yellow-5)"}`,
+                            border: `0.0625rem solid ${inputDirName ? "var(--mantine-color-green-filled)" : "var(--mantine-color-yellow-5)"}`,
                             backgroundColor: inputDirName
-                              ? "rgba(34,197,94,0.06)"
-                              : "rgba(234,179,8,0.06)",
+                              ? "var(--mantine-color-green-light)"
+                              : "var(--mantine-color-yellow-light)",
                           }}
                         >
                           <Group gap="xs" align="center" wrap="nowrap">
@@ -514,7 +514,7 @@ export function SmartFolderManagementModal({
                               style={{
                                 fontSize: "1rem",
                                 color: inputDirName
-                                  ? "#22c55e"
+                                  ? "var(--color-green-500)"
                                   : "var(--mantine-color-yellow-6)",
                                 flexShrink: 0,
                               }}
@@ -572,9 +572,9 @@ export function SmartFolderManagementModal({
                       style={{
                         padding: "0.5rem 0.75rem",
                         borderRadius: "var(--mantine-radius-sm)",
-                        border: `0.0625rem solid ${outputDirName ? "rgba(34,197,94,0.4)" : "var(--border-subtle)"}`,
+                        border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--border-subtle)"}`,
                         backgroundColor: outputDirName
-                          ? "rgba(34,197,94,0.06)"
+                          ? "var(--mantine-color-green-light)"
                           : "transparent",
                       }}
                     >
@@ -583,7 +583,7 @@ export function SmartFolderManagementModal({
                           style={{
                             fontSize: "1rem",
                             color: outputDirName
-                              ? "#22c55e"
+                              ? "var(--color-green-500)"
                               : "var(--mantine-color-dimmed)",
                             flexShrink: 0,
                           }}

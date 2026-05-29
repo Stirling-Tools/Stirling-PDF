@@ -136,7 +136,9 @@ export function SmartFolderCard({
           ) : status === "processing" ? (
             <Loader size={10} color={folder.accentColor} />
           ) : status === "done" ? (
-            <CheckCircleIcon style={{ fontSize: 12, color: "#22c55e" }} />
+            <CheckCircleIcon
+              style={{ fontSize: 12, color: "var(--color-green-500)" }}
+            />
           ) : null
         }
         onClick={onSelect}

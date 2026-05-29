@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { Text, ActionIcon, ScrollArea } from "@mantine/core";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   CardModalPhase,
   CARD_MODAL_TIMINGS,
@@ -46,6 +48,7 @@ export function CardExpansionModal({
   heightRem,
   fillHeight,
 }: CardExpansionModalProps) {
+  const { t } = useTranslation();
   const [viewportW, setViewportW] = useState(window.innerWidth);
   const [viewportH, setViewportH] = useState(window.innerHeight);
 
@@ -199,13 +202,14 @@ export function CardExpansionModal({
               size="lg"
               color="gray"
               onClick={onClose}
+              aria-label={t("close", "Close")}
               style={{
                 position: "absolute",
                 top: "0.25rem",
                 right: "0.375rem",
               }}
             >
-              <Text style={{ fontSize: "1.25rem", lineHeight: 1 }}>×</Text>
+              <CloseIcon style={{ fontSize: "1.25rem" }} />
             </ActionIcon>
           </div>
         </div>

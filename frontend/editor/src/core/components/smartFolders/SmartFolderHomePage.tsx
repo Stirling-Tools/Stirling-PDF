@@ -125,10 +125,10 @@ function FolderCard({
   const statusDotColor = isPaused
     ? "var(--mantine-color-dimmed)"
     : isActive
-      ? "#3b82f6"
+      ? "var(--mantine-color-blue-filled)"
       : isDone
-        ? "#22c55e"
-        : "#6b7280";
+        ? "var(--color-green-500)"
+        : "var(--text-muted)";
   const statusDotPulse = isActive;
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -165,7 +165,7 @@ function FolderCard({
   const ops = automation?.operations ?? [];
 
   const cardBorderColor = isDragOver
-    ? "rgba(59,130,246,0.7)"
+    ? "var(--mantine-color-blue-filled)"
     : isHovered
       ? folder.accentColor
       : "var(--mantine-color-default-border)";
@@ -181,7 +181,7 @@ function FolderCard({
         borderRadius: "var(--mantine-radius-md)",
         border: `0.0625rem solid ${cardBorderColor}`,
         backgroundColor: isDragOver
-          ? "rgba(59,130,246,0.10)"
+          ? "var(--mantine-color-blue-light)"
           : "var(--bg-toolbar)",
         transition:
           "border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease",
@@ -263,17 +263,17 @@ function FolderCard({
                     fontSize: "0.6875rem",
                     fontWeight: 500,
                     backgroundColor: isPaused
-                      ? "rgba(245,158,11,0.15)"
+                      ? "var(--mantine-color-yellow-light)"
                       : isActive
-                        ? "rgba(59, 130, 246, 0.12)"
-                        : "rgba(34, 197, 94, 0.12)",
+                        ? "var(--mantine-color-blue-light)"
+                        : "var(--mantine-color-green-light)",
                     color: isPaused
                       ? "var(--mantine-color-yellow-6)"
                       : isActive
-                        ? "#3b82f6"
-                        : "#22c55e",
+                        ? "var(--mantine-color-blue-filled)"
+                        : "var(--color-green-500)",
                     border: isPaused
-                      ? "0.0625rem solid rgba(245,158,11,0.35)"
+                      ? "0.0625rem solid var(--mantine-color-yellow-light)"
                       : "none",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
@@ -572,7 +572,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           height: "5rem",
           borderRadius: "1.25rem",
           background:
-            "linear-gradient(135deg, rgba(59,130,246,0.28) 0%, transparent 100%)",
+            "linear-gradient(135deg, var(--mantine-color-blue-light) 0%, transparent 100%)",
           border: "0.0625rem solid var(--border-subtle)",
           display: "flex",
           alignItems: "center",
