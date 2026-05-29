@@ -13,7 +13,6 @@ import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import FolderPlusIcon from "@mui/icons-material/CreateNewFolder";
@@ -27,10 +26,10 @@ import {
 } from "@app/hooks/useFolderAutomation";
 import { SmartFolder } from "@app/types/smartFolders";
 import { AutomationConfig } from "@app/types/automation";
-import { iconMap } from "@app/components/tools/automate/iconMap";
 import { automationStorage } from "@app/services/automationStorage";
 import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { fileStorage } from "@app/services/fileStorage";
+import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
 import { DeleteFolderConfirmModal } from "@app/components/smartFolders/DeleteFolderConfirmModal";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -40,13 +39,7 @@ import {
   SMART_FOLDER_WORKBENCH_ID,
 } from "@app/components/smartFolders/SmartFoldersRegistration";
 import { timeAgo } from "@app/components/smartFolders/SmartFolderWorkbenchView";
-
-const KEYFRAMES = `
-  @keyframes wf-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.35; transform: scale(0.7); }
-  }
-`;
+import "@app/components/smartFolders/SmartFolders.css";
 
 export function humaniseOp(op: string): string {
   return op
@@ -85,7 +78,6 @@ function FolderCard({
   const [fileCount, setFileCount] = useState(0);
   const [lastAdded, setLastAdded] = useState<Date | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     automationStorage.getAutomation(folder.automationId).then(setAutomation);
@@ -116,8 +108,6 @@ function FolderCard({
     return unsub;
   }, [folder.id, folder.automationId]);
 
-  const FolderIcon =
-    iconMap[folder.icon as keyof typeof iconMap] ?? iconMap.FolderIcon;
   const isPaused = folder.isPaused ?? false;
   const isActive = !isPaused && (isProcessing || status === "processing");
   const isDone = !isPaused && status === "done" && !isActive;
@@ -130,6 +120,14 @@ function FolderCard({
         ? "var(--color-green-500)"
         : "var(--text-muted)";
   const statusDotPulse = isActive;
+
+  const statusLabel = isPaused
+    ? t("smartFolders.status.paused", "Paused")
+    : isActive
+      ? t("smartFolders.status.processing", "Processing")
+      : isDone
+        ? t("smartFolders.status.done", "Done")
+        : t("smartFolders.status.active", "Active");
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -162,276 +160,103 @@ function FolderCard({
     }
   };
 
-  const ops = automation?.operations ?? [];
-
-  const cardBorderColor = isDragOver
-    ? "var(--mantine-color-blue-filled)"
-    : isHovered
-      ? folder.accentColor
-      : "var(--mantine-color-default-border)";
-
-  const cardBoxShadow =
-    isDragOver || isHovered
-      ? `0 0.25rem 0.75rem ${folder.accentColor}50`
-      : "0 0.0625rem 0.25rem rgba(0,0,0,0.08)";
+  // `automation` is loaded by the per-card effect above; the steps it holds
+  // are no longer rendered on the card but the load is preserved.
+  void automation;
 
   return (
-    <Box
-      style={{
-        borderRadius: "var(--mantine-radius-md)",
-        border: `0.0625rem solid ${cardBorderColor}`,
-        backgroundColor: isDragOver
-          ? "var(--mantine-color-blue-light)"
-          : "var(--bg-toolbar)",
-        transition:
-          "border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease",
-        boxShadow: cardBoxShadow,
-        cursor: "pointer",
-        position: "relative",
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <div
+      className={`wf-card${isDragOver ? " is-drop-target" : ""}`}
+      role="listitem"
+      tabIndex={0}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => onOpen(folder.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen(folder.id);
+      }}
     >
-      <Box style={{ padding: "1.25rem" }}>
-        <Group align="flex-start" wrap="nowrap" gap="md">
-          {/* Icon with status dot */}
-          <Box style={{ position: "relative", flexShrink: 0 }}>
-            <Box
-              style={{
-                width: "3rem",
-                height: "3rem",
-                borderRadius: "0.625rem",
-                backgroundColor: `${folder.accentColor}18`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <FolderIcon
-                style={{ fontSize: "1.5rem", color: folder.accentColor }}
-              />
-            </Box>
-            <Box
-              style={{
-                position: "absolute",
-                bottom: "-0.1875rem",
-                right: "-0.1875rem",
-                width: "0.875rem",
-                height: "0.875rem",
-                borderRadius: "50%",
-                backgroundColor:
-                  "var(--bg-surface, var(--mantine-color-default))",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Box
-                style={{
-                  width: "0.5rem",
-                  height: "0.5rem",
-                  borderRadius: "50%",
-                  backgroundColor: statusDotColor,
-                  animation: statusDotPulse
-                    ? "wf-pulse 1.4s ease-in-out infinite"
-                    : "none",
-                }}
-              />
-            </Box>
-          </Box>
+      <div
+        className="wf-card-thumb"
+        style={{
+          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.accentColor} 18%, var(--bg-surface)), color-mix(in srgb, ${folder.accentColor} 6%, var(--bg-surface)))`,
+        }}
+      >
+        <FolderThumbnail
+          color={folder.accentColor}
+          fileCount={fileCount}
+          size="thumb"
+        />
+      </div>
 
-          {/* Main content */}
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Group justify="space-between" align="center" wrap="nowrap" mb="xs">
-              <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-                <Text
-                  fw={600}
-                  size="sm"
-                  style={{ letterSpacing: "-0.01em", lineHeight: 1.3 }}
-                  lineClamp={1}
-                >
-                  {folder.name}
-                </Text>
-                <Box
-                  style={{
-                    padding: "0.125rem 0.5rem",
-                    borderRadius: "1rem",
-                    fontSize: "0.6875rem",
-                    fontWeight: 500,
-                    backgroundColor: isPaused
-                      ? "var(--mantine-color-yellow-light)"
-                      : isActive
-                        ? "var(--mantine-color-blue-light)"
-                        : "var(--mantine-color-green-light)",
-                    color: isPaused
-                      ? "var(--mantine-color-yellow-6)"
-                      : isActive
-                        ? "var(--mantine-color-blue-filled)"
-                        : "var(--color-green-500)",
-                    border: isPaused
-                      ? "0.0625rem solid var(--mantine-color-yellow-light)"
-                      : "none",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                  }}
-                >
-                  {isPaused
-                    ? t("smartFolders.status.paused", "Paused")
-                    : isActive
-                      ? t("smartFolders.status.processing", "Processing")
-                      : t("smartFolders.status.active", "Active")}
-                </Box>
-              </Group>
+      <div className="wf-card-body">
+        <div className="wf-card-name" title={folder.name}>
+          {folder.name}
+        </div>
+        <div className="wf-card-meta">
+          <span>
+            {fileCount}{" "}
+            {fileCount === 1
+              ? t("smartFolders.home.file", "file")
+              : t("smartFolders.home.files", "files")}
+          </span>
+          {lastAdded && (
+            <>
+              <span>·</span>
+              <span>{timeAgo(lastAdded, t)}</span>
+            </>
+          )}
+          <span style={{ flex: 1 }} />
+          <span
+            className={`wf-card-status-dot${statusDotPulse ? " is-pulsing" : ""}`}
+            style={{ backgroundColor: statusDotColor }}
+          />
+          <span style={{ fontSize: "0.7rem" }}>{statusLabel}</span>
+        </div>
+      </div>
 
-              <Group
-                gap="sm"
-                wrap="nowrap"
-                align="center"
-                style={{ flexShrink: 0 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Box style={{ textAlign: "right", marginRight: "0.25rem" }}>
-                  <Text fw={700} size="sm" style={{ lineHeight: 1.2 }}>
-                    {fileCount}{" "}
-                    {fileCount === 1
-                      ? t("smartFolders.home.file", "file")
-                      : t("smartFolders.home.files", "files")}
-                  </Text>
-                  {lastAdded && (
-                    <Text
-                      size="xs"
-                      c="dimmed"
-                      style={{ fontSize: "0.625rem", lineHeight: 1.3 }}
-                    >
-                      {timeAgo(lastAdded, t)}
-                    </Text>
-                  )}
-                </Box>
-
-                <Group
-                  gap="xs"
-                  wrap="nowrap"
-                  align="center"
-                  style={{
-                    opacity: isHovered ? 1 : 0,
-                    transition: "opacity 0.15s ease",
-                    marginLeft: "0.75rem",
-                  }}
-                >
-                  <ActionIcon
-                    size="md"
-                    variant="subtle"
-                    onClick={() => onTogglePause(folder)}
-                    aria-label={
-                      isPaused
-                        ? t("smartFolders.home.resume", "Resume")
-                        : t("smartFolders.home.pause", "Pause")
-                    }
-                    title={
-                      isPaused
-                        ? t("smartFolders.home.resume", "Resume")
-                        : t("smartFolders.home.pause", "Pause")
-                    }
-                  >
-                    {isPaused ? (
-                      <PlayCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
-                    ) : (
-                      <PauseCircleOutlineIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    )}
-                  </ActionIcon>
-                  <ActionIcon
-                    size="md"
-                    variant="subtle"
-                    onClick={() => onEdit(folder)}
-                    aria-label={t(
-                      "smartFolders.home.editFolder",
-                      "Edit folder",
-                    )}
-                  >
-                    <EditIcon style={{ fontSize: "1.125rem" }} />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="md"
-                    variant="subtle"
-                    color="red"
-                    onClick={() => onDelete(folder)}
-                    aria-label={t(
-                      "smartFolders.home.deleteFolder",
-                      "Delete folder",
-                    )}
-                  >
-                    <DeleteOutlineIcon style={{ fontSize: "1.125rem" }} />
-                  </ActionIcon>
-                </Group>
-              </Group>
-            </Group>
-
-            {/* Pipeline chips */}
-            {ops.length > 0 && (
-              <Group gap="xs" wrap="wrap" mb="xs">
-                {ops.map((op, i) => (
-                  <Group key={i} gap={4} wrap="nowrap" align="center">
-                    {i > 0 && (
-                      <ChevronRightIcon
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--mantine-color-gray-5)",
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-                    <Box
-                      style={{
-                        padding: "0.125rem 0.5rem",
-                        borderRadius: "0.25rem",
-                        fontSize: "0.75rem",
-                        backgroundColor: "var(--mantine-color-default-hover)",
-                        color: "var(--mantine-color-text)",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {humaniseOp(op.operation)}
-                    </Box>
-                  </Group>
-                ))}
-              </Group>
-            )}
-            {ops.length === 0 && (
-              <Text
-                size="xs"
-                c="dimmed"
-                mb="xs"
-                style={{ fontStyle: "italic" }}
-              >
-                {t(
-                  "smartFolders.home.noSteps",
-                  "No automation steps configured",
-                )}
-              </Text>
-            )}
-
-            {isDragOver && (
-              <Text
-                size="xs"
-                fw={600}
-                style={{
-                  color: folder.accentColor,
-                  fontSize: "0.6875rem",
-                }}
-              >
-                {t("smartFolders.home.dropHere", "Drop to process")}
-              </Text>
-            )}
-          </Box>
-        </Group>
-      </Box>
-    </Box>
+      <div className="wf-card-actions" onClick={(e) => e.stopPropagation()}>
+        <ActionIcon
+          size="md"
+          variant="subtle"
+          onClick={() => onTogglePause(folder)}
+          aria-label={
+            isPaused
+              ? t("smartFolders.home.resume", "Resume")
+              : t("smartFolders.home.pause", "Pause")
+          }
+          title={
+            isPaused
+              ? t("smartFolders.home.resume", "Resume")
+              : t("smartFolders.home.pause", "Pause")
+          }
+        >
+          {isPaused ? (
+            <PlayCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
+          ) : (
+            <PauseCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
+          )}
+        </ActionIcon>
+        <ActionIcon
+          size="md"
+          variant="subtle"
+          onClick={() => onEdit(folder)}
+          aria-label={t("smartFolders.home.editFolder", "Edit folder")}
+        >
+          <EditIcon style={{ fontSize: "1.125rem" }} />
+        </ActionIcon>
+        <ActionIcon
+          size="md"
+          variant="subtle"
+          color="red"
+          onClick={() => onDelete(folder)}
+          aria-label={t("smartFolders.home.deleteFolder", "Delete folder")}
+        >
+          <DeleteOutlineIcon style={{ fontSize: "1.125rem" }} />
+        </ActionIcon>
+      </div>
+    </div>
   );
 }
 
@@ -553,66 +378,31 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   const { t } = useTranslation();
 
   return (
-    <Box
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "4rem 2rem",
-        gap: "1.5rem",
-        maxWidth: "32rem",
-        margin: "0 auto",
-        textAlign: "center",
-      }}
-    >
-      <Box
-        style={{
-          width: "5rem",
-          height: "5rem",
-          borderRadius: "1.25rem",
-          background:
-            "linear-gradient(135deg, var(--mantine-color-blue-light) 0%, transparent 100%)",
-          border: "0.0625rem solid var(--border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <FolderPlusIcon
-          style={{
-            fontSize: "2rem",
-            color: "var(--mantine-color-blue-filled)",
-          }}
-        />
-      </Box>
-
-      <Stack gap="xs" align="center">
-        <Text fw={700} size="lg" style={{ letterSpacing: "-0.02em" }}>
-          {t("smartFolders.home.emptyTitle", "Automate your PDF workflows")}
-        </Text>
-        <Text
-          size="sm"
-          c="dimmed"
-          style={{ lineHeight: 1.6, maxWidth: "22rem" }}
-        >
-          {t(
-            "smartFolders.home.emptyDesc",
-            "Set up a Watch Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
-          )}
-        </Text>
-      </Stack>
+    <div className="wf-empty">
+      <span className="wf-empty-icon">
+        <FolderPlusIcon style={{ fontSize: "2.5rem" }} />
+      </span>
+      <div className="wf-empty-title">
+        {t("smartFolders.home.emptyTitle", "Automate your PDF workflows")}
+      </div>
+      <div className="wf-empty-hint">
+        {t(
+          "smartFolders.home.emptyDesc",
+          "Set up a Watch Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
+        )}
+      </div>
 
       <Button
         size="md"
         leftSection={<AddIcon style={{ fontSize: "1.125rem" }} />}
         onClick={onCreate}
+        mt="sm"
       >
         {t("smartFolders.home.create", "Create your first Watch Folder")}
       </Button>
 
       <HowItWorks />
-    </Box>
+    </div>
   );
 }
 
@@ -774,8 +564,6 @@ export function SmartFolderHomePage() {
         overflow: "hidden",
       }}
     >
-      <style>{KEYFRAMES}</style>
-
       <Box
         px="xl"
         py="md"
@@ -825,77 +613,55 @@ export function SmartFolderHomePage() {
             <Stack gap="md">
               <HowItWorks />
 
-              <Box
-                style={{
-                  borderRadius: "var(--mantine-radius-md)",
-                  border: "0.09375rem dashed var(--border-subtle)",
-                  padding: "1.5rem",
-                  textAlign: "center",
-                  cursor: "pointer",
-                  transition: "border-color 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor =
-                    "var(--mantine-color-blue-filled)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor =
-                    "var(--border-subtle)";
-                }}
-                onClick={() => setCreateModalOpen(true)}
-              >
-                <Box
-                  style={{
-                    width: "3rem",
-                    height: "3rem",
-                    borderRadius: "50%",
-                    backgroundColor: "var(--mantine-color-default-hover)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 0.75rem",
+              <div className="wf-grid" role="list">
+                {folders.map((folder) => {
+                  const status = statuses[folder.id] ?? "idle";
+                  const isProcessing =
+                    processingFolderIds.has(folder.id) ||
+                    status === "processing";
+                  return (
+                    <FolderCard
+                      key={folder.id}
+                      folder={folder}
+                      status={status}
+                      isProcessing={isProcessing}
+                      onEdit={handleEdit}
+                      onDelete={setDeleteTarget}
+                      onOpen={navigateToFolder}
+                      onDropFiles={processFiles}
+                      onDropSidebarFile={handleDropSidebarFile}
+                      onTogglePause={handleTogglePause}
+                    />
+                  );
+                })}
+
+                <div
+                  className="wf-new-tile"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setCreateModalOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ")
+                      setCreateModalOpen(true);
                   }}
                 >
-                  <FolderPlusIcon
-                    style={{
-                      fontSize: "1.375rem",
-                      color: "var(--mantine-color-dimmed)",
-                    }}
-                  />
-                </Box>
-                <Text size="sm" fw={500} c="dimmed" mb={2}>
-                  {t(
-                    "smartFolders.home.addAnother",
-                    "Add another Watch Folder",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {t(
-                    "smartFolders.home.addAnotherDesc",
-                    "Automatically process files with a new pipeline",
-                  )}
-                </Text>
-              </Box>
-
-              {folders.map((folder) => {
-                const status = statuses[folder.id] ?? "idle";
-                const isProcessing =
-                  processingFolderIds.has(folder.id) || status === "processing";
-                return (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    status={status}
-                    isProcessing={isProcessing}
-                    onEdit={handleEdit}
-                    onDelete={setDeleteTarget}
-                    onOpen={navigateToFolder}
-                    onDropFiles={processFiles}
-                    onDropSidebarFile={handleDropSidebarFile}
-                    onTogglePause={handleTogglePause}
-                  />
-                );
-              })}
+                  <span className="wf-new-tile-icon">
+                    <FolderPlusIcon style={{ fontSize: "1.5rem" }} />
+                  </span>
+                  <Text size="sm" fw={600}>
+                    {t(
+                      "smartFolders.home.addAnother",
+                      "Add another Watch Folder",
+                    )}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {t(
+                      "smartFolders.home.addAnotherDesc",
+                      "Automatically process files with a new pipeline",
+                    )}
+                  </Text>
+                </div>
+              </div>
             </Stack>
           )}
         </Box>
