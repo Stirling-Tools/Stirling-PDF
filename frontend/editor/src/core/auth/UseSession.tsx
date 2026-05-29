@@ -2,8 +2,14 @@ export interface AuthContextType {
   session: null;
   user: { id?: string; email?: string; [key: string]: unknown } | null;
   /**
-   * Human-readable name for the signed-in user, or null if there is no
-   * named user (anonymous, signed-out, or core OSS with no auth context).
+   * Human-readable name to show in the UI for the current session.
+   * - A real identity (username/email/full_name) when the user is signed in.
+   * - A layer-specific placeholder (e.g. "Guest" in SaaS, "User" in
+   *   proprietary) for anonymous sessions.
+   * - null only when there is no user object at all (signed-out, or core
+   *   OSS with no auth context) - consumers can fall back to whatever
+   *   makes sense in their build.
+   *
    * Each layer derives this from its own native user shape - consumers
    * should treat the resulting string as opaque display text.
    */

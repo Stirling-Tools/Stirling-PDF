@@ -24,7 +24,14 @@ import type {
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  /** Human-readable name for the signed-in user, or null for anonymous/signed-out. */
+  /**
+   * Human-readable name to show in the UI for the current session.
+   * - A real identity (username/email) when the user is signed in.
+   * - The localised "User" placeholder for anonymous sessions
+   *   (proprietary's chosen label - see deriveDisplayName).
+   * - null only when there is no user object at all (signed-out), so
+   *   consumers can fall back to whatever makes sense.
+   */
   displayName: string | null;
   loading: boolean;
   error: AuthError | null;
@@ -37,8 +44,10 @@ interface AuthContextType {
  * localised "User" placeholder (proprietary's chosen label for unsigned-in
  * sessions); returns null only when there is no user object at all so
  * consumers can pick their own fallback.
+ *
+ * Exported for unit testing.
  */
-function deriveDisplayName(
+export function deriveDisplayName(
   user: User | null | undefined,
   t: TFunction,
 ): string | null {

@@ -134,6 +134,15 @@ tasks:
       # `Permission denied (os error 13)` (Rust's io::Error Display drops
       # the path, so the failure is opaque). Make the source writable here
       # so the staged destinations are writable and can be overwritten.
+      #
+      # Trade-off: this task runs for both `task desktop:dev` and
+      # `task desktop:build`, so production bundles also ship mode-644
+      # JRE files instead of 444. Functionally harmless on POSIX (the
+      # `other` bit is `r--` either way, and on macOS code signing is the
+      # real integrity check) and on Windows the DOS read-only attribute
+      # isn't load-bearing for the bundled JDK. If we ever need strict
+      # 444 in production, split the chmod into a dev-only step and have
+      # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
       - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"

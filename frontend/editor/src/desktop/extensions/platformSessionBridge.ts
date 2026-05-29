@@ -29,6 +29,15 @@ interface SupabaseJwtClaims {
   is_anonymous?: boolean;
 }
 
+/**
+ * Decode the payload section of a JWT for display purposes only.
+ *
+ * SECURITY: this does NOT verify the signature. The returned claims are
+ * untrusted - never use them for authorisation decisions. The Supabase
+ * server validates the signature on every API call; this decoder exists
+ * solely to render the user's name/email in the UI before that
+ * server-validated state lands.
+ */
 function decodeSupabaseJwt(token: string): SupabaseJwtClaims | null {
   const parts = token.split(".");
   if (parts.length < 2) return null;
