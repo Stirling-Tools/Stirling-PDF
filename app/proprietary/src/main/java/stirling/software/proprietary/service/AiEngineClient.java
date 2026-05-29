@@ -162,6 +162,35 @@ public class AiEngineClient {
         }
     }
 
+    /**
+     * DELETE with no body. Used for purging the caller's RAG content on logout. Wraps the same
+     * error envelope as {@link #post} / {@link #get} so callers see a consistent set of {@code
+     * ResponseStatusException}s.
+     */
+    public String delete(String path, String userId) throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        if (!config.isEnabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+        }
+
+        String url = config.getUrl().stripTrailing() + path;
+        log.debug("Proxying AI engine DELETE request to {}", url);
+
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Accept", "application/json")
+                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                        .DELETE();
+        addUserHeader(builder, userId);
+        HttpResponse<String> response = sendRequest(builder.build());
+
+        log.debug("AI engine responded with status {}", response.statusCode());
+        checkResponseStatus(response);
+        return response.body();
+    }
+
     public String get(String path, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {

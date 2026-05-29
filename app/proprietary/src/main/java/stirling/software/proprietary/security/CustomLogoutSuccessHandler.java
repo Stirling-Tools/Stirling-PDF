@@ -36,6 +36,7 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
+import stirling.software.proprietary.service.AiUserDataService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -49,11 +50,19 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     private final JwtServiceInterface jwtService;
 
+    private final AiUserDataService aiUserDataService;
+
     @Override
     @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
     public void onLogoutSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
+
+        // Fire the RAG-content purge before any redirect logic. Best-effort — failures don't
+        // change the logout outcome; the engine's TTL reaper backstops anything that misses.
+        if (authentication != null) {
+            aiUserDataService.purgeRagContent(authentication.getName());
+        }
 
         if (!response.isCommitted()) {
             if (authentication != null) {

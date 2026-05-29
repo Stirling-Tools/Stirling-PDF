@@ -257,13 +257,13 @@ def test_delete_document_reports_deleted_true_when_existed(client: TestClient) -
         },
         headers=HEADERS,
     )
-    response = client.delete("/api/v1/documents/to-delete", headers=HEADERS)
+    response = client.delete("/api/v1/documents/by-id/to-delete", headers=HEADERS)
     assert response.status_code == 200
     assert response.json() == {"documentId": "to-delete", "deleted": True}
 
 
 def test_delete_document_is_idempotent(client: TestClient) -> None:
-    response = client.delete("/api/v1/documents/never-existed", headers=HEADERS)
+    response = client.delete("/api/v1/documents/by-id/never-existed", headers=HEADERS)
     assert response.status_code == 200
     assert response.json() == {"documentId": "never-existed", "deleted": False}
 
@@ -282,12 +282,53 @@ async def test_delete_document_removes_collection(client: TestClient, service: D
         headers=HEADERS,
     )
     assert await service.has_collection(FileId("gone"), principals=USER_PRINCIPALS)
-    client.delete("/api/v1/documents/gone", headers=HEADERS)
+    client.delete("/api/v1/documents/by-id/gone", headers=HEADERS)
     assert not await service.has_collection(FileId("gone"), principals=USER_PRINCIPALS)
 
 
 def test_delete_document_rejects_missing_user_header(client: TestClient) -> None:
-    response = client.delete("/api/v1/documents/anything")
+    response = client.delete("/api/v1/documents/by-id/anything")
+    assert response.status_code == 401
+
+
+@pytest.mark.anyio
+async def test_purge_by_owner_removes_only_callers_collections(client: TestClient, service: DocumentService) -> None:
+    """Logout path: DELETE /api/v1/documents/by-owner purges only the caller's docs."""
+    alice = {
+        "documentId": "alice-doc",
+        "source": "alice.pdf",
+        "pageText": [{"pageNumber": 1, "text": "alice content"}],
+        "ownerId": "alice",
+        "readPrincipals": ["alice"],
+    }
+    bob = {
+        "documentId": "bob-doc",
+        "source": "bob.pdf",
+        "pageText": [{"pageNumber": 1, "text": "bob content"}],
+        "ownerId": "bob",
+        "readPrincipals": ["bob"],
+    }
+    client.post("/api/v1/documents", json=alice, headers={"X-User-Id": "alice"})
+    client.post("/api/v1/documents", json=bob, headers={"X-User-Id": "bob"})
+
+    response = client.delete("/api/v1/documents/by-owner", headers={"X-User-Id": "alice"})
+    assert response.status_code == 200
+    assert response.json() == {"ownerId": "alice", "deleted": 1}
+
+    # Alice gone, Bob still there.
+    assert await service.has_collection(FileId("alice-doc"), principals=[PrincipalId("alice")]) is False
+    assert await service.has_collection(FileId("bob-doc"), principals=[PrincipalId("bob")]) is True
+
+
+def test_purge_by_owner_is_idempotent(client: TestClient) -> None:
+    """Calling purge with no docs is fine — deleted=0 and no error."""
+    response = client.delete("/api/v1/documents/by-owner", headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json() == {"ownerId": USER, "deleted": 0}
+
+
+def test_purge_by_owner_rejects_missing_user_header(client: TestClient) -> None:
+    response = client.delete("/api/v1/documents/by-owner")
     assert response.status_code == 401
 
 
@@ -304,9 +345,9 @@ def test_delete_document_only_affects_calling_user(client: TestClient) -> None:
     client.post("/api/v1/documents", json=alice_body, headers={"X-User-Id": "alice"})
     client.post("/api/v1/documents", json=bob_body, headers={"X-User-Id": "bob"})
 
-    alice_delete = client.delete("/api/v1/documents/shared", headers={"X-User-Id": "alice"})
+    alice_delete = client.delete("/api/v1/documents/by-id/shared", headers={"X-User-Id": "alice"})
     assert alice_delete.json() == {"documentId": "shared", "deleted": True}
 
     # Bob's copy is still there
-    bob_delete = client.delete("/api/v1/documents/shared", headers={"X-User-Id": "bob"})
+    bob_delete = client.delete("/api/v1/documents/by-id/shared", headers={"X-User-Id": "bob"})
     assert bob_delete.json() == {"documentId": "shared", "deleted": True}

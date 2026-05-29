@@ -55,10 +55,12 @@ class PgVectorStore(DocumentStore):
                         collection TEXT NOT NULL,
                         owner_id TEXT NOT NULL,
                         source TEXT NOT NULL,
+                        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                         PRIMARY KEY (collection, owner_id)
                     )
                     """
                 )
+                await cur.execute("CREATE INDEX IF NOT EXISTS idx_meta_created_at ON documents_meta(created_at)")
                 await cur.execute(
                     """
                     CREATE TABLE IF NOT EXISTS rag_documents (
@@ -129,6 +131,30 @@ class PgVectorStore(DocumentStore):
                     (collection, owner_id, source),
                 )
                 await conn.commit()
+
+    async def purge_owner(self, owner_id: OwnerId) -> int:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "DELETE FROM documents_meta WHERE owner_id = %s",
+                    (owner_id,),
+                )
+                deleted = cur.rowcount
+                await conn.commit()
+        return deleted
+
+    async def reap_older_than(self, max_age_seconds: int) -> int:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "DELETE FROM documents_meta WHERE created_at < NOW() - make_interval(secs => %s)",
+                    (max_age_seconds,),
+                )
+                deleted = cur.rowcount
+                await conn.commit()
+        return deleted
 
     async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
         await self._ensure_schema()

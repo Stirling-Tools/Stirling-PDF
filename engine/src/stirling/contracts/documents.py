@@ -67,3 +67,10 @@ class IngestDocumentResponse(ApiModel):
 class DeleteDocumentResponse(ApiModel):
     document_id: FileId
     deleted: bool
+
+
+class PurgeOwnerResponse(ApiModel):
+    """Returned by ``DELETE /api/v1/documents/by-owner``."""
+
+    owner_id: OwnerId
+    deleted: int = Field(ge=0)

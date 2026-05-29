@@ -77,6 +77,25 @@ class DocumentStore(ABC):
     async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
         """Remove a collection's chunks, pages, and ACL rows. Owner-only."""
 
+    @abstractmethod
+    async def purge_owner(self, owner_id: OwnerId) -> int:
+        """Remove every collection (and ACL row) belonging to ``owner_id``.
+
+        Used on explicit logout so a user's personal RAG content disappears
+        as soon as they end their session. Returns the number of collections
+        purged.
+        """
+
+    @abstractmethod
+    async def reap_older_than(self, max_age_seconds: int) -> int:
+        """Remove collections whose ``created_at`` is older than ``max_age_seconds``.
+
+        TTL backstop for cases the explicit logout path misses (tab close,
+        JWT expiry, engine restart). Returns the number of collections
+        deleted. Implementations compute the cutoff from the system clock —
+        no caller-supplied wall time, to avoid skew bugs.
+        """
+
     # ── write paths (scoped by owner) ──────────────────────────────────────
 
     @abstractmethod

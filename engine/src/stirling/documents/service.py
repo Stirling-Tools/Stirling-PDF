@@ -148,6 +148,17 @@ class DocumentService:
         """Remove a collection (chunks, pages, ACL). Owner-only operation."""
         await self._store.delete_collection(collection, owner_id)
 
+    async def purge_owner(self, owner_id: OwnerId) -> int:
+        """Remove everything ``owner_id`` owns. Called on user logout to clean up
+        personal-doc RAG content. Returns the number of collections purged."""
+        return await self._store.purge_owner(owner_id)
+
+    async def reap_stale(self, max_age_seconds: int) -> int:
+        """Remove collections older than ``max_age_seconds``. TTL backstop for
+        sessions that ended without a clean logout (tab close, JWT expiry,
+        engine restart). Returns the number of collections deleted."""
+        return await self._store.reap_older_than(max_age_seconds)
+
     async def has_collection(self, collection: FileId, principals: list[PrincipalId]) -> bool:
         """Check whether at least one principal can read this collection."""
         return await self._store.has_collection(collection, principals)

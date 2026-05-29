@@ -10,6 +10,7 @@ from stirling.contracts import (
     IngestDocumentRequest,
     IngestDocumentResponse,
 )
+from stirling.contracts.documents import PurgeOwnerResponse
 from stirling.documents import DocumentService
 from stirling.models import FileId, OwnerId, PrincipalId, UserId
 
@@ -46,7 +47,7 @@ async def ingest_document(
     return IngestDocumentResponse(document_id=request.document_id, chunks_indexed=chunks_indexed)
 
 
-@router.delete("/{document_id}", response_model=DeleteDocumentResponse)
+@router.delete("/by-id/{document_id}", response_model=DeleteDocumentResponse)
 async def delete_document(
     document_id: FileId,
     documents: Annotated[DocumentService, Depends(get_document_service)],
@@ -65,3 +66,19 @@ async def delete_document(
     if existed:
         await documents.delete_collection(document_id, owner_id=owner_id)
     return DeleteDocumentResponse(document_id=document_id, deleted=existed)
+
+
+@router.delete("/by-owner", response_model=PurgeOwnerResponse)
+async def purge_caller_documents(
+    documents: Annotated[DocumentService, Depends(get_document_service)],
+    user_id: Annotated[UserId, Depends(require_user_id)],
+) -> PurgeOwnerResponse:
+    """Delete every personal-doc collection owned by the caller. Idempotent.
+
+    Called by Java on logout so a user's RAG content disappears as soon as
+    the session ends. Org-owned docs (where the caller is a reader but not
+    the owner) are not touched — only collections whose ``owner_id`` matches
+    the calling user are removed.
+    """
+    deleted = await documents.purge_owner(OwnerId(user_id))
+    return PurgeOwnerResponse(owner_id=OwnerId(user_id), deleted=deleted)

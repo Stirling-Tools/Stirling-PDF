@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -29,7 +31,38 @@ from stirling.api.routes import (
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
+from stirling.documents import DocumentService
 from stirling.services import build_runtime, setup_posthog_tracking
+
+logger = logging.getLogger(__name__)
+
+
+async def _run_stale_doc_reaper(
+    documents: DocumentService,
+    interval_seconds: int,
+    max_age_seconds: int,
+) -> None:
+    """Periodically delete RAG content older than ``max_age_seconds``.
+
+    Backstop for the explicit logout purge. Catches sessions that ended
+    without a clean logout (tab close, JWT expiry, engine restart). Runs
+    until cancelled by the lifespan teardown.
+    """
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            deleted = await documents.reap_stale(max_age_seconds)
+            if deleted:
+                logger.info(
+                    "Reaped %d stale RAG collection(s) older than %ds",
+                    deleted,
+                    max_age_seconds,
+                )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            # One bad iteration must not kill the reaper. Log and keep going.
+            logger.exception("RAG reaper iteration failed; will retry on next interval")
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -56,7 +89,20 @@ async def lifespan(fast_api: FastAPI):
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
+    reaper_task = asyncio.create_task(
+        _run_stale_doc_reaper(
+            runtime.documents,
+            interval_seconds=settings.rag_reaper_interval_seconds,
+            max_age_seconds=settings.rag_max_age_seconds,
+        ),
+        name="rag-stale-doc-reaper",
+    )
     yield
+    reaper_task.cancel()
+    try:
+        await reaper_task
+    except asyncio.CancelledError:
+        pass
     await runtime.documents.close()
     if tracer_provider:
         tracer_provider.shutdown()

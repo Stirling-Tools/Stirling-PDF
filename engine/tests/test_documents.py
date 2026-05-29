@@ -161,6 +161,54 @@ class TestSqliteVecStore:
         assert await store.has_collection("shared-id", OTHER_OWNER_PRINCIPALS) is True
 
     @pytest.mark.anyio
+    async def test_purge_owner_removes_only_that_owners_collections(self) -> None:
+        """Logout path: one owner's purge must not touch another owner's docs."""
+        store = SqliteVecStore.ephemeral()
+        for owner, principals, name in (
+            (OWNER, OWNER_PRINCIPALS, "a.pdf"),
+            (OWNER, OWNER_PRINCIPALS, "b.pdf"),
+            (OTHER_OWNER, OTHER_OWNER_PRINCIPALS, "c.pdf"),
+        ):
+            await store.ensure_collection(name, name, owner)
+            await store.grant_read(name, owner, principals)
+            await store.add_documents(name, [Document(id="1", text="x", metadata={})], [[1.0, 0.0]], owner)
+
+        deleted = await store.purge_owner(OWNER)
+        assert deleted == 2
+        assert await store.list_collections(OWNER_PRINCIPALS) == []
+        assert await store.list_collections(OTHER_OWNER_PRINCIPALS) == ["c.pdf"]
+
+    @pytest.mark.anyio
+    async def test_reap_older_than_drops_stale_collections(self) -> None:
+        """TTL backstop: collections older than ``max_age`` go away on reap."""
+        store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("fresh", "fresh.pdf", OWNER)
+        await store.grant_read("fresh", OWNER, OWNER_PRINCIPALS)
+        await store.ensure_collection("stale", "stale.pdf", OWNER)
+        await store.grant_read("stale", OWNER, OWNER_PRINCIPALS)
+        # Backdate the stale row so reap_older_than(60) catches it.
+        store._conn.execute(
+            "UPDATE documents_meta SET created_at = datetime('now', '-1 hour') WHERE collection = ?",
+            ("stale",),
+        )
+        store._conn.commit()
+
+        deleted = await store.reap_older_than(60)
+        assert deleted == 1
+        assert await store.list_collections(OWNER_PRINCIPALS) == ["fresh"]
+
+    @pytest.mark.anyio
+    async def test_reap_older_than_keeps_recent_collections(self) -> None:
+        """Reaper must not nuke active sessions: anything within the window stays."""
+        store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("recent", "recent.pdf", OWNER)
+        await store.grant_read("recent", OWNER, OWNER_PRINCIPALS)
+
+        deleted = await store.reap_older_than(3600)
+        assert deleted == 0
+        assert await store.list_collections(OWNER_PRINCIPALS) == ["recent"]
+
+    @pytest.mark.anyio
     async def test_acl_grants_read_to_extra_principal(self) -> None:
         """A principal without an ACL row can't read; once granted, they can."""
         store = SqliteVecStore.ephemeral()

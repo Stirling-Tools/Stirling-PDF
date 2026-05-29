@@ -60,10 +60,12 @@ class SqliteVecStore(DocumentStore):
                 collection TEXT NOT NULL,
                 owner_id TEXT NOT NULL,
                 source TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (collection, owner_id)
             )
             """
         )
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_meta_created_at ON documents_meta(created_at)")
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS collections (
@@ -164,6 +166,49 @@ class SqliteVecStore(DocumentStore):
             (collection, owner_id),
         )
         self._conn.commit()
+
+    async def purge_owner(self, owner_id: OwnerId) -> int:
+        async with self._lock:
+            return await asyncio.to_thread(self._sync_purge_owner, owner_id)
+
+    def _sync_purge_owner(self, owner_id: OwnerId) -> int:
+        # Drop all vec0 virtual tables for this owner first (FK cascade can't reach them).
+        vec_tables = [
+            r[0]
+            for r in self._conn.execute("SELECT table_name FROM collections WHERE owner_id = ?", (owner_id,)).fetchall()
+        ]
+        for name in vec_tables:
+            self._conn.execute(f"DROP TABLE IF EXISTS {name}")
+        cursor = self._conn.execute("DELETE FROM documents_meta WHERE owner_id = ?", (owner_id,))
+        self._conn.commit()
+        return cursor.rowcount
+
+    async def reap_older_than(self, max_age_seconds: int) -> int:
+        async with self._lock:
+            return await asyncio.to_thread(self._sync_reap_older_than, max_age_seconds)
+
+    def _sync_reap_older_than(self, max_age_seconds: int) -> int:
+        # Drop vec0 virtual tables for stale collections first (FK cascade can't reach them).
+        vec_tables = [
+            r[0]
+            for r in self._conn.execute(
+                """
+                SELECT c.table_name FROM collections c
+                JOIN documents_meta m
+                  ON m.collection = c.collection AND m.owner_id = c.owner_id
+                WHERE m.created_at < datetime('now', ?)
+                """,
+                (f"-{max_age_seconds} seconds",),
+            ).fetchall()
+        ]
+        for name in vec_tables:
+            self._conn.execute(f"DROP TABLE IF EXISTS {name}")
+        cursor = self._conn.execute(
+            "DELETE FROM documents_meta WHERE created_at < datetime('now', ?)",
+            (f"-{max_age_seconds} seconds",),
+        )
+        self._conn.commit()
+        return cursor.rowcount
 
     # ── write paths ────────────────────────────────────────────────────────
 
