@@ -73,9 +73,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { setCustomWorkbenchViewData } = useToolWorkflow();
+    const { setCustomWorkbenchViewData, customWorkbenchViews } =
+      useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
     const isWatchFoldersActive = currentWorkbench === SMART_FOLDER_WORKBENCH_ID;
+    // The folder currently open in the Watch Folders view (null = folder list/home).
+    const activeWatchFolderId = (customWorkbenchViews.find(
+      (v) => v.id === SMART_FOLDER_VIEW_ID,
+    )?.data?.folderId ?? null) as string | null;
 
     const openWatchFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
@@ -193,6 +198,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
 
+        // In the Watch Folders view a click sends the file into the open folder
+        // (mirrors how a click toggles a file into the active workbench elsewhere).
+        // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
+        if (isWatchFoldersActive) {
+          if (activeWatchFolderId) {
+            setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, {
+              folderId: activeWatchFolderId,
+              pendingFileId: stub.id,
+            });
+          }
+          return;
+        }
+
         const workbenchFileId = state.files.ids.find(
           (id) => (id as string) === (stub.id as string),
         );
@@ -242,6 +260,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         activeFileId,
         requestNavigation,
         isMultiTool,
+        isWatchFoldersActive,
+        activeWatchFolderId,
+        setCustomWorkbenchViewData,
       ],
     );
 
