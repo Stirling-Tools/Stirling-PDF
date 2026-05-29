@@ -70,7 +70,8 @@ public class PolicyChangeListener {
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private ExecutorService executor;
-    private Connection listenConnection;
+    // Volatile: read by the poll thread, written by stop() on the container shutdown thread.
+    private volatile Connection listenConnection;
 
     public PolicyChangeListener(
             @Value("${spring.datasource.url}") String jdbcUrl,
@@ -105,8 +106,9 @@ public class PolicyChangeListener {
 
     @PreDestroy
     void stop() {
+        // Order matters: signal the poll loop to exit, interrupt + wait for it, THEN close the
+        // connection. Closing first would race the polling thread's getNotifications() call.
         running.set(false);
-        closeConnectionQuietly();
         if (executor != null) {
             executor.shutdownNow();
             try {
@@ -117,6 +119,7 @@ public class PolicyChangeListener {
                 Thread.currentThread().interrupt();
             }
         }
+        closeConnectionQuietly();
         log.info("PolicyChangeListener stopped.");
     }
 

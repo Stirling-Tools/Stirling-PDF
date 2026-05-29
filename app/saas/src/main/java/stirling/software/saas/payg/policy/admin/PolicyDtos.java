@@ -45,8 +45,9 @@ final class PolicyDtos {
                     p.getDocBytesPerUnit(),
                     p.getMinChargeUnits(),
                     p.getFileUnitCap(),
-                    // Defensive copies so callers can't mutate the cached entity through the
-                    // response collections.
+                    // Copy the outer collections so a caller's mutation can't leak back into the
+                    // cached entity. Values (Integer, String) are immutable, so a shallow copy is
+                    // sufficient here.
                     new HashMap<>(p.getStepLimits()),
                     new HashSet<>(p.getStripePriceIds()),
                     p.getIsDefault(),

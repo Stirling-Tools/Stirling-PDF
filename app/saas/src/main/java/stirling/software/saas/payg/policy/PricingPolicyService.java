@@ -134,8 +134,8 @@ public class PricingPolicyService {
 
     /**
      * Promotes {@code newDefaultId} to be the default policy, atomically clearing the existing
-     * default first. Idempotent — calling with a row already flagged default is a no-op (but still
-     * fires the event so callers can choose to refresh).
+     * default first. Idempotent — calling with a row already flagged default is a silent no-op (no
+     * event fired; no state actually changed).
      */
     @Transactional
     public PricingPolicy setDefault(Long newDefaultId) {
