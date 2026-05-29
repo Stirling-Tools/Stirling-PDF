@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +22,10 @@ import stirling.software.saas.payg.model.ArtifactKind;
  * Default detector. Composes signatures from every registered {@link LineageSignatureExtractor}
  * (currently just SHA-256 byte hash; future PDF-aware extractors are drop-in additions) and
  * delegates lookup + persistence to a {@link JobLineageStore}.
- *
- * <p>Future: when the per-team {@code wallet_policy.auto_group_strategy} lookup lands (alongside
- * the wallet policy service), {@link #detect} will short-circuit to {@code Optional.empty()} when
- * the team has explicitly opted out of auto-grouping. Not in this PR — the wiring slot is the first
- * line of {@code detect}.
  */
 @Slf4j
 @Component
+@Profile("saas")
 public class DefaultHashLineageDetector implements HashLineageDetector {
 
     private final List<LineageSignatureExtractor> extractors;

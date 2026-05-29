@@ -5,12 +5,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import stirling.software.saas.payg.model.ArtifactKind;
 import stirling.software.saas.payg.model.JobStatus;
@@ -28,8 +28,10 @@ import stirling.software.saas.payg.model.JobStatus;
  */
 public class InMemoryJobLineageStore implements JobLineageStore {
 
+    // All access is synchronized on `this` — a plain HashMap is fine here; ConcurrentHashMap
+    // would duplicate the locking the synchronized methods already provide.
     private final List<Entry> entries = new ArrayList<>();
-    private final Map<UUID, JobState> jobs = new ConcurrentHashMap<>();
+    private final Map<UUID, JobState> jobs = new HashMap<>();
 
     public synchronized void registerJob(
             UUID jobId, Long ownerUserId, JobStatus status, LocalDateTime lastStepAt) {

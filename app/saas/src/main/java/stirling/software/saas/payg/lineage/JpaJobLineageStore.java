@@ -11,6 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ import stirling.software.saas.payg.repository.JobArtifactHashRepository;
  * so multiple signature types coexist on the same column without a schema change.
  */
 @Component
+@Profile("saas")
 @RequiredArgsConstructor
 public class JpaJobLineageStore implements JobLineageStore {
 
@@ -71,11 +74,12 @@ public class JpaJobLineageStore implements JobLineageStore {
 
         List<LineageMatch> matches =
                 hashRepository.findOpenJobsForSignatures(
-                        userId, JobStatus.OPEN, since, storageKeys);
+                        userId, JobStatus.OPEN, since, storageKeys, Limit.of(1));
         return matches.isEmpty() ? Optional.empty() : Optional.of(matches.get(0));
     }
 
     @Override
+    @Transactional
     public int pruneOlderThan(Instant cutoff) {
         Objects.requireNonNull(cutoff, "cutoff");
         return hashRepository.deleteOlderThan(

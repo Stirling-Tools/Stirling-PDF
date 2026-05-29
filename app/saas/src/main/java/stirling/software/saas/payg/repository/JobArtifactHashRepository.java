@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +23,8 @@ public interface JobArtifactHashRepository
     /**
      * Lineage lookup: find open jobs (owned by {@code userId}, {@code last_step_at > since}) whose
      * recorded artifacts include any of the supplied storage-form signature keys. Ordered by job
-     * activity recency so the caller's {@code findFirst()} picks the freshest match.
+     * activity recency. Caller passes {@link Limit#of(int)} to bound the result set — for the
+     * single-match hot path use {@code Limit.of(1)} so the DB doesn't materialise unwanted rows.
      */
     @Query(
             "SELECT new stirling.software.saas.payg.lineage.LineageMatch("
@@ -38,7 +40,8 @@ public interface JobArtifactHashRepository
             @Param("userId") Long userId,
             @Param("openStatus") JobStatus openStatus,
             @Param("since") LocalDateTime since,
-            @Param("signatures") Collection<String> signatures);
+            @Param("signatures") Collection<String> signatures,
+            Limit limit);
 
     /** Prunes rows older than {@code cutoff}; run from a scheduled task. */
     @Modifying
