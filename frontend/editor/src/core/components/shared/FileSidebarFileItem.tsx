@@ -127,6 +127,9 @@ export interface FileItemProps {
   thumbnailUrl?: string;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
+  /** When true, the row can be dragged (e.g. onto a Watch Folder). */
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent, fileId: FileId) => void;
 }
 
 export function FileItem({
@@ -140,6 +143,8 @@ export function FileItem({
   thumbnailUrl,
   onClick,
   onEyeClick,
+  draggable,
+  onDragStart,
 }: FileItemProps) {
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
@@ -177,6 +182,10 @@ export function FileItem({
         ref={itemRef}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
+        draggable={draggable}
+        onDragStart={
+          draggable && onDragStart ? (e) => onDragStart(e, fileId) : undefined
+        }
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}

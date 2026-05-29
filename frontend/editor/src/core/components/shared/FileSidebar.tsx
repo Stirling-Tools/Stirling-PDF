@@ -121,6 +121,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
       navActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
+
+    // In Watch Folders view, sidebar files can be dragged onto a folder card / drop
+    // zone (which read the watchFolderFileId dataTransfer key).
+    const handleWatchFolderDragStart = useCallback(
+      (e: React.DragEvent, fileId: FileId) => {
+        e.dataTransfer.setData("watchFolderFileId", String(fileId));
+        e.dataTransfer.effectAllowed = "copy";
+      },
+      [],
+    );
     const isMultiTool =
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
@@ -804,6 +814,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           thumbnailUrl={thumbnailUrl}
                           onClick={handleFileClick}
                           onEyeClick={handleEyeClick}
+                          draggable={isWatchFoldersActive}
+                          onDragStart={handleWatchFolderDragStart}
                         />
                       );
                     })}
