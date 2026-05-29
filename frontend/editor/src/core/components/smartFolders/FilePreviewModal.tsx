@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Center, Text, Box, Loader } from "@mantine/core";
 import { FileId } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
@@ -21,6 +22,7 @@ export function FilePreviewModal({
   fileName,
   onClose,
 }: FilePreviewModalProps) {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -75,7 +77,12 @@ export function FilePreviewModal({
         </Center>
       ) : error ? (
         <Center h="100%">
-          <Text c="dimmed">Could not load file preview.</Text>
+          <Text c="dimmed">
+            {t(
+              "smartFolders.workbench.previewLoadFailed",
+              "Could not load file preview.",
+            )}
+          </Text>
         </Center>
       ) : !file ? (
         <Center h="100%">

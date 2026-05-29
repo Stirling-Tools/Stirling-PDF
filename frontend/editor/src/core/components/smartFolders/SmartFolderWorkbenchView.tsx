@@ -64,18 +64,54 @@ import { FilePreviewModal } from "@app/components/smartFolders/FilePreviewModal"
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "name-asc", label: "A → Z" },
-  { value: "name-desc", label: "Z → A" },
+  {
+    value: "newest",
+    labelKey: "smartFolders.workbench.sortNewest",
+    labelDefault: "Newest",
+  },
+  {
+    value: "oldest",
+    labelKey: "smartFolders.workbench.sortOldest",
+    labelDefault: "Oldest",
+  },
+  {
+    value: "name-asc",
+    labelKey: "smartFolders.workbench.sortNameAsc",
+    labelDefault: "A → Z",
+  },
+  {
+    value: "name-desc",
+    labelKey: "smartFolders.workbench.sortNameDesc",
+    labelDefault: "Z → A",
+  },
 ];
 
 const ACTIVITY_STATUS_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "processed", label: "Done" },
-  { value: "processing", label: "Active" },
-  { value: "error", label: "Failed" },
-  { value: "pending", label: "Pending" },
+  {
+    value: "all",
+    labelKey: "smartFolders.workbench.filterAll",
+    labelDefault: "All",
+  },
+  {
+    value: "processed",
+    labelKey: "smartFolders.status.done",
+    labelDefault: "Done",
+  },
+  {
+    value: "processing",
+    labelKey: "smartFolders.status.active",
+    labelDefault: "Active",
+  },
+  {
+    value: "error",
+    labelKey: "smartFolders.workbench.failed",
+    labelDefault: "Failed",
+  },
+  {
+    value: "pending",
+    labelKey: "smartFolders.workbench.filterPending",
+    labelDefault: "Pending",
+  },
 ];
 
 function FilterSortBar({
@@ -91,6 +127,7 @@ function FilterSortBar({
   onSortChange: (v: string) => void;
   extra?: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <Box
       style={{
@@ -102,7 +139,7 @@ function FilterSortBar({
     >
       <TextInput
         size="xs"
-        placeholder="Search…"
+        placeholder={t("smartFolders.workbench.search", "Search…")}
         value={search}
         onChange={(e) => onSearchChange(e.currentTarget.value)}
         leftSection={<SearchIcon style={{ fontSize: "0.875rem" }} />}
@@ -114,7 +151,10 @@ function FilterSortBar({
         size="xs"
         value={sort}
         onChange={(v) => v && onSortChange(v)}
-        data={SORT_OPTIONS}
+        data={SORT_OPTIONS.map((o) => ({
+          value: o.value,
+          label: t(o.labelKey, o.labelDefault),
+        }))}
         style={{ width: "6.5rem" }}
         styles={{ input: { fontSize: "0.75rem" } }}
         comboboxProps={{ withinPortal: true, zIndex: 400 }}
@@ -650,7 +690,10 @@ export function SmartFolderWorkbenchView({
     if (
       hasMixed &&
       !window.confirm(
-        "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?",
+        t(
+          "smartFolders.workbench.retryMixedConfirm",
+          "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?",
+        ),
       )
     )
       return;
@@ -927,8 +970,14 @@ export function SmartFolderWorkbenchView({
                   style={{ fontSize: "0.6875rem" }}
                 >
                   {localInputFolderName
-                    ? `Watching: ${localInputFolderName}`
-                    : "No input folder — edit to configure"}
+                    ? t("smartFolders.workbench.watching", {
+                        name: localInputFolderName,
+                        defaultValue: `Watching: ${localInputFolderName}`,
+                      })
+                    : t(
+                        "smartFolders.workbench.noInputFolder",
+                        "No input folder — edit to configure",
+                      )}
                 </Text>
               )}
             </Stack>
@@ -1180,12 +1229,18 @@ export function SmartFolderWorkbenchView({
                           color: "var(--mantine-color-blue-filled)",
                         }}
                       >
-                        {activeCount} processing
+                        {t("smartFolders.workbench.countProcessing", {
+                          count: activeCount,
+                          defaultValue: `${activeCount} processing`,
+                        })}
                       </Text>
                     )}
                     {queuedCount > 0 && (
                       <Text style={{ fontSize: "0.625rem" }} c="dimmed">
-                        {queuedCount} queued
+                        {t("smartFolders.workbench.countQueued", {
+                          count: queuedCount,
+                          defaultValue: `${queuedCount} queued`,
+                        })}
                       </Text>
                     )}
                   </Box>
@@ -1261,7 +1316,8 @@ export function SmartFolderWorkbenchView({
                     gap: "0.25rem",
                   }}
                 >
-                  <ReplayIcon style={{ fontSize: "0.75rem" }} /> Retry all
+                  <ReplayIcon style={{ fontSize: "0.75rem" }} />{" "}
+                  {t("smartFolders.workbench.retryAll", "Retry all")}
                 </button>
               )}
             {activityStatusFilter === "processed" &&
@@ -1285,7 +1341,8 @@ export function SmartFolderWorkbenchView({
                       gap: "0.25rem",
                     }}
                   >
-                    <DownloadIcon style={{ fontSize: "0.75rem" }} /> Export zip
+                    <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
+                    {t("smartFolders.workbench.exportZip", "Export zip")}
                   </button>
                   <button
                     onClick={() =>
@@ -1305,8 +1362,11 @@ export function SmartFolderWorkbenchView({
                       gap: "0.25rem",
                     }}
                   >
-                    <DownloadIcon style={{ fontSize: "0.75rem" }} /> Export
-                    separately
+                    <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
+                    {t(
+                      "smartFolders.workbench.exportSeparately",
+                      "Export separately",
+                    )}
                   </button>
                 </>
               )}
@@ -1324,7 +1384,10 @@ export function SmartFolderWorkbenchView({
                   size="xs"
                   value={activityStatusFilter}
                   onChange={(v) => v && setActivityStatusFilter(v)}
-                  data={ACTIVITY_STATUS_OPTIONS}
+                  data={ACTIVITY_STATUS_OPTIONS.map((o) => ({
+                    value: o.value,
+                    label: t(o.labelKey, o.labelDefault),
+                  }))}
                   style={{ width: "5.5rem" }}
                   styles={{ input: { fontSize: "0.75rem" } }}
                   comboboxProps={{ withinPortal: true, zIndex: 400 }}
@@ -1367,7 +1430,10 @@ export function SmartFolderWorkbenchView({
                     fw={600}
                     style={{ color: "var(--mantine-color-blue-filled)" }}
                   >
-                    {selectedActivityIds.size} selected
+                    {t("smartFolders.workbench.countSelected", {
+                      count: selectedActivityIds.size,
+                      defaultValue: `${selectedActivityIds.size} selected`,
+                    })}
                   </Text>
                   {selectedActivityIds.size < filteredActivityIds.length && (
                     <button
@@ -1384,7 +1450,10 @@ export function SmartFolderWorkbenchView({
                         textDecoration: "underline",
                       }}
                     >
-                      Select all {filteredActivityIds.length}
+                      {t("smartFolders.workbench.selectAll", {
+                        count: filteredActivityIds.length,
+                        defaultValue: `Select all ${filteredActivityIds.length}`,
+                      })}
                     </button>
                   )}
                   <Box style={{ flex: 1 }} />
@@ -1405,7 +1474,8 @@ export function SmartFolderWorkbenchView({
                         gap: "0.25rem",
                       }}
                     >
-                      <ReplayIcon style={{ fontSize: "0.75rem" }} /> Retry
+                      <ReplayIcon style={{ fontSize: "0.75rem" }} />{" "}
+                      {t("smartFolders.actions.retry", "Retry")}
                     </button>
                   )}
                   {showExport && (
@@ -1426,8 +1496,8 @@ export function SmartFolderWorkbenchView({
                           gap: "0.25rem",
                         }}
                       >
-                        <DownloadIcon style={{ fontSize: "0.75rem" }} /> Export
-                        zip
+                        <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
+                        {t("smartFolders.workbench.exportZip", "Export zip")}
                       </button>
                       <button
                         onClick={() => void handleBatchDownloadSeparate()}
@@ -1445,8 +1515,11 @@ export function SmartFolderWorkbenchView({
                           gap: "0.25rem",
                         }}
                       >
-                        <DownloadIcon style={{ fontSize: "0.75rem" }} /> Export
-                        separately
+                        <DownloadIcon style={{ fontSize: "0.75rem" }} />{" "}
+                        {t(
+                          "smartFolders.workbench.exportSeparately",
+                          "Export separately",
+                        )}
                       </button>
                     </>
                   )}
@@ -1465,7 +1538,8 @@ export function SmartFolderWorkbenchView({
                       gap: "0.25rem",
                     }}
                   >
-                    <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} /> Delete
+                    <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} />{" "}
+                    {t("smartFolders.workbench.delete", "Delete")}
                   </button>
                   <button
                     onClick={() => setSelectedActivityIds(new Set())}
@@ -1478,7 +1552,10 @@ export function SmartFolderWorkbenchView({
                       color: "var(--mantine-color-dimmed)",
                       lineHeight: 1,
                     }}
-                    title="Clear selection"
+                    title={t(
+                      "smartFolders.workbench.clearSelection",
+                      "Clear selection",
+                    )}
                   >
                     ×
                   </button>
@@ -1573,7 +1650,11 @@ export function SmartFolderWorkbenchView({
                               e.stopPropagation();
                               toggleActivityRow(fileId);
                             }}
-                            title={isExpanded ? "Collapse" : "Expand"}
+                            title={
+                              isExpanded
+                                ? t("smartFolders.actions.collapse", "Collapse")
+                                : t("smartFolders.actions.expand", "Expand")
+                            }
                           >
                             <ChevronRightIcon
                               style={{
@@ -1702,7 +1783,10 @@ export function SmartFolderWorkbenchView({
                                     e.stopPropagation();
                                     handleView(primaryFile);
                                   }}
-                                  title="Preview"
+                                  title={t(
+                                    "smartFolders.workbench.preview",
+                                    "Preview",
+                                  )}
                                 >
                                   <VisibilityIcon
                                     style={{ fontSize: "0.875rem" }}
@@ -1728,7 +1812,10 @@ export function SmartFolderWorkbenchView({
                                       primaryFile.name,
                                     );
                                   }}
-                                  title="Export"
+                                  title={t(
+                                    "smartFolders.workbench.export",
+                                    "Export",
+                                  )}
                                 >
                                   <DownloadIcon
                                     style={{ fontSize: "0.875rem" }}
@@ -1750,7 +1837,10 @@ export function SmartFolderWorkbenchView({
                                   e.stopPropagation();
                                   void handleDeleteOne(fileId);
                                 }}
-                                title="Delete"
+                                title={t(
+                                  "smartFolders.workbench.delete",
+                                  "Delete",
+                                )}
                               >
                                 <DeleteOutlineIcon
                                   style={{ fontSize: "0.875rem" }}
@@ -1791,7 +1881,10 @@ export function SmartFolderWorkbenchView({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  in
+                                  {t(
+                                    "smartFolders.workbench.directionIn",
+                                    "in",
+                                  )}
                                 </Text>
                                 <Text
                                   size="xs"
@@ -1822,7 +1915,10 @@ export function SmartFolderWorkbenchView({
                                     e.stopPropagation();
                                     handleView(inputFile);
                                   }}
-                                  title="Preview input"
+                                  title={t(
+                                    "smartFolders.workbench.previewInput",
+                                    "Preview input",
+                                  )}
                                 >
                                   <VisibilityIcon
                                     style={{ fontSize: "0.875rem" }}
@@ -1843,7 +1939,10 @@ export function SmartFolderWorkbenchView({
                                     e.stopPropagation();
                                     handleDownload(inputFile, inputFile.name);
                                   }}
-                                  title="Download input"
+                                  title={t(
+                                    "smartFolders.actions.downloadInput",
+                                    "Download input",
+                                  )}
                                 >
                                   <DownloadIcon
                                     style={{ fontSize: "0.875rem" }}
@@ -1871,7 +1970,10 @@ export function SmartFolderWorkbenchView({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  out
+                                  {t(
+                                    "smartFolders.workbench.directionOut",
+                                    "out",
+                                  )}
                                 </Text>
                                 <Text
                                   size="xs"
@@ -1902,7 +2004,10 @@ export function SmartFolderWorkbenchView({
                                     e.stopPropagation();
                                     handleView(out);
                                   }}
-                                  title="Preview output"
+                                  title={t(
+                                    "smartFolders.workbench.previewOutput",
+                                    "Preview output",
+                                  )}
                                 >
                                   <VisibilityIcon
                                     style={{ fontSize: "0.875rem" }}
@@ -1923,7 +2028,10 @@ export function SmartFolderWorkbenchView({
                                     e.stopPropagation();
                                     handleDownload(out, out.name);
                                   }}
-                                  title="Download output"
+                                  title={t(
+                                    "smartFolders.actions.downloadOutput",
+                                    "Download output",
+                                  )}
                                 >
                                   <DownloadIcon
                                     style={{ fontSize: "0.875rem" }}
@@ -1991,7 +2099,7 @@ export function SmartFolderWorkbenchView({
                                     <ReplayIcon
                                       style={{ fontSize: "0.75rem" }}
                                     />{" "}
-                                    Retry
+                                    {t("smartFolders.actions.retry", "Retry")}
                                   </button>
                                 )}
                               </Box>
@@ -2000,13 +2108,19 @@ export function SmartFolderWorkbenchView({
                               <Group gap="xs">
                                 <Loader size={8} />
                                 <Text size="xs" c="dimmed">
-                                  Processing…
+                                  {t(
+                                    "smartFolders.status.processing",
+                                    "Processing…",
+                                  )}
                                 </Text>
                               </Group>
                             )}
                             {status === "pending" && (
                               <Text size="xs" c="dimmed">
-                                Queued — waiting to run
+                                {t(
+                                  "smartFolders.workbench.queuedWaiting",
+                                  "Queued — waiting to run",
+                                )}
                               </Text>
                             )}
                           </Box>
@@ -2065,7 +2179,9 @@ export function SmartFolderWorkbenchView({
                     cursor: "pointer",
                   }}
                 >
-                  {p === "all" ? "All time" : p}
+                  {p === "all"
+                    ? t("smartFolders.workbench.allTime", "All time")
+                    : p}
                 </button>
               ))}
             </Group>
@@ -2082,7 +2198,7 @@ export function SmartFolderWorkbenchView({
                 tt="uppercase"
                 fw={600}
               >
-                Done
+                {t("smartFolders.status.done", "Done")}
               </Text>
               <Text size="xl" fw={800} c="var(--color-green-500)">
                 {dashboardStats.processed}
@@ -2096,7 +2212,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  Failed
+                  {t("smartFolders.workbench.failed", "Failed")}
                 </Text>
                 <Text size="xl" fw={800} c="red">
                   {dashboardStats.failed}
@@ -2111,7 +2227,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  Queued
+                  {t("smartFolders.workbench.queued", "Queued")}
                 </Text>
                 <Text size="xl" fw={800}>
                   {dashboardStats.pending}
@@ -2126,7 +2242,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  Input size
+                  {t("smartFolders.workbench.inputSize", "Input size")}
                 </Text>
                 <Text size="xl" fw={800}>
                   {formatBytes(dashboardStats.totalIn)}
@@ -2141,7 +2257,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  Saved
+                  {t("smartFolders.workbench.dataSaved", "Saved")}
                 </Text>
                 <Text size="xl" fw={800} c="var(--color-green-500)">
                   ↓ {formatBytes(dashboardStats.saved)}
@@ -2203,7 +2319,7 @@ export function SmartFolderWorkbenchView({
                   year: "numeric",
                 });
               }
-              return `${dateStr}\n${b.processed} complete  ${b.failed} failed`;
+              return `${dateStr}\n${t("smartFolders.workbench.chartTooltipComplete", { count: b.processed, defaultValue: `${b.processed} complete` })}  ${t("smartFolders.workbench.chartTooltipFailed", { count: b.failed, defaultValue: `${b.failed} failed` })}`;
             };
             const yMax = Math.max(dashboardStats.maxBucket, 10);
             const yTicks = [
@@ -2224,7 +2340,10 @@ export function SmartFolderWorkbenchView({
                 }}
               >
                 <Text size="xs" c="dimmed" mb="0.5rem">
-                  Files processed over time
+                  {t(
+                    "smartFolders.workbench.filesProcessedOverTime",
+                    "Files processed over time",
+                  )}
                 </Text>
                 <div
                   style={{
@@ -2412,7 +2531,7 @@ export function SmartFolderWorkbenchView({
                       }}
                     />
                     <Text size="xs" c="dimmed">
-                      Complete
+                      {t("smartFolders.workbench.legendComplete", "Complete")}
                     </Text>
                   </Group>
                   <Group gap="0.3rem">
@@ -2425,7 +2544,7 @@ export function SmartFolderWorkbenchView({
                       }}
                     />
                     <Text size="xs" c="dimmed">
-                      Failed
+                      {t("smartFolders.workbench.failed", "Failed")}
                     </Text>
                   </Group>
                 </Group>
@@ -2478,15 +2597,18 @@ export function SmartFolderWorkbenchView({
               }}
             >
               <Text fw={600} mb="0.25rem">
-                Remove{" "}
                 {deleteConfirm.ids.length === 1
-                  ? "entry"
-                  : `${deleteConfirm.ids.length} entries`}
+                  ? t("smartFolders.workbench.removeEntry", "Remove entry")
+                  : t("smartFolders.workbench.removeEntries", {
+                      count: deleteConfirm.ids.length,
+                      defaultValue: `Remove ${deleteConfirm.ids.length} entries`,
+                    })}
               </Text>
               <Text size="sm" c="dimmed" mb="1rem">
-                Remove notifications only clears the activity log. Delete
-                outputs also removes the processed files from storage. Your
-                original input files are never touched.
+                {t(
+                  "smartFolders.workbench.deleteConfirmBody",
+                  "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched.",
+                )}
               </Text>
               <div
                 style={{
@@ -2506,7 +2628,7 @@ export function SmartFolderWorkbenchView({
                     fontSize: "0.8125rem",
                   }}
                 >
-                  Cancel
+                  {t("smartFolders.workbench.cancel", "Cancel")}
                 </button>
                 <button
                   onClick={() => void execDelete(deleteConfirm.ids, false)}
@@ -2519,7 +2641,10 @@ export function SmartFolderWorkbenchView({
                     fontSize: "0.8125rem",
                   }}
                 >
-                  Remove notifications only
+                  {t(
+                    "smartFolders.workbench.removeNotificationsOnly",
+                    "Remove notifications only",
+                  )}
                 </button>
                 <button
                   onClick={() => void execDelete(deleteConfirm.ids, true)}
@@ -2534,7 +2659,7 @@ export function SmartFolderWorkbenchView({
                     fontWeight: 600,
                   }}
                 >
-                  Delete outputs
+                  {t("smartFolders.workbench.deleteOutputs", "Delete outputs")}
                 </button>
               </div>
             </div>
