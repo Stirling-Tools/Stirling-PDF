@@ -17,8 +17,10 @@ from stirling.contracts.contradiction import (
     ContradictionReport,
     ContradictionSeverity,
 )
-from stirling.models import FileId
+from stirling.models import FileId, UserId
 from stirling.services.runtime import AppRuntime
+
+USER = UserId("test-user")
 
 
 def _file(file_id: str, name: str) -> AiFile:
@@ -58,7 +60,7 @@ async def test_find_contradictions_returns_formatted_text(runtime: AppRuntime) -
     canned = _canned_report()
     detector.detect = AsyncMock(return_value=canned)
 
-    capability = ContradictionCapability(detector=detector, files=[_file("doc-a", "a.pdf")])
+    capability = ContradictionCapability(detector=detector, files=[_file("doc-a", "a.pdf")], user_id=USER)
     result = await capability._find_contradictions("are there inconsistent deadlines?")
 
     detector.detect.assert_awaited_once()
@@ -84,6 +86,7 @@ async def test_budget_gate_hides_tool_after_first_audit(runtime: AppRuntime) -> 
     capability = ContradictionCapability(
         detector=detector,
         files=[_file("doc-a", "a.pdf")],
+        user_id=USER,
         max_audits=1,
     )
     # A real, minimal ToolDefinition — the prepare callback returns this
@@ -107,7 +110,7 @@ async def test_budget_gate_hides_tool_after_first_audit(runtime: AppRuntime) -> 
 async def test_find_contradictions_with_no_files_returns_message(runtime: AppRuntime) -> None:
     detector = ContradictionDetector(runtime)
     detector.detect = AsyncMock(return_value=_canned_report())
-    capability = ContradictionCapability(detector=detector, files=[])
+    capability = ContradictionCapability(detector=detector, files=[], user_id=USER)
 
     result = await capability._find_contradictions("anything")
 
@@ -120,6 +123,7 @@ def test_instructions_mention_attached_files(runtime: AppRuntime) -> None:
     capability = ContradictionCapability(
         detector=detector,
         files=[_file("doc-a", "alpha.pdf"), _file("doc-b", "beta.pdf")],
+        user_id=USER,
     )
 
     text = capability.instructions
@@ -149,6 +153,7 @@ def test_instructions_escape_filename_injection_attempt(runtime: AppRuntime) -> 
     capability = ContradictionCapability(
         detector=detector,
         files=[_file("doc-evil", evil_name)],
+        user_id=USER,
     )
 
     text = capability.instructions

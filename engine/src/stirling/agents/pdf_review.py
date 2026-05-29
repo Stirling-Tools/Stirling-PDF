@@ -56,7 +56,7 @@ from stirling.models.agent_tool_models import (
     PdfCommentAgentParams,
 )
 from stirling.models.tool_models import AddCommentsParams
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, require_current_user_id
 
 # Fallback right-margin placement used when a finding has no usable
 # anchor text. A4/Letter portrait assumed.
@@ -158,7 +158,11 @@ class PdfReviewAgent:
                     files_to_ingest=missing,
                     content_types=[PdfContentType.PAGE_TEXT],
                 )
-            report = await self._contradiction_detector.detect(request.files, query=request.user_message)
+            report = await self._contradiction_detector.detect(
+                request.files,
+                user_id=require_current_user_id(),
+                query=request.user_message,
+            )
             comments_json = await self._build_contradiction_comments_payload(request.user_message, report)
             return EditPlanResponse(
                 summary="",
@@ -193,9 +197,10 @@ class PdfReviewAgent:
         )
 
     async def _find_missing_files(self, files: list[AiFile]) -> list[AiFile]:
+        user_id = require_current_user_id()
         missing: list[AiFile] = []
         for file in files:
-            if not await self.runtime.documents.has_collection(file.id):
+            if not await self.runtime.documents.has_collection(file.id, user_id=user_id):
                 missing.append(file)
         return missing
 

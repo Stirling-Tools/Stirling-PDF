@@ -27,7 +27,7 @@ from stirling.agents.shared.chunked_mapper import ChunkOutput
 from stirling.contracts import AiFile
 from stirling.contracts.contradiction import ContradictionSeverity
 from stirling.contracts.documents import Page, PageRange
-from stirling.models import FileId
+from stirling.models import FileId, UserId
 from stirling.services.runtime import AppRuntime
 
 
@@ -58,10 +58,13 @@ def pages_a() -> list[Page]:
     ]
 
 
+USER = UserId("test-user")
+
+
 def _install_documents_stub(runtime: AppRuntime, pages_by_id: dict[FileId, list[Page]]) -> None:
     """Patch ``runtime.documents.read_pages`` to return canned pages per file."""
 
-    async def _read(collection: FileId, page_range: PageRange | None = None) -> list[Page]:
+    async def _read(collection: FileId, user_id: UserId, page_range: PageRange | None = None) -> list[Page]:
         return pages_by_id.get(collection, [])
 
     # AppRuntime is frozen; monkey-patch the documents service.
@@ -76,7 +79,7 @@ async def test_no_pages_returns_clean_empty_report(runtime: AppRuntime, file_a: 
     _install_documents_stub(runtime, {file_a.id: []})
     detector = ContradictionDetector(runtime)
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     assert report.contradictions == []
     assert report.pages_examined == []
@@ -126,7 +129,7 @@ async def test_happy_path_finds_contradiction_across_two_pages(
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("Examined 2 pages; found 1 contradiction."))
 
-    report = await detector.detect([file_a], query="check the deadline")
+    report = await detector.detect([file_a], user_id=USER, query="check the deadline")
 
     assert len(report.contradictions) == 1
     c = report.contradictions[0]
@@ -155,7 +158,7 @@ async def test_zero_claims_returns_clean_report(runtime: AppRuntime, file_a: AiF
     # works.
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("any text"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     assert report.contradictions == []
     assert report.clean is True
@@ -204,7 +207,7 @@ async def test_canonicaliser_accepts_empty_alias_list(runtime: AppRuntime, file_
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
     assert len(report.contradictions) == 1
 
 
@@ -332,7 +335,7 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     # Lexical key collapses both subjects so the bucket still forms.
     assert len(report.contradictions) == 1
@@ -389,7 +392,7 @@ async def test_same_page_contradiction_is_surfaced(runtime: AppRuntime, file_a: 
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     assert len(report.contradictions) == 1
     assert report.contradictions[0].severity == ContradictionSeverity.ERROR
@@ -426,7 +429,7 @@ async def test_identical_quote_pair_is_still_dropped(runtime: AppRuntime, file_a
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     assert report.contradictions == []
 
@@ -455,7 +458,7 @@ async def test_summary_falls_back_to_deterministic_when_llm_unavailable(
     )
     detector._summary_agent.run = AsyncMock(side_effect=failure)
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     assert "No contradictions" in report.summary
     assert report.clean is True
@@ -499,7 +502,7 @@ async def test_detector_chunk_timeout_falls_through(runtime: AppRuntime, file_a:
     detector._pair_detector.run = AsyncMock(side_effect=TimeoutError("simulated"))
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     # Detector timed out so no pairs come back. Crucially: the pipeline
     # reached the summary stage rather than crashing earlier, so
@@ -533,7 +536,7 @@ async def test_empty_chunk_with_substantial_content_logs_warning(
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))
 
     with caplog.at_level(logging.WARNING, logger="stirling.agents.contradiction.detector"):
-        await detector.detect([file_a])
+        await detector.detect([file_a], user_id=USER)
 
     assert any(
         "produced 0 claims" in record.getMessage() and "pages=1" in record.getMessage() for record in caplog.records
@@ -580,7 +583,7 @@ async def test_pages_examined_includes_every_attempted_page(runtime: AppRuntime,
     detector._pair_detector.run = AsyncMock(return_value=_stub_result(_BucketContradictions(pairs=[])))
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     # Every page the extractor ran against is reported, even page 2
     # (which produced no claim).
@@ -655,7 +658,7 @@ async def test_oversized_bucket_windows_translate_indices_globally(runtime: AppR
     detector._pair_detector.run = _stub_detector  # type: ignore[method-assign]
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
-    report = await detector.detect([file_a])
+    report = await detector.detect([file_a], user_id=USER)
 
     # Both windows produced one valid pair each; dedup by global (i, j)
     # leaves exactly two contradictions.
@@ -791,7 +794,7 @@ async def test_multi_file_pages_dont_collide_in_validation(runtime: AppRuntime) 
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))
 
-    report = await detector.detect([file_a, file_b])
+    report = await detector.detect([file_a, file_b], user_id=USER)
 
     # Both claims validated as verbatim — each against the right file's
     # page text. A collision bug would have produced "paraphrased" for at

@@ -11,13 +11,15 @@ import sqlite_vec
 
 from stirling.contracts.documents import Page, PageRange
 from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
+from stirling.models import UserId
 
 
 class SqliteVecStore(DocumentStore):
     """sqlite-vec backed vector store. Single-file SQLite database, embedded, no server.
 
-    Each collection gets its own `vec0` virtual table with a fixed embedding dimension
-    (detected on first insert). Document metadata lives in a regular table joined by rowid.
+    Each ``(collection, user_id)`` pair gets its own `vec0` virtual table with a
+    fixed embedding dimension (detected on first insert). Document metadata lives
+    in a regular table joined by rowid.
     """
 
     def __init__(self, db_path: str | Path) -> None:
@@ -50,66 +52,188 @@ class SqliteVecStore(DocumentStore):
     def _init_schema(self) -> None:
         self._conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS documents_meta (
-                collection TEXT PRIMARY KEY,
-                source TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS documents_meta
+            (
+                collection
+                TEXT
+                NOT
+                NULL,
+                user_id
+                TEXT
+                NOT
+                NULL,
+                source
+                TEXT
+                NOT
+                NULL,
+                PRIMARY
+                KEY
+            (
+                collection,
+                user_id
             )
+                )
             """
         )
         self._conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS collections (
-                name TEXT PRIMARY KEY REFERENCES documents_meta(collection) ON DELETE CASCADE,
-                dim INTEGER NOT NULL,
-                table_name TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS collections
+            (
+                collection
+                TEXT
+                NOT
+                NULL,
+                user_id
+                TEXT
+                NOT
+                NULL,
+                dim
+                INTEGER
+                NOT
+                NULL,
+                table_name
+                TEXT
+                NOT
+                NULL,
+                PRIMARY
+                KEY
+            (
+                collection,
+                user_id
+            ),
+                FOREIGN KEY
+            (
+                collection,
+                user_id
             )
+                REFERENCES documents_meta
+            (
+                collection,
+                user_id
+            ) ON DELETE CASCADE
+                )
             """
         )
         self._conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS documents (
-                id TEXT NOT NULL,
-                collection TEXT NOT NULL REFERENCES documents_meta(collection) ON DELETE CASCADE,
-                text TEXT NOT NULL,
-                metadata TEXT NOT NULL DEFAULT '{}',
-                vec_rowid INTEGER NOT NULL,
-                PRIMARY KEY (id, collection)
+            CREATE TABLE IF NOT EXISTS documents
+            (
+                id
+                TEXT
+                NOT
+                NULL,
+                collection
+                TEXT
+                NOT
+                NULL,
+                user_id
+                TEXT
+                NOT
+                NULL,
+                text
+                TEXT
+                NOT
+                NULL,
+                metadata
+                TEXT
+                NOT
+                NULL
+                DEFAULT
+                '{}',
+                vec_rowid
+                INTEGER
+                NOT
+                NULL,
+                PRIMARY
+                KEY
+            (
+                id,
+                collection,
+                user_id
+            ),
+                FOREIGN KEY
+            (
+                collection,
+                user_id
             )
+                REFERENCES documents_meta
+            (
+                collection,
+                user_id
+            ) ON DELETE CASCADE
+                )
             """
         )
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_doc_collection ON documents(collection)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_doc_collection_user ON documents(collection, user_id)")
         self._conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS document_pages (
-                collection TEXT NOT NULL REFERENCES documents_meta(collection) ON DELETE CASCADE,
-                page_number INTEGER NOT NULL,
-                text TEXT NOT NULL,
-                char_count INTEGER NOT NULL,
-                PRIMARY KEY (collection, page_number)
+            CREATE TABLE IF NOT EXISTS document_pages
+            (
+                collection
+                TEXT
+                NOT
+                NULL,
+                user_id
+                TEXT
+                NOT
+                NULL,
+                page_number
+                INTEGER
+                NOT
+                NULL,
+                text
+                TEXT
+                NOT
+                NULL,
+                char_count
+                INTEGER
+                NOT
+                NULL,
+                PRIMARY
+                KEY
+            (
+                collection,
+                user_id,
+                page_number
+            ),
+                FOREIGN KEY
+            (
+                collection,
+                user_id
             )
+                REFERENCES documents_meta
+            (
+                collection,
+                user_id
+            ) ON DELETE CASCADE
+                )
             """
         )
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_pages_collection ON document_pages(collection)")
+        self._conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_pages_collection_user ON document_pages(collection, user_id)"
+        )
         self._conn.commit()
 
-    async def ensure_collection(self, collection: str, source: str) -> None:
+    async def ensure_collection(self, collection: str, source: str, user_id: UserId) -> None:
         async with self._lock:
-            await asyncio.to_thread(self._sync_ensure_collection, collection, source)
+            await asyncio.to_thread(self._sync_ensure_collection, collection, source, user_id)
 
-    def _sync_ensure_collection(self, collection: str, source: str) -> None:
+    def _sync_ensure_collection(self, collection: str, source: str, user_id: UserId) -> None:
         self._conn.execute(
             """
-            INSERT INTO documents_meta(collection, source) VALUES (?, ?)
-            ON CONFLICT(collection) DO UPDATE SET source = excluded.source
+            INSERT INTO documents_meta(collection, user_id, source)
+            VALUES (?, ?, ?) ON CONFLICT(collection, user_id) DO
+            UPDATE SET source = excluded.source
             """,
-            (collection, source),
+            (collection, user_id, source),
         )
         self._conn.commit()
 
     @staticmethod
-    def _sanitize_table_name(collection: str) -> str:
-        safe = re.sub(r"[^a-zA-Z0-9_]", "_", collection)
-        return f"vec_{safe}"
+    def _sanitize_table_name(collection: str, user_id: UserId) -> str:
+        safe_col = re.sub(r"[^a-zA-Z0-9_]", "_", collection)
+        safe_user = re.sub(r"[^a-zA-Z0-9_]", "_", user_id)
+        return f"vec_{safe_user}_{safe_col}"
 
     @staticmethod
     def _normalize(vector: list[float]) -> list[float]:
@@ -123,6 +247,7 @@ class SqliteVecStore(DocumentStore):
         collection: str,
         documents: list[Document],
         embeddings: list[list[float]],
+        user_id: UserId,
     ) -> None:
         if len(documents) != len(embeddings):
             raise ValueError(f"Got {len(documents)} documents but {len(embeddings)} embeddings")
@@ -130,34 +255,40 @@ class SqliteVecStore(DocumentStore):
             return
 
         async with self._lock:
-            await asyncio.to_thread(self._sync_add, collection, documents, embeddings)
+            await asyncio.to_thread(self._sync_add, collection, documents, embeddings, user_id)
 
     def _sync_add(
         self,
         collection: str,
         documents: list[Document],
         embeddings: list[list[float]],
+        user_id: UserId,
     ) -> None:
         dim = len(embeddings[0])
-        row = self._conn.execute("SELECT dim, table_name FROM collections WHERE name = ?", (collection,)).fetchone()
+        row = self._conn.execute(
+            "SELECT dim, table_name FROM collections WHERE collection = ? AND user_id = ?",
+            (collection, user_id),
+        ).fetchone()
         if row is None:
-            table_name = self._sanitize_table_name(collection)
+            table_name = self._sanitize_table_name(collection, user_id)
             self._conn.execute(f"CREATE VIRTUAL TABLE IF NOT EXISTS {table_name} USING vec0(embedding float[{dim}])")
             self._conn.execute(
-                "INSERT INTO collections(name, dim, table_name) VALUES (?, ?, ?)",
-                (collection, dim, table_name),
+                "INSERT INTO collections(collection, user_id, dim, table_name) VALUES (?, ?, ?, ?)",
+                (collection, user_id, dim, table_name),
             )
         else:
             existing_dim, table_name = row
             if existing_dim != dim:
-                raise ValueError(f"Collection {collection} has dim {existing_dim}, got embedding of dim {dim}")
+                raise ValueError(
+                    f"Collection {collection} for user {user_id} has dim {existing_dim}, got embedding of dim {dim}"
+                )
 
         # Upsert: delete existing docs with matching IDs first
         ids = [doc.id for doc in documents]
         placeholders = ",".join("?" * len(ids))
         existing = self._conn.execute(
-            f"SELECT vec_rowid FROM documents WHERE collection = ? AND id IN ({placeholders})",
-            (collection, *ids),
+            f"SELECT vec_rowid FROM documents WHERE collection = ? AND user_id = ? AND id IN ({placeholders})",
+            (collection, user_id, *ids),
         ).fetchall()
         if existing:
             vec_rowids = [r[0] for r in existing]
@@ -167,8 +298,8 @@ class SqliteVecStore(DocumentStore):
                 vec_rowids,
             )
             self._conn.execute(
-                f"DELETE FROM documents WHERE collection = ? AND id IN ({placeholders})",
-                (collection, *ids),
+                f"DELETE FROM documents WHERE collection = ? AND user_id = ? AND id IN ({placeholders})",
+                (collection, user_id, *ids),
             )
 
         for doc, emb in zip(documents, embeddings):
@@ -179,8 +310,8 @@ class SqliteVecStore(DocumentStore):
             )
             vec_rowid = cursor.lastrowid
             self._conn.execute(
-                "INSERT INTO documents(id, collection, text, metadata, vec_rowid) VALUES (?, ?, ?, ?, ?)",
-                (doc.id, collection, doc.text, json.dumps(doc.metadata), vec_rowid),
+                "INSERT INTO documents(id, collection, user_id, text, metadata, vec_rowid) VALUES (?, ?, ?, ?, ?, ?)",
+                (doc.id, collection, user_id, doc.text, json.dumps(doc.metadata), vec_rowid),
             )
         self._conn.commit()
 
@@ -188,18 +319,23 @@ class SqliteVecStore(DocumentStore):
         self,
         collection: str,
         query_embedding: list[float],
-        top_k: int = 5,
+        top_k: int,
+        user_id: UserId,
     ) -> list[SearchResult]:
         async with self._lock:
-            return await asyncio.to_thread(self._sync_search, collection, query_embedding, top_k)
+            return await asyncio.to_thread(self._sync_search, collection, query_embedding, top_k, user_id)
 
     def _sync_search(
         self,
         collection: str,
         query_embedding: list[float],
         top_k: int,
+        user_id: UserId,
     ) -> list[SearchResult]:
-        row = self._conn.execute("SELECT table_name, dim FROM collections WHERE name = ?", (collection,)).fetchone()
+        row = self._conn.execute(
+            "SELECT table_name, dim FROM collections WHERE collection = ? AND user_id = ?",
+            (collection, user_id),
+        ).fetchone()
         if row is None:
             return []
         table_name, dim = row
@@ -213,11 +349,14 @@ class SqliteVecStore(DocumentStore):
             f"""
             SELECT d.id, d.text, d.metadata, v.distance
             FROM {table_name} v
-            JOIN documents d ON d.vec_rowid = v.rowid AND d.collection = ?
+            JOIN documents d
+              ON d.vec_rowid = v.rowid
+             AND d.collection = ?
+             AND d.user_id = ?
             WHERE v.embedding MATCH ? AND k = ?
             ORDER BY v.distance
             """,
-            (collection, query_blob, top_k),
+            (collection, user_id, query_blob, top_k),
         ).fetchall()
 
         return [
@@ -233,74 +372,90 @@ class SqliteVecStore(DocumentStore):
             for r in results
         ]
 
-    async def add_pages(self, collection: str, pages: list[StoredPage]) -> None:
+    async def add_pages(self, collection: str, pages: list[StoredPage], user_id: UserId) -> None:
         async with self._lock:
-            await asyncio.to_thread(self._sync_add_pages, collection, pages)
+            await asyncio.to_thread(self._sync_add_pages, collection, pages, user_id)
 
-    def _sync_add_pages(self, collection: str, pages: list[StoredPage]) -> None:
-        self._conn.execute("DELETE FROM document_pages WHERE collection = ?", (collection,))
+    def _sync_add_pages(self, collection: str, pages: list[StoredPage], user_id: UserId) -> None:
+        self._conn.execute(
+            "DELETE FROM document_pages WHERE collection = ? AND user_id = ?",
+            (collection, user_id),
+        )
         if pages:
             self._conn.executemany(
-                "INSERT INTO document_pages(collection, page_number, text, char_count) VALUES (?, ?, ?, ?)",
-                [(collection, p.page_number, p.text, p.char_count) for p in pages],
+                "INSERT INTO document_pages(collection, user_id, page_number, text, char_count) VALUES (?, ?, ?, ?, ?)",
+                [(collection, user_id, p.page_number, p.text, p.char_count) for p in pages],
             )
         self._conn.commit()
 
     async def read_pages(
         self,
         collection: str,
-        page_range: PageRange | None = None,
+        page_range: PageRange | None,
+        user_id: UserId,
     ) -> list[Page]:
         async with self._lock:
-            return await asyncio.to_thread(self._sync_read_pages, collection, page_range)
+            return await asyncio.to_thread(self._sync_read_pages, collection, page_range, user_id)
 
     def _sync_read_pages(
         self,
         collection: str,
         page_range: PageRange | None,
+        user_id: UserId,
     ) -> list[Page]:
         if page_range is None:
             rows = self._conn.execute(
-                "SELECT page_number, text, char_count FROM document_pages WHERE collection = ? ORDER BY page_number",
-                (collection,),
+                "SELECT page_number, text, char_count FROM document_pages "
+                "WHERE collection = ? AND user_id = ? ORDER BY page_number",
+                (collection, user_id),
             ).fetchall()
         else:
             rows = self._conn.execute(
                 "SELECT page_number, text, char_count FROM document_pages "
-                "WHERE collection = ? AND page_number BETWEEN ? AND ? ORDER BY page_number",
-                (collection, page_range.start, page_range.end),
+                "WHERE collection = ? AND user_id = ? AND page_number BETWEEN ? AND ? "
+                "ORDER BY page_number",
+                (collection, user_id, page_range.start, page_range.end),
             ).fetchall()
         return [Page(page_number=r[0], text=r[1], char_count=r[2]) for r in rows]
 
-    async def delete_collection(self, collection: str) -> None:
+    async def delete_collection(self, collection: str, user_id: UserId) -> None:
         async with self._lock:
-            await asyncio.to_thread(self._sync_delete_collection, collection)
+            await asyncio.to_thread(self._sync_delete_collection, collection, user_id)
 
-    def _sync_delete_collection(self, collection: str) -> None:
+    def _sync_delete_collection(self, collection: str, user_id: UserId) -> None:
         # Drop the sqlite-vec virtual table first; FK cascade handles the regular tables
         # (collections, documents, document_pages) when documents_meta is deleted.
-        row = self._conn.execute("SELECT table_name FROM collections WHERE name = ?", (collection,)).fetchone()
+        row = self._conn.execute(
+            "SELECT table_name FROM collections WHERE collection = ? AND user_id = ?",
+            (collection, user_id),
+        ).fetchone()
         if row is not None:
             self._conn.execute(f"DROP TABLE IF EXISTS {row[0]}")
-        self._conn.execute("DELETE FROM documents_meta WHERE collection = ?", (collection,))
+        self._conn.execute(
+            "DELETE FROM documents_meta WHERE collection = ? AND user_id = ?",
+            (collection, user_id),
+        )
         self._conn.commit()
 
-    async def list_collections(self) -> list[str]:
+    async def list_collections(self, user_id: UserId) -> list[str]:
         async with self._lock:
-            return await asyncio.to_thread(self._sync_list_collections)
+            return await asyncio.to_thread(self._sync_list_collections, user_id)
 
-    def _sync_list_collections(self) -> list[str]:
-        rows = self._conn.execute("SELECT collection FROM documents_meta ORDER BY collection").fetchall()
+    def _sync_list_collections(self, user_id: UserId) -> list[str]:
+        rows = self._conn.execute(
+            "SELECT collection FROM documents_meta WHERE user_id = ? ORDER BY collection",
+            (user_id,),
+        ).fetchall()
         return [r[0] for r in rows]
 
-    async def has_collection(self, collection: str) -> bool:
+    async def has_collection(self, collection: str, user_id: UserId) -> bool:
         async with self._lock:
-            return await asyncio.to_thread(self._sync_has_collection, collection)
+            return await asyncio.to_thread(self._sync_has_collection, collection, user_id)
 
-    def _sync_has_collection(self, collection: str) -> bool:
+    def _sync_has_collection(self, collection: str, user_id: UserId) -> bool:
         row = self._conn.execute(
-            "SELECT 1 FROM documents_meta WHERE collection = ?",
-            (collection,),
+            "SELECT 1 FROM documents_meta WHERE collection = ? AND user_id = ?",
+            (collection, user_id),
         ).fetchone()
         return row is not None
 

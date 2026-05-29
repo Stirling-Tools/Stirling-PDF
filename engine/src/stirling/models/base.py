@@ -10,6 +10,12 @@ from pydantic.alias_generators import to_camel
 # throughout the engine.
 FileId = NewType("FileId", str)
 
+# Stable, opaque identifier for the calling user, supplied by the Java backend via the
+# X-User-Id header (and stamped into a ContextVar by UserIdMiddleware). Every per-user
+# storage operation in the document store is keyed by this so two users with the same
+# FileId remain isolated.
+UserId = NewType("UserId", str)
+
 
 class ApiModel(BaseModel):
     """Base for every contract model crossing a service boundary."""

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -24,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -32,6 +32,7 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -59,7 +60,6 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
@@ -74,6 +74,42 @@ public class AiWorkflowService {
     private final TempFileManager tempFileManager;
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
+    private final UserServiceInterface userService;
+
+    public AiWorkflowService(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            AiEngineClient aiEngineClient,
+            PdfContentExtractor pdfContentExtractor,
+            ObjectMapper objectMapper,
+            InternalApiClient internalApiClient,
+            FileStorage fileStorage,
+            ToolMetadataService toolMetadataService,
+            TempFileManager tempFileManager,
+            FileIdStrategy fileIdStrategy,
+            AiEngineEndpointResolver endpointResolver,
+            @Autowired(required = false) UserServiceInterface userService) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.aiEngineClient = aiEngineClient;
+        this.pdfContentExtractor = pdfContentExtractor;
+        this.objectMapper = objectMapper;
+        this.internalApiClient = internalApiClient;
+        this.fileStorage = fileStorage;
+        this.toolMetadataService = toolMetadataService;
+        this.tempFileManager = tempFileManager;
+        this.fileIdStrategy = fileIdStrategy;
+        this.endpointResolver = endpointResolver;
+        this.userService = userService;
+    }
+
+    /**
+     * Resolve the currently-authenticated user's id for X-User-Id propagation to the AI engine.
+     * Returns null when security is disabled (no UserServiceInterface bean) or no one is logged in.
+     * The engine rejects per-user routes (ingest, search) when this is null; non-tenant routes
+     * (health, orchestrate without RAG) still work.
+     */
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
+    }
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -301,7 +337,7 @@ public class AiWorkflowService {
         AiDocumentIngestRequest ingestRequest =
                 new AiDocumentIngestRequest(file.getId(), file.getName(), pages);
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body);
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, currentUserId());
         log.debug(
                 "Ingested document: id={}, name={}, pages={}",
                 file.getId(),
@@ -699,6 +735,7 @@ public class AiWorkflowService {
         aiEngineClient.streamPost(
                 "/api/v1/orchestrator",
                 requestBody,
+                currentUserId(),
                 line -> handleStreamLine(line, listener, resultHolder, errorHolder));
 
         if (errorHolder[0] != null) {

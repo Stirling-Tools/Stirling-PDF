@@ -41,6 +41,7 @@ from stirling.contracts.contradiction import (
     ContradictionSeverity,
 )
 from stirling.contracts.documents import Page
+from stirling.models import UserId
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -205,8 +206,13 @@ class ContradictionDetector:
     # Public entry point
     # ------------------------------------------------------------------
 
-    async def detect(self, files: list[AiFile], query: str | None = None) -> ContradictionReport:
-        """Run the full pipeline over the supplied files.
+    async def detect(
+        self,
+        files: list[AiFile],
+        user_id: UserId,
+        query: str | None = None,
+    ) -> ContradictionReport:
+        """Run the full pipeline over the supplied files for ``user_id``.
 
         ``files`` must have already been ingested (the caller is
         responsible for the ``has_collection`` precheck — the question
@@ -234,7 +240,7 @@ class ContradictionDetector:
         effective_query = query or "extract claims"
 
         per_file_results = await asyncio.gather(
-            *(self._extract_claims_for_file(file, effective_query) for file in files),
+            *(self._extract_claims_for_file(file, effective_query, user_id) for file in files),
             return_exceptions=True,
         )
 
@@ -312,6 +318,7 @@ class ContradictionDetector:
         self,
         file: AiFile,
         query: str,
+        user_id: UserId,
     ) -> _FileExtractionResult:
         """Run the per-chunk extractor over one file's pages.
 
@@ -324,7 +331,7 @@ class ContradictionDetector:
         ``asyncio.gather`` and the mapper's internal semaphore — this
         helper itself awaits each step sequentially within one file.
         """
-        file_pages = await self._runtime.documents.read_pages(file.id)
+        file_pages = await self._runtime.documents.read_pages(file.id, user_id=user_id)
         if not file_pages:
             logger.info(
                 "[contradiction] no stored pages for %s (id=%s); skipping",

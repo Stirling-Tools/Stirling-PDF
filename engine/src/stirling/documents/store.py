@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 from stirling.contracts.documents import Page, PageRange
+from stirling.models import UserId
 
 
 @dataclass
@@ -48,8 +49,8 @@ class DocumentStore(ABC):
     """
 
     @abstractmethod
-    async def ensure_collection(self, collection: str, source: str) -> None:
-        """Upsert the top-level ``documents_meta`` row for this collection.
+    async def ensure_collection(self, collection: str, source: str, user_id: UserId) -> None:
+        """Upsert the top-level ``documents_meta`` row for this collection under ``user_id``.
 
         Must be called before :meth:`add_pages` or :meth:`add_documents`. Both
         of those write into child tables that hold a foreign key to the parent
@@ -62,6 +63,7 @@ class DocumentStore(ABC):
         collection: str,
         documents: list[Document],
         embeddings: list[list[float]],
+        user_id: UserId,
     ) -> None:
         """Store vector chunks with their embeddings in the named collection."""
 
@@ -70,12 +72,13 @@ class DocumentStore(ABC):
         self,
         collection: str,
         query_embedding: list[float],
-        top_k: int = 5,
+        top_k: int,
+        user_id: UserId,
     ) -> list[SearchResult]:
         """Return the top_k most similar vector chunks from the collection."""
 
     @abstractmethod
-    async def add_pages(self, collection: str, pages: list[StoredPage]) -> None:
+    async def add_pages(self, collection: str, pages: list[StoredPage], user_id: UserId) -> None:
         """Replace the stored pages for ``collection`` with the supplied pages.
 
         Implementations must remove any previously-stored pages for the
@@ -87,7 +90,8 @@ class DocumentStore(ABC):
     async def read_pages(
         self,
         collection: str,
-        page_range: PageRange | None = None,
+        page_range: PageRange | None,
+        user_id: UserId,
     ) -> list[Page]:
         """Return ordered pages for ``collection``.
 
@@ -97,16 +101,16 @@ class DocumentStore(ABC):
         """
 
     @abstractmethod
-    async def delete_collection(self, collection: str) -> None:
+    async def delete_collection(self, collection: str, user_id: UserId) -> None:
         """Remove a collection's chunks and pages."""
 
     @abstractmethod
-    async def list_collections(self) -> list[str]:
-        """Return names of all existing collections."""
+    async def list_collections(self, user_id: UserId) -> list[str]:
+        """Return names of collections owned by ``user_id``."""
 
     @abstractmethod
-    async def has_collection(self, collection: str) -> bool:
-        """Check whether a collection exists."""
+    async def has_collection(self, collection: str, user_id: UserId) -> bool:
+        """Check whether ``user_id`` owns a collection with this name."""
 
     @abstractmethod
     async def close(self) -> None:

@@ -21,6 +21,7 @@ from pydantic_ai.toolsets import AbstractToolset
 from stirling.agents.contradiction.detector import ContradictionDetector
 from stirling.contracts import AiFile
 from stirling.contracts.contradiction import Claim, ContradictionReport
+from stirling.models import UserId
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ class ContradictionCapability:
         self,
         detector: ContradictionDetector,
         files: list[AiFile],
+        user_id: UserId,
         *,
         max_audits: int = DEFAULT_MAX_AUDITS,
     ) -> None:
@@ -59,6 +61,7 @@ class ContradictionCapability:
             raise ValueError("max_audits must be >= 1")
         self._detector = detector
         self._files = files
+        self._user_id = user_id
         self._max_audits = max_audits
         self._audit_count = 0
         toolset: FunctionToolset[None] = FunctionToolset()
@@ -121,7 +124,7 @@ class ContradictionCapability:
         if not self._files:
             return "No documents attached to audit."
 
-        report = await self._detector.detect(self._files, query=query)
+        report = await self._detector.detect(self._files, user_id=self._user_id, query=query)
         formatted = self.format_report(report)
         logger.info(
             "[contradiction-capability] audit query=%r files=%d -> %d findings, %d chars",

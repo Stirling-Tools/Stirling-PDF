@@ -8,6 +8,7 @@ contradiction and the right cross-references and anchor handling.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import replace
 from typing import Literal
 from unittest.mock import AsyncMock
@@ -27,10 +28,22 @@ from stirling.contracts import (
 )
 from stirling.contracts.contradiction import Claim
 from stirling.documents import DocumentService, SqliteVecStore
-from stirling.models import FileId, ToolEndpoint
+from stirling.models import FileId, ToolEndpoint, UserId
 from stirling.models.tool_models import AddCommentsParams
+from stirling.services import current_user_id
 from stirling.services.runtime import AppRuntime
 from tests.test_pdf_question_agent import StubEmbedder
+
+USER = UserId("test-user")
+
+
+@pytest.fixture(autouse=True)
+def _set_user_context() -> Iterator[None]:
+    token = current_user_id.set(USER)
+    try:
+        yield
+    finally:
+        current_user_id.reset(token)
 
 
 def _file(file_id: str, name: str) -> AiFile:
@@ -88,6 +101,7 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
         file.id,
         [PageText(page_number=1, text="x")],
         source=file.name,
+        user_id=USER,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -159,6 +173,7 @@ async def test_contradiction_intent_emits_add_comments_plan(
         file.id,
         [PageText(page_number=1, text="ignored"), PageText(page_number=5, text="ignored")],
         source=file.name,
+        user_id=USER,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -264,6 +279,7 @@ async def test_contradiction_takes_precedence_over_math(
         file.id,
         [PageText(page_number=1, text="x")],
         source=file.name,
+        user_id=USER,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
