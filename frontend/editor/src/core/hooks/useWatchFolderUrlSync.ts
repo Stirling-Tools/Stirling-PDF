@@ -64,7 +64,8 @@ export function useWatchFolderUrlSync() {
   const folders = useAllSmartFolders();
   const navigationState = useNavigationState();
   const { actions } = useNavigationActions();
-  const { setCustomWorkbenchViewData, customWorkbenchViews } = useToolWorkflow();
+  const { setCustomWorkbenchViewData, customWorkbenchViews } =
+    useToolWorkflow();
 
   const isWatchFolderWorkbench =
     navigationState.workbench === SMART_FOLDER_WORKBENCH_ID;

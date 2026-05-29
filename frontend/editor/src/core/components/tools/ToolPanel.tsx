@@ -19,6 +19,8 @@ import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
 import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
+import { SmartFolderSidebarPanel } from "@app/components/smartFolders/SmartFolderSidebarPanel";
+import { useSmartFolderSidebar } from "@app/hooks/useSmartFolderSidebar";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -58,6 +60,7 @@ export default function ToolPanel() {
 
   const { setAllButtonsDisabled } = useWorkbenchBar();
   const { preferences, updatePreference } = usePreferences();
+  const { isActive: isSmartFolderSidebar } = useSmartFolderSidebar();
 
   const isFullscreenMode = toolPanelMode === "fullscreen";
   const toolPickerVisible = !readerMode;
@@ -185,6 +188,20 @@ export default function ToolPanel() {
             flexDirection: "column",
           }}
         >
+          {isSmartFolderSidebar ? (
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <SmartFolderSidebarPanel />
+            </div>
+          ) : (
+          <>
           {/* Viewer mode tools — annotate, redact, form fill */}
           <ToolPanelViewerBar />
 
@@ -274,6 +291,8 @@ export default function ToolPanel() {
                 </ScrollArea>
               </div>
             </div>
+          )}
+          </>
           )}
         </div>
       )}

@@ -12,13 +12,13 @@ import {
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import FolderPlusIcon from "@mui/icons-material/CreateNewFolder";
-import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
-import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
+import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutlined";
 import { useSmartFolders } from "@app/hooks/useSmartFolders";
 import { useFolderRunStatuses } from "@app/hooks/useFolderRunStatuses";
 import {
@@ -246,12 +246,7 @@ function FolderCard({
 
           {/* Main content */}
           <Box style={{ flex: 1, minWidth: 0 }}>
-            <Group
-              justify="space-between"
-              align="center"
-              wrap="nowrap"
-              mb="xs"
-            >
+            <Group justify="space-between" align="center" wrap="nowrap" mb="xs">
               <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
                 <Text
                   fw={600}
@@ -343,9 +338,7 @@ function FolderCard({
                     }
                   >
                     {isPaused ? (
-                      <PlayCircleOutlineIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
+                      <PlayCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
                     ) : (
                       <PauseCircleOutlineIcon
                         style={{ fontSize: "1.125rem" }}
@@ -587,7 +580,10 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         }}
       >
         <FolderPlusIcon
-          style={{ fontSize: "2rem", color: "var(--mantine-color-blue-filled)" }}
+          style={{
+            fontSize: "2rem",
+            color: "var(--mantine-color-blue-filled)",
+          }}
         />
       </Box>
 
@@ -595,7 +591,11 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         <Text fw={700} size="lg" style={{ letterSpacing: "-0.02em" }}>
           {t("smartFolders.home.emptyTitle", "Automate your PDF workflows")}
         </Text>
-        <Text size="sm" c="dimmed" style={{ lineHeight: 1.6, maxWidth: "22rem" }}>
+        <Text
+          size="sm"
+          c="dimmed"
+          style={{ lineHeight: 1.6, maxWidth: "22rem" }}
+        >
           {t(
             "smartFolders.home.emptyDesc",
             "Set up a Watch Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
@@ -725,9 +725,7 @@ export function SmartFolderHomePage() {
               ownedByFolder: boolean;
             }> = [];
             for (const [id, meta] of pendingEntries) {
-              const stirlingFile = await fileStorage.getStirlingFile(
-                id as any,
-              );
+              const stirlingFile = await fileStorage.getStirlingFile(id as any);
               if (stirlingFile) {
                 items.push({
                   file: stirlingFile,
@@ -860,7 +858,10 @@ export function SmartFolderHomePage() {
                   />
                 </Box>
                 <Text size="sm" fw={500} c="dimmed" mb={2}>
-                  {t("smartFolders.home.addAnother", "Add another Watch Folder")}
+                  {t(
+                    "smartFolders.home.addAnother",
+                    "Add another Watch Folder",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed">
                   {t(

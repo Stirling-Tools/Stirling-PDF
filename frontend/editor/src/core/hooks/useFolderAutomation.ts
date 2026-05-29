@@ -1,7 +1,7 @@
 /**
  * Shared hook for running a file through a Watch Folder's automation pipeline.
  *
- * Local-only synchronous execution: each file is run through executeBackendPipeline
+ * Local-only synchronous execution: each file is run through executeAutomationSequence
  * and the outputs are persisted to IndexedDB. Retries are scheduled in
  * folderRetryScheduleStorage and drained on mount / visibility / SW wake.
  *
@@ -81,14 +81,14 @@ async function finalizeRun(
     currentMeta?.displayFileIds ??
     (currentMeta?.displayFileId ? [currentMeta.displayFileId] : []);
 
-  const inputStub = await fileStorage.getStirlingFileStub(inputFileId as FileId);
+  const inputStub = await fileStorage.getStirlingFileStub(
+    inputFileId as FileId,
+  );
   const isVersionMode = folder.outputMode === "new_version";
   const chainRoot = isVersionMode
     ? (inputStub?.originalFileId ?? inputFileId)
     : inputFileId;
-  const versionNum = isVersionMode
-    ? (inputStub?.versionNumber ?? 1) + 1
-    : 2;
+  const versionNum = isVersionMode ? (inputStub?.versionNumber ?? 1) + 1 : 2;
 
   const inputName = inputStub?.name ?? file.name;
   const outputLabel = folder.outputName?.trim() || folder.name;
@@ -100,8 +100,7 @@ async function finalizeRun(
   if (isAutoNumber) {
     for (const meta of Object.values(currentFolderData?.files ?? {})) {
       const ids =
-        meta.displayFileIds ??
-        (meta.displayFileId ? [meta.displayFileId] : []);
+        meta.displayFileIds ?? (meta.displayFileId ? [meta.displayFileId] : []);
       for (const oid of ids) {
         const stub = await fileStorage.getStirlingFileStub(oid as FileId);
         if (stub?.name) takenNames.add(stub.name);

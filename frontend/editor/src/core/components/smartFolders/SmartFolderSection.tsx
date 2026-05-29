@@ -39,10 +39,7 @@ export function SmartFolderSection() {
     actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
   };
 
-  const handleEditFolder = async (
-    e: React.MouseEvent,
-    folder: SmartFolder,
-  ) => {
+  const handleEditFolder = async (e: React.MouseEvent, folder: SmartFolder) => {
     e.stopPropagation();
     setEditFolder(folder);
     const automation = await automationStorage.getAutomation(

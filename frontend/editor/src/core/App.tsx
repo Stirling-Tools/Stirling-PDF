@@ -8,6 +8,7 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+import SmartFoldersRegistration from "@app/components/smartFolders/SmartFoldersRegistration";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -48,6 +49,7 @@ export default function App() {
               <AppLayout>
                 <HomePage />
                 <Onboarding />
+                <SmartFoldersRegistration />
               </AppLayout>
             </AppProviders>
           }

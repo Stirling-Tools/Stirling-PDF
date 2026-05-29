@@ -81,7 +81,8 @@ export function useSmartFolders(): UseSmartFoldersReturn {
       // Always delete every output the folder produced (folder always owns those).
       const outputIds = Object.values(record.files).flatMap(
         (meta) =>
-          meta.displayFileIds ?? (meta.displayFileId ? [meta.displayFileId] : []),
+          meta.displayFileIds ??
+          (meta.displayFileId ? [meta.displayFileId] : []),
       );
       const toDelete = [...new Set([...ownedInputIds, ...outputIds])];
       await Promise.all(

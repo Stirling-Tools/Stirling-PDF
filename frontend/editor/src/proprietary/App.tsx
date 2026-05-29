@@ -14,6 +14,7 @@ import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+import SmartFoldersRegistration from "@app/components/smartFolders/SmartFoldersRegistration";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -80,6 +81,7 @@ export default function App() {
                   <Route path="/*" element={<Landing />} />
                 </Routes>
                 <Onboarding />
+                <SmartFoldersRegistration />
               </AppLayout>
             </AppProviders>
           }

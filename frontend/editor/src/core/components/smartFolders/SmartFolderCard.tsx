@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
+import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
 import { SmartFolder } from "@app/types/smartFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";

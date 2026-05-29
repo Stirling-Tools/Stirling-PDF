@@ -39,6 +39,7 @@ export default function SmartFoldersRegistration() {
       workbenchId: SMART_FOLDER_WORKBENCH_ID,
       label: t("smartFolders.sidebarTitle", "Watch Folders"),
       component: SmartFolderWorkbenchView,
+      hideTopControls: true,
     });
     return () => {
       clearRef.current(SMART_FOLDER_VIEW_ID);

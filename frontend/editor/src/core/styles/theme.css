@@ -202,6 +202,8 @@
   --icon-sign-color: #ffffff;
   --icon-automate-bg: #a576e3;
   --icon-automate-color: #ffffff;
+  --icon-watchFolders-bg: #f59e0b;
+  --icon-watchFolders-color: #ffffff;
   --icon-files-bg: #d3e7f7;
   --icon-files-color: #0a8bff;
   --icon-activity-bg: #d3e7f7;
@@ -535,6 +537,8 @@
   --icon-sign-color: #eaeaea;
   --icon-automate-bg: #4b525a;
   --icon-automate-color: #eaeaea;
+  --icon-watchFolders-bg: #4b525a;
+  --icon-watchFolders-color: #eaeaea;
   --icon-files-bg: #4b525a;
   --icon-files-color: #eaeaea;
   --icon-activity-bg: #4b525a;

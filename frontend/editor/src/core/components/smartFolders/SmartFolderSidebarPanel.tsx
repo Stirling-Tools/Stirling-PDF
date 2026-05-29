@@ -15,7 +15,8 @@ export function SmartFolderSidebarPanel() {
   const { t } = useTranslation();
   const { loadRecentFiles } = useFileManager();
   const [recentFiles, setRecentFiles] = useState<StirlingFileStub[]>([]);
-  const { customWorkbenchViews, setCustomWorkbenchViewData } = useToolWorkflow();
+  const { customWorkbenchViews, setCustomWorkbenchViewData } =
+    useToolWorkflow();
   const { actions } = useNavigationActions();
 
   const smartFolderView = customWorkbenchViews.find(
