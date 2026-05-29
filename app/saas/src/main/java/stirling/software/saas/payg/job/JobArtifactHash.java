@@ -51,12 +51,7 @@ public class JobArtifactHash implements Serializable {
         @Column(name = "job_id", nullable = false)
         private UUID jobId;
 
-        /**
-         * Holds the {@code "type:value"} signature key the lineage layer produces (see {@code
-         * LineageSignature.asStorageKey()}). 128 chars covers SHA-256 ({@code sha256:} + 64 hex =
-         * 71) plus headroom for future schemes (PDF id, PDF content-stream hash) so we never need a
-         * schema change to add a new signature type.
-         */
+        /** {@code "type:value"} signature key; 128 chars fits SHA-256 plus future schemes. */
         @Column(name = "content_hash", nullable = false, length = 128)
         private String contentHash;
 

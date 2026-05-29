@@ -11,18 +11,12 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Guards against the {@link SaasJpaConfig} scan path drifting out of sync with where entities and
- * repositories actually live. Catches the failure mode where a new {@code payg.*} (or future {@code
- * billing.*}, etc.) package is added but never wired into the JPA scan — symptom is
- * {@code @Autowired Foo} failing at startup with "No qualifying bean of type Foo" or a
- * {@code @Query} failing with "Not a managed type" — neither of which a Mockito unit test would
- * catch.
+ * Guards {@link SaasJpaConfig}'s scan paths from drifting out of sync with the actual entity and
+ * repository packages — without this, a missing package goes undetected until a runtime "No
+ * qualifying bean of type" startup failure that Mockito-based tests can't catch.
  *
- * <p>Reflection-based rather than a {@code @DataJpaTest} smoke boot because the production schema
- * relies on PostgreSQL-specific features (partial unique indexes, JSONB casts) that H2 doesn't
- * fully support, and standing up Testcontainers PostgreSQL for a single guard test is
- * disproportionate. Real-DB smoke coverage lands when {@code @SpringBootTest} integration tests
- * arrive for the PAYG services.
+ * <p>Reflection-based rather than a real Spring boot because the production schema uses
+ * Postgres-specific features H2 doesn't fully support.
  */
 class SaasJpaConfigScanTest {
 
@@ -38,8 +32,7 @@ class SaasJpaConfigScanTest {
                     "stirling.software.saas.model",
                     "stirling.software.saas.billing.model",
                     "stirling.software.saas.ai.model",
-                    // Single root package covering payg.policy / payg.job / payg.wallet /
-                    // payg.entitlement / payg.shadow — Spring scans recursively.
+                    // Recursive — covers all payg.* sub-packages.
                     "stirling.software.saas.payg");
 
     @Test

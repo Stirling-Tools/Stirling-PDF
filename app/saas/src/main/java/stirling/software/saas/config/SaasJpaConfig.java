@@ -6,14 +6,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Registers the {@code :saas} module's entities and repositories with Spring Data JPA.
- *
- * <p>Every package holding a {@code @Repository} interface MUST appear in {@code basePackages}
- * (otherwise the repo never becomes a Spring bean and {@code @Autowired} fails at startup); every
- * package holding an {@code @Entity} class MUST appear in {@code @EntityScan} (otherwise Hibernate
- * doesn't see the entity and repo queries fail with "Not a managed type"). PAYG entities are spread
- * across {@code payg.policy} / {@code payg.job} / {@code payg.wallet} / {@code payg.entitlement} /
- * {@code payg.shadow} — {@code stirling.software.saas.payg} alone covers all of them recursively.
+ * Registers the {@code :saas} module's entities and repositories with Spring Data JPA. Any new
+ * package holding {@code @Repository} or {@code @Entity} classes must be added here, or the beans
+ * won't wire at startup.
  */
 @Configuration
 @Profile("saas")

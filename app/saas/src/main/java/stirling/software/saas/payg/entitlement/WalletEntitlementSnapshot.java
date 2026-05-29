@@ -34,10 +34,7 @@ import stirling.software.saas.payg.model.FeatureSet;
  * <p>Composite PK {@code (team_id, user_id)} uses 0 as the team-wide sentinel because Postgres
  * treats {@code NULL} as not-equal-to-NULL in unique constraints — 0 keeps the PK well-defined.
  *
- * <p><b>No {@code @Version} column by design.</b> Snapshots are produced by full recomputation —
- * {@code EntitlementService.recompute(teamId)} writes the whole row in one go. There's no
- * read-modify-write path where two writers could race on a single field. Adding optimistic locking
- * would just force unnecessary retries on the hot recompute path.
+ * <p>No {@code @Version} — rows are produced by full-row recompute, no read-modify-write race.
  */
 @Entity
 @Table(name = "wallet_entitlement_snapshot")

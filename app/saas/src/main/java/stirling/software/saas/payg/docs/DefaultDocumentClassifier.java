@@ -25,21 +25,12 @@ import stirling.software.saas.payg.policy.PricingPolicy;
  * <p>For PDFs, units are the larger of {@code ceil(pages / docPagesPerUnit)} and {@code ceil(bytes
  * / docBytesPerUnit)}. For non-PDFs, only the bytes axis contributes. A single file is clamped to
  * {@code [1, policy.fileUnitCap]}; a multi-file group is clamped to {@code [1, policy.fileUnitCap *
- * file_count]} applied to the sum of raw per-file units.
+ * file_count]} applied to the sum of raw per-file units. Malformed/encrypted PDFs fall back to
+ * bytes-only.
  *
- * <p>Malformed or encrypted PDFs fall back to bytes-only classification — the file still has a size
- * we can charge against, and the caller decides whether to reject the upload on other grounds.
- *
- * <p><b>Where {@code policy.minChargeUnits} is applied.</b> It isn't — not here. Per design § 3.4
- * the charge formula is {@code unitsForProcess = max(policy.min_charge_units, docUnits)} which runs
- * at process-open time inside {@code JobChargeService}. The classifier only enforces an absolute
- * floor of {@link #MIN_UNITS_PER_NONEMPTY_FILE} so callers can rely on "non-empty input → at least
- * 1 unit". Applying {@code minChargeUnits} here too would double-floor.
- *
- * <p><b>Profile-gated to {@code saas}.</b> The classifier is a stateless utility but stays gated
- * with the rest of the {@code :saas} module's beans for consistency — the module is the unit of
- * deployment, not individual beans. When self-hosted PAYG materialises (PR-X1) we can broaden to
- * {@code @Profile({"saas", "selfhosted-payg"})}.
+ * <p>{@code policy.minChargeUnits} is applied by the charge service, not here. The classifier only
+ * enforces an absolute floor of {@link #MIN_UNITS_PER_NONEMPTY_FILE} so callers can rely on
+ * "non-empty input → at least 1 unit".
  */
 @Slf4j
 @Component
@@ -50,12 +41,7 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
     private static final String PDF_CONTENT_TYPE = "application/pdf";
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
-    /**
-     * Absolute floor returned for a non-empty input. Distinct from {@code policy.minChargeUnits},
-     * which is applied at charge time (see class javadoc). Without this floor a 0-page 0-byte input
-     * would classify as 0 units, breaking the "non-empty input → at least 1 unit" invariant tests
-     * and downstream code rely on.
-     */
+    /** Floor for non-empty input. Distinct from {@code policy.minChargeUnits} (applied later). */
     private static final int MIN_UNITS_PER_NONEMPTY_FILE = 1;
 
     private final TempFileManager tempFileManager;
@@ -67,10 +53,7 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
 
         FileFacts facts = inspect(file);
         long rawUnits = computeRawUnits(facts.pages, facts.bytes, policy);
-        // toIntExact rather than (int) cast: a wraparound is a billing bug, not a numerical
-        // curiosity. The min() above guarantees we're well inside int range under default
-        // fileUnitCap (1000), but the explicit overflow check matches the saturatedAdd care
-        // taken everywhere else in this class.
+        // toIntExact: fail loud on overflow rather than silently wrapping a billing number.
         int units =
                 Math.toIntExact(
                         Math.max(
@@ -106,9 +89,7 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
         }
 
         long groupCap = (long) policy.getFileUnitCap() * files.size();
-        // toIntExact rather than (int) cast — same reasoning as the single-file path. With
-        // default fileUnitCap=1000 you'd need ~2.15M files to overflow, which HTTP body limits
-        // make impossible, but an explicit failure beats a silent wrap if the limits ever drift.
+        // toIntExact: fail loud on overflow rather than silently wrapping.
         int totalUnits =
                 Math.toIntExact(
                         Math.max(
