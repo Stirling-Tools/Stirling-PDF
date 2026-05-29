@@ -14,7 +14,6 @@ import {
   Collapse,
   Tooltip,
   Modal,
-  ScrollArea,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { SmartFolder } from "@app/types/smartFolders";
@@ -31,6 +30,7 @@ import {
   FS_WRITE_UNSUPPORTED_MSG,
 } from "@app/utils/fsAccessCapability";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import {
   Z_INDEX_AUTOMATE_MODAL,
   Z_INDEX_AUTOMATE_DROPDOWN,
@@ -306,9 +306,23 @@ export function SmartFolderManagementModal({
       opened={opened}
       onClose={handleClose}
       title={title}
-      size="64rem"
+      size="min(90rem, 94vw)"
+      centered
       zIndex={Z_INDEX_AUTOMATE_MODAL}
-      scrollAreaComponent={ScrollArea.Autosize}
+      styles={{
+        content: {
+          height: "min(90vh, 60rem)",
+          display: "flex",
+          flexDirection: "column",
+        },
+        body: {
+          flex: 1,
+          minHeight: 0,
+          padding: 0,
+          display: "flex",
+          flexDirection: "column",
+        },
+      }}
     >
       {/* Body: two-column layout */}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -610,18 +624,13 @@ export function SmartFolderManagementModal({
                     textTransform: "uppercase",
                   }}
                 >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      fontSize: "0.55rem",
-                      transform: showAdvanced
-                        ? "rotate(90deg)"
-                        : "rotate(0deg)",
+                  <ChevronRightIcon
+                    sx={{
+                      fontSize: "1rem",
+                      transform: showAdvanced ? "rotate(90deg)" : "none",
                       transition: "transform 160ms ease",
                     }}
-                  >
-                    ▶
-                  </span>
+                  />
                   {t("smartFolders.modal.advanced", "Advanced")}
                 </button>
 
