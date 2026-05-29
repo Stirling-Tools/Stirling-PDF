@@ -16,6 +16,25 @@ export async function isDesktopSaaSAuthMode(): Promise<boolean> {
 }
 
 /**
+ * In SaaS mode the apiClient points at the SaaS gateway, which doesn't
+ * expose `/api/v1/auth/logout` (Supabase manages session lifecycle); POSTing
+ * there returns 500 and floods the error toasts even though local cleanup
+ * succeeds. Self-hosted mode IS a Spring backend so the endpoint exists.
+ */
+export async function shouldCallBackendLogout(): Promise<boolean> {
+  try {
+    const mode = await connectionModeService.getCurrentMode();
+    return mode !== "saas";
+  } catch {
+    // If we can't read the mode, err on the side of trying the POST -
+    // a 500 is noisy but the catch branch still completes the local
+    // sign-out, so we'd rather attempt the backend call than skip it
+    // for a deployment that actually does have the endpoint.
+    return true;
+  }
+}
+
+/**
  * Supabase JWT payload claims we care about. Desktop knows it issues
  * Supabase-shaped tokens, so it can read them with proper types here -
  * proprietary's auth client never needs to learn about user_metadata.

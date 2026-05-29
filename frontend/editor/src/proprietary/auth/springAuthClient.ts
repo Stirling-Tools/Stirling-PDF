@@ -18,6 +18,7 @@ import {
   isDesktopSaaSAuthMode,
   refreshPlatformSession,
   savePlatformToken,
+  shouldCallBackendLogout,
 } from "@app/extensions/platformSessionBridge";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 
@@ -579,15 +580,24 @@ class SpringAuthClient {
           "1",
         );
       }
-      const response = await apiClient.post("/api/v1/auth/logout", null, {
-        headers: {
-          "X-XSRF-TOKEN": this.getCsrfToken() || "",
-        },
-        withCredentials: true,
-      });
 
-      if (response.status === 200) {
-        // console.debug('[SpringAuth] signOut: Success');
+      // Only call the backend logout endpoint when the platform tells us
+      // the current backend implements it. In desktop SaaS mode the
+      // apiClient points at the SaaS gateway, which doesn't expose
+      // `/api/v1/auth/logout` (Supabase manages session lifecycle); POSTing
+      // there returns 500 and pollutes error toasts even though the local
+      // cleanup below succeeds.
+      if (await shouldCallBackendLogout()) {
+        const response = await apiClient.post("/api/v1/auth/logout", null, {
+          headers: {
+            "X-XSRF-TOKEN": this.getCsrfToken() || "",
+          },
+          withCredentials: true,
+        });
+
+        if (response.status === 200) {
+          // console.debug('[SpringAuth] signOut: Success');
+        }
       }
 
       // Clean up local storage
