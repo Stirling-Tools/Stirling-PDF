@@ -38,6 +38,8 @@ project: &project
   - frontend/**
   - docker/**
   - scripts/RestartHelper.java
+  - scripts/db-migration/**
+  - .github/workflows/db-migration-test.yml
 
 frontend: &frontend
   - frontend/**

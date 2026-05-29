@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { folderStorage } from "@app/services/folderStorage";
+import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
 
 export function useFolderOutputIds(): Set<string> {
@@ -21,7 +21,7 @@ export function useFolderOutputIds(): Set<string> {
       const ids = new Set<string>();
       for (const folder of folders) {
         try {
-          const record = await folderStorage.getFolderData(folder.id);
+          const record = await watchFolderFileStorage.getFolderData(folder.id);
           if (record) {
             Object.values(record.files).forEach((meta) => {
               const oids =
@@ -38,7 +38,7 @@ export function useFolderOutputIds(): Set<string> {
     };
 
     load();
-    return folderStorage.onFolderChange(load);
+    return watchFolderFileStorage.onFolderChange(load);
   }, [folders]);
 
   return outputIds;

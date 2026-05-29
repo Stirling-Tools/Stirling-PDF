@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { createPortal } from "react-dom";
 import { ScrollArea, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -6,8 +7,6 @@ import FullscreenToolList from "@app/components/tools/FullscreenToolList";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useFocusTrap } from "@app/hooks/useFocusTrap";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
 import "@app/components/tools/ToolPanel.css";
 import { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 
@@ -26,6 +25,8 @@ interface FullscreenToolSurfaceProps {
   onToggleDescriptions: () => void;
   onExitFullscreenMode: () => void;
   geometry: ToolPanelGeometry | null;
+  /** Optional agents block rendered above the tool list. */
+  agentsSlot?: React.ReactNode;
 }
 
 const FullscreenToolSurface = ({
@@ -40,6 +41,7 @@ const FullscreenToolSurface = ({
   onToggleDescriptions,
   onExitFullscreenMode: _onExitFullscreenMode,
   geometry,
+  agentsSlot,
 }: FullscreenToolSurfaceProps) => {
   const { t } = useTranslation();
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -47,18 +49,16 @@ const FullscreenToolSurface = ({
   // Enable focus trap when surface is active
   useFocusTrap(surfaceRef, true);
 
-  const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+  if (!geometry) return null;
 
-  const style = geometry
-    ? {
-        left: `${geometry.left}px`,
-        top: `${geometry.top}px`,
-        width: `${geometry.width}px`,
-        height: `${geometry.height}px`,
-      }
-    : undefined;
+  const style = {
+    left: `${geometry.left}px`,
+    top: `${geometry.top}px`,
+    width: `${geometry.width}px`,
+    height: `${geometry.height}px`,
+  };
 
-  return (
+  const surface = (
     <div
       className="tool-panel__fullscreen-surface"
       style={style}
@@ -70,16 +70,6 @@ const FullscreenToolSurface = ({
       data-tour="tool-panel"
     >
       <div ref={surfaceRef} className="tool-panel__fullscreen-surface-inner">
-        <header className="tool-panel__fullscreen-header">
-          <div className="tool-panel__fullscreen-brand">
-            <LogoIcon className="tool-panel__fullscreen-brand-icon" />
-            <Wordmark
-              alt={brandAltText}
-              className="tool-panel__fullscreen-brand-text"
-            />
-          </div>
-        </header>
-
         <div className="tool-panel__fullscreen-controls">
           <ToolSearch
             value={searchQuery}
@@ -102,6 +92,9 @@ const FullscreenToolSurface = ({
             className="tool-panel__fullscreen-scroll"
             offsetScrollbars
           >
+            {agentsSlot && (
+              <div className="tool-panel__fullscreen-agents">{agentsSlot}</div>
+            )}
             <FullscreenToolList
               filteredTools={filteredTools}
               searchQuery={searchQuery}
@@ -115,6 +108,9 @@ const FullscreenToolSurface = ({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return surface;
+  return createPortal(surface, document.body);
 };
 
 export default FullscreenToolSurface;

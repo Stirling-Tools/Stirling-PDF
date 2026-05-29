@@ -4,6 +4,7 @@
 
 import { PageOperation } from "@app/types/pageEditor";
 import { FileId, BaseFileMetadata } from "@app/types/file";
+import { generateId } from "@app/utils/generateId";
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -58,18 +59,8 @@ export interface FileContextNormalizedFiles {
   byId: Record<FileId, StirlingFileStub>;
 }
 
-// Helper functions - UUID-based primary keys (zero collisions, synchronous)
 export function createFileId(): FileId {
-  // Use crypto.randomUUID for authoritative primary key
-  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
-    return window.crypto.randomUUID() as FileId;
-  }
-  // Fallback for environments without randomUUID
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  }) as FileId;
+  return generateId() as FileId;
 }
 
 // Generate quick deduplication key from file metadata

@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { SmartFolder } from "@app/types/smartFolders";
 import { automationStorage } from "@app/services/automationStorage";
-import { folderStorage } from "@app/services/folderStorage";
+import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 import { folderRetryScheduleStorage } from "@app/services/folderRetryScheduleStorage";
@@ -75,7 +75,9 @@ async function finalizeRun(
   ownedByFolder: boolean,
   resultFiles: File[],
 ): Promise<void> {
-  const currentFolderData = await folderStorage.getFolderData(folder.id);
+  const currentFolderData = await watchFolderFileStorage.getFolderData(
+    folder.id,
+  );
   const currentMeta = currentFolderData?.files[inputFileId];
   const prevOutputIds: string[] =
     currentMeta?.displayFileIds ??
@@ -202,7 +204,7 @@ async function finalizeRun(
   const accumulatedIds = isAutoNumber
     ? [...prevOutputIds, ...allOutputIds]
     : allOutputIds;
-  await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+  await watchFolderFileStorage.updateFileMetadata(folder.id, inputFileId, {
     status: "processed",
     processedAt,
     displayFileId: accumulatedIds[0],
@@ -243,16 +245,24 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           folder.automationId,
         );
         if (!automation) {
-          await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-            status: "error",
-            errorMessage: "Automation not found",
-          });
+          await watchFolderFileStorage.updateFileMetadata(
+            folder.id,
+            inputFileId,
+            {
+              status: "error",
+              errorMessage: "Automation not found",
+            },
+          );
           return;
         }
 
-        await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-          status: "processing",
-        });
+        await watchFolderFileStorage.updateFileMetadata(
+          folder.id,
+          inputFileId,
+          {
+            status: "processing",
+          },
+        );
 
         const resultFiles = await executeAutomationSequence(
           automation,
@@ -267,7 +277,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           resultFiles,
         );
       } catch (err: unknown) {
-        const existing = await folderStorage.getFolderData(folder.id);
+        const existing = await watchFolderFileStorage.getFolderData(folder.id);
         const prev = existing?.files[inputFileId];
         const attempts = (prev?.failedAttempts ?? 0) + 1;
         const maxRetries = folder.maxRetries ?? 3;
@@ -276,13 +286,17 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           maxRetries > 0 && attempts < maxRetries && retryDelayMs > 0;
         const nextRetryAt = willRetry ? Date.now() + retryDelayMs : undefined;
 
-        await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-          status: "error",
-          errorMessage: err instanceof Error ? err.message : "Unknown error",
-          failedAttempts: attempts,
-          nextRetryAt,
-          lastFailedAt: new Date(),
-        });
+        await watchFolderFileStorage.updateFileMetadata(
+          folder.id,
+          inputFileId,
+          {
+            status: "error",
+            errorMessage: err instanceof Error ? err.message : "Unknown error",
+            failedAttempts: attempts,
+            nextRetryAt,
+            lastFailedAt: new Date(),
+          },
+        );
 
         if (willRetry) {
           await folderRetryScheduleStorage.schedule(
@@ -297,13 +311,17 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       } finally {
         // Safety net: if still 'processing', something went wrong
         try {
-          const record = await folderStorage.getFolderData(folder.id);
+          const record = await watchFolderFileStorage.getFolderData(folder.id);
           const fileMeta = record?.files[inputFileId];
           if (fileMeta?.status === "processing") {
-            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-              status: "error",
-              errorMessage: "Processing failed unexpectedly",
-            });
+            await watchFolderFileStorage.updateFileMetadata(
+              folder.id,
+              inputFileId,
+              {
+                status: "error",
+                errorMessage: "Processing failed unexpectedly",
+              },
+            );
           }
         } catch {
           // Best-effort
@@ -325,10 +343,14 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           entry.fileId as FileId,
         );
         if (!freshFile) continue;
-        await folderStorage.updateFileMetadata(entry.folderId, entry.fileId, {
-          status: "pending",
-          nextRetryAt: undefined,
-        });
+        await watchFolderFileStorage.updateFileMetadata(
+          entry.folderId,
+          entry.fileId,
+          {
+            status: "pending",
+            nextRetryAt: undefined,
+          },
+        );
         void runPipeline(
           freshFolder,
           freshFile,

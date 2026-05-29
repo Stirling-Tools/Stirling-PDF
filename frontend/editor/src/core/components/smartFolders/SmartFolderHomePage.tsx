@@ -29,7 +29,7 @@ import { SmartFolder } from "@app/types/smartFolders";
 import { AutomationConfig } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { automationStorage } from "@app/services/automationStorage";
-import { folderStorage } from "@app/services/folderStorage";
+import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { fileStorage } from "@app/services/fileStorage";
 import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
 import { DeleteFolderConfirmModal } from "@app/components/smartFolders/DeleteFolderConfirmModal";
@@ -91,7 +91,7 @@ function FolderCard({
     automationStorage.getAutomation(folder.automationId).then(setAutomation);
 
     const loadData = () =>
-      folderStorage.getFolderData(folder.id).then((record) => {
+      watchFolderFileStorage.getFolderData(folder.id).then((record) => {
         if (!record) {
           setFileCount(0);
           setLastAdded(null);
@@ -110,7 +110,7 @@ function FolderCard({
       });
     loadData();
 
-    const unsub = folderStorage.onFolderChange((changedId) => {
+    const unsub = watchFolderFileStorage.onFolderChange((changedId) => {
       if (changedId === folder.id) loadData();
     });
     return unsub;
@@ -664,7 +664,9 @@ export function SmartFolderHomePage() {
       if (pdfs.length === 0) return;
 
       // Load existing folder data once to detect re-runs (same sidebar file dropped again)
-      const existingData = await folderStorage.getFolderData(folder.id);
+      const existingData = await watchFolderFileStorage.getFolderData(
+        folder.id,
+      );
       // Register files sequentially — addFileToFolder/updateFileMetadata are read-modify-write
       // without IDB transactions, so concurrent calls on the same folder lose updates.
       const items: Array<{
@@ -675,12 +677,16 @@ export function SmartFolderHomePage() {
       for (const file of pdfs) {
         const { inputFileId, ownedByFolder } = await resolveInputFile(file);
         if (existingData?.files[inputFileId]) {
-          await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-            status: "pending",
-            errorMessage: undefined,
-          });
+          await watchFolderFileStorage.updateFileMetadata(
+            folder.id,
+            inputFileId,
+            {
+              status: "pending",
+              errorMessage: undefined,
+            },
+          );
         } else {
-          await folderStorage.addFileToFolder(folder.id, inputFileId, {
+          await watchFolderFileStorage.addFileToFolder(folder.id, inputFileId, {
             status: "pending",
             name: file.name,
             ownedByFolder: ownedByFolder || undefined,
@@ -713,7 +719,7 @@ export function SmartFolderHomePage() {
       refreshFolders();
 
       if (resuming) {
-        const record = await folderStorage.getFolderData(folder.id);
+        const record = await watchFolderFileStorage.getFolderData(folder.id);
         if (record) {
           const pendingEntries = Object.entries(record.files).filter(
             ([, meta]) => meta.status === "pending",

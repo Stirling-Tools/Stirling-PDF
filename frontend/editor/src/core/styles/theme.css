@@ -1103,3 +1103,17 @@
   animation-duration: 160ms;
   animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
 }
+
+/* Mantine animates a button's background-color and its text/icon colour on
+ * separate transitions, so when a filled button flips state (selected ↔
+ * unselected, enabled ↔ disabled) you briefly see e.g. a blue background
+ * with the old dark-grey label still showing through. Drop the colour
+ * tween — the swap is instant, but transforms/shadows/borders/opacity keep
+ * animating for hover and press feedback. */
+.mantine-Button-root,
+.mantine-ActionIcon-root,
+.mantine-SegmentedControl-control,
+.mantine-SegmentedControl-label,
+.mantine-SegmentedControl-indicator {
+  transition-property: transform, box-shadow, border-color, opacity !important;
+}

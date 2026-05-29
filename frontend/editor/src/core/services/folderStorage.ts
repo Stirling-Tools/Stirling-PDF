@@ -1,214 +1,119 @@
 /**
- * Service for managing folder-file associations in IndexedDB.
- * File blobs are stored in the main stirling-pdf-files database (fileStorage).
- * This service only maintains folder record metadata: which file IDs belong to
- * which folders and their processing status.
+ * Folder Storage Service - passive read-cache of the server's folder hierarchy.
+ *
+ * Folders are server-owned. This module just persists the most recent server
+ * response so the UI can paint instantly on next mount (and remain readable
+ * offline). Every mutation must go through {@code folderSyncService} first;
+ * on success the caller invokes {@link FolderStorageService.replaceAll} or
+ * one of the targeted updaters to keep the cache in step.
+ *
+ * No id generation here, no cycle detection, no idempotency tricks - those
+ * are all the server's job now.
  */
 
-import { FolderFileMetadata, FolderRecord } from "@app/types/smartFolders";
+import { FolderId, FolderRecord } from "@app/types/folder";
+import {
+  indexedDBManager,
+  DATABASE_CONFIGS,
+} from "@app/services/indexedDBManager";
 
-const FOLDER_CHANGE_EVENT = "folder-storage-changed";
+class FolderStorageService {
+  private readonly dbConfig = DATABASE_CONFIGS.FILES;
+  private readonly storeName = "folders";
 
-class FolderStorage {
-  private dbName = "stirling-pdf-folder-files";
-  private dbVersion = 3;
-  private recordsStore = "folderRecords";
-  private db: IDBDatabase | null = null;
-
-  async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.dbVersion);
-
-      request.onerror = () => {
-        reject(new Error("Failed to open folder files database"));
-      };
-
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve();
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains(this.recordsStore)) {
-          db.createObjectStore(this.recordsStore, { keyPath: "folderId" });
-        }
-        if (db.objectStoreNames.contains("folderOutputFiles")) {
-          db.deleteObjectStore("folderOutputFiles");
-        }
-        if (db.objectStoreNames.contains("folderInputFiles")) {
-          db.deleteObjectStore("folderInputFiles");
-        }
-      };
-    });
-  }
-
-  private async ensureDB(): Promise<IDBDatabase> {
-    if (!this.db) {
-      await this.init();
-    }
-    if (!this.db) {
-      throw new Error("Folder files database not initialized");
-    }
-    return this.db;
-  }
-
-  private dispatchChange(folderId: string): void {
-    window.dispatchEvent(
-      new CustomEvent(FOLDER_CHANGE_EVENT, { detail: { folderId } }),
-    );
-  }
-
-  onFolderChange(listener: (folderId: string) => void): () => void {
-    const handler = (e: Event) => {
-      listener((e as CustomEvent).detail.folderId);
-    };
-    window.addEventListener(FOLDER_CHANGE_EVENT, handler);
-    return () => window.removeEventListener(FOLDER_CHANGE_EVENT, handler);
-  }
-
-  async getFolderData(folderId: string): Promise<FolderRecord | null> {
-    const db = await this.ensureDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.recordsStore], "readonly");
-      const store = transaction.objectStore(this.recordsStore);
-      const request = store.get(folderId);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(new Error("Failed to get folder data"));
-    });
-  }
-
-  async addFileToFolder(
-    folderId: string,
-    fileId: string,
-    metadata?: Partial<FolderFileMetadata>,
-  ): Promise<void> {
-    const db = await this.ensureDB();
-    const now = new Date();
-    return new Promise((resolve, reject) => {
-      // Single readwrite transaction for both read and write — prevents lost-update
-      // races when multiple files are added to the same folder concurrently.
-      const transaction = db.transaction([this.recordsStore], "readwrite");
-      const store = transaction.objectStore(this.recordsStore);
-      const getRequest = store.get(folderId);
-      getRequest.onsuccess = () => {
-        const record: FolderRecord = getRequest.result || {
-          folderId,
-          files: {},
-          lastUpdated: Date.now(),
-        };
-        record.files[fileId] = { addedAt: now, status: "pending", ...metadata };
-        record.lastUpdated = Date.now();
-        const putRequest = store.put(record);
-        putRequest.onsuccess = () => {
-          this.dispatchChange(folderId);
-          resolve();
-        };
-        putRequest.onerror = () =>
-          reject(new Error("Failed to add file to folder"));
-      };
-      getRequest.onerror = () =>
-        reject(new Error("Failed to read folder for add"));
-    });
-  }
-
-  async updateFileMetadata(
-    folderId: string,
-    fileId: string,
-    updates: Partial<FolderFileMetadata>,
-  ): Promise<void> {
-    const db = await this.ensureDB();
-    return new Promise((resolve, reject) => {
-      // Single readwrite transaction — prevents lost-update races during concurrent
-      // pipeline runs where multiple files update their status simultaneously.
-      const transaction = db.transaction([this.recordsStore], "readwrite");
-      const store = transaction.objectStore(this.recordsStore);
-      const getRequest = store.get(folderId);
-      getRequest.onsuccess = () => {
-        const existing: FolderRecord | undefined = getRequest.result;
-        if (!existing) {
-          resolve();
-          return;
-        }
-        existing.files[fileId] = { ...existing.files[fileId], ...updates };
-        existing.lastUpdated = Date.now();
-        const putRequest = store.put(existing);
-        putRequest.onsuccess = () => {
-          this.dispatchChange(folderId);
-          resolve();
-        };
-        putRequest.onerror = () =>
-          reject(new Error("Failed to update file metadata"));
-      };
-      getRequest.onerror = () =>
-        reject(new Error("Failed to read folder for update"));
-    });
-  }
-
-  async removeFileFromFolder(folderId: string, fileId: string): Promise<void> {
-    const db = await this.ensureDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.recordsStore], "readwrite");
-      const store = transaction.objectStore(this.recordsStore);
-      const getRequest = store.get(folderId);
-      getRequest.onsuccess = () => {
-        const existing: FolderRecord | undefined = getRequest.result;
-        if (!existing) {
-          resolve();
-          return;
-        }
-        delete existing.files[fileId];
-        existing.lastUpdated = Date.now();
-        const putRequest = store.put(existing);
-        putRequest.onsuccess = () => {
-          this.dispatchChange(folderId);
-          resolve();
-        };
-        putRequest.onerror = () =>
-          reject(new Error("Failed to remove file from folder"));
-      };
-      getRequest.onerror = () =>
-        reject(new Error("Failed to read folder for remove"));
-    });
+  private async getDatabase(): Promise<IDBDatabase> {
+    return indexedDBManager.openDatabase(this.dbConfig);
   }
 
   /**
-   * Overwrite the entire folder record.
-   * Pass `{ silent: true }` for mirror writes — these reflect a read,
-   * not a user action, so dispatching change events would cause subscribers
-   * (which themselves call getFolderData) to re-fetch in an infinite loop.
+   * Atomically replace the entire cached folder set with the supplied list.
+   * Used after a successful {@code pullFromServer} - the server is the
+   * source of truth, so any folder absent from the response is dropped
+   * locally too (no orphan rows surviving a server-side delete).
    */
-  async setFolderData(
-    folderId: string,
-    record: FolderRecord,
-    opts?: { silent?: boolean },
-  ): Promise<void> {
-    const db = await this.ensureDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.recordsStore], "readwrite");
-      const store = transaction.objectStore(this.recordsStore);
-      const request = store.put(record);
-      request.onsuccess = () => {
-        if (!opts?.silent) this.dispatchChange(folderId);
-        resolve();
-      };
-      request.onerror = () => reject(new Error("Failed to set folder data"));
+  async replaceAll(folders: FolderRecord[]): Promise<void> {
+    const db = await this.getDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () =>
+        reject(transaction.error ?? new Error("folder cache replace failed"));
+      transaction.onabort = () =>
+        reject(transaction.error ?? new Error("folder cache replace aborted"));
+      store.clear();
+      for (const folder of folders) {
+        store.put(folder);
+      }
     });
   }
 
-  async clearFolder(folderId: string): Promise<void> {
-    const db = await this.ensureDB();
+  /** Insert or overwrite a single folder in the cache. */
+  async upsertFolder(folder: FolderRecord): Promise<void> {
+    const db = await this.getDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const req = store.put(folder);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve();
+    });
+  }
+
+  /** Remove a set of folders from the cache (after a successful server delete). */
+  async removeFolders(ids: FolderId[]): Promise<void> {
+    if (ids.length === 0) return;
+    const db = await this.getDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () =>
+        reject(transaction.error ?? new Error("folder cache delete failed"));
+      transaction.onabort = () =>
+        reject(transaction.error ?? new Error("folder cache delete aborted"));
+      for (const id of ids) store.delete(id);
+    });
+  }
+
+  async getAllFolders(): Promise<FolderRecord[]> {
+    const db = await this.getDatabase();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.recordsStore], "readwrite");
-      const store = transaction.objectStore(this.recordsStore);
-      const request = store.delete(folderId);
+      const transaction = db.transaction([this.storeName], "readonly");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.getAll();
+      request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        this.dispatchChange(folderId);
-        resolve();
+        const records = (request.result as FolderRecord[]) ?? [];
+        resolve(records);
       };
-      request.onerror = () => reject(new Error("Failed to clear folder"));
+    });
+  }
+
+  async getFolder(id: FolderId): Promise<FolderRecord | null> {
+    const db = await this.getDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readonly");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.get(id);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const record = request.result as FolderRecord | undefined;
+        resolve(record ?? null);
+      };
+    });
+  }
+
+  async clearAll(): Promise<void> {
+    const db = await this.getDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.clear();
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
     });
   }
 }
 
-export const folderStorage = new FolderStorage();
+export const folderStorage = new FolderStorageService();

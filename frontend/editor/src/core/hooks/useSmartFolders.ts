@@ -8,7 +8,7 @@ import {
   smartFolderStorage,
   SMART_FOLDER_STORAGE_CHANGE_EVENT,
 } from "@app/services/smartFolderStorage";
-import { folderStorage } from "@app/services/folderStorage";
+import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderRetryScheduleStorage } from "@app/services/folderRetryScheduleStorage";
@@ -72,7 +72,7 @@ export function useSmartFolders(): UseSmartFoldersReturn {
   );
 
   const deleteFolder = useCallback(async (id: string): Promise<void> => {
-    const record = await folderStorage.getFolderData(id);
+    const record = await watchFolderFileStorage.getFolderData(id);
     if (record) {
       // Only delete input files the folder created from disk — never touch sidebar-sourced files.
       const ownedInputIds = Object.entries(record.files)
@@ -91,7 +91,7 @@ export function useSmartFolders(): UseSmartFoldersReturn {
         ),
       );
     }
-    await folderStorage.clearFolder(id);
+    await watchFolderFileStorage.clearFolder(id);
     await folderRunStateStorage.clearFolderRunState(id);
     await folderRetryScheduleStorage.clearFolder(id).catch(() => {});
     await folderSeenFilesStorage.clearFolder(id).catch(() => {});

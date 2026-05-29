@@ -1,7 +1,7 @@
 /**
  * Polls local input directories for Watch Folders with inputSource === 'local-folder'.
  * On each cycle it scans the chosen directory, skips already-seen files,
- * registers new ones in folderStorage, and kicks off the automation pipeline.
+ * registers new ones in watchFolderFileStorage, and kicks off the automation pipeline.
  *
  * Polling only happens while the page is visible; the interval is reset on visibility restore.
  */
@@ -9,7 +9,7 @@
 import { useEffect, useRef } from "react";
 import { SmartFolder } from "@app/types/smartFolders";
 import { smartFolderStorage } from "@app/services/smartFolderStorage";
-import { folderStorage } from "@app/services/folderStorage";
+import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 import {
   folderSeenFilesStorage,
@@ -70,7 +70,9 @@ export function useLocalFolderPoller(
             );
           if (!hasPermission) continue;
 
-          const folderData = await folderStorage.getFolderData(folder.id);
+          const folderData = await watchFolderFileStorage.getFolderData(
+            folder.id,
+          );
           // Build set of file names already in the folder (any status) to avoid duplicates
           // keyed by name+size (can't use lastModified — file handle gives same value each time)
           const processingNames = new Set(
@@ -105,11 +107,15 @@ export function useLocalFolderPoller(
 
             const { inputFileId, ownedByFolder } = await resolveInputFile(file);
 
-            await folderStorage.addFileToFolder(folder.id, inputFileId, {
-              status: "pending",
-              name: file.name,
-              ownedByFolder,
-            });
+            await watchFolderFileStorage.addFileToFolder(
+              folder.id,
+              inputFileId,
+              {
+                status: "pending",
+                name: file.name,
+                ownedByFolder,
+              },
+            );
 
             void runPipelineRef.current(
               folder,

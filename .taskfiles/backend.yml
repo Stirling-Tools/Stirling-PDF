@@ -22,12 +22,13 @@ tasks:
     vars:
       PORT: '{{.PORT | default "8080"}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+      AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   dev:bundled:
@@ -40,10 +41,10 @@ tasks:
         platforms: [linux, darwin]
 
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase (loads .env.saas.local)"
+    desc: "Start backend in SaaS flavor against Supabase"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
-    # subtaskfile is included with `dir: .`. Drop the file at the repo root.
-    dotenv: ['.env.saas.local']
+    # subtaskfile is included with `dir: .`.
+    dotenv: ['app/.env.saas.local', 'app/.env.saas']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'

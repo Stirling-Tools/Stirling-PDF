@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { folderStorage } from "@app/services/folderStorage";
+import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
 import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
 
 export function useFolderMembership(): Map<string, string[]> {
@@ -30,7 +30,7 @@ export function useFolderMembership(): Map<string, string[]> {
       };
       for (const folder of folders) {
         try {
-          const record = await folderStorage.getFolderData(folder.id);
+          const record = await watchFolderFileStorage.getFolderData(folder.id);
           if (record) {
             Object.entries(record.files).forEach(([fileId, meta]) => {
               add(fileId, folder.id);
@@ -48,7 +48,7 @@ export function useFolderMembership(): Map<string, string[]> {
     };
 
     load();
-    return folderStorage.onFolderChange(load);
+    return watchFolderFileStorage.onFolderChange(load);
   }, [folders]);
 
   return membership;
