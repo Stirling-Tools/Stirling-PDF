@@ -43,6 +43,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -236,10 +237,14 @@ public class AutoSplitPdfController {
         log.debug("Rendering page {} at {} DPI for QR detection", pageNum + 1, QR_DETECTION_DPI);
 
         BufferedImage bim =
-                ExceptionUtils.handleOomRendering(
-                        pageNum + 1,
-                        QR_DETECTION_DPI,
-                        () -> pdfRenderer.renderImageWithDPI(pageNum, QR_DETECTION_DPI));
+                RenderGate.acquireAnd(
+                        () ->
+                                ExceptionUtils.handleOomRendering(
+                                        pageNum + 1,
+                                        QR_DETECTION_DPI,
+                                        () ->
+                                                pdfRenderer.renderImageWithDPI(
+                                                        pageNum, QR_DETECTION_DPI)));
         String result = decodeQRCode(bim);
         bim = null; // allow GC before potential high-DPI retry
 
@@ -251,10 +256,14 @@ public class AutoSplitPdfController {
                         pageNum + 1,
                         maxDpi);
                 BufferedImage highRes =
-                        ExceptionUtils.handleOomRendering(
-                                pageNum + 1,
-                                maxDpi,
-                                () -> pdfRenderer.renderImageWithDPI(pageNum, maxDpi));
+                        RenderGate.acquireAnd(
+                                () ->
+                                        ExceptionUtils.handleOomRendering(
+                                                pageNum + 1,
+                                                maxDpi,
+                                                () ->
+                                                        pdfRenderer.renderImageWithDPI(
+                                                                pageNum, maxDpi)));
                 result = decodeQRCode(highRes);
             }
         }

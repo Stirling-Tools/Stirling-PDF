@@ -31,6 +31,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -171,7 +172,15 @@ public class CropController {
                     PDPage sourcePage = sourceDocument.getPage(i);
                     PDRectangle mediaBox = sourcePage.getMediaBox();
 
-                    BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
+                    // RenderGate caps the number of concurrent page rasters globally so a single
+                    // wide-fanout request cannot exhaust heap before CustomPDFDocumentFactory's
+                    // own gate notices.
+                    final int pageIndex = i;
+                    BufferedImage image =
+                            RenderGate.acquireAnd(
+                                    () ->
+                                            renderer.renderImageWithDPI(
+                                                    pageIndex, DEFAULT_RENDER_DPI));
                     int[] bounds = detectContentBounds(image);
 
                     float scaleX = mediaBox.getWidth() / image.getWidth();

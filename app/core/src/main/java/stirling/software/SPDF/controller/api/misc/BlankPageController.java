@@ -38,6 +38,7 @@ import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -138,12 +139,14 @@ public class BlankPageController {
                         final int currentPageIndex = pageIndex;
 
                         image =
-                                ExceptionUtils.handleOomRendering(
-                                        currentPageIndex + 1,
-                                        dpi,
+                                RenderGate.acquireAnd(
                                         () ->
-                                                pdfRenderer.renderImageWithDPI(
-                                                        currentPageIndex, dpi));
+                                                ExceptionUtils.handleOomRendering(
+                                                        currentPageIndex + 1,
+                                                        dpi,
+                                                        () ->
+                                                                pdfRenderer.renderImageWithDPI(
+                                                                        currentPageIndex, dpi)));
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }
                 }

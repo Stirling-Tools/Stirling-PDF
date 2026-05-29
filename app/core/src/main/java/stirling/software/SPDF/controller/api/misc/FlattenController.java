@@ -32,6 +32,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -110,14 +111,20 @@ public class FlattenController {
                                     document.getPage(pageIndex), pageIndex + 1, renderDpi);
 
                             // Wrap entire rendering operation to catch OutOfMemoryError from any
-                            // depth
+                            // depth. RenderGate caps concurrent rasters globally so the
+                            // BufferedImage peak stays bounded by heap budget, not by the loop
+                            // iteration count.
                             image =
-                                    ExceptionUtils.handleOomRendering(
-                                            pageIndex + 1,
-                                            renderDpi,
+                                    RenderGate.acquireAnd(
                                             () ->
-                                                    pdfRenderer.renderImageWithDPI(
-                                                            pageIndex, renderDpi, ImageType.RGB));
+                                                    ExceptionUtils.handleOomRendering(
+                                                            pageIndex + 1,
+                                                            renderDpi,
+                                                            () ->
+                                                                    pdfRenderer.renderImageWithDPI(
+                                                                            pageIndex,
+                                                                            renderDpi,
+                                                                            ImageType.RGB)));
 
                             PDPage page = new PDPage();
                             page.setMediaBox(document.getPage(i).getMediaBox());
