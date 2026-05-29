@@ -125,11 +125,15 @@ CREATE INDEX IF NOT EXISTS idx_processing_job_step_job
 -- ---------------------------------------------------------------------------------------------
 -- 6. job_artifact_hash — per-step input/output content hashes used by the lineage detector.
 -- ---------------------------------------------------------------------------------------------
+-- content_hash is VARCHAR(128) (not CHAR(64) bound to an SHA-256 hex string): the lineage layer
+-- stores signatures as "type:value" so multiple signature schemes coexist on one column —
+-- e.g. "sha256:<64 hex>" = 71 chars, future "pdf-id:<uuid>" or "pdf-content-stream-hash:..."
+-- comfortably fit too. CHAR padding inside the composite PK would also bring equality footguns.
 CREATE TABLE IF NOT EXISTS job_artifact_hash (
-    job_id        UUID         NOT NULL REFERENCES processing_job(job_id) ON DELETE CASCADE,
-    content_hash  CHAR(64)     NOT NULL,
-    kind          VARCHAR(8)   NOT NULL,
-    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    job_id        UUID          NOT NULL REFERENCES processing_job(job_id) ON DELETE CASCADE,
+    content_hash  VARCHAR(128)  NOT NULL,
+    kind          VARCHAR(8)    NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (job_id, content_hash, kind)
 );
 
@@ -138,6 +142,13 @@ CREATE INDEX IF NOT EXISTS idx_artifact_hash_lookup
 
 -- ---------------------------------------------------------------------------------------------
 -- 7. wallet_ledger — append-only signed-amount ledger keyed on team_id.
+--
+-- Width split (intentional):
+--   - amount_units is INTEGER because a single debit/credit per ledger row never realistically
+--     approaches 2B units (would imply a 50B-page or 10 PB single charge).
+--   - team_memberships.cap_units, wallet_policy.cap_units, and wallet_entitlement_snapshot's
+--     period_spend_units / period_cap_units are BIGINT because they accumulate across a billing
+--     period and admins may legitimately set headroom-cap values into the millions/billions.
 -- ---------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS wallet_ledger (
     entry_id           BIGSERIAL    PRIMARY KEY,
@@ -145,7 +156,7 @@ CREATE TABLE IF NOT EXISTS wallet_ledger (
     actor_user_id      BIGINT,
     entry_type         VARCHAR(32)  NOT NULL,
     bucket             VARCHAR(16)  NOT NULL,
-    amount_units       INTEGER      NOT NULL,
+    amount_units       INTEGER      NOT NULL,  -- per-row signed delta; rollups are BIGINT
     reference_type     VARCHAR(32)  NOT NULL,
     reference_id       VARCHAR(128) NOT NULL,
     policy_id          BIGINT,

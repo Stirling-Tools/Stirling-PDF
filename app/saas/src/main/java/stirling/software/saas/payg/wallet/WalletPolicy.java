@@ -30,6 +30,13 @@ import stirling.software.saas.payg.model.WalletEngine;
 /**
  * Per-team wallet configuration: charging engine, period spend cap, warn/degrade thresholds, the
  * degraded feature set, and the lineage-detection strategy.
+ *
+ * <p><b>No {@code @Version} column by design.</b> Wallet-policy writes only come from admin tooling
+ * (cap set, engine flip, threshold change) — never from the request hot path — so concurrent writes
+ * are essentially impossible. The cost of optimistic-lock retries on a cold-path admin endpoint
+ * outweighs the benefit, and the policy carries no field whose read-modify-write semantics would be
+ * subtly broken without a version column. If we ever start mutating this from multiple writers
+ * (e.g. an automated trial-converter), add {@code @Version} then.
  */
 @Entity
 @Table(name = "wallet_policy")
