@@ -32,6 +32,7 @@ interface ToolButtonProps {
   disableNavigation?: boolean;
   matchedSynonym?: string;
   hasStars?: boolean;
+  showDescription?: boolean;
   /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
   onUnavailableClick?: () => void;
 }
@@ -44,6 +45,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   disableNavigation = false,
   matchedSynonym,
   hasStars = false,
+  showDescription = false,
   onUnavailableClick,
 }) => {
   const { t } = useTranslation();
@@ -183,6 +185,14 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           )}
           {usesCloud && !visuallyUnavailable && <CloudBadge />}
         </div>
+        {showDescription && tool.description && (
+          <span
+            className="tool-button__description"
+            style={{ opacity: visuallyUnavailable ? 0.25 : 1 }}
+          >
+            {tool.description}
+          </span>
+        )}
         {matchedSynonym && (
           <span
             style={{
@@ -205,8 +215,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
-  const selectedStyles = isSelected
-    ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" }
+  const selectedBg = isSelected
+    ? { backgroundColor: "var(--tool-button-selected-bg)" }
     : {};
 
   const buttonElement = navProps ? (
@@ -227,7 +237,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
-          ...selectedStyles,
+          ...selectedBg,
         },
         label: { overflow: "visible" },
       }}
@@ -254,7 +264,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
-          ...selectedStyles,
+          ...selectedBg,
         },
         label: { overflow: "visible" },
       }}
@@ -279,7 +289,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           color: "var(--tools-text-and-icon-color)",
           cursor: visuallyUnavailable ? "not-allowed" : undefined,
           overflow: "visible",
-          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}

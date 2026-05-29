@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { generateId } from "@app/utils/generateId";
 
 function sanitizeFileName(fileName: string) {
   const cleaned = fileName.replace(/[^A-Za-z0-9._-]+/g, "_");
@@ -40,7 +41,7 @@ export async function printPdfNatively(
 
   const tempPath = await join(
     await tempDir(),
-    `stirling-print-${crypto.randomUUID()}-${sanitizeFileName(fileName)}`,
+    `stirling-print-${generateId()}-${sanitizeFileName(fileName)}`,
   );
 
   await writeFile(tempPath, new Uint8Array(await source.arrayBuffer()));

@@ -207,7 +207,12 @@ function ChatMessageBubble({
   );
 }
 
-export function ChatPanel() {
+export interface ChatPanelProps {
+  onBack?: () => void;
+  backLabel?: string;
+}
+
+export function ChatPanel(_props: ChatPanelProps = {}) {
   const { t } = useTranslation();
   const {
     messages,
