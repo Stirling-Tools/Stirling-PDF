@@ -18,6 +18,7 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useAuth } from "@app/auth/UseSession";
 import {
   useIndexedDB,
   useIndexedDBRevision,
@@ -107,19 +108,39 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
-    const [displayName, setDisplayName] = useState<string>("Guest");
+
+    // Each auth layer derives its own displayName from its native user shape.
+    // Fall back to the proprietary REST endpoint only when the auth
+    // context yields nothing - then to "User" as a generic last resort.
+    const { displayName: authDisplayName } = useAuth();
+    const [accountUsername, setAccountUsername] = useState<string | null>(null);
+    const displayName =
+      authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
 
     useEffect(() => {
-      if (!config?.enableLogin) return;
+      if (!config?.enableLogin) {
+        setAccountUsername(null);
+        return;
+      }
+      if (authDisplayName) {
+        // The auth context has a name; don't bother hitting the REST
+        // endpoint, but clear any stale cached value from a prior call.
+        setAccountUsername(null);
+        return;
+      }
       accountService
         .getAccountData()
         .then((data) => {
-          if (data?.username) setDisplayName(data.username);
+          // Always reflect the latest result - including clearing it on
+          // sign-out, when the endpoint returns no username (or 401s into
+          // the catch branch below). Without this, signing out would leave
+          // the old username on screen.
+          setAccountUsername(data?.username ?? null);
         })
         .catch(() => {
-          /* not logged in or security disabled */
+          setAccountUsername(null);
         });
-    }, [config?.enableLogin]);
+    }, [config?.enableLogin, authDisplayName]);
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);

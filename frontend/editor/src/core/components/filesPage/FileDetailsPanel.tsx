@@ -39,6 +39,8 @@ interface FileDetailsPanelProps {
   onRemove: (fileIds: FileId[]) => void;
   /** Save to server; only shown when at least one selected file is local-only. */
   onSaveToServer?: (files: StirlingFileStub[]) => void;
+  /** When set, Save to server renders disabled with this tooltip (storage off). */
+  saveToServerDisabledReason?: string | null;
 }
 
 export function FileDetailsPanel({
@@ -51,6 +53,7 @@ export function FileDetailsPanel({
   onMove,
   onRemove,
   onSaveToServer,
+  saveToServerDisabledReason,
 }: FileDetailsPanelProps) {
   const { t } = useTranslation();
   const { sharingEnabled } = useSharingEnabled();
@@ -319,15 +322,34 @@ export function FileDetailsPanel({
           >
             {t("filesPage.moveTo", "Move to…")}
           </Button>
-          {/* Save to server; shown when any selected file is local-only. */}
+          {/* Save to server; shown when any selected file is local-only. When
+              storage is off it stays visible but disabled with a tooltip (same
+              treatment as Manage sharing above). */}
           {onSaveToServer && localOnlyFiles.length > 0 && (
-            <Button
-              leftSection={<CloudUploadIcon fontSize="small" />}
-              variant="default"
-              onClick={() => onSaveToServer(localOnlyFiles)}
+            <Tooltip
+              label={saveToServerDisabledReason}
+              disabled={!saveToServerDisabledReason}
+              withinPortal
+              multiline
+              w={260}
             >
-              {t("filesPage.saveToServer", "Save to server")}
-            </Button>
+              <Button
+                leftSection={<CloudUploadIcon fontSize="small" />}
+                variant="default"
+                disabled={Boolean(saveToServerDisabledReason)}
+                onClick={() => onSaveToServer(localOnlyFiles)}
+                styles={{
+                  root: {
+                    // Keep tooltip hoverable while button is disabled.
+                    pointerEvents: saveToServerDisabledReason
+                      ? "auto"
+                      : undefined,
+                  },
+                }}
+              >
+                {t("filesPage.saveToServer", "Save to server")}
+              </Button>
+            </Tooltip>
           )}
           <Button
             leftSection={<DeleteIcon fontSize="small" />}

@@ -6,9 +6,18 @@ pub mod default_app;
 pub mod platform;
 pub mod print;
 pub mod updater;
+pub mod window;
 
 pub use backend::{cleanup_backend, get_backend_port, start_backend};
 pub use files::{add_opened_file, clear_opened_files, get_opened_files, pop_opened_files};
+pub use window::{
+    forward_files_to_window,
+    open_files_in_new_window,
+    open_in_new_window,
+    pop_window_file_ids,
+    target_window_label,
+    MAIN_WINDOW_LABEL,
+};
 pub use connection::{
     get_connection_config,
     get_update_mode,
