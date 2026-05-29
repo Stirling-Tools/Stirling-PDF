@@ -73,7 +73,7 @@ export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
  * "application/pdf;charset=UTF-8" or "application/octet-stream", which would
  * otherwise be misrouted into ZIP extraction and yield no usable output.
  */
-async function isZipResponse(
+export async function isZipResponse(
   blob: Blob,
   contentTypeHint?: string,
 ): Promise<boolean> {
