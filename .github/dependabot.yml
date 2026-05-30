@@ -25,6 +25,8 @@ updates:
       - "/docker/frontend"
       - "/docker/base"
       - "/docker/engine"
+      - "/docker/unoserver"
+      - "/engine"
     schedule:
       interval: "weekly"
     cooldown:

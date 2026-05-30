@@ -23,6 +23,9 @@ public class LocalStorageProvider implements StorageProvider {
 
     @Override
     public StoredObject store(User owner, MultipartFile file) throws IOException {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner.id is required for local storage key");
+        }
         String originalFilename = sanitizeFilename(file.getOriginalFilename());
         String storageKey =
                 owner.getId()
@@ -76,6 +79,7 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        return Path.of(filename).getFileName().toString();
+        String stripped = Paths.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
+        return stripped.isBlank() ? "file" : stripped;
     }
 }

@@ -458,6 +458,7 @@ public class FileStorageService {
                         file.getPurpose() != null
                                 ? file.getPurpose().name().toLowerCase(Locale.ROOT)
                                 : null)
+                .folderId(file.getFolder() != null ? file.getFolder().getId() : null)
                 .build();
     }
 
