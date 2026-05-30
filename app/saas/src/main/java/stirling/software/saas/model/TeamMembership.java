@@ -73,6 +73,13 @@ public class TeamMembership implements Serializable {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    /**
+     * Optional per-member spend cap inside the team's wallet, in doc units. NULL means the member
+     * is bounded only by the team-wide cap.
+     */
+    @Column(name = "cap_units")
+    private Long capUnits;
+
     public boolean isLeader() {
         return role == TeamRole.LEADER;
     }
