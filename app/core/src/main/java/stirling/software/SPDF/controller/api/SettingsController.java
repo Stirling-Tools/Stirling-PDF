@@ -16,6 +16,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SettingsApi;
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 
@@ -27,7 +28,9 @@ public class SettingsController {
     private final ApplicationProperties applicationProperties;
     private final EndpointConfiguration endpointConfiguration;
 
-    @AutoJobPostMapping("/update-enable-analytics")
+    @AutoJobPostMapping(
+            value = "/update-enable-analytics",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Hidden
     public ResponseEntity<Map<String, Object>> updateApiKey(@RequestParam Boolean enabled)
             throws IOException {

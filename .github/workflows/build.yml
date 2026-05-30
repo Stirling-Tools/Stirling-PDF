@@ -46,7 +46,7 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -66,6 +66,18 @@ jobs:
       security-events: write
       pull-requests: write
     uses: ./.github/workflows/backend-build.yml
+    secrets: inherit
+
+  db-migration-test:
+    # Boots the current bootJar against H2 fixtures captured from past
+    # releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still
+    # works after Hibernate's ddl-auto=update migrates the schema. Gated on
+    # the `project` filter so doc-only PRs skip this ~5-minute job.
+    if: needs.files-changed.outputs.project == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/db-migration-test.yml
     secrets: inherit
 
   check-generateOpenApiDocs:
@@ -135,6 +147,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      id-token: write
     uses: ./.github/workflows/test-build-docker.yml
     secrets: inherit
     with:
@@ -183,6 +196,7 @@ jobs:
     needs:
       - files-changed
       - build
+      - db-migration-test
       - check-generateOpenApiDocs
       - frontend-validation
       - playwright-e2e
@@ -197,11 +211,17 @@ jobs:
       - dependency-review
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - name: Verify every required job passed (or was legitimately skipped)
         env:
           RESULTS: |
             files-changed=${{ needs.files-changed.result }}
             build=${{ needs.build.result }}
+            db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}

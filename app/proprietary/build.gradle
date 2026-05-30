@@ -5,6 +5,8 @@ repositories {
 
 ext {
     jwtVersion = '0.13.0'
+    awsSdkVersion = '2.44.12'
+    testcontainersMinioVersion = '1.21.4'
 }
 
 bootRun {
@@ -67,10 +69,17 @@ dependencies {
     runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly 'org.postgresql:postgresql:42.7.10'
+    runtimeOnly 'org.postgresql:postgresql:42.7.11'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
+
+    implementation "software.amazon.awssdk:s3:$awsSdkVersion"
+    implementation "software.amazon.awssdk:url-connection-client:$awsSdkVersion"
+
+    testImplementation "org.testcontainers:minio:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:junit-jupiter:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:localstack:$testcontainersMinioVersion"
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}
