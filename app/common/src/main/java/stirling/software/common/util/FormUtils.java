@@ -2289,6 +2289,85 @@ public class FormUtils {
         acroForm.getFields().add(field);
     }
 
+    /** Drops AcroForm fields whose widgets are no longer on any page of {@code document}. */
+    public void pruneOrphanedFormFields(PDDocument document) {
+        if (document == null) {
+            return;
+        }
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+        if (catalog == null) {
+            return;
+        }
+        PDAcroForm form = catalog.getAcroForm(null);
+        if (form == null) {
+            return;
+        }
+        List<PDField> fields = form.getFields();
+        if (fields.isEmpty()) {
+            return;
+        }
+
+        Set<COSDictionary> liveWidgets = collectLiveWidgetDictionaries(document);
+        List<PDField> kept = pruneFieldList(fields, liveWidgets);
+        if (kept.isEmpty()) {
+            catalog.setAcroForm(null);
+        } else if (kept.size() != fields.size()) {
+            form.setFields(kept);
+        }
+    }
+
+    private Set<COSDictionary> collectLiveWidgetDictionaries(PDDocument document) {
+        Set<COSDictionary> live = new HashSet<>();
+        int pageCount = document.getNumberOfPages();
+        for (int i = 0; i < pageCount; i++) {
+            try {
+                for (PDAnnotation annotation : document.getPage(i).getAnnotations()) {
+                    if (annotation instanceof PDAnnotationWidget) {
+                        live.add(annotation.getCOSObject());
+                    }
+                }
+            } catch (IOException e) {
+                log.debug("Failed reading page {} annotations: {}", i, e.getMessage());
+            }
+        }
+        return live;
+    }
+
+    private List<PDField> pruneFieldList(List<PDField> fields, Set<COSDictionary> liveWidgets) {
+        List<PDField> kept = new ArrayList<>(fields.size());
+        for (PDField field : fields) {
+            if (field instanceof PDNonTerminalField nonTerminal) {
+                List<PDField> children = nonTerminal.getChildren();
+                List<PDField> remaining = pruneFieldList(children, liveWidgets);
+                if (remaining.isEmpty()) {
+                    continue;
+                }
+                if (remaining.size() != children.size()) {
+                    nonTerminal.setChildren(remaining);
+                }
+                kept.add(nonTerminal);
+            } else if (field instanceof PDTerminalField terminal) {
+                List<PDAnnotationWidget> widgets = terminal.getWidgets();
+                List<PDAnnotationWidget> liveOnes = new ArrayList<>(widgets.size());
+                for (PDAnnotationWidget widget : widgets) {
+                    if (liveWidgets.contains(widget.getCOSObject())) {
+                        liveOnes.add(widget);
+                    }
+                }
+                if (liveOnes.isEmpty()) {
+                    continue;
+                }
+                if (liveOnes.size() != widgets.size()) {
+                    terminal.setWidgets(liveOnes);
+                }
+                kept.add(terminal);
+            } else {
+                kept.add(field);
+            }
+        }
+        return kept;
+    }
+
     // Delegation methods to GeneralFormCopyUtils for form field transformation
     public boolean hasAnyRotatedPage(PDDocument document) {
         return stirling.software.common.util.GeneralFormCopyUtils.hasAnyRotatedPage(document);

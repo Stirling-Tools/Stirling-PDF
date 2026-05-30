@@ -6,7 +6,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "frontend/public/locales/*/translation.toml"
+      - "frontend/editor/public/locales/*/translation.toml"
       - ".github/scripts/check_language_toml.py"
       - ".github/workflows/check_toml.yml"
 
@@ -27,7 +27,7 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -76,7 +76,7 @@ jobs:
             exit 1
           fi
           # Get changed files and filter for TOML translation files
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
+          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/editor/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
           # Check if any files were found
           if [ ! -s changed_files.txt ]; then
             echo "No TOML translation files changed in this PR"
@@ -166,12 +166,12 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("frontend/public/locales/en-GB/translation.toml")) {
+            if (changedFiles.includes("frontend/editor/public/locales/en-GB/translation.toml")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "frontend/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-GB/translation.toml",
                 ref: branch,
               });
 
@@ -183,7 +183,7 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "frontend/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-GB/translation.toml",
                 ref: "main",
               });
 

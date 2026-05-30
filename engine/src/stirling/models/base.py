@@ -12,9 +12,12 @@ FileId = NewType("FileId", str)
 
 
 class ApiModel(BaseModel):
+    """Base for every contract model crossing a service boundary."""
+
     model_config = ConfigDict(
         alias_generator=to_camel,
         extra="forbid",
         validate_by_name=True,
         validate_by_alias=True,
+        serialize_by_alias=True,
     )

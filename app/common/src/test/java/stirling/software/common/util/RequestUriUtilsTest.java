@@ -99,6 +99,17 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsFrontendRoute_filesRouteOwnedByFrontend() {
+        // /files and /files/<folder-uuid> are FileManagerView routes - they
+        // must fall through to the SPA index.html, not get blocked by the
+        // backend auth filter. Regression test for direct-nav/refresh on
+        // the file manager returning a 401 JSON.
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/files"));
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/files/3331910a-4155-4f71-8111-e38c896bc458"));
+    }
+
+    @Test
     void testIsFrontendRoute_pathWithExtension() {
         assertFalse(RequestUriUtils.isFrontendRoute("", "/some/file.pdf"));
     }
@@ -183,7 +194,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareRootNotPublic() {
-        // Avoid matching bare "/share" or "/share/" — must have a token segment
+        // Avoid matching bare "/share" or "/share/" - must have a token segment
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/", ""));
     }
@@ -197,7 +208,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareApiStillProtected() {
-        // Share-link data APIs must NOT be public — they enforce auth + access checks
+        // Share-link data APIs must NOT be public - they enforce auth + access checks
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(

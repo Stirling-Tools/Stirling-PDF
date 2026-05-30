@@ -25,6 +25,8 @@ updates:
       - "/docker/frontend"
       - "/docker/base"
       - "/docker/engine"
+      - "/docker/unoserver"
+      - "/engine"
     schedule:
       interval: "weekly"
     cooldown:
@@ -126,9 +128,9 @@ updates:
 
   - package-ecosystem: cargo
     directories:
-      - /frontend/src-tauri
-      - /frontend/src-tauri/thumbnail-handler
-      - /frontend/src-tauri/provisioner
+      - /frontend/editor/src-tauri
+      - /frontend/editor/src-tauri/thumbnail-handler
+      - /frontend/editor/src-tauri/provisioner
     schedule:
       interval: "weekly"
     cooldown:

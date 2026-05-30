@@ -71,9 +71,11 @@
     "react-dom": "^19.1.1",
     "react-easy-crop": "^5.5.6",
     "react-i18next": "^15.7.3",
+    "react-markdown": "^9.0.3",
     "react-rnd": "^10.5.2",
     "react-router-dom": "^7.9.1",
     "recharts": "^3.7.0",
+    "remark-gfm": "^4.0.1",
     "signature_pad": "^5.0.4",
     "smol-toml": "^1.4.2",
     "tailwindcss": "^4.1.13",
@@ -122,6 +124,7 @@
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
@@ -147,5 +150,8 @@
       "@testing-library/user-event",
       "@vitest/coverage-v8"
     ]
+  },
+  "overrides": {
+    "devalue": "^5.8.1"
   }
 }

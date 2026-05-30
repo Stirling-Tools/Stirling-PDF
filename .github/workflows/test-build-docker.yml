@@ -12,11 +12,19 @@ on:
         required: false
         type: string
         default: "false"
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
 
 permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   # TODO: extract a pre-matrix `prepare` job that runs once and produces
   # shared artifacts for the three matrix entries below to consume:
   #   1. `task backend:build` — currently runs 3× in parallel with
@@ -32,7 +40,14 @@ jobs:
   # spring-security=true matrix entry if `task backend:build` and
   # `task backend:build:ci` produce equivalent JARs (verify before wiring).
   test-build-docker-images:
-    runs-on: ubuntu-latest
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -48,7 +63,7 @@ jobs:
             cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -80,7 +95,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ~/.gradle/wrapper
@@ -105,10 +120,16 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+
       - name: Set up QEMU
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         id: buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -134,7 +155,22 @@ jobs:
             echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build ${{ matrix.docker-rev }}
+      - name: Build ${{ matrix.docker-rev }} (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./${{ matrix.docker-rev }}
+          push: false
+          platforms: ${{ steps.build-params.outputs.platforms }}
+          build-args: |
+            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
+          provenance: true
+          sbom: true
+
+      - name: Build ${{ matrix.docker-rev }} (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -160,3 +196,86 @@ jobs:
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+  test-build-unoserver-image:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+
+      - name: Set up QEMU
+        if: env.USE_DEPOT != 'true'
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build docker/unoserver/Dockerfile (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Build docker/unoserver/Dockerfile (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          cache-from: type=gha,scope=stirling-unoserver
+          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Smoke test the built image
+        run: |
+          set -eu
+          docker run -d --name unoserver-smoke \
+            -e UNOSERVER_RECYCLE_INTERVAL_SECONDS=0 \
+            stirling-unoserver:pr-test
+          deadline=$((SECONDS + 60))
+          while [ $SECONDS -lt $deadline ]; do
+            status=$(docker inspect -f '{{.State.Health.Status}}' unoserver-smoke 2>/dev/null || echo "starting")
+            if [ "$status" = "healthy" ]; then
+              echo "unoserver became healthy"
+              docker logs unoserver-smoke | tail -30
+              docker rm -f unoserver-smoke
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "unoserver did not become healthy in time"
+          docker logs unoserver-smoke || true
+          docker rm -f unoserver-smoke || true
+          exit 1

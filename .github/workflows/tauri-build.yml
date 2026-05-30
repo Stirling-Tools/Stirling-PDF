@@ -4,6 +4,10 @@ name: Build Tauri Applications
 # Linux). Called from build.yml on PRs that touch desktop sources (gated
 # via the `tauri` filter in .github/config/.files.yaml). Also runnable
 # on demand via workflow_dispatch with a per-platform selector.
+#
+# Note: editing this file is itself enough to make the `tauri` path filter
+# match, which is how non-desktop PRs (e.g. backend-only fixes) opt into a
+# desktop smoke build.
 on:
   workflow_call:
     inputs:
@@ -37,7 +41,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -47,12 +51,10 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           PLATFORM: ${{ inputs.platform }}
         run: |
-          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
-          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"}'
-          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}'
+          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
+          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
+          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
-          # Resolve requested platform — populated by either workflow_dispatch
-          # or workflow_call inputs; both paths default to "all".
           case "$PLATFORM" in
             windows) ENTRIES=("$WINDOWS") ;;
             macos)   ENTRIES=("$MACOS") ;;
@@ -84,9 +86,10 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -112,10 +115,6 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # x86_64 JDK is set up first so the aarch64 step below can leave its
-      # JAVA_HOME as the active one. The macOS universal JRE build needs
-      # jmods from both arches; the x64 path is captured into the env
-      # before the second setup-java overwrites JAVA_HOME.
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -142,21 +141,24 @@ jobs:
       - name: Setup Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
-      # Build the universal JRE before desktop:prepare so the jlink:runtime
-      # task short-circuits on its `test -d runtime/jre` status check.
       - name: Build universal macOS JRE
         if: matrix.platform == 'macos-15'
         env:
           AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+          JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:jlink:universal-mac
 
       - name: Prepare desktop build
-        run: task desktop:prepare
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
+          JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
+        run: task desktop:prepare
+
+      - name: Run Tauri/Cargo tests
+        run: task desktop:test
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -269,6 +271,10 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
 
+      - name: Sign JPDFium dylibs inside bootJar (macOS only)
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
+
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
         run: |
@@ -299,7 +305,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -357,7 +363,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend
+          projectPath: ./frontend/editor
           tauriScript: npx tauri
           # Linux: build deb+rpm only here. AppImage runs in its own
           # continue-on-error step below so its persistent linuxdeploy
@@ -382,7 +388,7 @@ jobs:
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
-          projectPath: ./frontend
+          projectPath: ./frontend/editor
           tauriScript: npx tauri
           args: --bundles appimage
 
@@ -400,7 +406,7 @@ jobs:
         if: matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
           DMG_FILE=$(find . -name "*.dmg" | head -1)
           if [ -n "$DMG_FILE" ]; then
             echo "Found DMG: $DMG_FILE"
@@ -414,20 +420,22 @@ jobs:
       - name: Rename artifacts
         shell: bash
         run: |
-          mkdir -p ./dist
-          cd ./frontend/src-tauri/target
+          # Absolute dist path so the cd below can't break the copy targets.
+          DIST="$GITHUB_WORKSPACE/dist"
+          mkdir -p "$DIST"
+          cd ./frontend/editor/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             # Only ship the MSI installer. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
-            find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
+            find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
-            find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
+            find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
           else
-            find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
-            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
-            find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+            find . -name "*.deb" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm" \;
+            find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
       # Verify the MSI AND the inner exe extracted from it are signed.
@@ -505,7 +513,7 @@ jobs:
       - name: Verify build artifacts
         shell: bash
         run: |
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
 
           # Check for expected artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
@@ -536,7 +544,7 @@ jobs:
       - name: Test artifact sizes
         shell: bash
         run: |
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
           find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then
@@ -557,7 +565,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -648,7 +656,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 

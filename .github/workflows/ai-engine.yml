@@ -1,8 +1,9 @@
 name: AI Engine CI
 
-# Validates the Python AI engine: regenerates tool models, runs fixers,
-# lint, type-check, and tests. Called from build.yml on PRs and merge_group;
-# also runs directly on push to main as a post-merge safety net.
+# Validates the Python AI engine: regenerates tool models and runs the
+# engine quality gate (lint, type-check, format-check, tests). Called from
+# build.yml on PRs and merge_group; also runs directly on push to main as
+# a post-merge safety net.
 on:
   workflow_call:
   push:
@@ -17,14 +18,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -49,27 +52,95 @@ jobs:
         run: task engine:tool-models
 
       - name: Verify tool models are up to date
+        id: tool-models-check
+        continue-on-error: true
+        run: git diff --exit-code engine/src/stirling/models/tool_models.py
+
+      - name: Comment on tool models check failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.tool-models-check.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- tool-models-check -->';
+            const body = [
+              marker,
+              '### Tool Models Check Failed',
+              '',
+              'The generated `engine/src/stirling/models/tool_models.py` is out of date with the Java OpenAPI spec and will need to be regenerated before it can be merged in.',
+              '',
+              'Run `task engine:tool-models` to regenerate, then commit the updated file.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if tool models check failed
+        if: steps.tool-models-check.outcome == 'failure'
         run: |
-          if ! git diff --exit-code engine/src/stirling/models/tool_models.py; then
-            echo "tool_models.py is out of date."
-            echo "Run 'task engine:tool-models' locally and commit the updated file."
-            exit 1
-          fi
+          echo "============================================"
+          echo "  Tool Models Check Failed"
+          echo "============================================"
+          echo ""
+          echo "The generated engine/src/stirling/models/tool_models.py"
+          echo "is out of date with the Java OpenAPI spec and will"
+          echo "need to be regenerated before it can be merged in."
+          echo ""
+          echo "Run 'task engine:tool-models' to regenerate, then"
+          echo "commit the updated file."
+          echo "============================================"
+          exit 1
 
-      - name: Run fixers
-        run: task engine:fix
+      - name: Remove tool models check comment on success
+        if: steps.tool-models-check.outcome == 'success' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- tool-models-check -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
 
-      - name: Verify fixes are committed
-        id: fixer_changes
-        run: |
-          if ! git diff --quiet; then
-            git --no-pager diff --stat
-            echo "::error::There are issues with your Python code that will need to be fixed before they can be merged in. Run 'task engine:fix' to auto-fix what can be fixed automatically, then run 'task engine:check' to see what still needs fixing manually."
-            exit 1
-          fi
+      - name: Quality-check engine
+        id: engine-check
+        run: task engine:check
+        continue-on-error: true
 
-      - name: Comment on fixer failures
-        if: steps.fixer_changes.outcome == 'failure' && github.event_name == 'pull_request'
+      - name: Comment on engine check failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.engine-check.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -105,11 +176,39 @@ jobs:
               });
             }
 
-      - name: Run linting
-        run: task engine:lint
+      - name: Fail if engine check failed
+        if: steps.engine-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Engine Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your Python code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task engine:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task engine:check'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1
 
-      - name: Run type checking
-        run: task engine:typecheck
-
-      - name: Run tests
-        run: task engine:test
+      - name: Remove engine check comment on success
+        if: steps.engine-check.outcome == 'success' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- engine-check -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }

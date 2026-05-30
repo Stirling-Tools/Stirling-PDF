@@ -23,6 +23,10 @@ customFiles/
 configs/
 watchedFolders/
 clientWebUI/
+# Scratch dir used by local fixture-regeneration runs (see
+# app/proprietary/src/test/resources/db-migration-fixtures/README.md).
+# Holds downloaded JARs and disposable workdirs. Never committed.
+.alpha-local/
 !cucumber/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
@@ -32,6 +36,7 @@ exampleYmlFiles/stirling/
 /testing/cucumber/junit/
 /testing/cucumber/report.html
 /testing/.failed_tests
+/.test-state/
 SwaggerDoc.json
 
 # Runtime storage for uploaded files and user data (not Java source code)
@@ -156,7 +161,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
-frontend/src-tauri/provisioner/target
+frontend/editor/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -264,9 +269,14 @@ docs/type3/signatures/
 # Type3 sample PDFs (development only)
 **/type3/samples/
 
+**/application-dev-local.properties
+
 # Claude
 .claude/
 
 # Playwright MCP screenshots / traces
 .playwright-mcp/
 *.playwright-mcp.png
+
+# Local screenshot artifacts from *-screenshots.spec.ts
+frontend/screenshots/

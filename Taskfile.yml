@@ -3,7 +3,7 @@ version: '3'
 output: prefixed
 
 vars:
-  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts\find-free-port.ps1 -Preferred
+  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts/find-free-port.ps1
   FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
 
 includes:
@@ -22,6 +22,9 @@ includes:
   desktop:
     taskfile: .taskfiles/desktop.yml
     dir: frontend
+  e2e:
+    taskfile: .taskfiles/e2e.yml
+    dir: .
 
 tasks:
   # ============================================================
@@ -42,7 +45,7 @@ tasks:
     desc: "Start backend + frontend concurrently on free ports"
     vars:
       PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080,5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
       FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
     deps:
@@ -55,11 +58,28 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
+  dev:saas:
+    desc: "Start SaaS backend + frontend concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev:saas
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+      - task: frontend:dev:saas
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
   dev:all:
     desc: "Start backend + frontend + engine concurrently on free ports"
     vars:
       PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080,5173,5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
       FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
       ENGINE_PORT: '{{index (splitList "\n" .PORTS) 2}}'
@@ -71,7 +91,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
-      - task: frontend:dev:prototypes
+      - task: frontend:dev
         vars:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'

@@ -86,7 +86,7 @@ If you're using Tauri's built-in updater feature:
 
 ## Configuration Files
 
-### 1. Tauri Configuration (frontend/src-tauri/tauri.conf.json)
+### 1. Tauri Configuration (frontend/editor/src-tauri/tauri.conf.json)
 
 The Windows signing configuration is already set up:
 

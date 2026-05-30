@@ -2,7 +2,7 @@ name: Update Package Manager Manifests
 
 on:
   release:
-    types: [ released ]
+    types: [released]
   workflow_dispatch:
     inputs:
       version:
@@ -28,7 +28,7 @@ jobs:
       jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -79,12 +79,12 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
       - name: Checkout homebrew-stirling-pdf tap (also hosts Scoop bucket)
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: Stirling-Tools/homebrew-stirling-pdf
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
