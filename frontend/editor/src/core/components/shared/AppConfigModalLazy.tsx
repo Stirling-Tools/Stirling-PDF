@@ -22,11 +22,9 @@ export default function AppConfigModalLazy({
     if (opened) setShouldMount(true);
   }, [opened]);
 
-  if (!shouldMount) return null;
-
   return (
     <Suspense fallback={null}>
-      <AppConfigModal opened={opened} onClose={onClose} />
+      {shouldMount && <AppConfigModal opened={opened} onClose={onClose} />}
     </Suspense>
   );
 }

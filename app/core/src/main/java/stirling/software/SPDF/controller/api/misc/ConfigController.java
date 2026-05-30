@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -91,6 +93,63 @@ public class ConfigController {
         return null;
     }
 
+    /**
+     * Resolve the frontend URL the client should advertise to phones / share-link recipients.
+     * Priority: explicit system.frontendUrl, then the Host the user is already using to reach this
+     * server (works for Docker, reverse proxies, and bare-metal LANs), then a detected site-local
+     * IPv4, then empty.
+     */
+    // visible for testing
+    String resolveFrontendUrl(HttpServletRequest request, AppConfig appConfig) {
+        String configured = applicationProperties.getSystem().getFrontendUrl();
+        if (configured != null && !configured.isBlank()) {
+            return configured;
+        }
+        if (request != null) {
+            String host = request.getServerName();
+            if (host != null && !host.isBlank() && !isLoopbackHost(host)) {
+                String scheme = request.getScheme();
+                int port = request.getServerPort();
+                boolean defaultPort =
+                        ("http".equals(scheme) && port == 80)
+                                || ("https".equals(scheme) && port == 443);
+                return defaultPort ? scheme + "://" + host : scheme + "://" + host + ":" + port;
+            }
+        }
+        String localIp = GeneralUtils.getLocalNetworkIp();
+        if (localIp != null) {
+            String scheme = appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
+            return scheme + "://" + localIp + ":" + resolveEffectiveServerPort(appConfig);
+        }
+        return "";
+    }
+
+    /**
+     * The port the embedded server is actually listening on. With {@code server.port=0} (an
+     * ephemeral port, which the desktop bundle uses to dodge port clashes) the configured value
+     * stays {@code "0"} while Spring publishes the real bound port as {@code local.server.port}
+     * once the server is up. Advertised URLs (the mobile-scanner QR, share links) must carry the
+     * real port - a literal {@code :0} is unreachable and browsers reject it as ERR_UNSAFE_PORT.
+     */
+    // visible for testing
+    String resolveEffectiveServerPort(AppConfig appConfig) {
+        String configured = appConfig.getServerPort();
+        if (configured == null || "0".equals(configured.trim())) {
+            String actual = applicationContext.getEnvironment().getProperty("local.server.port");
+            if (actual != null && !actual.isBlank()) {
+                return actual;
+            }
+        }
+        return configured;
+    }
+
+    private static boolean isLoopbackHost(String host) {
+        return "localhost".equalsIgnoreCase(host)
+                || "127.0.0.1".equals(host)
+                || "::1".equals(host)
+                || "0:0:0:0:0:0:0:1".equals(host);
+    }
+
     /** Check if running Enterprise edition dynamically. */
     private Boolean isRunningEE() {
         // Use LicenseService for fresh license status if available
@@ -107,7 +166,7 @@ public class ConfigController {
     }
 
     @GetMapping("/app-config")
-    public ResponseEntity<Map<String, Object>> getAppConfig() {
+    public ResponseEntity<Map<String, Object>> getAppConfig(HttpServletRequest request) {
         Map<String, Object> configData = new HashMap<>();
 
         try {
@@ -121,20 +180,10 @@ public class ConfigController {
             // Note: Frontend expects "baseUrl" field name for compatibility
             configData.put("baseUrl", appConfig.getBackendUrl());
             configData.put("contextPath", appConfig.getContextPath());
-            configData.put("serverPort", appConfig.getServerPort());
+            configData.put("serverPort", resolveEffectiveServerPort(appConfig));
 
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
-            if ((frontendUrl == null || frontendUrl.isBlank())
-                    && Boolean.parseBoolean(
-                            System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
-                String localIp = GeneralUtils.getLocalNetworkIp();
-                if (localIp != null) {
-                    String scheme =
-                            appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
-                    frontendUrl = scheme + "://" + localIp + ":" + appConfig.getServerPort();
-                }
-            }
-            configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
+            configData.put("frontendUrl", resolveFrontendUrl(request, appConfig));
 
             // Add mobile scanner settings
             configData.put(
@@ -276,6 +325,9 @@ public class ConfigController {
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+
+            // AI Engine settings
+            configData.put("aiEngineEnabled", applicationProperties.getAiEngine().isEnabled());
 
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =

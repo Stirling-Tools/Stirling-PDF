@@ -1,6 +1,11 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { alert } from "@app/components/toast";
-import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
+import {
+  setupApiInterceptors as coreSetup,
+  getAuthHeaders,
+} from "@core/services/apiClientSetup";
+
+export { getAuthHeaders };
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";

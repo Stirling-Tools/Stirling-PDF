@@ -1094,6 +1094,15 @@ class SanitizePdfParams(ApiModel):
     remove_xmp_metadata: bool = Field(False, description="Remove XMP metadata from the PDF")
 
 
+class Orientation1(StrEnum):
+    """
+    Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+    """
+
+    portrait = "PORTRAIT"
+    landscape = "LANDSCAPE"
+
+
 class PageSize(StrEnum):
     """
     The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
@@ -1112,6 +1121,10 @@ class PageSize(StrEnum):
 
 
 class ScalePagesParams(ApiModel):
+    orientation: Orientation1 = Field(
+        Orientation1.portrait,
+        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+    )
     page_size: PageSize = Field(
         ..., description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."
     )
