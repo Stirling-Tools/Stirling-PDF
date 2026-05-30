@@ -3,11 +3,20 @@ import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
 import { AutomationFileProcessor } from "@app/utils/automationFileProcessor";
-import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  isZipResponse,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 
 /**
- * Process multi-file tool response (handles ZIP or single PDF responses)
+ * Process a tool response from an automation step (ZIP archive or single file).
+ *
+ * The single-vs-ZIP decision uses signature-based detection rather than an
+ * exact Content-Type match - reverse proxies (e.g. nginx with `charset utf-8;`)
+ * and some backends ship single PDFs as `application/pdf;charset=UTF-8` or
+ * `application/octet-stream`, both of which would otherwise fall through to
+ * ZIP extraction and produce a bogus `automation_*.zip` wrapping the PDF.
  */
 const processMultiFileResponse = async (
   responseData: Blob,
@@ -16,42 +25,41 @@ const processMultiFileResponse = async (
   filePrefix: string,
   preserveBackendFilename?: boolean,
 ): Promise<File[]> => {
-  // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
-  if (
-    responseData.type === "application/pdf" ||
-    (responseHeaders && responseHeaders["content-type"] === "application/pdf")
-  ) {
-    // Single PDF response - use processResponse to respect preserveBackendFilename
-    const processedFiles = await processResponse(
+  const contentTypeHeader = responseHeaders?.["content-type"];
+  const looksLikeZip = await isZipResponse(
+    responseData,
+    typeof contentTypeHeader === "string" ? contentTypeHeader : undefined,
+  );
+
+  if (!looksLikeZip) {
+    return processResponse(
       responseData,
       files,
       filePrefix,
       undefined,
       preserveBackendFilename ? responseHeaders : undefined,
     );
-    return processedFiles;
-  } else {
-    // ZIP response
-    const result =
-      await AutomationFileProcessor.extractAutomationZipFiles(responseData);
-
-    if (result.errors.length > 0) {
-      console.warn(`⚠️ File processing warnings:`, result.errors);
-    }
-
-    // Apply prefix to files, replacing any existing prefix
-    const processedFiles =
-      filePrefix && !preserveBackendFilename
-        ? result.files.map((file) => {
-            const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
-            return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
-              type: file.type,
-            });
-          })
-        : result.files;
-
-    return processedFiles;
   }
+
+  const result =
+    await AutomationFileProcessor.extractAutomationZipFiles(responseData);
+
+  if (result.errors.length > 0) {
+    console.warn(`⚠️ File processing warnings:`, result.errors);
+  }
+
+  // Apply prefix to files, replacing any existing prefix
+  const processedFiles =
+    filePrefix && !preserveBackendFilename
+      ? result.files.map((file) => {
+          const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
+          return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
+            type: file.type,
+          });
+        })
+      : result.files;
+
+  return processedFiles;
 };
 
 /**

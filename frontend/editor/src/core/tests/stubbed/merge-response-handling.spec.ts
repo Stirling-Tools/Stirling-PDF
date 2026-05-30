@@ -1,3 +1,4 @@
+import type { Page, Route } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import {
   uploadFiles,
@@ -25,21 +26,20 @@ const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 const SAMPLE_PDF_BYTES = fs.readFileSync(SAMPLE_PDF);
 
-async function mockMergeWithContentType(page, contentType: string) {
-  await page.route("**/api/v1/general/merge-pdfs", (route) =>
+async function mockMergeWithContentType(page: Page, contentType: string) {
+  await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
     route.fulfill({
       status: 200,
       contentType,
       headers: {
-        "Content-Disposition":
-          'attachment; filename="merged_unsigned.pdf"',
+        "Content-Disposition": 'attachment; filename="merged_unsigned.pdf"',
       },
       body: SAMPLE_PDF_BYTES,
     }),
   );
 }
 
-async function runMergeAndOpenReview(page) {
+async function runMergeAndOpenReview(page: Page) {
   await page.goto("/merge");
   await uploadFiles(page, [SAMPLE_PDF, SAMPLE_PDF]);
   await switchToEditorIfViewerMode(page);
