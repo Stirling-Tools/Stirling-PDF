@@ -18,7 +18,7 @@ import { processResponse } from "@app/utils/toolResponseProcessor";
  * `application/octet-stream`, both of which would otherwise fall through to
  * ZIP extraction and produce a bogus `automation_*.zip` wrapping the PDF.
  */
-const processMultiFileResponse = async (
+export const processMultiFileResponse = async (
   responseData: Blob,
   responseHeaders: any,
   files: File[],
