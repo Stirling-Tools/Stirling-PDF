@@ -188,10 +188,23 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
-        // If no Authorization header was sent, the user was never authenticated —
-        // the 401 is expected (e.g. endpoint availability checks when not signed in).
-        // Don't attempt a refresh or open the sign-in modal in that case.
+        // No token was attached. For background GETs (e.g. endpoint
+        // availability checks before sign-in) staying silent is correct -
+        // popping the modal would be intrusive. For user-initiated
+        // mutations (tool POSTs etc.), silently rejecting leaves the user
+        // with no feedback: the desktop httpErrorHandler suppresses the
+        // 401 toast, and there is no refresh path without an existing
+        // token. That is the "fast animation then nothing happens" symptom.
+        // Surface the sign-in modal so the user knows what to do.
         if (!originalRequest.headers.Authorization) {
+          const method = (originalRequest.method || "get").toLowerCase();
+          if (method !== "get") {
+            window.dispatchEvent(
+              new CustomEvent(OPEN_SIGN_IN_EVENT, {
+                detail: { locked: false },
+              }),
+            );
+          }
           return Promise.reject(error);
         }
         originalRequest._retry = true;

@@ -91,4 +91,42 @@ test.describe("Merge multi-file response detection", () => {
     await expect(review).toBeVisible();
     await expect(review.getByText(/result\.zip/i)).toHaveCount(0);
   });
+
+  // Separately documents the symptom Gilles described ("fast animation then
+  // nothing happens"). The multi-file response-detection fix above produces a
+  // visible (wrong) result.zip pre-fix - which the user would see, not call
+  // "nothing happens". A 401 from the connected backend on the other hand
+  // produces no review panel, no result file. This test pins what the user
+  // actually sees in that case so we can compare it to the report.
+  test("401 on merge: no result panel, no result file appears", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
+      route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Unauthorized" }),
+      }),
+    );
+
+    await page.goto("/merge");
+    await uploadFiles(page, [SAMPLE_PDF, SAMPLE_PDF]);
+    await switchToEditorIfViewerMode(page);
+
+    const runBtn = page.locator('[data-tour="run-button"]');
+    await expect(runBtn).toBeEnabled({ timeout: 15_000 });
+    await runBtn.click();
+
+    // Give the UI ample time to surface any result or error.
+    await page.waitForTimeout(3000);
+
+    // No successful result.
+    await expect(
+      page.locator('[data-testid="review-panel-container"]'),
+    ).not.toBeVisible();
+    // No bogus result.zip.
+    await expect(page.getByText(/result\.zip/i)).toHaveCount(0);
+    // No merged file in the file list.
+    await expect(page.getByText(/merged_/i)).toHaveCount(0);
+  });
 });
