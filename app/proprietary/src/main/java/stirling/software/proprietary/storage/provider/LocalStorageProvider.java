@@ -79,7 +79,7 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped = Paths.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
+        String stripped = Path.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
         return stripped.isBlank() ? "file" : stripped;
     }
 }
