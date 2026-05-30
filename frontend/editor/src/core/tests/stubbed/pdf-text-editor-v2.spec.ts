@@ -155,6 +155,32 @@ test.describe("PDF text editor v2 - editing", () => {
   });
 });
 
+test.describe("PDF text editor v2 - overlay grows to fit typed text", () => {
+  test("typing wider text expands the overlay so nothing gets clipped", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const beforeWidth = await firstRun.evaluate(
+      (el) => el.getBoundingClientRect().width,
+    );
+
+    const testid = await firstRun.getAttribute("data-testid");
+    await typeIntoRun(
+      page,
+      testid!,
+      "This Replacement Is Much Wider Than The Original",
+    );
+
+    const afterWidth = await firstRun.evaluate(
+      (el) => el.getBoundingClientRect().width,
+    );
+    expect(afterWidth).toBeGreaterThan(beforeWidth);
+  });
+});
+
 test.describe("PDF text editor v2 - selection + properties", () => {
   test("selecting a run enables the toolbar controls", async ({ page }) => {
     await gotoV2(page);

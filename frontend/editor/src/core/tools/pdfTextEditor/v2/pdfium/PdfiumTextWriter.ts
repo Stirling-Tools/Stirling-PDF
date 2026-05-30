@@ -2,6 +2,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { writeUtf16 } from "@app/services/pdfiumService";
+import { preserveConsecutiveSpaces } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
  * Pushes `TextRun` mutations into PDFium.
@@ -19,7 +20,7 @@ export class PdfiumTextWriter {
   ): void {
     if (!run.pdfiumObjPtr) return;
     const m = doc.module;
-    const ptr = writeUtf16(m, run.text);
+    const ptr = writeUtf16(m, preserveConsecutiveSpaces(run.text));
     try {
       m.FPDFText_SetText(run.pdfiumObjPtr, ptr);
     } finally {

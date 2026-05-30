@@ -39,6 +39,24 @@ function cssStyleFor(fontId: string): "italic" | "normal" {
   return /italic|oblique/i.test(fontId) ? "italic" : "normal";
 }
 
+/**
+ * Pick an editing-mask color that always contrasts with the text fill.
+ * White text on a white mask would be invisible; perceived-luminance
+ * picks white-for-dark-text and dark-for-light-text.
+ */
+function contrastingMaskFor(fill: {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}): string {
+  // ITU-R BT.601 luma; 0 = black, 255 = white.
+  const luma = (fill.r * 299 + fill.g * 587 + fill.b * 114) / 1000;
+  return luma > 160
+    ? "rgba(30, 30, 30, 0.85)"
+    : "rgba(255, 255, 255, 0.9)";
+}
+
 let sharedMeasureCanvas: HTMLCanvasElement | null = null;
 
 /**
@@ -173,12 +191,17 @@ export function TextRunOverlay({
   const fontStyle = cssStyleFor(run.fontId);
   const fontSizePx = Math.max(4, run.fontSize * scale);
   const isParagraph = (run.paragraphLineCount ?? 1) > 1;
-  const measuredWidth = isParagraph
-    ? measureMaxLineWidth(run.text, fontFamily, fontWeight, fontStyle, fontSizePx)
-    : 0;
-  const width = isParagraph
-    ? Math.max(pdfWidth, measuredWidth + fontSizePx)
-    : pdfWidth;
+  const measuredWidth = measureMaxLineWidth(
+    run.text,
+    fontFamily,
+    fontWeight,
+    fontStyle,
+    fontSizePx,
+  );
+  // Always grow the overlay to fit the typed text + a small buffer.
+  // Without this, typing wider content than the original bounds gets
+  // clipped by `overflow: hidden` and the user sees only a few chars.
+  const width = Math.max(pdfWidth, measuredWidth + fontSizePx);
 
   return (
     <div
@@ -254,9 +277,12 @@ export function TextRunOverlay({
           : 1,
         whiteSpace: (run.paragraphLineCount ?? 1) > 1 ? "pre-wrap" : "pre",
         color: focused ? toCssHex(run.fill) : "transparent",
-        // Mask the underlying bitmap with a soft white while editing.
+        // Mask the underlying bitmap while editing. Light text needs a
+        // dark mask and vice versa - white text on a white mask would
+        // be invisible. Use the perceived luminance of the text color
+        // to pick which side of the contrast to land on.
         backgroundColor: focused
-          ? "rgba(255,255,255,0.9)"
+          ? contrastingMaskFor(run.fill)
           : highlighted
             ? "rgba(255,217,0,0.45)"
             : selected

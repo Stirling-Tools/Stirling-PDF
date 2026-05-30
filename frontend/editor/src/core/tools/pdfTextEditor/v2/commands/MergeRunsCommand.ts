@@ -21,6 +21,8 @@ interface RunSnapshot {
   paragraphMemberPtrs: number[];
   paragraphMemberContainers: number[];
   paragraphMemberFs: number[];
+  paragraphLeafPtrs: number[];
+  paragraphLeafContainers: number[];
   bounds: { x: number; y: number; width: number; height: number };
 }
 
@@ -80,6 +82,30 @@ export class MergeRunsCommand implements Command {
     rep.paragraphMemberPtrs = runs.map((r) => r.pdfiumObjPtr);
     rep.paragraphMemberContainers = runs.map((r) => r.containerPtr);
     rep.paragraphMemberFs = runs.map((r) => r.matrix.f);
+    // Flatten each line's own merged sub-ptrs so EditTextCommand removes
+    // every original sub-word, not just the first ptr of each line.
+    const leafPtrs: number[] = [];
+    const leafContainers: number[] = [];
+    for (const r of runs) {
+      const leaves =
+        r.paragraphLeafPtrs.length > 0
+          ? r.paragraphLeafPtrs
+          : r.mergedFromPtrs.length > 0
+            ? r.mergedFromPtrs
+            : r.pdfiumObjPtr
+              ? [r.pdfiumObjPtr]
+              : [];
+      const containers =
+        r.paragraphLeafContainers.length > 0
+          ? r.paragraphLeafContainers
+          : leaves.map(() => r.containerPtr);
+      for (let i = 0; i < leaves.length; i++) {
+        leafPtrs.push(leaves[i]);
+        leafContainers.push(containers[i] ?? r.containerPtr);
+      }
+    }
+    rep.paragraphLeafPtrs = leafPtrs;
+    rep.paragraphLeafContainers = leafContainers;
 
     const removedIds = new Set(members.map((r) => r.id));
     page.setRuns(page.runs.filter((r) => !removedIds.has(r.id)));
@@ -123,6 +149,8 @@ function snapshotRun(r: TextRun): RunSnapshot {
     paragraphMemberPtrs: [...r.paragraphMemberPtrs],
     paragraphMemberContainers: [...r.paragraphMemberContainers],
     paragraphMemberFs: [...r.paragraphMemberFs],
+    paragraphLeafPtrs: [...r.paragraphLeafPtrs],
+    paragraphLeafContainers: [...r.paragraphLeafContainers],
     bounds: { ...r.bounds },
   };
 }
@@ -134,4 +162,6 @@ function restoreRun(r: TextRun, snap: RunSnapshot): void {
   r.paragraphMemberPtrs = [...snap.paragraphMemberPtrs];
   r.paragraphMemberContainers = [...snap.paragraphMemberContainers];
   r.paragraphMemberFs = [...snap.paragraphMemberFs];
+  r.paragraphLeafPtrs = [...snap.paragraphLeafPtrs];
+  r.paragraphLeafContainers = [...snap.paragraphLeafContainers];
 }

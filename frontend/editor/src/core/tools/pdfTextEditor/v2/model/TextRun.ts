@@ -32,6 +32,20 @@ export class TextRun {
    */
   mergedFromPtrs: number[];
   /**
+   * Per-sub-run text (parallel to `mergedFromPtrs`). Lets the editor
+   * map each char in the rep's merged text back to a source sub-object,
+   * which the "pure-deletion" optimization uses to remove only the
+   * sub-objects whose chars were deleted - preserving the original
+   * font's glyphs for everything else.
+   */
+  mergedFromTexts: string[];
+  /**
+   * Per-sub-run bounds (parallel to `mergedFromPtrs`). Needed by the
+   * pure-deletion path to compute how far to shift surviving sub-runs
+   * left when closing a deleted gap.
+   */
+  mergedFromBounds: Array<{ x: number; right: number }>;
+  /**
    * If this run was extracted from inside a form xobject, the PDFium
    * pointer of the immediate parent form. EditTextCommand uses this to
    * call `FPDFFormObj_RemoveObject(containerPtr, runPtr)` rather than
@@ -59,6 +73,15 @@ export class TextRun {
   paragraphMemberContainers: number[];
   /** Baseline f-values for each member, top-down. */
   paragraphMemberFs: number[];
+  /**
+   * Every leaf PDFium pointer that backs this paragraph - includes each
+   * line's own `mergedFromPtrs` flattened. Used by `EditTextCommand` to
+   * remove every original object; `paragraphMemberPtrs` is per-line and
+   * misses the LineGrouper sub-members.
+   */
+  paragraphLeafPtrs: number[];
+  /** Parallel form-xobject containers for every leaf ptr. */
+  paragraphLeafContainers: number[];
 
   constructor(
     init: TextRunSnapshot & {
@@ -79,12 +102,16 @@ export class TextRun {
     this.fontSubset = init.fontSubset;
     this.dirty = false;
     this.mergedFromPtrs = [];
+    this.mergedFromTexts = [];
+    this.mergedFromBounds = [];
     this.containerPtr = init.containerPtr ?? 0;
     this.topLevelContainerPtr = init.topLevelContainerPtr ?? 0;
     this.paragraphLineHeight = 0;
     this.paragraphMemberPtrs = [];
     this.paragraphMemberContainers = [];
     this.paragraphMemberFs = [];
+    this.paragraphLeafPtrs = [];
+    this.paragraphLeafContainers = [];
   }
 
   snapshot(): TextRunSnapshot {

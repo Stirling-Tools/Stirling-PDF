@@ -14,6 +14,8 @@ interface RepSnapshot {
   paragraphMemberPtrs: number[];
   paragraphMemberContainers: number[];
   paragraphMemberFs: number[];
+  paragraphLeafPtrs: number[];
+  paragraphLeafContainers: number[];
 }
 
 export class UngroupParagraphCommand implements Command {
@@ -41,6 +43,8 @@ export class UngroupParagraphCommand implements Command {
       paragraphMemberPtrs: [...rep.paragraphMemberPtrs],
       paragraphMemberContainers: [...rep.paragraphMemberContainers],
       paragraphMemberFs: [...rep.paragraphMemberFs],
+      paragraphLeafPtrs: [...rep.paragraphLeafPtrs],
+      paragraphLeafContainers: [...rep.paragraphLeafContainers],
     };
 
     const lines = rep.text.split(/\r?\n/);
@@ -82,6 +86,8 @@ export class UngroupParagraphCommand implements Command {
     rep.paragraphMemberPtrs = [];
     rep.paragraphMemberContainers = [];
     rep.paragraphMemberFs = [];
+    rep.paragraphLeafPtrs = [];
+    rep.paragraphLeafContainers = [];
     rep.paragraphLineHeight = 0;
     rep.text = lines[0] ?? "";
     rep.bounds = {
@@ -114,6 +120,8 @@ export class UngroupParagraphCommand implements Command {
     rep.paragraphMemberPtrs = [...this.prev.paragraphMemberPtrs];
     rep.paragraphMemberContainers = [...this.prev.paragraphMemberContainers];
     rep.paragraphMemberFs = [...this.prev.paragraphMemberFs];
+    rep.paragraphLeafPtrs = [...this.prev.paragraphLeafPtrs];
+    rep.paragraphLeafContainers = [...this.prev.paragraphLeafContainers];
     const tailIds = new Set(this.createdRunIds.slice(1));
     page.setRuns(page.runs.filter((r) => !tailIds.has(r.id)));
     this.createdRunIds = [];

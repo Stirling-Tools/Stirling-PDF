@@ -103,6 +103,25 @@ export class ParagraphGrouper {
       rep.paragraphMemberPtrs = para.members.map((m) => m.pdfiumObjPtr);
       rep.paragraphMemberContainers = para.members.map((m) => m.containerPtr);
       rep.paragraphMemberFs = para.members.map((m) => m.matrix.f);
+      // Track every leaf ptr so EditTextCommand can remove the original
+      // sub-words (LineGrouper merges multiple PDFium objects into each
+      // line; without this, removal misses everything except the first).
+      const leafPtrs: number[] = [];
+      const leafContainers: number[] = [];
+      for (const m of para.members) {
+        const leaves =
+          m.mergedFromPtrs.length > 0
+            ? m.mergedFromPtrs
+            : m.pdfiumObjPtr
+              ? [m.pdfiumObjPtr]
+              : [];
+        for (const p of leaves) {
+          leafPtrs.push(p);
+          leafContainers.push(m.containerPtr);
+        }
+      }
+      rep.paragraphLeafPtrs = leafPtrs;
+      rep.paragraphLeafContainers = leafContainers;
     }
 
     page.setRuns(paragraphs.map((p) => p.representative));

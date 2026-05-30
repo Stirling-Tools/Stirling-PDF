@@ -10,6 +10,16 @@ import {
   everyCharIn,
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import {
+  applyDeletionPlan,
+  planDeletionEdit,
+  type DeletionPlan,
+} from "@app/tools/pdfTextEditor/v2/commands/deletionOnlyEdit";
+import {
+  applyPartialEditPlan,
+  planPartialEdit,
+  type PartialEditPlan,
+} from "@app/tools/pdfTextEditor/v2/commands/partialEdit";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
 
 interface RevertLine {
@@ -48,6 +58,14 @@ export class EditTextCommand implements Command {
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
   private revertCreatedPtrs: number[] = [];
+  /** Set when the apply path took the deletion-only shortcut. */
+  private deletionPlan: DeletionPlan | null = null;
+  /** Set when the apply path took the partial-edit (LCS) shortcut. */
+  private partialPlan: PartialEditPlan | null = null;
+  private partialInsertedPtrs: number[] = [];
+  private prevMergedFromPtrs: number[] = [];
+  private prevMergedFromTexts: string[] = [];
+  private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
 
   constructor(opts: { pageIndex: number; runId: string; nextText: string }) {
     this.pageIndex = opts.pageIndex;
@@ -62,12 +80,69 @@ export class EditTextCommand implements Command {
     if (this.prevText === null) this.prevText = run.text;
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
+
+    // SURGICAL DIFF PATH (try first, before any other branch):
+    // LCS the prev and next text against the per-sub-object layout so
+    // every surviving char keeps its ORIGINAL font, byte code, and
+    // glyph. Only the chars the user actually inserted are emitted in
+    // a Helvetica fallback. Sub-objects whose chars were all deleted
+    // get removed; everything else is shifted to fit. Bails out only
+    // for mixed-survival sub-objects (would need splitting).
+    if (
+      this.deletionPlan === null &&
+      this.partialPlan === null &&
+      run.mergedFromPtrs.length > 0
+    ) {
+      const partial = planPartialEdit(
+        run,
+        this.prevText ?? "",
+        this.nextText,
+      );
+      if (partial) {
+        this.partialPlan = partial;
+        this.prevMergedFromPtrs = [...run.mergedFromPtrs];
+        this.prevMergedFromTexts = [...run.mergedFromTexts];
+        this.prevMergedFromBounds = run.mergedFromBounds.map((b) => ({ ...b }));
+        const result = applyPartialEditPlan(doc, page, run, partial);
+        this.partialInsertedPtrs = result.insertedPtrs;
+        run.mergedFromPtrs = result.newMergedFromPtrs;
+        run.mergedFromTexts = result.newMergedFromTexts;
+        run.mergedFromBounds = result.newMergedFromBounds;
+        run.bounds = {
+          ...run.bounds,
+          x: result.newBoundsX,
+          width: result.newBoundsWidth,
+        };
+        if (result.newMergedFromPtrs.length > 0) {
+          run.pdfiumObjPtr = result.newMergedFromPtrs[0];
+        }
+        run.text = this.nextText;
+        run.dirty = true;
+        page.markDirty();
+        return;
+      }
+    }
+
+    // Force overlay whenever the in-place SetText path can't keep every
+    // PDFium object up to date:
+    //   - paragraphs (multiple line objects) or newline-containing text
+    //   - text with consecutive spaces (per-word emit produced extra
+    //     ptrs in `paragraphLeafPtrs`; an in-place SetText would only
+    //     update the first chunk and leave the rest stale)
+    //   - any run that has more than one leaf ptr in the model (e.g.
+    //     because a previous edit went through per-word emit)
+    const needsMultiObjectEmit =
+      run.paragraphMemberPtrs.length > 1 ||
+      run.paragraphLeafPtrs.length > 1 ||
+      /\r?\n/.test(this.nextText) ||
+      /\s\s/.test(this.nextText);
     const needsOverlay =
-      !this.overlaid &&
-      !alreadyBase14 &&
-      (run.mergedFromPtrs.length > 0 ||
-        run.fontSubset ||
-        run.pdfiumObjPtr !== 0);
+      needsMultiObjectEmit ||
+      (!this.overlaid &&
+        !alreadyBase14 &&
+        (run.mergedFromPtrs.length > 0 ||
+          run.fontSubset ||
+          run.pdfiumObjPtr !== 0));
 
     if (!needsOverlay) {
       run.text = this.nextText;
@@ -85,8 +160,16 @@ export class EditTextCommand implements Command {
 
     const bg = sampleBackground(m, page, run.bounds);
     const safeChars = everyCharIn(this.nextText, this.prevText ?? "");
+    // Reusing the source font is only safe when the font handles its own
+    // Unicode-to-glyph mapping correctly. Subset / CID fonts famously
+    // don't, but neither do non-standard embedded fonts with custom
+    // encodings - calling FPDFText_SetText on a borrowed handle to one
+    // of those returns garbage glyphs (e.g. ÿ for every char that isn't
+    // already in the original string in the same slot). Only trust
+    // fontIds we know are base-14 (the safe set).
+    const looksBase14 = /^base14:/.test(run.fontId);
     const canReuseFont =
-      safeChars && !run.fontSubset && run.containerPtr === 0;
+      looksBase14 && safeChars && !run.fontSubset && run.containerPtr === 0;
     const originalFontPtr =
       canReuseFont && run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0;
 
@@ -110,9 +193,13 @@ export class EditTextCommand implements Command {
     const outputLines = this.nextText.split(/\r?\n/);
     const lineHeight =
       run.paragraphLineHeight > 0 ? run.paragraphLineHeight : run.fontSize * 1.2;
-    const textPtrs: number[] = [];
+    // One "line anchor" ptr per output line (first ptr emitted for that
+    // line); plus any extra per-word ptrs from space preservation, kept
+    // for leaf removal on subsequent edits.
+    const lineAnchorPtrs: number[] = [];
+    const allEmittedPtrs: number[] = [];
     for (let i = 0; i < outputLines.length; i++) {
-      const ptr = emitTextLine({
+      const ptrs = emitTextLine({
         doc,
         page,
         text: outputLines[i],
@@ -123,26 +210,33 @@ export class EditTextCommand implements Command {
         originalFontPtr,
         fallbackFamily,
       });
-      if (!ptr) continue;
-      this.createdPtrs.push(ptr);
-      textPtrs.push(ptr);
+      if (ptrs.length === 0) continue;
+      this.createdPtrs.push(...ptrs);
+      allEmittedPtrs.push(...ptrs);
+      lineAnchorPtrs.push(ptrs[0]);
     }
 
-    if (textPtrs.length > 0) {
-      this.newTextPtr = textPtrs[0];
-      run.pdfiumObjPtr = textPtrs[0];
+    if (lineAnchorPtrs.length > 0) {
+      this.newTextPtr = lineAnchorPtrs[0];
+      run.pdfiumObjPtr = lineAnchorPtrs[0];
       if (originalFontPtr === 0) {
         run.fontId = `base14:${fallbackFamily}`;
         run.fontSubset = false;
       }
-      run.paragraphMemberPtrs = textPtrs;
-      run.paragraphMemberContainers = textPtrs.map(() => 0);
-      run.paragraphMemberFs = textPtrs.map(
+      run.paragraphMemberPtrs = lineAnchorPtrs;
+      run.paragraphMemberContainers = lineAnchorPtrs.map(() => 0);
+      run.paragraphMemberFs = lineAnchorPtrs.map(
         (_, i) => run.matrix.f - i * lineHeight,
       );
+      // Every per-word emit becomes a leaf - so the next edit's removal
+      // pass cleans them up alongside the anchors.
+      run.paragraphLeafPtrs = allEmittedPtrs;
+      run.paragraphLeafContainers = allEmittedPtrs.map(() => 0);
     }
 
     run.mergedFromPtrs = [];
+    // Don't reset paragraphLeafPtrs here - we just set them above to the
+    // freshly-emitted chunks so the next overlay edit can remove them.
     run.text = this.nextText;
     run.dirty = true;
     page.markDirty();
@@ -154,6 +248,57 @@ export class EditTextCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run || this.prevText === null) return;
     const m = doc.module;
+
+    // Deletion-only fast path can't be cleanly undone (the removed
+    // PDFium objects are gone). Re-emit a Helvetica fallback covering
+    // the original text - same approach as the overlay-path revert.
+    if (this.deletionPlan) {
+      // First, undo translations on the survivors so subsequent revert
+      // logic sees them at their original positions.
+      for (const { ptr, dx } of this.deletionPlan.translates) {
+        if (!ptr || dx === 0) continue;
+        try {
+          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, -dx, 0);
+        } catch {
+          /* best-effort */
+        }
+      }
+      // Restore the model arrays so the next edit sees the original
+      // sub-run layout for any survivors.
+      run.mergedFromPtrs = this.prevMergedFromPtrs;
+      run.mergedFromTexts = this.prevMergedFromTexts;
+      run.mergedFromBounds = this.prevMergedFromBounds.map((b) => ({ ...b }));
+      // Emit Helvetica fallback objects for the originally-removed sub-runs
+      // so the user sees the same characters again (just in a different font).
+      const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
+      const restored: number[] = [];
+      for (const { ptr } of this.deletionPlan.removePtrs) {
+        const origIdx = this.prevMergedFromPtrs.indexOf(ptr);
+        if (origIdx < 0) continue;
+        const text = this.prevMergedFromTexts[origIdx] ?? "";
+        const bounds = this.prevMergedFromBounds[origIdx];
+        if (!text || !bounds) continue;
+        const ptrs = emitTextLine({
+          doc,
+          page,
+          text,
+          x: bounds.x,
+          y: run.matrix.f,
+          fontSize: run.fontSize,
+          fill: run.fill,
+          originalFontPtr: 0,
+          fallbackFamily: revertFallback,
+        });
+        restored.push(...ptrs);
+      }
+      this.revertCreatedPtrs = restored;
+      run.text = this.prevText;
+      run.dirty = true;
+      this.deletionPlan = null;
+      page.markDirty();
+      m.FPDFPage_GenerateContent(page.pagePtr);
+      return;
+    }
 
     if (!this.overlaid) {
       run.text = this.prevText;
@@ -180,9 +325,10 @@ export class EditTextCommand implements Command {
     // visually-equivalent paragraph at page level using the snapshot
     // captured during apply.
     const revertFallback = helveticaVariantFor(this.prevFontId ?? "");
-    const restoredPtrs: number[] = [];
+    const lineAnchorPtrs: number[] = [];
+    const allRestoredPtrs: number[] = [];
     for (const line of this.revertLines) {
-      const ptr = emitTextLine({
+      const ptrs = emitTextLine({
         doc,
         page,
         text: line.text,
@@ -193,18 +339,22 @@ export class EditTextCommand implements Command {
         originalFontPtr: 0,
         fallbackFamily: revertFallback,
       });
-      if (ptr) restoredPtrs.push(ptr);
+      if (ptrs.length === 0) continue;
+      lineAnchorPtrs.push(ptrs[0]);
+      allRestoredPtrs.push(...ptrs);
     }
-    this.revertCreatedPtrs = restoredPtrs;
+    this.revertCreatedPtrs = allRestoredPtrs;
 
-    run.pdfiumObjPtr = restoredPtrs[0] ?? this.prevObjPtr;
+    run.pdfiumObjPtr = lineAnchorPtrs[0] ?? this.prevObjPtr;
     run.fontId = `base14:${revertFallback}`;
     run.fontSubset = false;
     run.text = this.prevText;
     run.mergedFromPtrs = [];
-    run.paragraphMemberPtrs = restoredPtrs;
-    run.paragraphMemberContainers = restoredPtrs.map(() => 0);
+    run.paragraphMemberPtrs = lineAnchorPtrs;
+    run.paragraphMemberContainers = lineAnchorPtrs.map(() => 0);
     run.paragraphMemberFs = this.revertLines.map((l) => l.y);
+    run.paragraphLeafPtrs = allRestoredPtrs;
+    run.paragraphLeafContainers = allRestoredPtrs.map(() => 0);
     run.containerPtr = 0;
     run.dirty = true;
     this.overlaid = false;

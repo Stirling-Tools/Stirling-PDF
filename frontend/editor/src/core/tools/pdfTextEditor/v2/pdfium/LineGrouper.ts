@@ -65,9 +65,11 @@ export class LineGrouper {
       const sameLine = baseDiff <= BASELINE_TOLERANCE * Math.max(ref.fontSize, 4);
       const prev = current.members[current.members.length - 1];
       const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
-      const close =
-        gap <= WORD_GAP_FACTOR * Math.max(ref.fontSize, 4) &&
-        gap <= ABS_MAX_GAP_PT;
+      // The relative factor matched typical inter-word spacing but
+      // rejected gaps from our per-word save emit (where chunks land
+      // ~6-10pt apart). The absolute cap still catches column gutters
+      // (typically 20pt+) so dropping the relative is safe.
+      const close = gap <= ABS_MAX_GAP_PT;
 
       if (sameLine && close) {
         current.members.push(run);
@@ -82,24 +84,42 @@ export class LineGrouper {
     // can delete them on first edit.
     for (const group of groups) {
       if (group.members.length === 1) continue;
+      // Snapshot per-member texts and bounds BEFORE we mutate the
+      // representative - the representative IS members[0], so any later
+      // mutation to rep.text/bounds would overwrite member[0]'s
+      // original values via shared reference.
+      const memberTexts = group.members.map((m) => m.text);
+      const memberBounds = group.members.map((m) => ({
+        x: m.bounds.x,
+        right: m.bounds.x + m.bounds.width,
+      }));
       // When the typesetter emitted a cursor jump instead of a literal
       // space character, the two runs end up with content like ["Hello",
       // "World"] separated by a positional gap. Re-insert a space when
       // the previous run's text didn't already end in whitespace and
       // the next run's text doesn't already start with one.
-      const parts: string[] = [group.members[0].text];
+      const parts: string[] = [memberTexts[0]];
       for (let i = 1; i < group.members.length; i++) {
         const prev = group.members[i - 1];
         const cur = group.members[i];
         const gap = cur.bounds.x - (prev.bounds.x + prev.bounds.width);
-        const prevTail = prev.text.slice(-1);
-        const curHead = cur.text.slice(0, 1);
-        const needsSpace =
-          gap > 0.2 * Math.max(prev.fontSize, 4) &&
-          !/\s/.test(prevTail) &&
-          !/\s/.test(curHead);
-        if (needsSpace) parts.push(" ");
-        parts.push(cur.text);
+        const prevTail = memberTexts[i - 1].slice(-1);
+        const curHead = memberTexts[i].slice(0, 1);
+        // Typographic space advance is ~0.28*fontSize for Helvetica, but
+        // PDFium-reported bounds.x is the leftmost glyph edge (after side
+        // bearings) so the visible gap runs wider. 0.4 calibrates so a
+        // 2-space typed gap reads back as 2 spaces after the round trip.
+        const spaceWidth = 0.4 * Math.max(prev.fontSize, 4);
+        const extraSpaces =
+          gap > 0.2 * Math.max(prev.fontSize, 4)
+            ? Math.max(1, Math.round(gap / Math.max(1, spaceWidth)))
+            : 0;
+        const prevEndsInSpace = /\s/.test(prevTail);
+        const curStartsWithSpace = /\s/.test(curHead);
+        const alreadyHave = (prevEndsInSpace ? 1 : 0) + (curStartsWithSpace ? 1 : 0);
+        const toInsert = Math.max(0, extraSpaces - alreadyHave);
+        if (toInsert > 0) parts.push(" ".repeat(toInsert));
+        parts.push(memberTexts[i]);
       }
       const joined = parts.join("");
       const last = group.members[group.members.length - 1];
@@ -111,6 +131,12 @@ export class LineGrouper {
         x: left,
         width: Math.max(group.representative.bounds.width, right - left),
       };
+      // Per-sub-run texts + bounds so EditTextCommand's pure-deletion
+      // optimization can map joined-text chars back to their source
+      // sub-objects. Use the snapshots captured at the top of the loop -
+      // m.text would now read the joined string for member[0].
+      group.representative.mergedFromTexts = memberTexts;
+      group.representative.mergedFromBounds = memberBounds;
       group.representative.mergedFromPtrs = group.members.map(
         (m) => m.pdfiumObjPtr,
       );
