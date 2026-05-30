@@ -45,6 +45,14 @@ case "$(uname -m)" in
 esac
 [ -d /usr/lib/libreoffice/program ] && export LD_LIBRARY_PATH="/usr/lib/libreoffice/program${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
+# Reduce soffice.bin RSS by avoiding unnecessary subsystems.
+export SAL_USE_VCLPLUGIN=svp           # Null rendering plugin — avoids loading X11 toolkit (~40 MB)
+export SAL_DISABLE_PRINTERLIST=1       # Skip printer enumeration
+export OOO_FORCE_DESKTOP=none          # No desktop frame
+export SAL_LOG="-WARN-INFO"            # Minimal logging
+export MALLOC_ARENA_MAX=2              # Limit glibc arena fragmentation (saves 20-80 MB RSS)
+export DBUS_SESSION_BUS_ADDRESS=/dev/null  # Avoid D-Bus overhead
+
 # Python venv PATH + PYTHONPATH
 for _venv_bin in /opt/venv/bin /opt/unoserver-venv/bin; do
   PATH="$(_append_env_path "$_venv_bin" "$PATH")"
@@ -112,10 +120,21 @@ cleanup() {
     wait "$AOT_GEN_PID" 2>/dev/null || true
   fi
 
+  # Kill on-demand manager if running
+  if [ -n "${DEMAND_MANAGER_PID:-}" ] && kill -0 "$DEMAND_MANAGER_PID" 2>/dev/null; then
+    kill -TERM "$DEMAND_MANAGER_PID" 2>/dev/null || true
+    wait "$DEMAND_MANAGER_PID" 2>/dev/null || true
+  fi
+
   # Signal unoserver instances to shut down
   for pid in "${UNOSERVER_PIDS[@]:-}"; do
     [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
   done
+
+  # Stop Xvfb if running (on-demand mode)
+  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
+    kill -TERM "$XVFB_PID" 2>/dev/null || true
+  fi
 
   # Signal Java to shut down gracefully, Spring Boot handles SIGTERM cleanly
   if [ -n "${JAVA_PID:-}" ] && kill -0 "$JAVA_PID" 2>/dev/null; then
@@ -393,7 +412,8 @@ start_unoserver_watchdog() {
   ) &
 }
 
-start_unoserver_pool() {
+# Start the unoserver pool eagerly (legacy always-on mode).
+start_unoserver_pool_eager() {
   local auto
   auto="$(get_unoserver_auto)"
   auto="${auto,,}"
@@ -428,6 +448,181 @@ start_unoserver_pool() {
 
   # Small delay to let servers bind
   sleep 2
+}
+
+# ---------- On-demand unoserver management ----------
+# When UNO_DEMAND_ENABLED=true, unoserver + soffice + Xvfb are only started
+# when a conversion is needed and stopped after an idle timeout.
+# This saves ~200-350 MB idle memory.
+UNO_DEMAND_FILE="/tmp/uno-last-used"
+UNO_POOL_RUNNING=false
+XVFB_PID=""
+
+start_xvfb_if_needed() {
+  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
+    return 0
+  fi
+  if command_exists Xvfb; then
+    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
+    XVFB_PID=$!
+    export DISPLAY=:99
+    sleep 1
+    log "Xvfb started on-demand (pid $XVFB_PID)"
+  fi
+}
+
+stop_xvfb() {
+  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
+    kill -TERM "$XVFB_PID" 2>/dev/null || true
+    wait "$XVFB_PID" 2>/dev/null || true
+    log "Xvfb stopped"
+  fi
+  XVFB_PID=""
+}
+
+# Start the unoserver pool on-demand (called from the demand manager).
+start_unoserver_pool_now() {
+  if [ "$UNO_POOL_RUNNING" = true ]; then
+    return 0
+  fi
+
+  start_xvfb_if_needed
+
+  local count
+  count="$(get_unoserver_count)"
+  case "$count" in
+    ''|*[!0-9]*) count=1 ;;
+  esac
+  if [ "$count" -le 0 ]; then
+    count=1
+  fi
+
+  UNOSERVER_PIDS=()
+  UNOSERVER_PORTS=()
+  UNOSERVER_UNO_PORTS=()
+
+  local i=0
+  while [ "$i" -lt "$count" ]; do
+    local port=$((2003 + (i * 2)))
+    local uno_port=$((2004 + (i * 2)))
+    log "Starting unoserver on-demand on 127.0.0.1:${port} (uno-port ${uno_port})"
+    UNOSERVER_PORTS+=("$port")
+    UNOSERVER_UNO_PORTS+=("$uno_port")
+    start_unoserver_instance "$port" "$uno_port"
+    UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
+    i=$((i + 1))
+  done
+
+  # Wait for readiness
+  local ready=false
+  for _ in {1..30}; do
+    if check_unoserver_ready "silent"; then
+      ready=true
+      break
+    fi
+    sleep 1
+  done
+
+  if [ "$ready" = true ]; then
+    log "unoserver pool started on-demand and ready"
+  else
+    log "WARNING: unoserver started but not ready after 30s"
+  fi
+  UNO_POOL_RUNNING=true
+}
+
+# Stop all unoserver instances and Xvfb to reclaim memory.
+stop_unoserver_pool_now() {
+  if [ "$UNO_POOL_RUNNING" = false ]; then
+    return 0
+  fi
+  log "Stopping unoserver pool (idle timeout)"
+
+  for pid in "${UNOSERVER_PIDS[@]:-}"; do
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+      local child_pids
+      child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
+      pkill -TERM -P "$pid" 2>/dev/null || true
+      kill -TERM "$pid" 2>/dev/null || true
+      sleep 2
+      if [ -n "$child_pids" ]; then
+        kill -KILL $child_pids 2>/dev/null || true
+      fi
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
+  done
+
+  # Also kill any orphaned soffice processes
+  pkill -f 'soffice\.bin' 2>/dev/null || true
+  sleep 1
+  pkill -9 -f 'soffice\.bin' 2>/dev/null || true
+
+  stop_xvfb
+
+  UNOSERVER_PIDS=()
+  UNOSERVER_PORTS=()
+  UNOSERVER_UNO_PORTS=()
+  UNO_POOL_RUNNING=false
+  log "unoserver pool stopped, memory reclaimed"
+}
+
+# Demand manager: background loop that watches for conversion demand and manages idle timeout.
+start_unoserver_demand_manager() {
+  local idle_timeout=${UNO_IDLE_TIMEOUT_SECONDS:-120}
+  case "$idle_timeout" in
+    ''|*[!0-9]*) idle_timeout=120 ;;
+  esac
+  local check_interval=5
+
+  log "unoserver demand manager started (idle_timeout=${idle_timeout}s)"
+
+  # Ensure demand file does not exist at startup
+  rm -f "$UNO_DEMAND_FILE"
+
+  while true; do
+    if [ -f "$UNO_DEMAND_FILE" ]; then
+      # Demand detected — ensure pool is running
+      if [ "$UNO_POOL_RUNNING" = false ]; then
+        log "unoserver demand detected, starting pool"
+        start_unoserver_pool_now
+      fi
+
+      # Check idle time
+      local last_used_epoch
+      last_used_epoch=$(cat "$UNO_DEMAND_FILE" 2>/dev/null || echo "0")
+      local now_epoch
+      now_epoch=$(date +%s)
+      local idle_secs=$(( now_epoch - last_used_epoch ))
+
+      if [ "$idle_secs" -ge "$idle_timeout" ] && [ "$UNO_POOL_RUNNING" = true ]; then
+        log "unoserver idle for ${idle_secs}s (timeout=${idle_timeout}s)"
+        stop_unoserver_pool_now
+        rm -f "$UNO_DEMAND_FILE"
+      fi
+    elif [ "$UNO_POOL_RUNNING" = true ]; then
+      # Demand file removed but pool still running — stop it
+      stop_unoserver_pool_now
+    fi
+
+    # Also health-check running instances
+    if [ "$UNO_POOL_RUNNING" = true ]; then
+      local i=0
+      while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
+        local pid=${UNOSERVER_PIDS[$i]}
+        local port=${UNOSERVER_PORTS[$i]}
+        local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+
+        if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+          log "unoserver PID ${pid} died for port ${port}, restarting"
+          start_unoserver_instance "$port" "$uno_port"
+          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+        fi
+        i=$((i + 1))
+      done
+    fi
+
+    sleep "$check_interval"
+  done
 }
 
 # ---------- VERSION_TAG ----------
@@ -519,24 +714,24 @@ compute_dynamic_memory() {
   # - Direct byte buffers, native memory
   # Rule of thumb: heap% + (metaspace + ~200MB overhead) should fit in container.
   if [ "$mem_mb" -le 512 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=30
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=55
     DYNAMIC_MAX_METASPACE=96
   elif [ "$mem_mb" -le 1024 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=60
     DYNAMIC_MAX_METASPACE=128
   elif [ "$mem_mb" -le 2048 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=20
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=65
     DYNAMIC_MAX_METASPACE=192
   elif [ "$mem_mb" -le 4096 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=256
   else
     # Large memory (>4GB): cap at 70% to leave room for off-heap (LibreOffice, Calibre, etc.)
-    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=256
   fi
@@ -797,7 +992,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Xss256k -XX:CICompilerCount=2 -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
@@ -981,30 +1176,43 @@ for dir in "${CRITICAL_DIRS[@]}"; do
   fi
 done
 
-# ---------- Xvfb ----------
-# Start a virtual framebuffer for GUI-based LibreOffice interactions.
-if command_exists Xvfb; then
-  log "Starting Xvfb on :99"
-  Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
-  export DISPLAY=:99
-  # Brief pause so Xvfb accepts connections before unoserver tries to attach
-  sleep 1
-else
-  log "Xvfb not installed; skipping virtual display setup"
-fi
+# ---------- Xvfb + unoserver ----------
+# Detect whether on-demand mode is enabled.
+UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED:-true}"
+UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED,,}"
 
-# ---------- unoserver ----------
-# Start LibreOffice UNO server for document conversions.
-# Java and unoserver start in parallel, do NOT block here waiting for readiness.
-# Readiness is verified after Java is launched; the watchdog handles any restarts.
 UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
 UNOPING_BIN="$(command -v unoping || true)"
+
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
   run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
-  start_unoserver_pool
-  log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
+
+  if [ "$UNO_DEMAND_ENABLED" = "true" ]; then
+    # ---------- On-demand mode ----------
+    # Do NOT start Xvfb, unoserver, or soffice yet.
+    # The demand manager will start them lazily when a conversion request arrives
+    # and stop them after an idle timeout to reclaim ~200-350 MB RSS.
+    log "unoserver on-demand mode enabled (UNO_IDLE_TIMEOUT_SECONDS=${UNO_IDLE_TIMEOUT_SECONDS:-120}s)"
+    log "unoserver + soffice will start on first conversion request"
+    start_unoserver_demand_manager &
+    DEMAND_MANAGER_PID=$!
+  else
+    # ---------- Legacy always-on mode ----------
+    if command_exists Xvfb; then
+      log "Starting Xvfb on :99"
+      Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
+      XVFB_PID=$!
+      export DISPLAY=:99
+      sleep 1
+    else
+      log "Xvfb not installed; skipping virtual display setup"
+    fi
+
+    start_unoserver_pool_eager
+    log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
+  fi
 else
   log "unoserver/unoconvert not installed; skipping UNO setup"
 fi
@@ -1045,11 +1253,8 @@ fi
 
 JAVA_PID=$!
 
-# ---------- Unoserver Readiness + Watchdog ----------
-# Now that Java is running, check unoserver readiness and start the watchdog.
-# Runs in the main shell (not a subshell) so UNOSERVER_PIDS/PORTS arrays are accessible.
-# Java handles unoserver being temporarily unavailable, no fatal exit on timeout.
-if [ "${#UNOSERVER_PORTS[@]}" -gt 0 ]; then
+# ---------- Unoserver Readiness + Watchdog (legacy always-on mode only) ----------
+if [ "$UNO_DEMAND_ENABLED" != "true" ] && [ "${#UNOSERVER_PORTS[@]}" -gt 0 ]; then
   log "Waiting for unoserver (Java already starting in parallel)..."
   UNOSERVER_READY=false
   for _ in {1..30}; do
