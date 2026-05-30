@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CascadeType;
@@ -35,7 +37,8 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
         name = "stored_files",
         indexes = {
             @Index(name = "idx_stored_files_owner", columnList = "owner_id"),
-            @Index(name = "idx_stored_files_workflow", columnList = "workflow_session_id")
+            @Index(name = "idx_stored_files_workflow", columnList = "workflow_session_id"),
+            @Index(name = "idx_stored_files_folder", columnList = "folder_id")
         })
 @NoArgsConstructor
 @Getter
@@ -105,6 +108,20 @@ public class StoredFile implements Serializable {
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     private Set<FileShare> shares = new HashSet<>();
+
+    /**
+     * Optional folder placement for the file manager UI. Null = root. Hibernate ddl-auto will add
+     * this as a nullable column on upgrade so existing records continue to work untouched.
+     *
+     * <p>{@code OnDeleteAction.SET_NULL} so any backend that drops a folder row (admin script,
+     * future cleanup job, cascading user delete) cleanly orphans files to root rather than leaving
+     * dangling FK references. The application path ({@code FolderRepository.clearFolderForFiles})
+     * still runs first as a belt-and-braces.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "folder_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Folder folder;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

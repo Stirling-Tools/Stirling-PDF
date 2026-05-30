@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.swagger.MarkdownConversionResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
@@ -23,7 +24,10 @@ public class ConvertPDFToMarkdown {
 
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/markdown")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/markdown",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MarkdownConversionResponse
     @Operation(
             summary = "Convert PDF to Markdown",
