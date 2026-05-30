@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.configuration.ee;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -85,5 +87,44 @@ class LicenseKeyCheckerTest {
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
         verifyNoInteractions(verifier);
+    }
+
+    // ----- requireProOrEnterprise: shared boot-time gate for premium features -----
+
+    @Test
+    void requireProOrEnterprise_normalLicense_throwsWithFeatureName() {
+        LicenseKeyChecker checker = checkerWithLicense(License.NORMAL);
+        assertThatThrownBy(() -> checker.requireProOrEnterprise("storage.provider=s3"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("storage.provider=s3 requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void requireProOrEnterprise_serverLicense_passes() {
+        LicenseKeyChecker checker = checkerWithLicense(License.SERVER);
+        assertThatCode(() -> checker.requireProOrEnterprise("any.feature=true"))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void requireProOrEnterprise_enterpriseLicense_passes() {
+        LicenseKeyChecker checker = checkerWithLicense(License.ENTERPRISE);
+        assertThatCode(() -> checker.requireProOrEnterprise("any.feature=true"))
+                .doesNotThrowAnyException();
+    }
+
+    private LicenseKeyChecker checkerWithLicense(License level) {
+        ApplicationProperties props = new ApplicationProperties();
+        if (level == License.NORMAL) {
+            props.getPremium().setEnabled(false);
+        } else {
+            props.getPremium().setEnabled(true);
+            props.getPremium().setKey("any");
+            when(verifier.verifyLicense("any")).thenReturn(level);
+        }
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
+        return checker;
     }
 }
