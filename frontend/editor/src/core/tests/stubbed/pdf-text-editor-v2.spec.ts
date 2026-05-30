@@ -20,8 +20,7 @@ const PARAGRAPH_PDF = path.join(
  *
  * v2 runs entirely in the browser via PDFium WASM (`@embedpdf/pdfium`),
  * so these tests do not need a real backend - they live in the stubbed
- * project. We gate v2 with `?editor=v2`; the legacy v1 component stays
- * the default behind the same URL.
+ * project. `/pdf-text-editor` mounts v2 directly.
  *
  * The tests load `sample.pdf` (a 1-page text-only fixture), exercise the
  * core editing loop, and assert on the editor's DOM and the eventual
@@ -30,7 +29,7 @@ const PARAGRAPH_PDF = path.join(
  */
 
 async function gotoV2(page: import("@playwright/test").Page) {
-  await page.goto("/pdf-text-editor?editor=v2", {
+  await page.goto("/pdf-text-editor", {
     waitUntil: "domcontentloaded",
   });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
@@ -87,18 +86,10 @@ async function typeIntoRun(
 }
 
 test.describe("PDF text editor v2 - smoke", () => {
-  test("v2 mounts when ?editor=v2 is set", async ({ page }) => {
+  test("v2 mounts at /pdf-text-editor", async ({ page }) => {
     await gotoV2(page);
     await expect(page.getByTestId("v2-sidebar-empty")).toBeVisible();
-    // Toolbar is present even before a document loads.
     await expect(page.getByTestId("v2-toolbar")).toBeVisible();
-  });
-
-  test("v1 is still the default when no ?editor flag is set", async ({
-    page,
-  }) => {
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("v2-root")).toHaveCount(0);
   });
 });
 

@@ -89,7 +89,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
         component: lazy(
-          () => import("@app/tools/pdfTextEditor/PdfTextEditorRouter"),
+          () => import("@app/tools/pdfTextEditor/v2/PdfTextEditorV2"),
         ),
         description: t(
           "home.pdfTextEditor.desc",
