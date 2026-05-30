@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -34,10 +36,11 @@ class ConvertPDFToMarkdownTest {
     @RestControllerAdvice
     static class GlobalErrorHandler {
         @ExceptionHandler(Exception.class)
-        ResponseEntity<byte[]> handle(Exception ex) {
+        ResponseEntity<Resource> handle(Exception ex) {
             String message = ex.getMessage();
             byte[] body = message != null ? message.getBytes(StandardCharsets.UTF_8) : new byte[0];
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ByteArrayResource(body));
         }
     }
 
@@ -54,7 +57,7 @@ class ConvertPDFToMarkdownTest {
                                             inv ->
                                                     ResponseEntity.ok()
                                                             .header("Content-Type", "text/markdown")
-                                                            .body(md));
+                                                            .body(new ByteArrayResource(md)));
                         })) {
 
             MockMvc mvc = mockMvc();
@@ -66,6 +69,9 @@ class ConvertPDFToMarkdownTest {
                             "application/pdf",
                             new byte[] {1, 2, 3});
 
+            // ResponseEntity<Resource> is written synchronously on the request thread,
+            // so there is no async dispatch to wait for (unlike the old StreamingResponseBody
+            // path).
             mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(file))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", "text/markdown"))

@@ -6,8 +6,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,9 +28,12 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -35,8 +42,12 @@ import stirling.software.common.util.WebResponseUtils;
 public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-pages")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/remove-pages",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Remove pages from a PDF file",
@@ -44,7 +55,7 @@ public class RearrangePagesPDFController {
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
                             + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> deletePages(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
         MultipartFile pdfFile = request.getFileInput();
@@ -64,10 +75,12 @@ public class RearrangePagesPDFController {
                 int pageIndex = pagesToRemove.get(i);
                 document.removePage(pageIndex);
             }
+            FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
+                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
+                    tempFileManager);
         }
     }
 
@@ -150,28 +163,6 @@ public class RearrangePagesPDFController {
         return newPageOrder;
     }
 
-    /**
-     * Rearrange pages in a PDF file by merging odd and even pages. The first half of the pages will
-     * be the odd pages, and the second half will be the even pages as input. <br>
-     * This method is visible for testing purposes only.
-     *
-     * @param totalPages Total number of pages in the PDF file.
-     * @return List of page numbers in the new order. The first page is 0.
-     */
-    List<Integer> oddEvenMerge(int totalPages) {
-        List<Integer> newPageOrderZeroBased = new ArrayList<>();
-        int numberOfOddPages = (totalPages + 1) / 2;
-
-        for (int oneBasedIndex = 1; oneBasedIndex < (numberOfOddPages + 1); oneBasedIndex++) {
-            newPageOrderZeroBased.add((oneBasedIndex - 1));
-            if (numberOfOddPages + oneBasedIndex <= totalPages) {
-                newPageOrderZeroBased.add((numberOfOddPages + oneBasedIndex - 1));
-            }
-        }
-
-        return newPageOrderZeroBased;
-    }
-
     private List<Integer> duplicate(int totalPages, String pageOrder) {
         List<Integer> newPageOrder = new ArrayList<>();
         int duplicateCount;
@@ -220,7 +211,6 @@ public class RearrangePagesPDFController {
                 case BOOKLET_SORT -> bookletSort(totalPages);
                 case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
                 case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
-                case ODD_EVEN_MERGE -> oddEvenMerge(totalPages);
                 case REMOVE_FIRST -> removeFirst(totalPages);
                 case REMOVE_LAST -> removeLast(totalPages);
                 case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
@@ -238,7 +228,10 @@ public class RearrangePagesPDFController {
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/rearrange-pages")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/rearrange-pages",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Rearrange pages in a PDF file",
@@ -247,7 +240,7 @@ public class RearrangePagesPDFController {
                             + " order or custom mode. Users can provide a page order as a"
                             + " comma-separated list of page numbers or page ranges, or a custom mode."
                             + " Input:PDF Output:PDF")
-    public ResponseEntity<byte[]> rearrangePages(@ModelAttribute RearrangePagesRequest request)
+    public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
@@ -284,10 +277,22 @@ public class RearrangePagesPDFController {
                         rearrangedDocument.addPage(page);
                     }
 
+                    PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
+                    if (sourceCatalog != null) {
+                        PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);
+                        if (sourceForm != null) {
+                            rearrangedDocument
+                                    .getDocumentCatalog()
+                                    .getCOSObject()
+                                    .setItem(COSName.ACRO_FORM, sourceForm.getCOSObject());
+                        }
+                    }
+
                     return WebResponseUtils.pdfDocToWebResponse(
                             rearrangedDocument,
                             GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                            tempFileManager);
                 }
             }
         } catch (IOException e) {

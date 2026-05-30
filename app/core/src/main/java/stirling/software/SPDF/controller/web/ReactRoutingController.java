@@ -149,20 +149,30 @@ public class ReactRoutingController {
         return serveIndexHtml(request);
     }
 
+    @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
+        return serveIndexHtml(request);
+    }
+
     @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
         // cachedCallbackHtml is always initialized in @PostConstruct
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedCallbackHtml);
     }
 
+    // `files` was historically a backend static-asset directory and was therefore
+    // in the exclusion list - removing it lets /files and /files/<folder-uuid>
+    // forward to the SPA index.html, which is what FileManagerView expects.
+    // (Real storage endpoints live under /api/v1/storage/files, already
+    // excluded by the leading `api` token in the same regex.)
     @GetMapping(
-            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
+            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
     public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
         return serveIndexHtml(request);
     }
 
     @GetMapping(
-            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
+            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
         return serveIndexHtml(request);
@@ -178,8 +188,7 @@ public class ReactRoutingController {
         String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
-        return
-                """
+        return """
                 <!doctype html>
                 <html>
                   <head>
@@ -238,8 +247,7 @@ public class ReactRoutingController {
         String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
-        return
-                """
+        return """
                 <!doctype html>
                 <html>
                   <head>

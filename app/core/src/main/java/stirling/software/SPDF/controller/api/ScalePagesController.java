@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,9 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -36,8 +38,10 @@ import stirling.software.common.util.WebResponseUtils;
 public class ScalePagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    private static PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
+    private static PDRectangle getTargetSize(
+            String targetPDRectangle, String orientation, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
                 throw ExceptionUtils.createInvalidPageSizeException("KEEP");
@@ -54,18 +58,19 @@ public class ScalePagesController {
         }
 
         Map<String, PDRectangle> sizeMap = getSizeMap();
-
-        if (sizeMap.containsKey(targetPDRectangle)) {
-            return sizeMap.get(targetPDRectangle);
+        PDRectangle base = sizeMap.get(targetPDRectangle);
+        if (base == null) {
+            throw ExceptionUtils.createInvalidPageSizeException(targetPDRectangle);
         }
 
-        throw ExceptionUtils.createInvalidPageSizeException(targetPDRectangle);
+        if ("LANDSCAPE".equalsIgnoreCase(orientation)) {
+            return new PDRectangle(base.getHeight(), base.getWidth());
+        }
+        return base;
     }
 
     private static Map<String, PDRectangle> getSizeMap() {
         Map<String, PDRectangle> sizeMap = new HashMap<>();
-
-        // Portrait sizes (A0-A6)
         sizeMap.put("A0", PDRectangle.A0);
         sizeMap.put("A1", PDRectangle.A1);
         sizeMap.put("A2", PDRectangle.A2);
@@ -73,63 +78,32 @@ public class ScalePagesController {
         sizeMap.put("A4", PDRectangle.A4);
         sizeMap.put("A5", PDRectangle.A5);
         sizeMap.put("A6", PDRectangle.A6);
-
-        // Landscape sizes (A0-A6)
-        sizeMap.put(
-                "A0_LANDSCAPE",
-                new PDRectangle(PDRectangle.A0.getHeight(), PDRectangle.A0.getWidth()));
-        sizeMap.put(
-                "A1_LANDSCAPE",
-                new PDRectangle(PDRectangle.A1.getHeight(), PDRectangle.A1.getWidth()));
-        sizeMap.put(
-                "A2_LANDSCAPE",
-                new PDRectangle(PDRectangle.A2.getHeight(), PDRectangle.A2.getWidth()));
-        sizeMap.put(
-                "A3_LANDSCAPE",
-                new PDRectangle(PDRectangle.A3.getHeight(), PDRectangle.A3.getWidth()));
-        sizeMap.put(
-                "A4_LANDSCAPE",
-                new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth()));
-        sizeMap.put(
-                "A5_LANDSCAPE",
-                new PDRectangle(PDRectangle.A5.getHeight(), PDRectangle.A5.getWidth()));
-        sizeMap.put(
-                "A6_LANDSCAPE",
-                new PDRectangle(PDRectangle.A6.getHeight(), PDRectangle.A6.getWidth()));
-
-        // Portrait US sizes
         sizeMap.put("LETTER", PDRectangle.LETTER);
         sizeMap.put("LEGAL", PDRectangle.LEGAL);
-
-        // Landscape US sizes
-        sizeMap.put(
-                "LETTER_LANDSCAPE",
-                new PDRectangle(PDRectangle.LETTER.getHeight(), PDRectangle.LETTER.getWidth()));
-        sizeMap.put(
-                "LEGAL_LANDSCAPE",
-                new PDRectangle(PDRectangle.LEGAL.getHeight(), PDRectangle.LEGAL.getWidth()));
-
         return sizeMap;
     }
 
-    @AutoJobPostMapping(value = "/scale-pages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/scale-pages",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =
                     "This operation takes an input PDF file and the size to scale the pages to in"
                             + " the output PDF file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> scalePages(@ModelAttribute ScalePagesRequest request)
+    public ResponseEntity<Resource> scalePages(@ModelAttribute ScalePagesRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         String targetPDRectangle = request.getPageSize();
+        String orientation = request.getOrientation();
         float scaleFactor = request.getScaleFactor();
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
                 PDDocument outputDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
-            PDRectangle targetSize = getTargetSize(targetPDRectangle, sourceDocument);
+            PDRectangle targetSize = getTargetSize(targetPDRectangle, orientation, sourceDocument);
 
             // Create LayerUtility once outside the loop for better performance
             LayerUtility layerUtility = new LayerUtility(outputDocument);
@@ -168,11 +142,10 @@ public class ScalePagesController {
                 }
             }
 
-            outputDocument.save(baos);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(),
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"));
+            return WebResponseUtils.pdfDocToWebResponse(
+                    outputDocument,
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"),
+                    tempFileManager);
         }
     }
 }

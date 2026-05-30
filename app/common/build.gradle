@@ -7,6 +7,8 @@ spotless {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
+        suppressLintsFor { setStep('google-java-format') }
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         trimTrailingWhitespace()
@@ -27,26 +29,58 @@ spotless {
     }
 }
 dependencies {
-    api 'com.google.guava:guava:33.4.8-jre'
+    api 'com.google.guava:guava:33.6.0-jre'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
-    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260102.1'
+    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
     api 'org.apache.commons:commons-lang3:3.20.0'
-    api 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
+    api 'com.drewnoakes:metadata-extractor:2.20.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
     api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:7.5.8' // RAR archive support for CBR files
+    api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:8.12.6'
     api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
+
+    // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
+    // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
+    api ('technology.tabula:tabula:1.0.5') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+
+    api 'com.stirling:jpdfium:1.0.1'
+
+    // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
+    def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
+    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
+    def jpdfiumPlatforms = jpdfiumPlatformsProp == 'all'
+            ? jpdfiumAllPlatforms
+            : jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
+    def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
+    if (jpdfiumInvalid) {
+        throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
+                "Valid: ${jpdfiumAllPlatforms.join(', ')} or 'all'.")
+    }
+    logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms.join(', ')}")
+    jpdfiumPlatforms.each { platform ->
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.1"
+    }
+
+    // Bucket4j (local in-process token bucket for RateLimitStore default impl)
+    implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
+
+    // ArchUnit: enforces module dependency direction (see ArchitectureTest)
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }

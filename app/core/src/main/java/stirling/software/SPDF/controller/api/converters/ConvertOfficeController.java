@@ -13,6 +13,7 @@ import java.util.Locale;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -28,6 +29,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
@@ -36,6 +38,8 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -47,6 +51,7 @@ public class ConvertOfficeController {
     private final RuntimePathConfig runtimePathConfig;
     private final CustomHtmlSanitizer customHtmlSanitizer;
     private final EndpointConfiguration endpointConfiguration;
+    private final TempFileManager tempFileManager;
 
     private boolean isUnoconvertAvailable() {
         return endpointConfiguration.isGroupEnabled("Unoconvert")
@@ -196,27 +201,41 @@ public class ConvertOfficeController {
                 .matches();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/file/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/file/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
             description =
                     "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
         File file = null;
+        TempFile tempOut = null;
         try {
             file = convertToPdf(inputFile);
 
+            tempOut = tempFileManager.createManagedTempFile(".pdf");
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
-                return WebResponseUtils.pdfDocToWebResponse(
-                        doc,
-                        GeneralUtils.generateFilename(
-                                inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+                doc.save(tempOut.getFile());
             }
+            String filename =
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
+            ResponseEntity<Resource> response =
+                    WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
+            tempOut = null;
+            return response;
+        } catch (Exception e) {
+            if (tempOut != null) {
+                tempOut.close();
+            }
+            throw e;
         } finally {
             if (file != null && file.getParent() != null) {
                 FileUtils.deleteDirectory(file.getParentFile());

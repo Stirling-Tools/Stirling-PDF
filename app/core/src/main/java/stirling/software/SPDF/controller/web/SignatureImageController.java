@@ -11,21 +11,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 
-/**
- * Unified signature image controller that works for both authenticated and unauthenticated users.
- * Uses composition pattern: - Core SharedSignatureService (always available): reads shared
- * signatures - PersonalSignatureService (proprietary, optional): reads personal signatures For
- * authenticated signature management (save/delete), see proprietary SignatureController.
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/general")
+@Tag(name = "Signature Assets", description = "Retrieve saved signature images")
 public class SignatureImageController {
 
     private final SharedSignatureService sharedSignatureService;

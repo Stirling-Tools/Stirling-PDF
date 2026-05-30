@@ -46,7 +46,8 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.DatabaseServiceInterface;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -65,12 +66,13 @@ public class ProprietaryUIDataController {
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
     private final SessionRepository sessionRepository;
-    private final DatabaseService databaseService;
+    private final DatabaseServiceInterface databaseService;
     private final boolean runningEE;
     private final ObjectMapper objectMapper;
     private final UserLicenseSettingsService licenseSettingsService;
     private final PersistentAuditEventRepository auditRepository;
     private final MfaService mfaService;
+    private final LoginAttemptService loginAttemptService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -79,12 +81,13 @@ public class ProprietaryUIDataController {
             UserRepository userRepository,
             TeamRepository teamRepository,
             SessionRepository sessionRepository,
-            DatabaseService databaseService,
+            DatabaseServiceInterface databaseService,
             ObjectMapper objectMapper,
             @Qualifier("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
             PersistentAuditEventRepository auditRepository,
-            MfaService mfaService) {
+            MfaService mfaService,
+            LoginAttemptService loginAttemptService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -97,6 +100,7 @@ public class ProprietaryUIDataController {
         this.licenseSettingsService = licenseSettingsService;
         this.auditRepository = auditRepository;
         this.mfaService = mfaService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     /**
@@ -247,7 +251,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/admin-settings")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get admin settings data")
     public ResponseEntity<AdminSettingsData> getAdminSettingsData(Authentication authentication) {
         List<User> allUsers = userRepository.findAllWithTeam();
@@ -387,6 +391,7 @@ public class ProprietaryUIDataController {
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
         data.setUserSettings(userSettings);
+        data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
         return ResponseEntity.ok(data);
     }
@@ -445,7 +450,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/teams")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get teams list data")
     public ResponseEntity<TeamsData> getTeamsData() {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
@@ -471,7 +476,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/teams/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get team details data")
     public ResponseEntity<TeamDetailsData> getTeamDetailsData(@PathVariable("id") Long id) {
         Team team =
@@ -515,7 +520,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/database")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get database management data")
     public ResponseEntity<DatabaseData> getDatabaseData() {
         List<FileInfo> backupList = databaseService.getBackupList();
@@ -605,6 +610,7 @@ public class ProprietaryUIDataController {
         private boolean premiumEnabled;
         private boolean mailEnabled;
         private Map<String, Map<String, String>> userSettings;
+        private List<String> lockedUsers;
     }
 
     @Data

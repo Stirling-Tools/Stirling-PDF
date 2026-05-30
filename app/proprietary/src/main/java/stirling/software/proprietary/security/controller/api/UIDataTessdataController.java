@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ import tools.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping("/api/v1/ui-data")
 @RequiredArgsConstructor
+@Tag(name = "UI Data")
 public class UIDataTessdataController {
 
     private static final Pattern INVALID_LANG_CHARS_PATTERN = Pattern.compile("[^A-Za-z0-9_+\\-]");
@@ -45,7 +47,7 @@ public class UIDataTessdataController {
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
     @GetMapping("/tessdata-languages")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "List installed and remotely available tessdata languages")
     public ResponseEntity<TessdataLanguagesResponse> getTessdataLanguages() {
         TessdataLanguagesResponse response = new TessdataLanguagesResponse();
@@ -56,7 +58,7 @@ public class UIDataTessdataController {
     }
 
     @PostMapping("/tessdata/download")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Download selected tessdata languages from the official repository")
     public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(
             @RequestBody TessdataDownloadRequest request) {

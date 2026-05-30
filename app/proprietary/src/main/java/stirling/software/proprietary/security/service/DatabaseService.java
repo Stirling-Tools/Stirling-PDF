@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ import stirling.software.proprietary.security.model.exception.BackupNotFoundExce
 
 @Slf4j
 @Service
+@Profile("!saas")
 public class DatabaseService implements DatabaseServiceInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
@@ -391,6 +393,7 @@ public class DatabaseService implements DatabaseServiceInterface {
      *
      * @return <code>String</code> of the H2 version
      */
+    @Override
     public String getH2Version() {
         String version = "Unknown";
 
@@ -411,39 +414,18 @@ public class DatabaseService implements DatabaseServiceInterface {
         return version;
     }
 
-    /*
-     * Checks if the current datasource is H2.
-     *
-     * @return true if the datasource is H2, false otherwise
-     */
+    /** Returns {@code true} when the active runtime DataSource is genuinely H2. */
     private boolean isH2Database() {
-        boolean isTypeH2 =
-                datasourceProps.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
-        boolean isDBUrlH2 =
-                datasourceProps.getCustomDatabaseUrl().contains("h2")
-                        || datasourceProps.getCustomDatabaseUrl().contains("H2");
-        boolean isCustomDatabase = datasourceProps.isEnableCustomDatabase();
-
-        if (isCustomDatabase) {
-            if (isTypeH2 && !isDBUrlH2) {
-                log.warn(
-                        "Datasource type is H2, but the URL does not contain 'h2'. "
-                                + "Please check your configuration.");
-                throw new IllegalStateException(
-                        "Datasource type is H2, but the URL does not contain 'h2'. Please check"
-                                + " your configuration.");
-            } else if (!isTypeH2 && isDBUrlH2) {
-                log.warn(
-                        "Datasource URL contains 'h2', but the type is not H2. "
-                                + "Please check your configuration.");
-                throw new IllegalStateException(
-                        "Datasource URL contains 'h2', but the type is not H2. Please check your"
-                                + " configuration.");
-            }
+        try (Connection conn = dataSource.getConnection()) {
+            String product = conn.getMetaData().getDatabaseProductName();
+            return product != null && product.toLowerCase().contains("h2");
+        } catch (SQLException e) {
+            log.warn(
+                    "Could not read DatabaseMetaData to determine driver; assuming non-H2 to avoid"
+                            + " issuing H2-only SQL against another database: {}",
+                    e.getMessage());
+            return false;
         }
-        boolean isH2 = isTypeH2 && isDBUrlH2;
-
-        return !isCustomDatabase || isH2;
     }
 
     /**
@@ -488,13 +470,13 @@ public class DatabaseService implements DatabaseServiceInterface {
     private void executeDatabaseScript(Path scriptPath) {
         if (isH2Database()) {
 
+            // Validate SQL content BEFORE execution to prevent injection attacks
+            validateSqlContent(scriptPath);
+
             if (!verifyBackup(scriptPath)) {
                 log.error("Backup verification failed for: {}", scriptPath);
                 throw new IllegalArgumentException("Backup verification failed for: " + scriptPath);
             }
-
-            // Validate SQL content before execution to prevent injection attacks
-            validateSqlContent(scriptPath);
 
             String query = "RUNSCRIPT from ?;";
 

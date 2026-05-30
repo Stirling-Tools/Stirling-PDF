@@ -11,7 +11,7 @@ on:
       - "app/core/build.gradle"
       - "app/proprietary/build.gradle"
       - "README.md"
-      - "frontend/public/locales/*/translation.toml"
+      - "frontend/editor/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -57,11 +57,12 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install Python dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
 
       - name: Sync translation TOML files
         run: |
-          python .github/scripts/check_language_toml.py --reference-file "frontend/public/locales/en-GB/translation.toml" --branch main
+          python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-GB/translation.toml" --branch main
 
       - name: pre-commit run
         run: |
@@ -69,7 +70,7 @@ jobs:
 
       - name: Commit translation files
         run: |
-          git add frontend/public/locales/*/translation.toml
+          git add frontend/editor/public/locales/*/translation.toml
           git diff --staged --quiet || git commit -m ":memo: Sync translation files (TOML)" || echo "No changes detected"
 
       - name: Sync README.md
@@ -83,7 +84,7 @@ jobs:
 
       - name: Create Pull Request
         if: always()
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.setup-bot.outputs.token }}
           commit-message: Update files
@@ -99,7 +100,7 @@ jobs:
             This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
-            - Updated translation files (`frontend/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
+            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
             - **Format**: TOML
@@ -124,5 +125,5 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-            frontend/public/locales/*/translation.toml
+            frontend/editor/public/locales/*/translation.toml
             scripts/ignore_translation.toml

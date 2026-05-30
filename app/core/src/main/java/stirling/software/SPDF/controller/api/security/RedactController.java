@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.Color;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +33,7 @@ import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
@@ -59,11 +59,14 @@ import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
 
@@ -85,6 +88,7 @@ public class RedactController {
     private static final COSString EMPTY_COS_STRING = new COSString("");
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     private String removeFileExtension(String filename) {
         return GeneralUtils.removeExtension(filename);
@@ -93,10 +97,15 @@ public class RedactController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
-                List.class, "redactions", new StringToArrayListPropertyEditor());
+                List.class,
+                "redactions",
+                new StringToArrayListPropertyEditor<>(RedactionArea.class));
     }
 
-    @AutoJobPostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/redact",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             operationId = "redactPdfManual",
@@ -105,7 +114,7 @@ public class RedactController {
                     "This endpoint redacts content from a PDF file based on manually specified areas. "
                             + "Users can specify areas to redact and optionally convert the PDF to an image. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+    public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
         MultipartFile file = request.getFileInput();
@@ -120,30 +129,24 @@ public class RedactController {
 
             if (Boolean.TRUE.equals(request.getConvertPDFToImage())) {
                 try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    convertedPdf.save(baos);
-                    byte[] pdfContent = baos.toByteArray();
-
-                    return WebResponseUtils.bytesToWebResponse(
-                            pdfContent,
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            convertedPdf,
                             removeFileExtension(
                                             Objects.requireNonNull(
                                                     Filenames.toSimpleFileName(
                                                             file.getOriginalFilename())))
-                                    + "_redacted.pdf");
+                                    + "_redacted.pdf",
+                            tempFileManager);
                 }
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            byte[] pdfContent = baos.toByteArray();
-
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
                     removeFileExtension(
                                     Objects.requireNonNull(
                                             Filenames.toSimpleFileName(file.getOriginalFilename())))
-                            + "_redacted.pdf");
+                            + "_redacted.pdf",
+                    tempFileManager);
         }
     }
 
@@ -495,7 +498,10 @@ public class RedactController {
         return pageNumbers;
     }
 
-    @AutoJobPostMapping(value = "/auto-redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/auto-redact",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Redact PDF automatically",
@@ -504,7 +510,7 @@ public class RedactController {
                     "This endpoint automatically redacts text from a PDF file based on specified patterns. "
                             + "Users can provide text patterns to redact, with options for regex and whole word matching. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request) {
+    public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
         String[] listOfText = request.getListOfText().split("\n");
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
@@ -545,20 +551,15 @@ public class RedactController {
 
             if (allFoundTextsByPage.isEmpty()) {
                 log.info("No text found matching redaction patterns");
-                byte[] originalContent;
-                try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                    document.save(baos);
-                    originalContent = baos.toByteArray();
-                }
-
-                return WebResponseUtils.bytesToWebResponse(
-                        originalContent,
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
                         removeFileExtension(
                                         Objects.requireNonNull(
                                                 Filenames.toSimpleFileName(
                                                         request.getFileInput()
                                                                 .getOriginalFilename())))
-                                + "_redacted.pdf");
+                                + "_redacted.pdf",
+                        tempFileManager);
             }
 
             boolean fallbackToBoxOnlyMode;
@@ -587,7 +588,7 @@ public class RedactController {
                         findTextToRedact(
                                 fallbackDocument, listOfText, useRegex, wholeWordSearchBool);
 
-                byte[] pdfContent =
+                TempFile finalized =
                         finalizeRedaction(
                                 fallbackDocument,
                                 allFoundTextsByPage,
@@ -596,8 +597,8 @@ public class RedactController {
                                 request.getConvertPDFToImage(),
                                 false); // Box-only mode, use original box sizes
 
-                return WebResponseUtils.bytesToWebResponse(
-                        pdfContent,
+                return WebResponseUtils.pdfFileToWebResponse(
+                        finalized,
                         removeFileExtension(
                                         Objects.requireNonNull(
                                                 Filenames.toSimpleFileName(
@@ -606,7 +607,7 @@ public class RedactController {
                                 + "_redacted.pdf");
             }
 
-            byte[] pdfContent =
+            TempFile finalized =
                     finalizeRedaction(
                             document,
                             allFoundTextsByPage,
@@ -615,8 +616,8 @@ public class RedactController {
                             request.getConvertPDFToImage(),
                             true); // Text removal mode, use reduced box sizes
 
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
+            return WebResponseUtils.pdfFileToWebResponse(
+                    finalized,
                     removeFileExtension(
                                     Objects.requireNonNull(
                                             Filenames.toSimpleFileName(
@@ -733,7 +734,7 @@ public class RedactController {
         }
     }
 
-    private byte[] finalizeRedaction(
+    private TempFile finalizeRedaction(
             PDDocument document,
             Map<Integer, List<PDFText>> allFoundTextsByPage,
             String colorString,
@@ -759,29 +760,37 @@ public class RedactController {
             try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
                 cleanDocumentMetadata(convertedPdf);
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                convertedPdf.save(baos);
-                byte[] out = baos.toByteArray();
+                TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+                try {
+                    convertedPdf.save(tempOut.getFile());
+                } catch (IOException e) {
+                    tempOut.close();
+                    throw e;
+                }
 
                 log.info(
                         "Redaction finalized (image mode): {} pages ➜ {} KB",
                         convertedPdf.getNumberOfPages(),
-                        out.length / 1024);
+                        tempOut.getFile().length() / 1024);
 
-                return out;
+                return tempOut;
             }
         }
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        byte[] out = baos.toByteArray();
+        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            document.save(tempOut.getFile());
+        } catch (IOException e) {
+            tempOut.close();
+            throw e;
+        }
 
         log.info(
                 "Redaction finalized: {} pages ➜ {} KB",
                 document.getNumberOfPages(),
-                out.length / 1024);
+                tempOut.getFile().length() / 1024);
 
-        return out;
+        return tempOut;
     }
 
     private void cleanDocumentMetadata(PDDocument document) {

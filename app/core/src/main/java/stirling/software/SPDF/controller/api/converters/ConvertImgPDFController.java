@@ -18,11 +18,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -40,6 +40,7 @@ import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
@@ -72,7 +73,10 @@ public class ConvertImgPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/img",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
             summary = "Convert PDF to image(s)",
@@ -239,7 +243,10 @@ public class ConvertImgPDFController {
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/img/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Convert images to a PDF file",
@@ -268,14 +275,17 @@ public class ConvertImgPDFController {
                 GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbz/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/cbz/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Convert CBZ comic book archive to PDF",
             description =
                     "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
                             + "Input:CBZ Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertCbzToPdf(
-            @ModelAttribute ConvertCbzToPdfRequest request) throws IOException {
+    public ResponseEntity<Resource> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
+            throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
@@ -294,14 +304,17 @@ public class ConvertImgPDFController {
         return WebResponseUtils.pdfFileToWebResponse(pdfFile, filename);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/cbz",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert PDF to CBZ comic book archive",
             description =
                     "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
                             + "Input:PDF Output:CBZ Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertPdfToCbz(
-            @ModelAttribute ConvertPdfToCbzRequest request) throws IOException {
+    public ResponseEntity<Resource> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
+            throws IOException {
         MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
 
@@ -317,7 +330,10 @@ public class ConvertImgPDFController {
         return WebResponseUtils.zipFileToWebResponse(cbzFile, filename);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbr/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/cbr/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Convert CBR comic book archive to PDF",
             description =
@@ -343,7 +359,10 @@ public class ConvertImgPDFController {
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbr")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/cbr",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert PDF to CBR comic book archive",
             description =

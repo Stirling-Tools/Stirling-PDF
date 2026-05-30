@@ -18,6 +18,7 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.audit.AuditEventType;
@@ -46,6 +48,7 @@ import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
@@ -65,6 +68,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
+    private final LoginAttemptService loginAttemptService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -356,7 +360,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Settings updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/saveUser")
     public ResponseEntity<?> saveUser(
             @RequestParam(name = "username", required = true) String username,
@@ -464,7 +468,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/inviteUsers")
     public ResponseEntity<?> inviteUsers(
             @RequestParam(name = "emails", required = true) String emails,
@@ -581,7 +585,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changeRole")
     @Transactional
     public ResponseEntity<?> changeRole(
@@ -647,7 +651,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User role updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changePasswordForUser")
     public ResponseEntity<?> changePasswordForUser(
             @RequestParam(name = "username") String username,
@@ -721,7 +725,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User password updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changeUserEnabled/{username}")
     public ResponseEntity<?> changeUserEnabled(
             @PathVariable("username") String username,
@@ -773,8 +777,17 @@ public class UserController {
                 Map.of("message", "User " + (enabled ? "enabled" : "disabled") + " successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/unlockUser/{username}")
+    @Audited(type = AuditEventType.SETTINGS_CHANGED, level = AuditLevel.BASIC)
+    public ResponseEntity<?> unlockUser(@PathVariable("username") String username) {
+        loginAttemptService.resetAttempts(username);
+        return ResponseEntity.ok(Map.of("message", "User account unlocked successfully"));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> deleteUser(
             @PathVariable("username") String username, Authentication authentication) {
         if (!userService.usernameExistsIgnoreCase(username)) {
@@ -963,5 +976,35 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to complete initial setup");
         }
+    }
+
+    /**
+     * List all enabled users for selection in signing workflows.
+     *
+     * @param principal The authenticated user
+     * @return List of user summaries
+     */
+    @GetMapping("/users")
+    public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<UserSummaryDTO> users =
+                userRepository.findAll().stream()
+                        .filter(User::isEnabled)
+                        .map(this::toUserSummaryDTO)
+                        .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(users);
+    }
+
+    private UserSummaryDTO toUserSummaryDTO(User user) {
+        return new UserSummaryDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getUsername(), // Use username as displayName
+                user.getTeam() != null ? user.getTeam().getName() : null,
+                user.isEnabled());
     }
 }

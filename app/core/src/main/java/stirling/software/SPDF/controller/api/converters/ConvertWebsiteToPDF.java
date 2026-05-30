@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -33,12 +32,15 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -49,13 +51,17 @@ public class ConvertWebsiteToPDF {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
+    private final TempFileManager tempFileManager;
 
     private static final Pattern FILE_SCHEME_PATTERN =
             Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
 
     private static final Pattern NUMERIC_HTML_ENTITY_PATTERN = Pattern.compile("&#(x?[0-9a-f]+);");
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/url/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
@@ -136,14 +142,15 @@ public class ConvertWebsiteToPDF {
                     .runCommandWithOutputHandling(command);
 
             // Load the PDF using pdfDocumentFactory
-            try (PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile());
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                // Convert URL to a safe filename
-                String outputFilename = convertURLToFileName(URL);
-
-                doc.save(baos);
-                return WebResponseUtils.baosToWebResponse(baos, outputFilename);
+            String outputFilename = convertURLToFileName(URL);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try (PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile())) {
+                doc.save(tempOut.getFile());
+            } catch (Exception e) {
+                tempOut.close();
+                throw e;
             }
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
         } finally {
             if (tempHtmlInput != null) {
                 try {

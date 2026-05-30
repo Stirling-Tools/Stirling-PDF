@@ -1,6 +1,5 @@
 package stirling.software.common.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -66,16 +65,7 @@ public class FileToPdf {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
                                 .runCommandWithOutputHandling(command);
 
-                byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-                try {
-                    return pdfBytes;
-                } catch (Exception e) {
-                    pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-                    if (pdfBytes.length < 1) {
-                        throw e;
-                    }
-                    return pdfBytes;
-                }
+                return Files.readAllBytes(tempOutputFile.getPath());
             } // tempInputFile auto-closed
         } // tempOutputFile auto-closed
     }
@@ -92,8 +82,7 @@ public class FileToPdf {
             throws IOException {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
             try (ZipInputStream zipIn =
-                    ZipSecurity.createHardenedInputStream(
-                            new ByteArrayInputStream(Files.readAllBytes(zipFilePath)))) {
+                    ZipSecurity.createHardenedInputStream(Files.newInputStream(zipFilePath))) {
                 ZipEntry entry = zipIn.getNextEntry();
                 while (entry != null) {
                     Path filePath =

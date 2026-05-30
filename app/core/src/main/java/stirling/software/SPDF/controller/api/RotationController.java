@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -18,9 +19,11 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -28,15 +31,19 @@ import stirling.software.common.util.WebResponseUtils;
 public class RotationController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/rotate-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/rotate-pdf",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Rotate a PDF file",
             description =
                     "This endpoint rotates a given PDF file by a specified angle. The angle must be"
                             + " a multiple of 90. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> rotatePDF(@ModelAttribute RotatePDFRequest request)
+    public ResponseEntity<Resource> rotatePDF(@ModelAttribute RotatePDFRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
@@ -60,7 +67,8 @@ public class RotationController {
             // Return the rotated PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"));
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"),
+                    tempFileManager);
         }
     }
 }

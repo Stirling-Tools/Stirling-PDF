@@ -1,5 +1,6 @@
 package stirling.software.proprietary.controller.api;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/audit")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
@@ -239,7 +240,7 @@ public class AuditDashboardController {
             csv.append(escapeCSV(event.getData())).append("\n");
         }
 
-        byte[] csvBytes = csv.toString().getBytes();
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
         // Set up HTTP headers for download
         HttpHeaders headers = new HttpHeaders();

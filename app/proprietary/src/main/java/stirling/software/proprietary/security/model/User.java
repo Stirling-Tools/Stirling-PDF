@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -40,6 +41,7 @@ public class User implements UserDetails, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "username", unique = true)
@@ -49,12 +51,13 @@ public class User implements UserDetails, Serializable {
     @JsonIgnore
     private String password;
 
-    @Column(name = "apiKey")
+    @Column(name = "apiKey", unique = true)
     @JsonIgnore
     private String apiKey;
 
+    // Boxed so SaaS rows from Supabase can leave it null; isEnabled() treats null as enabled.
     @Column(name = "enabled")
-    private boolean enabled;
+    private Boolean enabled;
 
     @Column(name = "isFirstLogin")
     private Boolean isFirstLogin = false;
@@ -80,6 +83,13 @@ public class User implements UserDetails, Serializable {
     @Column(name = "oauth_grandfathered")
     private Boolean oauthGrandfathered = false;
 
+    @Column(name = "email", unique = true)
+    private String email;
+
+    // SaaS-only: Supabase user UUID. Null in OSS / proprietary deployments.
+    @Column(name = "supabase_id", unique = true)
+    private UUID supabaseId;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -89,6 +99,7 @@ public class User implements UserDetails, Serializable {
 
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
+    @Lob
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     @JsonIgnore
@@ -104,6 +115,11 @@ public class User implements UserDetails, Serializable {
 
     public String getRoleName() {
         return Role.getRoleNameByRoleId(getRolesAsString());
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled == null || enabled;
     }
 
     public boolean isFirstLogin() {

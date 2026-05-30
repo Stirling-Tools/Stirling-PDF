@@ -1,0 +1,147 @@
+/* Layer Sidebar - Layer-specific styles (base styles in SidebarBase.css) */
+
+/* Header actions (show/hide all buttons) */
+.layer-sidebar__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Layer List */
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* Layer Items */
+.layer-item-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.65rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.layer-item:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, var(--bg-toolbar));
+  border-color: color-mix(
+    in srgb,
+    var(--text-primary) 14%,
+    var(--border-subtle)
+  );
+}
+
+.layer-item:active {
+  background: color-mix(in srgb, var(--text-primary) 10%, var(--bg-toolbar));
+}
+
+.layer-item__expand-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.layer-item__expand-btn:hover {
+  opacity: 1;
+}
+
+.layer-item__expand-placeholder {
+  flex-shrink: 0;
+  width: 1.25rem;
+}
+
+.layer-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  line-height: 1.4;
+  cursor: pointer;
+  user-select: none;
+}
+
+.layer-item--hidden .layer-item__label {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--text-muted) 60%, transparent);
+}
+
+/* Children Container */
+.layer-item__children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-top: 0.125rem;
+  border-left: 2px solid
+    color-mix(in srgb, var(--border-subtle) 60%, transparent);
+  margin-left: 0.875rem;
+  padding-left: 0.25rem;
+}
+
+/* Footer with Apply button */
+.layer-sidebar__footer {
+  padding: 0.625rem 0.875rem;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Dirty indicator badge */
+.layer-sidebar__dirty-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--mantine-color-orange-5);
+  flex-shrink: 0;
+}
+
+/* Animation */
+@keyframes layer-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.layer-item__children {
+  animation: layer-fade-in 0.15s ease;
+}
+
+/* Accessibility & Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .layer-item,
+  .layer-item__children {
+    transition: none;
+    animation: none;
+  }
+}

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.TaskExecutorAdapter;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
 
 @Configuration
 @EnableAsync
@@ -47,5 +48,14 @@ public class AsyncConfig {
                 new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
         adapter.setTaskDecorator(new MDCContextTaskDecorator());
         return adapter;
+    }
+
+    /** Propagates the request's SecurityContext onto background AI-orchestration threads. */
+    @Bean(name = "aiStreamExecutor")
+    public Executor aiStreamExecutor() {
+        TaskExecutorAdapter adapter =
+                new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+        adapter.setTaskDecorator(new MDCContextTaskDecorator());
+        return new DelegatingSecurityContextExecutor(adapter);
     }
 }

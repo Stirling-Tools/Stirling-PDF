@@ -36,7 +36,7 @@ import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
-import stirling.software.common.util.FileMonitor;
+import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -50,8 +50,8 @@ public class PipelineDirectoryProcessor {
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
     private final PipelineProcessor processor;
-    private final FileMonitor fileMonitor;
     private final PostHogService postHogService;
+    private final FileReadinessChecker fileReadinessChecker;
     private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
 
@@ -63,14 +63,14 @@ public class PipelineDirectoryProcessor {
             ObjectMapper objectMapper,
             ApiDocService apiDocService,
             PipelineProcessor processor,
-            FileMonitor fileMonitor,
             PostHogService postHogService,
+            FileReadinessChecker fileReadinessChecker,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
         this.processor = processor;
-        this.fileMonitor = fileMonitor;
         this.postHogService = postHogService;
+        this.fileReadinessChecker = fileReadinessChecker;
         this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
@@ -273,19 +273,20 @@ public class PipelineDirectoryProcessor {
                                         }
                                         return isAllowed;
                                     })
-                            .map(Path::toAbsolutePath)
                             .filter(
                                     path -> {
-                                        boolean isReady =
-                                                fileMonitor.isFileReadyForProcessing(path);
-                                        if (!isReady) {
+                                        if (!fileReadinessChecker.isReady(path)) {
                                             log.info(
-                                                    "File not ready for processing (locked/created"
-                                                            + " last 5s): {}",
-                                                    path);
+                                                    "File '{}' is not yet ready for processing"
+                                                            + " (still being written or locked),"
+                                                            + " will retry on next scan cycle",
+                                                    path.getFileName());
+                                            return false;
                                         }
-                                        return isReady;
+                                        return true;
                                     })
+                            .map(Path::toAbsolutePath)
+                            .filter(path -> true)
                             .map(Path::toFile)
                             .toArray(File[]::new);
             log.info(

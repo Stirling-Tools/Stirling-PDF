@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +59,7 @@ public class ApplicationProperties {
     private Legal legal = new Legal();
     private Security security = new Security();
     private System system = new System();
+    private Storage storage = new Storage();
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
@@ -74,6 +76,9 @@ public class ApplicationProperties {
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
+    private AiEngine aiEngine = new AiEngine();
+    private InternalApi internalApi = new InternalApi();
+    private Cluster cluster = new Cluster();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -94,7 +99,14 @@ public class ApplicationProperties {
         EncodedResource encodedResource = new EncodedResource(resource);
         PropertySource<?> propertySource =
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
-        environment.getPropertySources().addFirst(propertySource);
+
+        boolean saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        if (saasActive) {
+            // Saas-pinned values in application-saas.properties must beat settings.yml.
+            environment.getPropertySources().addLast(propertySource);
+        } else {
+            environment.getPropertySources().addFirst(propertySource);
+        }
 
         log.debug("Loaded properties: {}", propertySource.getSource());
 
@@ -150,6 +162,44 @@ public class ApplicationProperties {
     @Data
     public static class AutoPipeline {
         private String outputFolder;
+        private FileReadiness fileReadiness = new FileReadiness();
+
+        /**
+         * Configuration for the {@link stirling.software.common.util.FileReadinessChecker}.
+         * Controls how the pipeline determines whether a file is fully written and stable before
+         * processing begins.
+         */
+        @Data
+        public static class FileReadiness {
+            /**
+             * Master toggle. When {@code false} every readiness check is skipped and all files are
+             * considered immediately ready (preserves legacy behaviour).
+             */
+            private boolean enabled = true;
+
+            /**
+             * How long (in milliseconds) a file must remain unmodified before it is considered
+             * stable. Files modified more recently than this threshold are skipped and retried on
+             * the next scan cycle. Default: 5 000 ms (5 seconds).
+             */
+            private long settleTimeMillis = 5000;
+
+            /**
+             * How long (in milliseconds) to pause between two consecutive file-size reads when
+             * checking whether a file is still being written. If the size differs between the two
+             * reads the file is considered unstable. This catches active copies on Linux/macOS
+             * where advisory locking alone cannot detect a mid-copy file. Default: 500 ms.
+             */
+            private long sizeCheckDelayMillis = 500;
+
+            /**
+             * Optional list of file extensions (without the leading dot, case-insensitive) that are
+             * allowed through the readiness check. An empty list means all extensions are accepted.
+             * Example: {@code ["pdf", "tiff"]} will skip any file whose extension is not {@code
+             * pdf} or {@code tiff}.
+             */
+            private List<String> allowedExtensions = new java.util.ArrayList<>();
+        }
     }
 
     @Data
@@ -193,6 +243,133 @@ public class ApplicationProperties {
     }
 
     @Data
+    public static class AiEngine {
+        private boolean enabled = false;
+        private String url = "http://localhost:5001";
+        private int timeoutSeconds = 120;
+
+        /**
+         * Longer timeout for heavy operations like RAG ingestion, which embeds the whole document
+         * and can take multiple minutes for large books. Applied per-call when the caller
+         * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
+         */
+        private int longRunningTimeoutSeconds = 600;
+    }
+
+    /**
+     * Cluster backplane configuration. All keys live under the top-level {@code cluster.*} prefix
+     * (e.g. env var {@code CLUSTER_ENABLED}). The master switch is {@link #enabled} and defaults to
+     * off; when off the in-process backplane is wired and no other cluster keys are required.
+     */
+    @Data
+    public static class Cluster {
+
+        /** Master switch. When {@code false} (default) the in-process backplane is wired. */
+        private boolean enabled = false;
+
+        /** Backplane implementation selector. Valid values: {@code inprocess} | {@code valkey}. */
+        private String backplane = "inprocess";
+
+        /**
+         * Transient cluster job-artifact store selector. Valid values: {@code local} | {@code s3}.
+         *
+         * <p>This is distinct from {@code storage.provider}, which selects the backend for
+         * persistent user-uploaded files. The two switches exist because the user-facing storage
+         * feature is optional ({@code storage.enabled=false} is common) but every multi-node
+         * cluster still needs a shared artifact store to serve cross-node downloads. Both
+         * implementations share credentials from {@code storage.s3.*} when set to {@code s3}.
+         */
+        private String artifactStore = "local";
+
+        private Valkey valkey = new Valkey();
+        private Node node = new Node();
+
+        private transient String cachedNodeId;
+
+        public NodeRole resolvedRole() {
+            if (node == null || node.getRole() == null) {
+                return NodeRole.BOTH;
+            }
+            String value = node.getRole().trim().toUpperCase(Locale.ROOT);
+            try {
+                return NodeRole.valueOf(value);
+            } catch (IllegalArgumentException ex) {
+                return NodeRole.BOTH;
+            }
+        }
+
+        public synchronized String resolvedNodeId() {
+            if (node != null && node.getId() != null && !node.getId().isBlank()) {
+                return node.getId();
+            }
+            if (cachedNodeId == null) {
+                cachedNodeId = UUID.randomUUID().toString();
+            }
+            return cachedNodeId;
+        }
+
+        public enum NodeRole {
+            WEB,
+            WORKER,
+            BOTH
+        }
+
+        @Data
+        public static class Valkey {
+            /**
+             * {@code redis://host:6379} or {@code rediss://...} for TLS. Required when cluster mode
+             * is on and backplane is valkey.
+             */
+            private String url = "";
+
+            private Tls tls = new Tls();
+
+            @Data
+            public static class Tls {
+                /**
+                 * When {@code true}, skip Valkey/Redis TLS certificate verification (dev/test
+                 * only). Leave {@code false} in production.
+                 */
+                private boolean skipCertVerification = false;
+            }
+        }
+
+        @Data
+        public static class Node {
+            /** Optional explicit node id. Blank = auto-generated UUID at startup. */
+            private String id = "";
+
+            /** {@code web} | {@code worker} | {@code both}. */
+            private String role = "both";
+
+            /**
+             * Internal cluster address advertised in the instance registry (host:port). Blank =
+             * derived at startup.
+             */
+            private String internalAddress = "";
+
+            /** {@code http} | {@code https} - scheme used when peers call this node. */
+            private String scheme = "http";
+
+            /** Heartbeat publish interval for the instance registry, in milliseconds. */
+            private long heartbeatIntervalMs = 5000;
+        }
+    }
+
+    /**
+     * HTTP timeouts for loopback calls to internal Stirling API endpoints, used by the AI workflow
+     * executor and the pipeline processor. A bounded read timeout prevents a hung tool (e.g. an
+     * infinite loop in a PDF processing service) from stalling the entire chat workflow forever.
+     * Tools that legitimately need longer than the read timeout should be invoked through the async
+     * job executor instead of synchronously.
+     */
+    @Data
+    public static class InternalApi {
+        private int connectTimeoutSeconds = 10;
+        private int readTimeoutSeconds = 300;
+    }
+
+    @Data
     public static class Legal {
         private String termsAndConditions;
         private String privacyPolicy;
@@ -213,6 +390,7 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
+        private Timestamp timestamp = new Timestamp();
         private String xFrameOptions = "DENY";
 
         public Boolean isAltLogin() {
@@ -349,6 +527,16 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+
+            /**
+             * When true, the OAuth2/OIDC login flow logs the full set of ID token and UserInfo
+             * claims at INFO level (and again at ERROR level if the username attribute cannot be
+             * resolved). Used to diagnose provider misconfiguration (for example ADFS not returning
+             * an {@code email} claim). WARNING: writes PII (sub, email, name) to application logs.
+             * Leave disabled in production; enable only while actively troubleshooting and disable
+             * again afterwards.
+             */
+            private Boolean debugLogging = false;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
@@ -531,6 +719,12 @@ public class ApplicationProperties {
                 private boolean hardFail = false;
             }
         }
+
+        @Data
+        public static class Timestamp {
+            private String defaultTsaUrl = "http://timestamp.digicert.com";
+            private List<String> customTsaUrls = new ArrayList<>();
+        }
     }
 
     @Data
@@ -586,6 +780,93 @@ public class ApplicationProperties {
         public boolean isScarfEnabled() {
             // Treat null as enabled when analytics is enabled
             return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
+        }
+    }
+
+    @Data
+    public static class Storage {
+        private boolean enabled = false;
+        private String provider = "local";
+        private Local local = new Local();
+        private S3 s3 = new S3();
+        private Quotas quotas = new Quotas();
+        private Sharing sharing = new Sharing();
+        private Signing signing = new Signing();
+
+        @Data
+        public static class Local {
+            private String basePath = InstallationPathConfig.getPath() + "storage";
+        }
+
+        @Data
+        public static class S3 {
+            /**
+             * Optional custom endpoint (e.g. {@code https://<account>.r2.cloudflarestorage.com},
+             * {@code https://<project>.supabase.co/storage/v1/s3}, or {@code http://localhost:9000}
+             * for MinIO). Blank = use AWS regional default.
+             */
+            private String endpoint = "";
+
+            private String bucket = "";
+
+            private String region = "us-east-1";
+
+            private String accessKey = "";
+            private String secretKey = "";
+
+            /**
+             * When {@code true} use path-style URLs ({@code <endpoint>/<bucket>/<key>}) instead of
+             * virtual-hosted ({@code <bucket>.<endpoint>/<key>}). MinIO and most S3-compatible
+             * gateways require path-style; AWS S3 prefers virtual-hosted.
+             */
+            private boolean pathStyleAccess = false;
+
+            /**
+             * When {@code false} (default), {@code endpoint} hostnames that resolve to private,
+             * loopback, or link-local addresses are rejected at startup to block SSRF attacks via
+             * the cloud metadata service (e.g. {@code http://169.254.169.254/}). Set to {@code
+             * true} to opt in for MinIO / in-cluster S3 endpoints on private networks.
+             */
+            private boolean allowPrivateEndpoints = false;
+
+            /**
+             * Controls when the SDK adds an {@code x-amz-checksum-*} header on PUT/UploadPart.
+             * Default {@code WHEN_SUPPORTED} (the SDK default since 2.30) makes the SDK send a
+             * CRC32 checksum on every upload - this works on AWS S3, MinIO, current Supabase,
+             * Backblaze B2 (post-July-2025), and modern R2. Set to {@code WHEN_REQUIRED} to
+             * suppress the auto-checksum on vendors that reject unknown {@code x-amz-checksum-*}
+             * headers (older Backblaze B2, some R2 corner cases, GCS S3 endpoint). Invalid values
+             * fall back to {@code WHEN_SUPPORTED}.
+             */
+            private String requestChecksumCalculation = "WHEN_SUPPORTED";
+
+            /**
+             * Controls when the SDK validates returned {@code x-amz-checksum-*} headers on GET
+             * responses. Default {@code WHEN_SUPPORTED}. Set to {@code WHEN_REQUIRED} if your
+             * vendor never returns these headers and you see false-positive checksum-mismatch
+             * errors. Invalid values fall back to {@code WHEN_SUPPORTED}.
+             */
+            private String responseChecksumValidation = "WHEN_SUPPORTED";
+        }
+
+        @Data
+        public static class Sharing {
+            private boolean enabled = false;
+            private boolean linkEnabled = false;
+            private boolean emailEnabled = false;
+            private int linkExpirationDays = 3;
+        }
+
+        @Data
+        public static class Quotas {
+            private long maxStorageMbPerUser = -1;
+            private long maxStorageMbTotal = -1;
+            private long maxFileMb = -1;
+        }
+
+        @Data
+        public static class Signing {
+            private boolean enabled = false;
         }
     }
 
@@ -696,8 +977,7 @@ public class ApplicationProperties {
 
         @Override
         public String toString() {
-            return
-                    """
+            return """
             Driver {
               driverName='%s'
             }

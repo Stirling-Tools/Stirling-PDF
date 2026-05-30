@@ -13,11 +13,18 @@ public class EmlToPdf {
 
     public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
             throws IOException {
+        return convertEmlToHtml(emlBytes, request, null);
+    }
+
+    public static String convertEmlToHtml(
+            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
+            throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
         EmlParser.EmailContent emailContent =
-                EmlParser.extractEmailContent(emlBytes, request, null);
-        return EmlProcessingUtils.generateEnhancedEmailHtml(emailContent, request, null);
+                EmlParser.extractEmailContent(emlBytes, request, customHtmlSanitizer);
+        return EmlProcessingUtils.generateEnhancedEmailHtml(
+                emailContent, request, customHtmlSanitizer);
     }
 
     public static byte[] convertEmlToPdf(
