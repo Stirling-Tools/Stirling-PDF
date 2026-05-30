@@ -88,7 +88,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           />
         ),
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: lazy(() => import("@app/tools/pdfTextEditor/PdfTextEditor")),
+        component: lazy(
+          () => import("@app/tools/pdfTextEditor/PdfTextEditorRouter"),
+        ),
         description: t(
           "home.pdfTextEditor.desc",
           "Review and edit text and images in PDFs with grouped text editing and PDF regeneration",
