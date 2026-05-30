@@ -121,6 +121,43 @@ test.describe("Settings dialog", () => {
     await restored.click();
   });
 
+  test("close returns to origin URL even after switching tabs (no history pile-up)", async ({
+    page,
+  }) => {
+    // Land on / first so the originating URL is unambiguous.
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator('[data-testid="config-button"]').first(),
+    ).toBeVisible({ timeout: 5_000 });
+
+    const originPath = new URL(page.url()).pathname;
+    const dialog = await openSettings(page);
+
+    // Click the same visible nav 3 times. In the buggy code each click
+    // pushed a fresh history entry, so close-by-back popped only the
+    // most recent tab change. The fix uses PUSH for the first nav (when
+    // not yet in /settings/*) and REPLACE for subsequent navs, so the
+    // origin URL stays at history depth 1 regardless of how many tabs
+    // the user clicks through.
+    const generalNav = dialog
+      .locator('[data-tour="admin-general-nav"]')
+      .first();
+    await expect(generalNav).toBeVisible({ timeout: 5_000 });
+    for (let i = 0; i < 3; i++) {
+      await generalNav.click();
+    }
+    // Wait for the URL to settle on /settings/general before closing so
+    // we're not racing the in-modal nav under parallel-worker load.
+    await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
+
+    await closeSettings(page);
+    // Wait for the URL pathname to settle back to origin. Match only
+    // pathname so trailing ?query or #hash don't trip the assertion.
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 5_000 })
+      .toBe(originPath);
+  });
+
   test("config sub-sections (System / Features / Endpoints / API Keys) are reachable when present", async ({
     page,
   }) => {

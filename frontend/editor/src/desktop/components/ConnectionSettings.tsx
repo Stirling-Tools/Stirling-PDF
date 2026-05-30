@@ -7,9 +7,11 @@ import {
 } from "@app/services/connectionModeService";
 import { authService, UserInfo } from "@app/services/authService";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
+import { useAuth } from "@app/auth/UseSession";
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();
+  const { signOut } = useAuth();
   const [config, setConfig] = useState<ConnectionConfig | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,22 @@ export const ConnectionSettings: React.FC = () => {
       if (config?.mode === "selfhosted" && config?.server_config?.url) {
         localStorage.setItem("server_url", config.server_config.url);
       }
-      await authService.logout();
+      // Use the proprietary signOut (which also fans out the SIGNED_OUT event
+      // to the AuthProvider so the React tree sees the unauthenticated state)
+      // and treat authService.logout() as a fallback if it errors. The previous
+      // implementation only called authService.logout() directly, which cleared
+      // the Tauri-stored token+user_info but left the proprietary AuthProvider's
+      // session state stale - so the FileSidebar badge kept showing the prior
+      // user's name until the next session check happened to fire.
+      try {
+        await signOut();
+      } catch (signOutError) {
+        console.warn(
+          "[ConnectionSettings] signOut() failed, falling back to authService.logout()",
+          signOutError,
+        );
+        await authService.logout();
+      }
       // Always switch to local after logout so the app remains usable
       await connectionModeService.switchToLocal();
 

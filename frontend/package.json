@@ -82,7 +82,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "update:minor": "node editor/scripts/update-minor.js",
+    "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
     "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
@@ -124,6 +124,7 @@
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
@@ -149,5 +150,8 @@
       "@testing-library/user-event",
       "@vitest/coverage-v8"
     ]
+  },
+  "overrides": {
+    "devalue": "^5.8.1"
   }
 }

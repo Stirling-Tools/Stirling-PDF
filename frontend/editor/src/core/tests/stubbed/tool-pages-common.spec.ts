@@ -36,10 +36,10 @@ test.describe("4. PDF Tool Pages - Common Patterns", () => {
       await page.goto("/compress");
       await page.waitForLoadState("domcontentloaded");
 
-      // Step 2: Click the "Back to tools" button in ToolPanel to go back to /.
+      // Step 2: Click the "Back to all tools" button in ToolPanel to go back to /.
       // In the redesigned UI this replaces the old "Tools" sidebar link.
       const homeLink = page
-        .getByRole("button", { name: /Back to tools/i })
+        .getByRole("button", { name: /Back to all tools/i })
         .first();
       await homeLink.click();
 
