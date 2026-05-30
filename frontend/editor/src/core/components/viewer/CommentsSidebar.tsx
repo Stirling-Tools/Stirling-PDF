@@ -125,7 +125,7 @@ const TOOL_ICON_MAP: Record<string, string> = {
   squiggly: "show-chart",
   ink: "edit",
   inkHighlighter: "brush",
-  square: "crop-square",
+  square: "crop-square-outline",
   circle: "radio-button-unchecked",
   line: "show-chart",
   lineArrow: "show-chart",
@@ -144,7 +144,7 @@ function getIconByType(type: number | undefined): string {
   if (type === 1) return "comment";
   if (type === 3) return "sticky-note-2";
   if (type === 4 || type === 8) return "show-chart";
-  if (type === 5) return "crop-square";
+  if (type === 5) return "crop-square-outline";
   if (type === 6) return "radio-button-unchecked";
   if (type === 7 || type === 8) return "change-history";
   if (type === 9) return "highlight";

@@ -43,6 +43,8 @@ project: &project
   - Taskfile.yml
   - .taskfiles/backend.yml
   - .taskfiles/docker.yml
+  - scripts/db-migration/**
+  - .github/workflows/db-migration-test.yml
 
 frontend: &frontend
   - frontend/**

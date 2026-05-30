@@ -8,17 +8,9 @@ import {
   AdjustPageScaleParameters,
   defaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import { buildAdjustPageScaleFormData } from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
 
-export const buildAdjustPageScaleFormData = (
-  parameters: AdjustPageScaleParameters,
-  file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("scaleFactor", parameters.scaleFactor.toString());
-  formData.append("pageSize", parameters.pageSize);
-  return formData;
-};
+export { buildAdjustPageScaleFormData };
 
 export const adjustPageScaleOperationConfig = {
   toolType: ToolType.singleFile,

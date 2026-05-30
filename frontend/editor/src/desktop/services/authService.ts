@@ -1,4 +1,5 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import { generateId } from "@app/utils/generateId";
 import { listen } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { connectionModeService } from "@app/services/connectionModeService";
@@ -1008,7 +1009,7 @@ export class AuthService {
     serverUrl: string,
   ): Promise<UserInfo> {
     // Generate and store nonce for CSRF protection
-    const nonce = crypto.randomUUID();
+    const nonce = generateId();
     sessionStorage.setItem("oauth_nonce", nonce);
     console.log(
       "[Desktop AuthService] Generated OAuth nonce for CSRF protection",
