@@ -7,11 +7,13 @@ import React, {
   createContext,
   useContext,
   useCallback,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId } from "@app/types/file";
+import { FolderId } from "@app/types/folder";
 import {
   StirlingFileStub,
   createStirlingFile,
@@ -20,6 +22,9 @@ import {
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 
 const DEBUG = process.env.NODE_ENV === "development";
+
+/** LRU cap for the in-memory file blob cache. Module-scoped so it isn't recreated each render. */
+const MAX_CACHE_SIZE = 50;
 
 interface IndexedDBContextValue {
   // Core CRUD operations
@@ -47,12 +52,25 @@ interface IndexedDBContextValue {
   updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
   markFileAsProcessed: (fileId: FileId) => Promise<boolean>;
 
-  // Incremented after any write or delete — subscribe to trigger re-reads
-  revision: number;
+  // Folder operations
+  moveFilesToFolder: (
+    fileIds: FileId[],
+    folderId: FolderId | null,
+  ) => Promise<FileId[]>;
+  clearFolderForFiles: (folderIds: FolderId[]) => Promise<number>;
+
+  // Bumped after any write or delete. Subscribe to changes via
+  // `useIndexedDBRevision()` - exposing the value here would force the
+  // entire API context to invalidate on every write, cascading downstream
+  // useCallback deps and creating refetch loops.
   bumpRevision: () => void;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
+
+// Separate context for the revision number so consumers that only need the
+// stable method API are not re-rendered when revision bumps.
+const IndexedDBRevisionContext = createContext<number>(0);
 
 interface IndexedDBProviderProps {
   children: React.ReactNode;
@@ -66,7 +84,6 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const fileCache = useRef(
     new Map<FileId, { file: File; lastAccessed: number }>(),
   );
-  const MAX_CACHE_SIZE = 50; // Maximum number of files to cache
 
   // LRU cache management
   const evictLRUEntries = useCallback(() => {
@@ -242,25 +259,72 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [bumpRevision],
   );
 
-  const value: IndexedDBContextValue = {
-    saveFile,
-    loadFile,
-    loadMetadata,
-    deleteFile,
-    loadAllMetadata,
-    loadLeafMetadata,
-    deleteMultiple,
-    clearAll,
-    getStorageStats,
-    updateThumbnail,
-    markFileAsProcessed,
-    revision,
-    bumpRevision,
-  };
+  const moveFilesToFolder = useCallback(
+    async (fileIds: FileId[], folderId: FolderId | null): Promise<FileId[]> => {
+      const updated = await fileStorage.moveFilesToFolder(fileIds, folderId);
+      if (updated.length > 0) bumpRevision();
+      return updated;
+    },
+    [bumpRevision],
+  );
+
+  const clearFolderForFiles = useCallback(
+    async (folderIds: FolderId[]): Promise<number> => {
+      const cleared = await fileStorage.clearFolderForFiles(folderIds);
+      if (cleared > 0) bumpRevision();
+      return cleared;
+    },
+    [bumpRevision],
+  );
+
+  // Memoize the context value so consumers' useIndexedDB() reference stays
+  // stable across renders. Without this, every IndexedDBProvider render
+  // (e.g. on bumpRevision after a thumbnail write) hands every consumer a
+  // brand-new object, invalidating downstream useCallback deps that include
+  // `indexedDB` (notably useFileManager.loadRecentFiles), which can cascade
+  // into infinite refetch loops in components that depend on those callbacks.
+  // `revision` is intentionally NOT a dep here - consume it via
+  // `useIndexedDBRevision()` so revision bumps don't churn the API value.
+  const value = useMemo<IndexedDBContextValue>(
+    () => ({
+      saveFile,
+      loadFile,
+      loadMetadata,
+      deleteFile,
+      loadAllMetadata,
+      loadLeafMetadata,
+      deleteMultiple,
+      clearAll,
+      getStorageStats,
+      updateThumbnail,
+      markFileAsProcessed,
+      moveFilesToFolder,
+      clearFolderForFiles,
+      bumpRevision,
+    }),
+    [
+      saveFile,
+      loadFile,
+      loadMetadata,
+      deleteFile,
+      loadAllMetadata,
+      loadLeafMetadata,
+      deleteMultiple,
+      clearAll,
+      getStorageStats,
+      updateThumbnail,
+      markFileAsProcessed,
+      moveFilesToFolder,
+      clearFolderForFiles,
+      bumpRevision,
+    ],
+  );
 
   return (
     <IndexedDBContext.Provider value={value}>
-      {children}
+      <IndexedDBRevisionContext.Provider value={revision}>
+        {children}
+      </IndexedDBRevisionContext.Provider>
     </IndexedDBContext.Provider>
   );
 }
@@ -271,4 +335,12 @@ export function useIndexedDB() {
     throw new Error("useIndexedDB must be used within an IndexedDBProvider");
   }
   return context;
+}
+
+/**
+ * Subscribe to IndexedDB write revisions. The number increments after any
+ * write or delete; use it as a `useEffect` dep to refetch stubs etc.
+ */
+export function useIndexedDBRevision(): number {
+  return useContext(IndexedDBRevisionContext);
 }
