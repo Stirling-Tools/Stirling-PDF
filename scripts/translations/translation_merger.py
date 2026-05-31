@@ -22,7 +22,9 @@ import tomli_w
 class TranslationMerger:
     def __init__(
         self,
-        locales_dir: str = os.path.join(os.getcwd(), "frontend", "editor", "public", "locales"),
+        locales_dir: str = os.path.join(
+            os.getcwd(), "frontend", "editor", "public", "locales"
+        ),
         ignore_file: str = os.path.join(
             os.getcwd(), "scripts", "ignore_translation.toml"
         ),
