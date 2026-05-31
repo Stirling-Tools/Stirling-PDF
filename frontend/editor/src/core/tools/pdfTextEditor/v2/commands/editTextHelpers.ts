@@ -292,7 +292,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   return ptrs;
 }
 
-function measureObjRightEdgePt(m: WrappedPdfiumModule, objPtr: number): number {
+export function measureObjRightEdgePt(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+): number {
   const l = m.pdfium.wasmExports.malloc(4);
   const b = m.pdfium.wasmExports.malloc(4);
   const r = m.pdfium.wasmExports.malloc(4);

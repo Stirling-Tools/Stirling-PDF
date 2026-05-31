@@ -1,7 +1,10 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
-import { emitTextLine } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import {
+  emitTextLine,
+  measureObjRightEdgePt,
+} from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
 
 /**
@@ -25,6 +28,14 @@ export interface PartialEditOp {
   subRunIdx?: number;
   /** insert: text to emit in fallback font */
   text?: string;
+  /**
+   * insert only: the original sub-run this insert is replacing (came
+   * from a "mixed" sub-run whose kept chars need a new emit). When set,
+   * the emit anchors at the original sub-run's x position so the line
+   * keeps its source layout. Inserts WITHOUT this field (pure user
+   * additions like typing at end-of-line) emit at the running cursor.
+   */
+  anchorSubRunIdx?: number;
 }
 
 export interface PartialEditPlan {
@@ -150,9 +161,26 @@ export function planPartialEdit(
   // and emit a single "keep" op the first time we see that sub-run.
   // For runs of inserted chars, accumulate into a buffer and flush as
   // one "insert" op when we hit a kept char (or end of next).
+  //
+  // When an insert buffer's content all came from a SINGLE mixed
+  // sub-run, we tag the flushed insert op with that sub-run's idx so
+  // applyPartialEditPlan can position the new emit at the original
+  // sub-run's x (preserving the source layout's slot for that word
+  // instead of pushing everything right by the new-text width).
   const ops: PartialEditOp[] = [];
   let lastSubRun = -1;
   let insertBuf = "";
+  let insertAnchorSubRun: number | undefined;
+  function flushInsert(): void {
+    if (insertBuf.length === 0) return;
+    ops.push({
+      type: "insert",
+      text: insertBuf,
+      anchorSubRunIdx: insertAnchorSubRun,
+    });
+    insertBuf = "";
+    insertAnchorSubRun = undefined;
+  }
   // Map next-bIdx → aIdx via alignment array
   const bToA = new Map<number, number>();
   for (const { aIdx, bIdx } of alignment) bToA.set(bIdx, aIdx);
@@ -171,13 +199,16 @@ export function planPartialEdit(
       // that lose their original font - the surrounding unchanged
       // sub-runs are fully preserved).
       if (mixedSubRuns.has(subRunIdx)) {
+        // First mixed-sub-run char seen sets the anchor; if a later
+        // char comes from a DIFFERENT mixed sub-run, drop the anchor
+        // (we can only anchor a single insert at one position).
+        if (insertBuf.length === 0) insertAnchorSubRun = subRunIdx;
+        else if (insertAnchorSubRun !== subRunIdx)
+          insertAnchorSubRun = undefined;
         insertBuf += nextText[b];
         continue;
       }
-      if (insertBuf.length > 0) {
-        ops.push({ type: "insert", text: insertBuf });
-        insertBuf = "";
-      }
+      flushInsert();
       if (subRunIdx !== lastSubRun) {
         ops.push({ type: "keep", subRunIdx });
         lastSubRun = subRunIdx;
@@ -186,9 +217,7 @@ export function planPartialEdit(
       insertBuf += nextText[b];
     }
   }
-  if (insertBuf.length > 0) {
-    ops.push({ type: "insert", text: insertBuf });
-  }
+  flushInsert();
 
   // Collect removals: both all-deleted sub-runs AND mixed sub-runs
   // (mixed sub-runs get re-emitted via Helvetica chunks above).
@@ -215,16 +244,6 @@ export function planPartialEdit(
 
 interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
-}
-
-let measureCanvas: HTMLCanvasElement | null = null;
-function measureAdvancePt(text: string, fontSizePt: number): number {
-  if (typeof document === "undefined") return text.length * fontSizePt * 0.5;
-  if (!measureCanvas) measureCanvas = document.createElement("canvas");
-  const ctx = measureCanvas.getContext("2d");
-  if (!ctx) return text.length * fontSizePt * 0.5;
-  ctx.font = `${fontSizePt}pt "Liberation Sans", Helvetica, Arial, sans-serif`;
-  return ctx.measureText(text).width;
 }
 
 export interface PartialEditApplyResult {
@@ -280,41 +299,77 @@ export function applyPartialEditPlan(
   const newMergedFromBounds: Array<{ x: number; right: number }> = [];
   const insertedPtrs: number[] = [];
 
-  // Strategy: kept sub-runs ALWAYS stay at their original position.
-  // Inserts fill into the empty slot left by an adjacent deleted /
-  // mixed sub-run. We never shift a kept sub-run sideways - the layout
-  // intent (inter-word positional gaps from the source PDF, glyph
-  // alignment, etc.) is preserved that way. If a Helvetica replacement
-  // for a mixed sub-run is slightly wider or narrower than the original
-  // glyph stretch, the visual result is a small gap or tight overlap at
-  // exactly the edited word's position - bounded and predictable.
+  // Strategy: walk ops in order. Track a cumulative `offset` that gets
+  // added to subsequent kept sub-runs' positions, accounting for the
+  // WIDTH DELTA between each mixed sub-run's original glyphs and its
+  // Helvetica replacement (typically narrower → negative delta → keep
+  // sub-runs after the edit shift LEFT to close the gap).
+  //
+  // For a "delete one letter from middle of word" edit:
+  //   * keep ops before the mixed word: stay at original position
+  //   * insert op for the word's kept chars: emits at the original
+  //     word's left edge (anchor) so leading whitespace is preserved
+  //   * width delta accumulates: e.g. Helvetica "Modle " is ~13pt
+  //     narrower than original LMRoman "Moodle ", so offset = -13pt
+  //   * keep ops AFTER the mixed word: shift left by 13pt, closing
+  //     the gap that would otherwise appear
   let firstX = run.bounds.x;
   let lastEnd = run.bounds.x;
+  let offset = 0;
 
   for (const op of plan.ops) {
     if (op.type === "keep" && op.subRunIdx !== undefined) {
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const text = plan.prevMergedFromTexts[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
+      if (Math.abs(offset) > 0.05) {
+        try {
+          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
+        } catch {
+          /* best-effort */
+        }
+      }
+      const newX = origBounds.x + offset;
+      const newRight = origBounds.right + offset;
       newMergedFromPtrs.push(ptr);
       newMergedFromTexts.push(text);
-      newMergedFromBounds.push({ x: origBounds.x, right: origBounds.right });
-      if (origBounds.right > lastEnd) lastEnd = origBounds.right;
+      newMergedFromBounds.push({ x: newX, right: newRight });
+      if (newRight > lastEnd) lastEnd = newRight;
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
+      const anchorIdx = op.anchorSubRunIdx;
+      const origBounds =
+        anchorIdx !== undefined ? plan.prevMergedFromBounds[anchorIdx] : null;
+      // Anchored inserts (replacing a mixed sub-run) emit at the
+      // original sub-run's x PLUS any offset already accumulated from
+      // earlier replacements. Unanchored inserts (typed-at-end) emit
+      // at lastEnd.
+      const anchorX = origBounds ? origBounds.x + offset : lastEnd;
       const ptrs = emitTextLine({
         doc,
         page,
         text: insertText,
-        x: lastEnd,
+        x: anchorX,
         y: run.matrix.f,
         fontSize: run.fontSize,
         fill: run.fill,
         originalFontPtr: 0,
         fallbackFamily,
       });
-      const measuredWidth = measureAdvancePt(insertText, run.fontSize);
-      let runningCursor = lastEnd;
+      // Use PDFium's actual rendered right edge (read back via
+      // FPDFPageObj_GetBounds) rather than canvas-measured Helvetica
+      // width. Canvas falls back to Liberation Sans which is wider
+      // than PDFium's base-14 Helvetica by 15-20%, so canvas-based
+      // offsets push subsequent keeps too far right.
+      let realRightEdge = anchorX;
+      for (const ptr of ptrs) {
+        const r = measureObjRightEdgePt(m, ptr);
+        if (r > realRightEdge) realRightEdge = r;
+      }
+      const measuredWidth = realRightEdge - anchorX;
+      // Distribute the measured width across the emit ptrs for the
+      // per-chunk model bounds (used by future edits).
+      let runningCursor = anchorX;
       for (let i = 0; i < ptrs.length; i++) {
         const sliceWidth = measuredWidth / ptrs.length;
         newMergedFromPtrs.push(ptrs[i]);
@@ -326,7 +381,14 @@ export function applyPartialEditPlan(
         runningCursor += sliceWidth;
       }
       insertedPtrs.push(...ptrs);
-      lastEnd += measuredWidth;
+      if (runningCursor > lastEnd) lastEnd = runningCursor;
+      // Update offset by the WIDTH DELTA against PDFium's actual
+      // rendered width. Negative delta (Helvetica narrower than
+      // original) shifts subsequent keeps LEFT to close the gap.
+      if (origBounds) {
+        const origWidth = origBounds.right - origBounds.x;
+        offset += measuredWidth - origWidth;
+      }
     }
   }
 
