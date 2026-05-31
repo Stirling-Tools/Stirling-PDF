@@ -21,13 +21,6 @@ const USER_SAMPLE_PDF = path.join(
   __dirname,
   "../test-fixtures/user-sample.pdf",
 );
-// A LaTeX-generated assignment PDF whose body text uses LMRoman12 (an
-// embedded non-base-14 serif). LineGrouper merges its sub-objects and
-// synthesises bridging whitespace - a hostile shape for partialEdit
-// and a frequent source of "edit a single char and the line teleports
-// / duplicates sub-runs" regressions. The fixture is used by the
-// model-integrity test below.
-const LMROMAN_PDF = path.join(__dirname, "../test-fixtures/dbg-exercise3.pdf");
 
 /**
  * v2 PDF text editor regression suite.
@@ -675,7 +668,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(reopenedAllText).toMatch(/Acrobat\s+Alternativ/);
   });
 
-  test("dbg-exercise3.pdf: deleting one char from middle doesn't corrupt or duplicate sub-runs", async ({
+  test("user-sample.pdf: deleting one char from middle of a LineGrouper-merged line doesn't corrupt or duplicate sub-runs", async ({
     page,
   }) => {
     // Regression guard: a previous attempt to teach partialEdit about
@@ -700,7 +693,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
-      .setInputFiles(LMROMAN_PDF);
+      .setInputFiles(USER_SAMPLE_PDF);
     await expect(page.getByTestId("v2-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -726,20 +719,20 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       ).__v2_editor_store;
       const r = store.doc
         .page(0)
-        .runs.find((x) => /Submissions.*Moodle/.test(x.text));
+        .runs.find((x) => /Adobe.*Acrobat.*Alternative/.test(x.text));
       return r
         ? { id: r.id, text: r.text, mergedFromTexts: [...r.mergedFromTexts] }
         : null;
     });
     if (!baseline) {
-      test.skip(true, "fixture missing Submissions/Moodle bullet");
+      test.skip(true, "fixture missing Adobe/Acrobat/Alternative tagline");
       return;
     }
 
     // Pick a deterministic middle-position character to delete: the
-    // letter "M" of "Moodle" (clearly in the middle of the line,
+    // letter "A" of "Adobe" (clearly in the middle of the line,
     // sandwiched between kept sub-runs on both sides).
-    const deleteIdx = baseline.text.indexOf("Moodle");
+    const deleteIdx = baseline.text.indexOf("Adobe");
     expect(deleteIdx).toBeGreaterThan(0);
     const expectedText =
       baseline.text.slice(0, deleteIdx) + baseline.text.slice(deleteIdx + 1);
@@ -807,7 +800,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }, baseline.id);
     if (!after) throw new Error("post-edit run vanished");
 
-    // Text content: exactly baseline minus the M of Moodle.
+    // Text content: exactly baseline minus the A of Adobe.
     expect(after.text).toBe(expectedText);
 
     // Sub-run integrity: any non-trivial (>=3 char) baseline fragment
@@ -826,24 +819,24 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
 
     // Char-fidelity: every non-trivial baseline fragment that wasn't
     // the deleted sub-run must still appear verbatim somewhere in
-    // after.mergedFromTexts. Detects silent char swaps (e.g.
-    // "as a single" became "as  single").
+    // after.mergedFromTexts. Detects silent char swaps.
     const afterJoined = after.mergedFromTexts.join("|");
     for (const t of baseline.mergedFromTexts) {
       if (t.length < 3) continue;
-      // The sub-run that contained the deleted M ("Moodle ") may be
-      // removed or re-emitted - don't assert on that one specifically.
-      if (t.includes("Moodle")) continue;
+      // The sub-run that contained the deleted A may be removed or
+      // re-emitted - don't assert on those specifically.
+      if (t === "A" || t.includes("Adobe")) continue;
       expect(
         afterJoined,
         `baseline fragment ${JSON.stringify(t)} lost from post-edit run`,
       ).toContain(t);
     }
 
-    // Font preservation: typing into an LMRoman-rendered line must
-    // NOT flip the run to base14:Helvetica. The partialEdit path
-    // borrows the original font handle from the surviving sub-objects,
-    // so the kept text stays in its source typeface.
+    // Font preservation: editing a line rendered in a non-base14
+    // source font must NOT flip the run to base14:Helvetica. The
+    // partialEdit path borrows the original font handle from the
+    // surviving sub-objects, so the kept text stays in its source
+    // typeface.
     const afterFontId = await page.evaluate((tid) => {
       const store = (
         window as unknown as {

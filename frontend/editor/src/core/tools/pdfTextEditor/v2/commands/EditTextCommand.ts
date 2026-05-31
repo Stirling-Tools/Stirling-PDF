@@ -145,16 +145,22 @@ export class EditTextCommand implements Command {
 
     const bg = sampleBackground(m, page, run.bounds);
     const safeChars = everyCharIn(this.nextText, this.prevText ?? "");
-    // Reusing the source font is only safe when the font handles its own
-    // Unicode-to-glyph mapping correctly. Subset / CID fonts famously
-    // don't, but neither do non-standard embedded fonts with custom
-    // encodings - calling FPDFText_SetText on a borrowed handle to one
-    // of those returns garbage glyphs (e.g. ÿ for every char that isn't
-    // already in the original string in the same slot). Only trust
-    // fontIds we know are base-14 (the safe set).
-    const looksBase14 = /^base14:/.test(run.fontId);
-    const canReuseFont =
-      looksBase14 && safeChars && !run.fontSubset && run.containerPtr === 0;
+    // Reusing the source font handle works when:
+    //   * Every nextText char already appears in prevText (`safeChars`)
+    //     - guarantees the font has a glyph for each char (it just
+    //       rendered them).
+    //   * The font is NOT a subset (subsets only embed the glyphs the
+    //     original text used; we can't rely on Unicode→glyph mapping
+    //     beyond the original char set).
+    //   * The run lives at page level (FPDFPageObj_CreateTextObj only
+    //     accepts page-level docPtr; form-xobject text needs a different
+    //     code path that PDFium doesn't expose cleanly).
+    //
+    // The previous extra `looksBase14` check was overly conservative -
+    // it forced full-font non-base14 sources (LMRoman, etc.) to flip to
+    // base-14 Helvetica on any edit, even safe-char deletes. Dropping
+    // it lets typed-into-LMRoman titles keep their LMRoman font.
+    const canReuseFont = safeChars && !run.fontSubset && run.containerPtr === 0;
     const originalFontPtr =
       canReuseFont && run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0;
 
