@@ -89,23 +89,11 @@ export function planPartialEdit(
 
   const { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
 
-  // Build charToSubRun by walking sub-run texts AND interleaving the
-  // synthesised whitespace that LineGrouper inserts between adjacent
-  // sub-runs whose bounds don't already meet. Synthesised whitespace
-  // chars live in run.text but DON'T belong to any sub-object - their
-  // map value is -1 (a "ghost" char). LCS-keep on a ghost is a no-op;
-  // LCS-delete on a ghost is also a no-op because there's no underlying
-  // PDFium object to remove (the gap stays in place).
-  //
-  // This is the same bridging logic LineGrouper.apply runs at read-time.
-  // Keeping it in sync here is what lets partialEdit survive lines that
-  // were assembled from a positional-jump source.
+  // Map each prev char index to its sub-run index.
   const charToSubRun = new Array<number>(prevText.length).fill(-1);
-  const subRunRanges: Array<{ start: number; end: number }> = [];
   let charCursor = 0;
   for (let i = 0; i < run.mergedFromPtrs.length; i++) {
     const subText = run.mergedFromTexts[i];
-    const subStart = charCursor;
     for (
       let c = 0;
       c < subText.length && charCursor + c < prevText.length;
@@ -114,42 +102,25 @@ export function planPartialEdit(
       charToSubRun[charCursor + c] = i;
     }
     charCursor += subText.length;
-    subRunRanges.push({ start: subStart, end: charCursor });
-
-    // Insert ghost chars matching the synthesised whitespace LineGrouper
-    // would have produced between this sub-run and the next.
-    if (i + 1 < run.mergedFromPtrs.length) {
-      const curBounds = run.mergedFromBounds[i];
-      const nextBounds = run.mergedFromBounds[i + 1];
-      const gap = nextBounds.x - curBounds.right;
-      const spaceWidth = 0.4 * Math.max(run.fontSize, 4);
-      const wantSpaces =
-        gap > 0.2 * Math.max(run.fontSize, 4)
-          ? Math.max(1, Math.round(gap / Math.max(1, spaceWidth)))
-          : 0;
-      const prevTail = subText.slice(-1);
-      const curHead = run.mergedFromTexts[i + 1].slice(0, 1);
-      const alreadyHave =
-        (/\s/.test(prevTail) ? 1 : 0) + (/\s/.test(curHead) ? 1 : 0);
-      const toInsert = Math.max(0, wantSpaces - alreadyHave);
-      charCursor += toInsert;
-    }
   }
-  if (charCursor !== prevText.length) return null; // mapping doesn't add up
+  if (charCursor !== prevText.length) return null; // sub-run texts don't add up
 
-  // Classify sub-runs by counting only their OWN chars (using the
-  // tracked range), not the ghost gaps.
+  // Classify sub-runs. all-kept = preserve as-is, all-deleted = remove,
+  // mixed = sub-run has some kept and some deleted chars. We can't
+  // PDFium-split a text object, so for mixed we remove the whole thing
+  // and treat the kept chars as if they were inserts (Helvetica fallback).
+  // Far better than re-emitting the WHOLE line as Helvetica.
   const subRunStatus: Array<"all-kept" | "all-deleted" | "mixed"> = [];
   const mixedSubRuns = new Set<number>();
   for (let i = 0; i < run.mergedFromPtrs.length; i++) {
-    const { start, end } = subRunRanges[i];
-    const subLen = end - start;
+    const subText = run.mergedFromTexts[i];
+    const start = subRunStartOf(run, i);
     let keptCount = 0;
-    for (let c = start; c < end; c++) {
+    for (let c = start; c < start + subText.length; c++) {
       if (keptA.has(c)) keptCount += 1;
     }
     if (keptCount === 0) subRunStatus.push("all-deleted");
-    else if (keptCount === subLen) subRunStatus.push("all-kept");
+    else if (keptCount === subText.length) subRunStatus.push("all-kept");
     else {
       subRunStatus.push("mixed");
       mixedSubRuns.add(i);
@@ -170,12 +141,6 @@ export function planPartialEdit(
     if (keptB.has(b)) {
       const a = bToA.get(b)!;
       const subRunIdx = charToSubRun[a];
-      // Ghost chars (LineGrouper-synthesised whitespace between sub-
-      // objects) don't belong to any PDFium text object - we can't
-      // "keep" them as an op. Their presence is already encoded in the
-      // positional gap between the surrounding sub-objects, so keeping
-      // both neighbours preserves the gap automatically.
-      if (subRunIdx === -1) continue;
       // Kept chars in mixed sub-runs are treated as inserts so we can
       // emit them via Helvetica fallback (the only chars in the line
       // that lose their original font - the surrounding unchanged
@@ -193,8 +158,6 @@ export function planPartialEdit(
         lastSubRun = subRunIdx;
       }
     } else {
-      // Char is in nextText but not aligned to anything in prevText -
-      // it's a fresh user-typed char and must be emitted via insert.
       insertBuf += nextText[b];
     }
   }
@@ -225,6 +188,12 @@ export function planPartialEdit(
   };
 }
 
+function subRunStartOf(run: TextRun, subRunIdx: number): number {
+  let start = 0;
+  for (let i = 0; i < subRunIdx; i++) start += run.mergedFromTexts[i].length;
+  return start;
+}
+
 interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
@@ -237,36 +206,6 @@ function measureAdvancePt(text: string, fontSizePt: number): number {
   if (!ctx) return text.length * fontSizePt * 0.5;
   ctx.font = `${fontSizePt}pt "Liberation Sans", Helvetica, Arial, sans-serif`;
   return ctx.measureText(text).width;
-}
-
-interface FontReadingModule {
-  FPDFTextObj_GetFont?: (ptr: number) => number;
-}
-
-/**
- * Borrow the font handle from the FIRST surviving sub-object that
- * wasn't slated for removal. Inserted text reused this font handle
- * via FPDFPageObj_CreateTextObj renders in the same typeface as the
- * surrounding line, instead of jumping to base-14 Helvetica.
- */
-function borrowFontFromSurvivor(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  plan: PartialEditPlan,
-): number {
-  const fontMod = m as unknown as FontReadingModule;
-  if (!fontMod.FPDFTextObj_GetFont) return 0;
-  const removed = new Set(plan.removePtrs.map((r) => r.ptr));
-  for (let i = 0; i < plan.prevMergedFromPtrs.length; i++) {
-    const ptr = plan.prevMergedFromPtrs[i];
-    if (!ptr || removed.has(ptr)) continue;
-    try {
-      const fontPtr = fontMod.FPDFTextObj_GetFont(ptr);
-      if (fontPtr) return fontPtr;
-    } catch {
-      /* try next survivor */
-    }
-  }
-  return 0;
 }
 
 export interface PartialEditApplyResult {
@@ -317,14 +256,6 @@ export function applyPartialEditPlan(
   // space from the saved PDF - because the spaces lived in the gaps
   // between sub-objects, not inside them.
   const fallbackFamily = helveticaVariantFor(run.fontId);
-  // Try to reuse the SOURCE font for inserted text by borrowing the
-  // font handle from the first surviving sub-object. This keeps the
-  // inserted glyphs visually consistent with the line - typing a
-  // letter into an LMRoman document shouldn't make that letter pop
-  // out in Helvetica. Falls back to Helvetica when the font handle
-  // can't be retrieved (e.g. the function isn't exported in this
-  // PDFium build).
-  const originalFontPtr = borrowFontFromSurvivor(m, plan);
   const newMergedFromPtrs: number[] = [];
   const newMergedFromTexts: string[] = [];
   const newMergedFromBounds: Array<{ x: number; right: number }> = [];
@@ -362,7 +293,7 @@ export function applyPartialEditPlan(
         y: run.matrix.f,
         fontSize: run.fontSize,
         fill: run.fill,
-        originalFontPtr,
+        originalFontPtr: 0,
         fallbackFamily,
       });
       const measuredWidth = measureAdvancePt(insertText, run.fontSize);
