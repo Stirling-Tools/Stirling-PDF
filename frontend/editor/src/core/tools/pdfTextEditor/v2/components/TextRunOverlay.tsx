@@ -97,7 +97,7 @@ function measureMaxLineWidth(
  * PDFium text object per line.
  */
 function extractTextWithSoftBreaks(element: HTMLElement): string {
-  const normalized = element.innerText.replace(/ /g, " ");
+  const normalized = element.innerText.replace(/\u00A0/g, " ");
   if (!element.isConnected) return normalized;
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
   const range = document.createRange();
@@ -175,7 +175,6 @@ export function TextRunOverlay({
   useEffect(() => {
     const el = ref.current;
     if (el && el.innerText === "") el.innerText = run.text;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const left = run.bounds.x * scale;
@@ -190,7 +189,6 @@ export function TextRunOverlay({
   const fontWeight = cssWeightFor(run.fontId);
   const fontStyle = cssStyleFor(run.fontId);
   const fontSizePx = Math.max(4, run.fontSize * scale);
-  const isParagraph = (run.paragraphLineCount ?? 1) > 1;
   const measuredWidth = measureMaxLineWidth(
     run.text,
     fontFamily,

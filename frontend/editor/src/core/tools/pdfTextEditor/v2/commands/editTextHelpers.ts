@@ -74,7 +74,7 @@ export function removeMemberPtrs(
       continue;
     }
     const container = containerByPtr.get(ptr) ?? fallbackContainerPtr;
-    let ok = false;
+    let ok: boolean;
     if (container && formMod.FPDFFormObj_RemoveObject) {
       try {
         ok = !!formMod.FPDFFormObj_RemoveObject(container, ptr);

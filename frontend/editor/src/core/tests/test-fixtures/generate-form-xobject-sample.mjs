@@ -1,3 +1,4 @@
+import process from "node:process";
 // One-off script: generate `form-xobject-sample.pdf`, a synthetic
 // magazine-style PDF whose page content lives inside a Form XObject.
 // This mirrors the structural pattern InDesign / professional layout

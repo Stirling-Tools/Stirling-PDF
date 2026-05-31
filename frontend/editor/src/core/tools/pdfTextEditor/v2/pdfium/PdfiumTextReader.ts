@@ -107,7 +107,7 @@ function walkObjects(
       const img = readImage(m, page, objPtr, indexId);
       if (img) images.push(img);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
-      let formCount = 0;
+      let formCount: number;
       try {
         formCount = formModule.FPDFFormObj_CountObjects(objPtr);
       } catch {
@@ -253,7 +253,7 @@ function readFontFamily(
 
 function readTextRun(
   m: WrappedPdfiumModule,
-  doc: EditorDocument,
+  _doc: EditorDocument,
   page: Page,
   objPtr: number,
   index: number | string,

@@ -1,3 +1,4 @@
+import process from "node:process";
 // One-off script: generate `paragraph-sample.pdf`, a synthetic PDF
 // whose page contains a multi-line body paragraph with consistent
 // font/size/colour/left-margin. ParagraphGrouper should fold all four

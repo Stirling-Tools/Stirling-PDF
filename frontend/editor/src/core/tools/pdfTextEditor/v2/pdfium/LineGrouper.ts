@@ -29,12 +29,9 @@ export interface LineGroupInfo {
 }
 
 const BASELINE_TOLERANCE = 0.4;
-// Two runs on the same baseline join the same line only if the
-// horizontal gap between them is BOTH within `WORD_GAP_FACTOR * fontSize`
-// AND below an absolute cap. The cap catches column gutters that happen
-// to be a small multiple of the font size; without it, runs from the
-// right column merge into left-column lines that share a baseline.
-const WORD_GAP_FACTOR = 0.6;
+// Two runs on the same baseline join the same line only when the
+// horizontal gap between them is below this absolute cap. Catches
+// column gutters that would otherwise merge across the column break.
 const ABS_MAX_GAP_PT = 12;
 
 export class LineGrouper {

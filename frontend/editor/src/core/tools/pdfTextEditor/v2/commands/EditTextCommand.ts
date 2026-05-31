@@ -11,11 +11,6 @@ import {
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import {
-  applyDeletionPlan,
-  planDeletionEdit,
-  type DeletionPlan,
-} from "@app/tools/pdfTextEditor/v2/commands/deletionOnlyEdit";
-import {
   applyPartialEditPlan,
   planPartialEdit,
   type PartialEditPlan,
@@ -58,8 +53,6 @@ export class EditTextCommand implements Command {
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
   private revertCreatedPtrs: number[] = [];
-  /** Set when the apply path took the deletion-only shortcut. */
-  private deletionPlan: DeletionPlan | null = null;
   /** Set when the apply path took the partial-edit (LCS) shortcut. */
   private partialPlan: PartialEditPlan | null = null;
   private partialInsertedPtrs: number[] = [];
@@ -88,11 +81,7 @@ export class EditTextCommand implements Command {
     // a Helvetica fallback. Sub-objects whose chars were all deleted
     // get removed; everything else is shifted to fit. Bails out only
     // for mixed-survival sub-objects (would need splitting).
-    if (
-      this.deletionPlan === null &&
-      this.partialPlan === null &&
-      run.mergedFromPtrs.length > 0
-    ) {
+    if (this.partialPlan === null && run.mergedFromPtrs.length > 0) {
       const partial = planPartialEdit(
         run,
         this.prevText ?? "",
@@ -249,30 +238,27 @@ export class EditTextCommand implements Command {
     if (!run || this.prevText === null) return;
     const m = doc.module;
 
-    // Deletion-only fast path can't be cleanly undone (the removed
-    // PDFium objects are gone). Re-emit a Helvetica fallback covering
-    // the original text - same approach as the overlay-path revert.
-    if (this.deletionPlan) {
-      // First, undo translations on the survivors so subsequent revert
-      // logic sees them at their original positions.
-      for (const { ptr, dx } of this.deletionPlan.translates) {
-        if (!ptr || dx === 0) continue;
+    // Partial-edit fast path revert: the removed sub-objects are gone
+    // from PDFium permanently, so we re-emit Helvetica fallback chunks
+    // at their original positions to give the user back the visible
+    // chars (in a different font). Inserted Helvetica chunks from the
+    // forward apply are removed.
+    if (this.partialPlan) {
+      for (const ptr of this.partialInsertedPtrs) {
+        if (!ptr) continue;
         try {
-          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, -dx, 0);
+          m.FPDFPage_RemoveObject(page.pagePtr, ptr);
         } catch {
           /* best-effort */
         }
       }
-      // Restore the model arrays so the next edit sees the original
-      // sub-run layout for any survivors.
+      this.partialInsertedPtrs = [];
       run.mergedFromPtrs = this.prevMergedFromPtrs;
       run.mergedFromTexts = this.prevMergedFromTexts;
       run.mergedFromBounds = this.prevMergedFromBounds.map((b) => ({ ...b }));
-      // Emit Helvetica fallback objects for the originally-removed sub-runs
-      // so the user sees the same characters again (just in a different font).
       const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
       const restored: number[] = [];
-      for (const { ptr } of this.deletionPlan.removePtrs) {
+      for (const { ptr } of this.partialPlan.removePtrs) {
         const origIdx = this.prevMergedFromPtrs.indexOf(ptr);
         if (origIdx < 0) continue;
         const text = this.prevMergedFromTexts[origIdx] ?? "";
@@ -294,7 +280,7 @@ export class EditTextCommand implements Command {
       this.revertCreatedPtrs = restored;
       run.text = this.prevText;
       run.dirty = true;
-      this.deletionPlan = null;
+      this.partialPlan = null;
       page.markDirty();
       m.FPDFPage_GenerateContent(page.pagePtr);
       return;
