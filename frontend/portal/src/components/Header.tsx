@@ -97,7 +97,7 @@ export function Header() {
         <ThemeToggle />
         <NotificationsDropdown />
         <TierSwitcher />
-        <Avatar name="Reece" size="md" tone="blue" onClick={() => {}} />
+        <Avatar name="Reece" size="md" tone="blue" />
       </div>
     </header>
   );

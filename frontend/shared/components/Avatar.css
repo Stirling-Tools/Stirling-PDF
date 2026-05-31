@@ -4,7 +4,7 @@
   justify-content: center;
   border-radius: 50%;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-family: var(--font-sans);
   letter-spacing: 0.01em;
   overflow: hidden;
@@ -57,10 +57,10 @@
   background: var(--grad-green-btn);
 }
 .sui-avatar--amber {
-  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  background: var(--grad-amber-btn);
 }
 .sui-avatar--red {
-  background: linear-gradient(180deg, #f87171, #ef4444);
+  background: var(--grad-red-btn);
 }
 .sui-avatar--neutral {
   background: var(--color-bg-muted);

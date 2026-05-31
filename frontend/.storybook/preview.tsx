@@ -70,7 +70,10 @@ const withProviders: Decorator = (Story, context) => {
   // withThemeByDataAttribute exposes the toolbar theme as the `theme` global.
   // Bind Mantine's color scheme to it so Mantine chrome (inputs, focus rings,
   // default surfaces) follows the dark toggle alongside the SUI CSS variables.
-  const colorScheme = (context.globals.theme as "light" | "dark") ?? "light";
+  // The global initialises to "" (before any toolbar interaction), so treat
+  // anything that isn't "dark" as light — matching the addon's own
+  // `selected || defaultTheme` fallback where defaultTheme is light.
+  const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>

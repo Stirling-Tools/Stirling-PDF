@@ -36,15 +36,19 @@ export function ProgressBar({
   const v = clamp01(value);
   let fill = color;
   if (!fill) {
+    // Second stop is a lighter mix of the same token so the gradient keeps its
+    // sheen in both themes (a hardcoded hex here flattened to a solid bar in
+    // dark mode, where the token already equalled that hex).
     if (thresholded) {
       fill =
         v >= 0.96
-          ? "linear-gradient(90deg, var(--color-red), #F87171)"
+          ? "linear-gradient(90deg, var(--color-red), color-mix(in srgb, var(--color-red) 70%, white))"
           : v >= 0.8
-            ? "linear-gradient(90deg, var(--color-amber), #FBBF24)"
-            : "linear-gradient(90deg, var(--color-blue), #60A5FA)";
+            ? "linear-gradient(90deg, var(--color-amber), color-mix(in srgb, var(--color-amber) 70%, white))"
+            : "linear-gradient(90deg, var(--color-blue), color-mix(in srgb, var(--color-blue) 70%, white))";
     } else {
-      fill = "linear-gradient(90deg, var(--color-blue), #60A5FA)";
+      fill =
+        "linear-gradient(90deg, var(--color-blue), color-mix(in srgb, var(--color-blue) 70%, white))";
     }
   }
   return (

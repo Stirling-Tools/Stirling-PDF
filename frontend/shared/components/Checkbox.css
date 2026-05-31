@@ -44,7 +44,7 @@
 .sui-check__input:checked + .sui-check__box {
   background: var(--color-blue);
   border-color: var(--color-blue);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .sui-check__tick {
@@ -65,7 +65,7 @@
   position: absolute;
   width: 0.5rem;
   height: 2px;
-  background: #fff;
+  background: var(--color-text-on-accent);
   border-radius: 1px;
 }
 .sui-check__dash {

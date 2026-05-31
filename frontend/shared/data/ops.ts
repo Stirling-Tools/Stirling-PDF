@@ -435,7 +435,7 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Document Review",
-    color: "#6366F1",
+    color: "var(--color-cat-compliance)",
     blurb: "Inspection, AI review, certification",
   },
   {
@@ -445,12 +445,12 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Page Formatting",
-    color: "#F97316",
+    color: "var(--color-cat-energy)",
     blurb: "Rotate, crop, layout, page-level edits",
   },
   {
     name: "Extraction",
-    color: "#14B8A6",
+    color: "var(--color-cat-extraction)",
     blurb: "OCR, format conversion, content pull",
   },
   {
@@ -460,12 +460,12 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Automation",
-    color: "#EC4899",
+    color: "var(--color-cat-operations)",
     blurb: "AI-driven generation, translation, forms",
   },
   {
     name: "Advanced Formatting",
-    color: "#8B5CF6",
+    color: "var(--color-cat-healthcare)",
     blurb: "TOC, overlays, format-to-PDF, PDF/A",
   },
   {

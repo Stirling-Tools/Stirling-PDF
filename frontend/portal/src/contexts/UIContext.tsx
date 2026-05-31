@@ -1,6 +1,5 @@
 import {
   createContext,
-  useCallback,
   useContext,
   useMemo,
   useState,
@@ -47,23 +46,4 @@ export function useUI(): UIContextValue {
   const v = useContext(UIContext);
   if (!v) throw new Error("useUI must be used inside <UIProvider>");
   return v;
-}
-
-/**
- * Convenience hook — registers a global keyboard shortcut. Caller owns the
- * handler so the same hook works for ⌘K, ESC, etc.
- */
-export function useKeyboardShortcut(
-  match: (e: KeyboardEvent) => boolean,
-  handler: (e: KeyboardEvent) => void,
-) {
-  // Use a stable handler ref via useCallback to keep dependencies stable.
-  const onKey = useCallback(
-    (e: KeyboardEvent) => {
-      if (match(e)) handler(e);
-    },
-    [match, handler],
-  );
-  // Effect lives in the caller; keep this a pure utility.
-  return onKey;
 }

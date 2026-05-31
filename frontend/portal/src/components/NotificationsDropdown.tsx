@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dropdown, EmptyState, Skeleton } from "@shared/components";
 import { BellIcon } from "@portal/components/icons";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -24,16 +24,17 @@ export function NotificationsDropdown() {
   const { data: items } = state;
   const { isLoading } = useSectionFlags(state);
 
-  const [localItems, setLocalItems] = useState<Notification[] | null>(null);
-  const visible = localItems ?? items ?? [];
-
-  useEffect(() => {
-    if (items) setLocalItems(items);
-  }, [items]);
+  // Optimistically clear on "mark all read"; revert if the request fails.
+  const [cleared, setCleared] = useState(false);
+  const visible = cleared ? [] : (items ?? []);
 
   async function onMarkAllRead() {
-    setLocalItems([]);
-    await markAllNotificationsRead();
+    setCleared(true);
+    try {
+      await markAllNotificationsRead();
+    } catch {
+      setCleared(false);
+    }
   }
 
   const isEmpty = !isLoading && visible.length === 0;

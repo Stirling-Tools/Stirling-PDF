@@ -153,7 +153,13 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      onBlur={(e) => {
+        // onBlur bubbles from children; only unpause when focus actually
+        // leaves the carousel, not when tabbing between the dot buttons.
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setPaused(false);
+        }
+      }}
       aria-label="Stirling product highlights"
       aria-roledescription="carousel"
     >

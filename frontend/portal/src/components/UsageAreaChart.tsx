@@ -49,8 +49,9 @@ export function UsageAreaChart({
         };
       }
       const max = Math.max(...data.map((d) => d.value));
-      // Round yMax up to a "nice" number for ticks.
-      const niceMax = Math.ceil(max / 500) * 500;
+      // Round yMax up to a "nice" number for ticks. Floor at 500 so an
+      // all-zero series doesn't divide by zero (which would NaN every point).
+      const niceMax = Math.max(Math.ceil(max / 500) * 500, 500);
       const yTicksCalc = [0, niceMax * 0.5, niceMax];
 
       const innerW = VIEW.width - PADDING.left - PADDING.right;

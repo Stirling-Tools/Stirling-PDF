@@ -178,7 +178,7 @@ export function SingleOpRunner({
                 onClick={buildPipelineWithOp}
                 trailingIcon={<span aria-hidden>→</span>}
               >
-                Build a pipeline with this op
+                Open the pipeline builder
               </Button>
             </>
           ) : (

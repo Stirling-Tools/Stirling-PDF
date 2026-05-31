@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { ALL_ENDPOINTS, VERTICALS } from "@shared/data/endpoints";
+import { VERTICALS } from "@shared/data/endpoints";
 
 export const endpointsHandlers = [
   http.get("/v1/endpoints", async ({ request }) => {
@@ -11,10 +11,5 @@ export const endpointsHandlers = [
       return HttpResponse.json(v ? v.endpoints : []);
     }
     return HttpResponse.json(VERTICALS);
-  }),
-
-  http.get("/v1/endpoints/flat", async () => {
-    await delay(120);
-    return HttpResponse.json(ALL_ENDPOINTS);
   }),
 ];

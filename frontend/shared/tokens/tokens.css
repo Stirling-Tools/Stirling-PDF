@@ -1,9 +1,10 @@
 /*
  * Stirling design tokens — CSS custom properties.
  *
- * Mirrors src/tokens/tokens.ts so components can reference tokens via
- * var(--color-...) without importing the JS module. Theme switching flips
- * `data-theme="dark"` on <html> and these variables cascade.
+ * This is the single source of truth for the design tokens. Components
+ * reference them via var(--color-...); there is no JS palette to keep in sync.
+ * Theme switching flips `data-theme="dark"` on <html> and these variables
+ * cascade. (tokens.ts holds only the Tier type, not the palette.)
  *
  * Category accents (insurance, finance, legal, …) are not theme-switched —
  * the document types they label are stable, theme-agnostic concepts.
@@ -63,6 +64,7 @@
   --color-cat-hr: #f59e0b;
   --color-cat-realestate: #84cc16;
   --color-cat-energy: #f97316;
+  --color-cat-extraction: #14b8a6;
 
   /* Surfaces */
   --color-bg: #f8f9fb;
@@ -142,6 +144,18 @@
     #34d399 0%,
     #10b981 50%,
     #059669 100%
+  );
+  --grad-amber-btn: linear-gradient(
+    180deg,
+    #fbbf24 0%,
+    #f59e0b 50%,
+    #d97706 100%
+  );
+  --grad-red-btn: linear-gradient(
+    180deg,
+    #f87171 0%,
+    #ef4444 50%,
+    #dc2626 100%
   );
   --grad-banner: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 50%, #fce7f3 100%);
 }
@@ -260,6 +274,8 @@
   --code-property: #93c5fd;
   --code-comment: #475569;
   --code-border: #1e293b;
+  /* Window-chrome traffic-light dots in the code-block header. */
+  --code-dot: #475569;
 }
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */

@@ -1,6 +1,8 @@
 import { NavItem } from "@shared/components";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
+import { useAsync } from "@portal/hooks/useAsync";
+import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import {
   HomeIcon,
   EditorIcon,
@@ -60,24 +62,32 @@ function StirlingMark() {
 
 function UsageFooter() {
   const { tier } = useTier();
+  // Read the same endpoint Home's KPI strip uses so the doc count here can't
+  // drift from the headline figure. The first KPI is always the doc total.
+  const { data: kpis, loading } = useAsync<KpiEntry[]>(
+    () => fetchHomeKpis(tier),
+    [tier],
+  );
+  const docs = loading ? undefined : kpis?.[0]?.value;
 
   if (tier === "free") {
-    const docs = 247;
-    const cap = 500;
-    const pct = (docs / cap) * 100;
+    // The free doc KPI is formatted "used / cap"; parse it for the meter.
+    const [used, cap] =
+      typeof docs === "string"
+        ? docs.split("/").map((s) => Number(s.replace(/[^\d]/g, "")))
+        : [];
+    const pct = used && cap ? (used / cap) * 100 : 0;
     return (
       <div className="portal-sidebar__usage portal-sidebar__usage--free">
         <div className="portal-sidebar__usage-line">
           <span className="portal-sidebar__usage-label">Docs processed</span>
-          <span className="portal-sidebar__usage-value">
-            {docs} / {cap}
-          </span>
+          <span className="portal-sidebar__usage-value">{docs ?? "—"}</span>
         </div>
         <div
           className="portal-sidebar__usage-track"
           role="progressbar"
-          aria-valuenow={docs}
-          aria-valuemax={cap}
+          aria-valuenow={used ?? 0}
+          aria-valuemax={cap ?? 100}
         >
           <div
             className="portal-sidebar__usage-fill"
@@ -89,7 +99,6 @@ function UsageFooter() {
   }
 
   const planLabel = tier === "pro" ? "Pay-as-you-go" : "Enterprise Plan";
-  const docCount = tier === "pro" ? "12,481" : "1.84M";
 
   return (
     <div className="portal-sidebar__usage">
@@ -98,7 +107,9 @@ function UsageFooter() {
           <span className="portal-sidebar__plan-dot" aria-hidden />
           {planLabel}
         </span>
-        <span className="portal-sidebar__usage-value">{docCount} docs</span>
+        <span className="portal-sidebar__usage-value">
+          {docs != null ? `${docs} docs` : "—"}
+        </span>
       </div>
     </div>
   );

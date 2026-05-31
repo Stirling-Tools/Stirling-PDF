@@ -45,7 +45,7 @@
 
 /* gradient (primary) */
 .sui-btn--gradient {
-  color: #fff;
+  color: var(--color-text-on-accent);
   background: var(--grad-blue-btn);
   box-shadow: var(--shadow-blue);
 }

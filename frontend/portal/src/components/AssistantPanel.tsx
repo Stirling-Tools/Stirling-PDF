@@ -45,7 +45,7 @@ export function AssistantPanel() {
 
   async function send(text: string) {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || typing) return;
     const userMsg: Message = {
       id: nextIdRef.current++,
       role: "user",
@@ -110,6 +110,7 @@ export function AssistantPanel() {
                   type="button"
                   className="portal-assistant__suggestion"
                   onClick={() => send(s)}
+                  disabled={typing}
                 >
                   {s}
                 </button>
@@ -152,11 +153,12 @@ export function AssistantPanel() {
           placeholder="Ask about Stirling…"
           aria-label="Ask the assistant"
           className="portal-assistant__input"
+          disabled={typing}
         />
         <button
           type="submit"
           className="portal-assistant__send"
-          disabled={!input.trim()}
+          disabled={!input.trim() || typing}
           aria-label="Send"
         >
           <SendIcon size={14} />

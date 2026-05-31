@@ -359,7 +359,7 @@ const KPI_LABELS_BY_TIER: Record<Tier, KpiLabelSpec[]> = {
 function TierKpiStrip() {
   const { tier } = useTier();
   const labels = KPI_LABELS_BY_TIER[tier];
-  const { data: kpis } = useAsync<KpiEntry[]>(
+  const { data: kpis, loading } = useAsync<KpiEntry[]>(
     () => fetchHomeKpis(tier),
     [tier],
   );
@@ -367,7 +367,9 @@ function TierKpiStrip() {
   return (
     <section className="portal-home__metrics">
       {labels.map((spec, i) => {
-        const fetched = kpis?.[i];
+        // useAsync keeps the previous tier's data during a refetch; ignore it
+        // while loading so the new labels never pair with stale values.
+        const fetched = loading ? undefined : kpis?.[i];
         return (
           <MetricCard
             key={`${tier}-${i}`}
@@ -453,10 +455,10 @@ function EnterpriseRegions() {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function ChartSection() {
-  const { data: usage } = useAsync<UsageSeriesResponse>(
-    () => fetchUsageSeries(),
-    [],
-  );
+  const state = useAsync<UsageSeriesResponse>(() => fetchUsageSeries(), []);
+  const { data: usage } = state;
+  const { isLoading } = useSectionFlags(state);
+
   const docs30d = useMemo(
     () => usage?.points.reduce((sum, p) => sum + p.value, 0) ?? 0,
     [usage],
@@ -465,10 +467,30 @@ function ChartSection() {
     if (!usage || usage.priorTotal <= 0) return undefined;
     return (docs30d - usage.priorTotal) / usage.priorTotal;
   }, [usage, docs30d]);
+
+  if (isLoading) {
+    return (
+      <div className="portal-chart">
+        <Skeleton width="12rem" height="0.875rem" />
+        <Skeleton width="7rem" height="1.75rem" />
+        <Skeleton height="15rem" />
+      </div>
+    );
+  }
+
+  if (!usage || usage.points.length === 0) {
+    return (
+      <EmptyState
+        title="No usage yet"
+        description="Once documents are processed, your 30-day usage appears here."
+      />
+    );
+  }
+
   return (
     <UsageAreaChart
-      data={usage?.points ?? []}
-      totalValue={usage ? docs30d.toLocaleString() : "—"}
+      data={usage.points}
+      totalValue={docs30d.toLocaleString()}
       deltaPct={deltaPct}
     />
   );
