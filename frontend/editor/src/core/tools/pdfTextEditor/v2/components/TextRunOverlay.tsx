@@ -246,9 +246,14 @@ export function TextRunOverlay({
       onInput={(e) => {
         const el = e.currentTarget as HTMLDivElement;
         // Paragraphs preserve soft-wrap line breaks so the commit can
-        // emit one PDF text object per visual line.
+        // emit one PDF text object per visual line. Always strip NBSP
+        // (U+00A0): browsers can substitute it for a typed Space at
+        // word boundaries to preserve the visual gap, but PDFium's
+        // base-14 Helvetica maps U+00A0 to 0xFF (ydieresis), so any
+        // NBSP that survives to PDFium SetText renders as junk.
         const isParagraph = (run.paragraphLineCount ?? 1) > 1;
-        const text = isParagraph ? extractTextWithSoftBreaks(el) : el.innerText;
+        const raw = isParagraph ? extractTextWithSoftBreaks(el) : el.innerText;
+        const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
       }}
       onMouseEnter={() => setHovered(true)}
