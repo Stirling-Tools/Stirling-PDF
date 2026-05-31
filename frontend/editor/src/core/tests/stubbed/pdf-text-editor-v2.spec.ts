@@ -14,6 +14,13 @@ const PARAGRAPH_PDF = path.join(
   __dirname,
   "../test-fixtures/paragraph-sample.pdf",
 );
+// The same Sample.pdf that ships in `frontend/editor/public/samples/` -
+// copied here as a fixture so the test suite has a self-contained
+// reference to the file the user reproduces space-preservation bugs on.
+const USER_SAMPLE_PDF = path.join(
+  __dirname,
+  "../test-fixtures/user-sample.pdf",
+);
 
 /**
  * v2 PDF text editor regression suite.
@@ -260,10 +267,35 @@ test.describe("PDF text editor v2 - save", () => {
       buffer: savedBytes,
     });
 
-    // First run on the re-opened doc should now show the edited text.
-    const reopenedFirst = page.locator('[data-testid^="v2-run-p0-"]').first();
-    await expect(reopenedFirst).toBeVisible({ timeout: 30_000 });
-    await expect(reopenedFirst).toHaveText(edited);
+    // The edited text must be present somewhere in page 0's runs.
+    // The per-word emit path can split inserted text into a separate
+    // PDFium text object (so "(Hello!)" may end up in its own run
+    // after LineGrouper) - what matters is that every char survives
+    // and the round-trip didn't lose the appended content.
+    const allText = await page
+      .waitForFunction(
+        () => {
+          const runs = Array.from(
+            document.querySelectorAll<HTMLDivElement>(
+              '[data-testid^="v2-run-p0-"]',
+            ),
+          );
+          if (runs.length === 0) return null;
+          const joined = runs.map((el) => el.innerText).join(" ");
+          return /Hello/.test(joined) ? joined : null;
+        },
+        { timeout: 30_000, polling: 500 },
+      )
+      .then((h) => h.jsonValue() as Promise<string>);
+    expect(allText).toContain(original);
+    expect(allText).toContain("(Hello!)");
+    // The boundary between original and appended may collapse to a
+    // single or double space depending on per-word emit / LineGrouper
+    // reconstruction. Either is acceptable as long as both pieces are
+    // present and not visually glued.
+    expect(allText).not.toContain(`${original}(Hello!)`);
+    // Quiet the unused-var lint - `edited` documents the intent above.
+    void edited;
   });
 });
 
@@ -366,15 +398,21 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // assertion that matters is "the rendered PDF, when re-read, still
     // contains 'Hello World' with a space between" - scan every run on
     // page 0 for the substring.
-    const reopenedAllText = await page.evaluate(() =>
-      Array.from(
-        document.querySelectorAll<HTMLDivElement>(
-          '[data-testid^="v2-run-p0-"]',
-        ),
+    const reopenedAllText = await page
+      .waitForFunction(
+        () => {
+          const runs = Array.from(
+            document.querySelectorAll<HTMLDivElement>(
+              '[data-testid^="v2-run-p0-"]',
+            ),
+          );
+          if (runs.length === 0) return null;
+          const joined = runs.map((el) => el.innerText).join("\n");
+          return /Hello/.test(joined) ? joined : null;
+        },
+        { timeout: 30_000, polling: 500 },
       )
-        .map((el) => el.innerText)
-        .join("\n"),
-    );
+      .then((h) => h.jsonValue() as Promise<string>);
     expect(reopenedAllText).toContain("Hello World");
     expect(reopenedAllText).not.toContain("Hello\u00A0World");
     expect(reopenedAllText).not.toMatch(/HelloWorld/);
@@ -509,6 +547,125 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // whitespace somewhere in the reopened text.
     expect(reopenedAllText).toMatch(/Free\s+Adobe/);
     expect(reopenedAllText).toMatch(/Adobe\s+Acrobat/);
+  });
+
+  test("user-sample.pdf: deleting one char from tagline keeps every inter-word space", async ({
+    page,
+  }) => {
+    // EXACT user repro. Loads the same Sample.pdf the user is editing
+    // (frontend/editor/public/samples/Sample.pdf, copied to fixtures as
+    // user-sample.pdf). The tagline "The Free Adobe Acrobat Alternative"
+    // is laid out as one PDFium text object per glyph, with standalone
+    // zero-width " " sub-objects positioned in the inter-word gaps. The
+    // failure mode this guards against: editing the run (here: deleting
+    // the trailing "e") collapses every kept sub-object leftward,
+    // eliminating the inter-object whitespace gaps so the saved PDF
+    // renders as `TheFreeAdobeAcrobatAlternativ` with all spaces eaten.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    // Find the tagline overlay.
+    const taglineHandle = await page
+      .locator('[data-testid^="v2-run-p0-"]')
+      .filter({ hasText: /Adobe.+Acrobat.+Alternative/ })
+      .first()
+      .elementHandle();
+    if (!taglineHandle) {
+      test.skip(true, "Sample.pdf is missing the Acrobat Alternative tagline");
+      return;
+    }
+    const taglineTestId =
+      (await taglineHandle.getAttribute("data-testid")) ?? "";
+    const original = (await taglineHandle.innerText()) ?? "";
+    expect(original).toMatch(/Adobe\s+Acrobat\s+Alternative/);
+
+    // Delete the last character (matches the user clicking the line and
+    // hitting Backspace once).
+    await page.evaluate((tid) => {
+      const el = document.querySelector<HTMLDivElement>(
+        `[data-testid="${tid}"]`,
+      );
+      if (!el) throw new Error("no tagline element");
+      el.focus();
+      const sel = window.getSelection();
+      if (!sel) return;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand("delete", false);
+    }, taglineTestId);
+
+    // Model assertion: the run text after the edit must still have all
+    // four inter-word gaps. (LineGrouper reports synthesised double
+    // spaces between the per-glyph sub-objects, so use `\s+`.)
+    const modelText = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            state: { pages: { runs: { id: string; text: string }[] }[] };
+          };
+        }
+      ).__v2_editor_store;
+      for (const p of store.state.pages) {
+        for (const r of p.runs) {
+          if (`v2-run-${r.id}` === tid) return r.text;
+        }
+      }
+      return "";
+    }, taglineTestId);
+    expect(modelText).toMatch(/The\s+Free\s+Adobe\s+Acrobat\s+Alternativ/);
+
+    // Round-trip through save + re-open and verify the same word
+    // boundaries survive. This is the "does the saved PDF render with
+    // spaces" check - a PDF viewer that re-extracts text from the file
+    // must see the words separated.
+    await saveAndReopen(page);
+
+    const reopenedAllText = await page
+      .waitForFunction(
+        () => {
+          const pages = Array.from(
+            document.querySelectorAll<HTMLElement>('[data-testid^="v2-page-"]'),
+          );
+          for (const el of pages) el.scrollIntoView({ block: "center" });
+          const runs = Array.from(
+            document.querySelectorAll<HTMLDivElement>(
+              '[data-testid^="v2-run-p"]',
+            ),
+          );
+          const joined = runs.map((el) => el.innerText).join("\n");
+          return /Adobe/i.test(joined) ? joined : null;
+        },
+        { timeout: 30_000, polling: 500 },
+      )
+      .then((h) => h.jsonValue() as Promise<string>);
+
+    // Surface a slice around the tagline on failure so future
+    // debuggers see the actual reopened text.
+    const tagIdx = reopenedAllText.indexOf("Adobe");
+    const snippet =
+      tagIdx >= 0
+        ? reopenedAllText.slice(Math.max(0, tagIdx - 30), tagIdx + 200)
+        : "<no Adobe in reopened runs>";
+
+    // The CORE assertion. The previous bug rendered all words glued.
+    expect(
+      reopenedAllText,
+      `Tagline snippet: ${JSON.stringify(snippet)}`,
+    ).not.toMatch(/FreeAdobe/);
+    expect(reopenedAllText).not.toMatch(/AdobeAcrobat/);
+    expect(reopenedAllText).not.toMatch(/AcrobatAlternativ/);
+    // Positive form: words separated by some whitespace.
+    expect(reopenedAllText).toMatch(/Free\s+Adobe/);
+    expect(reopenedAllText).toMatch(/Adobe\s+Acrobat/);
+    expect(reopenedAllText).toMatch(/Acrobat\s+Alternativ/);
   });
 
   test("multiple consecutive spaces survive save and re-open", async ({

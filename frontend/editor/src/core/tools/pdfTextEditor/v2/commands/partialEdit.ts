@@ -243,42 +243,53 @@ export function applyPartialEditPlan(
     }
   }
 
-  // Step 2: walk ops, position each kept sub-run (by shifting its text
-  // matrix) and emit Helvetica chunks for inserted text. Track cursor.
+  // Step 2: walk ops. Track only the cumulative `offset` from inserts
+  // and deletes - kept sub-runs are shifted by that offset, so the
+  // ORIGINAL inter-object spacing (including standalone zero-width
+  // "space" sub-objects that exist between word glyphs in many PDFs)
+  // is preserved between consecutive kept sub-runs.
+  //
+  // The earlier approach computed a monotonically-increasing cursor
+  // from each kept sub-run's width, which collapsed any inter-object
+  // gap that wasn't captured in a sub-run's bounding box. Result: an
+  // edit that only deletes one char also stripped every inter-word
+  // space from the saved PDF - because the spaces lived in the gaps
+  // between sub-objects, not inside them.
   const fallbackFamily = helveticaVariantFor(run.fontId);
   const newMergedFromPtrs: number[] = [];
   const newMergedFromTexts: string[] = [];
   const newMergedFromBounds: Array<{ x: number; right: number }> = [];
   const insertedPtrs: number[] = [];
 
-  let cursor = run.bounds.x; // anchor at the original left edge
-  let firstX = cursor;
+  let offset = 0;
+  let firstX = run.bounds.x;
+  let lastEnd = run.bounds.x;
 
   for (const op of plan.ops) {
     if (op.type === "keep" && op.subRunIdx !== undefined) {
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const text = plan.prevMergedFromTexts[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
-      const width = origBounds.right - origBounds.x;
-      const dx = cursor - origBounds.x;
-      if (Math.abs(dx) > 0.05) {
+      if (Math.abs(offset) > 0.05) {
         try {
-          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, dx, 0);
+          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
         } catch {
           /* best-effort */
         }
       }
+      const newX = origBounds.x + offset;
+      const newRight = origBounds.right + offset;
       newMergedFromPtrs.push(ptr);
       newMergedFromTexts.push(text);
-      newMergedFromBounds.push({ x: cursor, right: cursor + width });
-      cursor += width;
+      newMergedFromBounds.push({ x: newX, right: newRight });
+      lastEnd = newRight;
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
       const ptrs = emitTextLine({
         doc,
         page,
         text: insertText,
-        x: cursor,
+        x: lastEnd,
         y: run.matrix.f,
         fontSize: run.fontSize,
         fill: run.fill,
@@ -286,12 +297,8 @@ export function applyPartialEditPlan(
         fallbackFamily,
       });
       const measuredWidth = measureAdvancePt(insertText, run.fontSize);
-      let runningCursor = cursor;
+      let runningCursor = lastEnd;
       for (let i = 0; i < ptrs.length; i++) {
-        // For accurate per-chunk widths we'd need to read each ptr's
-        // bounds back; rough estimate is fine for the model arrays
-        // since they're only used for layout calculations by future
-        // edits (which read fresh bounds from PDFium anyway).
         const sliceWidth = measuredWidth / ptrs.length;
         newMergedFromPtrs.push(ptrs[i]);
         newMergedFromTexts.push(insertText);
@@ -302,7 +309,8 @@ export function applyPartialEditPlan(
         runningCursor += sliceWidth;
       }
       insertedPtrs.push(...ptrs);
-      cursor += measuredWidth;
+      offset += measuredWidth;
+      lastEnd += measuredWidth;
     }
   }
 
@@ -318,6 +326,6 @@ export function applyPartialEditPlan(
     newMergedFromBounds,
     insertedPtrs,
     newBoundsX: firstX,
-    newBoundsWidth: cursor - firstX,
+    newBoundsWidth: lastEnd - firstX,
   };
 }
