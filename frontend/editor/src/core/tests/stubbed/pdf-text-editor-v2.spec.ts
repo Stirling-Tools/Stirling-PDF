@@ -21,6 +21,13 @@ const USER_SAMPLE_PDF = path.join(
   __dirname,
   "../test-fixtures/user-sample.pdf",
 );
+// A LaTeX-generated assignment PDF whose body text uses LMRoman12 (an
+// embedded non-base-14 serif). LineGrouper merges its sub-objects and
+// synthesises bridging whitespace - a hostile shape for partialEdit
+// and a frequent source of "edit a single char and the line teleports
+// / duplicates sub-runs" regressions. The fixture is used by the
+// model-integrity test below.
+const LMROMAN_PDF = path.join(__dirname, "../test-fixtures/dbg-exercise3.pdf");
 
 /**
  * v2 PDF text editor regression suite.
@@ -666,6 +673,134 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(reopenedAllText).toMatch(/Free\s+Adobe/);
     expect(reopenedAllText).toMatch(/Adobe\s+Acrobat/);
     expect(reopenedAllText).toMatch(/Acrobat\s+Alternativ/);
+  });
+
+  test("dbg-exercise3.pdf: typing one char doesn't corrupt or duplicate sub-runs", async ({
+    page,
+  }) => {
+    // Regression guard: a previous attempt to teach partialEdit about
+    // LineGrouper-synthesised whitespace miscounted ghost chars by 1,
+    // which silently misclassified one sub-run as "mixed", removed
+    // and re-emitted it, and produced a model state with DUPLICATE
+    // `mergedFromTexts` entries (the same text twice, at different
+    // bounds). Visually this teleported a chunk of the line and
+    // dropped chars from the middle.
+    //
+    // This test loads the LMRoman fixture, types one char at the end,
+    // and asserts the model state stays sane:
+    //   * run.text is exactly prevText + the appended char
+    //   * mergedFromTexts has no duplicates of any non-trivial text
+    //     fragment (treats short ones like "• " as benign)
+    //   * none of the original sub-run texts had a char silently swapped
+    //     for a different one (e.g. "as a single" → "as  single")
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(LMROMAN_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    // Snapshot the baseline for the bullet that's known to trigger the
+    // ghost-char-count bug.
+    const baseline = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromTexts: string[];
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x) => /Submissions.*Moodle/.test(x.text));
+      return r
+        ? { id: r.id, text: r.text, mergedFromTexts: [...r.mergedFromTexts] }
+        : null;
+    });
+    if (!baseline) {
+      test.skip(true, "fixture missing Submissions/Moodle bullet");
+      return;
+    }
+
+    // Type "X" at the end of the bullet line.
+    await page.evaluate((tid) => {
+      const el = document.querySelector<HTMLDivElement>(
+        `[data-testid="v2-run-${tid}"]`,
+      );
+      if (!el) throw new Error("no run el");
+      el.focus();
+      const sel = window.getSelection();
+      if (!sel) return;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand("insertText", false, "X");
+    }, baseline.id);
+    await page.waitForTimeout(400);
+
+    const after = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromTexts: string[];
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      return r
+        ? { text: r.text, mergedFromTexts: [...r.mergedFromTexts] }
+        : null;
+    }, baseline.id);
+    if (!after) throw new Error("post-edit run vanished");
+
+    // Text content: exactly baseline + "X".
+    expect(after.text).toBe(baseline.text + "X");
+
+    // Sub-run integrity: any non-trivial (>=3 char) baseline fragment
+    // must NOT appear twice in the post-edit mergedFromTexts. That's
+    // the smoking gun for the teleport regression.
+    const counts = new Map<string, number>();
+    for (const t of after.mergedFromTexts) {
+      if (t.length < 3) continue;
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    const dupes = Array.from(counts.entries()).filter(([, c]) => c > 1);
+    expect(
+      dupes,
+      `mergedFromTexts duplicates after edit: ${JSON.stringify(dupes)}`,
+    ).toEqual([]);
+
+    // Char-fidelity: every non-trivial baseline fragment must still
+    // appear verbatim somewhere in after.mergedFromTexts. Detects
+    // silent char swaps (e.g. "as a single" became "as  single").
+    const afterJoined = after.mergedFromTexts.join("|");
+    for (const t of baseline.mergedFromTexts) {
+      if (t.length < 3) continue;
+      expect(
+        afterJoined,
+        `baseline fragment ${JSON.stringify(t)} lost from post-edit run`,
+      ).toContain(t);
+    }
   });
 
   test("multiple consecutive spaces survive save and re-open", async ({

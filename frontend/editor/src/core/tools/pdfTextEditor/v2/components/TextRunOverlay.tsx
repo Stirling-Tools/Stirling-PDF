@@ -177,9 +177,21 @@ export function TextRunOverlay({
   }, []);
 
   const left = run.bounds.x * scale;
-  const top = (pageHeight - run.bounds.y - run.bounds.height) * scale;
+  // PDFium-reported bounds.height only captures the visible glyph
+  // extent (often x-height for lowercase-heavy runs, not cap+descender),
+  // so a line of body text often reports height=3pt for a 12pt font.
+  // Use max(bounds.height, fontSize*1.1) so the overlay covers the full
+  // line vertically and the contenteditable hit area lines up with what
+  // the user sees in the bitmap. Multi-line paragraphs already report a
+  // sensible height so the max is harmless for them.
+  const boxHeightPt = Math.max(
+    run.bounds.height,
+    run.fontSize * 1.1,
+    run.paragraphLineHeight ?? 0,
+  );
+  const top = (pageHeight - run.bounds.y - boxHeightPt) * scale;
   const pdfWidth = run.bounds.width * scale;
-  const height = run.bounds.height * scale;
+  const height = boxHeightPt * scale;
 
   // Paragraphs: widen the overlay enough that every source line still
   // fits in CSS metrics. Without this the Arial fallback's slightly
