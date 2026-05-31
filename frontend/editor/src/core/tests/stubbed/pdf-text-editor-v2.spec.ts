@@ -267,6 +267,154 @@ test.describe("PDF text editor v2 - save", () => {
   });
 });
 
+test.describe("PDF text editor v2 - whitespace preservation", () => {
+  // These guard against a recurring class of regression where typed
+  // spaces vanish from the saved PDF. Two mechanisms have caused this:
+  //
+  // 1. Browser substitutes U+00A0 (NBSP) for a typed space at word
+  //    boundaries to keep visual gaps. PDFium's base-14 Helvetica
+  //    fallback maps U+00A0 to glyph 0xFF (ydieresis), so the "space"
+  //    becomes a visible junk char.
+  // 2. PDFium's FPDFText_SetText collapses consecutive ASCII spaces
+  //    inside a single text object, so "A  B" comes back "A B" unless
+  //    the writer emits one text object per word with explicit gaps.
+  //
+  // The first is a contenteditable-layer concern (TextRunOverlay must
+  // strip NBSP before dispatching onEdit). The second is an
+  // EditTextCommand / emitTextLine concern (per-word emit path). Both
+  // are easy to break unnoticed, so we test both at the model boundary
+  // AND across a full save / re-open round trip.
+
+  async function readFirstRunText(
+    page: import("@playwright/test").Page,
+  ): Promise<string> {
+    return await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            state: { pages: { runs: { text: string }[] }[] };
+          };
+        }
+      ).__v2_editor_store!;
+      return store.state.pages[0]?.runs[0]?.text ?? "";
+    });
+  }
+
+  async function saveAndReopen(
+    page: import("@playwright/test").Page,
+  ): Promise<void> {
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("v2-save").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) chunks.push(chunk as Buffer);
+    const savedBytes = Buffer.concat(chunks);
+    await page.locator('[data-testid="v2-file-input"]').setInputFiles({
+      name: "round-trip.pdf",
+      mimeType: "application/pdf",
+      buffer: savedBytes,
+    });
+    await expect(
+      page.locator('[data-testid^="v2-run-p0-"]').first(),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  test("NBSP typed into a single-line run is normalized to a regular space in the model", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+
+    // Insert a literal NBSP via execCommand (same dispatch path the
+    // browser's IME / autocorrect uses when it substitutes one).
+    await typeIntoRun(page, runTestId, "X\u00A0Y");
+
+    // The visible overlay shows what we typed.
+    await expect(firstRun).toContainText("X");
+    await expect(firstRun).toContainText("Y");
+
+    // But the model snapshot - the source of truth for save - must
+    // contain regular space, never NBSP. If this assertion fails the
+    // PDF will render `XÿY` after save with base-14 Helvetica.
+    const modelText = await readFirstRunText(page);
+    expect(modelText).not.toContain("\u00A0");
+    expect(modelText).toContain("X Y");
+  });
+
+  test("typed single space survives save and re-open", async ({ page }) => {
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+    const original = (await firstRun.innerText()) ?? "";
+    const appended = " Hello World";
+    await typeIntoRun(page, runTestId, appended);
+    await expect(firstRun).toContainText("Hello World");
+
+    await saveAndReopen(page);
+
+    // After re-open we re-read everything through PdfiumTextReader +
+    // LineGrouper, which is the same path the user's PDF viewer of
+    // choice would take. The space between "Hello" and "World" must
+    // come back as a literal U+0020.
+    const reopenedFirst = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const reopenedText = (await reopenedFirst.innerText()) ?? "";
+    expect(reopenedText).toContain("Hello World");
+    expect(reopenedText).not.toContain("Hello\u00A0World");
+    expect(reopenedText).not.toMatch(/HelloWorld/);
+    expect(reopenedText.startsWith(original)).toBe(true);
+  });
+
+  test("multiple consecutive spaces survive save and re-open", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+
+    // Three consecutive spaces between A and B. PDFium's text object
+    // storage collapses these unless the writer emits per-word chunks
+    // - this is what the "Preserve consecutive spaces via per-word
+    // emit" path in editTextHelpers exists to defend.
+    await typeIntoRun(page, runTestId, " A   B");
+    await expect(firstRun).toContainText("A   B");
+
+    await saveAndReopen(page);
+
+    // The per-word emit writes "A" + gap + "B" as separate PDFium
+    // text objects, and LineGrouper on reload may or may not re-merge
+    // them depending on the measured gap vs ABS_MAX_GAP_PT. Either way,
+    // both halves and the inter-word gap must survive somewhere on
+    // page 0 - collect every run's text and look for the pattern.
+    const allText = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            state: { pages: { runs: { text: string }[] }[] };
+          };
+        }
+      ).__v2_editor_store!;
+      return (store.state.pages[0]?.runs ?? []).map((r) => r.text).join("\n");
+    });
+    // Both letters must come back. The "B" disappearing would mean a
+    // text object was lost in the round trip.
+    expect(allText).toContain("A");
+    expect(allText).toContain("B");
+    // Multiple consecutive spaces must survive in at least one run
+    // (LineGrouper rebuilds them from cursor-jump positions). A complete
+    // collapse to a single space means PDFium ate them inside one
+    // text object - the failure mode this test guards against.
+    expect(allText).toMatch(/ {2,}/);
+  });
+});
+
 test.describe("PDF text editor v2 - colour", () => {
   test("changing the colour control dispatches a SetColour edit", async ({
     page,
