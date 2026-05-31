@@ -160,14 +160,17 @@ function measureAdvancePt(
 }
 
 /**
- * Split a line at runs of TWO OR MORE consecutive spaces only. Single
- * inter-word spaces stay inside a chunk so PDFium renders them normally
- * (one text object per chunk = fewer pieces for the LineGrouper to
- * re-stitch on reload, and tighter visual gaps between chunks).
+ * Split a line into one chunk per word with the trailing whitespace
+ * stored as an explicit `gapAfterPt`. This is the ONLY reliable way to
+ * preserve inter-word spaces in a PDFium-written text object - the
+ * library's text-storage layer collapses ASCII spaces inside a single
+ * text object (even single inter-word spaces in some font / encoding
+ * configurations), so the caller emits one text object per word and
+ * advances the cursor by the measured gap width between them.
  *
- * The returned `gapAfterPt` is the width of the multi-space run that
- * followed the chunk's text. The caller advances the cursor by
- * `measureAdvancePt(chunk.text) + chunk.gapAfterPt` between chunks.
+ * Empty chunks (consecutive whitespace, leading whitespace) are dropped
+ * - their visual width is folded into the previous chunk's `gapAfterPt`
+ * so positioning still tracks the source text.
  */
 export interface WordChunk {
   text: string;
@@ -179,33 +182,58 @@ export function splitIntoWordChunks(
   fontSizePt: number,
 ): WordChunk[] {
   const chunks: WordChunk[] = [];
-  // Match the gap regex on consecutive spaces (2+) only - single spaces
-  // stay glued to surrounding text.
-  const gapRe = /[ \t]{2,}/g;
+  // Any run of 1+ whitespace becomes a chunk boundary. Earlier versions
+  // only split on 2+ spaces (assuming PDFium preserved single spaces in
+  // the text object) - that assumption turned out to be unreliable, so
+  // every whitespace run is now an explicit positional jump.
+  const gapRe = /[ \t]+/g;
+  let leadingGapPt = 0;
   let lastIdx = 0;
   let m: RegExpExecArray | null;
   while ((m = gapRe.exec(line)) !== null) {
     const before = line.slice(lastIdx, m.index);
     const gapText = m[0];
-    chunks.push({
-      text: before,
-      gapAfterPt: measureAdvancePt(gapText, fontFamily, fontSizePt),
-    });
+    const gapPt = measureAdvancePt(gapText, fontFamily, fontSizePt);
+    if (before.length === 0) {
+      // Whitespace at the very start of `line`, or two whitespace runs
+      // back-to-back with no non-space char between. Fold the gap into
+      // the next chunk's leading offset rather than emitting an empty
+      // text object PDFium would reject.
+      leadingGapPt += gapPt;
+    } else if (chunks.length === 0 && leadingGapPt > 0) {
+      // First non-empty chunk absorbs the leading whitespace as a
+      // synthetic gap-before (caller adds it to the start cursor).
+      chunks.push({ text: before, gapAfterPt: gapPt });
+      // leadingGapPt will be applied by emitTextLine via the initial
+      // cursor offset.
+    } else {
+      chunks.push({ text: before, gapAfterPt: gapPt });
+    }
     lastIdx = gapRe.lastIndex;
   }
-  // Tail after the last consecutive-space run (or the entire line if none).
+  // Trailing non-whitespace tail.
   if (lastIdx < line.length) {
     chunks.push({ text: line.slice(lastIdx), gapAfterPt: 0 });
   }
+  // Tag the first chunk with leading whitespace by mutating its
+  // gapAfterPt is wrong; expose it via a closure-side field instead.
+  // The caller reads `chunks.leadingGapPt` when present.
+  (chunks as WordChunk[] & { leadingGapPt?: number }).leadingGapPt =
+    leadingGapPt;
   return chunks;
 }
 
 /**
- * Insert one or more text objects representing `opts.text`. When the
- * text has no consecutive spaces it returns exactly one pointer. When
- * it does, the text is split per word and each word becomes its own
- * text object positioned so the visual gaps line up - this is the only
- * way to keep PDFium from collapsing the spaces.
+ * Insert one or more text objects representing `opts.text`. Text with
+ * no whitespace becomes a single PDFium text object. Text with any
+ * whitespace becomes one text object per word, with the inter-word
+ * gaps emitted as explicit positional jumps via x-offset.
+ *
+ * The per-word path is the only reliable way to keep PDFium from
+ * collapsing inter-word spaces during its text-object serialisation
+ * (single AND consecutive spaces can both be stripped depending on
+ * font / encoding combination). One text object per word sidesteps the
+ * question entirely - PDFium has no spaces to collapse.
  *
  * The first returned pointer is the "anchor" (the model run's
  * `pdfiumObjPtr`); the rest live alongside it and must be tracked for
@@ -226,9 +254,9 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         )
       : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
 
-  // Fast path: no consecutive spaces → one text object holds the whole line.
-  const hasGappedSpaces = /\s\s/.test(opts.text);
-  if (!hasGappedSpaces) {
+  // Fast path: no whitespace at all → one text object holds the whole word.
+  const hasAnyWhitespace = /\s/.test(opts.text);
+  if (!hasAnyWhitespace) {
     const ptr = create();
     if (!ptr) return [];
     setTextOn(m, ptr, preserveSpaceRuns(opts.text));
@@ -236,14 +264,16 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     return [ptr];
   }
 
-  // Per-chunk emit (split at runs of 2+ spaces). After each emit we read
-  // the actual right edge from PDFium so the next chunk's x is exact -
-  // canvas measureText uses the browser's Helvetica fallback (often
-  // Liberation Sans) which overestimates Helvetica's advance by 15-20%
-  // and would leave huge gaps between chunks otherwise.
-  const chunks = splitIntoWordChunks(opts.text, family, size);
+  // Per-chunk emit (split on ANY whitespace run). After each emit we
+  // read the actual right edge from PDFium so the next chunk's x is
+  // exact - canvas measureText uses the browser's Helvetica fallback
+  // (often Liberation Sans) which overestimates Helvetica's advance by
+  // 15-20% and would leave huge gaps between chunks otherwise.
+  const chunks = splitIntoWordChunks(opts.text, family, size) as WordChunk[] & {
+    leadingGapPt?: number;
+  };
   const ptrs: number[] = [];
-  let cursor = opts.x;
+  let cursor = opts.x + (chunks.leadingGapPt ?? 0);
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
       const ptr = create();
