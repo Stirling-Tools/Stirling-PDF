@@ -41,7 +41,7 @@ spotless {
 }
 dependencies {
     implementation project(':common')
-    api 'com.google.guava:guava:33.6.0-jre'
+    api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
@@ -56,12 +56,12 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.18.0'
+    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
-    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation "com.google.code.gson:gson:${gsonVersion}"
 
     api 'io.micrometer:micrometer-registry-prometheus'
 
