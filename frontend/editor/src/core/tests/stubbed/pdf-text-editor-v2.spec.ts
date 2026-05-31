@@ -675,7 +675,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(reopenedAllText).toMatch(/Acrobat\s+Alternativ/);
   });
 
-  test("dbg-exercise3.pdf: typing one char doesn't corrupt or duplicate sub-runs", async ({
+  test("dbg-exercise3.pdf: deleting one char from middle doesn't corrupt or duplicate sub-runs", async ({
     page,
   }) => {
     // Regression guard: a previous attempt to teach partialEdit about
@@ -686,13 +686,17 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // bounds). Visually this teleported a chunk of the line and
     // dropped chars from the middle.
     //
-    // This test loads the LMRoman fixture, types one char at the end,
-    // and asserts the model state stays sane:
-    //   * run.text is exactly prevText + the appended char
+    // We delete one character from the MIDDLE of the bullet (not the
+    // end) because middle-edits exercise the full keep/delete/keep
+    // op-walk - end appends only need a single trailing insert and
+    // miss the cross-sub-run alignment bugs.
+    //
+    // Asserts the model state stays sane after the delete:
+    //   * run.text equals baseline minus the deleted char
     //   * mergedFromTexts has no duplicates of any non-trivial text
-    //     fragment (treats short ones like "• " as benign)
-    //   * none of the original sub-run texts had a char silently swapped
-    //     for a different one (e.g. "as a single" → "as  single")
+    //     fragment (the smoking gun for the teleport regression)
+    //   * every non-trivial baseline fragment whose chars all survived
+    //     still appears verbatim - catches silent char swaps
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -732,22 +736,52 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       return;
     }
 
-    // Type "X" at the end of the bullet line.
-    await page.evaluate((tid) => {
-      const el = document.querySelector<HTMLDivElement>(
-        `[data-testid="v2-run-${tid}"]`,
-      );
-      if (!el) throw new Error("no run el");
-      el.focus();
-      const sel = window.getSelection();
-      if (!sel) return;
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      document.execCommand("insertText", false, "X");
-    }, baseline.id);
+    // Pick a deterministic middle-position character to delete: the
+    // letter "M" of "Moodle" (clearly in the middle of the line,
+    // sandwiched between kept sub-runs on both sides).
+    const deleteIdx = baseline.text.indexOf("Moodle");
+    expect(deleteIdx).toBeGreaterThan(0);
+    const expectedText =
+      baseline.text.slice(0, deleteIdx) + baseline.text.slice(deleteIdx + 1);
+
+    // Position caret AFTER "M" and Backspace (so the M gets deleted).
+    await page.evaluate(
+      ({ tid, caretAt }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="v2-run-${tid}"]`,
+        );
+        if (!el) throw new Error("no run el");
+        el.focus();
+        // Walk the text nodes and place caret after the N-th char.
+        const walker = document.createTreeWalker(
+          el,
+          NodeFilter.SHOW_TEXT,
+          null,
+        );
+        let node: Text | null = null;
+        let remaining = caretAt;
+        while (walker.nextNode()) {
+          const n = walker.currentNode as Text;
+          const len = n.textContent?.length ?? 0;
+          if (remaining <= len) {
+            node = n;
+            break;
+          }
+          remaining -= len;
+        }
+        if (!node) throw new Error("ran out of text walking caret");
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        range.setStart(node, remaining);
+        range.setEnd(node, remaining);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        // delete = deleteContentBackward semantically
+        document.execCommand("delete", false);
+      },
+      { tid: baseline.id, caretAt: deleteIdx + 1 },
+    );
     await page.waitForTimeout(400);
 
     const after = await page.evaluate((tid) => {
@@ -773,8 +807,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }, baseline.id);
     if (!after) throw new Error("post-edit run vanished");
 
-    // Text content: exactly baseline + "X".
-    expect(after.text).toBe(baseline.text + "X");
+    // Text content: exactly baseline minus the M of Moodle.
+    expect(after.text).toBe(expectedText);
 
     // Sub-run integrity: any non-trivial (>=3 char) baseline fragment
     // must NOT appear twice in the post-edit mergedFromTexts. That's
@@ -790,17 +824,43 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       `mergedFromTexts duplicates after edit: ${JSON.stringify(dupes)}`,
     ).toEqual([]);
 
-    // Char-fidelity: every non-trivial baseline fragment must still
-    // appear verbatim somewhere in after.mergedFromTexts. Detects
-    // silent char swaps (e.g. "as a single" became "as  single").
+    // Char-fidelity: every non-trivial baseline fragment that wasn't
+    // the deleted sub-run must still appear verbatim somewhere in
+    // after.mergedFromTexts. Detects silent char swaps (e.g.
+    // "as a single" became "as  single").
     const afterJoined = after.mergedFromTexts.join("|");
     for (const t of baseline.mergedFromTexts) {
       if (t.length < 3) continue;
+      // The sub-run that contained the deleted M ("Moodle ") may be
+      // removed or re-emitted - don't assert on that one specifically.
+      if (t.includes("Moodle")) continue;
       expect(
         afterJoined,
         `baseline fragment ${JSON.stringify(t)} lost from post-edit run`,
       ).toContain(t);
     }
+
+    // Font preservation: typing into an LMRoman-rendered line must
+    // NOT flip the run to base14:Helvetica. The partialEdit path
+    // borrows the original font handle from the surviving sub-objects,
+    // so the kept text stays in its source typeface.
+    const afterFontId = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{ id: string; fontId: string }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      return (
+        store.doc.page(0).runs.find((r) => r.id === tid)?.fontId ?? "<gone>"
+      );
+    }, baseline.id);
+    expect(afterFontId).not.toMatch(/^base14:/);
   });
 
   test("multiple consecutive spaces survive save and re-open", async ({

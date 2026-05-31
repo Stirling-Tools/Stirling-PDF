@@ -89,38 +89,57 @@ export function planPartialEdit(
 
   const { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
 
-  // Map each prev char index to its sub-run index.
+  // Map each prev char index to its sub-run index by LOCATING each
+  // sub-run's text inside prevText. LineGrouper may have synthesised
+  // whitespace between sub-runs (positional cursor jumps that don't
+  // exist as actual chars in any sub-run); those chars stay at -1
+  // (ghost) and are skipped by the ops walk - keeping the surrounding
+  // sub-runs preserves the gap as a positional offset.
+  //
+  // Earlier versions of this function reconstructed the gaps via a
+  // heuristic that matched LineGrouper's, but any drift (different
+  // fontSize source, rounding) silently misclassified sub-runs and
+  // corrupted text. Locating sub-run texts directly removes the
+  // heuristic entirely.
   const charToSubRun = new Array<number>(prevText.length).fill(-1);
-  let charCursor = 0;
-  for (let i = 0; i < run.mergedFromPtrs.length; i++) {
+  const subRunRanges: Array<{ start: number; end: number } | null> = [];
+  let scanPos = 0;
+  for (let i = 0; i < run.mergedFromTexts.length; i++) {
     const subText = run.mergedFromTexts[i];
-    for (
-      let c = 0;
-      c < subText.length && charCursor + c < prevText.length;
-      c++
-    ) {
-      charToSubRun[charCursor + c] = i;
+    if (subText.length === 0) {
+      subRunRanges.push({ start: scanPos, end: scanPos });
+      continue;
     }
-    charCursor += subText.length;
+    const found = prevText.indexOf(subText, scanPos);
+    if (found < 0) return null; // sub-run text vanished from prevText — bail
+    for (let c = found; c < found + subText.length; c++) {
+      charToSubRun[c] = i;
+    }
+    subRunRanges.push({ start: found, end: found + subText.length });
+    scanPos = found + subText.length;
   }
-  if (charCursor !== prevText.length) return null; // sub-run texts don't add up
 
-  // Classify sub-runs. all-kept = preserve as-is, all-deleted = remove,
-  // mixed = sub-run has some kept and some deleted chars. We can't
-  // PDFium-split a text object, so for mixed we remove the whole thing
-  // and treat the kept chars as if they were inserts (Helvetica fallback).
-  // Far better than re-emitting the WHOLE line as Helvetica.
+  // Classify sub-runs by counting how many of their own chars (the
+  // tracked range, not ghost gaps) survived the LCS.
   const subRunStatus: Array<"all-kept" | "all-deleted" | "mixed"> = [];
   const mixedSubRuns = new Set<number>();
-  for (let i = 0; i < run.mergedFromPtrs.length; i++) {
-    const subText = run.mergedFromTexts[i];
-    const start = subRunStartOf(run, i);
+  for (let i = 0; i < run.mergedFromTexts.length; i++) {
+    const range = subRunRanges[i];
+    if (!range) {
+      subRunStatus.push("all-kept");
+      continue;
+    }
+    const subLen = range.end - range.start;
+    if (subLen === 0) {
+      subRunStatus.push("all-kept");
+      continue;
+    }
     let keptCount = 0;
-    for (let c = start; c < start + subText.length; c++) {
+    for (let c = range.start; c < range.end; c++) {
       if (keptA.has(c)) keptCount += 1;
     }
     if (keptCount === 0) subRunStatus.push("all-deleted");
-    else if (keptCount === subText.length) subRunStatus.push("all-kept");
+    else if (keptCount === subLen) subRunStatus.push("all-kept");
     else {
       subRunStatus.push("mixed");
       mixedSubRuns.add(i);
@@ -141,6 +160,12 @@ export function planPartialEdit(
     if (keptB.has(b)) {
       const a = bToA.get(b)!;
       const subRunIdx = charToSubRun[a];
+      // Ghost char (LineGrouper-synthesised whitespace, not part of any
+      // PDFium text object). No keep op needed - the positional gap
+      // between the surrounding sub-runs implicitly carries the
+      // whitespace. Don't reset lastSubRun either, so two real chars
+      // from the same sub-run on either side of a ghost still dedupe.
+      if (subRunIdx === -1) continue;
       // Kept chars in mixed sub-runs are treated as inserts so we can
       // emit them via Helvetica fallback (the only chars in the line
       // that lose their original font - the surrounding unchanged
@@ -186,12 +211,6 @@ export function planPartialEdit(
     prevMergedFromTexts: [...run.mergedFromTexts],
     prevMergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
   };
-}
-
-function subRunStartOf(run: TextRun, subRunIdx: number): number {
-  let start = 0;
-  for (let i = 0; i < subRunIdx; i++) start += run.mergedFromTexts[i].length;
-  return start;
 }
 
 interface FormRemovalModule {
@@ -261,7 +280,14 @@ export function applyPartialEditPlan(
   const newMergedFromBounds: Array<{ x: number; right: number }> = [];
   const insertedPtrs: number[] = [];
 
-  let offset = 0;
+  // Strategy: kept sub-runs ALWAYS stay at their original position.
+  // Inserts fill into the empty slot left by an adjacent deleted /
+  // mixed sub-run. We never shift a kept sub-run sideways - the layout
+  // intent (inter-word positional gaps from the source PDF, glyph
+  // alignment, etc.) is preserved that way. If a Helvetica replacement
+  // for a mixed sub-run is slightly wider or narrower than the original
+  // glyph stretch, the visual result is a small gap or tight overlap at
+  // exactly the edited word's position - bounded and predictable.
   let firstX = run.bounds.x;
   let lastEnd = run.bounds.x;
 
@@ -270,19 +296,10 @@ export function applyPartialEditPlan(
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const text = plan.prevMergedFromTexts[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
-      if (Math.abs(offset) > 0.05) {
-        try {
-          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
-        } catch {
-          /* best-effort */
-        }
-      }
-      const newX = origBounds.x + offset;
-      const newRight = origBounds.right + offset;
       newMergedFromPtrs.push(ptr);
       newMergedFromTexts.push(text);
-      newMergedFromBounds.push({ x: newX, right: newRight });
-      lastEnd = newRight;
+      newMergedFromBounds.push({ x: origBounds.x, right: origBounds.right });
+      if (origBounds.right > lastEnd) lastEnd = origBounds.right;
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
       const ptrs = emitTextLine({
@@ -309,7 +326,6 @@ export function applyPartialEditPlan(
         runningCursor += sliceWidth;
       }
       insertedPtrs.push(...ptrs);
-      offset += measuredWidth;
       lastEnd += measuredWidth;
     }
   }
