@@ -25,7 +25,10 @@ import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
-import { exportToBlob, printDocument } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
+import {
+  exportToBlob,
+  printDocument,
+} from "@app/tools/pdfTextEditor/v2/util/exportPdf";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -191,7 +194,9 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     onDelete: sel.deleteSelection,
     onDuplicate: sel.duplicateFirstSelected,
     onSelectAll: useCallback(() => {
-      const ids = store.getState().pages.flatMap((p) => p.runs.map((r) => r.id));
+      const ids = store
+        .getState()
+        .pages.flatMap((p) => p.runs.map((r) => r.id));
       if (ids.length > 0) store.selection.selectMany(ids);
     }, [store]),
     onCopySelected: handleCopySelected,
@@ -244,9 +249,11 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
           store.setMode(state.mode === "addText" ? "select" : "addText")
         }
         onPickImage={() =>
-          (document.querySelector(
-            '[data-testid="v2-image-input"]',
-          ) as HTMLInputElement | null)?.click()
+          (
+            document.querySelector(
+              '[data-testid="v2-image-input"]',
+            ) as HTMLInputElement | null
+          )?.click()
         }
         onRotate={(delta) => rotateVisiblePage(store, delta)}
         onGroup={handleMergeSelection}

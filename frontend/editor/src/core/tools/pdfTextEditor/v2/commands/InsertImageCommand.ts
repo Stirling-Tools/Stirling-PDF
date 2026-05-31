@@ -106,9 +106,7 @@ export class InsertImageCommand implements Command {
     const page = doc.page(this.pageIndex);
     doc.module.FPDFPage_RemoveObject(page.pagePtr, this.createdObjPtr);
     if (this.createdImageId) {
-      page.setImages(
-        page.images.filter((i) => i.id !== this.createdImageId),
-      );
+      page.setImages(page.images.filter((i) => i.id !== this.createdImageId));
     }
     page.markDirty();
     doc.module.FPDFPage_GenerateContent(page.pagePtr);

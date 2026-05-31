@@ -219,7 +219,11 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const reuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
   const create = (): number =>
     reuse
-      ? m2.FPDFPageObj_CreateTextObj!(opts.doc.docPtr, opts.originalFontPtr, size)
+      ? m2.FPDFPageObj_CreateTextObj!(
+          opts.doc.docPtr,
+          opts.originalFontPtr,
+          size,
+        )
       : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
 
   // Fast path: no consecutive spaces → one text object holds the whole line.
@@ -247,7 +251,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       setTextOn(m, ptr, chunk.text);
       applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
       const measured = measureObjRightEdgePt(m, ptr);
-      cursor = measured > cursor ? measured : cursor + measureAdvancePt(chunk.text, family, size);
+      cursor =
+        measured > cursor
+          ? measured
+          : cursor + measureAdvancePt(chunk.text, family, size);
       ptrs.push(ptr);
     }
     cursor += chunk.gapAfterPt;
@@ -255,10 +262,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   return ptrs;
 }
 
-function measureObjRightEdgePt(
-  m: WrappedPdfiumModule,
-  objPtr: number,
-): number {
+function measureObjRightEdgePt(m: WrappedPdfiumModule, objPtr: number): number {
   const l = m.pdfium.wasmExports.malloc(4);
   const b = m.pdfium.wasmExports.malloc(4);
   const r = m.pdfium.wasmExports.malloc(4);
@@ -274,11 +278,7 @@ function measureObjRightEdgePt(
   }
 }
 
-function setTextOn(
-  m: WrappedPdfiumModule,
-  ptr: number,
-  text: string,
-): void {
+function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
   const textPtr = writeUtf16(m, text);
   try {
     m.FPDFText_SetText(ptr, textPtr);

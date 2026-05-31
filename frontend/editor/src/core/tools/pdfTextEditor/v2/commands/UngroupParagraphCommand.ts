@@ -115,7 +115,10 @@ export class UngroupParagraphCommand implements Command {
     if (!rep) return;
     rep.text = this.prev.text;
     rep.bounds = { ...this.prev.bounds };
-    rep.matrix = { ...rep.matrix, f: this.prev.paragraphMemberFs[0] ?? rep.matrix.f };
+    rep.matrix = {
+      ...rep.matrix,
+      f: this.prev.paragraphMemberFs[0] ?? rep.matrix.f,
+    };
     rep.paragraphLineHeight = this.prev.paragraphLineHeight;
     rep.paragraphMemberPtrs = [...this.prev.paragraphMemberPtrs];
     rep.paragraphMemberContainers = [...this.prev.paragraphMemberContainers];

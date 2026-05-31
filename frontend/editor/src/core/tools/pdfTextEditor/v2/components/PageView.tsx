@@ -137,13 +137,8 @@ export function PageView({
       .catch((err: unknown) => {
         if (cancelled) return;
         const msg =
-          err instanceof Error
-            ? `${err.name}: ${err.message}`
-            : String(err);
-        console.warn(
-          `[v2] page ${page.pageIndex} render failed`,
-          err,
-        );
+          err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+        console.warn(`[v2] page ${page.pageIndex} render failed`, err);
         setRendering(false);
         setRenderError(msg);
         // Flip the first-rendered flag on error too, so the loading
@@ -184,7 +179,9 @@ export function PageView({
         if (!onPageClick) return;
         // Convert from CSS pixel coords (origin upper-left) into PDF
         // page-space coords (origin lower-left, points).
-        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        const rect = (
+          e.currentTarget as HTMLDivElement
+        ).getBoundingClientRect();
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
         const pageX = cssX / scale;
@@ -216,12 +213,7 @@ export function PageView({
         </Box>
       )}
       {rendering && nearViewport && (
-        <Box
-          pos="absolute"
-          top={8}
-          right={8}
-          style={{ pointerEvents: "none" }}
-        >
+        <Box pos="absolute" top={8} right={8} style={{ pointerEvents: "none" }}>
           <Loader size="xs" />
         </Box>
       )}

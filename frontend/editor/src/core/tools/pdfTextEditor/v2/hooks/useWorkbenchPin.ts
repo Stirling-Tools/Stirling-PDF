@@ -40,7 +40,13 @@ export function useWorkbenchPin({
   // Stash the per-render values that aren't dependable identities (icon
   // is a fresh JSX node every render) so the effect can read them on
   // mount without re-running on every parent render.
-  const viewRef = useRef({ workbenchId, workbenchViewId, label, icon, component });
+  const viewRef = useRef({
+    workbenchId,
+    workbenchViewId,
+    label,
+    icon,
+    component,
+  });
   viewRef.current = { workbenchId, workbenchViewId, label, icon, component };
   useEffect(() => {
     const v = viewRef.current;

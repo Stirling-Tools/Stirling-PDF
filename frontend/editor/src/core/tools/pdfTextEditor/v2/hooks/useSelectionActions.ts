@@ -23,11 +23,7 @@ import {
 export function useSelectionActions(store: EditorStore) {
   const forEachSelectedRun = useCallback(
     (
-      visit: (run: {
-        id: string;
-        pageIndex: number;
-        fontId: string;
-      }) => void,
+      visit: (run: { id: string; pageIndex: number; fontId: string }) => void,
     ) => {
       const sel = store.selection.value;
       const doc = store.document;

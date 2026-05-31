@@ -1,7 +1,10 @@
 import { useState } from "react";
 import React from "react";
 import { Rnd } from "react-rnd";
-import type { ImageObjectSnapshot, PageRect } from "@app/tools/pdfTextEditor/v2/types";
+import type {
+  ImageObjectSnapshot,
+  PageRect,
+} from "@app/tools/pdfTextEditor/v2/types";
 
 interface ImageHandleProps {
   image: ImageObjectSnapshot;
@@ -101,9 +104,7 @@ export function ImageHandle({
             ? "1px dashed rgba(0,0,0,0.45)"
             : "none",
         background:
-          selected || dragging
-            ? "rgba(44,123,229,0.08)"
-            : "transparent",
+          selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
         cursor: "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
         pointerEvents: "auto",

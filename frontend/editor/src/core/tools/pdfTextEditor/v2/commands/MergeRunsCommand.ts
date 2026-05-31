@@ -59,12 +59,8 @@ export class MergeRunsCommand implements Command {
     this.removedRunSnapshots = members.map(snapshotRun);
 
     const minX = Math.min(...runs.map((r) => r.bounds.x));
-    const maxRight = Math.max(
-      ...runs.map((r) => r.bounds.x + r.bounds.width),
-    );
-    const topY = Math.max(
-      ...runs.map((r) => r.bounds.y + r.bounds.height),
-    );
+    const maxRight = Math.max(...runs.map((r) => r.bounds.x + r.bounds.width));
+    const topY = Math.max(...runs.map((r) => r.bounds.y + r.bounds.height));
     const bottomY = Math.min(...runs.map((r) => r.bounds.y));
 
     rep.text = runs.map((r) => r.text).join("\n");

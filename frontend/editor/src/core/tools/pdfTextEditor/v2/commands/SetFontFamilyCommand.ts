@@ -29,11 +29,7 @@ export class SetFontFamilyCommand implements Command {
   /** New PDFium pointer for the replacement run; needed for revert. */
   private nextObjPtr: number;
 
-  constructor(opts: {
-    pageIndex: number;
-    runId: string;
-    nextFamily: string;
-  }) {
+  constructor(opts: { pageIndex: number; runId: string; nextFamily: string }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextFamily = opts.nextFamily;

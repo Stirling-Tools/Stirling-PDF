@@ -37,14 +37,12 @@ export function sampleBackground(
   try {
     const left = Math.max(0, bounds.x - MARGIN_POINTS);
     const right = Math.min(page.width, bounds.x + bounds.width + MARGIN_POINTS);
-    const top = Math.min(
-      page.height,
-      bounds.y + bounds.height + MARGIN_POINTS,
-    );
+    const top = Math.min(page.height, bounds.y + bounds.height + MARGIN_POINTS);
     const bottom = Math.max(0, bounds.y - MARGIN_POINTS);
     const widthPts = right - left;
     const heightPts = top - bottom;
-    if (widthPts <= 1 || heightPts <= 1) return { fill: fallback, confident: false };
+    if (widthPts <= 1 || heightPts <= 1)
+      return { fill: fallback, confident: false };
 
     const w = Math.max(8, Math.round(widthPts * SAMPLE_SCALE));
     const h = Math.max(8, Math.round(heightPts * SAMPLE_SCALE));
@@ -115,11 +113,13 @@ export function sampleBackground(
         bucket.count += 1;
         buckets.set(key, bucket);
       }
-      let best: { r: number; g: number; b: number; count: number } | null = null;
+      let best: { r: number; g: number; b: number; count: number } | null =
+        null;
       for (const b of buckets.values()) {
         if (!best || b.count > best.count) best = b;
       }
-      if (!best || best.count === 0) return { fill: fallback, confident: false };
+      if (!best || best.count === 0)
+        return { fill: fallback, confident: false };
       return {
         fill: {
           r: Math.round(best.r / best.count),

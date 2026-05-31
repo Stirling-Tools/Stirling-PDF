@@ -5,11 +5,7 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { LineGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
-import type {
-  Affine,
-  PageRect,
-  RGBA,
-} from "@app/tools/pdfTextEditor/v2/types";
+import type { Affine, PageRect, RGBA } from "@app/tools/pdfTextEditor/v2/types";
 import { readUtf16 } from "@app/services/pdfiumService";
 
 /**
@@ -280,9 +276,8 @@ function readTextRun(
     // The on-page visible font size is `rawFontSize * |matrix scale|`. PDFium
     // encodes the size split between a unit font and a scaling matrix; users
     // think in points, so we expose the product as the run's fontSize.
-    const matrixScale = Math.sqrt(
-      matrix.a * matrix.a + matrix.b * matrix.b,
-    ) || 1;
+    const matrixScale =
+      Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b) || 1;
     const fontSize = rawFontSize * matrixScale;
 
     const fontPtr = m.FPDFTextObj_GetFont(objPtr);

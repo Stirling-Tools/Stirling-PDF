@@ -84,7 +84,11 @@ export class EditorStore {
   }
 
   setLoading(loading: boolean, error: string | null = null): void {
-    this.patch({ loading, error, progress: loading ? this.state.progress : null });
+    this.patch({
+      loading,
+      error,
+      progress: loading ? this.state.progress : null,
+    });
   }
 
   setProgress(progress: LoadProgress | null): void {

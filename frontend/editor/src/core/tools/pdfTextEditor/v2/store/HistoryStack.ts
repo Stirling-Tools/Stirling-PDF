@@ -70,7 +70,9 @@ export class HistoryStack {
    * Equivalent to repeated `undo()` calls until empty. After the call
    * the redo stack contains every reverted command in original order.
    */
-  undoAll(doc: import("@app/tools/pdfTextEditor/v2/model/EditorDocument").EditorDocument): number {
+  undoAll(
+    doc: import("@app/tools/pdfTextEditor/v2/model/EditorDocument").EditorDocument,
+  ): number {
     let count = 0;
     while (this.undoStack.length > 0) {
       this.undo(doc);

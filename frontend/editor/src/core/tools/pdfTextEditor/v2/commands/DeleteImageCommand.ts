@@ -42,7 +42,9 @@ export class DeleteImageCommand implements Command {
       const total = doc.module.FPDFPage_CountObjects(page.pagePtr);
       let foundIdx = -1;
       for (let i = 0; i < total; i++) {
-        if (doc.module.FPDFPage_GetObject(page.pagePtr, i) === img.pdfiumObjPtr) {
+        if (
+          doc.module.FPDFPage_GetObject(page.pagePtr, i) === img.pdfiumObjPtr
+        ) {
           foundIdx = i;
           break;
         }
@@ -72,7 +74,12 @@ export class DeleteImageCommand implements Command {
     let inserted = false;
     if (typeof insertAt === "function" && this.originalIndex >= 0) {
       try {
-        inserted = insertAt.call(m, page.pagePtr, this.cachedObjPtr, this.originalIndex);
+        inserted = insertAt.call(
+          m,
+          page.pagePtr,
+          this.cachedObjPtr,
+          this.originalIndex,
+        );
       } catch {
         inserted = false;
       }
@@ -91,7 +98,10 @@ export class DeleteImageCommand implements Command {
         // the target object effectively one step lower in z-order.
         // This works because FPDFPage_InsertObject appends to the end.
         for (let i = this.originalIndex; i < lastIdx; i++) {
-          const ptr = doc.module.FPDFPage_GetObject(page.pagePtr, this.originalIndex);
+          const ptr = doc.module.FPDFPage_GetObject(
+            page.pagePtr,
+            this.originalIndex,
+          );
           if (!ptr || ptr === this.cachedObjPtr) break;
           doc.module.FPDFPage_RemoveObject(page.pagePtr, ptr);
           doc.module.FPDFPage_InsertObject(page.pagePtr, ptr);

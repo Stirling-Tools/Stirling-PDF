@@ -12,7 +12,10 @@ import RedoIcon from "@mui/icons-material/Redo";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import { parseCssColor, toCssHex } from "@app/tools/pdfTextEditor/v2/model/Color";
+import {
+  parseCssColor,
+  toCssHex,
+} from "@app/tools/pdfTextEditor/v2/model/Color";
 import type { ToolbarState } from "@app/tools/pdfTextEditor/v2/types";
 
 interface ToolbarProps {

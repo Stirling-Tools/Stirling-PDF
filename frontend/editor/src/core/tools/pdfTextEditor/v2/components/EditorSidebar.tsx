@@ -94,7 +94,8 @@ function formatSelection(selection: SelectionState): string | null {
   const images = selection.imageIds.length;
   if (runs === 0 && images === 0) return null;
   const parts: string[] = [];
-  if (runs > 0) parts.push(`${runs} text ${runs === 1 ? "run" : "runs"} selected`);
+  if (runs > 0)
+    parts.push(`${runs} text ${runs === 1 ? "run" : "runs"} selected`);
   if (images > 0)
     parts.push(`${images} ${images === 1 ? "image" : "images"} selected`);
   return parts.join(" · ");

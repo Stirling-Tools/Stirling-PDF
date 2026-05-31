@@ -9,7 +9,10 @@ import {
 } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
-import type { PageSnapshot, TextRunSnapshot } from "@app/tools/pdfTextEditor/v2/types";
+import type {
+  PageSnapshot,
+  TextRunSnapshot,
+} from "@app/tools/pdfTextEditor/v2/types";
 
 interface FindBarProps {
   store: EditorStore;

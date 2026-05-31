@@ -70,17 +70,19 @@ export class SetImageTransformCommand implements Command {
     // Restore the captured matrix exactly (preserves any rotation /
     // shear that wasn't expressed in the simple bounds form).
     const m = doc.module;
-    const fn = (m as unknown as {
-      FPDFImageObj_SetMatrix: (
-        obj: number,
-        a: number,
-        b: number,
-        c: number,
-        d: number,
-        e: number,
-        f: number,
-      ) => boolean;
-    }).FPDFImageObj_SetMatrix;
+    const fn = (
+      m as unknown as {
+        FPDFImageObj_SetMatrix: (
+          obj: number,
+          a: number,
+          b: number,
+          c: number,
+          d: number,
+          e: number,
+          f: number,
+        ) => boolean;
+      }
+    ).FPDFImageObj_SetMatrix;
     try {
       fn(
         img.pdfiumObjPtr,
@@ -107,17 +109,19 @@ function setMatrix(
   objPtr: number,
   bounds: PageRect,
 ): void {
-  const fn = (doc.module as unknown as {
-    FPDFImageObj_SetMatrix: (
-      obj: number,
-      a: number,
-      b: number,
-      c: number,
-      d: number,
-      e: number,
-      f: number,
-    ) => boolean;
-  }).FPDFImageObj_SetMatrix;
+  const fn = (
+    doc.module as unknown as {
+      FPDFImageObj_SetMatrix: (
+        obj: number,
+        a: number,
+        b: number,
+        c: number,
+        d: number,
+        e: number,
+        f: number,
+      ) => boolean;
+    }
+  ).FPDFImageObj_SetMatrix;
   try {
     fn(objPtr, bounds.width, 0, 0, bounds.height, bounds.x, bounds.y);
   } catch {

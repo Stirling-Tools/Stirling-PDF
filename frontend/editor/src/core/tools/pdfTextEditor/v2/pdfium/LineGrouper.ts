@@ -59,7 +59,8 @@ export class LineGrouper {
       }
       const ref = current.representative;
       const baseDiff = Math.abs(run.matrix.f - ref.matrix.f);
-      const sameLine = baseDiff <= BASELINE_TOLERANCE * Math.max(ref.fontSize, 4);
+      const sameLine =
+        baseDiff <= BASELINE_TOLERANCE * Math.max(ref.fontSize, 4);
       const prev = current.members[current.members.length - 1];
       const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
       // The relative factor matched typical inter-word spacing but
@@ -113,7 +114,8 @@ export class LineGrouper {
             : 0;
         const prevEndsInSpace = /\s/.test(prevTail);
         const curStartsWithSpace = /\s/.test(curHead);
-        const alreadyHave = (prevEndsInSpace ? 1 : 0) + (curStartsWithSpace ? 1 : 0);
+        const alreadyHave =
+          (prevEndsInSpace ? 1 : 0) + (curStartsWithSpace ? 1 : 0);
         const toInsert = Math.max(0, extraSpaces - alreadyHave);
         if (toInsert > 0) parts.push(" ".repeat(toInsert));
         parts.push(memberTexts[i]);

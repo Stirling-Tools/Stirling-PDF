@@ -82,11 +82,7 @@ export class EditTextCommand implements Command {
     // get removed; everything else is shifted to fit. Bails out only
     // for mixed-survival sub-objects (would need splitting).
     if (this.partialPlan === null && run.mergedFromPtrs.length > 0) {
-      const partial = planPartialEdit(
-        run,
-        this.prevText ?? "",
-        this.nextText,
-      );
+      const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       if (partial) {
         this.partialPlan = partial;
         this.prevMergedFromPtrs = [...run.mergedFromPtrs];
@@ -181,7 +177,9 @@ export class EditTextCommand implements Command {
 
     const outputLines = this.nextText.split(/\r?\n/);
     const lineHeight =
-      run.paragraphLineHeight > 0 ? run.paragraphLineHeight : run.fontSize * 1.2;
+      run.paragraphLineHeight > 0
+        ? run.paragraphLineHeight
+        : run.fontSize * 1.2;
     // One "line anchor" ptr per output line (first ptr emitted for that
     // line); plus any extra per-word ptrs from space preservation, kept
     // for leaf removal on subsequent edits.

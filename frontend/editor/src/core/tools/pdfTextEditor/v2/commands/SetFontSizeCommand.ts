@@ -32,9 +32,16 @@ export class SetFontSizeCommand implements Command {
     if (this.prevSize === null) {
       this.prevSize = run.fontSize;
     }
-    this.scaleTo(doc, run.pdfiumObjPtr, this.nextSize / Math.max(0.01, run.fontSize));
+    this.scaleTo(
+      doc,
+      run.pdfiumObjPtr,
+      this.nextSize / Math.max(0.01, run.fontSize),
+    );
     run.fontSize = this.nextSize;
-    run.matrix = scaleMatrix(run.matrix, this.nextSize / Math.max(0.01, this.prevSize));
+    run.matrix = scaleMatrix(
+      run.matrix,
+      this.nextSize / Math.max(0.01, this.prevSize),
+    );
     run.dirty = true;
     page.markDirty();
     doc.module.FPDFPage_GenerateContent(page.pagePtr);
@@ -45,7 +52,11 @@ export class SetFontSizeCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || !run.pdfiumObjPtr) return;
-    this.scaleTo(doc, run.pdfiumObjPtr, this.prevSize / Math.max(0.01, run.fontSize));
+    this.scaleTo(
+      doc,
+      run.pdfiumObjPtr,
+      this.prevSize / Math.max(0.01, run.fontSize),
+    );
     const ratio = this.prevSize / Math.max(0.01, run.fontSize);
     run.fontSize = this.prevSize;
     run.matrix = scaleMatrix(run.matrix, ratio);

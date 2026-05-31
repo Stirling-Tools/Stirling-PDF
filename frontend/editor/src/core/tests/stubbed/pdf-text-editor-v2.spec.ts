@@ -254,13 +254,11 @@ test.describe("PDF text editor v2 - save", () => {
     // Push the saved bytes back into the dropzone as a new file.
     // setInputFiles() accepts an in-memory payload; the editor will
     // close the old document via store.setDocument() and load this.
-    await page
-      .locator('[data-testid="v2-file-input"]')
-      .setInputFiles({
-        name: "round-trip.pdf",
-        mimeType: "application/pdf",
-        buffer: savedBytes,
-      });
+    await page.locator('[data-testid="v2-file-input"]').setInputFiles({
+      name: "round-trip.pdf",
+      mimeType: "application/pdf",
+      buffer: savedBytes,
+    });
 
     // First run on the re-opened doc should now show the edited text.
     const reopenedFirst = page.locator('[data-testid^="v2-run-p0-"]').first();
@@ -352,7 +350,9 @@ test.describe("PDF text editor v2 - keyboard shortcuts", () => {
     await expect(firstRun).toContainText("tt");
 
     // Move focus off the run so the Ctrl+Z isn't captured as caret undo.
-    await page.locator('[data-testid="v2-stage"]').click({ position: { x: 5, y: 5 } });
+    await page
+      .locator('[data-testid="v2-stage"]')
+      .click({ position: { x: 5, y: 5 } });
     await page.keyboard.press("Control+z");
     await expect(firstRun).toHaveText(original);
   });
@@ -394,7 +394,9 @@ test.describe("PDF text editor v2 - multi-page", () => {
     await expect(page.getByTestId("v2-page-2")).toBeVisible();
 
     // The sidebar status reports the page count.
-    await expect(page.getByTestId("v2-sidebar-status")).toContainText("3 pages");
+    await expect(page.getByTestId("v2-sidebar-status")).toContainText(
+      "3 pages",
+    );
   });
 
   test("edits on a non-first page are saved and round-trip", async ({
@@ -460,9 +462,7 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       .first()
       .click({ timeout: 10_000 });
 
-    const undoCountBefore = await page
-      .getByTestId("v2-undo")
-      .isEnabled();
+    const undoCountBefore = await page.getByTestId("v2-undo").isEnabled();
     expect(undoCountBefore).toBe(true);
 
     // Now click Bold. It should dispatch another edit (undo stack grows).
@@ -615,9 +615,13 @@ test.describe("PDF text editor v2 - image manipulation", () => {
     if (!box) throw new Error("image overlay has no bounding box");
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
-    await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2 + 40, {
-      steps: 5,
-    });
+    await page.mouse.move(
+      box.x + box.width / 2 + 80,
+      box.y + box.height / 2 + 40,
+      {
+        steps: 5,
+      },
+    );
     await page.mouse.up();
     await expect(page.getByTestId("v2-undo")).toBeEnabled({ timeout: 5_000 });
   });
@@ -890,9 +894,7 @@ test.describe("PDF text editor v2 - fit-to-width", () => {
   }) => {
     await gotoV2(page);
     await loadSamplePdf(page);
-    const before = await page
-      .getByTestId("v2-zoom-percent")
-      .innerText();
+    const before = await page.getByTestId("v2-zoom-percent").innerText();
     await page.getByTestId("v2-zoom-fit").click();
     const after = await page.getByTestId("v2-zoom-percent").innerText();
     // The fit value depends on viewport width, but must be a sensible
@@ -1076,9 +1078,8 @@ test.describe("PDF text editor v2 - rotate page", () => {
 
     const readRotation = () =>
       page.evaluate(() => {
-        const store = (
-          window as unknown as { __v2_editor_store?: unknown }
-        ).__v2_editor_store as unknown as {
+        const store = (window as unknown as { __v2_editor_store?: unknown })
+          .__v2_editor_store as unknown as {
           document: {
             module: { FPDFPage_GetRotation: (p: number) => number };
             page: (i: number) => { pagePtr: number };
@@ -1102,9 +1103,8 @@ test.describe("PDF text editor v2 - rotate page", () => {
     // element currently has keyboard focus (Mantine buttons swallow
     // some key events between window.keydown registration and Playwright).
     await page.evaluate(() => {
-      const store = (
-        window as unknown as { __v2_editor_store?: unknown }
-      ).__v2_editor_store as { undo: () => void };
+      const store = (window as unknown as { __v2_editor_store?: unknown })
+        .__v2_editor_store as { undo: () => void };
       store.undo();
     });
     await page.waitForTimeout(120);
@@ -1139,9 +1139,8 @@ test.describe("PDF text editor v2 - duplicate selected run", () => {
     expect(after).toBe(before + 1);
 
     await page.evaluate(() => {
-      const store = (
-        window as unknown as { __v2_editor_store?: unknown }
-      ).__v2_editor_store as { undo: () => void };
+      const store = (window as unknown as { __v2_editor_store?: unknown })
+        .__v2_editor_store as { undo: () => void };
       store.undo();
     });
     await page.waitForTimeout(200);
@@ -1169,9 +1168,9 @@ test.describe("PDF text editor v2 - Ctrl+wheel zoom", () => {
     const initial = await readScale();
 
     await page.evaluate(() => {
-      const stage = document.querySelector('[data-testid="v2-stage"]') as
-        | HTMLElement
-        | null;
+      const stage = document.querySelector(
+        '[data-testid="v2-stage"]',
+      ) as HTMLElement | null;
       stage?.dispatchEvent(
         new WheelEvent("wheel", {
           deltaY: -100,
@@ -1242,9 +1241,7 @@ test.describe("PDF text editor v2 - marquee + merge", () => {
     await loadSamplePdf(page);
 
     await page.waitForTimeout(150);
-    const totalRuns = await page
-      .locator('[data-testid^="v2-run-p0-"]')
-      .count();
+    const totalRuns = await page.locator('[data-testid^="v2-run-p0-"]').count();
     expect(totalRuns).toBeGreaterThan(1);
 
     // Dispatch the synthetic mousedown / mousemove / mouseup that wrap
@@ -1324,7 +1321,9 @@ test.describe("PDF text editor v2 - marquee + merge", () => {
     await page.evaluate((ids) => {
       const store = (
         window as unknown as {
-          __v2_editor_store?: { selection: { selectMany: (ids: string[]) => void } };
+          __v2_editor_store?: {
+            selection: { selectMany: (ids: string[]) => void };
+          };
         }
       ).__v2_editor_store!;
       store.selection.selectMany(ids);

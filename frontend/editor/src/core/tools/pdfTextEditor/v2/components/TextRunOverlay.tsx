@@ -52,9 +52,7 @@ function contrastingMaskFor(fill: {
 }): string {
   // ITU-R BT.601 luma; 0 = black, 255 = white.
   const luma = (fill.r * 299 + fill.g * 587 + fill.b * 114) / 1000;
-  return luma > 160
-    ? "rgba(30, 30, 30, 0.85)"
-    : "rgba(255, 255, 255, 0.9)";
+  return luma > 160 ? "rgba(30, 30, 30, 0.85)" : "rgba(255, 255, 255, 0.9)";
 }
 
 let sharedMeasureCanvas: HTMLCanvasElement | null = null;
@@ -75,7 +73,8 @@ function measureMaxLineWidth(
   fontSizePx: number,
 ): number {
   if (typeof document === "undefined") return 0;
-  if (!sharedMeasureCanvas) sharedMeasureCanvas = document.createElement("canvas");
+  if (!sharedMeasureCanvas)
+    sharedMeasureCanvas = document.createElement("canvas");
   const ctx = sharedMeasureCanvas.getContext("2d");
   if (!ctx) return 0;
   ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
@@ -249,9 +248,7 @@ export function TextRunOverlay({
         // Paragraphs preserve soft-wrap line breaks so the commit can
         // emit one PDF text object per visual line.
         const isParagraph = (run.paragraphLineCount ?? 1) > 1;
-        const text = isParagraph
-          ? extractTextWithSoftBreaks(el)
-          : el.innerText;
+        const text = isParagraph ? extractTextWithSoftBreaks(el) : el.innerText;
         onEdit(text);
       }}
       onMouseEnter={() => setHovered(true)}
@@ -304,6 +301,5 @@ export function TextRunOverlay({
         overflow: "hidden",
       }}
     />
-
   );
 }

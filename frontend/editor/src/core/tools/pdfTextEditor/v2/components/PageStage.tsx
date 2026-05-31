@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Center, Loader, Progress, ScrollArea, Stack, Text } from "@mantine/core";
 import {
-  useEditorStore,
-} from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
+  Box,
+  Center,
+  Loader,
+  Progress,
+  ScrollArea,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
 import { ensurePageRead } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
 import { MarqueeSelector } from "@app/tools/pdfTextEditor/v2/components/MarqueeSelector";
 import { PageView } from "@app/tools/pdfTextEditor/v2/components/PageView";
@@ -79,8 +85,7 @@ export function PageStage() {
   const percent =
     p && p.total > 0 ? Math.round((p.current / p.total) * 100) : null;
   const stageLabel =
-    p?.stage ??
-    (state.hasDocument ? "Rendering preview" : "Loading document");
+    p?.stage ?? (state.hasDocument ? "Rendering preview" : "Loading document");
 
   return (
     <Box
@@ -190,72 +195,74 @@ export function PageStage() {
       )}
       <MarqueeSelector store={store} />
       <ScrollArea h="100%" type="auto" data-testid="v2-stage">
-      <Box
-        py="lg"
-        onMouseDown={() => store.selection.clear()}
-        data-testid="v2-pages"
-      >
-        <Stack gap="lg" align="center">
-          {state.pages.map((page) =>
-            store.document ? (
-              <PageView
-                key={page.pageIndex}
-                document={store.document}
-                page={page}
-                scale={state.renderScale || DEFAULT_SCALE}
-                selectedRunIds={selection.runIds}
-                selectedImageIds={selection.imageIds}
-                highlightedRunId={highlightedRunId}
-                onSelectRun={(runId, shiftKey) => {
-                  if (shiftKey) store.selection.toggle(runId);
-                  else store.selection.selectOne(runId);
-                }}
-                onSelectImage={(imageId) => store.selection.selectImage(imageId)}
-                onEditRun={(pageIndex, runId, nextText) => {
-                  store.dispatch(
-                    new EditTextCommand({ pageIndex, runId, nextText }),
-                  );
-                }}
-                onMoveRun={(pageIndex, runId, dx, dy) => {
-                  store.dispatch(
-                    new MoveTextRunCommand({ pageIndex, runId, dx, dy }),
-                  );
-                }}
-                onPageClick={(pageIndex, pageX, pageY) => {
-                  if (state.mode !== "addText") return;
-                  const cmd = new InsertTextCommand({
-                    pageIndex,
-                    x: pageX,
-                    y: pageY,
-                    text: "New text",
-                  });
-                  store.dispatch(cmd);
-                  if (cmd.insertedRunId) {
-                    store.selection.selectOne(cmd.insertedRunId);
+        <Box
+          py="lg"
+          onMouseDown={() => store.selection.clear()}
+          data-testid="v2-pages"
+        >
+          <Stack gap="lg" align="center">
+            {state.pages.map((page) =>
+              store.document ? (
+                <PageView
+                  key={page.pageIndex}
+                  document={store.document}
+                  page={page}
+                  scale={state.renderScale || DEFAULT_SCALE}
+                  selectedRunIds={selection.runIds}
+                  selectedImageIds={selection.imageIds}
+                  highlightedRunId={highlightedRunId}
+                  onSelectRun={(runId, shiftKey) => {
+                    if (shiftKey) store.selection.toggle(runId);
+                    else store.selection.selectOne(runId);
+                  }}
+                  onSelectImage={(imageId) =>
+                    store.selection.selectImage(imageId)
                   }
-                  store.setMode("select");
-                }}
-                onTransformImage={(pageIndex, imageId, nextBounds) => {
-                  store.dispatch(
-                    new SetImageTransformCommand({
+                  onEditRun={(pageIndex, runId, nextText) => {
+                    store.dispatch(
+                      new EditTextCommand({ pageIndex, runId, nextText }),
+                    );
+                  }}
+                  onMoveRun={(pageIndex, runId, dx, dy) => {
+                    store.dispatch(
+                      new MoveTextRunCommand({ pageIndex, runId, dx, dy }),
+                    );
+                  }}
+                  onPageClick={(pageIndex, pageX, pageY) => {
+                    if (state.mode !== "addText") return;
+                    const cmd = new InsertTextCommand({
                       pageIndex,
-                      imageId,
-                      nextBounds,
-                    }),
-                  );
-                }}
-                onFirstVisible={(pageIndex) =>
-                  ensurePageRead(store, pageIndex)
-                }
-                onFirstRendered={(pageIndex) => {
-                  if (pageIndex === 0) store.markFirstPageRendered();
-                }}
-              />
-            ) : null,
-          )}
-        </Stack>
-      </Box>
-    </ScrollArea>
+                      x: pageX,
+                      y: pageY,
+                      text: "New text",
+                    });
+                    store.dispatch(cmd);
+                    if (cmd.insertedRunId) {
+                      store.selection.selectOne(cmd.insertedRunId);
+                    }
+                    store.setMode("select");
+                  }}
+                  onTransformImage={(pageIndex, imageId, nextBounds) => {
+                    store.dispatch(
+                      new SetImageTransformCommand({
+                        pageIndex,
+                        imageId,
+                        nextBounds,
+                      }),
+                    );
+                  }}
+                  onFirstVisible={(pageIndex) =>
+                    ensurePageRead(store, pageIndex)
+                  }
+                  onFirstRendered={(pageIndex) => {
+                    if (pageIndex === 0) store.markFirstPageRendered();
+                  }}
+                />
+              ) : null,
+            )}
+          </Stack>
+        </Box>
+      </ScrollArea>
     </Box>
   );
 }

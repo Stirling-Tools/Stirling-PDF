@@ -142,7 +142,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (pages.length === 0) return;
       const current = findVisiblePageIndex();
       let target = current;
-      if (e.key === "PageDown") target = Math.min(pages.length - 1, current + 1);
+      if (e.key === "PageDown")
+        target = Math.min(pages.length - 1, current + 1);
       else if (e.key === "PageUp") target = Math.max(0, current - 1);
       else if (isHome) target = 0;
       else if (isEnd) target = pages.length - 1;

@@ -13,11 +13,7 @@ import { preserveConsecutiveSpaces } from "@app/tools/pdfTextEditor/v2/commands/
  *     persisted when the document is saved or re-rendered.
  */
 export class PdfiumTextWriter {
-  static commitRunText(
-    doc: EditorDocument,
-    page: Page,
-    run: TextRun,
-  ): void {
+  static commitRunText(doc: EditorDocument, page: Page, run: TextRun): void {
     if (!run.pdfiumObjPtr) return;
     const m = doc.module;
     const ptr = writeUtf16(m, preserveConsecutiveSpaces(run.text));
@@ -29,11 +25,7 @@ export class PdfiumTextWriter {
     m.FPDFPage_GenerateContent(page.pagePtr);
   }
 
-  static commitRunFill(
-    doc: EditorDocument,
-    page: Page,
-    run: TextRun,
-  ): void {
+  static commitRunFill(doc: EditorDocument, page: Page, run: TextRun): void {
     if (!run.pdfiumObjPtr) return;
     const m = doc.module;
     m.FPDFPageObj_SetFillColor(
@@ -58,15 +50,7 @@ export class PdfiumTextWriter {
     const m = doc.module;
     const sx = run.fontSize / Math.max(1, run.matrix.a || 1);
     const sy = run.fontSize / Math.max(1, run.matrix.d || 1);
-    m.FPDFPageObj_Transform(
-      run.pdfiumObjPtr,
-      sx,
-      0,
-      0,
-      sy,
-      0,
-      0,
-    );
+    m.FPDFPageObj_Transform(run.pdfiumObjPtr, sx, 0, 0, sy, 0, 0);
     run.matrix = {
       ...run.matrix,
       a: run.matrix.a * sx,
