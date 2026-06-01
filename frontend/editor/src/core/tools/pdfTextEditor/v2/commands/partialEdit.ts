@@ -340,6 +340,19 @@ export function applyPartialEditPlan(
   const newMergedFromCharStarts: number[] = [];
   const insertedPtrs: number[] = [];
 
+  // Note: a previous attempt borrowed the source font handle for
+  // inserted text so the new chars would render in the surrounding
+  // line's typeface. It works for some fonts but PDFium's
+  // FPDFText_SetText on a borrowed handle to a non-standard
+  // embedded font returns 0-width / garbage glyphs for chars not
+  // present at the SAME slot in the source - which kills width
+  // measurements and breaks subsequent-keep positioning. Leaving
+  // the borrow disabled until we can detect "this font safely
+  // re-encodes arbitrary Unicode" without false positives. Inserted
+  // text therefore always uses base-14 Helvetica (the fallback
+  // family). Tracked as: inserted glyph font matching for embedded
+  // CID fonts.
+
   // Strategy: walk ops in order. Track a cumulative `offset` that gets
   // added to subsequent kept sub-runs' positions, accounting for the
   // WIDTH DELTA between each mixed sub-run's original glyphs and its
