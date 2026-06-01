@@ -35,7 +35,7 @@ vi.mock("@app/services/desktopUpdateService", () => ({
   },
 }));
 
-import { useDesktopUpdatePopup } from "./useDesktopUpdatePopup";
+import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
 
 /** Flush pending microtasks so awaited promises settle. */
 async function flushMicrotasks() {

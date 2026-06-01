@@ -445,6 +445,11 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
+    // Windows-path tests are cfg-gated because `Path::starts_with` is
+    // component-wise: on Linux, `"C:\\foo\\bar"` is a SINGLE path component
+    // (since backslash is a literal character there, not a separator) so
+    // the prefix never matches the way it would on Windows.
+    #[cfg(target_os = "windows")]
     #[test]
     fn user_app_data_provisioning_does_not_lock_ui() {
         // A user dropping a provisioning file in their own roaming AppData
@@ -462,6 +467,7 @@ mod tests {
         ));
     }
 
+    #[cfg(target_os = "windows")]
     #[test]
     fn system_provisioning_dir_does_lock_ui() {
         // A provisioning file in ProgramData\Stirling-PDF (or /Library, /etc)
@@ -531,9 +537,7 @@ mod tests {
         // refuse to lock — the user-AppData file is the only thing we'd be
         // matching against, and that's the case we explicitly want to leave
         // unlocked.
-        let user_path = PathBuf::from(
-            "C:\\Users\\alice\\AppData\\Roaming\\Stirling-PDF\\stirling-provisioning.json",
-        );
+        let user_path = PathBuf::from("/home/alice/.config/Stirling-PDF/stirling-provisioning.json");
         assert!(!provisioning_path_is_admin_owned(&user_path, None));
     }
 }
