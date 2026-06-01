@@ -2,6 +2,7 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,6 +47,7 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class MathAuditorAgentController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final MathAuditorOrchestrator orchestrator;
 
     @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -85,7 +87,7 @@ public class MathAuditorAgentController {
 
         String safeName =
                 fileInput.getOriginalFilename() != null
-                        ? fileInput.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                        ? NEWLINE_PATTERN.matcher(fileInput.getOriginalFilename()).replaceAll("_")
                         : "<unnamed>";
         log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
 

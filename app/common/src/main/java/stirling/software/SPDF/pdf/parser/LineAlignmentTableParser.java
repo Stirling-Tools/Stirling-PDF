@@ -64,6 +64,8 @@ public class LineAlignmentTableParser implements TableParser {
      */
     static final float ROW_MERGE_TOLERANCE_PT = 2f;
 
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+
     // ── public API ───────────────────────────────────────────────────────────────────────────────
 
     @Override
@@ -185,7 +187,7 @@ public class LineAlignmentTableParser implements TableParser {
 
         List<LineToken> result = new ArrayList<>();
         int offset = 0;
-        for (String part : raw.split("\\s+")) {
+        for (String part : WHITESPACE_PATTERN.split(raw)) {
             if (part.isEmpty()) {
                 offset++;
                 continue;
