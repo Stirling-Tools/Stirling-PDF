@@ -115,6 +115,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getFfmpegSessionLimit();
+                                case PYMUPDF_CONVERT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPyMuPdfConvertSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -180,6 +185,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getFfmpegTimeoutMinutes();
+                                case PYMUPDF_CONVERT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getPyMuPdfConvertTimeoutMinutes();
                             };
                     return new ProcessExecutor(
                             processType, semaphoreLimit, liveUpdates, timeoutMinutes);
@@ -550,7 +560,8 @@ public class ProcessExecutor {
         GHOSTSCRIPT,
         OCR_MY_PDF,
         CFF_CONVERTER,
-        FFMPEG
+        FFMPEG,
+        PYMUPDF_CONVERT
     }
 
     @Setter

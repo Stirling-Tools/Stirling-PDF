@@ -10,6 +10,10 @@ if that directory exists, is licensed under the license defined in "app/propriet
 if that directory exists, is licensed under the license defined in "app/saas/LICENSE".
 * All content that resides under the "engine/" directory of this repository,
 if that directory exists, is licensed under the license defined in "engine/LICENSE".
+* All content that resides under the "pymupdf-worker/" directory of this repository,
+if that directory exists, is licensed under the GNU Affero General Public License v3.0
+(or later) as defined in "pymupdf-worker/LICENSE". This is a separate program invoked
+as an OS subprocess; its license does not extend to content outside that directory.
 * All content that resides under the "frontend/src/proprietary/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/src/proprietary/LICENSE".
 * All content that resides under the "frontend/src/desktop/" directory of this repository,

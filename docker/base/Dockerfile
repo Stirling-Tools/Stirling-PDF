@@ -348,12 +348,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       python3 python3-venv ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
+# Copy the AGPL-3.0 pymupdf-convert CLI source so it can be installed into the venv.
+# This is a separate program; installing it here does not affect the license of the
+# rest of the image. See pymupdf-worker/LICENSE.
+COPY pymupdf-worker/ /tmp/pymupdf-worker/
+
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
     /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
       cryptography \
-      "unoserver==${UNOSERVER_VERSION}" && \
+      "unoserver==${UNOSERVER_VERSION}" \
+      pymupdf pymupdf4llm && \
+    # Install the pymupdf-convert CLI entry point (AGPL-3.0 separate program)
+    /opt/venv/bin/pip install --no-cache-dir /tmp/pymupdf-worker && \
+    rm -rf /tmp/pymupdf-worker && \
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
@@ -608,6 +617,8 @@ RUN ldconfig /usr/local/lib && \
       /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)" && \
     PYTHONDONTWRITEBYTECODE=1 \
       /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')" && \
+    PYTHONDONTWRITEBYTECODE=1 \
+      /opt/venv/bin/python -c "import pymupdf4llm; print('pymupdf4llm OK')" && \
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 # Non-root user
@@ -643,9 +654,10 @@ RUN set -eux; \
     ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert; \
     ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
     ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
-    ln -sf /opt/venv/bin/ocrmypdf   /usr/local/bin/ocrmypdf; \
-    ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint; \
-    ln -sf /opt/venv/bin/unoping    /usr/local/bin/unoping; \
+    ln -sf /opt/venv/bin/ocrmypdf        /usr/local/bin/ocrmypdf; \
+    ln -sf /opt/venv/bin/weasyprint      /usr/local/bin/weasyprint; \
+    ln -sf /opt/venv/bin/unoping         /usr/local/bin/unoping; \
+    ln -sf /opt/venv/bin/pymupdf-convert /usr/local/bin/pymupdf-convert; \
     fc-cache -f
 
 # Metadata labels - base image

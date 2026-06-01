@@ -15,6 +15,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.service.PyMuPdfConverter;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -23,6 +24,7 @@ import stirling.software.common.util.TempFileManager;
 public class ConvertPDFToMarkdown {
 
     private final TempFileManager tempFileManager;
+    private final PyMuPdfConverter pyMuPdfConverter;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -37,6 +39,6 @@ public class ConvertPDFToMarkdown {
             throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager);
-        return pdfToFile.processPdfToMarkdown(inputFile);
+        return pdfToFile.processPdfToMarkdown(inputFile, pyMuPdfConverter);
     }
 }

@@ -2,6 +2,7 @@ package stirling.software.SPDF.model.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -23,12 +24,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.service.PyMuPdfConverter;
 import stirling.software.common.util.PDFToFile;
 
 class ConvertPDFToMarkdownTest {
 
     private MockMvc mockMvc() {
-        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null))
+        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null, null))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }
@@ -52,7 +54,9 @@ class ConvertPDFToMarkdownTest {
                 Mockito.mockConstruction(
                         PDFToFile.class,
                         (mock, ctx) -> {
-                            when(mock.processPdfToMarkdown(any(MultipartFile.class)))
+                            when(mock.processPdfToMarkdown(
+                                            any(MultipartFile.class),
+                                            nullable(PyMuPdfConverter.class)))
                                     .thenAnswer(
                                             inv ->
                                                     ResponseEntity.ok()
@@ -83,7 +87,8 @@ class ConvertPDFToMarkdownTest {
             // And that the uploaded file was passed to processPdfToMarkdown()
             PDFToFile created = construction.constructed().get(0);
             ArgumentCaptor<MultipartFile> captor = ArgumentCaptor.forClass(MultipartFile.class);
-            verify(created, times(1)).processPdfToMarkdown(captor.capture());
+            verify(created, times(1))
+                    .processPdfToMarkdown(captor.capture(), nullable(PyMuPdfConverter.class));
             MultipartFile passed = captor.getValue();
 
             // Minimal plausibility checks
@@ -98,7 +103,9 @@ class ConvertPDFToMarkdownTest {
                 Mockito.mockConstruction(
                         PDFToFile.class,
                         (mock, ctx) -> {
-                            when(mock.processPdfToMarkdown(any(MultipartFile.class)))
+                            when(mock.processPdfToMarkdown(
+                                            any(MultipartFile.class),
+                                            nullable(PyMuPdfConverter.class)))
                                     .thenThrow(new RuntimeException("boom"));
                         })) {
 

@@ -1350,6 +1350,10 @@ public class ApplicationProperties {
             public int getFfmpegSessionLimit() {
                 return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
             }
+
+            public int getPyMuPdfConvertSessionLimit() {
+                return 2;
+            }
         }
 
         @Data
@@ -1426,6 +1430,10 @@ public class ApplicationProperties {
 
             public long getFfmpegTimeoutMinutes() {
                 return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
+            }
+
+            public long getPyMuPdfConvertTimeoutMinutes() {
+                return 10;
             }
         }
     }

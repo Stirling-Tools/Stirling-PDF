@@ -31,6 +31,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
+import stirling.software.common.service.PyMuPdfConverter;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -74,6 +75,7 @@ public class AiWorkflowService {
     private final TempFileManager tempFileManager;
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
+    private final PyMuPdfConverter pyMuPdfConverter;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -137,6 +139,9 @@ public class AiWorkflowService {
                         ? new ArrayList<>()
                         : new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+        boolean workerAvailable = pyMuPdfConverter.isAvailable();
+        initialRequest.setPymupdfWorkerAvailable(workerAvailable);
+        log.info("[pymupdf-convert] available={}", workerAvailable);
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -745,5 +750,6 @@ public class AiWorkflowService {
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
         private List<String> enabledEndpoints = new ArrayList<>();
+        private boolean pymupdfWorkerAvailable;
     }
 }

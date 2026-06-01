@@ -30,6 +30,7 @@ import stirling.software.SPDF.pdf.parser.PdfModels.RawLine;
 import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
 import stirling.software.SPDF.pdf.parser.PdfModels.TextFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
+import stirling.software.common.service.PyMuPdfConverter;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
@@ -44,6 +45,7 @@ public class PdfContentExtractor {
 
     private final TabulaTableParser tabulaTableParser;
     private final PdfIngester pdfIngester;
+    private final PyMuPdfConverter pyMuPdfConverter;
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
 
@@ -190,6 +192,8 @@ public class PdfContentExtractor {
                             extractText(lf, fileReq, remainingPages, remainingCharacters));
             case PAGE_LAYOUT ->
                     Optional.<PdfContentResult>ofNullable(extractPageLayout(lf, remainingPages));
+            case PYMUPDF_MARKDOWN ->
+                    Optional.<PdfContentResult>ofNullable(extractPyMuPdfMarkdown(lf));
             default -> {
                 log.warn(
                         "Content type {} not yet implemented, skipping for {}",
@@ -253,6 +257,11 @@ public class PdfContentExtractor {
             case PAGE_LAYOUT -> {
                 PageLayoutArtifact artifact = new PageLayoutArtifact();
                 artifact.setFiles(results.stream().map(PageLayoutFileResult.class::cast).toList());
+                yield artifact;
+            }
+            case PYMUPDF_MARKDOWN -> {
+                PyMuPdfMarkdownArtifact artifact = new PyMuPdfMarkdownArtifact();
+                artifact.setFiles(results.stream().map(PyMuPdfMarkdownResult.class::cast).toList());
                 yield artifact;
             }
             case TOOL_REPORT ->
@@ -370,7 +379,8 @@ public class PdfContentExtractor {
     enum ArtifactKind {
         EXTRACTED_TEXT("extracted_text"),
         PAGE_LAYOUT("page_layout"),
-        TOOL_REPORT("tool_report");
+        TOOL_REPORT("tool_report"),
+        PYMUPDF_MARKDOWN("pymupdf_markdown");
 
         private final String value;
 
@@ -468,5 +478,47 @@ public class PdfContentExtractor {
     static final class PageLayoutArtifact implements WorkflowArtifact {
         private final ArtifactKind kind = ArtifactKind.PAGE_LAYOUT;
         private List<PageLayoutFileResult> files = new ArrayList<>();
+    }
+
+    private PyMuPdfMarkdownResult extractPyMuPdfMarkdown(LoadedFile lf) {
+        try {
+            log.info("[pymupdf-convert] converting file={}", lf.fileName());
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            lf.document().save(baos);
+            String markdown = pyMuPdfConverter.convertToMarkdown(baos.toByteArray(), lf.fileName());
+            log.info(
+                    "[pymupdf-convert] success file={} markdown-chars={}",
+                    lf.fileName(),
+                    markdown.length());
+            PyMuPdfMarkdownResult result = new PyMuPdfMarkdownResult();
+            result.setFileName(lf.fileName());
+            result.setMarkdown(markdown);
+            return result;
+        } catch (Exception e) {
+            log.warn(
+                    "[pymupdf-convert] failed for file={}, falling back to page layout: {}",
+                    lf.fileName(),
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    /** PyMuPDF worker pre-rendered Markdown for one file. */
+    @Data
+    static final class PyMuPdfMarkdownResult implements PdfContentResult {
+        private String fileName;
+        private String markdown;
+
+        @Override
+        public ArtifactKind getArtifactKind() {
+            return ArtifactKind.PYMUPDF_MARKDOWN;
+        }
+    }
+
+    /** Artifact carrying PyMuPDF-rendered Markdown for all input files. */
+    @Data
+    static final class PyMuPdfMarkdownArtifact implements WorkflowArtifact {
+        private final ArtifactKind kind = ArtifactKind.PYMUPDF_MARKDOWN;
+        private List<PyMuPdfMarkdownResult> files = new ArrayList<>();
     }
 }

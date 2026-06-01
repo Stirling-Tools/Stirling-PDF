@@ -49,6 +49,7 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
+import stirling.software.common.service.PyMuPdfConverter;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -85,6 +86,7 @@ class AiWorkflowServiceTest {
     @Mock private ToolMetadataService toolMetadataService;
     @Mock private FileIdStrategy fileIdStrategy;
     @Mock private AiEngineEndpointResolver endpointResolver;
+    @Mock private PyMuPdfConverter pyMuPdfConverter;
 
     @TempDir Path tempDir;
 
@@ -117,7 +119,8 @@ class AiWorkflowServiceTest {
                         toolMetadataService,
                         tempFileManager,
                         fileIdStrategy,
-                        endpointResolver);
+                        endpointResolver,
+                        pyMuPdfConverter);
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 

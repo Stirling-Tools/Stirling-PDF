@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import io.github.pixee.security.Filenames;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.service.PyMuPdfConverter;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 @Slf4j
@@ -151,6 +153,59 @@ public class PDFToFile {
                     }
                 }
             }
+        } catch (Exception e) {
+            finalOut.close();
+            throw e;
+        }
+        return WebResponseUtils.fileToWebResponse(
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    /**
+     * PDF-&gt;Markdown with optional PyMuPDF acceleration.
+     *
+     * <p>When {@code pymupdf-convert} is installed and on PATH, conversion is delegated to it as a
+     * subprocess. On any failure — or when the tool is absent — this transparently falls back to
+     * the bundled {@code pdftohtml}-based converter. {@code pymupdf-convert} is a SEPARATE,
+     * AGPL-3.0 licensed program (see {@code pymupdf-worker/}); invoking it as a subprocess does not
+     * extend its copyleft to this MIT-licensed code.
+     */
+    public ResponseEntity<Resource> processPdfToMarkdown(
+            MultipartFile inputFile, PyMuPdfConverter pyMuPdfConverter)
+            throws IOException, InterruptedException {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        if (pyMuPdfConverter != null && pyMuPdfConverter.isAvailable()) {
+            try {
+                String originalName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
+                String baseName = originalName;
+                if (originalName != null && originalName.contains(".")) {
+                    baseName = originalName.substring(0, originalName.lastIndexOf('.'));
+                }
+                String markdown =
+                        pyMuPdfConverter.convertToMarkdown(inputFile.getBytes(), originalName);
+                return buildMarkdownZipResponse(markdown, baseName);
+            } catch (IOException e) {
+                log.warn(
+                        "PyMuPDF conversion failed; falling back to pdftohtml converter: {}",
+                        e.getMessage());
+            }
+        }
+        return processPdfToMarkdown(inputFile);
+    }
+
+    private ResponseEntity<Resource> buildMarkdownZipResponse(String markdown, String pdfBaseName)
+            throws IOException {
+        String fileName = pdfBaseName + "ToMarkdown.zip";
+        TempFile finalOut = tempFileManager.createManagedTempFile(".zip");
+        try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
+                ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
+            ZipEntry mdEntry = new ZipEntry(pdfBaseName + ".md");
+            zipOutputStream.putNextEntry(mdEntry);
+            zipOutputStream.write(markdown.getBytes(StandardCharsets.UTF_8));
+            zipOutputStream.closeEntry();
         } catch (Exception e) {
             finalOut.close();
             throw e;

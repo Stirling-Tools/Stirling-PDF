@@ -1,0 +1,19 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install pymupdf-worker dependencies"
+    run: once
+    cmds:
+      - uv sync
+    sources:
+      - uv.lock
+      - pyproject.toml
+    status:
+      - test -d .venv
+
+  test:
+    desc: "Run pymupdf-worker tests"
+    deps: [install]
+    cmds:
+      - uv run pytest tests

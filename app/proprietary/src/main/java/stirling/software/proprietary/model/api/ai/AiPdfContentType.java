@@ -32,7 +32,10 @@ public enum AiPdfContentType {
 
     // Heavy content
     COMPLIANCE("compliance"),
-    IMAGES("images");
+    IMAGES("images"),
+
+    // PyMuPDF worker — pre-rendered Markdown (Java calls the AGPL worker; copyleft stays in worker)
+    PYMUPDF_MARKDOWN("pymupdf_markdown");
 
     private final String value;
 
