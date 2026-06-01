@@ -1,6 +1,7 @@
 import { Box, Button, Group, Text, Tooltip } from "@mantine/core";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
+import { CharcodeStrategyPicker } from "@app/tools/pdfTextEditor/v2/components/CharcodeStrategyPicker";
 
 interface TopBarProps {
   store: EditorStore;
@@ -252,6 +253,7 @@ export function EditorTopBar(props: TopBarProps) {
               Print
             </Button>
           </Tooltip>
+          <CharcodeStrategyPicker />
           <Tooltip label="Download edited PDF (Ctrl+S)">
             <Button size="xs" onClick={onSave} data-testid="v2-save">
               Save PDF

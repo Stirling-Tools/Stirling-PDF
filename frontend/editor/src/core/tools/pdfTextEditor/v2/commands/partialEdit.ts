@@ -273,6 +273,28 @@ export function planPartialEdit(
   };
 }
 
+let _wsMeasureCanvas: HTMLCanvasElement | null = null;
+/**
+ * Canvas-measured advance width for whitespace chars. PDFium's
+ * FPDFPageObj_GetBounds returns the visible-glyph bounds (zero for
+ * a space, since a space has no ink), so when an insert contains
+ * whitespace we can't read its advance width back from PDFium. The
+ * canvas measurement of the same string in Liberation Sans / the
+ * fallback family is close enough for our offset-tracking purposes.
+ */
+function measureWhitespaceAdvancePt(
+  text: string,
+  fontFamily: string,
+  fontSizePt: number,
+): number {
+  if (typeof document === "undefined") return text.length * fontSizePt * 0.27;
+  if (!_wsMeasureCanvas) _wsMeasureCanvas = document.createElement("canvas");
+  const ctx = _wsMeasureCanvas.getContext("2d");
+  if (!ctx) return text.length * fontSizePt * 0.27;
+  ctx.font = `${fontSizePt}pt ${fontFamily}`;
+  return ctx.measureText(text).width;
+}
+
 interface FontReadingModule {
   FPDFTextObj_GetFont?: (ptr: number) => number;
 }
@@ -300,6 +322,52 @@ function borrowFontFromSurvivor(
     }
   }
   return 0;
+}
+
+/**
+ * Per-char font borrowing: when each glyph in the source PDF lives
+ * in its OWN dedicated subset font (the Adobe / Creative Cloud
+ * pattern - e.g. "10M+" with 4 separate fonts for 1/0/M/+), borrowing
+ * the FIRST surviving font for a newly-typed char gives the wrong
+ * answer: typing M with font('1')'s handle produces tofu because the
+ * '1' subset doesn't have an M glyph at all.
+ *
+ * This function returns a map: Unicode → font handle, derived from
+ * which font each surviving sub-run actually uses. For "10M+" the map
+ * is `{'1': font_for_1, '0': font_for_0, 'M': font_for_M, '+': font_for_plus}`.
+ * The caller can then look up each inserted char in this map and
+ * borrow the CORRECT font for that char, falling back to Helvetica
+ * only for chars no surviving sub-run contains.
+ */
+export function _buildPerCharFontMap(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  plan: PartialEditPlan,
+): Map<string, number> {
+  const map = new Map<string, number>();
+  const fontMod = m as unknown as FontReadingModule;
+  if (!fontMod.FPDFTextObj_GetFont) return map;
+  const removed = new Set(plan.removePtrs.map((r) => r.ptr));
+  for (let i = 0; i < plan.prevMergedFromPtrs.length; i++) {
+    const ptr = plan.prevMergedFromPtrs[i];
+    if (!ptr || removed.has(ptr)) continue;
+    const text = plan.prevMergedFromTexts[i];
+    if (!text) continue;
+    let fontPtr: number;
+    try {
+      fontPtr = fontMod.FPDFTextObj_GetFont(ptr);
+    } catch {
+      continue;
+    }
+    if (!fontPtr) continue;
+    // Each text object generally renders one char in subset fonts,
+    // but for multi-char objects, attribute the font to every char
+    // (best-effort: the same font CAN render every char of THAT
+    // particular text object's content stream).
+    for (const ch of text) {
+      if (!map.has(ch)) map.set(ch, fontPtr);
+    }
+  }
+  return map;
 }
 
 interface FormRemovalModule {
@@ -385,15 +453,63 @@ export function applyPartialEditPlan(
   // width = font didn't have working glyphs for these chars). The
   // detection costs one bounds read per emit - negligible.
   //
-  // Only attempt the borrow when EVERY char in EVERY insert op
-  // already appears in some surviving sub-run's text. The surviving
-  // glyphs are proof the font has a working CID for those chars; an
-  // arbitrary new char (e.g. user typed 'Ω' into an ASCII document)
-  // skips the borrow and goes straight to Helvetica.
+  // Borrow-font policy: always borrow when a charcode strategy is
+  // active (cmap / content-stream / backend can resolve any char the
+  // font has a glyph for), else use the conservative
+  // surviving-chars-pool check.
+  //
+  // The legacy 'helvetica' strategy still needs the safety gate
+  // because FPDFText_SetText can map unknown chars to glyph 0xFF
+  // (ydieresis) which renders at full visible width and passes the
+  // measure check below - the safety gate keeps that failure mode
+  // out of the saved PDF.
+  //
+  // Active strategies don't have that problem: charcodes that
+  // resolve produce the right glyph, and chars that DON'T resolve
+  // are detected by tryResolveCharcodes returning `missing.length >
+  // 0`, in which case emitTextLine falls back to SetText for that
+  // chunk (and the existing measure-and-fallback below catches any
+  // resulting tofu).
+  const strategy =
+    typeof window === "undefined"
+      ? "helvetica"
+      : (() => {
+          try {
+            const fromUrl = new URL(window.location.href).searchParams.get(
+              "charcodeStrategy",
+            );
+            if (
+              fromUrl === "cmap" ||
+              fromUrl === "content-stream" ||
+              fromUrl === "backend"
+            )
+              return fromUrl;
+            const fromLs = window.localStorage?.getItem("v2.charcodeStrategy");
+            if (
+              fromLs === "cmap" ||
+              fromLs === "content-stream" ||
+              fromLs === "backend"
+            )
+              return fromLs;
+          } catch {
+            /* fall through to default */
+          }
+          return "helvetica";
+        })();
+
   const survivingChars = new Set<string>();
   for (let i = 0; i < plan.prevMergedFromTexts.length; i++) {
     if (plan.subRunStatus[i] !== "all-deleted") {
       for (const ch of plan.prevMergedFromTexts[i]) survivingChars.add(ch);
+    }
+  }
+  for (const otherPage of doc.loadedPages()) {
+    for (const otherRun of otherPage.runs) {
+      if (otherRun.fontId !== run.fontId) continue;
+      for (const ch of otherRun.text) survivingChars.add(ch);
+      for (const sub of otherRun.mergedFromTexts) {
+        for (const ch of sub) survivingChars.add(ch);
+      }
     }
   }
   let allInsertCharsAreSafe = true;
@@ -408,9 +524,11 @@ export function applyPartialEditPlan(
     }
     if (!allInsertCharsAreSafe) break;
   }
-  const borrowedFontPtr = allInsertCharsAreSafe
-    ? borrowFontFromSurvivor(m, plan)
-    : 0;
+  const useStrategyBorrow = strategy !== "helvetica";
+  const borrowedFontPtr =
+    useStrategyBorrow || allInsertCharsAreSafe
+      ? borrowFontFromSurvivor(m, plan)
+      : 0;
 
   // Strategy: walk ops in order. Track a cumulative `offset` that gets
   // added to subsequent kept sub-runs' positions, accounting for the
@@ -500,13 +618,23 @@ export function applyPartialEditPlan(
       }
       let measuredWidth = realRightEdge - anchorX;
 
-      // Heuristic: a working glyph is at least ~0.15 * fontSize per
-      // char wide (narrowest base-14 Helvetica glyph "i" is ~0.22).
-      // Anything well below that means SetText returned a 0-width
-      // (.notdef) glyph - the borrowed font's Unicode→CID lookup
-      // failed for these chars. Re-emit via Helvetica fallback.
-      const minExpected = insertText.length * run.fontSize * 0.15;
-      if (borrowedFontPtr !== 0 && measuredWidth < minExpected) {
+      // Heuristic: a working visible glyph is at least ~0.15 * fontSize
+      // wide. Anything below that PER NON-WHITESPACE CHAR means SetText
+      // returned a 0-width (.notdef) glyph - the borrowed font's
+      // Unicode→CID lookup failed. Re-emit via Helvetica fallback.
+      //
+      // We exclude whitespace from the check because FPDFPageObj_GetBounds
+      // returns the visible-glyph extent (0 for spaces, regardless of
+      // the font's advance width). A pure-whitespace insert (e.g.
+      // typing a single space) ALWAYS measures 0 and would be wrongly
+      // re-emitted forever.
+      const nonWhitespaceLen = insertText.replace(/\s/g, "").length;
+      const minExpected = nonWhitespaceLen * run.fontSize * 0.15;
+      if (
+        borrowedFontPtr !== 0 &&
+        nonWhitespaceLen > 0 &&
+        measuredWidth < minExpected
+      ) {
         // Remove the failed text objects before retrying.
         for (const ptr of ptrs) {
           if (!ptr) continue;
@@ -533,6 +661,24 @@ export function applyPartialEditPlan(
           if (r > realRightEdge) realRightEdge = r;
         }
         measuredWidth = realRightEdge - anchorX;
+      }
+
+      // FPDFPageObj_GetBounds doesn't include the advance width of
+      // characters without a visible glyph (spaces, tabs). Without
+      // patching the measurement we'd push subsequent kept sub-runs
+      // RIGHT by 0 for "AlternativeHi"-style inserts that should
+      // contain a space - the bitmap renders "AlternativeHi" with no
+      // gap. Add a canvas-measured estimate for any whitespace chars
+      // in the insert so the offset accumulates correctly.
+      const whitespaceLen = insertText.length - nonWhitespaceLen;
+      if (whitespaceLen > 0) {
+        const whitespaceText = " ".repeat(whitespaceLen);
+        const wsWidth = measureWhitespaceAdvancePt(
+          whitespaceText,
+          fallbackFamily,
+          run.fontSize,
+        );
+        measuredWidth += wsWidth;
       }
       // Distribute the measured width across the emit ptrs for the
       // per-chunk model bounds (used by future edits).

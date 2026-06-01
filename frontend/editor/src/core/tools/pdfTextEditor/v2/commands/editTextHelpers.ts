@@ -2,6 +2,13 @@ import { writeUtf16 } from "@app/services/pdfiumService";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import {
+  emitCharcodeEvent,
+  findFontForChar,
+  setCharcodesOn,
+  tryResolveCharcodes,
+} from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
+import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
 /** True when every character in `text` is also present in `pool`. */
 export function everyCharIn(text: string, pool: string): boolean {
@@ -254,12 +261,216 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         )
       : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
 
+  // Try-charcodes wrapper: when we're reusing a source font AND the
+  // active charcode strategy can resolve EVERY char in the chunk,
+  // call FPDFText_SetCharcodes directly. Otherwise fall through to
+  // FPDFText_SetText (the legacy path). Returns true on success.
+  const writeViaCharcodesOrSetText = (ptr: number, text: string): void => {
+    const strategy = getActiveCharcodeStrategy();
+    if (!reuse || !opts.originalFontPtr) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: !reuse
+          ? "no source font available (Helvetica fresh emit)"
+          : "originalFontPtr is 0",
+        outcome: "no-font",
+      });
+      setTextOn(m, ptr, text);
+      return;
+    }
+    const resolved = tryResolveCharcodes(opts.originalFontPtr, text, {
+      module: m,
+      pagePtr: opts.page.pagePtr,
+      docPtr: opts.doc.docPtr,
+    });
+    if (!resolved) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: "active strategy is 'helvetica' (no resolver)",
+        outcome: "no-strategy",
+      });
+      setTextOn(m, ptr, text);
+      return;
+    }
+    const r = resolved.result;
+    if (r && r.coverage === text.length && r.charcodes.length === text.length) {
+      const ok = setCharcodesOn(m, ptr, r.charcodes);
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: resolved.strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [...r.charcodes],
+        missing: [],
+        note: r.note,
+        outcome: ok ? "charcodes-ok" : "charcodes-call-failed",
+      });
+      if (ok) return;
+      // SetCharcodes binding rejected the call - fall back.
+    } else if (r) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: resolved.strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [...r.charcodes],
+        missing: [...r.missing],
+        note: r.note,
+        outcome: "partial-coverage-fallback",
+      });
+    } else {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: resolved.strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: "resolver returned null (unavailable for this font)",
+        outcome: "partial-coverage-fallback",
+      });
+    }
+    setTextOn(m, ptr, text);
+  };
+
+  // Per-char emit branch for the BACKEND strategy. When the active
+  // strategy is 'backend', each char's font may be DIFFERENT (Chrome/
+  // Skia-style per-glyph-per-font PDFs). For each char we ask the
+  // resolver for a charcode AND probe PDFium for the font handle that
+  // renders that char on the page. We then create one text object per
+  // char with the CORRECT font + charcode, positioning them adjacently
+  // so the visual output matches the source font.
+  //
+  // Fires whenever the backend strategy is active AND every char has
+  // both a per-char font handle on the page AND a backend-resolved
+  // charcode. Importantly, it does NOT require `reuse=true` - Sample.pdf
+  // stores its 10M+ glyphs in form-XObjects which the partial-edit
+  // path can't reuse, so a fresh emit is the only path that ever
+  // runs for that run. If we gated on reuse the per-char branch
+  // would never fire on the very PDF it was built for.
+  //
+  // Bails out (falls through to the normal path) when:
+  //   - text contains whitespace (whitespace doesn't have a per-char
+  //     font on the page; the normal per-chunk path already handles it)
+  //   - we're not in backend strategy mode
+  //   - ANY char fails to resolve both a font handle AND a charcode
+  const isBackendStrategy = getActiveCharcodeStrategy() === "backend";
+  const hasAnyWhitespaceForBranch = /\s/.test(opts.text);
+  if (
+    isBackendStrategy &&
+    !hasAnyWhitespaceForBranch &&
+    opts.text.length > 0 &&
+    m2.FPDFPageObj_CreateTextObj
+  ) {
+    if (typeof console !== "undefined") {
+      console.log(
+        `[v2.charcode] per-char branch entered text=${JSON.stringify(opts.text)} originalFontPtr=${opts.originalFontPtr}`,
+      );
+    }
+    const ctx = {
+      module: m,
+      pagePtr: opts.page.pagePtr,
+      docPtr: opts.doc.docPtr,
+    };
+    // Probe per char first. If any char fails resolution, fall through
+    // to the normal write path (which will surface the failure via
+    // emitCharcodeEvent's outcome:partial-coverage-fallback path).
+    const perChar: Array<{ ch: string; font: number; charcodes: number[] }> =
+      [];
+    let allOk = true;
+    for (const ch of opts.text) {
+      const charFont = findFontForChar(ch, ctx);
+      if (!charFont) {
+        if (typeof console !== "undefined") {
+          console.log(
+            `[v2.charcode] per-char bail: no per-char font for ${JSON.stringify(ch)}`,
+          );
+        }
+        allOk = false;
+        break;
+      }
+      const resolved = tryResolveCharcodes(charFont, ch, ctx);
+      if (
+        !resolved?.result ||
+        resolved.result.charcodes.length !== 1 ||
+        resolved.result.missing.length > 0
+      ) {
+        if (typeof console !== "undefined") {
+          console.log(
+            `[v2.charcode] per-char bail: no charcode for (${charFont}, ${JSON.stringify(ch)}). resolved=${JSON.stringify(resolved?.result ?? null)}`,
+          );
+        }
+        allOk = false;
+        break;
+      }
+      perChar.push({
+        ch,
+        font: charFont,
+        charcodes: resolved.result.charcodes,
+      });
+    }
+    if (allOk && perChar.length === opts.text.length) {
+      // Per-char emit: one text object per char, each with its OWN font.
+      const ptrs: number[] = [];
+      let cursor = opts.x;
+      for (const pc of perChar) {
+        const ptr = m2.FPDFPageObj_CreateTextObj!(
+          opts.doc.docPtr,
+          pc.font,
+          size,
+        );
+        if (!ptr) continue;
+        const ok = setCharcodesOn(m, ptr, pc.charcodes);
+        if (!ok) {
+          // Couldn't set charcodes - rare but possible. Remove the
+          // orphaned object and bail to the normal path.
+          try {
+            m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+          } catch {
+            /* best-effort */
+          }
+          ptrs.length = 0;
+          break;
+        }
+        applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
+        const measured = measureObjRightEdgePt(m, ptr);
+        cursor =
+          measured > cursor
+            ? measured
+            : cursor + measureAdvancePt(pc.ch, family, size);
+        emitCharcodeEvent({
+          timestamp: 0,
+          strategy: "backend",
+          text: pc.ch,
+          fontPtr: pc.font,
+          resolved: [...pc.charcodes],
+          missing: [],
+          note: `per-char backend emit: font=${pc.font} charcode=${pc.charcodes[0]}`,
+          outcome: "charcodes-ok",
+        });
+        ptrs.push(ptr);
+      }
+      if (ptrs.length === opts.text.length) return ptrs;
+    }
+    // fall through to the normal path if per-char attempt didn't work
+  }
+
   // Fast path: no whitespace at all → one text object holds the whole word.
   const hasAnyWhitespace = /\s/.test(opts.text);
   if (!hasAnyWhitespace) {
     const ptr = create();
     if (!ptr) return [];
-    setTextOn(m, ptr, preserveSpaceRuns(opts.text));
+    writeViaCharcodesOrSetText(ptr, preserveSpaceRuns(opts.text));
     applyFillAndPos(m, opts.page, ptr, opts.fill, opts.x, opts.y);
     return [ptr];
   }
@@ -278,7 +489,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     if (chunk.text.length > 0) {
       const ptr = create();
       if (!ptr) continue;
-      setTextOn(m, ptr, chunk.text);
+      writeViaCharcodesOrSetText(ptr, chunk.text);
       applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
       const measured = measureObjRightEdgePt(m, ptr);
       cursor =

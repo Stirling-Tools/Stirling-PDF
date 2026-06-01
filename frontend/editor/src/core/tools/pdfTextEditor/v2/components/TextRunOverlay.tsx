@@ -207,10 +207,20 @@ export function TextRunOverlay({
     fontStyle,
     fontSizePx,
   );
-  // Always grow the overlay to fit the typed text + a small buffer.
-  // Without this, typing wider content than the original bounds gets
-  // clipped by `overflow: hidden` and the user sees only a few chars.
-  const width = Math.max(pdfWidth, measuredWidth + fontSizePx);
+  // Width policy:
+  //   - Focused (user is typing): add a one-em buffer past the
+  //     measured text width so the caret has room to advance one more
+  //     char before the overlay clips and the next keystroke gets
+  //     swallowed by `overflow: hidden`.
+  //   - Unfocused / selected / hovered: hug the actual text width. A
+  //     stale wider box (from an earlier longer state) makes the
+  //     selection rectangle and hover affordance read as "there's
+  //     invisible content here" - the user reported the textbox
+  //     "doesn't have the same width as the text", which is this.
+  // pdfWidth is still the floor in both modes so a freshly-emitted run
+  // doesn't undershoot the bitmap's actual rendered glyph extent.
+  const buffer = focused ? fontSizePx : 0;
+  const width = Math.max(pdfWidth, measuredWidth + buffer);
 
   return (
     <div
@@ -246,13 +256,35 @@ export function TextRunOverlay({
         // Place caret at end so typed keys route into the element.
         const el = e.currentTarget as HTMLDivElement;
         const sel = window.getSelection();
-        if (!sel) return;
-        if (sel.rangeCount > 0 && el.contains(sel.anchorNode)) return;
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
+        if (sel && !(sel.rangeCount > 0 && el.contains(sel.anchorNode))) {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        // Backend strategy: pre-warm the per-char charcode cache for the
+        // whole page in the background. By the time the user types their
+        // first char, the cache is populated and the per-char emit branch
+        // in editTextHelpers fires on the FIRST keystroke - no more
+        // "type once for Helvetica, retype for the real font" UX. This
+        // is a one-shot per page per session (idempotent guard in
+        // BackendResolver).
+        void (async () => {
+          try {
+            const [
+              { getActiveCharcodeStrategy },
+              { prewarmBackendCacheForPage },
+            ] = await Promise.all([
+              import("@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy"),
+              import("@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry"),
+            ]);
+            if (getActiveCharcodeStrategy() !== "backend") return;
+            await prewarmBackendCacheForPage(run.pageIndex);
+          } catch {
+            /* prewarm is best-effort, never block focus */
+          }
+        })();
       }}
       onBlur={() => setFocused(false)}
       onInput={(e) => {
