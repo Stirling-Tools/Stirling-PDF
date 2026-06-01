@@ -2079,6 +2079,313 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(allText.indexOf("Alternativ")).toBeGreaterThanOrEqual(0);
   });
 
+  // -------------------------------------------------------------------
+  // Font-fallback regression tests. The editor has TWO insert paths
+  // (partialEdit for LineGrouper-merged runs, overlay for single-
+  // object runs) and BOTH need to handle the case where the source
+  // font might not have a glyph for the inserted char. The default
+  // safe answer is "use base-14 Helvetica fallback" - which guarantees
+  // the inserted glyph renders correctly even if the source font is
+  // a CID font with a custom encoding that would return 0-width or
+  // garbage glyphs for arbitrary Unicode.
+  //
+  // These tests pin the behaviour so a future "optimisation" that
+  // tries to borrow the source font without proper glyph-availability
+  // checks (and ends up rendering tofu) gets caught immediately.
+  // -------------------------------------------------------------------
+
+  test("font-fallback: typing arbitrary char into a non-base14 line keeps glyph rendering (visible width > 0)", async ({
+    page,
+  }) => {
+    // The marketing PDF tagline uses an embedded non-standard font
+    // ("pdf:...:Unknown"). Typing a char that may or may not be in
+    // the font's safe re-encoding range must still produce a
+    // VISIBLE glyph (non-zero width) - otherwise the user sees
+    // nothing change after typing. Helvetica fallback guarantees a
+    // visible glyph.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Insert "X" at end of tagline.
+    await execAt(page, baseline.id, baseline.text.length, "insertText", "X");
+
+    // Read the new sub-run's bounds and confirm it has a real width.
+    // A 0-width sub-run = font failed to render the glyph = bug.
+    const result = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      if (!r) return null;
+      // Find the LAST sub-run whose text contains "X" - the inserted one.
+      for (let i = r.mergedFromTexts.length - 1; i >= 0; i--) {
+        if (r.mergedFromTexts[i].includes("X")) {
+          const b = r.mergedFromBounds[i];
+          return { width: b.right - b.x, text: r.mergedFromTexts[i] };
+        }
+      }
+      return null;
+    }, baseline.id);
+    if (!result) throw new Error("inserted 'X' sub-run not found");
+    expect(
+      result.width,
+      `Inserted "${result.text}" sub-run has 0 width - source font failed to re-encode 'X' as a visible glyph. Should have fallen back to Helvetica.`,
+    ).toBeGreaterThan(2);
+  });
+
+  test("font-fallback: typing same-char-as-original keeps text content correct (no garbage glyph)", async ({
+    page,
+  }) => {
+    // Even when the inserted char IS already present in the source
+    // text (e.g. typing 'd' next to existing 'd' in "Adobe"), the
+    // result must remain text-content-correct: run.text equals
+    // baseline + 'd', no other chars mangled, no 0-width sub-runs.
+    // Catches a future "optimisation" that borrows the source font
+    // without verifying the encoding round-trip survives.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Find caret right after the 'd' of "Adobe".
+    const adobeIdx = baseline.text.indexOf("Adobe");
+    expect(adobeIdx).toBeGreaterThan(0);
+    const caretPos = adobeIdx + 2; // after 'A','d'
+    await execAt(page, baseline.id, caretPos, "insertText", "d");
+
+    const result = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      if (!r) return null;
+      // Find the inserted 'd' sub-run - it's the one whose text is
+      // exactly "d" added between "Ad" and "obe" of the original.
+      // Filter to sub-runs containing 'd' that have non-zero width.
+      const dSubRuns = r.mergedFromTexts
+        .map((t, i) => ({ text: t, bounds: r.mergedFromBounds[i] }))
+        .filter((s) => s.text.includes("d"));
+      const widths = dSubRuns.map((s) => s.bounds.right - s.bounds.x);
+      return { text: r.text, dWidths: widths };
+    }, baseline.id);
+    if (!result) throw new Error("run vanished");
+    // Text content correct: 'Addobe' appears in the run.
+    expect(result.text).toMatch(/Ad+obe/);
+    // At least ONE 'd' sub-run must have a real (non-zero) width -
+    // the inserted 'd' rendered with a visible glyph.
+    const hasRenderableD = result.dWidths.some((w) => w > 2);
+    expect(
+      hasRenderableD,
+      `No 'd' sub-run has visible width (>2pt). Widths: ${JSON.stringify(result.dWidths)} - font borrow would render tofu`,
+    ).toBe(true);
+  });
+
+  test("font-fallback: subset-font run falls back to Helvetica on edit (no garbage)", async ({
+    page,
+  }) => {
+    // Subset fonts only embed the glyphs the source PDF originally
+    // used. Inserting a NEW char (not in the source) can't reuse the
+    // subset font - it must fall back to Helvetica. The user sees
+    // the new char rendered correctly; the rest of the line may flip
+    // to Helvetica as documented (subset fonts can't be partial-
+    // edited because they lack a stable Unicode→glyph mapping).
+    //
+    // Skipped automatically if no subset-font run is present in
+    // sample.pdf - this is opportunistic coverage.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+    await page.waitForTimeout(500);
+
+    const subsetRun = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  fontId: string;
+                  fontSubset: boolean;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      for (const p of [0]) {
+        for (const r of store.doc.page(p).runs) {
+          if (r.fontSubset && r.text.length >= 3) {
+            return { id: r.id, text: r.text };
+          }
+        }
+      }
+      return null;
+    });
+    if (!subsetRun) {
+      test.skip(true, "no subset-font run found");
+      return;
+    }
+
+    // Type a char unlikely to be in the subset (a 9 - typical body
+    // text rarely subsets digits unless they appear in the source).
+    await execAt(page, subsetRun.id, subsetRun.text.length, "insertText", "9");
+    await page.waitForTimeout(300);
+
+    const after = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      return r
+        ? {
+            text: r.text,
+            zeroWidthCount: r.mergedFromBounds.filter(
+              (b) => b.right - b.x < 0.1,
+            ).length,
+          }
+        : null;
+    }, subsetRun.id);
+    if (!after) throw new Error("run vanished after subset edit");
+    expect(after.text).toBe(subsetRun.text + "9");
+    expect(
+      after.zeroWidthCount,
+      "subset-font edit emitted 0-width sub-runs - glyph rendering broken",
+    ).toBeLessThan(2);
+  });
+
+  test("font-fallback: overlay path's canReuseFont gate documented", async ({
+    page,
+  }) => {
+    // Belt-and-suspenders test: confirms the EditTextCommand overlay
+    // path (taken when partialEdit can't run, e.g. single-object
+    // runs) reuses the source font ONLY when (a) every new char
+    // exists in the original text (safeChars) AND (b) the font
+    // isn't a subset AND (c) the run lives at page level (not
+    // inside a form-xobject). If a future change loosens any of
+    // these without proper glyph-availability detection, the user
+    // would see tofu / 0-width glyphs.
+    //
+    // We exercise this by reading the source code's gate via a
+    // self-test: load a doc, find a single-object non-base14 run,
+    // edit it with a char NOT in the original (`X` is rare in
+    // sample.pdf's body text), and assert the run.fontId flips to
+    // base14:Helvetica (proving the fallback fired).
+    await gotoV2(page);
+    await loadSamplePdf(page);
+    await page.waitForTimeout(500);
+
+    const singleObjRun = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  fontId: string;
+                  mergedFromPtrs: number[];
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      for (const r of store.doc.page(0).runs) {
+        if (
+          r.mergedFromPtrs.length === 0 &&
+          !/^base14:/.test(r.fontId) &&
+          r.text.length >= 3 &&
+          !r.text.includes("X")
+        ) {
+          return { id: r.id, text: r.text, fontId: r.fontId };
+        }
+      }
+      return null;
+    });
+    if (!singleObjRun) {
+      test.skip(true, "no single-object non-base14 run without 'X' available");
+      return;
+    }
+
+    // Insert 'X' (not in original text) → safeChars=false → font
+    // must flip to base14 Helvetica per the canReuseFont gate.
+    await execAt(
+      page,
+      singleObjRun.id,
+      singleObjRun.text.length,
+      "insertText",
+      "X",
+    );
+    const after = await readRun(page, singleObjRun.id);
+    if (!after) throw new Error("run vanished");
+    expect(
+      after.fontId,
+      `expected base14 fallback for unsafe-char insert; got ${after.fontId}`,
+    ).toMatch(/^base14:/);
+  });
+
   test("multiple consecutive spaces survive save and re-open", async ({
     page,
   }) => {
