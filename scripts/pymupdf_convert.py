@@ -1,3 +1,4 @@
+#!/opt/venv/bin/python3
 # Stirling PDF PyMuPDF Convert CLI
 # Copyright (C) 2025 Stirling PDF Inc.
 #
@@ -18,10 +19,6 @@
 Usage::
 
     pymupdf-convert <input.pdf> <output.md>
-
-This is a self-contained AGPL-3.0 program. Stirling PDF invokes it as a
-separate subprocess (no in-process import), so the AGPL copyleft attaches to
-this program alone and does not extend to the calling Java code.
 """
 
 from __future__ import annotations

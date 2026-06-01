@@ -25,9 +25,6 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
-  pymupdf:
-    taskfile: .taskfiles/pymupdf.yml
-    dir: pymupdf-worker
 
 tasks:
   # ============================================================

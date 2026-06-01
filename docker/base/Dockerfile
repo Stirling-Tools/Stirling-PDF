@@ -348,7 +348,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       python3 python3-venv ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
-COPY pymupdf-worker/ /tmp/pymupdf-worker/
+COPY scripts/pymupdf_convert.py /tmp/pymupdf_convert.py
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
@@ -357,8 +357,8 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
       cryptography \
       "unoserver==${UNOSERVER_VERSION}" \
       pymupdf pymupdf4llm && \
-    /opt/venv/bin/pip install --no-cache-dir /tmp/pymupdf-worker && \
-    rm -rf /tmp/pymupdf-worker && \
+    install -m 0755 /tmp/pymupdf_convert.py /usr/local/bin/pymupdf-convert && \
+    rm /tmp/pymupdf_convert.py && \
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
@@ -653,7 +653,6 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/ocrmypdf        /usr/local/bin/ocrmypdf; \
     ln -sf /opt/venv/bin/weasyprint      /usr/local/bin/weasyprint; \
     ln -sf /opt/venv/bin/unoping         /usr/local/bin/unoping; \
-    ln -sf /opt/venv/bin/pymupdf-convert /usr/local/bin/pymupdf-convert; \
     fc-cache -f
 
 # Metadata labels - base image
