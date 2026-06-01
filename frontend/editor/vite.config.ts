@@ -2,7 +2,8 @@ import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import { compression } from "vite-plugin-compression2";
+import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { constants } from "node:zlib";
 
 const VALID_MODES = [
   "core",
@@ -80,10 +81,16 @@ export default defineConfig(async ({ mode }) => {
         projects: [tsconfigProject],
       }),
       compression({
-        algorithm: "gzip",
-      }),
-      compression({
-        algorithm: "brotliCompress",
+        threshold: 1024,
+        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        algorithms: [
+          defineAlgorithm("gzip", { level: 9 }),
+          defineAlgorithm("brotliCompress", {
+            params: {
+              [constants.BROTLI_PARAM_QUALITY]: 11,
+            },
+          }),
+        ],
       }),
       // Set ANALYZE=true to emit dist/stats.html (treemap) alongside the
       // build; rollup-plugin-visualizer is ESM-only so we import dynamically.
