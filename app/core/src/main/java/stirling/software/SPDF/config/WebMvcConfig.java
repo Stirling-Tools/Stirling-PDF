@@ -1,6 +1,8 @@
 package stirling.software.SPDF.config;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -81,7 +83,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/3rdPartyLicenses.json",
                         "/pdfjs/**",
                         "/pdfjs-legacy/**",
-                        "/pdfium/**")
+                        "/pdfium/**",
+                        "/locales/**",
+                        "/css/**",
+                        "/js/**",
+                        "/vendor/**",
+                        "/samples/**",
+                        "/og_images/**",
+                        "/Login/**",
+                        "/manifest-classic.json")
                 .addResourceLocations(
                         staticPath,
                         "classpath:/static/",
@@ -90,7 +100,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "pdfjs-legacy/",
                         "classpath:/static/pdfjs-legacy/",
                         staticPath + "pdfium/",
-                        "classpath:/static/pdfium/")
+                        "classpath:/static/pdfium/",
+                        staticPath + "locales/",
+                        "classpath:/static/locales/",
+                        staticPath + "css/",
+                        "classpath:/static/css/",
+                        staticPath + "js/",
+                        "classpath:/static/js/",
+                        staticPath + "vendor/",
+                        "classpath:/static/vendor/",
+                        staticPath + "samples/",
+                        "classpath:/static/samples/",
+                        staticPath + "og_images/",
+                        "classpath:/static/og_images/",
+                        staticPath + "Login/",
+                        "classpath:/static/Login/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()
@@ -156,9 +180,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     applicationProperties.getSystem().getCorsAllowedOrigins());
 
             // Combine user-configured origins with Tauri origins
-            java.util.List<String> allOrigins =
-                    new java.util.ArrayList<>(
-                            applicationProperties.getSystem().getCorsAllowedOrigins());
+            List<String> allOrigins =
+                    new ArrayList<>(applicationProperties.getSystem().getCorsAllowedOrigins());
 
             // Always include Tauri origins for desktop app compatibility
             // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
@@ -199,7 +222,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         } else {
             // Default to allowing all origins when nothing is configured
             logger.debug(
-                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
+                    "No CORS allowed origins configured in settings.yml"
+                            + " (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
             registry.addMapping("/**")
                     .allowedOriginPatterns("*")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
