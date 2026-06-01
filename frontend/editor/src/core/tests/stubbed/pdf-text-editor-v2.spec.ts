@@ -2094,15 +2094,23 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   // checks (and ends up rendering tofu) gets caught immediately.
   // -------------------------------------------------------------------
 
-  test("font-fallback: typing arbitrary char into a non-base14 line keeps glyph rendering (visible width > 0)", async ({
+  test("font-fallback: Helvetica fallback for inserted text produces a visible glyph (width > 0)", async ({
     page,
   }) => {
     // The marketing PDF tagline uses an embedded non-standard font
-    // ("pdf:...:Unknown"). Typing a char that may or may not be in
-    // the font's safe re-encoding range must still produce a
-    // VISIBLE glyph (non-zero width) - otherwise the user sees
-    // nothing change after typing. Helvetica fallback guarantees a
-    // visible glyph.
+    // ("pdf:...:Unknown"). Our current behaviour is to ALWAYS emit
+    // inserted chars in base-14 Helvetica fallback (originalFontPtr=0
+    // in applyPartialEditPlan). This test pins the contract: the
+    // user must see a real, non-zero-width glyph after typing - which
+    // Helvetica guarantees.
+    //
+    // Note: this test does NOT prove that borrowing the source font
+    // would have failed - typing 'X' here goes through the fallback
+    // path by design. The follow-up SetCharcodes work (see comment
+    // in partialEdit.ts) would let us borrow the source font for
+    // chars demonstrably present in the source line. That's a
+    // separate improvement; the contract this test pins is "fallback
+    // path always produces a renderable glyph".
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')

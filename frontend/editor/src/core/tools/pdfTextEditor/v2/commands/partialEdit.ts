@@ -340,18 +340,31 @@ export function applyPartialEditPlan(
   const newMergedFromCharStarts: number[] = [];
   const insertedPtrs: number[] = [];
 
-  // Note: a previous attempt borrowed the source font handle for
-  // inserted text so the new chars would render in the surrounding
-  // line's typeface. It works for some fonts but PDFium's
-  // FPDFText_SetText on a borrowed handle to a non-standard
-  // embedded font returns 0-width / garbage glyphs for chars not
-  // present at the SAME slot in the source - which kills width
-  // measurements and breaks subsequent-keep positioning. Leaving
-  // the borrow disabled until we can detect "this font safely
-  // re-encodes arbitrary Unicode" without false positives. Inserted
-  // text therefore always uses base-14 Helvetica (the fallback
-  // family). Tracked as: inserted glyph font matching for embedded
-  // CID fonts.
+  // Inserted text uses base-14 Helvetica fallback (originalFontPtr=0).
+  //
+  // WHY (real reason, not the earlier "byte slot" hand-wave): for
+  // embedded CID fonts, PDFium has no reliable reverse Unicode→CID
+  // lookup. ToUnicode CMaps are one-way by design (often many-to-one
+  // for ligatures). So when `FPDFText_SetText` is asked to write 'a'
+  // into a borrowed embedded font, PDFium typically writes raw byte
+  // 0x61 and the font's custom encoding maps that to something random
+  // or nothing - producing 0-width / tofu glyphs.
+  //
+  // A BETTER PATH exists and is worth doing:
+  //   1. Per source text-object, read the original byte codes paired
+  //      with the Unicode text already extracted via FPDFTextObj_GetText.
+  //   2. Build a per-line Unicode→byte-code map for chars present in
+  //      the source line ("the existing 'd' proves the font has a
+  //      working code for 'd'").
+  //   3. Emit via FPDFPageObj_CreateTextObj + FPDFText_SetCharcodes
+  //      (which IS exposed in embedpdf) using the original byte codes.
+  //      That bypasses the broken Unicode→CID lookup entirely.
+  //   4. Only fall back to Helvetica for chars NOT in the source line.
+  //
+  // The blocker is exposing FPDFTextObj_GetCharCount / per-char
+  // accessor in the embedpdf binding (currently we only have
+  // FPDFTextObj_GetText which returns Unicode, not the raw codes).
+  // Until that's wired, inserted text stays on Helvetica.
 
   // Strategy: walk ops in order. Track a cumulative `offset` that gets
   // added to subsequent kept sub-runs' positions, accounting for the
