@@ -256,7 +256,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--mantine-color-green-6);
+  background: var(--mantine-color-blue-5);
   border: 1.5px solid var(--mantine-color-body);
   animation: agent-dot-pulse 2.4s ease-in-out infinite;
   pointer-events: none;
@@ -272,11 +272,11 @@
   }
 }
 
-/* Green outline on hero Stirling button when agent is running in background */
+/* Blue outline on hero Stirling button when agent is running */
 .agent-button.agent-button--running {
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-green-6) 60%,
+    var(--mantine-color-blue-5) 60%,
     var(--border-subtle)
   );
 }
@@ -284,7 +284,7 @@
 [data-mantine-color-scheme="dark"] .agent-button.agent-button--running {
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-green-5) 55%,
+    var(--mantine-color-blue-4) 55%,
     var(--border-subtle)
   );
 }

@@ -13,7 +13,6 @@ import {
   Collapse,
   Group,
   List,
-  Loader,
   Menu,
   Paper,
   ScrollArea,
@@ -24,6 +23,7 @@ import {
 } from "@mantine/core";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -37,13 +37,25 @@ import {
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
+import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
-type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+type TranslateFn = ReturnType<typeof useTranslation>["t"];
 
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
+
+function formatRelativeTime(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 /**
  * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
@@ -172,31 +184,61 @@ function ToolsUsedBlock({
 function ChatMessageBubble({
   role,
   content,
+  timestamp,
   toolsUsed,
   resolveToolName,
   t,
 }: {
   role: "user" | "assistant";
   content: string;
+  timestamp: number;
   toolsUsed?: string[];
   resolveToolName: ToolNameResolver;
   t: TranslateFn;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    void navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  const actions = (
+    <div className="chat-message-actions">
+      <button
+        type="button"
+        className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
+        onClick={handleCopy}
+        title={t("chat.actions.copy", "Copy message")}
+      >
+        <ContentCopyIcon sx={{ fontSize: 13 }} />
+      </button>
+<span className="chat-message-timestamp">
+        {formatRelativeTime(timestamp)}
+      </span>
+    </div>
+  );
+
   if (role === "user") {
     return (
       <div className="chat-message chat-message-user">
-        <Paper className="chat-bubble chat-bubble-user" p="xs" radius="md">
-          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-            {content}
-          </Text>
-        </Paper>
+        <div className="chat-message-user__inner">
+          <Paper className="chat-bubble chat-bubble-user" p="xs" radius="md">
+            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {content}
+            </Text>
+          </Paper>
+          {actions}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="chat-message chat-message-assistant">
-      <div className="chat-assistant-content">
+      <div className="chat-bubble chat-bubble-assistant">
         <Text size="sm" component="div">
           {renderMarkdown(content)}
         </Text>
@@ -207,6 +249,7 @@ function ChatMessageBubble({
             t={t}
           />
         )}
+        {actions}
       </div>
     </div>
   );
@@ -263,11 +306,12 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           <Menu.Target>
             <button
               type="button"
-              className="chat-panel__agent-pill"
+              className={`chat-panel__agent-pill${isLoading ? " chat-panel__agent-pill--loading" : ""}`}
               aria-label={t("chat.header.agentMenu", "Stirling agent options")}
             >
               <span className="chat-panel__agent-pill-icon">
                 <StirlingLogoOutline size={16} />
+                {isLoading && <span className="agent-status-dot" />}
               </span>
               <span className="chat-panel__agent-pill-label">
                 {t("agents.stirling_name", "Stirling")}
@@ -306,6 +350,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
               key={msg.id}
               role={msg.role}
               content={msg.content}
+              timestamp={msg.timestamp}
               toolsUsed={msg.toolsUsed}
               resolveToolName={resolveToolName}
               t={t}
@@ -313,20 +358,14 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           ))}
           {isLoading && (
             <div className="chat-message chat-message-assistant">
-              <Paper
-                className="chat-bubble chat-bubble-assistant"
-                p="xs"
-                radius="md"
-              >
-                <Group gap="xs" wrap="nowrap">
-                  <Loader size="xs" type="dots" />
-                  <Text size="sm" c="dimmed">
-                    {progress
-                      ? formatProgress(progress, t, resolveToolName)
-                      : t("chat.progress.thinking")}
-                  </Text>
-                </Group>
-              </Paper>
+              <div className="chat-thinking">
+                <StirlingLogoAnimated size={20} />
+                <Text size="sm" c="dimmed">
+                  {progress
+                    ? formatProgress(progress, t, resolveToolName)
+                    : t("chat.progress.thinking")}
+                </Text>
+              </div>
             </div>
           )}
         </Stack>

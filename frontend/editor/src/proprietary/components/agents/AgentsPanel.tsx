@@ -105,10 +105,12 @@ export function AgentsSection() {
               {t("agents.stirling_name", "Stirling")}
             </Text>
             <Text size="xs" c="dimmed" truncate>
-              {t(
-                "agents.stirling_description",
-                "Your general-purpose PDF assistant",
-              )}
+              {isLoading
+                ? t("agents.stirling_running", "Running...")
+                : t(
+                    "agents.stirling_description",
+                    "Your general-purpose PDF assistant",
+                  )}
             </Text>
           </Box>
         </Group>

@@ -67,7 +67,7 @@
 .chat-panel__agent-pill--loading {
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-green-6) 60%,
+    var(--mantine-color-blue-5) 60%,
     var(--border-subtle)
   );
 }
@@ -75,7 +75,7 @@
 [data-mantine-color-scheme="dark"] .chat-panel__agent-pill--loading {
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-green-5) 55%,
+    var(--mantine-color-blue-4) 55%,
     var(--border-subtle)
   );
 }
@@ -304,14 +304,74 @@
   margin: 0.2rem 0;
 }
 
+.chat-message-user__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 85%;
+}
+
 .chat-message-assistant {
   justify-content: flex-start;
 }
 
+/* Hover action row — copy, like, timestamp */
+.chat-message-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-top: 0.3rem;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+
+.chat-message:hover .chat-message-actions,
+.chat-message-actions:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chat-message-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 100ms ease-out,
+    color 100ms ease-out;
+}
+
+.chat-message-action-btn:hover {
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+}
+
+.chat-message-action-btn--active {
+  color: var(--mantine-color-blue-filled);
+}
+
+.chat-message-timestamp {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 0 0.25rem;
+  white-space: nowrap;
+}
+
 /* Bubble styling — user only */
 
-.chat-bubble-user {
+.chat-bubble {
   max-width: 85%;
+}
+
+.chat-bubble-user {
   background: var(--mantine-color-blue-filled) !important;
   color: white !important;
 }
@@ -321,17 +381,17 @@
 }
 
 /* Assistant messages: no bubble, free-flowing with side padding */
-.chat-assistant-content {
+.chat-bubble-assistant {
   width: 100%;
   padding: 0 0.5rem;
   font-size: var(--mantine-font-size-sm);
 }
 
-.chat-assistant-content p {
+.chat-bubble-assistant p {
   margin: 0 0 0.5em;
 }
 
-.chat-assistant-content p:last-child {
+.chat-bubble-assistant p:last-child {
   margin-bottom: 0;
 }
 
