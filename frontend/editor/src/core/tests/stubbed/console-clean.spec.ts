@@ -11,7 +11,7 @@ import type { ConsoleMessage, Page } from "@playwright/test";
  *
  * If you have a legitimate reason a warning fires on a given route
  * (third-party library noise we cannot influence, etc.), filter it via the
- * `IGNORED` allowlist below — but the default expectation is that the
+ * `IGNORED` allowlist below, but the default expectation is that the
  * console stays clean. Do not add entries casually; prefer fixing the
  * underlying issue.
  */
@@ -73,7 +73,7 @@ async function expectCleanConsole(entries: ConsoleEntry[]) {
 // ─── Routes to sweep ────────────────────────────────────────────────────────
 //
 // One entry per route we want to guarantee is console-clean on load. Mirrors
-// the most common user entry points; expand cautiously — every entry adds CI
+// the most common user entry points; expand cautiously - every entry adds CI
 // time and triage surface for new warnings.
 
 const ROUTES: { name: string; path: string }[] = [

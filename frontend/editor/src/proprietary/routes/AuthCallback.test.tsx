@@ -6,6 +6,7 @@ import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   springAuth,
 } from "@app/auth/springAuthClient";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // Mock springAuth; keep the real redirect-path helpers.
 vi.mock("@app/auth/springAuthClient", async () => {
@@ -90,8 +91,7 @@ describe("AuthCallback", () => {
   });
 
   it("should redirect to login when no access token in hash", async () => {
-    // Production logs the failure; this test deliberately drives that path.
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    expectConsole.error(/\[AuthCallback\] No access_token in URL fragment/);
     // No hash or empty hash
     window.location.hash = "";
 
@@ -111,8 +111,7 @@ describe("AuthCallback", () => {
   });
 
   it("should redirect to login when token validation fails", async () => {
-    // Production logs the failure; this test deliberately drives that path.
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    expectConsole.error(/\[AuthCallback\] Failed to validate token/);
     const invalidToken = "invalid-oauth-token";
     window.location.hash = `#access_token=${invalidToken}`;
 
@@ -141,8 +140,7 @@ describe("AuthCallback", () => {
   });
 
   it("should handle errors gracefully", async () => {
-    // Production logs the thrown error; this test deliberately throws.
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    expectConsole.error(/\[AuthCallback\] Authentication failed/);
     const mockToken = "error-token";
     window.location.hash = `#access_token=${mockToken}`;
 

@@ -8,6 +8,7 @@ import {
 } from "@app/auth/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
+import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
 import {
   AxiosError,
   type AxiosResponse,
@@ -133,7 +134,7 @@ describe("SpringAuthClient", () => {
     it("should successfully sign in with email and password", async () => {
       // The fake token isn't a real JWT, so calculateAdaptiveIntervals warns
       // about defaults - incidental to what this test verifies.
-      vi.spyOn(console, "warn").mockImplementation(() => {});
+      allowConsole.warn(/Cannot decode token for adaptive intervals/);
       const credentials = {
         email: "test@example.com",
         password: "password123",
@@ -181,8 +182,7 @@ describe("SpringAuthClient", () => {
     });
 
     it("should return error on failed login", async () => {
-      // Production logs the failure; this test deliberately drives the error path.
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      expectConsole.error(/\[SpringAuth\] signInWithPassword error/);
       const credentials = {
         email: "wrong@example.com",
         password: "wrongpassword",
@@ -243,8 +243,7 @@ describe("SpringAuthClient", () => {
     });
 
     it("should return error on failed registration", async () => {
-      // Production logs the failure; this test deliberately drives the error path.
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      expectConsole.error(/\[SpringAuth\] signUp error/);
       const credentials = {
         email: "existing@example.com",
         password: "password123",
@@ -292,8 +291,7 @@ describe("SpringAuthClient", () => {
     });
 
     it("should clear JWT even if logout request fails", async () => {
-      // Production logs the backend failure; this test deliberately drives it.
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      expectConsole.error(/\[SpringAuth\] signOut error/);
       const mockToken = "jwt-to-clear";
       localStorage.setItem("stirling_jwt", mockToken);
 
@@ -314,7 +312,7 @@ describe("SpringAuthClient", () => {
     it("should refresh JWT token successfully", async () => {
       // The fake token isn't a real JWT, so calculateAdaptiveIntervals warns
       // about defaults - incidental to what this test verifies.
-      vi.spyOn(console, "warn").mockImplementation(() => {});
+      allowConsole.warn(/Cannot decode token for adaptive intervals/);
       const newToken = "refreshed-jwt-token";
       const mockUser = {
         id: "123",

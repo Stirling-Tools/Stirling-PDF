@@ -1,5 +1,6 @@
-import { describe, expect, test, beforeEach, vi } from "vitest";
+import { describe, expect, test, beforeEach } from "vitest";
 import "fake-indexeddb/auto";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 import {
   DATABASE_CONFIGS,
@@ -364,9 +365,8 @@ describe("IndexedDB migration (FILES store)", () => {
 
   test("SaaS v6 database is force-deleted (data lost, schema reset to v9)", async () => {
     // The force-delete warn IS the contract under test; production fires it
-    // to surface why data was wiped, and the test deliberately drives that
-    // path.
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    // to surface why data was wiped.
+    expectConsole.warn(/Deleting corrupt SaaS v6/);
     await seedSaasDatabase(6, ["v6-corrupt-file"]);
 
     await indexedDBManager.openDatabase(DATABASE_CONFIGS.FILES);
@@ -386,9 +386,8 @@ describe("IndexedDB migration (FILES store)", () => {
 
   test("SaaS v7 database is force-deleted (data lost, schema reset to v9)", async () => {
     // The force-delete warn IS the contract under test; production fires it
-    // to surface why data was wiped, and the test deliberately drives that
-    // path.
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    // to surface why data was wiped.
+    expectConsole.warn(/Deleting corrupt SaaS v7/);
     await seedSaasDatabase(7, ["v7-corrupt-file"]);
 
     await indexedDBManager.openDatabase(DATABASE_CONFIGS.FILES);

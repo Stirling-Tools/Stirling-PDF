@@ -28,6 +28,7 @@ import {
   createTestStirlingFile,
   createTestFilesWithId,
 } from "@app/tests/utils/testFileHelpers";
+import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
 import { MantineProvider } from "@mantine/core";
 
 // Mock axios (for static methods like CancelToken, isCancel)
@@ -500,7 +501,9 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       // Test files aren't registered in the FileContext stub registry, so
       // production warns about the stub/output mismatch - incidental to what
       // this test asserts.
-      vi.spyOn(console, "warn").mockImplementation(() => {});
+      allowConsole.warn(
+        /\[useToolOperation\] Mismatch successInputStubs vs outputs/,
+      );
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),
         {
@@ -645,7 +648,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
     test("should handle partial failures in multi-file processing", async () => {
       // Production warns when an individual file in a batch fails; the test
       // deliberately drives one mock rejection to exercise that path.
-      vi.spyOn(console, "warn").mockImplementation(() => {});
+      expectConsole.warn(/Failed to convert file doc2\.xyz/);
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),
         {

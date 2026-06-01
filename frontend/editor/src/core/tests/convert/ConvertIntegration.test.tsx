@@ -29,6 +29,7 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@app/i18n/config";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
+import { expectConsole } from "@app/tests/failOnConsole";
 import { StirlingFile } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
@@ -574,7 +575,7 @@ describe("Convert Tool Integration Tests", () => {
     test("should handle multiple file uploads correctly", async () => {
       // Test mocks only one apiClient.post response; the second file hits an
       // undefined response and production warns about the conversion failure.
-      vi.spyOn(console, "warn").mockImplementation(() => {});
+      expectConsole.warn(/Failed to convert file test2\.pdf/);
       const mockBlob = new Blob(["zip-content"], { type: "application/zip" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 
