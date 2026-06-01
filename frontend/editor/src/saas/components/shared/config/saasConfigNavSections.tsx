@@ -9,12 +9,28 @@ import GeneralSection from "@app/components/shared/config/configSections/General
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import Plan from "@app/components/shared/config/configSections/Plan";
+import {
+  PaygLeader,
+  PaygMember,
+} from "@app/components/shared/config/configSections/Payg";
 
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
 interface CreateSaasConfigNavSectionsOptions {
   isDev?: boolean;
   isAnonymous?: boolean;
+  /**
+   * Show the new Pay-as-you-go billing section. Gated on
+   * `appConfig.paygEnabled` so the tenant has to be opted in.
+   */
+  paygEnabled?: boolean;
+  /**
+   * Whether the viewer is the team owner (LEADER) — controls whether the PAYG
+   * screen shows editable cap/sub-cap controls or a read-only member view.
+   * Until team roles land we proxy this from `appConfig.isAdmin`; replace with
+   * a real team-role lookup when available.
+   */
+  isLeader?: boolean;
   t: TFunction<"translation", undefined>;
 }
 
@@ -108,10 +124,40 @@ function appendBillingSection(
   ];
 }
 
+function appendPaygSection(
+  sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
+  isLeader: boolean,
+): ConfigNavSection[] {
+  if (sections.some((s) => s.items.some((i) => i.key === "payg"))) {
+    return sections;
+  }
+  return [
+    ...sections,
+    {
+      title: t("config.payg.section", "Pay-as-you-go"),
+      items: [
+        {
+          key: "payg",
+          label: t("config.payg.label", "Billing & usage"),
+          icon: "speed-rounded",
+          component: isLeader ? <PaygLeader /> : <PaygMember />,
+        },
+      ],
+    },
+  ];
+}
+
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
-  { isDev = false, isAnonymous = false, t }: CreateSaasConfigNavSectionsOptions,
+  {
+    isDev = false,
+    isAnonymous = false,
+    paygEnabled = false,
+    isLeader = false,
+    t,
+  }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   const baseSections = createCoreConfigNavSections(false, false, false);
 
@@ -154,6 +200,9 @@ export function createSaasConfigNavSections(
 
   if (!isAnonymous) {
     sections = appendBillingSection(sections, t);
+    if (paygEnabled) {
+      sections = appendPaygSection(sections, t, isLeader);
+    }
   }
 
   if (isDev) {

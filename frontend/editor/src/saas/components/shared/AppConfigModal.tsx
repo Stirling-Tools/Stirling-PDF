@@ -3,6 +3,7 @@ import { Modal, Button, Text, ActionIcon } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
@@ -107,14 +108,32 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
 
   // Left navigation structure and icons
+  const { config: appConfig } = useAppConfig();
+  // Until team-role lookup lands, proxy LEADER from the tenant-admin flag.
+  // DEMO: `?payg=1` query param (sticks in localStorage) force-enables the new
+  // section locally so the screen can be previewed before the backend
+  // ApplicationProperties.Payg wiring is in place. Remove once the real config
+  // flag flows from ConfigController.java.
+  let paygOverride = false;
+  if (typeof window !== "undefined") {
+    if (new URLSearchParams(window.location.search).get("payg") === "1") {
+      localStorage.setItem("paygDemo", "1");
+    }
+    paygOverride = localStorage.getItem("paygDemo") === "1";
+  }
+  const paygEnabled = Boolean(appConfig?.paygEnabled) || paygOverride;
+  const isLeader = Boolean(appConfig?.isAdmin) || paygOverride;
+
   const configNavSections = useMemo(
     () =>
       createSaasConfigNavSections(Overview, openLogoutConfirm, {
         isDev,
         isAnonymous,
+        paygEnabled,
+        isLeader,
         t,
       }),
-    [openLogoutConfirm, isDev, isAnonymous, t],
+    [openLogoutConfirm, isDev, isAnonymous, paygEnabled, isLeader, t],
   );
 
   const activeLabel = useMemo(() => {
