@@ -2166,6 +2166,118 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     ).toBeGreaterThan(2);
   });
 
+  test("font-borrow: typing same-char-as-original uses the SOURCE font (width matches original)", async ({
+    page,
+  }) => {
+    // The "try borrow, detect, fall back" path: when every inserted
+    // char already appears in the source line, partialEdit tries the
+    // source font handle. If PDFium successfully renders the glyph,
+    // the inserted char looks IDENTICAL to the original (same width,
+    // same weight, same typeface).
+    //
+    // This test types 'a' right after the 'a' of "Acrobat" → "Acrobaat".
+    // The inserted 'a' must have approximately the same rendered
+    // width as the source's 'a'. If we fall back to Helvetica (the
+    // narrower fallback), the inserted width is significantly smaller
+    // (~8pt) than the source font's bold 'a' (~12pt at this size).
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Snapshot the original 'a' width inside "Acrobat" BEFORE editing.
+    const origAWidth = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      if (!r) return null;
+      // Find the FIRST sub-run whose text is exactly 'a'. The
+      // marketing tagline's per-glyph layout makes 'a' its own
+      // sub-run.
+      for (let i = 0; i < r.mergedFromTexts.length; i++) {
+        if (r.mergedFromTexts[i] === "a") {
+          const b = r.mergedFromBounds[i];
+          return b.right - b.x;
+        }
+      }
+      return null;
+    }, baseline.id);
+    if (origAWidth === null || origAWidth < 1) {
+      test.skip(true, "no single-char 'a' sub-run found in tagline");
+      return;
+    }
+
+    // Insert 'a' right after the 'a' of "Acrobat".
+    const caretPos = baseline.text.indexOf("Acrobat") + 6;
+    await execAt(page, baseline.id, caretPos, "insertText", "a");
+
+    // Read the INSERTED 'a' sub-run's width. It's the most recently
+    // added 'a' single-char sub-run that wasn't there before. We
+    // identify it as "the last 'a' sub-run in order".
+    const insertedAWidth = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      if (!r) return null;
+      // The inserted 'a' is the last sub-run with text exactly 'a'.
+      for (let i = r.mergedFromTexts.length - 1; i >= 0; i--) {
+        if (r.mergedFromTexts[i] === "a") {
+          const b = r.mergedFromBounds[i];
+          return b.right - b.x;
+        }
+      }
+      return null;
+    }, baseline.id);
+    if (insertedAWidth === null) throw new Error("inserted 'a' not found");
+
+    // The inserted 'a' must be approximately the same width as the
+    // original 'a' (within 30% - a generous bound that catches the
+    // Helvetica fallback while tolerating PDFium's measurement
+    // quirks).
+    const ratio = insertedAWidth / origAWidth;
+    expect(
+      ratio,
+      `inserted 'a' width ${insertedAWidth.toFixed(2)}pt vs original ${origAWidth.toFixed(2)}pt (ratio ${ratio.toFixed(2)}). Helvetica fallback gives ratio ~0.6; source-font borrow gives ~1.0.`,
+    ).toBeGreaterThan(0.85);
+    expect(ratio).toBeLessThan(1.2);
+  });
+
   test("font-fallback: typing same-char-as-original keeps text content correct (no garbage glyph)", async ({
     page,
   }) => {

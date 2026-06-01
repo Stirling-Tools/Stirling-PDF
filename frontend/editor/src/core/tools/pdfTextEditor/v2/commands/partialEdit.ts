@@ -273,6 +273,35 @@ export function planPartialEdit(
   };
 }
 
+interface FontReadingModule {
+  FPDFTextObj_GetFont?: (ptr: number) => number;
+}
+
+/**
+ * Borrow the font handle from the FIRST surviving sub-object that
+ * wasn't slated for removal. Returns 0 if no surviving sub-object
+ * has a readable font (or if FPDFTextObj_GetFont isn't exposed).
+ */
+function borrowFontFromSurvivor(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  plan: PartialEditPlan,
+): number {
+  const fontMod = m as unknown as FontReadingModule;
+  if (!fontMod.FPDFTextObj_GetFont) return 0;
+  const removed = new Set(plan.removePtrs.map((r) => r.ptr));
+  for (let i = 0; i < plan.prevMergedFromPtrs.length; i++) {
+    const ptr = plan.prevMergedFromPtrs[i];
+    if (!ptr || removed.has(ptr)) continue;
+    try {
+      const fontPtr = fontMod.FPDFTextObj_GetFont(ptr);
+      if (fontPtr) return fontPtr;
+    } catch {
+      /* try next survivor */
+    }
+  }
+  return 0;
+}
+
 interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
@@ -340,31 +369,48 @@ export function applyPartialEditPlan(
   const newMergedFromCharStarts: number[] = [];
   const insertedPtrs: number[] = [];
 
-  // Inserted text uses base-14 Helvetica fallback (originalFontPtr=0).
+  // Font-borrow strategy for inserted text:
   //
-  // WHY (real reason, not the earlier "byte slot" hand-wave): for
-  // embedded CID fonts, PDFium has no reliable reverse Unicode→CID
-  // lookup. ToUnicode CMaps are one-way by design (often many-to-one
-  // for ligatures). So when `FPDFText_SetText` is asked to write 'a'
-  // into a borrowed embedded font, PDFium typically writes raw byte
-  // 0x61 and the font's custom encoding maps that to something random
-  // or nothing - producing 0-width / tofu glyphs.
+  // Embedded CID fonts have no reliable Unicode→CID reverse lookup
+  // (ToUnicode CMaps are one-way by design). So `FPDFText_SetText`
+  // with arbitrary Unicode chars often renders as 0-width / tofu in
+  // the source font - even for chars demonstrably present elsewhere
+  // in the line. The cleanest fix would be `FPDFText_SetCharcodes`
+  // with the original byte codes, but that needs binding work to
+  // expose per-char-code accessors on text objects.
   //
-  // A BETTER PATH exists and is worth doing:
-  //   1. Per source text-object, read the original byte codes paired
-  //      with the Unicode text already extracted via FPDFTextObj_GetText.
-  //   2. Build a per-line Unicode→byte-code map for chars present in
-  //      the source line ("the existing 'd' proves the font has a
-  //      working code for 'd'").
-  //   3. Emit via FPDFPageObj_CreateTextObj + FPDFText_SetCharcodes
-  //      (which IS exposed in embedpdf) using the original byte codes.
-  //      That bypasses the broken Unicode→CID lookup entirely.
-  //   4. Only fall back to Helvetica for chars NOT in the source line.
+  // Workaround we DO ship: try the borrow, measure the actual
+  // rendered width via `FPDFPageObj_GetBounds`, and fall back to
+  // Helvetica when the result looks broken (sub-threshold per-char
+  // width = font didn't have working glyphs for these chars). The
+  // detection costs one bounds read per emit - negligible.
   //
-  // The blocker is exposing FPDFTextObj_GetCharCount / per-char
-  // accessor in the embedpdf binding (currently we only have
-  // FPDFTextObj_GetText which returns Unicode, not the raw codes).
-  // Until that's wired, inserted text stays on Helvetica.
+  // Only attempt the borrow when EVERY char in EVERY insert op
+  // already appears in some surviving sub-run's text. The surviving
+  // glyphs are proof the font has a working CID for those chars; an
+  // arbitrary new char (e.g. user typed 'Ω' into an ASCII document)
+  // skips the borrow and goes straight to Helvetica.
+  const survivingChars = new Set<string>();
+  for (let i = 0; i < plan.prevMergedFromTexts.length; i++) {
+    if (plan.subRunStatus[i] !== "all-deleted") {
+      for (const ch of plan.prevMergedFromTexts[i]) survivingChars.add(ch);
+    }
+  }
+  let allInsertCharsAreSafe = true;
+  for (const op of plan.ops) {
+    if (op.type === "insert" && op.text) {
+      for (const ch of op.text) {
+        if (!survivingChars.has(ch)) {
+          allInsertCharsAreSafe = false;
+          break;
+        }
+      }
+    }
+    if (!allInsertCharsAreSafe) break;
+  }
+  const borrowedFontPtr = allInsertCharsAreSafe
+    ? borrowFontFromSurvivor(m, plan)
+    : 0;
 
   // Strategy: walk ops in order. Track a cumulative `offset` that gets
   // added to subsequent kept sub-runs' positions, accounting for the
@@ -431,7 +477,12 @@ export function applyPartialEditPlan(
       // earlier replacements. Unanchored inserts (typed-at-end) emit
       // at lastEnd.
       const anchorX = origBounds ? origBounds.x + offset : lastEnd;
-      const ptrs = emitTextLine({
+
+      // Try borrowed source font first when every insert char is
+      // safe; measure the result and fall back to Helvetica if the
+      // rendered width is sub-threshold (font didn't have working
+      // glyphs at the chars we passed via SetText).
+      let ptrs = emitTextLine({
         doc,
         page,
         text: insertText,
@@ -439,20 +490,50 @@ export function applyPartialEditPlan(
         y: run.matrix.f,
         fontSize: run.fontSize,
         fill: run.fill,
-        originalFontPtr: 0,
+        originalFontPtr: borrowedFontPtr,
         fallbackFamily,
       });
-      // Use PDFium's actual rendered right edge (read back via
-      // FPDFPageObj_GetBounds) rather than canvas-measured Helvetica
-      // width. Canvas falls back to Liberation Sans which is wider
-      // than PDFium's base-14 Helvetica by 15-20%, so canvas-based
-      // offsets push subsequent keeps too far right.
       let realRightEdge = anchorX;
       for (const ptr of ptrs) {
         const r = measureObjRightEdgePt(m, ptr);
         if (r > realRightEdge) realRightEdge = r;
       }
-      const measuredWidth = realRightEdge - anchorX;
+      let measuredWidth = realRightEdge - anchorX;
+
+      // Heuristic: a working glyph is at least ~0.15 * fontSize per
+      // char wide (narrowest base-14 Helvetica glyph "i" is ~0.22).
+      // Anything well below that means SetText returned a 0-width
+      // (.notdef) glyph - the borrowed font's Unicode→CID lookup
+      // failed for these chars. Re-emit via Helvetica fallback.
+      const minExpected = insertText.length * run.fontSize * 0.15;
+      if (borrowedFontPtr !== 0 && measuredWidth < minExpected) {
+        // Remove the failed text objects before retrying.
+        for (const ptr of ptrs) {
+          if (!ptr) continue;
+          try {
+            m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+          } catch {
+            /* best-effort */
+          }
+        }
+        ptrs = emitTextLine({
+          doc,
+          page,
+          text: insertText,
+          x: anchorX,
+          y: run.matrix.f,
+          fontSize: run.fontSize,
+          fill: run.fill,
+          originalFontPtr: 0,
+          fallbackFamily,
+        });
+        realRightEdge = anchorX;
+        for (const ptr of ptrs) {
+          const r = measureObjRightEdgePt(m, ptr);
+          if (r > realRightEdge) realRightEdge = r;
+        }
+        measuredWidth = realRightEdge - anchorX;
+      }
       // Distribute the measured width across the emit ptrs for the
       // per-chunk model bounds (used by future edits).
       let runningCursor = anchorX;
