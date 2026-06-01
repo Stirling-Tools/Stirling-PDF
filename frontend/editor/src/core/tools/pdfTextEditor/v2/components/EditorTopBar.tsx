@@ -1,8 +1,20 @@
 import { Box, Button, Group, Text, Tooltip } from "@mantine/core";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
-import { CharcodeStrategyPicker } from "@app/tools/pdfTextEditor/v2/components/CharcodeStrategyPicker";
 
+/**
+ * Top bar for the v2 text/image editor.
+ *
+ * This editor is scoped to TEXT and IMAGE editing on top of a PDF
+ * substrate. Document-level operations (page rotation, page reorder,
+ * page split, print, save-to-workbench-for-another-tool) live in
+ * Stirling's dedicated tools and have intentionally been removed
+ * from this surface so users don't see overlapping affordances.
+ *
+ * Kept controls: zoom (editing visibility), add text, add image,
+ * group/ungroup paragraph runs, save PDF (canonical document output),
+ * keyboard help.
+ */
 interface TopBarProps {
   store: EditorStore;
   hasDocument: boolean;
@@ -11,19 +23,14 @@ interface TopBarProps {
   mode: "select" | "addText";
   pages: PageSnapshot[];
   openedFileName: string | null;
-  canReset: boolean;
   /** True when ≥2 text runs are selected. */
   canGroup: boolean;
   /** True when exactly one paragraph-grouped run is selected. */
   canUngroup: boolean;
   onToggleAddText: () => void;
   onPickImage: () => void;
-  onRotate: (delta: 1 | -1) => void;
   onGroup: () => void;
   onUngroup: () => void;
-  onReset: () => void;
-  onSaveToWorkbench: () => void;
-  onPrint: () => void;
   onSave: () => void;
   onShowHelp: () => void;
 }
@@ -42,17 +49,12 @@ export function EditorTopBar(props: TopBarProps) {
     mode,
     pages,
     openedFileName,
-    canReset,
     canGroup,
     canUngroup,
     onToggleAddText,
     onPickImage,
-    onRotate,
     onGroup,
     onUngroup,
-    onReset,
-    onSaveToWorkbench,
-    onPrint,
     onSave,
     onShowHelp,
   } = props;
@@ -202,58 +204,6 @@ export function EditorTopBar(props: TopBarProps) {
               Ungroup
             </Button>
           </Tooltip>
-          <Tooltip label="Rotate page left (90° counter-clockwise)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={() => onRotate(-1)}
-              data-testid="v2-rotate-left"
-            >
-              ↺
-            </Button>
-          </Tooltip>
-          <Tooltip label="Rotate page right (90° clockwise)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={() => onRotate(1)}
-              data-testid="v2-rotate-right"
-            >
-              ↻
-            </Button>
-          </Tooltip>
-          <Tooltip label="Reset every edit">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={onReset}
-              data-testid="v2-reset"
-              disabled={!canReset}
-            >
-              Reset
-            </Button>
-          </Tooltip>
-          <Tooltip label="Save to Workbench (open in another tool)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={onSaveToWorkbench}
-              data-testid="v2-save-workbench"
-            >
-              Save to Workbench
-            </Button>
-          </Tooltip>
-          <Tooltip label="Print (Ctrl+P)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={onPrint}
-              data-testid="v2-print"
-            >
-              Print
-            </Button>
-          </Tooltip>
-          <CharcodeStrategyPicker />
           <Tooltip label="Download edited PDF (Ctrl+S)">
             <Button size="xs" onClick={onSave} data-testid="v2-save">
               Save PDF

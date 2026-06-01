@@ -2899,25 +2899,6 @@ test.describe("PDF text editor v2 - multi-page", () => {
   });
 });
 
-test.describe("PDF text editor v2 - reset", () => {
-  test("Reset reverts every edit in one click", async ({ page }) => {
-    await gotoV2(page);
-    await loadSamplePdf(page);
-
-    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
-    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
-    const original = (await firstRun.innerText()) ?? "";
-
-    await typeIntoRun(page, runTestId, "t");
-    await typeIntoRun(page, runTestId, "t");
-    await expect(firstRun).toContainText("tt");
-
-    await page.getByTestId("v2-reset").click();
-    await expect(firstRun).toHaveText(original);
-    await expect(page.getByTestId("v2-undo")).toBeDisabled();
-  });
-});
-
 test.describe("PDF text editor v2 - bold/italic", () => {
   test("Bold toggle dispatches a SetFontFamily edit", async ({ page }) => {
     await gotoV2(page);
@@ -3707,56 +3688,20 @@ test.describe("PDF text editor v2 - toolbar tooltips", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    await expect(page.getByTestId("v2-rotate-left")).toBeVisible();
-    await expect(page.getByTestId("v2-rotate-right")).toBeVisible();
-    await expect(page.getByTestId("v2-print")).toBeVisible();
-    await expect(page.getByTestId("v2-reset")).toBeVisible();
+    // After the text/image-editor scope cleanup, the rotate, print,
+    // reset, and save-to-workbench toolbar entries are gone. These
+    // belong in Stirling's dedicated PDF tools; the v2 editor's
+    // surface focuses on text + image manipulation.
+    await expect(page.getByTestId("v2-add-text")).toBeVisible();
+    await expect(page.getByTestId("v2-add-image")).toBeVisible();
     await expect(page.getByTestId("v2-save")).toBeVisible();
-  });
-});
-
-test.describe("PDF text editor v2 - rotate page", () => {
-  test("rotate buttons bump pagePtr rotation and revert with undo", async ({
-    page,
-  }) => {
-    await gotoV2(page);
-    await loadSamplePdf(page);
-
-    const readRotation = () =>
-      page.evaluate(() => {
-        const store = (window as unknown as { __v2_editor_store?: unknown })
-          .__v2_editor_store as unknown as {
-          document: {
-            module: { FPDFPage_GetRotation: (p: number) => number };
-            page: (i: number) => { pagePtr: number };
-          } | null;
-        };
-        const doc = store.document;
-        if (!doc) return -1;
-        return doc.module.FPDFPage_GetRotation(doc.page(0).pagePtr);
-      });
-
-    const initial = await readRotation();
-    expect(initial).toBeGreaterThanOrEqual(0);
-
-    await page.getByTestId("v2-rotate-right").click();
-    await page.waitForTimeout(120);
-
-    const after = await readRotation();
-    expect(after).toBe((initial + 1) % 4);
-
-    // Call store.undo() directly so the test isn't sensitive to which
-    // element currently has keyboard focus (Mantine buttons swallow
-    // some key events between window.keydown registration and Playwright).
-    await page.evaluate(() => {
-      const store = (window as unknown as { __v2_editor_store?: unknown })
-        .__v2_editor_store as { undo: () => void };
-      store.undo();
-    });
-    await page.waitForTimeout(120);
-
-    const reverted = await readRotation();
-    expect(reverted).toBe(initial);
+    await expect(page.getByTestId("v2-help")).toBeVisible();
+    // Removed controls must NOT appear:
+    await expect(page.getByTestId("v2-rotate-left")).toHaveCount(0);
+    await expect(page.getByTestId("v2-rotate-right")).toHaveCount(0);
+    await expect(page.getByTestId("v2-print")).toHaveCount(0);
+    await expect(page.getByTestId("v2-reset")).toHaveCount(0);
+    await expect(page.getByTestId("v2-save-workbench")).toHaveCount(0);
   });
 });
 

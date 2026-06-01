@@ -12,29 +12,3 @@ export function exportToBlob(doc: EditorDocument): {
   });
   return { blob, filename: "edited.pdf" };
 }
-
-/**
- * Open the exported PDF in a new window and trigger print. Falls back to
- * downloading the file if the browser blocked the pop-up.
- */
-export function printDocument(
-  doc: EditorDocument,
-  onFallbackDownload: (blob: Blob, name: string) => void,
-): void {
-  const { blob, filename } = exportToBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, "_blank");
-  if (!win) {
-    onFallbackDownload(blob, filename);
-    URL.revokeObjectURL(url);
-    return;
-  }
-  win.addEventListener("load", () => {
-    try {
-      win.print();
-    } catch {
-      /* user dismissed or browser blocked the dialog */
-    }
-  });
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}

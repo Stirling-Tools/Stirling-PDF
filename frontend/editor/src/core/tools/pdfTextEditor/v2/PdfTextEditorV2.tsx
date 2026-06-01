@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
-import { useFileManagement } from "@app/contexts/FileContext";
 import { downloadBlob } from "@app/utils/downloadUtils";
 import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
@@ -11,10 +10,7 @@ import { useWorkbenchPin } from "@app/tools/pdfTextEditor/v2/hooks/useWorkbenchP
 import { useUnsavedChangesGuard } from "@app/tools/pdfTextEditor/v2/hooks/useUnsavedChangesGuard";
 import { useEditorTestGlobal } from "@app/tools/pdfTextEditor/v2/hooks/useEditorTestGlobal";
 import { useSelectionActions } from "@app/tools/pdfTextEditor/v2/hooks/useSelectionActions";
-import {
-  rotateVisiblePage,
-  useEditorKeyboardShortcuts,
-} from "@app/tools/pdfTextEditor/v2/hooks/useEditorKeyboardShortcuts";
+import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/v2/hooks/useEditorKeyboardShortcuts";
 import { FindBar } from "@app/tools/pdfTextEditor/v2/components/FindBar";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/v2/components/HelpOverlay";
 import { EditorTopBar } from "@app/tools/pdfTextEditor/v2/components/EditorTopBar";
@@ -26,10 +22,7 @@ import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
-import {
-  exportToBlob,
-  printDocument,
-} from "@app/tools/pdfTextEditor/v2/util/exportPdf";
+import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -40,7 +33,6 @@ const INSERTED_IMAGE_RATIO = 0.4;
 export default function PdfTextEditorV2(_props: BaseToolProps) {
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
-  const { addFiles } = useFileManagement();
 
   const [selection, setSelection] = useState<SelectionState>(
     store.selection.value,
@@ -69,21 +61,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     const { blob, filename } = exportToBlob(store.document);
     downloadBlob(blob, filename);
   }, [store]);
-
-  const handlePrint = useCallback(() => {
-    if (!store.document) return;
-    printDocument(store.document, downloadBlob);
-  }, [store]);
-
-  const handleSaveToWorkbench = useCallback(async () => {
-    if (!store.document) return;
-    const { blob, filename } = exportToBlob(store.document);
-    try {
-      await addFiles([new File([blob], filename, { type: blob.type })]);
-    } catch (err) {
-      store.setError(err instanceof Error ? err.message : String(err));
-    }
-  }, [store, addFiles]);
 
   const handleInsertImage = useCallback(
     async (file: File) => {
@@ -191,7 +168,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     onUndo: useCallback(() => store.undo(), [store]),
     onRedo: useCallback(() => store.redo(), [store]),
     onSave: handleSave,
-    onPrint: handlePrint,
     onDelete: sel.deleteSelection,
     onDuplicate: sel.duplicateFirstSelected,
     onSelectAll: useCallback(() => {
@@ -237,7 +213,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         mode={state.mode}
         pages={state.pages}
         openedFileName={openedFileName}
-        canReset={store.history.canUndo}
         canGroup={selection.runIds.length >= 2}
         canUngroup={(() => {
           if (selection.runIds.length !== 1) return false;
@@ -257,12 +232,8 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
             ) as HTMLInputElement | null
           )?.click()
         }
-        onRotate={(delta) => rotateVisiblePage(store, delta)}
         onGroup={handleMergeSelection}
         onUngroup={handleUngroupSelection}
-        onReset={() => store.resetAll()}
-        onSaveToWorkbench={handleSaveToWorkbench}
-        onPrint={handlePrint}
         onSave={handleSave}
         onShowHelp={() => setHelpOpen(true)}
       />

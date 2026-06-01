@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { RotatePageCommand } from "@app/tools/pdfTextEditor/v2/commands/RotatePageCommand";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import {
   findVisiblePageIndex,
@@ -12,7 +11,6 @@ interface KeyboardShortcutCallbacks {
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
-  onPrint: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onSelectAll: () => void;
@@ -31,7 +29,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onUndo,
     onRedo,
     onSave,
-    onPrint,
     onDelete,
     onDuplicate,
     onSelectAll,
@@ -64,10 +61,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         case "s":
           e.preventDefault();
           onSave();
-          return;
-        case "p":
-          e.preventDefault();
-          onPrint();
           return;
         case "d":
           if (store.selection.value.runIds.length === 0) return;
@@ -165,7 +158,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onUndo,
     onRedo,
     onSave,
-    onPrint,
     onDelete,
     onDuplicate,
     onSelectAll,
@@ -176,15 +168,4 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onEscape,
     onMergeSelection,
   ]);
-}
-
-/**
- * Compact helper for the "rotate the page closest to the viewport centre"
- * action. Shared by the toolbar buttons and (potentially) future shortcuts.
- */
-export function rotateVisiblePage(store: EditorStore, delta: 1 | -1): void {
-  if (!store.document) return;
-  store.dispatch(
-    new RotatePageCommand({ pageIndex: findVisiblePageIndex(), delta }),
-  );
 }
