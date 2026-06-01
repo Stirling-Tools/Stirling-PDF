@@ -43,9 +43,12 @@ test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
     await page.locator("#password").fill("samlpassword");
     await page.locator('input[type="submit"], button[type="submit"]').click();
 
-    await page.waitForURL((url) => url.pathname === "/" || url.pathname === "/dashboard", {
-      timeout: 30_000,
-    });
+    await page.waitForURL(
+      (url) => url.pathname === "/" || url.pathname === "/dashboard",
+      {
+        timeout: 30_000,
+      },
+    );
     await expect(
       page.locator('[data-testid="config-button"]').first(),
     ).toBeVisible({ timeout: 30_000 });
