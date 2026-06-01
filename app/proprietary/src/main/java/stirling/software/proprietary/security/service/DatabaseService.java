@@ -544,19 +544,21 @@ public class DatabaseService implements DatabaseServiceInterface {
     }
 
     /**
-     * Normalizes SQL content by removing comments to prevent bypass attacks.
+     * Sanitize SQL content by removing comments to prevent bypass attacks.
      *
-     * @param sql the SQL content to normalize
-     * @return normalized SQL without comments
+     * @param sql the SQL content to sanitize
+     * @return sanitize SQL without comments
      */
     private String sanitizeSql(String sql) {
         // Remove block comments (/* ... */)
-        sql = BLOCK_COMMENT_PATTERN.matcher(sql).replaceAll(" ");
+        // TODO: I feel like this should re-evulated.
+        // Passing around SQL like this, smells a bit when we have Hibernate/Critaria API.
+        String intermediateSql = BLOCK_COMMENT_PATTERN.matcher(sql).replaceAll(" ");
         // Remove line comments (--....)
-        sql = LINE_COMMENT_PATTERN.matcher(sql).replaceAll(" ");
+        intermediateSql = LINE_COMMENT_PATTERN.matcher(intermediateSql).replaceAll(" ");
         // Collapse multiple whitespaces
-        sql = WHITESPACE_PATTERN.matcher(sql).replaceAll(" ");
-        return sql.trim();
+        intermediateSql = WHITESPACE_PATTERN.matcher(intermediateSql).replaceAll(" ");
+        return intermediateSql.trim();
     }
 
     /**

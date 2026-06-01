@@ -85,9 +85,10 @@ public class MathAuditorAgentController {
             return ResponseEntity.badRequest().build();
         }
 
+        String originalFilename = fileInput.getOriginalFilename();
         String safeName =
-                fileInput.getOriginalFilename() != null
-                        ? NEWLINE_PATTERN.matcher(fileInput.getOriginalFilename()).replaceAll("_")
+                originalFilename != null
+                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
         log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
 
