@@ -347,6 +347,7 @@ capture_file_list() {
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
         -not -path '*/tmp/aot-*.log' \
+        -not -path '*/tmp/uno-last-used' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
 
     # Check if the output file has content
@@ -378,6 +379,7 @@ capture_file_list() {
             -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
+            -not -path '*/tmp/uno-last-used' \
             2>/dev/null | sort" > "$output_file"
 
         if [ ! -s "$output_file" ]; then
