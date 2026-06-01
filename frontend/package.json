@@ -158,12 +158,12 @@
       "@vitest/coverage-v8"
     ]
   },
+  "overrides": {
+    "devalue": "^5.8.1"
+  },
   "msw": {
     "workerDirectory": [
       "portal/public"
     ]
-},
-  "overrides": {
-    "devalue": "^5.8.1"
-
   }
+}
