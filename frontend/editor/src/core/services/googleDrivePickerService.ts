@@ -4,6 +4,7 @@
  */
 
 import { loadScript } from "@app/utils/scriptLoader";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
@@ -200,6 +201,9 @@ class GoogleDrivePickerService {
         .setOAuthToken(this.accessToken)
         .addView(view1)
         .addView(view2)
+        // Render above the FileManager modal that typically invokes the picker.
+        // Google's default is ~1001 which sits below Z_INDEX_FILE_MANAGER_MODAL (1200).
+        .setZIndex(Z_INDEX_OVER_FILE_MANAGER_MODAL)
         .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
 
       if (options.multiple) {

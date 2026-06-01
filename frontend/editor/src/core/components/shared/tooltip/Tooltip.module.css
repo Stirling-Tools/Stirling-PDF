@@ -10,7 +10,9 @@
   font-size: 0.875rem;
   line-height: 1.5;
   pointer-events: auto;
-  z-index: 9999;
+  /* z-index is set inline from Tooltip.tsx via Z_INDEX_OVER_FULLSCREEN_SURFACE
+     so the documented hierarchy in zIndex.ts is honoured instead of being
+     shadowed by a hardcoded value. */
   transition:
     opacity 100ms ease-out,
     transform 100ms ease-out;
