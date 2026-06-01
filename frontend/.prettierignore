@@ -5,7 +5,6 @@ editor/dist/
 # Match nested target/ dirs too — provisioner/ and thumbnail-handler/ each
 # have their own Cargo workspace under src-tauri/.
 editor/src-tauri/**/target/
-src-tauri/target/
 editor/src-tauri/gen/
 node_modules/
 editor/public/vendor/
