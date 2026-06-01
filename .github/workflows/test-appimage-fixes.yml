@@ -1,0 +1,253 @@
+# TEMP: AppImage Wayland fix validation builds for issue #6240.
+# Produces 4 differently-patched AppImages so affected users (Fedora 43, Arch,
+# Aurora) can download and test which fix resolves the blank-window /
+# EGL_BAD_PARAMETER crash. Delete this file after a fix is chosen.
+name: TEMP - Validate AppImage Wayland Fixes (#6240)
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+      - 'fix/appimage-wayland-**'
+      - 'test/appimage-**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-appimage-fixes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: control
+            blurb: "No fix applied - reproduces the bug as baseline"
+          - name: gdk-x11
+            blurb: "main.rs sets GDK_BACKEND=x11 when APPIMAGE is set"
+          - name: apprun-preload
+            blurb: "AppRun wrapper LD_PRELOADs the system libwayland-client"
+          - name: strip-libwayland
+            blurb: "Bundled libwayland-*.so files removed (host versions used)"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Ubuntu desktop deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev \
+            libappindicator3-dev librsvg2-dev patchelf \
+            libjavascriptcoregtk-4.0-dev libsoup2.4-dev \
+            libjavascriptcoregtk-4.1-dev libsoup-3.0-dev \
+            squashfs-tools file
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        with:
+          toolchain: stable
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          gradle-version: 9.3.1
+
+      - name: Setup Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+
+      - name: Apply gdk-x11 patch to main.rs
+        if: matrix.variant.name == 'gdk-x11'
+        run: |
+          cat > frontend/editor/src-tauri/src/main.rs <<'RUST'
+          // Prevents additional console window on Windows in release, DO NOT REMOVE!!
+          #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+          fn main() {
+            // TEMP #6240: When running inside an AppImage on Linux, force X11
+            // toolkit backend so libEGL avoids the Wayland platform. The bundled
+            // libwayland-client.so.0 is incompatible with some hosts' Mesa/EGL.
+            #[cfg(target_os = "linux")]
+            {
+              if std::env::var_os("APPIMAGE").is_some()
+                && std::env::var_os("GDK_BACKEND").is_none()
+              {
+                // SAFETY: Single-threaded at this point, before Tauri starts.
+                #[allow(unused_unsafe)]
+                unsafe { std::env::set_var("GDK_BACKEND", "x11"); }
+              }
+            }
+            app_lib::run();
+          }
+          RUST
+          echo "=== Patched main.rs ==="
+          cat frontend/editor/src-tauri/src/main.rs
+
+      - name: Make libjvm discoverable for linuxdeploy
+        run: |
+          JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
+          sudo ln -sf "$JAVA_LIBJVM" /usr/lib/libjvm.so
+
+      - name: Prepare desktop build
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DISABLE_ADDITIONAL_FEATURES: true
+          JPDFIUM_PLATFORMS: linux-x64
+        run: task desktop:prepare
+
+      - name: Build Tauri AppImage
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN: '0'
+          CI: true
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }} # gitleaks:allow
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+        with:
+          projectPath: ./frontend/editor
+          tauriScript: npx tauri
+          args: --bundles appimage
+
+      - name: Locate built AppImage
+        id: find_appimage
+        run: |
+          APPIMAGE=$(find ./frontend/editor/src-tauri/target -name "*.AppImage" -type f | head -1)
+          if [ -z "$APPIMAGE" ]; then
+            echo "ERROR: No AppImage produced by Tauri build"
+            find ./frontend/editor/src-tauri/target -name "*.AppImage*" || true
+            exit 1
+          fi
+          echo "appimage=$APPIMAGE" >> "$GITHUB_OUTPUT"
+          echo "Found AppImage: $APPIMAGE ($(du -h "$APPIMAGE" | cut -f1))"
+
+      - name: Download appimagetool (for repack)
+        if: matrix.variant.name == 'apprun-preload' || matrix.variant.name == 'strip-libwayland'
+        run: |
+          wget -qO appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          ./appimagetool --version || true
+
+      - name: Apply apprun-preload patch
+        if: matrix.variant.name == 'apprun-preload'
+        run: |
+          APPIMAGE="${{ steps.find_appimage.outputs.appimage }}"
+          WORK=$(mktemp -d)
+          cp "$APPIMAGE" "$WORK/orig.AppImage"
+          APPIMAGETOOL="$PWD/appimagetool"
+          cd "$WORK"
+          chmod +x orig.AppImage
+          ./orig.AppImage --appimage-extract >/dev/null
+
+          # Move original AppRun aside and wrap it - this avoids hardcoding the
+          # binary path. The wrapper LD_PRELOADs the host's libwayland-client so
+          # the bundled (incompatible) copy never gets loaded.
+          mv squashfs-root/AppRun squashfs-root/AppRun.orig
+          cat > squashfs-root/AppRun <<'SH'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "$0")")"
+          for p in \
+            /usr/lib/x86_64-linux-gnu/libwayland-client.so.0 \
+            /usr/lib64/libwayland-client.so.0 \
+            /usr/lib/libwayland-client.so.0; do
+            if [ -f "$p" ]; then
+              export LD_PRELOAD="$p${LD_PRELOAD:+:$LD_PRELOAD}"
+              break
+            fi
+          done
+          exec "$HERE/AppRun.orig" "$@"
+          SH
+          chmod +x squashfs-root/AppRun
+
+          ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run squashfs-root patched.AppImage
+          cp patched.AppImage "$APPIMAGE"
+          echo "apprun-preload patch applied"
+
+      - name: Apply strip-libwayland patch
+        if: matrix.variant.name == 'strip-libwayland'
+        run: |
+          APPIMAGE="${{ steps.find_appimage.outputs.appimage }}"
+          WORK=$(mktemp -d)
+          cp "$APPIMAGE" "$WORK/orig.AppImage"
+          APPIMAGETOOL="$PWD/appimagetool"
+          cd "$WORK"
+          chmod +x orig.AppImage
+          ./orig.AppImage --appimage-extract >/dev/null
+
+          echo "=== Bundled libwayland-* files (will be removed) ==="
+          find squashfs-root -name 'libwayland-*' -printf '%p (%s bytes)\n' || true
+          find squashfs-root -name 'libwayland-*' -delete
+          echo "=== After removal ==="
+          find squashfs-root -name 'libwayland-*' || echo "(none remaining)"
+
+          ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run squashfs-root patched.AppImage
+          cp patched.AppImage "$APPIMAGE"
+          echo "strip-libwayland patch applied"
+
+      - name: Stage renamed artifact
+        run: |
+          mkdir -p ./dist
+          APPIMAGE="${{ steps.find_appimage.outputs.appimage }}"
+          OUT="./dist/Stirling-PDF-fix-${{ matrix.variant.name }}.AppImage"
+          cp "$APPIMAGE" "$OUT"
+          chmod +x "$OUT"
+          ls -lh "$OUT"
+          file "$OUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: Stirling-PDF-fix-${{ matrix.variant.name }}
+          path: ./dist/Stirling-PDF-fix-${{ matrix.variant.name }}.AppImage
+          retention-days: 30
+          if-no-files-found: error
+
+  summary:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write test instructions to job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'MD'
+          ## AppImage Wayland fix test builds (#6240)
+
+          Four AppImage variants were built. Affected users (Fedora 43, Arch, Aurora) should download each, run it, and report which (if any) opens with the UI visible instead of a blank window.
+
+          | Variant | What it does |
+          | --- | --- |
+          | `Stirling-PDF-fix-control.AppImage` | No fix - control / repro baseline |
+          | `Stirling-PDF-fix-gdk-x11.AppImage` | Sets `GDK_BACKEND=x11` at startup |
+          | `Stirling-PDF-fix-apprun-preload.AppImage` | `LD_PRELOAD`s host `libwayland-client` |
+          | `Stirling-PDF-fix-strip-libwayland.AppImage` | Removes bundled `libwayland-*.so` |
+
+          Run each from a terminal and capture the output:
+          ```
+          chmod +x Stirling-PDF-fix-*.AppImage
+          ./Stirling-PDF-fix-gdk-x11.AppImage 2>&1 | tee gdk-x11.log
+          ```
+
+          Look for `EGL_BAD_PARAMETER` or `WebKitWebProcess` crashes. Anything that opens the UI is a candidate fix.
+
+          Artifacts download: see the **Artifacts** section at the top of the workflow run page.
+          MD
