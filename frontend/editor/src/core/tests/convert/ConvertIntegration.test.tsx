@@ -30,6 +30,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "@app/i18n/config";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
 import { expectConsole } from "@app/tests/failOnConsole";
+import { fileStorage } from "@app/services/fileStorage";
 import { StirlingFile } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
@@ -211,6 +212,10 @@ describe("Convert Tool Integration Tests", () => {
       expect(result.current.downloadFilename).toBe("test.png");
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
+
+      // The output file must be persisted via fileStorage.storeStirlingFile
+      // so downstream tools see it in the registry.
+      expect(fileStorage.storeStirlingFile).toHaveBeenCalled();
     });
 
     test("should handle API error responses correctly", async () => {

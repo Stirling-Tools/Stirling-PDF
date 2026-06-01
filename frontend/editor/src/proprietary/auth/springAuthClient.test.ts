@@ -94,6 +94,14 @@ describe("SpringAuthClient", () => {
 
       const result = await springAuth.getSession();
 
+      // A 401 from /me triggers an explicit refresh attempt before treating
+      // the session as invalid; lock that recovery contract in so future
+      // refactors can't quietly skip it.
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/auth/refresh",
+        null,
+        expect.any(Object),
+      );
       expect(localStorage.getItem("stirling_jwt")).toBeNull();
       expect(result.data.session).toBeNull();
       // 401 is handled gracefully, so error should be null
@@ -123,6 +131,14 @@ describe("SpringAuthClient", () => {
 
       const result = await springAuth.getSession();
 
+      // A 403 from /me triggers an explicit refresh attempt before treating
+      // the session as invalid; lock that recovery contract in so future
+      // refactors can't quietly skip it.
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/auth/refresh",
+        null,
+        expect.any(Object),
+      );
       expect(localStorage.getItem("stirling_jwt")).toBeNull();
       expect(result.data.session).toBeNull();
       // 403 is handled gracefully, so error should be null

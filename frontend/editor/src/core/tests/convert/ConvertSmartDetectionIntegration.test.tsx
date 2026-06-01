@@ -29,6 +29,7 @@ import {
   createTestFilesWithId,
 } from "@app/tests/utils/testFileHelpers";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
+import { fileStorage } from "@app/services/fileStorage";
 import { MantineProvider } from "@mantine/core";
 
 // Mock axios (for static methods like CancelToken, isCancel)
@@ -171,6 +172,10 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
           responseType: "blob",
         },
       );
+
+      // The output file must be persisted via fileStorage.storeStirlingFile
+      // so downstream tools see it in the registry.
+      expect(fileStorage.storeStirlingFile).toHaveBeenCalled();
     });
 
     test("should handle unknown file type with file-to-pdf fallback", async () => {

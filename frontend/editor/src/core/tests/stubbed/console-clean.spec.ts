@@ -1,13 +1,14 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { ConsoleMessage, Page } from "@playwright/test";
+import { errors, type ConsoleMessage, type Page } from "@playwright/test";
 
 /**
  * Smoke test: standard usage of the app must not produce any
  * console.error, console.warn, or uncaught page errors.
  *
- * Each test installs listeners BEFORE the auto-goto runs (via the
- * `attachConsoleListeners` fixture override), navigates to a representative
- * route, lets it settle, and then asserts the captured buffer is empty.
+ * Each test disables the fixture's auto-goto (via `test.use({ autoGoto:
+ * false })`), attaches listeners inline with `attachListeners(page)` BEFORE
+ * navigating, walks a representative route, lets it settle, then asserts
+ * the captured buffer is empty.
  *
  * If you have a legitimate reason a warning fires on a given route
  * (third-party library noise we cannot influence, etc.), filter it via the
@@ -100,9 +101,12 @@ test.describe("Console hygiene: representative routes load cleanly", () => {
       // surface anything they were going to log.
       await page
         .waitForLoadState("networkidle", { timeout: 10_000 })
-        .catch(() => {
-          // networkidle can flake on third-party CDNs; we still want the
-          // assertion to run on what we captured.
+        .catch((err) => {
+          // networkidle can flake on third-party CDNs; treat ONLY the
+          // timeout as benign and still run the console assertion on what
+          // we captured. Anything else (frame detached, navigation abort,
+          // etc.) is a real problem and should fail the test.
+          if (!(err instanceof errors.TimeoutError)) throw err;
         });
       await expectCleanConsole(entries);
     });

@@ -123,7 +123,8 @@ function register(method: ConsoleMethod, matcher: Matcher, required: boolean) {
   expectations.push({ method, matcher, required, matched: false });
 }
 
-function matches(matcher: Matcher, text: string): boolean {
+/** Exported for the failOnConsole unit tests; not part of the public API. */
+export function matches(matcher: Matcher, text: string): boolean {
   return typeof matcher === "string"
     ? text.includes(matcher)
     : matcher.test(text);
@@ -135,7 +136,8 @@ function formatMatcher(matcher: Matcher): string {
     : JSON.stringify(matcher);
 }
 
-function formatArgs(args: unknown[]): string {
+/** Exported for the failOnConsole unit tests; not part of the public API. */
+export function formatArgs(args: unknown[]): string {
   return args.map(formatArg).join(" ");
 }
 
