@@ -556,7 +556,7 @@ public class ProcessExecutor {
             String epoch = String.valueOf(System.currentTimeMillis() / 1000);
             Files.writeString(demandFile, epoch);
 
-            waitForUnoServerReady(30);
+            // waitForUnoServerReady(30);
         } catch (IOException e) {
             log.debug("Could not write unoserver demand file: {}", e.getMessage());
         }

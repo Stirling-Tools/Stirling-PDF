@@ -964,7 +964,7 @@ main() {
             # Save docker logs from the behave window to a dedicated file
             local cucumber_log="$REPORT_DIR/cucumber-docker-context.log"
             docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$cucumber_log" 2>/dev/null || true
-            test_failure_logs["Stirling-PDF-Regression"]="$cucumber_log"
+            test_failure_logs["Stirling-PDF-Regression $CONTAINER_NAME"]="$cucumber_log"
 
             gha_group "Docker logs during behave run: $CONTAINER_NAME"
             tail -100 "$cucumber_log"
