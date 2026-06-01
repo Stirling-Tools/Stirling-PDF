@@ -177,8 +177,8 @@ function formatScaled(pts: number, scale: MeasureScale): string {
 function scaledCross(pts: number, scale: MeasureScale): string | null {
   const unit = scale.unit.toLowerCase().trim();
 
-  // Validate unit is known
-  if (!(unit in POINT_TO_UNIT)) return null;
+  // Validate unit is known — use safe own-property check
+  if (!Object.hasOwn(POINT_TO_UNIT, unit)) return null;
 
   // Get the value in the PDF's own unit system using raw factor
   const valueInUnit = pts * scale.factor;
@@ -292,10 +292,11 @@ interface MeasurementLineProps {
   endS: Point;
   /** Physical distance in PDF points (= screen pixel distance / zoom). */
   distPts: number;
-  hovered: boolean;
+  isSelected: boolean;
+  onSelect: (id: string | null) => void;
   onDelete: (id: string) => void;
-  onHover: (id: string | null) => void;
   measureScale?: MeasureScale | null;
+  zoom: number;
 }
 
 function MeasurementLine({
@@ -303,10 +304,11 @@ function MeasurementLine({
   startS,
   endS,
   distPts,
-  hovered,
+  isSelected,
+  onSelect,
   onDelete,
-  onHover,
   measureScale,
+  zoom,
 }: MeasurementLineProps) {
   const { t } = useTranslation();
   const mid = midpoint(startS, endS);
@@ -322,10 +324,10 @@ function MeasurementLine({
     ? formatScaled(distPts, measureScale)
     : formatDist(distPts);
 
-  // Hover line 1 — both real-world values ordered by PDF unit system:
-  //   imperial PDF: "Scaled: 10.000 ft / 3.048 m"
-  //   metric PDF:   "Scaled: 142.5 m / 467.5 ft"
-  //   no scale:     "25.4 mm / 1.00 in"  (metric first, default — no label)
+  // Hover line 1 — measurement converted to real-world scale (factor * PDF points) + cross-unit:
+  //   imperial scale (ft/in/yd/mi): "Scaled: 10.000 ft / 3.048 m" (shows imperial + metric conversion)
+  //   metric scale (m/cm/mm/km):    "Scaled: 142.5 m / 467.5 ft"   (shows metric + imperial conversion)
+  //   no scale:                      "25.4 mm / 1.00 in"          (shows both units, no scale label)
   const scaledLabel = t("ruler.scaled", "Scaled");
   const hoverLine1 = measureScale
     ? (() => {
@@ -353,8 +355,14 @@ function MeasurementLine({
     : null;
   const contextLabel = scaleLabel ? `${scaleLabel}   ${angLabel}` : angLabel;
 
-  const maxHoverLh = measureScale ? LH3 : LH2;
-  const lh = hovered ? maxHoverLh : LH;
+  // Scale dimensions based on zoom level
+  const zoomScale = Math.max(0.6, Math.min(1.0, zoom / 1.5));
+  const scaledLH = Math.round(LH * zoomScale);
+  const scaledLH2 = Math.round(LH2 * zoomScale);
+  const scaledLH3 = Math.round(LH3 * zoomScale);
+
+  const maxHoverLh = measureScale ? scaledLH3 : scaledLH2;
+  const lh = isSelected ? maxHoverLh : scaledLH;
 
   const lwNormal = Math.max(distLabel.length * 8 + LP * 2, 80);
   const lwHover = Math.max(
@@ -363,24 +371,34 @@ function MeasurementLine({
     contextLabel.length * 8 + LP * 2,
     80,
   );
-  const lw = hovered ? lwHover : lwNormal;
-  const sw = hovered ? 3 : 2;
+  const lw = isSelected ? lwHover : lwNormal;
+  const sw = isSelected ? 3 : 2;
 
   const delX = mid.x + lwHover / 2 + DEL_R + 4;
   const delY = mid.y;
 
-  const hitLeft = mid.x - lwHover / 2 - 4;
-  const hitTop = mid.y - maxHoverLh / 2 - 4;
-  const hitWidth = delX + DEL_R + 4 - hitLeft;
-  const hitHeight = maxHoverLh + 8;
+  // Hit area: small when idle, expanded when selected to include delete button
+  const idleHitLeft = mid.x - lw / 2 - 2;
+  const idleHitTop = mid.y - lh / 2 - 2;
+  const idleHitWidth = lw + 4;
+  const idleHitHeight = lh + 4;
+
+  const selectedHitLeft = mid.x - lwHover / 2 - 4;
+  const selectedHitTop = mid.y - maxHoverLh / 2 - 4;
+  const selectedHitWidth = delX + DEL_R + 4 - selectedHitLeft;
+  const selectedHitHeight = maxHoverLh + 8;
+
+  const hitLeft = isSelected ? selectedHitLeft : idleHitLeft;
+  const hitTop = isSelected ? selectedHitTop : idleHitTop;
+  const hitWidth = isSelected ? selectedHitWidth : idleHitWidth;
+  const hitHeight = isSelected ? selectedHitHeight : idleHitHeight;
 
   const mono = "'Roboto Mono','Consolas',monospace";
 
   return (
     <g
-      onMouseEnter={() => onHover(id)}
-      onMouseLeave={() => onHover(null)}
-      style={{ pointerEvents: "all" }}
+      onClick={() => onSelect(isSelected ? null : id)}
+      style={{ pointerEvents: "all", cursor: "pointer" }}
     >
       <rect
         x={hitLeft}
@@ -449,12 +467,12 @@ function MeasurementLine({
           filter="url(#ruler-shadow)"
         />
 
-        {hovered && measureScale ? (
-          // 3-line scaled hover
+        {isSelected && measureScale ? (
+          // 3-line scaled (selected)
           <>
             <text
               x={mid.x}
-              y={mid.y - 17}
+              y={mid.y - Math.round(17 * zoomScale)}
               textAnchor="middle"
               dominantBaseline="middle"
               fill="#1e88e5"
@@ -480,7 +498,7 @@ function MeasurementLine({
             </text>
             <text
               x={mid.x}
-              y={mid.y + 17}
+              y={mid.y + Math.round(17 * zoomScale)}
               textAnchor="middle"
               dominantBaseline="middle"
               fill="#5c6bc0"
@@ -492,12 +510,12 @@ function MeasurementLine({
               {contextLabel}
             </text>
           </>
-        ) : hovered ? (
-          // 2-line no-scale hover
+        ) : isSelected ? (
+          // 2-line no-scale (selected)
           <>
             <text
               x={mid.x}
-              y={mid.y - 6}
+              y={mid.y - Math.round(6 * zoomScale)}
               textAnchor="middle"
               dominantBaseline="middle"
               fill="#1e88e5"
@@ -510,7 +528,7 @@ function MeasurementLine({
             </text>
             <text
               x={mid.x}
-              y={mid.y + 13}
+              y={mid.y + Math.round(13 * zoomScale)}
               textAnchor="middle"
               dominantBaseline="middle"
               fill="#5c6bc0"
@@ -677,7 +695,7 @@ export const RulerOverlay = React.forwardRef<
   const [cursorS, setCursorS] = useState<Point | null>(null);
   /** Current cursor in page-relative PDF units — for finalising off-page clicks. */
   const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Callbacks for measurements change notifications (only for user-drawn changes, not restores)
   const measurementsListenersRef = useRef<
@@ -735,13 +753,21 @@ export const RulerOverlay = React.forwardRef<
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const resizeObserver = new ResizeObserver(() => {
+    const handleLayoutChange = () => {
       // Layout changed - force re-render to recalculate coordinates from getBoundingClientRect
       setScrollVersion((n) => n + 1);
-    });
+    };
 
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
+    // Use ResizeObserver if available, otherwise fall back to window resize event
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver(handleLayoutChange);
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    } else {
+      // Fallback for environments without ResizeObserver (legacy browsers, embedded webviews)
+      window.addEventListener("resize", handleLayoutChange);
+      return () => window.removeEventListener("resize", handleLayoutChange);
+    }
   }, [containerRef]);
 
   // ── Scroll tracking ────────────────────────────────────────────────────────
@@ -797,6 +823,7 @@ export const RulerOverlay = React.forwardRef<
       setFirstPt(null);
       setCursorS(null);
       setCursorDoc(null);
+      setSelectedId(null);
     },
     getMeasurements: () => measurements,
     setMeasurements: (newMeasurements: Measurement[]) => {
@@ -844,6 +871,7 @@ export const RulerOverlay = React.forwardRef<
       setFirstPt(null);
       setCursorS(null);
       setCursorDoc(null);
+      setSelectedId(null);
     }
   }, [isActive]);
 
@@ -983,9 +1011,16 @@ export const RulerOverlay = React.forwardRef<
     };
   }, [containerRef, isActive, isCalibrationActive, onCalibrationMeasure]);
 
-  const deleteMeasurement = useCallback((id: string) => {
-    setMeasurements((prev) => prev.filter((m) => m.id !== id));
-  }, []);
+  const deleteMeasurement = useCallback(
+    (id: string) => {
+      setMeasurements((prev) => prev.filter((m) => m.id !== id));
+      // Close expanded label if the deleted measurement was selected
+      if (selectedId === id) {
+        setSelectedId(null);
+      }
+    },
+    [selectedId],
+  );
 
   if (!isActive && measurements.length === 0) return null;
 
@@ -1029,6 +1064,12 @@ export const RulerOverlay = React.forwardRef<
         overflow: "visible",
         zIndex: 100,
       }}
+      onClick={(e) => {
+        // Close expanded label if clicking on empty SVG area
+        if ((e.target as SVGElement).tagName === "svg") {
+          setSelectedId(null);
+        }
+      }}
     >
       <defs>
         <filter id="ruler-shadow" x="-20%" y="-50%" width="140%" height="200%">
@@ -1059,10 +1100,11 @@ export const RulerOverlay = React.forwardRef<
             startS={startS}
             endS={endS}
             distPts={dist(startS, endS) / zoom}
-            hovered={hoveredId === m.id}
+            isSelected={selectedId === m.id}
+            onSelect={setSelectedId}
             onDelete={deleteMeasurement}
-            onHover={setHoveredId}
             measureScale={mScale}
+            zoom={zoom}
           />
         );
       })}

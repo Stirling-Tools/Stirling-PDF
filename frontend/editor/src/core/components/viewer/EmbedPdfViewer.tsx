@@ -979,7 +979,7 @@ const EmbedPdfViewerContent = ({
   }, [applyChanges, setApplyChanges]);
 
   // Ruler / measurement tool state is handled by the dedicated hook.
-  const rulerOverlayRef = useRef<RulerOverlayHandle>(null);
+  const rulerOverlayRef = useRef<RulerOverlayHandle | null>(null);
 
   const {
     isRulerActive,

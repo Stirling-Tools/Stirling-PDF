@@ -134,7 +134,7 @@ export function ScaleCalibrationDialog({
           <Text size="sm" c="dimmed">
             {t(
               "scaleSettings.calibrationPaperDistance",
-              "Measured drawing distance: {{distance}}",
+              "Measured page distance: {{distance}}",
               {
                 distance: formatPaperDistance(measurement.pdfDistancePts),
               },
@@ -145,8 +145,12 @@ export function ScaleCalibrationDialog({
         {/* Input: real distance + unit selector */}
         <Group grow align="flex-start">
           <NumberInput
-            label={t("scaleSettings.realDistance", "Real distance")}
-            placeholder={t("scaleSettings.realDistancePlaceholder", "e.g., 5")}
+            label={t("scaleSettings.realDistance", "Real-world distance")}
+            placeholder={t(
+              "scaleSettings.realDistancePlaceholder",
+              "e.g., 5 (actual distance in {{unit}})",
+              { unit },
+            )}
             value={realDistance ?? undefined}
             onChange={handleRealDistanceChange}
             min={0}
@@ -166,8 +170,11 @@ export function ScaleCalibrationDialog({
         {/* Preview: show calculated scale */}
         {previewScale && (
           <Text size="sm" c="blue">
-            {t("scaleSettings.calculatedScale", "Calculated scale")}:{" "}
-            {generateScaleLabel(previewScale.ratio, previewScale.unit)}
+            {t(
+              "scaleSettings.calculatedScale",
+              "Calculated scale (1 page unit = X real units)",
+            )}
+            : {generateScaleLabel(previewScale.ratio, previewScale.unit)}
           </Text>
         )}
 

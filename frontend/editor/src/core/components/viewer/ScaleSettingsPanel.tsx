@@ -18,7 +18,7 @@ import {
 } from "@app/utils/measurementUtils";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
-// Preset scales as architectural ratios (e.g., "1:100" = 1 unit on drawing = 100 real-world units)
+// Preset scales as architectural ratios (e.g., "1:100" = 1 page unit = 100 real-world units)
 const PRESET_SCALES = ["1:5", "1:10", "1:20", "1:50", "1:100", "1:150"];
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -28,6 +28,7 @@ interface ScaleSettingsPanelProps {
   onStartCalibration?: () => void;
   isCalibrationActive?: boolean;
   currentScale?: MeasureScale | null;
+  onClose?: () => void;
 }
 
 export function ScaleSettingsPanel({
@@ -36,6 +37,7 @@ export function ScaleSettingsPanel({
   onStartCalibration,
   isCalibrationActive = false,
   currentScale,
+  onClose,
 }: ScaleSettingsPanelProps) {
   const { t } = useTranslation();
   const [ratio, setRatio] = useState<string | number>(
@@ -91,6 +93,8 @@ export function ScaleSettingsPanel({
     clearRatioError();
     // Live update: apply immediately for presets
     applyScale(presetRatio, unit);
+    // Close panel after applying preset
+    onClose?.();
   };
 
   const handleRatioChange = (value: string | number) => {
@@ -124,7 +128,8 @@ export function ScaleSettingsPanel({
     // Auto-apply immediately if ratio is set (better UX consistency)
     const numValue = parseRatioValue(ratio);
     if (numValue && numValue > 0) {
-      applyScale(numValue, val);
+      // Close panel after auto-applying unit change
+      applyScale(numValue, val, true);
     }
   };
 
@@ -143,7 +148,11 @@ export function ScaleSettingsPanel({
     return numValue;
   };
 
-  const applyScale = (scaleRatio: number, scaleUnit: string) => {
+  const applyScale = (
+    scaleRatio: number,
+    scaleUnit: string,
+    shouldClose = false,
+  ) => {
     if (!scaleRatio || scaleRatio <= 0) return;
 
     try {
@@ -158,11 +167,14 @@ export function ScaleSettingsPanel({
 
       onApplyScale(scale);
       clearUnitError();
+      // Close panel only if explicitly requested
+      if (shouldClose) {
+        onClose?.();
+      }
     } catch (err) {
       console.error("Invalid unit:", scaleUnit, err);
       setUnitError(
-        t("scaleSettings.unitInvalid", {
-          defaultValue: "Invalid unit: {{scaleUnit}}",
+        t("scaleSettings.unitInvalid", "Invalid unit: {{scaleUnit}}", {
           scaleUnit,
         }),
       );
@@ -172,12 +184,15 @@ export function ScaleSettingsPanel({
   const handleApply = () => {
     const numValue = validateRatio();
     if (numValue === null) return;
-    applyScale(numValue, unit);
+    // Close panel after manual apply (if validation passed)
+    applyScale(numValue, unit, true);
   };
 
   const handleStartCalibration = () => {
     clearErrors();
     onStartCalibration?.();
+    // Close panel after starting calibration
+    onClose?.();
   };
 
   return (
@@ -212,8 +227,11 @@ export function ScaleSettingsPanel({
           <div>
             <NumberInput
               key={`ratio-${currentScale?.ratio ?? "empty"}`}
-              label={t("scaleSettings.ratio", "Ratio")}
-              placeholder={t("scaleSettings.ratioPlaceholder", "e.g., 100")}
+              label={t("scaleSettings.ratio", "Scale Ratio")}
+              placeholder={t(
+                "scaleSettings.ratioPlaceholder",
+                "e.g., 100 (1 page unit = 100 real units)",
+              )}
               value={ratio}
               onChange={handleRatioChange}
               min={0.1}
@@ -237,7 +255,7 @@ export function ScaleSettingsPanel({
         <Text size="xs" c="dimmed" mt="xs">
           {t(
             "scaleSettings.ratioHelp",
-            "Ratio: 1 drawing unit = X real-world units",
+            "Ratio: 1 page unit = X real-world units",
           )}
         </Text>
       </div>

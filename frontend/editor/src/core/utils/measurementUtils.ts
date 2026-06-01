@@ -30,7 +30,7 @@ function normalizeUnit(unit: string): string {
 }
 
 function isMeasurementUnit(unit: string): unit is MeasurementUnit {
-  return unit in POINT_TO_UNIT;
+  return Object.hasOwn(POINT_TO_UNIT, unit);
 }
 
 export function getUnitFactor(unit: string): number | undefined {
@@ -121,19 +121,32 @@ export const UNIT_OPTIONS = [
 
 /**
  * Detect quota exceeded errors across browser implementations.
- * Handles: name "QuotaExceededError", code 22, "NS_ERROR_DOM_QUOTA_REACHED"
+ * Handles: name "QuotaExceededError", code 22 (legacy), "NS_ERROR_DOM_QUOTA_REACHED"
+ *
+ * Note: DOMException may not be instanceof Error in all browsers,
+ * so we check by shape and properties rather than type.
+ * Note: DOMException.code is deprecated but kept for legacy browser support.
  */
 function isQuotaExceededError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
+  if (error === null || error === undefined) return false;
 
-  // Check by name (modern browsers, standard DOMException)
-  if (error.name === "QuotaExceededError") return true;
+  // Check if it's a DOMException when available (standard)
+  if (typeof DOMException !== "undefined" && error instanceof DOMException) {
+    if (error.name === "QuotaExceededError") return true;
+  }
 
-  // Check by code (legacy DOMException code 22 for QuotaExceededError)
-  if ("code" in error && (error as any).code === 22) return true;
+  // Fallback: check by shape for any object with name/code properties
+  if (typeof error === "object") {
+    const err = error as Record<string, unknown>;
 
-  // Check for Safari/older implementation variants
-  if (error.name === "NS_ERROR_DOM_QUOTA_REACHED") return true;
+    // Modern standard: check name property (works in all modern browsers)
+    if (err.name === "QuotaExceededError") return true;
+    if (err.name === "NS_ERROR_DOM_QUOTA_REACHED") return true;
+
+    // Legacy support: check deprecated code property for very old browsers
+    // Use Object.hasOwn for safe own-property check
+    if (Object.hasOwn(err, "code") && err.code === 22) return true;
+  }
 
   return false;
 }

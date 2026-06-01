@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { ActionIcon, Slider, Popover, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
@@ -111,6 +111,8 @@ export function useViewerWorkbenchBarButtons(
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isAnnotationsPath]);
+
+  const scalePopoverRef = useRef<HTMLButtonElement>(null);
 
   const searchLabel = t("workbenchBar.search", "Search PDF");
   const panLabel = t("workbenchBar.panMode", "Pan Mode");
@@ -290,6 +292,7 @@ export function useViewerWorkbenchBarButtons(
                         portalTarget={document.body}
                       >
                         <ActionIcon
+                          ref={scalePopoverRef}
                           variant="filled"
                           color="blue"
                           radius="md"
@@ -316,6 +319,10 @@ export function useViewerWorkbenchBarButtons(
                       }}
                       onStartCalibration={handleStartScaleCalibration}
                       isCalibrationActive={isScaleCalibrationActive}
+                      onClose={() => {
+                        // Click the ActionIcon to toggle popover closed
+                        scalePopoverRef.current?.click();
+                      }}
                     />
                   </Popover.Dropdown>
                 </Popover>
