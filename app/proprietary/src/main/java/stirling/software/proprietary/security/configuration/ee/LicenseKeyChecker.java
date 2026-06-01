@@ -75,7 +75,8 @@ public class LicenseKeyChecker {
         } else {
             String licenseKey = getLicenseKeyContent(applicationProperties.getPremium().getKey());
             if ("00000000-0000-0000-0000-000000000000".equals(licenseKey)) {
-                log.info("Detected default test premium/enterprise license key. Bypassing verification.");
+                log.info(
+                        "Detected default test premium/enterprise license key. Bypassing verification.");
                 premiumEnabledResult = License.ENTERPRISE;
             } else if (licenseKey != null) {
                 premiumEnabledResult = licenseService.verifyLicense(licenseKey);
