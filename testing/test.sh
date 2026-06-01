@@ -335,23 +335,18 @@ capture_file_list() {
         -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
         -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
-        -not -path '*/home/stirlingpdfuser/.libreoffice_uno_*' \
-        -not -path '*/home/stirlingpdfuser/.cache/*' \
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-        -not -path '*/tmp/stirling-pdf/lu/*' \
-        -not -path '*/tmp/stirling-pdf/tmp/*' \
-        -not -path '/tmp/lu/*' \
-        -not -path '/tmp/.X99-lock' \
-        -not -path '*/tmp/xdg-*' \
+        -not -path '*/tmp/stirling-pdf/lu*' \
+        -not -path '*/tmp/stirling-pdf/tmp*' \
+        -not -path '/tmp/lu*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
         -not -path '*/tmp/aot-*.log' \
-        -not -path '*/tmp/uno-last-used' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
 
     # Check if the output file has content
@@ -365,29 +360,24 @@ capture_file_list() {
             -not -path '*/sys/*' \
             -not -path '*/dev/*' \
             -not -path '/config/*' \
-            -not -path '/configs/*' \
+        -not -path '/configs/*' \
             -not -path '/logs/*' \
             -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
             -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
             -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
-            -not -path '*/home/stirlingpdfuser/.libreoffice_uno_*' \
-            -not -path '*/home/stirlingpdfuser/.cache/*' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-            -not -path '*/tmp/stirling-pdf/lu/*' \
-            -not -path '*/tmp/stirling-pdf/tmp/*' \
-            -not -path '*/tmp/lu/*' \
+            -not -path '*/tmp/stirling-pdf/lu*' \
+            -not -path '*/tmp/stirling-pdf/tmp*' \
+            -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
-            -not -path '/tmp/.X99-lock' \
-            -not -path '*/tmp/xdg-*' \
             -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
-            -not -path '*/tmp/uno-last-used' \
             2>/dev/null | sort" > "$output_file"
 
         if [ ! -s "$output_file" ]; then
@@ -974,7 +964,7 @@ main() {
             # Save docker logs from the behave window to a dedicated file
             local cucumber_log="$REPORT_DIR/cucumber-docker-context.log"
             docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$cucumber_log" 2>/dev/null || true
-            test_failure_logs["Stirling-PDF-Regression $CONTAINER_NAME"]="$cucumber_log"
+            test_failure_logs["Stirling-PDF-Regression"]="$cucumber_log"
 
             gha_group "Docker logs during behave run: $CONTAINER_NAME"
             tail -100 "$cucumber_log"

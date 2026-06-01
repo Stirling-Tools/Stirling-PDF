@@ -155,7 +155,7 @@ export default function AuthCallback() {
 
         // Wait for all context providers to process jwt-available event
         // This prevents infinite render loop when coming from cross-domain SAML redirect
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         console.log(
           `[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`,
         );

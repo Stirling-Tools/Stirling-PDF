@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
@@ -21,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 
-@Lazy(false)
 @Component
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)

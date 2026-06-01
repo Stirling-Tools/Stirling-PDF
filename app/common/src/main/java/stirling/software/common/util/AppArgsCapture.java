@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  * Captures application command-line arguments at startup so they can be reused for restart
  * operations. This allows the application to restart with the same configuration.
  */
-@Lazy(false)
 @Slf4j
 @Component
 public class AppArgsCapture implements ApplicationRunner {
