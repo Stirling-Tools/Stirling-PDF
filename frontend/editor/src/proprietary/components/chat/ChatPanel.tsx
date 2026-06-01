@@ -215,7 +215,7 @@ function ChatMessageBubble({
       >
         <ContentCopyIcon sx={{ fontSize: 13 }} />
       </button>
-<span className="chat-message-timestamp">
+      <span className="chat-message-timestamp">
         {formatRelativeTime(timestamp)}
       </span>
     </div>
@@ -238,7 +238,7 @@ function ChatMessageBubble({
 
   return (
     <div className="chat-message chat-message-assistant">
-      <div className="chat-bubble chat-bubble-assistant">
+      <div className="chat-bubble-assistant">
         <Text size="sm" component="div">
           {renderMarkdown(content)}
         </Text>
@@ -344,7 +344,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       </div>
 
       <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
-        <Stack gap="sm" p="sm">
+        <Stack gap="sm" px="md" py="sm">
           {messages.map((msg) => (
             <ChatMessageBubble
               key={msg.id}
