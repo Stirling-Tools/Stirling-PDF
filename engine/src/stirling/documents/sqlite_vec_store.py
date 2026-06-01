@@ -5,6 +5,7 @@ import json
 import math
 import re
 import sqlite3
+from datetime import UTC, datetime
 from pathlib import Path
 
 import sqlite_vec
@@ -14,6 +15,17 @@ from stirling.documents.store import Document, DocumentStore, SearchResult, Stor
 from stirling.models import OwnerId, PrincipalId
 
 _READ_PERMISSION = "read"
+# sqlite stores TIMESTAMP as TEXT. We normalise to UTC ISO 8601 ``YYYY-MM-DD HH:MM:SS``
+# so lexicographic comparison against ``datetime('now')`` matches chronological order.
+_SQLITE_DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+
+
+def _to_sqlite_utc(dt: datetime | None) -> str | None:
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(UTC).replace(tzinfo=None)
+    return dt.strftime(_SQLITE_DATETIME_FMT)
 
 
 class SqliteVecStore(DocumentStore):
@@ -60,12 +72,17 @@ class SqliteVecStore(DocumentStore):
                 collection TEXT NOT NULL,
                 owner_id TEXT NOT NULL,
                 source TEXT NOT NULL,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP,
                 PRIMARY KEY (collection, owner_id)
             )
             """
         )
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_meta_created_at ON documents_meta(created_at)")
+        # The reaper filters on ``expires_at IS NOT NULL AND expires_at < now`` so
+        # a partial index over non-null rows keeps the scan tight even when most
+        # rows are persistent (org docs).
+        self._conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_meta_expires_at ON documents_meta(expires_at) WHERE expires_at IS NOT NULL"
+        )
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS collections (
@@ -134,17 +151,32 @@ class SqliteVecStore(DocumentStore):
 
     # ── lifecycle of the (collection, owner_id) row ────────────────────────
 
-    async def ensure_collection(self, collection: str, source: str, owner_id: OwnerId) -> None:
+    async def ensure_collection(
+        self,
+        collection: str,
+        source: str,
+        owner_id: OwnerId,
+        expires_at: datetime | None,
+    ) -> None:
         async with self._lock:
-            await asyncio.to_thread(self._sync_ensure_collection, collection, source, owner_id)
+            await asyncio.to_thread(self._sync_ensure_collection, collection, source, owner_id, expires_at)
 
-    def _sync_ensure_collection(self, collection: str, source: str, owner_id: OwnerId) -> None:
+    def _sync_ensure_collection(
+        self,
+        collection: str,
+        source: str,
+        owner_id: OwnerId,
+        expires_at: datetime | None,
+    ) -> None:
         self._conn.execute(
             """
-            INSERT INTO documents_meta(collection, owner_id, source) VALUES (?, ?, ?)
-            ON CONFLICT(collection, owner_id) DO UPDATE SET source = excluded.source
+            INSERT INTO documents_meta(collection, owner_id, source, expires_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(collection, owner_id) DO UPDATE SET
+                source = excluded.source,
+                expires_at = excluded.expires_at
             """,
-            (collection, owner_id, source),
+            (collection, owner_id, source, _to_sqlite_utc(expires_at)),
         )
         self._conn.commit()
 
@@ -183,12 +215,12 @@ class SqliteVecStore(DocumentStore):
         self._conn.commit()
         return cursor.rowcount
 
-    async def reap_older_than(self, max_age_seconds: int) -> int:
+    async def reap_expired(self) -> int:
         async with self._lock:
-            return await asyncio.to_thread(self._sync_reap_older_than, max_age_seconds)
+            return await asyncio.to_thread(self._sync_reap_expired)
 
-    def _sync_reap_older_than(self, max_age_seconds: int) -> int:
-        # Drop vec0 virtual tables for stale collections first (FK cascade can't reach them).
+    def _sync_reap_expired(self) -> int:
+        # Drop vec0 virtual tables for expired collections first (FK cascade can't reach them).
         vec_tables = [
             r[0]
             for r in self._conn.execute(
@@ -196,16 +228,14 @@ class SqliteVecStore(DocumentStore):
                 SELECT c.table_name FROM collections c
                 JOIN documents_meta m
                   ON m.collection = c.collection AND m.owner_id = c.owner_id
-                WHERE m.created_at < datetime('now', ?)
-                """,
-                (f"-{max_age_seconds} seconds",),
+                WHERE m.expires_at IS NOT NULL AND m.expires_at < datetime('now')
+                """
             ).fetchall()
         ]
         for name in vec_tables:
             self._conn.execute(f"DROP TABLE IF EXISTS {name}")
         cursor = self._conn.execute(
-            "DELETE FROM documents_meta WHERE created_at < datetime('now', ?)",
-            (f"-{max_age_seconds} seconds",),
+            "DELETE FROM documents_meta WHERE expires_at IS NOT NULL AND expires_at < datetime('now')"
         )
         self._conn.commit()
         return cursor.rowcount

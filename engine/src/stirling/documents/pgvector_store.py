@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 
 import psycopg
 from pgvector.psycopg import register_vector_async
@@ -55,12 +56,17 @@ class PgVectorStore(DocumentStore):
                         collection TEXT NOT NULL,
                         owner_id TEXT NOT NULL,
                         source TEXT NOT NULL,
-                        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                        expires_at TIMESTAMP WITH TIME ZONE,
                         PRIMARY KEY (collection, owner_id)
                     )
                     """
                 )
-                await cur.execute("CREATE INDEX IF NOT EXISTS idx_meta_created_at ON documents_meta(created_at)")
+                # Partial index over rows that can actually expire keeps the reaper
+                # scan tight even when most rows are persistent (org docs).
+                await cur.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_meta_expires_at "
+                    "ON documents_meta(expires_at) WHERE expires_at IS NOT NULL"
+                )
                 await cur.execute(
                     """
                     CREATE TABLE IF NOT EXISTS rag_documents (
@@ -118,17 +124,25 @@ class PgVectorStore(DocumentStore):
 
     # ── lifecycle of the (collection, owner_id) row ────────────────────────
 
-    async def ensure_collection(self, collection: str, source: str, owner_id: OwnerId) -> None:
+    async def ensure_collection(
+        self,
+        collection: str,
+        source: str,
+        owner_id: OwnerId,
+        expires_at: datetime | None,
+    ) -> None:
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
-                    INSERT INTO documents_meta (collection, owner_id, source)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (collection, owner_id) DO UPDATE SET source = EXCLUDED.source
+                    INSERT INTO documents_meta (collection, owner_id, source, expires_at)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (collection, owner_id) DO UPDATE SET
+                        source = EXCLUDED.source,
+                        expires_at = EXCLUDED.expires_at
                     """,
-                    (collection, owner_id, source),
+                    (collection, owner_id, source, expires_at),
                 )
                 await conn.commit()
 
@@ -144,14 +158,11 @@ class PgVectorStore(DocumentStore):
                 await conn.commit()
         return deleted
 
-    async def reap_older_than(self, max_age_seconds: int) -> int:
+    async def reap_expired(self) -> int:
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(
-                    "DELETE FROM documents_meta WHERE created_at < NOW() - make_interval(secs => %s)",
-                    (max_age_seconds,),
-                )
+                await cur.execute("DELETE FROM documents_meta WHERE expires_at IS NOT NULL AND expires_at < NOW()")
                 deleted = cur.rowcount
                 await conn.commit()
         return deleted

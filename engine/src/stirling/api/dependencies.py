@@ -57,8 +57,8 @@ def require_user_id() -> UserId:
 
     Reads ``X-User-Id`` (already extracted into a ContextVar by ``UserIdMiddleware``)
     and returns it. Returns HTTP 401 if the caller didn't supply the header. Apply
-    to any route that ingests, searches, reads, or deletes RAG documents so the
-    tenancy gate is enforced at the API boundary.
+    to any route that ingests, searches, reads, or deletes document content so
+    the tenancy gate is enforced at the API boundary.
     """
     user_id = current_user_id.get()
     if user_id is None:

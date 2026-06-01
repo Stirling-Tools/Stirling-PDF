@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import Field
 
 from stirling.models import ApiModel, OwnerId, PrincipalId
@@ -57,6 +59,8 @@ class IngestDocumentRequest(ApiModel):
     page_text: list[PageText] | None = None
     owner_id: OwnerId = Field(min_length=1)
     read_principals: list[PrincipalId] = Field(min_length=1)
+    # When to delete this doc. ``None`` means "persistent" (keep until an explicit delete)
+    expires_at: datetime | None
 
 
 class IngestDocumentResponse(ApiModel):

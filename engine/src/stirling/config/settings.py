@@ -37,19 +37,9 @@ class AppSettings(BaseSettings):
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
     rag_max_searches: int = Field(validation_alias="STIRLING_RAG_MAX_SEARCHES")
-    # TTL backstop for ingested RAG content. Java calls DELETE /api/v1/documents/by-owner on
-    # logout for the common-case cleanup; this reaper catches what slips through (tab close,
-    # JWT expiry, engine restart between logout and shutdown). Default 24h matches the
-    # backend's default JWT lifetime so a stale token never has data it can still reach.
-    rag_max_age_seconds: int = Field(
-        default=86_400,
-        validation_alias="STIRLING_RAG_MAX_AGE_SECONDS",
-    )
-    # How often the reaper checks for stale collections. 15min is a good balance between
-    # responsiveness and write load — the reaper takes a momentary lock on documents_meta.
-    rag_reaper_interval_seconds: int = Field(
+    documents_reaper_interval_seconds: int = Field(
         default=900,
-        validation_alias="STIRLING_RAG_REAPER_INTERVAL_SECONDS",
+        validation_alias="STIRLING_DOCUMENTS_REAPER_INTERVAL_SECONDS",
     )
 
     # Chunked reasoner settings (whole-document map-reduce).

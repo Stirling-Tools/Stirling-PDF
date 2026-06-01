@@ -79,7 +79,7 @@ async def test_read_full_document_returns_formatted_notes_for_single_file(
         PageText(page_number=2, text="Chapter two prose."),
     ]
     await runtime_with_stub_docs.documents.ingest(
-        FileId("doc-id"), pages, source="doc.pdf", owner_id=OWNER, read_principals=PRINCIPALS
+        FileId("doc-id"), pages, source="doc.pdf", owner_id=OWNER, read_principals=PRINCIPALS, expires_at=None
     )
 
     reasoner = ChunkedReasoner(runtime_with_stub_docs)
@@ -114,6 +114,7 @@ async def test_read_full_document_iterates_multiple_files(runtime_with_stub_docs
             source=source,
             owner_id=OWNER,
             read_principals=PRINCIPALS,
+            expires_at=None,
         )
 
     reasoner = ChunkedReasoner(runtime_with_stub_docs)
@@ -151,6 +152,7 @@ async def test_read_full_document_skips_files_without_pages(runtime_with_stub_do
         source="present.pdf",
         owner_id=OWNER,
         read_principals=PRINCIPALS,
+        expires_at=None,
     )
     # 'missing' is never ingested -> read_pages returns [].
 
@@ -201,6 +203,7 @@ async def test_read_full_document_budget_hides_tool_when_exhausted(
         source="doc.pdf",
         owner_id=OWNER,
         read_principals=PRINCIPALS,
+        expires_at=None,
     )
     reasoner = ChunkedReasoner(runtime_with_stub_docs)
     with patch.object(reasoner, "gather_notes", AsyncMock(return_value=[ChunkNotes(pages=[1], summary="s")])):

@@ -37,8 +37,8 @@ current_user_id: ContextVar[UserId | None] = ContextVar("current_user_id", defau
 def require_current_user_id() -> UserId:
     """Return the request's user ID or raise if the X-User-Id header was missing.
 
-    Use at the boundary of any code path that touches per-user storage (RAG
-    documents, chunks, pages). Routes prefer the FastAPI dependency form
+    Use at the boundary of any code path that touches per-user document
+    storage (vector chunks, page text, ACL rows). Routes prefer the FastAPI dependency form
     (``Depends(require_user_id)``); agent internals that don't have a request
     object in scope call this helper directly to fail closed.
     """

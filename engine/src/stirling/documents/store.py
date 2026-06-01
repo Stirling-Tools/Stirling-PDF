@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from stirling.contracts.documents import Page, PageRange
 from stirling.models import OwnerId, PrincipalId
@@ -65,7 +66,13 @@ class DocumentStore(ABC):
     # ── lifecycle of the (collection, owner_id) row ────────────────────────
 
     @abstractmethod
-    async def ensure_collection(self, collection: str, source: str, owner_id: OwnerId) -> None:
+    async def ensure_collection(
+        self,
+        collection: str,
+        source: str,
+        owner_id: OwnerId,
+        expires_at: datetime | None,
+    ) -> None:
         """Upsert the top-level ``documents_meta`` row for ``(collection, owner_id)``.
 
         Must be called before :meth:`add_pages` or :meth:`add_documents`. Both
@@ -81,19 +88,20 @@ class DocumentStore(ABC):
     async def purge_owner(self, owner_id: OwnerId) -> int:
         """Remove every collection (and ACL row) belonging to ``owner_id``.
 
-        Used on explicit logout so a user's personal RAG content disappears
-        as soon as they end their session. Returns the number of collections
-        purged.
+        Drops the full doc footprint for each row: vector chunks, page text,
+        ACL entries. Used on explicit logout so a user's personal document
+        content disappears as soon as they end their session. Returns the
+        number of collections purged.
         """
 
     @abstractmethod
-    async def reap_older_than(self, max_age_seconds: int) -> int:
-        """Remove collections whose ``created_at`` is older than ``max_age_seconds``.
+    async def reap_expired(self) -> int:
+        """Remove collections whose ``expires_at`` is non-null and in the past.
 
         TTL backstop for cases the explicit logout path misses (tab close,
-        JWT expiry, engine restart). Returns the number of collections
-        deleted. Implementations compute the cutoff from the system clock,
-        not from a caller-supplied wall time, to avoid skew bugs.
+        JWT expiry, engine restart). Rows with ``expires_at IS NULL`` are
+        persistent and never reaped; that's the shape for org-owned docs.
+        Returns the number of collections deleted.
         """
 
     # ── write paths (scoped by owner) ──────────────────────────────────────

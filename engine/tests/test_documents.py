@@ -66,7 +66,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_add_and_search(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("test-col", "test.pdf", OWNER)
+        await store.ensure_collection("test-col", "test.pdf", OWNER, None)
         await store.grant_read("test-col", OWNER, OWNER_PRINCIPALS)
         docs = [
             Document(id="1", text="Python is a programming language", metadata={"source": "test"}),
@@ -89,7 +89,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_list_and_has_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("my-collection", "test.pdf", OWNER)
+        await store.ensure_collection("my-collection", "test.pdf", OWNER, None)
         await store.grant_read("my-collection", OWNER, OWNER_PRINCIPALS)
         docs = [Document(id="1", text="test", metadata={})]
         await store.add_documents("my-collection", docs, [[1.0, 0.0]], OWNER)
@@ -102,7 +102,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_delete_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("to-delete", "test.pdf", OWNER)
+        await store.ensure_collection("to-delete", "test.pdf", OWNER, None)
         await store.grant_read("to-delete", OWNER, OWNER_PRINCIPALS)
         docs = [Document(id="1", text="test", metadata={})]
         await store.add_documents("to-delete", docs, [[1.0]], OWNER)
@@ -114,7 +114,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_search_empty_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("empty-test", "test.pdf", OWNER)
+        await store.ensure_collection("empty-test", "test.pdf", OWNER, None)
         await store.grant_read("empty-test", OWNER, OWNER_PRINCIPALS)
         docs = [Document(id="1", text="test", metadata={})]
         await store.add_documents("empty-test", docs, [[1.0, 0.0]], OWNER)
@@ -132,9 +132,9 @@ class TestSqliteVecStore:
     async def test_collections_isolated_by_owner(self) -> None:
         """Two owners can store the same collection id; reads stay scoped to ACL."""
         store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("shared-id", "alice.pdf", OWNER)
+        await store.ensure_collection("shared-id", "alice.pdf", OWNER, None)
         await store.grant_read("shared-id", OWNER, OWNER_PRINCIPALS)
-        await store.ensure_collection("shared-id", "bob.pdf", OTHER_OWNER)
+        await store.ensure_collection("shared-id", "bob.pdf", OTHER_OWNER, None)
         await store.grant_read("shared-id", OTHER_OWNER, OTHER_OWNER_PRINCIPALS)
         await store.add_documents(
             "shared-id",
@@ -169,7 +169,7 @@ class TestSqliteVecStore:
             (OWNER, OWNER_PRINCIPALS, "b.pdf"),
             (OTHER_OWNER, OTHER_OWNER_PRINCIPALS, "c.pdf"),
         ):
-            await store.ensure_collection(name, name, owner)
+            await store.ensure_collection(name, name, owner, None)
             await store.grant_read(name, owner, principals)
             await store.add_documents(name, [Document(id="1", text="x", metadata={})], [[1.0, 0.0]], owner)
 
@@ -179,41 +179,45 @@ class TestSqliteVecStore:
         assert await store.list_collections(OTHER_OWNER_PRINCIPALS) == ["c.pdf"]
 
     @pytest.mark.anyio
-    async def test_reap_older_than_drops_stale_collections(self) -> None:
-        """TTL backstop: collections older than ``max_age`` go away on reap."""
-        store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("fresh", "fresh.pdf", OWNER)
-        await store.grant_read("fresh", OWNER, OWNER_PRINCIPALS)
-        await store.ensure_collection("stale", "stale.pdf", OWNER)
-        await store.grant_read("stale", OWNER, OWNER_PRINCIPALS)
-        # Backdate the stale row so reap_older_than(60) catches it.
-        store._conn.execute(
-            "UPDATE documents_meta SET created_at = datetime('now', '-1 hour') WHERE collection = ?",
-            ("stale",),
-        )
-        store._conn.commit()
+    async def test_reap_expired_drops_collections_past_expires_at(self) -> None:
+        """TTL backstop: rows with ``expires_at`` in the past go away on reap."""
+        from datetime import UTC, datetime, timedelta
 
-        deleted = await store.reap_older_than(60)
+        store = SqliteVecStore.ephemeral()
+        now = datetime.now(UTC)
+        await store.ensure_collection("fresh", "fresh.pdf", OWNER, now + timedelta(hours=1))
+        await store.grant_read("fresh", OWNER, OWNER_PRINCIPALS)
+        await store.ensure_collection("stale", "stale.pdf", OWNER, now - timedelta(seconds=1))
+        await store.grant_read("stale", OWNER, OWNER_PRINCIPALS)
+
+        deleted = await store.reap_expired()
         assert deleted == 1
         assert await store.list_collections(OWNER_PRINCIPALS) == ["fresh"]
 
     @pytest.mark.anyio
-    async def test_reap_older_than_keeps_recent_collections(self) -> None:
-        """Reaper must not nuke active sessions: anything within the window stays."""
-        store = SqliteVecStore.ephemeral()
-        await store.ensure_collection("recent", "recent.pdf", OWNER)
-        await store.grant_read("recent", OWNER, OWNER_PRINCIPALS)
+    async def test_reap_expired_keeps_persistent_and_unexpired(self) -> None:
+        """Rows with ``expires_at`` in the future stay. Rows with null
+        ``expires_at`` (org docs) are persistent and never touched, regardless
+        of age."""
+        from datetime import UTC, datetime, timedelta
 
-        deleted = await store.reap_older_than(3600)
+        store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("session", "s.pdf", OWNER, datetime.now(UTC) + timedelta(hours=1))
+        await store.grant_read("session", OWNER, OWNER_PRINCIPALS)
+        await store.ensure_collection("persistent", "p.pdf", OTHER_OWNER, None)
+        await store.grant_read("persistent", OTHER_OWNER, OTHER_OWNER_PRINCIPALS)
+
+        deleted = await store.reap_expired()
         assert deleted == 0
-        assert await store.list_collections(OWNER_PRINCIPALS) == ["recent"]
+        assert await store.list_collections(OWNER_PRINCIPALS) == ["session"]
+        assert await store.list_collections(OTHER_OWNER_PRINCIPALS) == ["persistent"]
 
     @pytest.mark.anyio
     async def test_acl_grants_read_to_extra_principal(self) -> None:
         """A principal without an ACL row can't read; once granted, they can."""
         store = SqliteVecStore.ephemeral()
         team_principal = PrincipalId("group:engineering")
-        await store.ensure_collection("doc", "engineering-runbook.pdf", OWNER)
+        await store.ensure_collection("doc", "engineering-runbook.pdf", OWNER, None)
         await store.grant_read("doc", OWNER, OWNER_PRINCIPALS)
         await store.add_documents(
             "doc",
@@ -285,7 +289,12 @@ class TestDocumentService:
     async def test_ingest_and_search(self, documents: DocumentService) -> None:
         text = "Python is great for data science. It has many libraries like pandas and numpy."
         count = await documents.ingest(
-            FileId("docs"), _pages(text), source="guide.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("docs"),
+            _pages(text),
+            source="guide.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         assert count > 0
 
@@ -296,7 +305,12 @@ class TestDocumentService:
     @pytest.mark.anyio
     async def test_ingest_empty_text_returns_zero_chunks(self, documents: DocumentService) -> None:
         count = await documents.ingest(
-            FileId("docs"), _pages(""), source="empty.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("docs"),
+            _pages(""),
+            source="empty.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         assert count == 0
 
@@ -313,6 +327,7 @@ class TestDocumentService:
             source="ml.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         await documents.ingest(
             FileId("col-b"),
@@ -320,6 +335,7 @@ class TestDocumentService:
             source="dl.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         results = await documents.search("neural networks", principals=OWNER_PRINCIPALS)
@@ -334,6 +350,7 @@ class TestDocumentService:
             source="alice.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         await documents.ingest(
             FileId("col-b"),
@@ -341,6 +358,7 @@ class TestDocumentService:
             source="bob.pdf",
             owner_id=OTHER_OWNER,
             read_principals=OTHER_OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         alice_results = await documents.search("notes", principals=OWNER_PRINCIPALS)
@@ -365,6 +383,7 @@ class TestDocumentService:
             source="runbook.pdf",
             owner_id=org_owner,
             read_principals=[eng_group],
+            expires_at=None,
         )
 
         # Engineering can read.
@@ -387,6 +406,7 @@ class TestDocumentService:
             source="tmp.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         collections = await documents.list_collections(OWNER_PRINCIPALS)
         assert "temp" in collections
@@ -403,7 +423,12 @@ class TestDocumentService:
             PageText(page_number=3, text="Third page text."),
         ]
         await documents.ingest(
-            FileId("ordered"), pages, source="ordered.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("ordered"),
+            pages,
+            source="ordered.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         stored = await documents.read_pages(FileId("ordered"), principals=OWNER_PRINCIPALS)
@@ -417,7 +442,7 @@ class TestDocumentService:
 
         pages = [PageText(page_number=i, text=f"page {i}") for i in range(1, 6)]
         await documents.ingest(
-            FileId("ranged"), pages, source="r.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("ranged"), pages, source="r.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS, expires_at=None
         )
 
         subset = await documents.read_pages(
@@ -433,6 +458,7 @@ class TestDocumentService:
             source="v1.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         await documents.ingest(
             FileId("doc"),
@@ -440,6 +466,7 @@ class TestDocumentService:
             source="v2.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         stored = await documents.read_pages(FileId("doc"), principals=OWNER_PRINCIPALS)
@@ -456,7 +483,12 @@ class TestDocumentService:
             PageText(page_number=3, text="Real text on page 3."),
         ]
         await documents.ingest(
-            FileId("with-blanks"), pages, source="blanks.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("with-blanks"),
+            pages,
+            source="blanks.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         stored = await documents.read_pages(FileId("with-blanks"), principals=OWNER_PRINCIPALS)
@@ -493,10 +525,20 @@ class TestRagCapability:
     @pytest.mark.anyio
     async def test_dynamic_instructions_list_available_collections(self, documents: DocumentService) -> None:
         await documents.ingest(
-            FileId("col-a"), _pages("Alpha content."), source="a.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("col-a"),
+            _pages("Alpha content."),
+            source="a.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         await documents.ingest(
-            FileId("col-b"), _pages("Beta content."), source="b.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("col-b"),
+            _pages("Beta content."),
+            source="b.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         instructions_fn = cap.instructions
@@ -527,6 +569,7 @@ class TestRagCapability:
             source="guide.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         output = await _invoke_search_knowledge(cap, "Python")
@@ -543,6 +586,7 @@ class TestRagCapability:
             source="pinned.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         await documents.ingest(
             FileId("other"),
@@ -550,6 +594,7 @@ class TestRagCapability:
             source="other.pdf",
             owner_id=OWNER,
             read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=[FileId("pinned")])
@@ -561,7 +606,12 @@ class TestRagCapability:
     async def test_search_knowledge_respects_max_results(self, documents: DocumentService) -> None:
         paragraphs = "\n\n".join(f"Paragraph {i} about topic." for i in range(10))
         await documents.ingest(
-            FileId("bulk"), _pages(paragraphs), source="bulk.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("bulk"),
+            _pages(paragraphs),
+            source="bulk.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
 
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
@@ -575,7 +625,12 @@ class TestRagCapability:
         """The prepare callback must return None once max_searches has been reached
         so the agent can no longer call the tool on subsequent turns."""
         await documents.ingest(
-            FileId("docs"), _pages("Some content."), source="x.pdf", owner_id=OWNER, read_principals=OWNER_PRINCIPALS
+            FileId("docs"),
+            _pages("Some content."),
+            source="x.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
         )
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS, max_searches=2)
         tool_def = _dummy_tool_def()

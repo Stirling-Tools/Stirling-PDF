@@ -113,6 +113,7 @@ async def test_reports_only_missing_files(runtime_with_stub_rag: AppRuntime) -> 
         source="present.pdf",
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
     agent = PdfQuestionAgent(runtime_with_stub_rag)
 
@@ -132,6 +133,7 @@ async def test_returns_grounded_answer_when_all_files_ingested(runtime_with_stub
         source="invoice.pdf",
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
     agent = StubPdfQuestionAgent(
         runtime_with_stub_rag,
@@ -165,6 +167,7 @@ async def test_returns_not_found_when_answer_not_in_doc(runtime_with_stub_rag: A
         source="shipping.pdf",
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
     agent = StubPdfQuestionAgent(
         runtime_with_stub_rag,

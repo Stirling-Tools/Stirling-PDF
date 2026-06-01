@@ -86,6 +86,7 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
         source=file.name,
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
 
     agent = PdfQuestionAgent(runtime_with_stub_docs)

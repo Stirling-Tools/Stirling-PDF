@@ -38,6 +38,7 @@ async def ingest_document(
         source=request.source,
         owner_id=request.owner_id,
         read_principals=request.read_principals,
+        expires_at=request.expires_at,
     )
     return IngestDocumentResponse(document_id=request.document_id, chunks_indexed=chunks_indexed)
 

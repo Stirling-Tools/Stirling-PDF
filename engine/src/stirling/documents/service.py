@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from stirling.contracts.documents import Page, PageRange, PageText
 from stirling.documents.embedder import EmbeddingService
@@ -49,6 +50,7 @@ class DocumentService:
         source: str,
         owner_id: OwnerId,
         read_principals: list[PrincipalId],
+        expires_at: datetime | None,
     ) -> int:
         """Replace-ingest a document. Returns the number of vector chunks indexed.
 
@@ -67,7 +69,7 @@ class DocumentService:
             raise ValueError("read_principals must not be empty — every doc needs at least one reader")
 
         await self._store.delete_collection(collection, owner_id)
-        await self._store.ensure_collection(collection, source, owner_id)
+        await self._store.ensure_collection(collection, source, owner_id, expires_at)
 
         stored_pages = [StoredPage(page_number=p.page_number, text=p.text, char_count=len(p.text)) for p in pages]
         await self._store.add_pages(collection, stored_pages, owner_id)
@@ -149,15 +151,18 @@ class DocumentService:
         await self._store.delete_collection(collection, owner_id)
 
     async def purge_owner(self, owner_id: OwnerId) -> int:
-        """Remove everything ``owner_id`` owns. Called on user logout to clean up
-        personal-doc RAG content. Returns the number of collections purged."""
+        """Remove every collection ``owner_id`` owns, including vector chunks,
+        page text, and ACL rows. Called on user logout to clean up the user's
+        personal document content. Returns the number of collections purged."""
         return await self._store.purge_owner(owner_id)
 
-    async def reap_stale(self, max_age_seconds: int) -> int:
-        """Remove collections older than ``max_age_seconds``. TTL backstop for
-        sessions that ended without a clean logout (tab close, JWT expiry,
-        engine restart). Returns the number of collections deleted."""
-        return await self._store.reap_older_than(max_age_seconds)
+    async def reap_expired(self) -> int:
+        """Delete collections whose ``expires_at`` is set and in the past. TTL
+        backstop for sessions that ended without a clean logout (tab close,
+        JWT expiry, engine restart). Persistent collections (``expires_at``
+        null, i.e. org-owned shared docs) are never touched. Returns the
+        number of collections deleted."""
+        return await self._store.reap_expired()
 
     async def has_collection(self, collection: FileId, principals: list[PrincipalId]) -> bool:
         """Check whether at least one principal can read this collection."""

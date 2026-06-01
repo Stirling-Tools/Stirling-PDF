@@ -84,6 +84,7 @@ def test_ingest_document_indexes_page_text(client: TestClient, service: Document
             ],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -103,6 +104,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
             "pageText": [{"pageNumber": 1, "text": "Original content that existed before."}],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -115,6 +117,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
             "pageText": [{"pageNumber": 1, "text": "New content that replaced the old."}],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -138,6 +141,7 @@ def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
             ],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -148,7 +152,13 @@ def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
 def test_ingest_document_with_no_content_returns_zero(client: TestClient) -> None:
     response = client.post(
         "/api/v1/documents",
-        json={"documentId": "empty", "source": "empty.pdf", "ownerId": USER, "readPrincipals": [USER]},
+        json={
+            "documentId": "empty",
+            "source": "empty.pdf",
+            "ownerId": USER,
+            "readPrincipals": [USER],
+            "expiresAt": None,
+        },
         headers=HEADERS,
     )
     assert response.status_code == 200
@@ -191,6 +201,7 @@ def test_ingest_document_rejects_non_positive_page_number(client: TestClient) ->
             "pageText": [{"pageNumber": 0, "text": "something"}],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -207,6 +218,7 @@ def test_ingest_document_rejects_missing_owner_id(client: TestClient) -> None:
             "source": "no-owner.pdf",
             "pageText": [{"pageNumber": 1, "text": "something"}],
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -254,6 +266,7 @@ def test_delete_document_reports_deleted_true_when_existed(client: TestClient) -
             "pageText": [{"pageNumber": 1, "text": "Text."}],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -278,6 +291,7 @@ async def test_delete_document_removes_collection(client: TestClient, service: D
             "pageText": [{"pageNumber": 1, "text": "Text."}],
             "ownerId": USER,
             "readPrincipals": [USER],
+            "expiresAt": None,
         },
         headers=HEADERS,
     )
@@ -300,6 +314,7 @@ async def test_purge_by_owner_removes_only_callers_collections(client: TestClien
         "pageText": [{"pageNumber": 1, "text": "alice content"}],
         "ownerId": "alice",
         "readPrincipals": ["alice"],
+        "expiresAt": None,
     }
     bob = {
         "documentId": "bob-doc",
@@ -307,6 +322,7 @@ async def test_purge_by_owner_removes_only_callers_collections(client: TestClien
         "pageText": [{"pageNumber": 1, "text": "bob content"}],
         "ownerId": "bob",
         "readPrincipals": ["bob"],
+        "expiresAt": None,
     }
     client.post("/api/v1/documents", json=alice, headers={"X-User-Id": "alice"})
     client.post("/api/v1/documents", json=bob, headers={"X-User-Id": "bob"})
@@ -340,8 +356,9 @@ def test_delete_document_only_affects_calling_user(client: TestClient) -> None:
         "pageText": [{"pageNumber": 1, "text": "x"}],
         "ownerId": "alice",
         "readPrincipals": ["alice"],
+        "expiresAt": None,
     }
-    bob_body = {**alice_body, "ownerId": "bob", "readPrincipals": ["bob"]}
+    bob_body = {**alice_body, "ownerId": "bob", "readPrincipals": ["bob"], "expiresAt": None}
     client.post("/api/v1/documents", json=alice_body, headers={"X-User-Id": "alice"})
     client.post("/api/v1/documents", json=bob_body, headers={"X-User-Id": "bob"})
 

@@ -105,6 +105,7 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
         source=file.name,
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -178,6 +179,7 @@ async def test_contradiction_intent_emits_add_comments_plan(
         source=file.name,
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -285,6 +287,7 @@ async def test_contradiction_takes_precedence_over_math(
         source=file.name,
         owner_id=OWNER,
         read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)

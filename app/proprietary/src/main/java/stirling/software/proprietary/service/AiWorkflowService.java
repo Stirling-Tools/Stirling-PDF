@@ -1,6 +1,8 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,6 +65,14 @@ import tools.jackson.databind.ObjectMapper;
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
+
+    /**
+     * How long an AI-workflow-ingested personal doc lives on the engine before the reaper deletes
+     * it. Matches the default JWT lifetime so a stale token never has data it can still reach.
+     * Org-shared content (when we add it) bypasses this and sends a null {@code expiresAt} so it's
+     * persistent.
+     */
+    private static final Duration PERSONAL_DOC_TTL = Duration.ofHours(24);
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
@@ -335,8 +345,9 @@ public class AiWorkflowService {
             }
         }
         // Personal-doc semantics for AI workflows today: caller owns the doc and is its only
-        // grantee. When org / shared-doc ingestion lands, the caller chooses owner and
-        // grantees explicitly.
+        // grantee, with a session-bounded expiry so the reaper cleans up if logout misses.
+        // When org / shared-doc ingestion lands, the caller chooses owner, grantees, and
+        // expiry (null = persistent) explicitly.
         String callerId = currentUserId();
         AiDocumentIngestRequest ingestRequest =
                 new AiDocumentIngestRequest(
@@ -344,7 +355,8 @@ public class AiWorkflowService {
                         file.getName(),
                         pages,
                         callerId,
-                        callerId == null ? List.of() : List.of(callerId));
+                        callerId == null ? List.of() : List.of(callerId),
+                        Instant.now().plus(PERSONAL_DOC_TTL));
         String body = objectMapper.writeValueAsString(ingestRequest);
         aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
         log.debug(
