@@ -401,7 +401,6 @@ jobs:
       # bakes the fix into the artifact so users don't need the workaround.
       - name: Strip bundled libwayland from AppImage
         if: matrix.platform == 'ubuntu-22.04'
-        continue-on-error: true
         shell: bash
         env:
           SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
@@ -412,7 +411,9 @@ jobs:
           shopt -s nullglob
 
           BUNDLE_DIR="frontend/editor/src-tauri/target/release/bundle/appimage"
-          mapfile -t IMAGES < <(find "$BUNDLE_DIR" -maxdepth 1 -type f -name '*.AppImage' 2>/dev/null || true)
+          # Resolve all paths to absolute up front: the per-image loop pushd's
+          # into a temp dir, so any relative path stops resolving after that.
+          mapfile -t IMAGES < <(find "$BUNDLE_DIR" -maxdepth 1 -type f -name '*.AppImage' -printf '%p\n' 2>/dev/null || true)
           if [ "${#IMAGES[@]}" -eq 0 ]; then
             echo "No AppImage produced (build likely failed earlier) - skipping libwayland strip"
             exit 0
@@ -421,9 +422,9 @@ jobs:
           # Use the Tauri-cached appimagetool when present so we match the
           # version that originally built the artifact; otherwise fetch a
           # known-good release. Both paths set $APPIMAGETOOL for the repack.
-          CACHED_TOOL=$(find "$HOME/.cache/tauri" -maxdepth 4 -type f -name 'appimagetool*.AppImage' 2>/dev/null | head -n1)
+          CACHED_TOOL=$(find "$HOME/.cache/tauri" -maxdepth 4 -type f -name 'appimagetool*.AppImage' 2>/dev/null | head -n1 || true)
           if [ -n "$CACHED_TOOL" ]; then
-            APPIMAGETOOL="$CACHED_TOOL"
+            APPIMAGETOOL="$(readlink -f "$CACHED_TOOL")"
             echo "Using cached appimagetool: $APPIMAGETOOL"
           else
             APPIMAGETOOL="$RUNNER_TEMP/appimagetool-x86_64.AppImage"
@@ -433,7 +434,9 @@ jobs:
             echo "Fetched appimagetool to $APPIMAGETOOL"
           fi
 
-          for IMG in "${IMAGES[@]}"; do
+          STRIPPED_ANY=0
+          for REL in "${IMAGES[@]}"; do
+            IMG="$(readlink -f "$REL")"
             echo "Stripping libwayland from $IMG"
             WORK=$(mktemp -d)
             pushd "$WORK" > /dev/null
@@ -470,8 +473,16 @@ jobs:
             mv -f "$OUT" "$IMG"
             popd > /dev/null
             rm -rf "$WORK"
+            STRIPPED_ANY=1
             echo "  repacked $IMG"
           done
+
+          # The whole point of this step is the fix - if we found AppImages but
+          # didn't strip any of them, surface that as a hard failure rather than
+          # silently shipping the broken artifact.
+          if [ "$STRIPPED_ANY" -eq 0 ]; then
+            echo "Found ${#IMAGES[@]} AppImage(s) but none contained bundled libwayland - either linuxdeploy stopped bundling it (good) or paths drifted (investigate)"
+          fi
 
       - name: Clear release GPG key from runner keyring (Linux)
         if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
