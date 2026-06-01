@@ -33,6 +33,3 @@ export const Z_INDEX_SIGNATURE_DRAG_BLOCKER = 999;
 export const Z_INDEX_SIGNATURE_OVERLAY = 1000;
 export const Z_INDEX_SIGNATURE_OVERLAY_HANDLE = 1001;
 export const Z_INDEX_SIGNATURE_OVERLAY_DELETE = 1002;
-
-// Agents chat overlay — rendered via portal to escape the tool-panel stacking context
-export const Z_INDEX_AGENTS_CHAT_OVERLAY = 200;
