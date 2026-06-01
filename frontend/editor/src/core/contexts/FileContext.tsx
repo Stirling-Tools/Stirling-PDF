@@ -241,6 +241,8 @@ function FileContextInner({
         insertAfterPageId?: string;
         selectFiles?: boolean;
         skipAutoUnzip?: boolean;
+        /** Persist to IDB without dispatching to workspace state. */
+        skipWorkspaceDispatch?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(

@@ -4,6 +4,10 @@ name: Build Tauri Applications
 # Linux). Called from build.yml on PRs that touch desktop sources (gated
 # via the `tauri` filter in .github/config/.files.yaml). Also runnable
 # on demand via workflow_dispatch with a per-platform selector.
+#
+# Note: editing this file is itself enough to make the `tauri` path filter
+# match, which is how non-desktop PRs (e.g. backend-only fixes) opt into a
+# desktop smoke build.
 on:
   workflow_call:
     inputs:
@@ -152,6 +156,9 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:prepare
+
+      - name: Run Tauri/Cargo tests
+        run: task desktop:test
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -413,20 +420,22 @@ jobs:
       - name: Rename artifacts
         shell: bash
         run: |
-          mkdir -p ./dist
+          # Absolute dist path so the cd below can't break the copy targets.
+          DIST="$GITHUB_WORKSPACE/dist"
+          mkdir -p "$DIST"
           cd ./frontend/editor/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             # Only ship the MSI installer. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
-            find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
+            find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
-            find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
+            find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
           else
-            find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
-            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
-            find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+            find . -name "*.deb" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm" \;
+            find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
       # Verify the MSI AND the inner exe extracted from it are signed.

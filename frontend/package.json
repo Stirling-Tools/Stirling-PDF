@@ -128,6 +128,7 @@
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
@@ -161,5 +162,8 @@
     "workerDirectory": [
       "portal/public"
     ]
+},
+  "overrides": {
+    "devalue": "^5.8.1"
+
   }
-}

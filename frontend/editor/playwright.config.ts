@@ -4,10 +4,10 @@ import { defineConfig, devices } from "@playwright/test";
  * Stirling-PDF E2E Test Configuration
  *
  * The suite is split into two projects:
- *   - `stubbed` — backend-free specs that mock `/api/v1/*` via `page.route()`.
+ *   - `stubbed` - backend-free specs that mock `/api/v1/*` via `page.route()`.
  *                 Safe to run in CI without the Spring Boot server. Lives in
  *                 `src/core/tests/stubbed/**`.
- *   - `live`    — specs that require a real backend on `localhost:8080`
+ *   - `live`    - specs that require a real backend on `localhost:8080`
  *                 (auth, admin mutation, real tool round-trips). Lives in
  *                 `src/core/tests/live/**`.
  *
@@ -35,7 +35,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -44,14 +44,14 @@ export default defineConfig({
   },
 
   projects: [
-    // Stubbed — no backend required, chromium-only for CI speed
+    // Stubbed - no backend required, chromium-only for CI speed
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
       use: chromiumViewport,
     },
 
-    // Live setup — runs once before the live suite to perform the real
+    // Live setup - runs once before the live suite to perform the real
     // forced-password-change first-login flow against a freshly-booted
     // backend. The live project depends on it.
     {
@@ -61,7 +61,7 @@ export default defineConfig({
       use: chromiumViewport,
     },
 
-    // Live backend — auth + admin-mutation + real-tool smoke
+    // Live backend - auth + admin-mutation + real-tool smoke
     {
       name: "live",
       testDir: "./src/core/tests/live",
@@ -69,7 +69,7 @@ export default defineConfig({
       dependencies: ["live-setup"],
     },
 
-    // Enterprise — license-gated SSO/SAML/audit/teams against keycloak compose
+    // Enterprise - license-gated SSO/SAML/audit/teams against keycloak compose
     // Uses port 8080 directly (the docker compose stack publishes the
     // backend's built-in frontend there); the Vite dev server is bypassed
     // because the OAuth/SAML callback URLs are registered against 8080.
@@ -98,7 +98,7 @@ export default defineConfig({
   webServer: {
     // In CI, serve a pre-built `dist/` via `vite preview` so the heavy tool
     // pages don't pay vite's on-demand transform cost on first hit (which
-    // blew the 30s navigationTimeout under --workers=3 — see
+    // blew the 30s navigationTimeout under --workers=3 - see
     // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
     command: process.env.CI
       ? "npx vite preview --port 5173 --strictPort"

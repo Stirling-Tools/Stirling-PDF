@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
+import { generateId } from "@app/utils/generateId";
 import { useTranslation } from "react-i18next";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
@@ -578,10 +579,7 @@ const Annotate = (_props: BaseToolProps) => {
         const OFFSET = 20;
         const pasted: Record<string, unknown> = { ...annotation };
         // Assign a new id so EmbedPDF tracks the copy and delete works on it
-        pasted.id =
-          typeof crypto !== "undefined" && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `paste-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        pasted.id = generateId();
         delete pasted.uid;
         // Remove appearance stream reference — the copy needs its own rendering
         delete pasted.appearanceModes;

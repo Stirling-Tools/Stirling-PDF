@@ -18,6 +18,7 @@ import {
   isDesktopSaaSAuthMode,
   refreshPlatformSession,
   savePlatformToken,
+  shouldCallBackendLogout,
 } from "@app/extensions/platformSessionBridge";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 
@@ -352,9 +353,13 @@ class SpringAuthClient {
               platformUser?.email ||
               platformUser?.username ||
               "desktop-saas-user",
-            email: platformUser?.email || "",
-            username: platformUser?.username || platformUser?.email || "User",
+            email: platformUser?.email ?? "",
+            // Username may be empty when the platform layer can't identify
+            // the user - downstream displayName derivation handles that
+            // case and falls back to a generic placeholder.
+            username: platformUser?.username ?? "",
             role: "USER",
+            is_anonymous: platformUser?.is_anonymous,
           },
           access_token: token,
           expires_in: tokenExpiry.expiresIn,
@@ -575,15 +580,24 @@ class SpringAuthClient {
           "1",
         );
       }
-      const response = await apiClient.post("/api/v1/auth/logout", null, {
-        headers: {
-          "X-XSRF-TOKEN": this.getCsrfToken() || "",
-        },
-        withCredentials: true,
-      });
 
-      if (response.status === 200) {
-        // console.debug('[SpringAuth] signOut: Success');
+      // Only call the backend logout endpoint when the platform tells us
+      // the current backend implements it. In desktop SaaS mode the
+      // apiClient points at the SaaS gateway, which doesn't expose
+      // `/api/v1/auth/logout` (Supabase manages session lifecycle); POSTing
+      // there returns 500 and pollutes error toasts even though the local
+      // cleanup below succeeds.
+      if (await shouldCallBackendLogout()) {
+        const response = await apiClient.post("/api/v1/auth/logout", null, {
+          headers: {
+            "X-XSRF-TOKEN": this.getCsrfToken() || "",
+          },
+          withCredentials: true,
+        });
+
+        if (response.status === 200) {
+          // console.debug('[SpringAuth] signOut: Success');
+        }
       }
 
       // Clean up local storage
@@ -641,6 +655,12 @@ class SpringAuthClient {
           cleanupError,
         );
       }
+      // The user is logged out *locally* even if the backend call failed
+      // (token + platform user_info are gone). The previous version skipped
+      // this notification on error - the AuthProvider then never cleared
+      // its session state, leaving the UI claiming the user was still signed
+      // in until a full reload.
+      this.notifyListeners("SIGNED_OUT", null);
       return {
         error: { message: getErrorMessage(error, "Logout failed") },
       };
