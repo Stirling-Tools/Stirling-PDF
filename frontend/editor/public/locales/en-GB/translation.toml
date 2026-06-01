@@ -2715,6 +2715,9 @@ title = "Change Permissions"
 [changePermissions.tooltip.warning]
 text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
+[chat]
+resize = "Resize chat panel"
+
 [chat.header]
 agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
