@@ -351,32 +351,40 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // char with the CORRECT font + charcode, positioning them adjacently
   // so the visual output matches the source font.
   //
-  // Fires whenever the backend strategy is active AND every char has
-  // both a per-char font handle on the page AND a backend-resolved
-  // charcode. Importantly, it does NOT require `reuse=true` - Sample.pdf
-  // stores its 10M+ glyphs in form-XObjects which the partial-edit
-  // path can't reuse, so a fresh emit is the only path that ever
-  // runs for that run. If we gated on reuse the per-char branch
-  // would never fire on the very PDF it was built for.
+  // Fires ONLY when the caller did NOT supply a borrowed source font
+  // (`!reuse`). Why: when the partial-edit path borrows the first
+  // surviving sub-object's font and asks us to emit an inserted char,
+  // we must let `writeViaCharcodesOrSetText` try the borrow first. If
+  // the borrow renders correctly we get one text object in the source
+  // font. If the borrow fails (tofu / 0-width glyph), the caller's own
+  // measure-and-fallback in `applyPartialEditPlan` retries with
+  // `originalFontPtr=0`, at which point this branch fires correctly
+  // (reuse becomes false). Without the `!reuse` gate the per-char
+  // branch pre-empted BOTH attempts and emitted the same char twice,
+  // producing the "The FFrFee Adobe AcFFFfffffrobat Alternative"
+  // visual on Sample.pdf's per-glyph tagline.
+  //
+  // The 10M+ form-xobject case still works: `planPartialEdit` returns
+  // null for form-xobject runs (mergedFromPtrs is empty), the overlay
+  // path runs with `canReuseFont=false` (containerPtr != 0 ->
+  // `originalFontPtr=0` -> `reuse=false`), and this branch fires
+  // correctly on the FIRST and only emit attempt.
   //
   // Bails out (falls through to the normal path) when:
   //   - text contains whitespace (whitespace doesn't have a per-char
   //     font on the page; the normal per-chunk path already handles it)
   //   - we're not in backend strategy mode
+  //   - the caller supplied a usable source font to borrow (reuse=true)
   //   - ANY char fails to resolve both a font handle AND a charcode
   const isBackendStrategy = getActiveCharcodeStrategy() === "backend";
   const hasAnyWhitespaceForBranch = /\s/.test(opts.text);
   if (
+    !reuse &&
     isBackendStrategy &&
     !hasAnyWhitespaceForBranch &&
     opts.text.length > 0 &&
     m2.FPDFPageObj_CreateTextObj
   ) {
-    if (typeof console !== "undefined") {
-      console.log(
-        `[v2.charcode] per-char branch entered text=${JSON.stringify(opts.text)} originalFontPtr=${opts.originalFontPtr}`,
-      );
-    }
     const ctx = {
       module: m,
       pagePtr: opts.page.pagePtr,
@@ -391,11 +399,6 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     for (const ch of opts.text) {
       const charFont = findFontForChar(ch, ctx);
       if (!charFont) {
-        if (typeof console !== "undefined") {
-          console.log(
-            `[v2.charcode] per-char bail: no per-char font for ${JSON.stringify(ch)}`,
-          );
-        }
         allOk = false;
         break;
       }
@@ -405,11 +408,6 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         resolved.result.charcodes.length !== 1 ||
         resolved.result.missing.length > 0
       ) {
-        if (typeof console !== "undefined") {
-          console.log(
-            `[v2.charcode] per-char bail: no charcode for (${charFont}, ${JSON.stringify(ch)}). resolved=${JSON.stringify(resolved?.result ?? null)}`,
-          );
-        }
         allOk = false;
         break;
       }

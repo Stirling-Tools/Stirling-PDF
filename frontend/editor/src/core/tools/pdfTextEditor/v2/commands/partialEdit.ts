@@ -682,23 +682,39 @@ export function applyPartialEditPlan(
       }
       // Distribute the measured width across the emit ptrs for the
       // per-chunk model bounds (used by future edits).
+      //
+      // Per-ptr text tracking: when ptrs.length === 1 each ptr renders
+      // the whole insertText; when ptrs.length > 1 (which happens for
+      // the per-char backend emit branch and per-word emits) each ptr
+      // renders a SLICE of the text. We MUST store the per-ptr slice in
+      // newMergedFromTexts rather than the whole insertText, otherwise
+      // the next planPartialEdit's sanity check
+      // (`prevText.slice(start, end) !== subText`, line 151) fails for
+      // every entry past the first and forces the destructive overlay
+      // path - which removes the surviving originals and re-emits via
+      // SetText through the borrowed font, producing the tofu/cascade
+      // we just fixed in the per-char branch.
       let runningCursor = anchorX;
-      // Distribute char-start across the ptrs sequentially.
-      let runningCharOffset = 0;
-      const insertCharLen = insertText.length / Math.max(1, ptrs.length);
+      const charsPerPtr = Math.max(
+        1,
+        Math.floor(insertText.length / Math.max(1, ptrs.length)),
+      );
+      let charCursor = 0;
       for (let i = 0; i < ptrs.length; i++) {
         const sliceWidth = measuredWidth / ptrs.length;
+        const isLast = i === ptrs.length - 1;
+        const sliceText = isLast
+          ? insertText.slice(charCursor)
+          : insertText.slice(charCursor, charCursor + charsPerPtr);
         newMergedFromPtrs.push(ptrs[i]);
-        newMergedFromTexts.push(insertText);
+        newMergedFromTexts.push(sliceText);
         newMergedFromBounds.push({
           x: runningCursor,
           right: runningCursor + sliceWidth,
         });
-        newMergedFromCharStarts.push(
-          op.startBIdx + Math.round(runningCharOffset),
-        );
+        newMergedFromCharStarts.push(op.startBIdx + charCursor);
         runningCursor += sliceWidth;
-        runningCharOffset += insertCharLen;
+        charCursor += sliceText.length;
       }
       insertedPtrs.push(...ptrs);
       if (runningCursor > lastEnd) lastEnd = runningCursor;
