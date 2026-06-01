@@ -392,14 +392,16 @@ jobs:
           tauriScript: npx tauri
           args: --bundles appimage
 
-      # Strip the bundled libwayland-*.so* files that linuxdeploy pulls in from
-      # the Ubuntu 22.04 build host. They collide with the system wayland on
-      # newer distros (Fedora 43, recent Arch, Aurora), producing
-      # "Could not create default EGL display: EGL_BAD_PARAMETER" and a blank
-      # WebKit window. See Stirling-PDF#6240 - LD_PRELOAD-ing the system
-      # libwayland-client.so works around the same conflict at runtime; this
-      # bakes the fix into the artifact so users don't need the workaround.
-      - name: Strip bundled libwayland from AppImage
+      # Strip the bundled GUI / display stack so the AppImage uses each user's
+      # system copy of WebKitGTK, GTK, Pango, Cairo, fontconfig, wayland, etc.
+      # The Ubuntu-22.04 build host's WebKit ships a Skia COLRv1 vector OOB bug
+      # plus a libwayland that collides with Fedora 43 / Aurora / recent Arch
+      # (EGL_BAD_PARAMETER blank window) - see Stirling-PDF#6240. The .deb/.rpm
+      # already depend on the system stack and work fine on those distros;
+      # this converges the AppImage on the same model. Tradeoff: the AppImage
+      # now requires WebKit2GTK 4.1 + the standard desktop libs to be present,
+      # which is true on any GUI Linux install but not on minimal/server hosts.
+      - name: Strip bundled GUI stack from AppImage
         if: matrix.platform == 'ubuntu-22.04'
         shell: bash
         env:
@@ -415,7 +417,7 @@ jobs:
           # into a temp dir, so any relative path stops resolving after that.
           mapfile -t IMAGES < <(find "$BUNDLE_DIR" -maxdepth 1 -type f -name '*.AppImage' -printf '%p\n' 2>/dev/null || true)
           if [ "${#IMAGES[@]}" -eq 0 ]; then
-            echo "No AppImage produced (build likely failed earlier) - skipping libwayland strip"
+            echo "No AppImage produced (build likely failed earlier) - skipping GUI-stack strip"
             exit 0
           fi
 
@@ -434,10 +436,45 @@ jobs:
             echo "Fetched appimagetool to $APPIMAGETOOL"
           fi
 
+          # Patterns to strip. Each gets globbed inside every dir in LIBDIRS.
+          # Anything desktop Linux is guaranteed to provide goes here; libs
+          # whose versions vary widely between distros (ICU, NSS, libssl,
+          # libsoup, libsqlite) stay bundled so the AppImage keeps working
+          # across distro versions.
+          STRIP_GLOBS=(
+            'libwayland-*.so*'
+            'libwebkit2gtk-*.so*'
+            'libjavascriptcoregtk-*.so*'
+            'libgtk-3.so*'
+            'libgdk-3.so*'
+            'libgdk_pixbuf-*.so*'
+            'libpango-*.so*'
+            'libpangocairo-*.so*'
+            'libpangoft2-*.so*'
+            'libpangoxft-*.so*'
+            'libcairo.so*'
+            'libcairo-gobject.so*'
+            'libharfbuzz.so*'
+            'libharfbuzz-icu.so*'
+            'libharfbuzz-subset.so*'
+            'libfontconfig.so*'
+            'libfreetype.so*'
+            'libxkbcommon.so*'
+            'libxkbcommon-x11.so*'
+            'libatk-1.0.so*'
+            'libatk-bridge-2.0.so*'
+            'libatspi.so*'
+            'libepoxy.so*'
+          )
+          LIBDIRS=(
+            'squashfs-root/usr/lib'
+            'squashfs-root/usr/lib/x86_64-linux-gnu'
+          )
+
           STRIPPED_ANY=0
           for REL in "${IMAGES[@]}"; do
             IMG="$(readlink -f "$REL")"
-            echo "Stripping libwayland from $IMG"
+            echo "Stripping bundled GUI stack from $IMG"
             WORK=$(mktemp -d)
             pushd "$WORK" > /dev/null
 
@@ -446,16 +483,20 @@ jobs:
             "$IMG" --appimage-extract > /dev/null
 
             REMOVED=0
-            for f in squashfs-root/usr/lib/libwayland-*.so* \
-                     squashfs-root/usr/lib/x86_64-linux-gnu/libwayland-*.so*; do
-              if [ -e "$f" ]; then
-                rm -f "$f"
-                echo "  removed $f"
-                REMOVED=$((REMOVED + 1))
-              fi
+            for dir in "${LIBDIRS[@]}"; do
+              [ -d "$dir" ] || continue
+              for pattern in "${STRIP_GLOBS[@]}"; do
+                for f in "$dir"/$pattern; do
+                  if [ -e "$f" ]; then
+                    rm -f "$f"
+                    echo "  removed $f"
+                    REMOVED=$((REMOVED + 1))
+                  fi
+                done
+              done
             done
             if [ "$REMOVED" -eq 0 ]; then
-              echo "  no bundled libwayland-*.so* found - nothing to strip"
+              echo "  no bundled GUI libs found - nothing to strip"
               popd > /dev/null
               rm -rf "$WORK"
               continue
@@ -474,14 +515,14 @@ jobs:
             popd > /dev/null
             rm -rf "$WORK"
             STRIPPED_ANY=1
-            echo "  repacked $IMG"
+            echo "  repacked $IMG ($REMOVED libs removed)"
           done
 
           # The whole point of this step is the fix - if we found AppImages but
           # didn't strip any of them, surface that as a hard failure rather than
           # silently shipping the broken artifact.
           if [ "$STRIPPED_ANY" -eq 0 ]; then
-            echo "Found ${#IMAGES[@]} AppImage(s) but none contained bundled libwayland - either linuxdeploy stopped bundling it (good) or paths drifted (investigate)"
+            echo "Found ${#IMAGES[@]} AppImage(s) but none contained bundled GUI libs - either linuxdeploy stopped bundling them (good) or paths drifted (investigate)"
           fi
 
       - name: Clear release GPG key from runner keyring (Linux)
