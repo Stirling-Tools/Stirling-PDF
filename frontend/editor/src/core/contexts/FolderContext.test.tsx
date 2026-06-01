@@ -122,6 +122,9 @@ describe("FolderContext sync-banner gating", () => {
   });
 
   test("500 (server error) DOES surface a banner", async () => {
+    // Surfacing the banner also logs a warning - that's the contract this branch
+    // tests for.
+    vi.spyOn(console, "warn").mockImplementation(() => {});
     mockList.mockRejectedValue(axiosError(500, "internal"));
     await renderAndWaitForPull();
     expect(screen.getByTestId("error").textContent).toContain(
@@ -133,7 +136,8 @@ describe("FolderContext sync-banner gating", () => {
   test("network error (no response) DOES surface a banner", async () => {
     // axios on a network failure rejects with an Error that has NO
     // `.response` property - that's the "status === undefined" branch
-    // the gate explicitly covers.
+    // the gate explicitly covers. Surfacing the banner also logs a warning.
+    vi.spyOn(console, "warn").mockImplementation(() => {});
     mockList.mockRejectedValue(new Error("ECONNREFUSED"));
     await renderAndWaitForPull();
     expect(screen.getByTestId("error").textContent).toContain(

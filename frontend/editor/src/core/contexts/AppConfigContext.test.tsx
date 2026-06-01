@@ -92,6 +92,8 @@ describe("AppConfigContext", () => {
   });
 
   it("should handle network errors", async () => {
+    // Production logs once retries are exhausted; the test drives that path.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const errorMessage = "Network error occurred";
     const mockError = new Error(errorMessage);
     // Network errors don't have response property
@@ -249,6 +251,9 @@ describe("AppConfigContext", () => {
   });
 
   it("should handle initial config prop", async () => {
+    // apiClient.get isn't mocked here, so the implicit "fetch fails" path
+    // exhausts retries and logs. Test only asserts the API was called.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const initialConfig = {
       enableLogin: false,
       appNameNavbar: "Initial App",

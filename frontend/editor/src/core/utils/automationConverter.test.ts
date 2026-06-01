@@ -2,7 +2,7 @@
  * Unit tests for automationConverter import/export round-tripping.
  */
 
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import {
   convertToAutomationConfig,
   convertToFolderScanningConfig,
@@ -111,6 +111,9 @@ describe("automationConverter", () => {
     });
 
     test("falls back to operation key when no endpoint is registered", () => {
+      // Production warns when a config references an unregistered operation;
+      // the test deliberately drives that fallback path.
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const automation: AutomationConfig = {
         ...sampleAutomation,
         operations: [{ operation: "unknownTool", parameters: {} }],

@@ -76,6 +76,7 @@ vi.mock("../../services/fileStorage", () => ({
         thumbnail: thumbnail,
       });
     }),
+    storeStirlingFile: vi.fn().mockResolvedValue(undefined),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
     cleanup: vi.fn().mockResolvedValue(undefined),
   },
@@ -496,6 +497,10 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
     });
 
     test("should send correct PDF/A parameters for pdf-to-pdfa conversion", async () => {
+      // Test files aren't registered in the FileContext stub registry, so
+      // production warns about the stub/output mismatch - incidental to what
+      // this test asserts.
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),
         {
@@ -638,6 +643,9 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
   describe("Error Scenarios in Smart Detection", () => {
     test("should handle partial failures in multi-file processing", async () => {
+      // Production warns when an individual file in a batch fails; the test
+      // deliberately drives one mock rejection to exercise that path.
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),
         {

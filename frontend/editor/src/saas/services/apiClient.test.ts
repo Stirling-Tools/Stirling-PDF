@@ -177,6 +177,8 @@ describe("apiClient", () => {
   });
 
   it("should handle refresh token failure", async () => {
+    // Production logs the refresh failure; this test deliberately drives it.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const oldToken = "old-token";
 
     const oldSession = {

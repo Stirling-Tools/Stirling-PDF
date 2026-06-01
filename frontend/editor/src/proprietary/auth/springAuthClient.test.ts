@@ -89,6 +89,7 @@ describe("SpringAuthClient", () => {
       );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
+      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
 
       const result = await springAuth.getSession();
 
@@ -117,6 +118,7 @@ describe("SpringAuthClient", () => {
       );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
+      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
 
       const result = await springAuth.getSession();
 
@@ -129,6 +131,9 @@ describe("SpringAuthClient", () => {
 
   describe("signInWithPassword", () => {
     it("should successfully sign in with email and password", async () => {
+      // The fake token isn't a real JWT, so calculateAdaptiveIntervals warns
+      // about defaults - incidental to what this test verifies.
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const credentials = {
         email: "test@example.com",
         password: "password123",
@@ -176,6 +181,8 @@ describe("SpringAuthClient", () => {
     });
 
     it("should return error on failed login", async () => {
+      // Production logs the failure; this test deliberately drives the error path.
+      vi.spyOn(console, "error").mockImplementation(() => {});
       const credentials = {
         email: "wrong@example.com",
         password: "wrongpassword",
@@ -236,6 +243,8 @@ describe("SpringAuthClient", () => {
     });
 
     it("should return error on failed registration", async () => {
+      // Production logs the failure; this test deliberately drives the error path.
+      vi.spyOn(console, "error").mockImplementation(() => {});
       const credentials = {
         email: "existing@example.com",
         password: "password123",
@@ -283,6 +292,8 @@ describe("SpringAuthClient", () => {
     });
 
     it("should clear JWT even if logout request fails", async () => {
+      // Production logs the backend failure; this test deliberately drives it.
+      vi.spyOn(console, "error").mockImplementation(() => {});
       const mockToken = "jwt-to-clear";
       localStorage.setItem("stirling_jwt", mockToken);
 
@@ -301,6 +312,9 @@ describe("SpringAuthClient", () => {
 
   describe("refreshSession", () => {
     it("should refresh JWT token successfully", async () => {
+      // The fake token isn't a real JWT, so calculateAdaptiveIntervals warns
+      // about defaults - incidental to what this test verifies.
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const newToken = "refreshed-jwt-token";
       const mockUser = {
         id: "123",

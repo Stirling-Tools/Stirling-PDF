@@ -78,6 +78,7 @@ vi.mock("../../services/fileStorage", () => ({
         thumbnail: thumbnail,
       });
     }),
+    storeStirlingFile: vi.fn().mockResolvedValue(undefined),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
     cleanup: vi.fn().mockResolvedValue(undefined),
   },
@@ -571,6 +572,9 @@ describe("Convert Tool Integration Tests", () => {
 
   describe("File Upload Integration", () => {
     test("should handle multiple file uploads correctly", async () => {
+      // Test mocks only one apiClient.post response; the second file hits an
+      // undefined response and production warns about the conversion failure.
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const mockBlob = new Blob(["zip-content"], { type: "application/zip" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 

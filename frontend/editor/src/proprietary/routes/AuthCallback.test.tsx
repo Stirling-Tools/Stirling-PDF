@@ -90,6 +90,8 @@ describe("AuthCallback", () => {
   });
 
   it("should redirect to login when no access token in hash", async () => {
+    // Production logs the failure; this test deliberately drives that path.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     // No hash or empty hash
     window.location.hash = "";
 
@@ -109,6 +111,8 @@ describe("AuthCallback", () => {
   });
 
   it("should redirect to login when token validation fails", async () => {
+    // Production logs the failure; this test deliberately drives that path.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const invalidToken = "invalid-oauth-token";
     window.location.hash = `#access_token=${invalidToken}`;
 
@@ -137,6 +141,8 @@ describe("AuthCallback", () => {
   });
 
   it("should handle errors gracefully", async () => {
+    // Production logs the thrown error; this test deliberately throws.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const mockToken = "error-token";
     window.location.hash = `#access_token=${mockToken}`;
 
