@@ -49,7 +49,7 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
     await page.locator('input[type="submit"], button[type="submit"]').click();
 
     // Back on Stirling-PDF, authenticated dashboard renders
-    await page.waitForURL((url) => !url.pathname.includes("/login"), {
+    await page.waitForURL((url) => url.pathname === "/" || url.pathname === "/dashboard", {
       timeout: 30_000,
     });
     await expect(
