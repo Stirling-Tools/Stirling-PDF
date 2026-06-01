@@ -9,6 +9,18 @@ import {
 
 const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const STARTUP_DELAY_MS = 15_000;
+/**
+ * When the headless auto-update path fails (bad signature, corrupt download,
+ * disk full, network drop mid-install) we record the timestamp here and skip
+ * the auto attempt for [`AUTO_FAILURE_BACKOFF_MS`] before trying again. Without
+ * this, a persistent failure restart-loops the app on every launch.
+ *
+ * The interactive flow still works during the backoff window — the user can
+ * open Settings → Software Updates and click Install Now manually, which
+ * clears the backoff on success.
+ */
+const AUTO_FAILURE_KEY = "stirling-pdf-updater:autoFailedAt";
+const AUTO_FAILURE_BACKOFF_MS = 6 * 60 * 60 * 1000;
 
 /**
  * Desktop-only hook that checks for updates on startup and handles the
@@ -130,6 +142,21 @@ export function useDesktopUpdatePopup() {
             );
             return;
           }
+
+          // Skip the headless attempt if a previous one failed recently.
+          // hasChecked is in-memory only, so without this guard a persistent
+          // failure (bad signature, corrupt download) restart-loops the app.
+          const failedAt = localStorage.getItem(AUTO_FAILURE_KEY);
+          if (
+            failedAt &&
+            Date.now() - parseInt(failedAt, 10) < AUTO_FAILURE_BACKOFF_MS
+          ) {
+            console.warn(
+              "[DesktopUpdatePopup] auto-update skipped: recent failure within backoff window",
+            );
+            return;
+          }
+
           const ci: CanInstallResult =
             await desktopUpdateService.canInstallUpdates();
           if (!ci.canInstall) {
@@ -139,11 +166,28 @@ export function useDesktopUpdatePopup() {
             return;
           }
           // Fully headless flow: download + install + restart with no UI.
+          // restart_app MUST be gated on install success — otherwise a failed
+          // install (which startInstall catches internally) cascades into a
+          // restart, and the in-memory `hasChecked` ref resets, so the next
+          // launch retries the same broken update. Restart loop.
+          let installed = false;
           try {
-            await installRef.current.actions.startInstall();
-            await installRef.current.actions.restartApp();
+            installed = await installRef.current.actions.startInstall();
           } catch (err) {
             console.error("[DesktopUpdatePopup] auto-update failed:", err);
+          }
+          if (installed) {
+            localStorage.removeItem(AUTO_FAILURE_KEY);
+            try {
+              await installRef.current.actions.restartApp();
+            } catch (err) {
+              console.error(
+                "[DesktopUpdatePopup] restart after auto-update failed:",
+                err,
+              );
+            }
+          } else {
+            localStorage.setItem(AUTO_FAILURE_KEY, String(Date.now()));
           }
           return;
         }

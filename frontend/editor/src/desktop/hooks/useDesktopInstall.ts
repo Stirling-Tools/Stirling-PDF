@@ -102,10 +102,12 @@ export function useDesktopInstall() {
           setState("installing");
         });
         await invoke<void>("download_and_install_update");
+        return true;
       } catch (err) {
         console.error("[useDesktopInstall] Install failed:", err);
         setErrorMessage(err instanceof Error ? err.message : String(err));
         setState("error");
+        return false;
       } finally {
         progressUnlisten?.();
         finishUnlisten?.();

@@ -198,6 +198,23 @@ fn provisioning_file_paths() -> Vec<PathBuf> {
     paths
 }
 
+/// A provisioning file should only lock the update-mode UI when it was placed
+/// somewhere that requires administrator rights to write to — i.e. the
+/// system-wide provisioning dir written by MSI/Intune. A file in the per-user
+/// `app_data_dir()` is just a user dropping JSON in their own profile; locking
+/// the UI based on that would let any local user permanently disable the
+/// Settings selector for themselves with no way back, because the file is
+/// deleted after apply but the lock flag persists in the store.
+pub(crate) fn provisioning_path_is_admin_owned(
+    provisioning_path: &std::path::Path,
+    system_dir: Option<&std::path::Path>,
+) -> bool {
+    match system_dir {
+        Some(dir) => provisioning_path.starts_with(dir),
+        None => false,
+    }
+}
+
 pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), String> {
     let provisioning_paths = provisioning_file_paths();
     let provisioning_path = provisioning_paths
@@ -272,13 +289,21 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
             serde_json::to_value(&mode)
                 .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
         );
-        // A provisioning file pinning the update mode also locks the UI so
-        // end users cannot flip it back — if IT wanted it to be user-editable
-        // they simply wouldn't include the field in their stirling-provisioning.json.
-        store.set(UPDATE_MODE_LOCKED_KEY, serde_json::json!(true));
+        // Only lock the UI when the provisioning file came from a path that
+        // requires admin rights to write — i.e. the system provisioning dir
+        // populated by MSI/Intune. A user dropping a file in their own
+        // `app_data_dir` must NOT lock themselves out of the Settings
+        // selector permanently (the file is deleted after apply, but the
+        // lock flag persists in the store).
+        let system_dir = system_provisioning_dir();
+        let locked = provisioning_path_is_admin_owned(
+            &provisioning_path,
+            system_dir.as_deref(),
+        );
+        store.set(UPDATE_MODE_LOCKED_KEY, serde_json::json!(locked));
         add_log(format!(
-            "🧩 Provisioning set update mode to {:?} (locked)",
-            mode
+            "🧩 Provisioning set update mode to {:?} (locked={})",
+            mode, locked
         ));
     }
 
@@ -413,4 +438,102 @@ pub async fn reset_setup_completion(app_handle: AppHandle) -> Result<(), String>
 
     log::info!("Setup completion flag reset successfully");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn user_app_data_provisioning_does_not_lock_ui() {
+        // A user dropping a provisioning file in their own roaming AppData
+        // (per-user, user-writable) must NOT permanently lock the update-mode
+        // selector. The file is deleted after apply but the lock flag would
+        // persist in the store, locking the user out with no way back.
+        let user_path = PathBuf::from(
+            "C:\\Users\\alice\\AppData\\Roaming\\Stirling-PDF\\stirling-provisioning.json",
+        );
+        let system_dir = PathBuf::from("C:\\ProgramData\\Stirling-PDF");
+
+        assert!(!provisioning_path_is_admin_owned(
+            &user_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn system_provisioning_dir_does_lock_ui() {
+        // A provisioning file in ProgramData\Stirling-PDF (or /Library, /etc)
+        // requires admin/root rights to write — those locations are how MSI
+        // and Intune deliver policy — so locking the UI here is correct.
+        let system_path = PathBuf::from(
+            "C:\\ProgramData\\Stirling-PDF\\stirling-provisioning.json",
+        );
+        let system_dir = PathBuf::from("C:\\ProgramData\\Stirling-PDF");
+
+        assert!(provisioning_path_is_admin_owned(
+            &system_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn linux_etc_provisioning_does_lock_ui() {
+        let system_path = PathBuf::from("/etc/stirling-pdf/stirling-provisioning.json");
+        let system_dir = PathBuf::from("/etc/stirling-pdf");
+        assert!(provisioning_path_is_admin_owned(
+            &system_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn linux_home_config_does_not_lock_ui() {
+        let user_path =
+            PathBuf::from("/home/alice/.config/Stirling-PDF/stirling-provisioning.json");
+        let system_dir = PathBuf::from("/etc/stirling-pdf");
+        assert!(!provisioning_path_is_admin_owned(
+            &user_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn macos_library_provisioning_does_lock_ui() {
+        let system_path = PathBuf::from(
+            "/Library/Application Support/Stirling-PDF/stirling-provisioning.json",
+        );
+        let system_dir =
+            PathBuf::from("/Library/Application Support/Stirling-PDF");
+        assert!(provisioning_path_is_admin_owned(
+            &system_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn macos_user_library_does_not_lock_ui() {
+        let user_path = PathBuf::from(
+            "/Users/alice/Library/Application Support/Stirling-PDF/stirling-provisioning.json",
+        );
+        let system_dir =
+            PathBuf::from("/Library/Application Support/Stirling-PDF");
+        assert!(!provisioning_path_is_admin_owned(
+            &user_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn no_system_dir_means_no_lock() {
+        // Defensive: when the platform has no defined system_provisioning_dir,
+        // refuse to lock — the user-AppData file is the only thing we'd be
+        // matching against, and that's the case we explicitly want to leave
+        // unlocked.
+        let user_path = PathBuf::from(
+            "C:\\Users\\alice\\AppData\\Roaming\\Stirling-PDF\\stirling-provisioning.json",
+        );
+        assert!(!provisioning_path_is_admin_owned(&user_path, None));
+    }
 }

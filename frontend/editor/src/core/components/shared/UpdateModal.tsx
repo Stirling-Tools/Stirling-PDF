@@ -50,7 +50,14 @@ export interface DesktopInstallProgress {
 }
 
 export interface DesktopInstallActions {
-  startInstall: () => Promise<void>;
+  /**
+   * Kick off the Tauri updater download + install. Resolves to `true` on
+   * success and `false` on failure — never rejects. Auto-mode callers MUST
+   * check the return value before calling [`restartApp`]; restarting on a
+   * failed install puts the app in a restart loop because the install state
+   * (`hasChecked`) resets on every launch.
+   */
+  startInstall: () => Promise<boolean>;
   restartApp: () => Promise<void>;
 }
 
