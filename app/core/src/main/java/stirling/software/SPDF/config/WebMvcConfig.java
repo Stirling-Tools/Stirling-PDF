@@ -51,7 +51,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
                 .resourceChain(true)
-                .resourceChain(true)
                 .addResolver(new EncodedResourceResolver());
 
         // 2. Vite fingerprinted assets (immutable)
@@ -59,7 +58,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/assets/**")
                 .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
 
         // 3. Media and fonts (immutable)
         registry.addResourceHandler("/images/**", "/fonts/**")
@@ -69,7 +69,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "fonts/",
                         "classpath:/static/fonts/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
-                .resourceChain(true)
                 .resourceChain(true)
                 .addResolver(new EncodedResourceResolver());
 
