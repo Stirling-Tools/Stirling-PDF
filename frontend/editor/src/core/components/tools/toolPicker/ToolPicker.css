@@ -1,0 +1,141 @@
+.tool-picker-scrollable {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 0.1875rem;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mantine-color-gray-5);
+}
+
+.search-input {
+  margin: 1rem;
+}
+
+.tool-subcategory-title {
+  text-transform: uppercase;
+  padding-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--tool-subcategory-text-color);
+  /* Align the text with tool labels to account for icon gutter */
+  padding-left: 1rem;
+}
+
+/* New row-style subcategory header with rule */
+.tool-subcategory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tool-subcategory-row-title {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--tool-subcategory-text-color);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.tool-subcategory-row-rule {
+  height: 1px;
+  background-color: var(--tool-subcategory-rule-color);
+  flex: 1 1 auto;
+}
+
+/* Selected tool highlight — theme-aware via CSS variable */
+:root {
+  --tool-button-selected-bg: var(--mantine-color-gray-2);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --tool-button-selected-bg: var(--mantine-color-dark-4);
+}
+
+/* Compact tool buttons */
+.tool-button {
+  font-size: 0.875rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.tool-button .mantine-Button-label {
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.tool-button-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Container to enable hover-only favourite star overlay */
+.tool-button-container {
+  position: relative;
+}
+
+.tool-button-star {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: var(--z-toolpicker-star); /* lower than sticky section headers */
+}
+
+.tool-button-container:hover .tool-button-star {
+  opacity: 1;
+}
+
+.search-input-container {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tool-button__description {
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.35;
+  margin-top: 0.15rem;
+  white-space: normal;
+  text-align: left;
+}
+
+/* Resting / compact tool list — taller rows, room for description. */
+.tool-picker__compact {
+  padding: 0.5rem var(--mantine-spacing-sm) var(--mantine-spacing-sm);
+}
+
+.tool-picker__compact .tool-button {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  height: auto;
+}
+
+.tool-picker__compact .tool-button .mantine-Button-label {
+  align-items: center;
+}
+
+.tool-picker__compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tool-picker__view-all {
+  margin-top: 0.75rem;
+}

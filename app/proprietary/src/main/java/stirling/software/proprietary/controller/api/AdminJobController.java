@@ -27,7 +27,7 @@ import stirling.software.common.service.TaskManager;
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/v1/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin Job Management", description = "Admin-only Job  Management APIs")
 public class AdminJobController {
 
@@ -41,7 +41,7 @@ public class AdminJobController {
      */
     @GetMapping("/job/stats")
     @Operation(summary = "Get job statistics")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<JobStats> getJobStats() {
         JobStats stats = taskManager.getJobStats();
         log.info(
@@ -58,7 +58,7 @@ public class AdminJobController {
      */
     @GetMapping("/job/queue/stats")
     @Operation(summary = "Get job queue statistics")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getQueueStats() {
         Map<String, Object> queueStats = jobQueue.getQueueStats();
         log.info("Admin requested queue stats: {} queued jobs", queueStats.get("queuedJobs"));
@@ -72,7 +72,7 @@ public class AdminJobController {
      */
     @PostMapping("/job/cleanup")
     @Operation(summary = "Cleanup old jobs")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> cleanupOldJobs() {
         int beforeCount = taskManager.getJobStats().getTotalJobs();
         taskManager.cleanupOldJobs();

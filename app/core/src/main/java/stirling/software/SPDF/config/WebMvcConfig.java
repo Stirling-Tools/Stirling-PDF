@@ -1,5 +1,8 @@
 package stirling.software.SPDF.config;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -25,6 +28,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
 
+    private static final CacheControl NO_CACHE = CacheControl.noCache();
+    private static final CacheControl IMMUTABLE_ONE_YEAR =
+            CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable();
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
@@ -32,43 +39,100 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Cache hashed assets (JS/CSS with content hashes) for 1 year
-        // These files have names like index-ChAS4tCC.js that change when content changes
-        // Check customFiles/static first, then fall back to classpath
+        String staticPath =
+                "file:"
+                        + stirling.software.common.configuration.InstallationPathConfig
+                                .getStaticPath();
+
+        // 1. Service worker and PWA metadata (never store)
+        // Browsers revalidate SW bytes anyway; no-store is the safest for atomic updates.
+        registry.addResourceHandler(
+                        "/sw.js", "/manifest.json", "/site.webmanifest", "/browserconfig.xml")
+                .addResourceLocations(staticPath, "classpath:/static/")
+                .setCacheControl(CacheControl.noStore())
+                .resourceChain(true)
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
+
+        // 2. Vite fingerprinted assets (immutable)
+        // These already have content hashes in filenames (e.g. index-ChAS4tCC.js)
         registry.addResourceHandler("/assets/**")
+                .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
+                .setCacheControl(IMMUTABLE_ONE_YEAR)
+                .resourceChain(true);
+
+        // 3. Media and fonts (immutable)
+        registry.addResourceHandler("/images/**", "/fonts/**")
                 .addResourceLocations(
-                        "file:"
-                                + stirling.software.common.configuration.InstallationPathConfig
-                                        .getStaticPath()
-                                + "assets/",
-                        "classpath:/static/assets/")
-                .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic())
+                        staticPath + "images/",
+                        "classpath:/static/images/",
+                        staticPath + "fonts/",
+                        "classpath:/static/fonts/")
+                .setCacheControl(IMMUTABLE_ONE_YEAR)
+                .resourceChain(true)
                 .resourceChain(true)
                 .addResolver(new EncodedResourceResolver());
 
-        // Don't cache index.html - it needs to be fresh to reference latest hashed assets
-        // Note: index.html is handled by ReactRoutingController for dynamic processing
-        registry.addResourceHandler("/index.html")
+        // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
+        // Use stale-while-revalidate to improve perceived performance.
+        registry.addResourceHandler(
+                        "/favicon.*",
+                        "/apple-touch-icon.png",
+                        "/android-chrome-*.png",
+                        "/mstile-*.png",
+                        "/safari-pinned-tab.svg",
+                        "/icons/**",
+                        "/modern-logo/**",
+                        "/classic-logo/**",
+                        "/robots.txt",
+                        "/3rdPartyLicenses.json",
+                        "/pdfjs/**",
+                        "/pdfjs-legacy/**",
+                        "/pdfium/**",
+                        "/locales/**",
+                        "/css/**",
+                        "/js/**",
+                        "/vendor/**",
+                        "/samples/**",
+                        "/og_images/**",
+                        "/Login/**",
+                        "/manifest-classic.json")
                 .addResourceLocations(
-                        "file:"
-                                + stirling.software.common.configuration.InstallationPathConfig
-                                        .getStaticPath(),
-                        "classpath:/static/")
-                .setCacheControl(CacheControl.noCache().mustRevalidate())
+                        staticPath,
+                        "classpath:/static/",
+                        staticPath + "pdfjs/",
+                        "classpath:/static/pdfjs/",
+                        staticPath + "pdfjs-legacy/",
+                        "classpath:/static/pdfjs-legacy/",
+                        staticPath + "pdfium/",
+                        "classpath:/static/pdfium/",
+                        staticPath + "locales/",
+                        "classpath:/static/locales/",
+                        staticPath + "css/",
+                        "classpath:/static/css/",
+                        staticPath + "js/",
+                        "classpath:/static/js/",
+                        staticPath + "vendor/",
+                        "classpath:/static/vendor/",
+                        staticPath + "samples/",
+                        "classpath:/static/samples/",
+                        staticPath + "og_images/",
+                        "classpath:/static/og_images/",
+                        staticPath + "Login/",
+                        "classpath:/static/Login/")
+                .setCacheControl(
+                        CacheControl.maxAge(Duration.ofDays(1))
+                                .cachePublic()
+                                .staleWhileRevalidate(Duration.ofDays(7)))
                 .resourceChain(true)
                 .addResolver(new EncodedResourceResolver());
 
-        // Handle all other static resources (js, css, images, fonts, etc.)
-        // Check customFiles/static first for user overrides
+        // 5. Catch-all (SPA fallback)
+        // Must check with server to ensure index.html is always fresh.
         registry.addResourceHandler("/**")
-                .addResourceLocations(
-                        "file:"
-                                + stirling.software.common.configuration.InstallationPathConfig
-                                        .getStaticPath(),
-                        "classpath:/static/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
-                .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResourceLocations(staticPath, "classpath:/static/")
+                .setCacheControl(NO_CACHE)
+                .resourceChain(true);
     }
 
     @Override
@@ -122,9 +186,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     applicationProperties.getSystem().getCorsAllowedOrigins());
 
             // Combine user-configured origins with Tauri origins
-            java.util.List<String> allOrigins =
-                    new java.util.ArrayList<>(
-                            applicationProperties.getSystem().getCorsAllowedOrigins());
+            List<String> allOrigins =
+                    new ArrayList<>(applicationProperties.getSystem().getCorsAllowedOrigins());
 
             // Always include Tauri origins for desktop app compatibility
             // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost

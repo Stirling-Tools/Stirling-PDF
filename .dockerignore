@@ -34,8 +34,8 @@ frontend/playwright-report/
 # Tauri/desktop builds
 src-tauri/target/
 src-tauri/dist/
-frontend/src-tauri/target/
-frontend/src-tauri/dist/
+frontend/editor/src-tauri/target/
+frontend/editor/src-tauri/dist/
 
 # IDE and editor
 .idea/
