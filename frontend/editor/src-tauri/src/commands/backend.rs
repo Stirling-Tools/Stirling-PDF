@@ -2,8 +2,21 @@ use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
-use crate::utils::{add_log, app_data_dir};
+use crate::utils::{add_log, app_data_dir, is_debug_logging_enabled};
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
+
+// Default JVM max heap for the bundled backend. Down from 2g - desktop users
+// rarely need that much, and it cuts idle RSS noticeably. Override at launch
+// with STIRLING_PDF_MAX_HEAP (e.g. "2g", "512m") for heavy workloads.
+const DEFAULT_MAX_HEAP: &str = "1g";
+
+fn resolve_max_heap() -> String {
+    std::env::var("STIRLING_PDF_MAX_HEAP")
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| DEFAULT_MAX_HEAP.to_string())
+}
 
 // Store backend process handle and port globally
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
@@ -202,9 +215,10 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
+    let max_heap_option = format!("-Xmx{}", resolve_max_heap());
 
     let java_options = vec![
-        "-Xmx2g",
+        max_heap_option.as_str(),
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
@@ -216,14 +230,17 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         jar_path.to_str().unwrap(),
     ];
 
-    // Log the equivalent command for external testing
-    let java_command = format!(
-        "TAURI_PARENT_PID={} \"{}\" {}",
-        std::process::id(),
-        java_path.display(),
-        java_options.join(" ")
-    );
-    add_log(format!("🔧 Equivalent command: {}", java_command));
+    // Full Java command is only useful when debugging launch problems, and it
+    // can include long absolute paths. Skip it in normal runs.
+    if is_debug_logging_enabled() {
+        let java_command = format!(
+            "TAURI_PARENT_PID={} \"{}\" {}",
+            std::process::id(),
+            java_path.display(),
+            java_options.join(" ")
+        );
+        add_log(format!("🔧 Equivalent command: {}", java_command));
+    }
     add_log(format!("📁 Backend logs will be in: {}", log_dir.display()));
 
     // Additional macOS-specific checks
@@ -345,16 +362,18 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                 }
                 tauri_plugin_shell::process::CommandEvent::Terminated(payload) => {
                     add_log(format!("💀 Backend terminated with code: {:?}", payload.code));
-                    if let Some(code) = payload.code {
-                        match code {
-                            0 => println!("✅ Process terminated normally"),
-                            1 => println!("❌ Process terminated with generic error"),
-                            2 => println!("❌ Process terminated due to misuse"),
-                            126 => println!("❌ Command invoked cannot execute"),
-                            127 => println!("❌ Command not found"),
-                            128 => println!("❌ Invalid exit argument"),
-                            130 => println!("❌ Process terminated by Ctrl+C"),
-                            _ => println!("❌ Process terminated with code: {}", code),
+                    if is_debug_logging_enabled() {
+                        if let Some(code) = payload.code {
+                            match code {
+                                0 => println!("✅ Process terminated normally"),
+                                1 => println!("❌ Process terminated with generic error"),
+                                2 => println!("❌ Process terminated due to misuse"),
+                                126 => println!("❌ Command invoked cannot execute"),
+                                127 => println!("❌ Command not found"),
+                                128 => println!("❌ Invalid exit argument"),
+                                130 => println!("❌ Process terminated by Ctrl+C"),
+                                _ => println!("❌ Process terminated with code: {}", code),
+                            }
                         }
                     }
                     // Clear the stored process handle
@@ -362,12 +381,14 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                     *process_guard = None;
                 }
                 _ => {
-                    println!("🔍 Unknown command event: {:?}", event);
+                    if is_debug_logging_enabled() {
+                        println!("🔍 Unknown command event: {:?}", event);
+                    }
                 }
             }
         }
 
-        if error_count > 0 {
+        if error_count > 0 && is_debug_logging_enabled() {
             println!("⚠️ Backend process ended with {} errors detected", error_count);
         }
     });
@@ -471,7 +492,6 @@ pub fn cleanup_backend() {
             }
             Err(e) => {
                 add_log(format!("❌ Failed to terminate backend process during cleanup: {}", e));
-                println!("❌ Failed to terminate backend process during cleanup: {}", e);
             }
         }
     }

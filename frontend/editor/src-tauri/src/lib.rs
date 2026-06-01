@@ -65,10 +65,19 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // Default to Warn in release so the Rust log crate stays quiet on stdout;
+  // dev builds keep Info for easier debugging. add_log() (file + ring buffer)
+  // is unaffected.
+  let log_level = if cfg!(debug_assertions) {
+    log::LevelFilter::Info
+  } else {
+    log::LevelFilter::Warn
+  };
+
   tauri::Builder::default()
     .plugin(
       tauri_plugin_log::Builder::new()
-        .level(log::LevelFilter::Info)
+        .level(log_level)
         .build()
     )
     .plugin(tauri_plugin_opener::init())

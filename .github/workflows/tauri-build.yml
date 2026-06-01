@@ -392,6 +392,87 @@ jobs:
           tauriScript: npx tauri
           args: --bundles appimage
 
+      # Strip the bundled libwayland-*.so* files that linuxdeploy pulls in from
+      # the Ubuntu 22.04 build host. They collide with the system wayland on
+      # newer distros (Fedora 43, recent Arch, Aurora), producing
+      # "Could not create default EGL display: EGL_BAD_PARAMETER" and a blank
+      # WebKit window. See Stirling-PDF#6240 - LD_PRELOAD-ing the system
+      # libwayland-client.so works around the same conflict at runtime; this
+      # bakes the fix into the artifact so users don't need the workaround.
+      - name: Strip bundled libwayland from AppImage
+        if: matrix.platform == 'ubuntu-22.04'
+        continue-on-error: true
+        shell: bash
+        env:
+          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          BUNDLE_DIR="frontend/editor/src-tauri/target/release/bundle/appimage"
+          mapfile -t IMAGES < <(find "$BUNDLE_DIR" -maxdepth 1 -type f -name '*.AppImage' 2>/dev/null || true)
+          if [ "${#IMAGES[@]}" -eq 0 ]; then
+            echo "No AppImage produced (build likely failed earlier) - skipping libwayland strip"
+            exit 0
+          fi
+
+          # Use the Tauri-cached appimagetool when present so we match the
+          # version that originally built the artifact; otherwise fetch a
+          # known-good release. Both paths set $APPIMAGETOOL for the repack.
+          CACHED_TOOL=$(find "$HOME/.cache/tauri" -maxdepth 4 -type f -name 'appimagetool*.AppImage' 2>/dev/null | head -n1)
+          if [ -n "$CACHED_TOOL" ]; then
+            APPIMAGETOOL="$CACHED_TOOL"
+            echo "Using cached appimagetool: $APPIMAGETOOL"
+          else
+            APPIMAGETOOL="$RUNNER_TEMP/appimagetool-x86_64.AppImage"
+            curl -fsSL -o "$APPIMAGETOOL" \
+              https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+            chmod +x "$APPIMAGETOOL"
+            echo "Fetched appimagetool to $APPIMAGETOOL"
+          fi
+
+          for IMG in "${IMAGES[@]}"; do
+            echo "Stripping libwayland from $IMG"
+            WORK=$(mktemp -d)
+            pushd "$WORK" > /dev/null
+
+            chmod +x "$IMG"
+            # --appimage-extract uses bsdtar internally, no FUSE required.
+            "$IMG" --appimage-extract > /dev/null
+
+            REMOVED=0
+            for f in squashfs-root/usr/lib/libwayland-*.so* \
+                     squashfs-root/usr/lib/x86_64-linux-gnu/libwayland-*.so*; do
+              if [ -e "$f" ]; then
+                rm -f "$f"
+                echo "  removed $f"
+                REMOVED=$((REMOVED + 1))
+              fi
+            done
+            if [ "$REMOVED" -eq 0 ]; then
+              echo "  no bundled libwayland-*.so* found - nothing to strip"
+              popd > /dev/null
+              rm -rf "$WORK"
+              continue
+            fi
+
+            OUT="$WORK/$(basename "$IMG")"
+            SIGN_ARGS=()
+            if [ "${SIGN:-0}" = "1" ] && [ -n "${SIGN_KEY:-}" ]; then
+              SIGN_ARGS+=(--sign --sign-key="$SIGN_KEY")
+            fi
+            ARCH=x86_64 "$APPIMAGETOOL" \
+              "${SIGN_ARGS[@]}" \
+              squashfs-root "$OUT"
+
+            mv -f "$OUT" "$IMG"
+            popd > /dev/null
+            rm -rf "$WORK"
+            echo "  repacked $IMG"
+          done
+
       - name: Clear release GPG key from runner keyring (Linux)
         if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         env:
