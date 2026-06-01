@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
@@ -9,11 +9,12 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import {
-  AgentsChatOverlay,
   AgentsCollapsedButton,
   AgentsSection,
   useAgentsEnabled,
 } from "@app/components/agents/AgentsPanel";
+import { useChat } from "@app/components/chat/ChatContext";
+import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
@@ -31,6 +32,10 @@ import {
 } from "@app/components/tools/FullscreenToolPanel";
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import "@app/components/tools/ToolPanel.css";
+
+const DEFAULT_CHAT_WIDTH = 18.5 * 16; // 18.5rem in px
+const MIN_CHAT_WIDTH = 240;
+const MAX_CHAT_WIDTH = 720;
 
 /**
  * Right-side rail wrapping the tool panel.
@@ -85,6 +90,54 @@ export default function RightSidebar() {
   };
 
   const [allToolsView, setAllToolsView] = useState(false);
+
+  const { isOpen: isChatOpen, setOpen: setChatOpen } = useChat();
+  const [chatWidthPx, setChatWidthPx] = useState(DEFAULT_CHAT_WIDTH);
+  const [isChatDragging, setIsChatDragging] = useState(false);
+  const chatDragState = useRef<{ startX: number; startWidth: number } | null>(
+    null,
+  );
+
+  const handleChatClose = useCallback(() => {
+    withViewTransition(() => setChatOpen(false));
+    setChatWidthPx(DEFAULT_CHAT_WIDTH);
+  }, [setChatOpen]);
+
+  const handleResizeChatPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      chatDragState.current = { startX: e.clientX, startWidth: chatWidthPx };
+      setIsChatDragging(true);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+
+      const onMove = (ev: PointerEvent) => {
+        if (!chatDragState.current) return;
+        const delta = chatDragState.current.startX - ev.clientX;
+        setChatWidthPx(
+          Math.max(
+            MIN_CHAT_WIDTH,
+            Math.min(MAX_CHAT_WIDTH, chatDragState.current.startWidth + delta),
+          ),
+        );
+      };
+
+      const cleanup = () => {
+        chatDragState.current = null;
+        setIsChatDragging(false);
+        document.body.style.removeProperty("cursor");
+        document.body.style.removeProperty("user-select");
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", cleanup);
+        window.removeEventListener("pointercancel", cleanup);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", cleanup);
+      window.addEventListener("pointercancel", cleanup);
+    },
+    [chatWidthPx],
+  );
 
   const handleShowAllTools = () => {
     withViewTransition(() => setAllToolsView(true));
@@ -147,6 +200,7 @@ export default function RightSidebar() {
 
   const computedWidth = () => {
     if (isMobile) return "100%";
+    if (isChatOpen) return `${chatWidthPx}px`;
     if (!isPanelVisible) return "3.5rem";
     return "18.5rem";
   };
@@ -182,15 +236,39 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : isChatOpen ? "" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ""
       } ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",
+        ...(isChatDragging ? { transition: "none" } : {}),
       }}
     >
-      {!fullscreenExpanded && !isPanelVisible && !isMobile && (
+      {!fullscreenExpanded && isChatOpen && (
+        <div
+          style={{
+            height: "100%",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div
+            className="agents-takeover__resize-handle"
+            onPointerDown={handleResizeChatPointerDown}
+            role="separator"
+            aria-label={t("chat.resize", "Resize chat panel")}
+            aria-orientation="vertical"
+          />
+          <ChatPanel
+            onBack={handleChatClose}
+            backLabel={t("agents.back_to_tools", "Back to tools")}
+          />
+        </div>
+      )}
+
+      {!fullscreenExpanded && !isChatOpen && !isPanelVisible && !isMobile && (
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">
             <ActionIcon
@@ -234,7 +312,7 @@ export default function RightSidebar() {
         </div>
       )}
 
-      {!fullscreenExpanded && isPanelVisible && (
+      {!fullscreenExpanded && !isChatOpen && isPanelVisible && (
         <div
           /* Fixed width matches the expanded panel width so the inner content is
              laid out at its final size from the moment it mounts. The outer
@@ -323,7 +401,6 @@ export default function RightSidebar() {
             onToolSelect={handleToolSelectWithTransition}
             compact={agentsEnabled && !allToolsView}
           />
-          <AgentsChatOverlay />
         </div>
       )}
 

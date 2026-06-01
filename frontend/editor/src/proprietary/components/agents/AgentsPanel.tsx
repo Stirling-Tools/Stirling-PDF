@@ -1,5 +1,4 @@
-import { useState, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import type { ElementType } from "react";
 import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
@@ -11,11 +10,9 @@ import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useChat } from "@app/components/chat/ChatContext";
-import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
 import { withViewTransition } from "@app/utils/viewTransition";
-import { Z_INDEX_AGENTS_CHAT_OVERLAY } from "@app/styles/zIndex";
 import "@app/components/agents/AgentsPanel.css";
 
 interface ComingSoonAgent {
@@ -79,7 +76,7 @@ const PREVIEW_COUNT = 3;
 /** Sidebar agents section — Stirling as hero CTA, coming-soon agents below. */
 export function AgentsSection() {
   const { t } = useTranslation();
-  const { isOpen, setOpen } = useChat();
+  const { isOpen, setOpen, isLoading } = useChat();
   const enabled = useAgentsEnabled();
   const [showAll, setShowAll] = useState(false);
 
@@ -94,13 +91,14 @@ export function AgentsSection() {
     <Box className="agents-section" w="100%">
       {/* Main Stirling agent — real and clickable */}
       <UnstyledButton
-        className="agent-button agent-button--hero"
+        className={`agent-button agent-button--hero${isLoading ? " agent-button--running" : ""}`}
         onClick={() => withViewTransition(() => setOpen(true))}
         aria-label={t("agents.stirling_name", "Stirling")}
       >
         <Group gap="sm" wrap="nowrap" align="center">
           <Box className="agent-button__logo">
             <StirlingLogoOutline size={28} />
+            {isLoading && <span className="agent-status-dot" />}
           </Box>
           <Box style={{ minWidth: 0, flex: 1 }}>
             <Text size="sm" fw={600} truncate>
@@ -173,7 +171,7 @@ export function AgentsSection() {
 /** Icon-only agent button in the collapsed (minimised) right rail. */
 export function AgentsCollapsedButton({ onExpand }: { onExpand: () => void }) {
   const { t } = useTranslation();
-  const { setOpen } = useChat();
+  const { setOpen, isLoading } = useChat();
   const enabled = useAgentsEnabled();
 
   if (!enabled) return null;
@@ -191,6 +189,7 @@ export function AgentsCollapsedButton({ onExpand }: { onExpand: () => void }) {
         className="agents-collapsed-btn"
       >
         <StirlingLogoOutline size={22} />
+        {isLoading && <span className="agent-status-dot" />}
       </UnstyledButton>
     </AppTooltip>
   );
@@ -273,87 +272,3 @@ export function AgentsFullscreenSection() {
   );
 }
 
-const DEFAULT_CHAT_WIDTH = 18.5 * 16; // 18.5rem in px
-const MIN_CHAT_WIDTH = 240;
-const MAX_CHAT_WIDTH = 720;
-
-/** Full-rail chat overlay rendered inside ToolPanel. */
-export function AgentsChatOverlay() {
-  const { t } = useTranslation();
-  const { isOpen, setOpen } = useChat();
-  const enabled = useAgentsEnabled();
-  const [widthPx, setWidthPx] = useState(DEFAULT_CHAT_WIDTH);
-  const [isClosing, setIsClosing] = useState(false);
-  const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
-
-  const handleClose = useCallback(() => {
-    setIsClosing(true);
-    setWidthPx(DEFAULT_CHAT_WIDTH);
-    setTimeout(() => {
-      setIsClosing(false);
-      withViewTransition(() => setOpen(false));
-    }, 280);
-  }, [setOpen]);
-
-  const handleResizePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      dragState.current = { startX: e.clientX, startWidth: widthPx };
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
-
-      const onMove = (ev: PointerEvent) => {
-        if (!dragState.current) return;
-        const delta = dragState.current.startX - ev.clientX;
-        setWidthPx(
-          Math.max(
-            MIN_CHAT_WIDTH,
-            Math.min(MAX_CHAT_WIDTH, dragState.current.startWidth + delta),
-          ),
-        );
-      };
-
-      const cleanup = () => {
-        dragState.current = null;
-        document.body.style.removeProperty("cursor");
-        document.body.style.removeProperty("user-select");
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", cleanup);
-        window.removeEventListener("pointercancel", cleanup);
-      };
-
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", cleanup);
-      window.addEventListener("pointercancel", cleanup);
-    },
-    [widthPx],
-  );
-
-  if (!enabled || (!isOpen && !isClosing)) return null;
-
-  return createPortal(
-    <Box
-      className="agents-takeover"
-      style={{
-        zIndex: Z_INDEX_AGENTS_CHAT_OVERLAY,
-        width: widthPx,
-        transition: isClosing
-          ? "width 280ms cubic-bezier(0.32, 0.72, 0, 1)"
-          : "none",
-      }}
-    >
-      <div
-        className="agents-takeover__resize-handle"
-        onPointerDown={handleResizePointerDown}
-        role="separator"
-        aria-label={t("chat.resize", "Resize chat panel")}
-        aria-orientation="vertical"
-      />
-      <ChatPanel
-        onBack={handleClose}
-        backLabel={t("agents.back_to_tools", "Back to tools")}
-      />
-    </Box>,
-    document.body,
-  );
-}

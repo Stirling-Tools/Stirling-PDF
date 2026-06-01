@@ -61,6 +61,23 @@
   background: var(--mantine-color-blue-light);
   color: var(--mantine-color-blue-filled);
   flex-shrink: 0;
+  position: relative;
+}
+
+.chat-panel__agent-pill--loading {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-green-6) 60%,
+    var(--border-subtle)
+  );
+}
+
+[data-mantine-color-scheme="dark"] .chat-panel__agent-pill--loading {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-green-5) 55%,
+    var(--border-subtle)
+  );
 }
 
 /* Dark-mode: let the pill blend into the rail. Just a thin border, no fill —
@@ -284,16 +301,14 @@
 
 .chat-message-user {
   justify-content: flex-end;
+  margin: 0.2rem 0;
 }
 
 .chat-message-assistant {
   justify-content: flex-start;
 }
 
-/* Bubble styling */
-.chat-message-user {
-  margin: 0.2rem 0;
-}
+/* Bubble styling — user only */
 
 .chat-bubble-user {
   max-width: 85%;
@@ -305,6 +320,7 @@
   color: white !important;
 }
 
+/* Assistant messages: no bubble, free-flowing with side padding */
 .chat-assistant-content {
   width: 100%;
   padding: 0 0.5rem;
@@ -317,4 +333,48 @@
 
 .chat-assistant-content p:last-child {
   margin-bottom: 0;
+}
+
+/* Thinking indicator */
+.chat-thinking {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  color: var(--mantine-color-blue-filled);
+}
+
+/* ─── Stirling logo thinking animation ─────────────────────────────────── */
+
+.stirling-thinking__path-right {
+  animation: stirling-orbit-right 2s ease-in-out infinite;
+}
+
+.stirling-thinking__path-left {
+  animation: stirling-orbit-left 2s ease-in-out infinite;
+}
+
+@keyframes stirling-orbit-right {
+  0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+  25%       { transform: translate(-1px, -5px); opacity: 0.45; }
+  50%       { transform: translate(-6px, 0); opacity: 0.9; }
+  75%       { transform: translate(-1px, 5px); opacity: 0.55; }
+}
+
+@keyframes stirling-orbit-left {
+  0%, 100% { transform: translate(0, 0); opacity: 1; }
+  25%       { transform: translate(1px, 5px); opacity: 0.85; }
+  50%       { transform: translate(6px, 0); opacity: 0.5; }
+  75%       { transform: translate(1px, -5px); opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stirling-thinking__path-right {
+    animation: none;
+    opacity: 0.5;
+  }
+  .stirling-thinking__path-left {
+    animation: none;
+    opacity: 1;
+  }
 }

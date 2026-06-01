@@ -98,6 +98,7 @@
   justify-content: center;
   color: var(--mantine-color-blue-filled);
   flex-shrink: 0;
+  position: relative;
 }
 
 /* Coming-soon agent rows */
@@ -236,10 +237,54 @@
   color: var(--mantine-color-blue-filled);
   cursor: pointer;
   transition: background 120ms ease-out;
+  position: relative;
 }
 
 .agents-collapsed-btn:hover {
   background: var(--mantine-color-default-hover);
+}
+
+/* ─── Running / in-progress status dot ──────────────────────────────────── */
+
+.agent-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mantine-color-green-6);
+  border: 1.5px solid var(--mantine-color-body);
+  animation: agent-dot-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes agent-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Green outline on hero Stirling button when agent is running in background */
+.agent-button.agent-button--running {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-green-6) 60%,
+    var(--border-subtle)
+  );
+}
+
+[data-mantine-color-scheme="dark"] .agent-button.agent-button--running {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-green-5) 55%,
+    var(--border-subtle)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-status-dot {
+    animation: none;
+  }
 }
 
 /* ─── Fullscreen hero card ───────────────────────────────────────────────── */
