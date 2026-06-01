@@ -21,7 +21,7 @@ import {
   type UsageSeriesResponse,
 } from "@portal/api/home";
 import { WelcomeCarousel } from "@portal/components/WelcomeCarousel";
-import { DocumentTypeGrid } from "@portal/components/DocumentTypeGrid";
+import { PopularUseCases } from "@portal/components/PopularUseCases";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { SingleOpRunner } from "@portal/components/SingleOpRunner";
@@ -516,7 +516,7 @@ export function Home() {
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
           <ProductGrid />
-          <DocumentTypeGrid />
+          <PopularUseCases />
         </>
       )}
 
@@ -529,7 +529,7 @@ export function Home() {
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
           <ProductGrid />
-          <DocumentTypeGrid />
+          <PopularUseCases />
         </>
       )}
 
@@ -543,7 +543,7 @@ export function Home() {
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
           <ProductGrid />
-          <DocumentTypeGrid />
+          <PopularUseCases />
         </>
       )}
 

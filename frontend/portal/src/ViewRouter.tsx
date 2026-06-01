@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Home } from "@portal/views/Home";
+import { Documents } from "@portal/views/Documents";
 import { Placeholder } from "@portal/views/Placeholder";
 import { VIEW_PATHS, type ViewId } from "@portal/contexts/ViewContext";
 
@@ -7,7 +8,6 @@ const PLACEHOLDER_PHASES: Partial<Record<ViewId, string>> = {
   editor: "Phase 8 — Editor",
   sources: "Phase 5 — Sources & Agents",
   pipelines: "Phase 4 — Pipelines",
-  documents: "Phase 6 — Documents",
   infrastructure: "Phase 7 — Infrastructure",
   usage: "Phase 8 — Usage & Billing",
   docs: "Phase 8 — Developer Docs",
@@ -36,12 +36,7 @@ export function ViewRouter() {
           <Placeholder view="sources" phase={PLACEHOLDER_PHASES.sources} />
         }
       />
-      <Route
-        path={VIEW_PATHS.documents}
-        element={
-          <Placeholder view="documents" phase={PLACEHOLDER_PHASES.documents} />
-        }
-      />
+      <Route path={VIEW_PATHS.documents} element={<Documents />} />
       <Route
         path={VIEW_PATHS.infrastructure}
         element={
