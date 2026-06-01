@@ -41,6 +41,14 @@ export interface PartialEditOp {
 export interface PartialEditPlan {
   removePtrs: Array<{ ptr: number; containerPtr: number }>;
   ops: PartialEditOp[];
+  /**
+   * Per-sub-run status (parallel to prevMergedFromPtrs). Used by apply
+   * to subtract the width of any all-deleted sub-runs that fall between
+   * two consecutive keep / anchor ops - otherwise kept text after a
+   * fully-deleted sub-run would stay at its original x and leave a
+   * visible gap in the saved PDF.
+   */
+  subRunStatus: Array<"all-kept" | "all-deleted" | "mixed">;
   /** Snapshot of current model arrays for revert. */
   prevMergedFromPtrs: number[];
   prevMergedFromTexts: string[];
@@ -236,6 +244,7 @@ export function planPartialEdit(
   return {
     removePtrs,
     ops,
+    subRunStatus,
     prevMergedFromPtrs: [...run.mergedFromPtrs],
     prevMergedFromTexts: [...run.mergedFromTexts],
     prevMergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
@@ -316,9 +325,26 @@ export function applyPartialEditPlan(
   let firstX = run.bounds.x;
   let lastEnd = run.bounds.x;
   let offset = 0;
+  // Tracks the highest sub-run index we've already accounted for in
+  // `offset`. Before processing each keep/anchor op, we walk forward
+  // and subtract the widths of any all-deleted sub-runs strictly
+  // between the previous processed index and this op's sub-run index.
+  // This closes the visible gap that would otherwise sit where the
+  // deleted sub-run used to live.
+  let processedUpTo = -1;
+  function absorbDeletesBefore(idx: number): void {
+    for (let i = processedUpTo + 1; i < idx; i++) {
+      if (plan.subRunStatus[i] === "all-deleted") {
+        const b = plan.prevMergedFromBounds[i];
+        if (b) offset -= b.right - b.x;
+      }
+    }
+    processedUpTo = Math.max(processedUpTo, idx);
+  }
 
   for (const op of plan.ops) {
     if (op.type === "keep" && op.subRunIdx !== undefined) {
+      absorbDeletesBefore(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const text = plan.prevMergedFromTexts[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
@@ -338,6 +364,7 @@ export function applyPartialEditPlan(
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
       const anchorIdx = op.anchorSubRunIdx;
+      if (anchorIdx !== undefined) absorbDeletesBefore(anchorIdx);
       const origBounds =
         anchorIdx !== undefined ? plan.prevMergedFromBounds[anchorIdx] : null;
       // Anchored inserts (replacing a mixed sub-run) emit at the

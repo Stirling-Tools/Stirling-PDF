@@ -1211,6 +1211,252 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }
   });
 
+  test("user-sample.pdf: deleting an entire word closes the gap (text after shifts left)", async ({
+    page,
+  }) => {
+    // Regression guard: when an edit fully removes a sub-run, the
+    // surviving sub-runs to its right used to STAY at their original
+    // x position, leaving a visible blank-space gap in the saved
+    // bitmap. Fix: the partialEdit apply walk now subtracts the
+    // width of any all-deleted sub-runs that fall between two
+    // consecutive keep/anchor ops, shifting subsequent keeps left.
+    //
+    // This test selects the whole word "Adobe" + its trailing space
+    // and deletes it. We assert:
+    //   * the kept sub-run that USED to live AFTER "Adobe " has
+    //     shifted LEFT (its new bounds.x < original bounds.x)
+    //   * the total run width has shrunk by approximately the width
+    //     of the deleted text (no orphaned gap)
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    // Snapshot the baseline including the bounds of every sub-run
+    // (we need the original x of the sub-run that lives AFTER "Adobe ").
+    const baseline = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  fontId: string;
+                  bounds: { x: number; width: number };
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r
+        ? {
+            id: r.id,
+            text: r.text,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromBounds: r.mergedFromBounds.map((b) => ({ ...b })),
+            boundsWidth: r.bounds.width,
+          }
+        : null;
+    });
+    if (!baseline) {
+      test.skip(true, "fixture missing tagline");
+      return;
+    }
+
+    // Find the first sub-run whose text begins after the "Adobe "
+    // word. We'll track its bounds.x before and after the delete.
+    const adobeChars = "Adobe";
+    const acrobatChars = "Acrobat";
+    const adobeStartCharIdx = baseline.text.indexOf(adobeChars);
+    const acrobatStartCharIdx = baseline.text.indexOf(acrobatChars);
+    expect(adobeStartCharIdx).toBeGreaterThan(0);
+    expect(acrobatStartCharIdx).toBeGreaterThan(adobeStartCharIdx);
+
+    // The sub-run containing the FIRST char of "Acrobat" - its
+    // original x is what we compare to.
+    let charCursor = 0;
+    let acrobatSubRunIdx = -1;
+    for (let i = 0; i < baseline.mergedFromTexts.length; i++) {
+      const sub = baseline.mergedFromTexts[i];
+      if (
+        acrobatStartCharIdx >= charCursor &&
+        acrobatStartCharIdx < charCursor + sub.length
+      ) {
+        acrobatSubRunIdx = i;
+        break;
+      }
+      charCursor += sub.length;
+    }
+    expect(acrobatSubRunIdx).toBeGreaterThan(0);
+    const origAcrobatX = baseline.mergedFromBounds[acrobatSubRunIdx].x;
+
+    // Select "Adobe " (the word + trailing whitespace) and delete it.
+    await page.evaluate(
+      ({ tid, start, end }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="v2-run-${tid}"]`,
+        );
+        if (!el) throw new Error("no run el");
+        el.focus();
+        const walker = document.createTreeWalker(
+          el,
+          NodeFilter.SHOW_TEXT,
+          null,
+        );
+        let startNode: Text | null = null;
+        let startOffset = 0;
+        let endNode: Text | null = null;
+        let endOffset = 0;
+        let remaining = start;
+        while (walker.nextNode()) {
+          const n = walker.currentNode as Text;
+          const len = n.textContent?.length ?? 0;
+          if (!startNode && remaining <= len) {
+            startNode = n;
+            startOffset = remaining;
+          }
+          if (!startNode) remaining -= len;
+          else break;
+        }
+        // Reset walker; re-walk for end.
+        const walker2 = document.createTreeWalker(
+          el,
+          NodeFilter.SHOW_TEXT,
+          null,
+        );
+        let r2 = end;
+        while (walker2.nextNode()) {
+          const n = walker2.currentNode as Text;
+          const len = n.textContent?.length ?? 0;
+          if (r2 <= len) {
+            endNode = n;
+            endOffset = r2;
+            break;
+          }
+          r2 -= len;
+        }
+        if (!startNode || !endNode) throw new Error("selection walk failed");
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("delete", false);
+      },
+      {
+        tid: baseline.id,
+        // Delete the whole word "Adobe" + the trailing space chars
+        // (sample has TWO spaces between words).
+        start: adobeStartCharIdx,
+        end: acrobatStartCharIdx,
+      },
+    );
+    await page.waitForTimeout(400);
+
+    const after = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                  bounds: { width: number };
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      return r
+        ? {
+            text: r.text,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromBounds: r.mergedFromBounds.map((b) => ({ ...b })),
+            boundsWidth: r.bounds.width,
+          }
+        : null;
+    }, baseline.id);
+    if (!after) throw new Error("post-edit run vanished");
+
+    // Text content: baseline minus "Adobe " (including the trailing
+    // double space).
+    const expectedText =
+      baseline.text.slice(0, adobeStartCharIdx) +
+      baseline.text.slice(acrobatStartCharIdx);
+    expect(after.text).toBe(expectedText);
+
+    // Find the sub-run that now contains "Acrobat" - it MUST have
+    // shifted LEFT of its original position to close the gap.
+    let newAcrobatX: number | null = null;
+    let cursor = 0;
+    for (let i = 0; i < after.mergedFromTexts.length; i++) {
+      const sub = after.mergedFromTexts[i];
+      const idx = (after.text.slice(cursor) + "").indexOf("Acrobat");
+      if (
+        idx >= 0 &&
+        cursor + idx >= cursor &&
+        cursor + idx < cursor + sub.length
+      ) {
+        newAcrobatX = after.mergedFromBounds[i].x;
+        break;
+      }
+      cursor += sub.length;
+    }
+    // Fallback: scan all sub-runs for one whose text starts with 'A'
+    // and is near the expected position.
+    if (newAcrobatX === null) {
+      for (let i = 0; i < after.mergedFromTexts.length; i++) {
+        if (after.mergedFromTexts[i].startsWith("A")) {
+          newAcrobatX = after.mergedFromBounds[i].x;
+          break;
+        }
+      }
+    }
+    if (newAcrobatX === null) {
+      // Pick the sub-run at the same INDEX as the original Acrobat
+      // sub-run (sub-run count may have changed but the post-Adobe
+      // sub-run should still exist).
+      const newIdx = Math.min(
+        acrobatSubRunIdx,
+        after.mergedFromBounds.length - 1,
+      );
+      newAcrobatX = after.mergedFromBounds[newIdx].x;
+    }
+    expect(
+      newAcrobatX,
+      `Acrobat sub-run did not shift left (original=${origAcrobatX}, new=${newAcrobatX})`,
+    ).toBeLessThan(origAcrobatX);
+
+    // Run width must have shrunk by roughly the width of "Adobe "
+    // (give or take a few pt for the per-word emit's positional
+    // padding). Anything close to zero shrinkage means the gap was
+    // left in place.
+    const widthShrinkage = baseline.boundsWidth - after.boundsWidth;
+    expect(
+      widthShrinkage,
+      `bounds.width barely shrank (Δ=${widthShrinkage}) - gap probably left in place`,
+    ).toBeGreaterThan(15);
+  });
+
   test("multiple consecutive spaces survive save and re-open", async ({
     page,
   }) => {
