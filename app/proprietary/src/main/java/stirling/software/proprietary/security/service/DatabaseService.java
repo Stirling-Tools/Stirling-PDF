@@ -551,7 +551,7 @@ public class DatabaseService implements DatabaseServiceInterface {
      */
     private String sanitizeSql(String sql) {
         // Remove block comments (/* ... */)
-        // TODO: I feel like this should re-evulated.
+        // TODO: I feel like this should re-evaluated.
         // Passing around SQL like this, smells a bit when we have Hibernate/Critaria API.
         String intermediateSql = BLOCK_COMMENT_PATTERN.matcher(sql).replaceAll(" ");
         // Remove line comments (--....)
