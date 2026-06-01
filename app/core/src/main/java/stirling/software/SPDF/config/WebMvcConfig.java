@@ -118,7 +118,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "og_images/",
                         "classpath:/static/og_images/",
                         staticPath + "Login/",
-                        "classpath:/static/Login/")
+                        "classpath:/static/Login/",
+                        staticPath + "icons/",
+                        "classpath:/static/icons/",
+                        staticPath + "modern-logo/",
+                        "classpath:/static/modern-logo/",
+                        staticPath + "classic-logo/",
+                        "classpath:/static/classic-logo/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()
