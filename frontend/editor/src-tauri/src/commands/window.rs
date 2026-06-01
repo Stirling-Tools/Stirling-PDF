@@ -47,9 +47,14 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
     // nothing more. We mirror that string byte-for-byte so windows share one data
     // dir (and thus IndexedDB / localStorage / cookies). macOS (WKWebView) and
     // Linux (WebKitGTK) don't have this constraint, so the arg is Windows-only.
+    //
+    // `--disable-pinch` turns off WebView2's built-in "Page Scale" pinch zoom,
+    // which otherwise intercepts trackpad pinches as a post-render compositor step
+    // and never dispatches the synthetic ctrl+wheel event the PDF viewer relies on
+    // for zoom. Must stay byte-for-byte in sync with tauri.conf.json.
     #[cfg(target_os = "windows")]
-    let builder =
-        builder.additional_browser_args("--enable-features=CertVerifierBuiltinFeature");
+    let builder = builder
+        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature --disable-pinch");
 
     builder.build().map_err(|e| e.to_string())
 }
