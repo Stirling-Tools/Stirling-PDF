@@ -1314,17 +1314,17 @@ class SvgToPdfParams(ApiModel):
 
 class TextRange(ApiModel):
     """
-    Text ranges to redact. Each entry specifies a short start and end anchor phrase (5–15 words each) taken from the extracted page text; all content between them (inclusive) is redacted. Keep anchors short and distinctive — do NOT use entire paragraphs. Both anchors must be exact short phrases present in the extracted text.
+    Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
     """
 
     end_string: str = Field(
         ...,
-        description="A short phrase (5–15 words) marking where redaction ends (inclusive). Copy it verbatim from the extracted page text — do not paraphrase or reconstruct from memory. Use a phrase from within the body text — shorter is more reliable. Do not combine a section heading with body text in a single anchor.",
+        description="A short, distinctive phrase (5–15 words) that marks where redaction ends (inclusive). Must appear verbatim in the document. Shorter phrases match more reliably.",
         min_length=1,
     )
     start_string: str = Field(
         ...,
-        description="A short phrase (5–15 words) marking where redaction begins (inclusive). Copy it verbatim from the extracted page text — do not paraphrase or reconstruct from memory. Use either a section heading alone (e.g. '#6: Image resolution') or a short phrase from within the body text alone — never combine a heading with the following body text in a single anchor, as they may not be contiguous in the extracted text.",
+        description="A short, distinctive phrase (5–15 words) that marks where redaction begins (inclusive). Must appear verbatim in the document — e.g. a section heading or a unique sentence fragment.",
         min_length=1,
     )
 
@@ -1402,7 +1402,7 @@ class RedactExecuteParams(ApiModel):
     )
     ranges: list[TextRange] | None = Field(
         None,
-        description="Text ranges to redact. Each entry specifies a short start and end anchor phrase (5–15 words each) taken from the extracted page text; all content between them (inclusive) is redacted. Keep anchors short and distinctive — do NOT use entire paragraphs. Both anchors must be exact short phrases present in the extracted text.",
+        description="Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.",
     )
     redact_image_pages: list[int] | None = Field(
         None,
@@ -1410,11 +1410,12 @@ class RedactExecuteParams(ApiModel):
     )
     regex_patterns: list[str] | None = Field(
         None,
-        description="Regex patterns — each match in the document is redacted. Use Java/PCRE syntax. Account for format variants: different separators, optional prefixes/suffixes, grouped vs ungrouped digits, locale spellings, etc.",
+        description="Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like phone numbers, email addresses, national ID numbers, or dates (which can appear with different separators, optional country codes, etc.). For fixed known strings such as names, use textValues instead.",
     )
     style: Style | None = Field(None, description="Redaction style options")
     text_values: list[str] | None = Field(
-        None, description="Exact strings to find and black out. One entry per phrase to redact."
+        None,
+        description="Exact strings to find and black out. One entry per phrase to redact. Best for known names, identifiers, and specific text found in the document.",
     )
     wipe_pages: list[int] | None = Field(
         None, description="1-indexed page numbers to wipe entirely (all content removed from those pages)."

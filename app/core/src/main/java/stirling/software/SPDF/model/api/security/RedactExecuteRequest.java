@@ -14,12 +14,19 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class RedactExecuteRequest extends PDFFile {
 
-    @Schema(description = "Exact strings to find and black out. One entry per phrase to redact.")
+    @Schema(
+            description =
+                    "Exact strings to find and black out. One entry per phrase to redact."
+                            + " Best for known names, identifiers, and specific text found in the document.")
     private List<String> textValues = new ArrayList<>();
 
     @Schema(
             description =
-                    "Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax.")
+                    "Regex patterns to match and redact. Each match anywhere in the document is blacked out."
+                            + " Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like"
+                            + " phone numbers, email addresses, national ID numbers, or"
+                            + " dates (which can appear with different separators, optional country codes,"
+                            + " etc.). For fixed known strings such as names, use textValues instead.")
     private List<String> regexPatterns = new ArrayList<>();
 
     @Schema(
