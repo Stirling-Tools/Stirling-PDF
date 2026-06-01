@@ -58,10 +58,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
 
-        // Fire the RAG-content purge before any redirect logic. Best-effort — failures don't
-        // change the logout outcome; the engine's TTL reaper backstops anything that misses.
         if (authentication != null) {
-            aiUserDataService.purgeRagContent(authentication.getName());
+            aiUserDataService.purgeUserDocuments(authentication.getName());
         }
 
         if (!response.isCommitted()) {

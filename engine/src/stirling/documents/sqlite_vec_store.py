@@ -430,7 +430,7 @@ class SqliteVecStore(DocumentStore):
         Same ``collection`` value can exist under multiple owners; we pick the
         first owner the caller has read access to. (In practice collections are
         keyed by content-hash file ids so cross-owner collisions are deliberate
-        — Alice and Bob both uploaded the same PDF.)
+        - Alice and Bob both uploaded the same PDF.)
         """
         placeholders = ",".join("?" * len(principals))
         row = self._conn.execute(

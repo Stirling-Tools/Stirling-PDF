@@ -92,8 +92,8 @@ class DocumentStore(ABC):
 
         TTL backstop for cases the explicit logout path misses (tab close,
         JWT expiry, engine restart). Returns the number of collections
-        deleted. Implementations compute the cutoff from the system clock —
-        no caller-supplied wall time, to avoid skew bugs.
+        deleted. Implementations compute the cutoff from the system clock,
+        not from a caller-supplied wall time, to avoid skew bugs.
         """
 
     # ── write paths (scoped by owner) ──────────────────────────────────────

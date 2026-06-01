@@ -285,15 +285,9 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         try {
-            // Capture the username BEFORE clearing the context — the purge call needs to identify
-            // who's logging out, and clearContext() drops the principal.
             String username = userService.getCurrentUsername();
             SecurityContextHolder.clearContext();
-
-            // Best-effort: clean up the user's RAG content on the AI engine. Failures here
-            // (engine down, network blip) must not stop the user logging out — the engine's
-            // TTL reaper backstops anything that slips through.
-            aiUserDataService.purgeRagContent(username);
+            aiUserDataService.purgeUserDocuments(username);
 
             log.debug("User logged out successfully");
 

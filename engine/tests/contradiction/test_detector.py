@@ -157,8 +157,8 @@ async def test_zero_claims_returns_clean_report(runtime: AppRuntime, file_a: AiF
         return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
     # Stubbing the summary agent is unavoidable (the production code calls
-    # it on every detect()); we just don't assert on what it returns —
-    # asserting on the canned value here would only re-prove that AsyncMock
+    # it on every detect()); we just don't assert on what it returns.
+    # Asserting on the canned value here would only re-prove that AsyncMock
     # works.
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("any text"))
 
