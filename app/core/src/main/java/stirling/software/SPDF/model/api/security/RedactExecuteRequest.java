@@ -19,7 +19,7 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Regex patterns — each match in the document is redacted. Use Java/PCRE syntax. Account for format variants: different separators, optional prefixes/suffixes, grouped vs ungrouped digits, locale spellings, etc.")
+                    "Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax.")
     private List<String> regexPatterns = new ArrayList<>();
 
     @Schema(
@@ -29,11 +29,10 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Text ranges to redact. Each entry specifies a short start and end anchor"
-                            + " phrase (5–15 words each) taken from the extracted page text; all"
-                            + " content between them (inclusive) is redacted. Keep anchors short"
-                            + " and distinctive — do NOT use entire paragraphs. Both anchors must"
-                            + " be exact short phrases present in the extracted text.")
+                    "Text ranges to redact by specifying a start and end anchor phrase. All"
+                            + " content between the two phrases (inclusive) is redacted. Anchors"
+                            + " work best when short and unique. They must appear"
+                            + " verbatim in the document.")
     private List<TextRange> ranges = new ArrayList<>();
 
     @Schema(
@@ -52,25 +51,18 @@ public class RedactExecuteRequest extends PDFFile {
     public record TextRange(
             @Schema(
                             description =
-                                    "A short phrase (5–15 words) marking where redaction begins"
-                                            + " (inclusive). Copy it verbatim from the extracted page"
-                                            + " text — do not paraphrase or reconstruct from memory."
-                                            + " Use either a section heading alone (e.g. '#6: Image"
-                                            + " resolution') or a short phrase from within the body"
-                                            + " text alone — never combine a heading with the following"
-                                            + " body text in a single anchor, as they may not be"
-                                            + " contiguous in the extracted text.",
+                                    "A short, distinctive phrase (5–15 words) that marks where"
+                                            + " redaction begins (inclusive). Must appear verbatim in"
+                                            + " the document — e.g. a section heading or a unique"
+                                            + " sentence fragment.",
                             requiredMode = Schema.RequiredMode.REQUIRED,
                             minLength = 1)
                     String startString,
             @Schema(
                             description =
-                                    "A short phrase (5–15 words) marking where redaction ends"
-                                            + " (inclusive). Copy it verbatim from the extracted page"
-                                            + " text — do not paraphrase or reconstruct from memory."
-                                            + " Use a phrase from within the body text — shorter is"
-                                            + " more reliable. Do not combine a section heading with"
-                                            + " body text in a single anchor.",
+                                    "A short, distinctive phrase (5–15 words) that marks where"
+                                            + " redaction ends (inclusive). Must appear verbatim in the"
+                                            + " document. Shorter phrases match more reliably.",
                             requiredMode = Schema.RequiredMode.REQUIRED,
                             minLength = 1)
                     String endString) {
