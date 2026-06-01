@@ -409,12 +409,22 @@ export function applyPartialEditPlan(
       }
       insertedPtrs.push(...ptrs);
       if (runningCursor > lastEnd) lastEnd = runningCursor;
-      // Update offset by the WIDTH DELTA against PDFium's actual
-      // rendered width. Negative delta (Helvetica narrower than
-      // original) shifts subsequent keeps LEFT to close the gap.
+      // Update offset:
+      //   * anchored (mixed-replacement): delta vs original sub-run
+      //     width. Negative delta shifts subsequent keeps LEFT (close
+      //     the gap when Helvetica is narrower than original glyphs).
+      //   * unanchored (pure user-typed insert in the middle of a
+      //     line, e.g. "Acrob|at" → "Acrobaaaat" with caret between
+      //     "b" and "a"): the inserted text occupies new space, so
+      //     subsequent keeps need to shift RIGHT by the full inserted
+      //     width. Without this every following sub-run rendered on
+      //     top of the new chars and the bitmap looked like the
+      //     insert never happened.
       if (origBounds) {
         const origWidth = origBounds.right - origBounds.x;
         offset += measuredWidth - origWidth;
+      } else {
+        offset += measuredWidth;
       }
     }
   }

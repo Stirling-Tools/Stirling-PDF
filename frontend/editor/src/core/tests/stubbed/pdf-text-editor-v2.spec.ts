@@ -1211,6 +1211,161 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }
   });
 
+  test("user-sample.pdf: inserting chars in the MIDDLE shifts subsequent text right (no overlap)", async ({
+    page,
+  }) => {
+    // Regression guard: inserting NEW chars between two kept sub-runs
+    // (e.g. caret between "Acrob" and "at" → type "aaa" → "Acrobaaaat")
+    // used to leave the inserted text overlapping the original
+    // following chars. The bitmap looked like the insert never
+    // happened. Fix: unanchored inserts now push the cumulative
+    // offset right by the inserted width so kept sub-runs after them
+    // shift right to make room.
+    //
+    // Asserts: the kept sub-run immediately AFTER the insertion has
+    // shifted RIGHT (its bounds.x > original bounds.x), and the run's
+    // total width grew by approximately the inserted width.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  bounds: { width: number };
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r
+        ? {
+            id: r.id,
+            text: r.text,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromBounds: r.mergedFromBounds.map((b) => ({ ...b })),
+            boundsWidth: r.bounds.width,
+          }
+        : null;
+    });
+    if (!baseline) {
+      test.skip(true, "fixture missing tagline");
+      return;
+    }
+
+    // Find caret position right after "Acrob" (between 'b' and 'a').
+    const acrobIdx = baseline.text.indexOf("Acrobat");
+    expect(acrobIdx).toBeGreaterThan(0);
+    const caretPos = acrobIdx + 5; // after "Acrob"
+
+    // Find original x of the sub-run that LIVES AFTER the caret -
+    // this is the one that should shift right after the insert.
+    let charCursor = 0;
+    let postCaretSubRunIdx = -1;
+    for (let i = 0; i < baseline.mergedFromTexts.length; i++) {
+      const len = baseline.mergedFromTexts[i].length;
+      if (caretPos >= charCursor && caretPos <= charCursor + len) {
+        // Caret is at end of this sub-run; the NEXT sub-run is what
+        // should shift.
+        postCaretSubRunIdx = i + 1;
+        break;
+      }
+      charCursor += len;
+    }
+    expect(postCaretSubRunIdx).toBeGreaterThan(0);
+    expect(postCaretSubRunIdx).toBeLessThan(baseline.mergedFromBounds.length);
+    const origPostCaretX = baseline.mergedFromBounds[postCaretSubRunIdx].x;
+
+    // Insert "aaa" at the caret position.
+    await execAt(page, baseline.id, caretPos, "insertText", "aaa");
+
+    const after = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                  bounds: { width: number };
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      return r
+        ? {
+            text: r.text,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromBounds: r.mergedFromBounds.map((b) => ({ ...b })),
+            boundsWidth: r.bounds.width,
+          }
+        : null;
+    }, baseline.id);
+    if (!after) throw new Error("post-edit run vanished");
+
+    // Sanity: text is exactly baseline with "aaa" inserted at caretPos.
+    const expectedText =
+      baseline.text.slice(0, caretPos) + "aaa" + baseline.text.slice(caretPos);
+    expect(after.text).toBe(expectedText);
+
+    // The sub-run that USED to live right after the caret must now
+    // have its x shifted RIGHT to make room for the inserted "aaa".
+    // Find it by scanning the post-edit sub-runs for the same content
+    // as baseline.mergedFromTexts[postCaretSubRunIdx], or by index
+    // (offset by the number of new "aaa" sub-runs inserted).
+    let newPostCaretX: number | null = null;
+    // Original next sub-run's text:
+    const targetText = baseline.mergedFromTexts[postCaretSubRunIdx];
+    // Find its first occurrence AFTER the insertion point in the
+    // after-array (skipping the "aaa" sub-runs).
+    let cursor = 0;
+    for (let i = 0; i < after.mergedFromTexts.length; i++) {
+      if (cursor >= caretPos + 3 && after.mergedFromTexts[i] === targetText) {
+        newPostCaretX = after.mergedFromBounds[i].x;
+        break;
+      }
+      cursor += after.mergedFromTexts[i].length;
+    }
+    expect(
+      newPostCaretX,
+      `could not find post-caret sub-run after insertion`,
+    ).not.toBeNull();
+    expect(
+      newPostCaretX!,
+      `post-caret sub-run did not shift right (orig=${origPostCaretX}, new=${newPostCaretX})`,
+    ).toBeGreaterThan(origPostCaretX + 5);
+
+    // Run width must have grown by at least the inserted "aaa" width.
+    const widthGrowth = after.boundsWidth - baseline.boundsWidth;
+    expect(
+      widthGrowth,
+      `bounds.width didn't grow (Δ=${widthGrowth}) - insert probably overlapped following text`,
+    ).toBeGreaterThan(10);
+  });
+
   test("user-sample.pdf: deleting an entire word closes the gap (text after shifts left)", async ({
     page,
   }) => {
