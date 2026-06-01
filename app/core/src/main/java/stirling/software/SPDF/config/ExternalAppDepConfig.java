@@ -242,9 +242,7 @@ public class ExternalAppDepConfig {
     private void checkPyMuPdf() {
         if (isCommandAvailable("pymupdf-convert")) {
             log.warn(
-                    "pymupdf-convert detected — PDF->Markdown will use PyMuPDF acceleration. "
-                            + "pymupdf-convert is a separate AGPL-3.0 program (see pymupdf-worker/); "
-                            + "its license does not extend to Stirling PDF.");
+                    "pymupdf-convert detected — PDF->Markdown will use PyMuPDF acceleration.");
         } else {
             log.info(
                     "pymupdf-convert not found — PDF->Markdown will use the bundled pdftohtml converter.");

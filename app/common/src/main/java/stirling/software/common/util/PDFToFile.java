@@ -166,9 +166,7 @@ public class PDFToFile {
      *
      * <p>When {@code pymupdf-convert} is installed and on PATH, conversion is delegated to it as a
      * subprocess. On any failure — or when the tool is absent — this transparently falls back to
-     * the bundled {@code pdftohtml}-based converter. {@code pymupdf-convert} is a SEPARATE,
-     * AGPL-3.0 licensed program (see {@code pymupdf-worker/}); invoking it as a subprocess does not
-     * extend its copyleft to this MIT-licensed code.
+     * the bundled {@code pdftohtml}-based converter.
      */
     public ResponseEntity<Resource> processPdfToMarkdown(
             MultipartFile inputFile, PyMuPdfConverter pyMuPdfConverter)

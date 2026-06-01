@@ -348,9 +348,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       python3 python3-venv ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy the AGPL-3.0 pymupdf-convert CLI source so it can be installed into the venv.
-# This is a separate program; installing it here does not affect the license of the
-# rest of the image. See pymupdf-worker/LICENSE.
 COPY pymupdf-worker/ /tmp/pymupdf-worker/
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
@@ -360,7 +357,6 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
       cryptography \
       "unoserver==${UNOSERVER_VERSION}" \
       pymupdf pymupdf4llm && \
-    # Install the pymupdf-convert CLI entry point (AGPL-3.0 separate program)
     /opt/venv/bin/pip install --no-cache-dir /tmp/pymupdf-worker && \
     rm -rf /tmp/pymupdf-worker && \
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
