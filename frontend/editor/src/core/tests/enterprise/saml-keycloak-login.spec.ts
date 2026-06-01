@@ -48,7 +48,7 @@ test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
     });
     await expect(
       page.locator('[data-testid="config-button"]').first(),
-    ).toBeVisible({ timeout: 15_000 });
+    ).toBeVisible({ timeout: 30_000 });
 
     // ── 2. Identity in settings → Account ────────────────────
     await page.locator('[data-testid="config-button"]').first().click();

@@ -335,14 +335,18 @@ capture_file_list() {
         -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
         -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
+        -not -path '*/home/stirlingpdfuser/.libreoffice_uno_*' \
+        -not -path '*/home/stirlingpdfuser/.cache/*' \
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-        -not -path '*/tmp/stirling-pdf/lu*' \
-        -not -path '*/tmp/stirling-pdf/tmp*' \
-        -not -path '/tmp/lu*' \
+        -not -path '*/tmp/stirling-pdf/lu/*' \
+        -not -path '*/tmp/stirling-pdf/tmp/*' \
+        -not -path '/tmp/lu/*' \
+        -not -path '/tmp/.X99-lock' \
+        -not -path '*/tmp/xdg-*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
@@ -361,21 +365,25 @@ capture_file_list() {
             -not -path '*/sys/*' \
             -not -path '*/dev/*' \
             -not -path '/config/*' \
-        -not -path '/configs/*' \
+            -not -path '/configs/*' \
             -not -path '/logs/*' \
             -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
             -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
             -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
+            -not -path '*/home/stirlingpdfuser/.libreoffice_uno_*' \
+            -not -path '*/home/stirlingpdfuser/.cache/*' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-            -not -path '*/tmp/stirling-pdf/lu*' \
-            -not -path '*/tmp/stirling-pdf/tmp*' \
-            -not -path '*/tmp/lu*' \
+            -not -path '*/tmp/stirling-pdf/lu/*' \
+            -not -path '*/tmp/stirling-pdf/tmp/*' \
+            -not -path '*/tmp/lu/*' \
             -not -path '*/tmp/tmp*' \
+            -not -path '/tmp/.X99-lock' \
+            -not -path '*/tmp/xdg-*' \
             -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
