@@ -856,6 +856,361 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(afterFontId).not.toMatch(/^base14:/);
   });
 
+  // ---------------------------------------------------------------
+  // Sequential-edit visual-integrity tests. Each test performs a
+  // series of single-character edits and after EVERY step asserts:
+  //   (1) run.text matches the expected after-edit string
+  //   (2) run.fontId stays on its source (non-base14) font
+  //   (3) run.bounds.y doesn't move (no vertical teleport)
+  //   (4) mergedFromTexts has no duplicate non-trivial fragment
+  //
+  // The bounds.y check is the cheap "visual" proxy: a regression
+  // that teleports text to the wrong line will fail it immediately,
+  // and a regression that swaps the font flips assertion (2). These
+  // assertions are stricter than "round-trip survives reload" - they
+  // catch any model-state damage at the moment it happens, so a
+  // future bug can be pinned to the exact keystroke that introduced
+  // it.
+  // ---------------------------------------------------------------
+
+  async function findTaglineRun(page: import("@playwright/test").Page) {
+    return await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  fontId: string;
+                  bounds: {
+                    x: number;
+                    y: number;
+                    width: number;
+                    height: number;
+                  };
+                  mergedFromTexts: string[];
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r
+        ? {
+            id: r.id,
+            text: r.text,
+            fontId: r.fontId,
+            bounds: { ...r.bounds },
+          }
+        : null;
+    });
+  }
+
+  async function readRun(page: import("@playwright/test").Page, id: string) {
+    return await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  fontId: string;
+                  bounds: { x: number; y: number };
+                  mergedFromTexts: string[];
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      return r
+        ? {
+            text: r.text,
+            fontId: r.fontId,
+            boundsX: r.bounds.x,
+            boundsY: r.bounds.y,
+            mergedFromTexts: [...r.mergedFromTexts],
+          }
+        : null;
+    }, id);
+  }
+
+  async function caretAt(
+    page: import("@playwright/test").Page,
+    tid: string,
+    pos: number,
+  ) {
+    await page.evaluate(
+      ({ tid, pos }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="v2-run-${tid}"]`,
+        );
+        if (!el) throw new Error("no run el");
+        el.focus();
+        const walker = document.createTreeWalker(
+          el,
+          NodeFilter.SHOW_TEXT,
+          null,
+        );
+        let node: Text | null = null;
+        let remaining = pos;
+        while (walker.nextNode()) {
+          const n = walker.currentNode as Text;
+          const len = n.textContent?.length ?? 0;
+          if (remaining <= len) {
+            node = n;
+            break;
+          }
+          remaining -= len;
+        }
+        if (!node) throw new Error("ran out of text walking caret");
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        range.setStart(node, remaining);
+        range.setEnd(node, remaining);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      },
+      { tid, pos },
+    );
+  }
+
+  async function execAt(
+    page: import("@playwright/test").Page,
+    tid: string,
+    pos: number,
+    cmd: "insertText" | "delete",
+    text?: string,
+  ) {
+    await caretAt(page, tid, pos);
+    await page.evaluate(
+      ({ cmd, text }) => {
+        document.execCommand(cmd, false, text);
+      },
+      { cmd, text },
+    );
+    await page.waitForTimeout(250);
+  }
+
+  function dedupeCheck(mergedFromTexts: string[]): string[] {
+    const counts = new Map<string, number>();
+    for (const t of mergedFromTexts) {
+      if (t.length < 3) continue;
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .filter(([, c]) => c > 1)
+      .map(([t]) => t);
+  }
+
+  test("user-sample.pdf: sequential type-3-chars-at-end keeps font + position stable", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "fixture missing tagline");
+      return;
+    }
+    expect(baseline.fontId).not.toMatch(/^base14:/);
+
+    // Type three chars at the end of the line, asserting after each
+    // keystroke that the font hasn't flipped and the line hasn't
+    // teleported off its original baseline.
+    let runningText = baseline.text;
+    for (const ch of ["A", "d", "o"]) {
+      runningText += ch;
+      await execAt(page, baseline.id, runningText.length - 1, "insertText", ch);
+      const after = await readRun(page, baseline.id);
+      if (!after) throw new Error("run vanished after type");
+      expect(after.text, `after typing ${ch}`).toBe(runningText);
+      expect(after.fontId, `font flipped after typing ${ch}`).not.toMatch(
+        /^base14:/,
+      );
+      expect(
+        Math.abs(after.boundsY - baseline.bounds.y),
+        `vertical teleport after typing ${ch} (Δy=${after.boundsY - baseline.bounds.y})`,
+      ).toBeLessThan(2);
+      const dupes = dedupeCheck(after.mergedFromTexts);
+      expect(
+        dupes,
+        `dupes after typing ${ch}: ${JSON.stringify(dupes)}`,
+      ).toEqual([]);
+    }
+  });
+
+  test("user-sample.pdf: sequential backspace-3-chars-from-end keeps font + position stable", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "fixture missing tagline");
+      return;
+    }
+
+    let runningText = baseline.text;
+    for (let i = 0; i < 3; i++) {
+      runningText = runningText.slice(0, -1);
+      await execAt(page, baseline.id, runningText.length + 1, "delete");
+      const after = await readRun(page, baseline.id);
+      if (!after) throw new Error("run vanished after backspace");
+      expect(after.text, `after backspace #${i + 1}`).toBe(runningText);
+      expect(
+        after.fontId,
+        `font flipped after backspace #${i + 1}`,
+      ).not.toMatch(/^base14:/);
+      expect(
+        Math.abs(after.boundsY - baseline.bounds.y),
+        `vertical teleport after backspace #${i + 1}`,
+      ).toBeLessThan(2);
+      const dupes = dedupeCheck(after.mergedFromTexts);
+      expect(
+        dupes,
+        `dupes after backspace #${i + 1}: ${JSON.stringify(dupes)}`,
+      ).toEqual([]);
+    }
+  });
+
+  test("user-sample.pdf: sequential delete-3-chars-from-middle keeps font + position stable", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "fixture missing tagline");
+      return;
+    }
+    // Find the index of "Acrobat" - we'll backspace the leading
+    // letters off it ('A', 'c', 'r') one at a time.
+    const acrobatStart = baseline.text.indexOf("Acrobat");
+    expect(acrobatStart).toBeGreaterThan(0);
+
+    let runningText = baseline.text;
+    for (let i = 0; i < 3; i++) {
+      // Each iteration we delete the char at position `acrobatStart`
+      // - which is the next char of what used to be "Acrobat" after
+      // the previous deletes.
+      runningText =
+        runningText.slice(0, acrobatStart) +
+        runningText.slice(acrobatStart + 1);
+      await execAt(page, baseline.id, acrobatStart + 1, "delete");
+      const after = await readRun(page, baseline.id);
+      if (!after) throw new Error("run vanished after middle delete");
+      expect(after.text, `after middle delete #${i + 1}`).toBe(runningText);
+      expect(
+        after.fontId,
+        `font flipped after middle delete #${i + 1}`,
+      ).not.toMatch(/^base14:/);
+      expect(
+        Math.abs(after.boundsY - baseline.bounds.y),
+        `vertical teleport after middle delete #${i + 1}`,
+      ).toBeLessThan(2);
+      const dupes = dedupeCheck(after.mergedFromTexts);
+      expect(
+        dupes,
+        `dupes after middle delete #${i + 1}: ${JSON.stringify(dupes)}`,
+      ).toEqual([]);
+    }
+  });
+
+  test("user-sample.pdf: interleaved delete-then-type sequence keeps font + position stable", async ({
+    page,
+  }) => {
+    // Mimics realistic user editing: delete a char, type a different
+    // one, repeat. Stresses both the "mixed sub-run" code path AND
+    // the cumulative-offset math across multiple replacements in the
+    // same line.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "fixture missing tagline");
+      return;
+    }
+
+    const sequence: Array<{
+      op: "insertText" | "delete";
+      pos: number;
+      ch?: string;
+    }> = [
+      // Delete the trailing "e" of Alternative.
+      { op: "delete", pos: baseline.text.length },
+      // Append a known-existing 'A'.
+      { op: "insertText", pos: baseline.text.length - 1, ch: "A" },
+      // Delete it.
+      { op: "delete", pos: baseline.text.length },
+      // Type 'e' back at the end.
+      { op: "insertText", pos: baseline.text.length - 1, ch: "e" },
+    ];
+
+    let runningText = baseline.text;
+    for (let i = 0; i < sequence.length; i++) {
+      const step = sequence[i];
+      if (step.op === "insertText") {
+        runningText =
+          runningText.slice(0, step.pos) +
+          (step.ch ?? "") +
+          runningText.slice(step.pos);
+        await execAt(page, baseline.id, step.pos, "insertText", step.ch);
+      } else {
+        runningText =
+          runningText.slice(0, step.pos - 1) + runningText.slice(step.pos);
+        await execAt(page, baseline.id, step.pos, "delete");
+      }
+      const after = await readRun(page, baseline.id);
+      if (!after) throw new Error(`run vanished after step ${i}`);
+      expect(after.text, `step ${i} (${step.op})`).toBe(runningText);
+      expect(after.fontId, `step ${i} font flipped`).not.toMatch(/^base14:/);
+      expect(
+        Math.abs(after.boundsY - baseline.bounds.y),
+        `step ${i} vertical teleport`,
+      ).toBeLessThan(2);
+      const dupes = dedupeCheck(after.mergedFromTexts);
+      expect(dupes, `step ${i} dupes: ${JSON.stringify(dupes)}`).toEqual([]);
+    }
+  });
+
   test("multiple consecutive spaces survive save and re-open", async ({
     page,
   }) => {
