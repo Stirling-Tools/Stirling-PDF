@@ -31,7 +31,10 @@
   bottom: 0;
   width: 1px;
   background: transparent;
-  transition: background 150ms ease, width 150ms ease, left 150ms ease;
+  transition:
+    background 150ms ease,
+    width 150ms ease,
+    left 150ms ease;
 }
 
 .agents-takeover__resize-handle:hover::after {
@@ -260,8 +263,13 @@
 }
 
 @keyframes agent-dot-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 /* Green outline on hero Stirling button when agent is running in background */

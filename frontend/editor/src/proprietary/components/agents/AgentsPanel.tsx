@@ -271,4 +271,3 @@ export function AgentsFullscreenSection() {
     </section>
   );
 }
-
