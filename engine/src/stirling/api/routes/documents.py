@@ -25,16 +25,11 @@ async def ingest_document(
 ) -> IngestDocumentResponse:
     """Replace-ingest a document's content under ``(owner_id, read_principals)``.
 
-    Stores both representations in one shot:
-      * embedded chunks for RAG search,
-      * ordered page text for whole-document reading,
-    plus the ACL row(s) that grant read access.
-
-    ``owner_id`` and ``read_principals`` are required on the request body —
-    the engine never defaults them. For personal uploads the caller sets
-    both to its user id; for org-shared uploads it sets owner to the org
-    and grantees to the target groups (``group:engineering``, etc.). We
-    still require ``X-User-Id`` on the request so the caller is
+    ``owner_id`` and ``read_principals`` are required on the request body.
+    For personal uploads the caller sets both to its user id;
+    for org-shared uploads it sets owner to the org and grantees to the
+    target groups (``group:engineering``, etc.).
+    We still require ``X-User-Id`` on the request so the caller is
     authenticated and PostHog tracks the right user.
     """
     chunks_indexed = await documents.ingest(
@@ -53,7 +48,7 @@ async def delete_document(
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],
 ) -> DeleteDocumentResponse:
-    """Remove the caller's copy of this document. Idempotent.
+    """Remove the caller's copy of this document.
 
     Owner is inferred from the caller - only personal-doc deletes go through
     here. Org-doc deletes will need an explicit owner_id once we add the
@@ -73,11 +68,11 @@ async def purge_caller_documents(
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],
 ) -> PurgeOwnerResponse:
-    """Delete every personal-doc collection owned by the caller. Idempotent.
+    """Delete every personal-doc collection owned by the caller.
 
-    Called by Java on logout so a user's RAG content disappears as soon as
+    Called by Java on logout so a user's document content disappears as soon as
     the session ends. Org-owned docs (where the caller is a reader but not
-    the owner) are not touched — only collections whose ``owner_id`` matches
+    the owner) are not touched - only collections whose ``owner_id`` matches
     the calling user are removed.
     """
     deleted = await documents.purge_owner(OwnerId(user_id))

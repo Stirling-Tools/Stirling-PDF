@@ -12,9 +12,7 @@ import lombok.NoArgsConstructor;
  * workflow can continue.
  *
  * <p>{@code ownerId} is the tenant the doc belongs to (a user for personal uploads, an org for
- * shared content). {@code readPrincipals} is the explicit list of principals granted read access -
- * never derived implicitly, since defaulting either field hides the tenancy choice from the caller.
- * For personal uploads, both are set to the caller's user id.
+ * shared content). {@code readPrincipals} is the explicit list of principals granted read access.
  */
 @Data
 @NoArgsConstructor
