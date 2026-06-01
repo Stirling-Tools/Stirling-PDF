@@ -145,6 +145,7 @@ export class ConnectionModeService {
 
     console.log("Switching to SaaS mode");
 
+    const previousMode = this.currentConfig?.mode ?? null;
     const serverConfig: ServerConfig = { url: saasServerUrl };
 
     await invoke("set_connection_mode", {
@@ -165,6 +166,26 @@ export class ConnectionModeService {
     );
 
     this.notifyListeners();
+
+    // Re-dispatch `jwt-available` so the proprietary AuthProvider re-runs
+    // getSession() now that the mode is "saas". During OAuth login,
+    // authService.saveTokenEverywhere fires the initial `jwt-available`
+    // BEFORE switchToSaaS runs - at that point getSession sees mode="local"
+    // and takes the standard Spring path, which fails for Supabase JWTs.
+    // Without re-firing here the AuthProvider's session state stays null
+    // until a manual reload.
+    //
+    // Only fire when the mode actually changed AND there's a token to
+    // validate - otherwise a stay-in-mode call (e.g. updating the SaaS
+    // server URL while already signed in) would cause every `jwt-available`
+    // consumer to refetch unnecessarily.
+    if (
+      previousMode !== "saas" &&
+      typeof window !== "undefined" &&
+      localStorage.getItem("stirling_jwt")
+    ) {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+    }
 
     console.log("Switched to SaaS mode successfully");
   }
@@ -208,6 +229,8 @@ export class ConnectionModeService {
 
     console.log("Switching to self-hosted mode:", serverConfig);
 
+    const previousMode = this.currentConfig?.mode ?? null;
+
     await invoke("set_connection_mode", {
       mode: "selfhosted",
       serverConfig,
@@ -230,6 +253,17 @@ export class ConnectionModeService {
     selfHostedServerMonitor.start(serverConfig.url);
 
     this.notifyListeners();
+
+    // See the comment in switchToSaaS: re-fire `jwt-available` so the
+    // AuthProvider re-validates its session in the new mode. The same race
+    // applies to the self-hosted OAuth flow. Only on an actual mode change.
+    if (
+      previousMode !== "selfhosted" &&
+      typeof window !== "undefined" &&
+      localStorage.getItem("stirling_jwt")
+    ) {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+    }
 
     console.log("Switched to self-hosted mode successfully");
   }

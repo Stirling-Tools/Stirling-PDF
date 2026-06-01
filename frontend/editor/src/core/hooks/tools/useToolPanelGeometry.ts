@@ -13,6 +13,31 @@ interface UseToolPanelGeometryOptions {
   quickAccessRef: RefObject<HTMLDivElement | null>;
 }
 
+function computeGeometry(
+  panelEl: HTMLDivElement,
+  quickAccessRef: RefObject<HTMLDivElement | null>,
+): ToolPanelGeometry {
+  const rect = panelEl.getBoundingClientRect();
+  const isRTL =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  let width: number;
+  let left: number;
+
+  if (isRTL) {
+    // RTL: panel is on the left, expands rightward
+    width = Math.max(360, window.innerWidth - rect.right);
+    left = rect.right;
+  } else {
+    // LTR: panel is on the right, expands leftward to the file sidebar
+    const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
+    const leftOffset = quickAccessRect ? quickAccessRect.right : 0;
+    width = Math.max(360, rect.right - leftOffset);
+    left = leftOffset;
+  }
+  const height = Math.max(rect.height, window.innerHeight - rect.top);
+  return { left, top: rect.top, width, height };
+}
+
 export function useToolPanelGeometry({
   enabled,
   toolPanelRef,
@@ -36,31 +61,7 @@ export function useToolPanelGeometry({
     let rafId: number | null = null;
 
     const computeAndSetGeometry = () => {
-      const rect = panelEl.getBoundingClientRect();
-      const isRTL =
-        typeof document !== "undefined" &&
-        document.documentElement.dir === "rtl";
-      let width: number;
-      let left: number;
-
-      if (isRTL) {
-        // RTL: panel is on the left, expands rightward
-        width = Math.max(360, window.innerWidth - rect.right);
-        left = rect.right;
-      } else {
-        // LTR: panel is on the right, expands leftward to the file sidebar
-        const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
-        const leftOffset = quickAccessRect ? quickAccessRect.right : 0;
-        width = Math.max(360, rect.right - leftOffset);
-        left = leftOffset;
-      }
-      const height = Math.max(rect.height, window.innerHeight - rect.top);
-      setGeometry({
-        left,
-        top: rect.top,
-        width,
-        height,
-      });
+      setGeometry(computeGeometry(panelEl, quickAccessRef));
     };
 
     const scheduleUpdate = () => {

@@ -63,7 +63,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isRainbowMode } = useRainbowThemeContext();
-  const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
+  const { isFilesModalOpen } = useFilesModalContext();
   const {
     handleReaderToggle,
     handleToolSelect,
@@ -131,7 +131,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         ).length;
         setPendingSignCount(pending);
       } catch {
-        /* silent — avoid noisy background error toasts */
+        /* silent - avoid noisy background error toasts */
       }
     };
     fetchCount();
@@ -264,7 +264,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           return `${normalized}/share/`;
         }
       } catch {
-        // invalid URL — fall through to default
+        // invalid URL - fall through to default
       }
     }
     return absoluteWithBasePath("/share/");
@@ -592,7 +592,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   }, [leftPanelView, selectedToolKey, toolRegistry, readerMode]);
 
   const handleFilesButtonClick = () => {
-    openFilesModal();
+    navigate("/files");
   };
 
   // Helper function to render navigation buttons with URL support
