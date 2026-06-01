@@ -241,8 +241,7 @@ public class ExternalAppDepConfig {
 
     private void checkPyMuPdf() {
         if (isCommandAvailable("pymupdf-convert")) {
-            log.warn(
-                    "pymupdf-convert detected — PDF->Markdown will use PyMuPDF acceleration.");
+            log.warn("pymupdf-convert detected — PDF->Markdown will use PyMuPDF acceleration.");
         } else {
             log.info(
                     "pymupdf-convert not found — PDF->Markdown will use the bundled pdftohtml converter.");
