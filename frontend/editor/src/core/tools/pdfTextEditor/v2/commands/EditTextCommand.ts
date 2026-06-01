@@ -93,6 +93,7 @@ export class EditTextCommand implements Command {
         run.mergedFromPtrs = result.newMergedFromPtrs;
         run.mergedFromTexts = result.newMergedFromTexts;
         run.mergedFromBounds = result.newMergedFromBounds;
+        run.mergedFromCharStarts = result.newMergedFromCharStarts;
         run.bounds = {
           ...run.bounds,
           x: result.newBoundsX,
@@ -228,6 +229,14 @@ export class EditTextCommand implements Command {
     }
 
     run.mergedFromPtrs = [];
+    // Clear the parallel arrays too: planPartialEdit bails on length
+    // mismatch, so leaving stale text/bounds/char-starts when ptrs is
+    // reset to [] would force every SUBSEQUENT edit to fall to the
+    // overlay path and flip the font again - a self-reinforcing
+    // regression where one overlay edit poisons the run for life.
+    run.mergedFromTexts = [];
+    run.mergedFromBounds = [];
+    run.mergedFromCharStarts = [];
     // Don't reset paragraphLeafPtrs here - we just set them above to the
     // freshly-emitted chunks so the next overlay edit can remove them.
     run.text = this.nextText;

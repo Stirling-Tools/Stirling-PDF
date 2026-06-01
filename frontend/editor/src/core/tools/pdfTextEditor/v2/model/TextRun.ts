@@ -46,6 +46,20 @@ export class TextRun {
    */
   mergedFromBounds: Array<{ x: number; right: number }>;
   /**
+   * Per-sub-run starting position in `run.text` (parallel to
+   * `mergedFromPtrs`). Replaces the prior approach of locating
+   * sub-runs via `indexOf` at planPartialEdit time, which broke after
+   * an insert split a sub-run's contiguous chars in run.text (the
+   * sub-run text "e " could no longer be found because an inserted
+   * "r" landed between the 'e' and the space).
+   *
+   * The char range a sub-run owns in run.text is
+   * `[mergedFromCharStarts[i], mergedFromCharStarts[i] + mergedFromTexts[i].length)`.
+   * Gaps between consecutive sub-runs' ranges hold LineGrouper-
+   * synthesised whitespace that doesn't belong to any PDFium object.
+   */
+  mergedFromCharStarts: number[];
+  /**
    * If this run was extracted from inside a form xobject, the PDFium
    * pointer of the immediate parent form. EditTextCommand uses this to
    * call `FPDFFormObj_RemoveObject(containerPtr, runPtr)` rather than
@@ -104,6 +118,7 @@ export class TextRun {
     this.mergedFromPtrs = [];
     this.mergedFromTexts = [];
     this.mergedFromBounds = [];
+    this.mergedFromCharStarts = [];
     this.containerPtr = init.containerPtr ?? 0;
     this.topLevelContainerPtr = init.topLevelContainerPtr ?? 0;
     this.paragraphLineHeight = 0;

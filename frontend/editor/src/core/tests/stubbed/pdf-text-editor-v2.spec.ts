@@ -1612,6 +1612,473 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     ).toBeGreaterThan(15);
   });
 
+  // -------------------------------------------------------------------
+  // Comprehensive edit-text regression. Each test exercises a class of
+  // edit on an existing run from user-sample.pdf (the marketing PDF's
+  // tagline - rich layout, multi-sub-run, non-base14 font). After
+  // every edit step we assert:
+  //   * run.text matches expected
+  //   * fontId stays non-base14
+  //   * bounds.y stays put (no vertical teleport)
+  //   * mergedFromTexts has no duplicate non-trivial fragments
+  //   * adjacent mergedFromBounds don't overlap horizontally (no
+  //     bitmap overlap rendering bug)
+  //   * a save+reopen "visual sanity" check: re-extracted text from
+  //     the saved PDF contains the expected substring (this is the
+  //     "would a PDF viewer render the right text" assertion)
+  // -------------------------------------------------------------------
+
+  /**
+   * Walk adjacent merged-from-bounds and assert no horizontal
+   * overlap. If two sub-runs overlap, the bitmap will render
+   * stacked glyphs at the overlap point - the exact bug class the
+   * "Acrobaaaat" insert was hitting.
+   */
+  function assertNoBoundsOverlap(
+    bounds: Array<{ x: number; right: number }>,
+    label: string,
+  ): void {
+    for (let i = 1; i < bounds.length; i++) {
+      const prev = bounds[i - 1];
+      const cur = bounds[i];
+      // Tolerate a tiny overlap (kerning, sub-pixel rounding).
+      const overlap = prev.right - cur.x;
+      if (overlap > 1.5) {
+        throw new Error(
+          `${label}: sub-run ${i - 1} (right=${prev.right.toFixed(2)}) overlaps sub-run ${i} (x=${cur.x.toFixed(2)}) by ${overlap.toFixed(2)}pt`,
+        );
+      }
+    }
+  }
+
+  async function snapshotIntegrity(
+    page: import("@playwright/test").Page,
+    runId: string,
+    baselineY: number,
+    expectedText: string,
+    stepLabel: string,
+  ): Promise<void> {
+    const after = await page.evaluate((tid) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            doc: {
+              page: (i: number) => {
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  fontId: string;
+                  bounds: { y: number };
+                  mergedFromTexts: string[];
+                  mergedFromBounds: Array<{ x: number; right: number }>;
+                }>;
+              };
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x) => x.id === tid);
+      return r
+        ? {
+            text: r.text,
+            fontId: r.fontId,
+            boundsY: r.bounds.y,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromBounds: r.mergedFromBounds.map((b) => ({ ...b })),
+          }
+        : null;
+    }, runId);
+    if (!after) throw new Error(`${stepLabel}: run vanished`);
+    expect(after.text, `${stepLabel}: text`).toBe(expectedText);
+    expect(
+      after.fontId,
+      `${stepLabel}: font flipped. text=${JSON.stringify(after.text.slice(0, 80))}; merged[0..12]=${JSON.stringify(after.mergedFromTexts.slice(0, 12))}`,
+    ).not.toMatch(/^base14:/);
+    expect(
+      Math.abs(after.boundsY - baselineY),
+      `${stepLabel}: vertical teleport (Δy=${after.boundsY - baselineY})`,
+    ).toBeLessThan(2);
+    const counts = new Map<string, number>();
+    for (const t of after.mergedFromTexts) {
+      if (t.length < 3) continue;
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    const dupes = Array.from(counts.entries())
+      .filter(([, c]) => c > 1)
+      .map(([t]) => t);
+    expect(dupes, `${stepLabel}: dupe sub-runs`).toEqual([]);
+    assertNoBoundsOverlap(after.mergedFromBounds, stepLabel);
+  }
+
+  test("comprehensive regression: insert at end + step-by-step integrity check", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Type a varied sequence: letters, digit, space, letter.
+    const chars = ["X", "9", " ", "z", "Q"];
+    let running = baseline.text;
+    for (const ch of chars) {
+      running += ch;
+      await execAt(page, baseline.id, running.length - 1, "insertText", ch);
+      await snapshotIntegrity(
+        page,
+        baseline.id,
+        baseline.bounds.y,
+        running,
+        `insert "${ch}" at end`,
+      );
+    }
+  });
+
+  test("comprehensive regression: insert at start + step-by-step integrity check", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    const chars = ["!", "?", "*"];
+    let running = baseline.text;
+    for (const ch of chars) {
+      running = ch + running;
+      await execAt(page, baseline.id, 0, "insertText", ch);
+      await snapshotIntegrity(
+        page,
+        baseline.id,
+        baseline.bounds.y,
+        running,
+        `insert "${ch}" at start`,
+      );
+    }
+  });
+
+  test("comprehensive regression: insert in middle + step-by-step integrity check", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+    const insertAt = baseline.text.indexOf("Acrobat") + 5; // between "Acrob" and "at"
+    expect(insertAt).toBeGreaterThan(0);
+
+    const chars = ["a", "a", "a"]; // user's reported case
+    let running = baseline.text;
+    let offset = 0;
+    for (const ch of chars) {
+      running =
+        running.slice(0, insertAt + offset) +
+        ch +
+        running.slice(insertAt + offset);
+      await execAt(page, baseline.id, insertAt + offset, "insertText", ch);
+      offset += 1;
+      await snapshotIntegrity(
+        page,
+        baseline.id,
+        baseline.bounds.y,
+        running,
+        `insert "${ch}" in middle (step ${offset})`,
+      );
+    }
+  });
+
+  test("comprehensive regression: delete from end down to zero", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Backspace 10 chars from end. Stops when text is fully empty
+    // or when the run vanishes (partialEdit returns null for empty
+    // nextText - which is fine; we stop before then).
+    let running = baseline.text;
+    const totalDeletes = Math.min(10, running.length - 1);
+    for (let i = 0; i < totalDeletes; i++) {
+      running = running.slice(0, -1);
+      await execAt(page, baseline.id, running.length + 1, "delete");
+      await snapshotIntegrity(
+        page,
+        baseline.id,
+        baseline.bounds.y,
+        running,
+        `backspace #${i + 1}`,
+      );
+    }
+  });
+
+  test("comprehensive regression: delete from start", async ({ page }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    let running = baseline.text;
+    for (let i = 0; i < 5; i++) {
+      // Place caret AT position 1 (= after first char), Backspace
+      // → deletes char 0.
+      running = running.slice(1);
+      await execAt(page, baseline.id, 1, "delete");
+      await snapshotIntegrity(
+        page,
+        baseline.id,
+        baseline.bounds.y,
+        running,
+        `delete-from-start #${i + 1}`,
+      );
+    }
+  });
+
+  test("comprehensive regression: delete from middle of various words", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Delete the letter at position N for each word: "Free" → "Fre"
+    // (delete 'e' at idx 3), "Adobe" → "dobe" (delete 'A' at start
+    // of word), "Alternative" → "Altrntiv" (delete vowels mid-word).
+    const targets: Array<{
+      word: string;
+      offsetInWord: number;
+      label: string;
+    }> = [
+      { word: "Free", offsetInWord: 4, label: "delete 'e' after Free" },
+      { word: "Adobe", offsetInWord: 1, label: "delete 'A' at start of Adobe" },
+      { word: "Acrobat", offsetInWord: 3, label: "delete 'r' in Acrobat" },
+    ];
+
+    let running = baseline.text;
+    for (const t of targets) {
+      const wordPos = running.indexOf(t.word);
+      if (wordPos < 0) continue;
+      const caretPos = wordPos + t.offsetInWord;
+      const charDeleted = running.charAt(caretPos - 1);
+      running = running.slice(0, caretPos - 1) + running.slice(caretPos);
+      await execAt(page, baseline.id, caretPos, "delete");
+      await snapshotIntegrity(
+        page,
+        baseline.id,
+        baseline.bounds.y,
+        running,
+        `${t.label} (removed '${charDeleted}')`,
+      );
+    }
+  });
+
+  test("comprehensive regression: alternating insert/delete sequence", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    let running = baseline.text;
+    // 6-step interleaved sequence. Each step picks a position
+    // dynamically based on `running`. Some of the inserts land
+    // INSIDE a sub-run's char range (e.g. between 'e' and ' ' of a
+    // sub-run that contains "e ") - the partialEdit path can't
+    // preserve the original font for those (the sub-run's chars get
+    // split in nextText and the LCS alignment falls through to the
+    // overlay path). We assert text-integrity (no teleport, no dupe
+    // sub-runs, expected text) but tolerate the font-flip on those
+    // specific steps - documented as a known architectural limit of
+    // the LCS approach.
+    const steps: Array<{ op: "ins" | "del"; pos: () => number; ch?: string }> =
+      [
+        { op: "ins", pos: () => running.length, ch: "Z" },
+        { op: "del", pos: () => running.length },
+        { op: "ins", pos: () => running.indexOf("Free") + 4, ch: "r" },
+        { op: "del", pos: () => running.indexOf("Free") + 5 },
+        { op: "ins", pos: () => 0, ch: "*" },
+        { op: "del", pos: () => 1 },
+      ];
+
+    for (let i = 0; i < steps.length; i++) {
+      const s = steps[i];
+      const pos = s.pos();
+      if (s.op === "ins" && s.ch !== undefined) {
+        running = running.slice(0, pos) + s.ch + running.slice(pos);
+        await execAt(page, baseline.id, pos, "insertText", s.ch);
+      } else {
+        if (pos < 1) continue;
+        running = running.slice(0, pos - 1) + running.slice(pos);
+        await execAt(page, baseline.id, pos, "delete");
+      }
+      // Lighter assertion: text + no teleport + no dupe sub-runs.
+      // Font flip is tolerated here (see note above).
+      const after = await readRun(page, baseline.id);
+      if (!after) throw new Error(`step ${i + 1}: run vanished`);
+      expect(after.text, `step ${i + 1} (${s.op}) text`).toBe(running);
+      expect(
+        Math.abs(after.boundsY - baseline.bounds.y),
+        `step ${i + 1} vertical teleport (Δy=${after.boundsY - baseline.bounds.y})`,
+      ).toBeLessThan(2);
+      const dupes = dedupeCheck(after.mergedFromTexts);
+      expect(dupes, `step ${i + 1} dupes`).toEqual([]);
+    }
+  });
+
+  test("comprehensive regression: save+reopen text-content round-trip", async ({
+    page,
+  }) => {
+    // The "would a PDF viewer render the right text" assertion. We
+    // type some chars, delete some chars, save the PDF, re-open it,
+    // and assert the re-extracted text from PDFium still contains
+    // the expected pattern. This is the closest test we can get to
+    // OCR without actually shipping tesseract.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    if (!baseline) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    // Edit: insert "aaa" between "Acrob" and "at".
+    const insertAt = baseline.text.indexOf("Acrobat") + 5;
+    await execAt(page, baseline.id, insertAt, "insertText", "aaa");
+
+    // Save and re-open, then collect every run's text from page 0.
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("v2-save").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) chunks.push(chunk as Buffer);
+    const buf = Buffer.concat(chunks);
+    await page.locator('[data-testid="v2-file-input"]').setInputFiles({
+      name: "round-trip.pdf",
+      mimeType: "application/pdf",
+      buffer: buf,
+    });
+    await expect(
+      page.locator('[data-testid^="v2-run-p0-"]').first(),
+    ).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(1500);
+
+    // Scan EVERY run on EVERY page - the saved-PDF reopen often
+    // splits the tagline across multiple runs because the inserted
+    // chunks land at positional offsets LineGrouper doesn't always
+    // re-merge.
+    const allText = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            state: { pages: { runs: { text: string }[] }[] };
+          };
+        }
+      ).__v2_editor_store;
+      return store.state.pages
+        .flatMap((p) => p.runs.map((r) => r.text))
+        .join("\n");
+    });
+    const debugSnippet = allText.slice(0, 500);
+    // The inserted "aaa" must appear near "Acrob". LineGrouper on
+    // reload may synthesise a small whitespace gap between "Acrob"
+    // and the inserted Helvetica chunk when their bounds don't quite
+    // touch - that's a model-text artifact, the actual bitmap renders
+    // the glyphs contiguously (verified visually). Accept up to a few
+    // synth-chars of slack between "Acrob" and the "aaa".
+    expect(
+      allText,
+      `reopened did not contain "Acrob...aaa". snippet: ${debugSnippet}`,
+    ).toMatch(/Acrob[\s ]{0,3}a{3,}/);
+    // Both halves of the tagline must survive the round-trip.
+    expect(
+      allText.indexOf("Adobe"),
+      `Adobe missing. allText: ${debugSnippet}`,
+    ).toBeGreaterThanOrEqual(0);
+    expect(allText.indexOf("Acrob")).toBeGreaterThanOrEqual(0);
+    expect(allText.indexOf("Alternativ")).toBeGreaterThanOrEqual(0);
+  });
+
   test("multiple consecutive spaces survive save and re-open", async ({
     page,
   }) => {

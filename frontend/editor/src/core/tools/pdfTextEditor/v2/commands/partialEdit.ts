@@ -36,6 +36,14 @@ export interface PartialEditOp {
    * additions like typing at end-of-line) emit at the running cursor.
    */
   anchorSubRunIdx?: number;
+  /**
+   * Position in nextText where this op's first char lives. Used by
+   * apply to write the correct `mergedFromCharStarts` entry so the
+   * stored char-positions stay aligned with the run.text layout
+   * (including any LineGrouper-synthesised whitespace gaps that don't
+   * belong to any sub-run).
+   */
+  startBIdx: number;
 }
 
 export interface PartialEditPlan {
@@ -108,34 +116,43 @@ export function planPartialEdit(
 
   const { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
 
-  // Map each prev char index to its sub-run index by LOCATING each
-  // sub-run's text inside prevText. LineGrouper may have synthesised
-  // whitespace between sub-runs (positional cursor jumps that don't
-  // exist as actual chars in any sub-run); those chars stay at -1
-  // (ghost) and are skipped by the ops walk - keeping the surrounding
-  // sub-runs preserves the gap as a positional offset.
+  // Read per-sub-run char-start positions directly off the run. The
+  // gaps between consecutive sub-runs' char-ranges hold LineGrouper-
+  // synthesised whitespace that doesn't belong to any PDFium object;
+  // those chars stay at -1 (ghost) and are skipped by the ops walk.
   //
-  // Earlier versions of this function reconstructed the gaps via a
-  // heuristic that matched LineGrouper's, but any drift (different
-  // fontSize source, rounding) silently misclassified sub-runs and
-  // corrupted text. Locating sub-run texts directly removes the
-  // heuristic entirely.
+  // Earlier versions located sub-runs via prevText.indexOf at plan
+  // time, but that broke after a previous edit inserted chars in the
+  // MIDDLE of a sub-run's contiguous span (e.g. a kept "e " sub-run
+  // gets an "r" inserted between the 'e' and the space). The stored
+  // char-start positions are kept up-to-date by applyPartialEditPlan
+  // so they always reflect the current run.text layout.
+  if (
+    run.mergedFromCharStarts.length !== run.mergedFromPtrs.length ||
+    run.mergedFromCharStarts.some((s) => s < 0 || s > prevText.length)
+  ) {
+    // Stale or missing char-starts (e.g. an overlay-path edit cleared
+    // the ptrs without also setting char-starts). Bail safely.
+    return null;
+  }
   const charToSubRun = new Array<number>(prevText.length).fill(-1);
   const subRunRanges: Array<{ start: number; end: number } | null> = [];
-  let scanPos = 0;
   for (let i = 0; i < run.mergedFromTexts.length; i++) {
     const subText = run.mergedFromTexts[i];
+    const start = run.mergedFromCharStarts[i];
+    const end = start + subText.length;
     if (subText.length === 0) {
-      subRunRanges.push({ start: scanPos, end: scanPos });
+      subRunRanges.push({ start, end });
       continue;
     }
-    const found = prevText.indexOf(subText, scanPos);
-    if (found < 0) return null; // sub-run text vanished from prevText — bail
-    for (let c = found; c < found + subText.length; c++) {
+    if (end > prevText.length) return null;
+    // Sanity check: the stored chars must actually match prevText at
+    // that position. Catches model corruption without silent drift.
+    if (prevText.slice(start, end) !== subText) return null;
+    for (let c = start; c < end; c++) {
       charToSubRun[c] = i;
     }
-    subRunRanges.push({ start: found, end: found + subText.length });
-    scanPos = found + subText.length;
+    subRunRanges.push({ start, end });
   }
 
   // Classify sub-runs by counting how many of their own chars (the
@@ -179,12 +196,14 @@ export function planPartialEdit(
   let lastSubRun = -1;
   let insertBuf = "";
   let insertAnchorSubRun: number | undefined;
+  let insertStartBIdx = 0;
   function flushInsert(): void {
     if (insertBuf.length === 0) return;
     ops.push({
       type: "insert",
       text: insertBuf,
       anchorSubRunIdx: insertAnchorSubRun,
+      startBIdx: insertStartBIdx,
     });
     insertBuf = "";
     insertAnchorSubRun = undefined;
@@ -210,18 +229,21 @@ export function planPartialEdit(
         // First mixed-sub-run char seen sets the anchor; if a later
         // char comes from a DIFFERENT mixed sub-run, drop the anchor
         // (we can only anchor a single insert at one position).
-        if (insertBuf.length === 0) insertAnchorSubRun = subRunIdx;
-        else if (insertAnchorSubRun !== subRunIdx)
+        if (insertBuf.length === 0) {
+          insertAnchorSubRun = subRunIdx;
+          insertStartBIdx = b;
+        } else if (insertAnchorSubRun !== subRunIdx)
           insertAnchorSubRun = undefined;
         insertBuf += nextText[b];
         continue;
       }
       flushInsert();
       if (subRunIdx !== lastSubRun) {
-        ops.push({ type: "keep", subRunIdx });
+        ops.push({ type: "keep", subRunIdx, startBIdx: b });
         lastSubRun = subRunIdx;
       }
     } else {
+      if (insertBuf.length === 0) insertStartBIdx = b;
       insertBuf += nextText[b];
     }
   }
@@ -259,6 +281,15 @@ export interface PartialEditApplyResult {
   newMergedFromPtrs: number[];
   newMergedFromTexts: string[];
   newMergedFromBounds: Array<{ x: number; right: number }>;
+  /**
+   * Per-sub-run char-start positions in the NEW run.text (post-edit).
+   * Walking sub-runs in order, each entry is the running sum of
+   * preceding sub-run text lengths, leaving no gaps - inserted text
+   * is contiguous with the kept text around it. Stored on the run so
+   * the next edit's partialEdit can map char positions to sub-runs
+   * without ambiguity.
+   */
+  newMergedFromCharStarts: number[];
   insertedPtrs: number[];
   newBoundsX: number;
   newBoundsWidth: number;
@@ -306,6 +337,7 @@ export function applyPartialEditPlan(
   const newMergedFromPtrs: number[] = [];
   const newMergedFromTexts: string[] = [];
   const newMergedFromBounds: Array<{ x: number; right: number }> = [];
+  const newMergedFromCharStarts: number[] = [];
   const insertedPtrs: number[] = [];
 
   // Strategy: walk ops in order. Track a cumulative `offset` that gets
@@ -360,6 +392,7 @@ export function applyPartialEditPlan(
       newMergedFromPtrs.push(ptr);
       newMergedFromTexts.push(text);
       newMergedFromBounds.push({ x: newX, right: newRight });
+      newMergedFromCharStarts.push(op.startBIdx);
       if (newRight > lastEnd) lastEnd = newRight;
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
@@ -397,6 +430,9 @@ export function applyPartialEditPlan(
       // Distribute the measured width across the emit ptrs for the
       // per-chunk model bounds (used by future edits).
       let runningCursor = anchorX;
+      // Distribute char-start across the ptrs sequentially.
+      let runningCharOffset = 0;
+      const insertCharLen = insertText.length / Math.max(1, ptrs.length);
       for (let i = 0; i < ptrs.length; i++) {
         const sliceWidth = measuredWidth / ptrs.length;
         newMergedFromPtrs.push(ptrs[i]);
@@ -405,7 +441,11 @@ export function applyPartialEditPlan(
           x: runningCursor,
           right: runningCursor + sliceWidth,
         });
+        newMergedFromCharStarts.push(
+          op.startBIdx + Math.round(runningCharOffset),
+        );
         runningCursor += sliceWidth;
+        runningCharOffset += insertCharLen;
       }
       insertedPtrs.push(...ptrs);
       if (runningCursor > lastEnd) lastEnd = runningCursor;
@@ -435,10 +475,17 @@ export function applyPartialEditPlan(
     firstX = newMergedFromBounds[0].x;
   }
 
+  // newMergedFromCharStarts is populated inline by the ops walk
+  // above. Each entry comes from op.startBIdx (the bIdx in nextText
+  // where the op's first char lives) - preserving any LineGrouper-
+  // synthesised whitespace gaps because those bIdx values reflect
+  // the actual nextText layout.
+
   return {
     newMergedFromPtrs,
     newMergedFromTexts,
     newMergedFromBounds,
+    newMergedFromCharStarts,
     insertedPtrs,
     newBoundsX: firstX,
     newBoundsWidth: lastEnd - firstX,

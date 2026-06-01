@@ -97,6 +97,8 @@ export class LineGrouper {
       // the previous run's text didn't already end in whitespace and
       // the next run's text doesn't already start with one.
       const parts: string[] = [memberTexts[0]];
+      const memberCharStarts: number[] = [0];
+      let cumulativeLen = memberTexts[0].length;
       for (let i = 1; i < group.members.length; i++) {
         const prev = group.members[i - 1];
         const cur = group.members[i];
@@ -117,8 +119,13 @@ export class LineGrouper {
         const alreadyHave =
           (prevEndsInSpace ? 1 : 0) + (curStartsWithSpace ? 1 : 0);
         const toInsert = Math.max(0, extraSpaces - alreadyHave);
-        if (toInsert > 0) parts.push(" ".repeat(toInsert));
+        if (toInsert > 0) {
+          parts.push(" ".repeat(toInsert));
+          cumulativeLen += toInsert;
+        }
+        memberCharStarts.push(cumulativeLen);
         parts.push(memberTexts[i]);
+        cumulativeLen += memberTexts[i].length;
       }
       const joined = parts.join("");
       const last = group.members[group.members.length - 1];
@@ -136,6 +143,7 @@ export class LineGrouper {
       // m.text would now read the joined string for member[0].
       group.representative.mergedFromTexts = memberTexts;
       group.representative.mergedFromBounds = memberBounds;
+      group.representative.mergedFromCharStarts = memberCharStarts;
       group.representative.mergedFromPtrs = group.members.map(
         (m) => m.pdfiumObjPtr,
       );
