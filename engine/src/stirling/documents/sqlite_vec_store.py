@@ -178,11 +178,11 @@ class SqliteVecStore(DocumentStore):
         )
         self._conn.commit()
 
-    async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
+    async def delete_collection(self, collection: str, owner_id: OwnerId) -> bool:
         async with self._lock:
-            await asyncio.to_thread(self._sync_delete_collection, collection, owner_id)
+            return await asyncio.to_thread(self._sync_delete_collection, collection, owner_id)
 
-    def _sync_delete_collection(self, collection: str, owner_id: OwnerId) -> None:
+    def _sync_delete_collection(self, collection: str, owner_id: OwnerId) -> bool:
         # Drop the sqlite-vec virtual table first; FK cascade handles the regular tables
         # (collections, documents, document_pages, document_acl) when documents_meta is deleted.
         row = self._conn.execute(
@@ -191,11 +191,12 @@ class SqliteVecStore(DocumentStore):
         ).fetchone()
         if row is not None:
             self._conn.execute(f"DROP TABLE IF EXISTS {row[0]}")
-        self._conn.execute(
+        cursor = self._conn.execute(
             "DELETE FROM documents_meta WHERE collection = ? AND owner_id = ?",
             (collection, owner_id),
         )
         self._conn.commit()
+        return cursor.rowcount > 0
 
     async def purge_owner(self, owner_id: OwnerId) -> int:
         async with self._lock:
@@ -453,11 +454,7 @@ class SqliteVecStore(DocumentStore):
         ]
 
     def _readable_owner_for(self, collection: str, principals: list[PrincipalId]) -> str | None:
-        """Resolve which owner_id this caller is reading. ``None`` means no access.
-
-        Same ``collection`` value can exist under multiple owners; we pick the
-        first owner the caller has read access to.
-        """
+        """Resolve which owner_id this caller is reading. ``None`` means no access."""
         placeholders = ",".join("?" * len(principals))
         row = self._conn.execute(
             f"""
@@ -465,6 +462,7 @@ class SqliteVecStore(DocumentStore):
             WHERE collection = ?
               AND permission = ?
               AND principal_id IN ({placeholders})
+            ORDER BY owner_id
             LIMIT 1
             """,
             (collection, _READ_PERMISSION, *principals),

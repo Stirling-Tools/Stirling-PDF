@@ -62,8 +62,12 @@ class DocumentStore(ABC):
         """
 
     @abstractmethod
-    async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
-        """Remove a collection's chunks, pages, and ACL rows."""
+    async def delete_collection(self, collection: str, owner_id: OwnerId) -> bool:
+        """Remove a collection's chunks, pages, and ACL rows.
+
+        Returns ``True`` when a row matched and was deleted, ``False`` when
+        ``(collection, owner_id)`` didn't exist.
+        """
 
     @abstractmethod
     async def purge_owner(self, owner_id: OwnerId) -> int:

@@ -100,7 +100,7 @@ async def lifespan(fast_api: FastAPI):
             runtime.documents,
             interval_seconds=settings.documents_reaper_interval_seconds,
         ),
-        name="rag-expired-doc-reaper",
+        name="expired-document-reaper",
     )
     yield
     reaper_task.cancel()

@@ -119,7 +119,8 @@ class AiWorkflowServiceTest {
                         tempFileManager,
                         fileIdStrategy,
                         endpointResolver,
-                        null);
+                        null,
+                        new ApplicationProperties());
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 

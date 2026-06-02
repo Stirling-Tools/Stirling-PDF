@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.core.io.Resource;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -51,6 +53,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private final JwtServiceInterface jwtService;
 
     private final AiUserDataService aiUserDataService;
+
+    private static final AuthenticationTrustResolver TRUST_RESOLVER =
+            new AuthenticationTrustResolverImpl();
 
     @Override
     @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
@@ -98,31 +103,22 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     /**
      * Pick the right name to purge under. JWT cookie wins if present and parseable; we fall through
-     * to whatever Spring handed us only when there's no cookie. ``anonymousUser`` is filtered out
-     * because it's the wrong owner for any real cleanup.
+     * to whatever Spring handed us only when there's no cookie. Spring's anonymous principal is
+     * filtered out via {@link AuthenticationTrustResolver} so we don't purge under that
+     * pseudo-user.
      */
     private String resolveUsername(HttpServletRequest request, Authentication authentication) {
-        try {
-            if (jwtService != null) {
-                String token = jwtService.extractToken(request);
-                if (token != null && !token.isBlank()) {
-                    String fromToken = jwtService.extractUsernameAllowExpired(token);
-                    if (fromToken != null && !fromToken.isBlank()) {
-                        return fromToken;
-                    }
-                }
+        if (jwtService != null) {
+            String fromCookie = jwtService.extractUsernameFromRequestAllowExpired(request);
+            if (fromCookie != null) {
+                return fromCookie;
             }
-        } catch (Exception e) {
-            log.debug("Could not extract username from JWT during logout: {}", e.getMessage());
         }
-        if (authentication == null) {
+        if (authentication == null || TRUST_RESOLVER.isAnonymous(authentication)) {
             return null;
         }
         String name = authentication.getName();
-        if (name == null || name.isBlank() || "anonymousUser".equals(name)) {
-            return null;
-        }
-        return name;
+        return (name != null && !name.isBlank()) ? name : null;
     }
 
     // Redirect for SAML2 authentication logout

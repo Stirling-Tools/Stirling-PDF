@@ -29,6 +29,7 @@ import io.github.pixee.security.Filenames;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
@@ -52,6 +53,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
+import stirling.software.proprietary.security.util.DesktopClientUtils;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
@@ -66,14 +68,6 @@ public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
 
-    /**
-     * How long an AI-workflow-ingested personal doc lives on the engine before the reaper deletes
-     * it. Matches the default JWT lifetime so a stale token never has data it can still reach.
-     * Org-shared content (when we add it) bypasses this and sends a null {@code expiresAt} so it's
-     * persistent.
-     */
-    private static final Duration PERSONAL_DOC_TTL = Duration.ofHours(24);
-
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
     private final PdfContentExtractor pdfContentExtractor;
@@ -85,6 +79,7 @@ public class AiWorkflowService {
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
     private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
 
     public AiWorkflowService(
             CustomPDFDocumentFactory pdfDocumentFactory,
@@ -97,7 +92,8 @@ public class AiWorkflowService {
             TempFileManager tempFileManager,
             FileIdStrategy fileIdStrategy,
             AiEngineEndpointResolver endpointResolver,
-            @Autowired(required = false) UserServiceInterface userService) {
+            @Autowired(required = false) UserServiceInterface userService,
+            ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.aiEngineClient = aiEngineClient;
         this.pdfContentExtractor = pdfContentExtractor;
@@ -109,6 +105,18 @@ public class AiWorkflowService {
         this.fileIdStrategy = fileIdStrategy;
         this.endpointResolver = endpointResolver;
         this.userService = userService;
+        this.applicationProperties = applicationProperties;
+    }
+
+    /**
+     * How long an AI-workflow-ingested personal doc lives on the engine before the reaper deletes
+     * it. Mirrors the configured web JWT lifetime, so a stale cookie can never see data the user
+     * has lost their session to. Org-shared content (when we add it) bypasses this and sends a null
+     * {@code expiresAt} so it's persistent.
+     */
+    private Duration personalDocTtl() {
+        int minutes = DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
+        return Duration.ofMinutes(minutes);
     }
 
     /**
@@ -356,7 +364,7 @@ public class AiWorkflowService {
                         pages,
                         callerId,
                         callerId == null ? List.of() : List.of(callerId),
-                        Instant.now().plus(PERSONAL_DOC_TTL));
+                        Instant.now().plus(personalDocTtl()));
         String body = objectMapper.writeValueAsString(ingestRequest);
         aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
         log.debug(

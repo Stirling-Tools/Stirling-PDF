@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import java.io.IOException;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -12,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
  * Lifecycle hooks for a user's AI document data on the Python engine.
  *
  * <p>Today: cleanup on logout. The engine also runs a TTL reaper that catches sessions ended
- * without a clean logout (tab close, JWT expiry, engine restart), so this service is the happy-
- * path purge, not a hard guarantee. All calls are best-effort: engine outages must not block the
- * user logging out.
+ * without a clean logout (tab close, JWT expiry, engine restart), so this service is the happy-path
+ * purge, not a hard guarantee. Calls are fire-and-forget on a background thread (Spring's default
+ * {@code @Async} executor) so an unavailable engine never delays the caller's response.
  */
 @Slf4j
 @Service
@@ -26,10 +27,12 @@ public class AiUserDataService {
     private final AiEngineClient aiEngineClient;
 
     /**
-     * Tell the engine to delete every collection owned by {@code userId} - vector chunks, page
-     * text, ACL rows, and the owner row itself. Logged but never thrown: a failure here must not
-     * stop the user logging out, and the engine's TTL reaper backstops any miss within ~24h.
+     * Tell the engine to delete every collection owned by {@code userId}: vector chunks, page text,
+     * ACL rows, and the owner row itself. Runs asynchronously so the calling thread (typically a
+     * logout handler) returns immediately; engine errors are logged on the worker thread and never
+     * propagated. The engine's TTL reaper backstops any miss within ~24h.
      */
+    @Async
     public void purgeUserDocuments(String userId) {
         if (userId == null || userId.isBlank()) {
             log.debug("Skipping user document purge: no user id");

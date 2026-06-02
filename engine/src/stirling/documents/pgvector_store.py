@@ -165,7 +165,7 @@ class PgVectorStore(DocumentStore):
                 await conn.commit()
         return deleted
 
-    async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
+    async def delete_collection(self, collection: str, owner_id: OwnerId) -> bool:
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
@@ -174,7 +174,9 @@ class PgVectorStore(DocumentStore):
                     "DELETE FROM documents_meta WHERE collection = %s AND owner_id = %s",
                     (collection, owner_id),
                 )
+                deleted = cur.rowcount > 0
                 await conn.commit()
+        return deleted
 
     # ── write paths ────────────────────────────────────────────────────────
 
@@ -314,6 +316,7 @@ class PgVectorStore(DocumentStore):
             WHERE collection = %s
               AND permission = %s
               AND principal_id = ANY(%s)
+            ORDER BY owner_id
             LIMIT 1
             """,
             (collection, _READ_PERMISSION, list(principals)),

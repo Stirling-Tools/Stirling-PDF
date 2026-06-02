@@ -141,9 +141,13 @@ class DocumentService:
         """Return ordered page text for ``collection`` if any principal can read it."""
         return await self._store.read_pages(collection, page_range, principals)
 
-    async def delete_collection(self, collection: FileId, owner_id: OwnerId) -> None:
-        """Remove a collection (chunks, pages, ACL)."""
-        await self._store.delete_collection(collection, owner_id)
+    async def delete_collection(self, collection: FileId, owner_id: OwnerId) -> bool:
+        """Remove a collection (chunks, pages, ACL).
+
+        Returns ``True`` if the collection was found and deleted, ``False`` if
+        no row matched ``(collection, owner_id)``.
+        """
+        return await self._store.delete_collection(collection, owner_id)
 
     async def purge_owner(self, owner_id: OwnerId) -> int:
         """Remove every collection ``owner_id`` owns, including vector chunks,
