@@ -9,15 +9,6 @@ import {
 } from "@app/hooks/tools/shared/useToolOperation";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 
-/**
- * Process a tool response from an automation step (ZIP archive or single file).
- *
- * The single-vs-ZIP decision uses signature-based detection rather than an
- * exact Content-Type match - reverse proxies (e.g. nginx with `charset utf-8;`)
- * and some backends ship single PDFs as `application/pdf;charset=UTF-8` or
- * `application/octet-stream`, both of which would otherwise fall through to
- * ZIP extraction and produce a bogus `automation_*.zip` wrapping the PDF.
- */
 export const processMultiFileResponse = async (
   responseData: Blob,
   responseHeaders: any,
@@ -48,18 +39,15 @@ export const processMultiFileResponse = async (
     console.warn(`⚠️ File processing warnings:`, result.errors);
   }
 
-  // Apply prefix to files, replacing any existing prefix
-  const processedFiles =
-    filePrefix && !preserveBackendFilename
-      ? result.files.map((file) => {
-          const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
-          return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
-            type: file.type,
-          });
-        })
-      : result.files;
-
-  return processedFiles;
+  if (!filePrefix || preserveBackendFilename) {
+    return result.files;
+  }
+  return result.files.map((file) => {
+    const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
+    return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
+      type: file.type,
+    });
+  });
 };
 
 /**

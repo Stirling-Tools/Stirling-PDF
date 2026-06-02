@@ -63,23 +63,16 @@ export type {
 // Re-export for backwards compatibility
 export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 
-/**
- * Decide whether a multi-file endpoint response is a ZIP archive.
- *
- * Detection is by file signature - the ZIP local-file-header magic "PK\x03\x04"
- * plus the empty-archive / spanned variants - with the Content-Type header used
- * only as a fallback when the bytes can't be read. An exact Content-Type match
- * is unreliable here: reverse proxies and some backends return a merged PDF as
- * "application/pdf;charset=UTF-8" or "application/octet-stream", which would
- * otherwise be misrouted into ZIP extraction and yield no usable output.
- */
+// Signature-first ZIP detection. Content-Type alone is unreliable: proxies and
+// some backends ship merged PDFs as "application/pdf;charset=UTF-8" or
+// "application/octet-stream", which an exact-equality check would misroute
+// into ZIP extraction.
 export async function isZipResponse(
   blob: Blob,
   contentTypeHint?: string,
 ): Promise<boolean> {
   try {
     const sig = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
-    // "PK" (0x50 0x4B) followed by a valid record marker -> ZIP
     if (
       sig[0] === 0x50 &&
       sig[1] === 0x4b &&
@@ -87,7 +80,6 @@ export async function isZipResponse(
     ) {
       return true;
     }
-    // "%PDF" (0x25 0x50 0x44 0x46) -> a PDF, never a ZIP
     if (
       sig[0] === 0x25 &&
       sig[1] === 0x50 &&
@@ -97,7 +89,7 @@ export async function isZipResponse(
       return false;
     }
   } catch {
-    // Unreadable blob - fall back to the Content-Type hint below.
+    // Unreadable blob - fall back to Content-Type.
   }
   return (contentTypeHint || blob.type || "").toLowerCase().includes("zip");
 }
@@ -317,7 +309,6 @@ export const useToolOperation = <TParams>(
             const contentTypeHeader = response.headers?.["content-type"];
 
             if (config.responseHandler) {
-              // Tool supplies its own response parsing (e.g. ZIP extraction).
               processedFiles = await config.responseHandler(
                 responseBlob,
                 filesForAPI,
@@ -330,23 +321,14 @@ export const useToolOperation = <TParams>(
                   : undefined,
               )
             ) {
-              // ZIP archive - extract (respects the autoUnzip preference).
               processedFiles = await extractZipFiles(responseBlob);
             } else {
-              // Single-file response (e.g. merge -> one PDF). Detected by file
-              // signature, not an exact Content-Type match: reverse proxies and
-              // some backends return "application/pdf;charset=UTF-8" or
-              // "application/octet-stream", which previously fell through to ZIP
-              // extraction and silently produced no output.
               const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
               processedFiles = [
                 new File([responseBlob], filename, { type: "application/pdf" }),
               ];
             }
 
-            // A multi-file operation that returns nothing is a failure, not a
-            // silent no-op - surface it so the user sees an error. Merge's
-            // getErrorMessage passes this message straight through.
             if (processedFiles.length === 0) {
               throw new Error(
                 "The server processed the request but returned no files.",

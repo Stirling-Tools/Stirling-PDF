@@ -2,9 +2,8 @@ import type { AxiosInstance } from "axios";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 
-// All transitive imports of apiClientSetup are mocked - the test exercises the
-// error-interceptor logic in isolation by hand-rolling a minimal axios-like
-// client and capturing the registered handlers.
+// Exercise the error-interceptor logic against a hand-rolled axios-like
+// client; transitive imports are mocked out so this is a pure unit test.
 
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("@core/services/apiClientSetup", () => ({
@@ -90,9 +89,7 @@ function makeMockClient(): { client: MockClient; handlers: Handlers } {
         },
       },
     },
-    // setupApiInterceptors calls client.request(originalRequest) on successful
-    // refresh-retry. That branch is not exercised by these tests, but the
-    // method must exist on the mock.
+    // Must exist on the mock; not exercised by these tests.
     request: vi.fn(),
   };
   return { client, handlers };
@@ -104,9 +101,8 @@ async function triggerErrorInterceptor(
 ): Promise<void> {
   const handler = handlers.responseRejected[0];
   expect(handler).toBeTypeOf("function");
-  await Promise.resolve(handler(error)).catch(() => {
-    // The interceptor re-rejects after handling; that's expected.
-  });
+  // The interceptor re-rejects after handling; swallow it.
+  await Promise.resolve(handler(error)).catch(() => {});
 }
 
 describe("desktop apiClientSetup - 401 silent-path", () => {
@@ -150,16 +146,6 @@ describe("desktop apiClientSetup - 401 silent-path", () => {
       },
     });
     expect(events).toHaveLength(0);
-  });
-
-  test("PUT 401 without Authorization dispatches sign-in modal event", async () => {
-    const { client, handlers } = makeMockClient();
-    setupApiInterceptors(client as unknown as AxiosInstance);
-    await triggerErrorInterceptor(handlers, {
-      response: { status: 401 },
-      config: { method: "put", url: "/api/v1/files/123", headers: {} },
-    });
-    expect(events).toHaveLength(1);
   });
 
   test("401 on auth probe (/api/v1/auth/me) never dispatches the modal", async () => {

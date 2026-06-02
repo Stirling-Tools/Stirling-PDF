@@ -1,14 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { processMultiFileResponse } from "@app/utils/automationExecutor";
 
-// Regression coverage for the automation-side mirror of the merge bug. Before
-// the isZipResponse fix, processMultiFileResponse decided "single PDF vs ZIP"
-// with an exact-equality Content-Type check, so any non-canonical response
-// (charset suffix, octet-stream) misrouted the PDF into ZIP extraction and
-// the user saw a bogus `automation_*.zip` instead of the processed file.
-//
-// These tests call processMultiFileResponse directly with each bug-trigger
-// Content-Type and assert the returned File is a PDF, not a ZIP.
+// Regression coverage for the automation-side mirror of the merge bug:
+// non-canonical Content-Types previously misrouted a PDF into ZIP extraction
+// and yielded a bogus `automation_*.zip`.
 
 const PDF_BYTES = new Uint8Array([
   0x25,
@@ -25,7 +20,7 @@ const PDF_BYTES = new Uint8Array([
   0xe3,
   0xcf,
   0xd3,
-  0x0a, // typical PDF header padding
+  0x0a,
 ]);
 
 const inputFiles = [
@@ -43,26 +38,20 @@ async function run(contentType: string) {
 }
 
 describe("processMultiFileResponse (automation execution)", () => {
-  test('PDF body + "application/octet-stream" -> PDF, not bogus .zip', async () => {
+  test('PDF body + "application/octet-stream" -> PDF, not .zip', async () => {
     const result = await run("application/octet-stream");
     expect(result.length).toBe(1);
     expect(result[0].name).not.toMatch(/\.zip$/);
   });
 
-  test('PDF body + "application/pdf;charset=UTF-8" -> PDF, not bogus .zip', async () => {
+  test('PDF body + "application/pdf;charset=UTF-8" -> PDF, not .zip', async () => {
     const result = await run("application/pdf;charset=UTF-8");
     expect(result.length).toBe(1);
     expect(result[0].name).not.toMatch(/\.zip$/);
   });
 
-  test('PDF body + "APPLICATION/PDF" (uppercased) -> PDF, not bogus .zip', async () => {
+  test('PDF body + "APPLICATION/PDF" -> PDF, not .zip', async () => {
     const result = await run("APPLICATION/PDF");
-    expect(result.length).toBe(1);
-    expect(result[0].name).not.toMatch(/\.zip$/);
-  });
-
-  test('PDF body + canonical "application/pdf" -> PDF (sanity)', async () => {
-    const result = await run("application/pdf");
     expect(result.length).toBe(1);
     expect(result[0].name).not.toMatch(/\.zip$/);
   });

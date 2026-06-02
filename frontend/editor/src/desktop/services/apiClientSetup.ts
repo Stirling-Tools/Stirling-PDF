@@ -188,14 +188,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
-        // No token was attached. For background GETs (e.g. endpoint
-        // availability checks before sign-in) staying silent is correct -
-        // popping the modal would be intrusive. For user-initiated
-        // mutations (tool POSTs etc.), silently rejecting leaves the user
-        // with no feedback: the desktop httpErrorHandler suppresses the
-        // 401 toast, and there is no refresh path without an existing
-        // token. That is the "fast animation then nothing happens" symptom.
-        // Surface the sign-in modal so the user knows what to do.
+        // No token attached: stay silent for background GETs (endpoint probes
+        // before sign-in), but surface the sign-in modal for mutations so the
+        // user isn't left with a no-op click.
         if (!originalRequest.headers.Authorization) {
           const method = (originalRequest.method || "get").toLowerCase();
           if (method !== "get") {
