@@ -12,6 +12,7 @@
 export interface CommentEntryLike {
   annotation: {
     object: {
+      id?: string;
       rect?: {
         origin?: { x?: number; y?: number };
       };
