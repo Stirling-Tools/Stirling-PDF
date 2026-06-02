@@ -18,9 +18,11 @@ import { EditorSidebar } from "@app/tools/pdfTextEditor/v2/components/EditorSide
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/v2/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/v2/components/PageStage";
 import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
+import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertTextCommand";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
+import { SetLockCommand } from "@app/tools/pdfTextEditor/v2/commands/SetLockCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
@@ -249,6 +251,95 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     }
   }, [store]);
 
+  /**
+   * Toggle the session-only `locked` flag on every selected run and
+   * image. If the selection mixes locked + unlocked, the action sets
+   * EVERY object to locked (closest match to the user's mental model:
+   * "lock everything I have selected"). The unlock affordance lives
+   * on the same button when the entire selection is already locked.
+   */
+  const handleToggleLockSelection = useCallback(() => {
+    const doc = store.document;
+    if (!doc) return;
+    const selRuns = new Set(store.selection.value.runIds);
+    const selImages = new Set(store.selection.value.imageIds);
+    if (selRuns.size === 0 && selImages.size === 0) return;
+    let allLocked = true;
+    for (const p of doc.loadedPages()) {
+      for (const r of p.runs)
+        if (selRuns.has(r.id) && !r.locked) allLocked = false;
+      for (const im of p.images)
+        if (selImages.has(im.id) && !im.locked) allLocked = false;
+    }
+    const nextLocked = !allLocked;
+    for (const p of doc.loadedPages()) {
+      for (const r of p.runs)
+        if (selRuns.has(r.id) && r.locked !== nextLocked) {
+          store.dispatch(
+            new SetLockCommand({
+              pageIndex: p.index,
+              runId: r.id,
+              locked: nextLocked,
+            }),
+          );
+        }
+      for (const im of p.images)
+        if (selImages.has(im.id) && im.locked !== nextLocked) {
+          store.dispatch(
+            new SetLockCommand({
+              pageIndex: p.index,
+              imageId: im.id,
+              locked: nextLocked,
+            }),
+          );
+        }
+    }
+  }, [store]);
+
+  /**
+   * Transform every selected run's text via the chosen case rule and
+   * dispatch one EditTextCommand per run. Pure string transform; no
+   * PDFium plumbing.
+   */
+  const handleChangeCase = useCallback(
+    (mode: "upper" | "lower" | "title" | "sentence") => {
+      const doc = store.document;
+      if (!doc) return;
+      const sel = new Set(store.selection.value.runIds);
+      if (sel.size === 0) return;
+      const transform = (s: string): string => {
+        switch (mode) {
+          case "upper":
+            return s.toUpperCase();
+          case "lower":
+            return s.toLowerCase();
+          case "title":
+            return s.replace(
+              /\b\w[\w']*/g,
+              (w) => w[0].toUpperCase() + w.slice(1).toLowerCase(),
+            );
+          case "sentence":
+            return s.replace(/(^\s*\w|[.!?]\s+\w)/g, (m) => m.toUpperCase());
+        }
+      };
+      for (const p of doc.loadedPages()) {
+        for (const r of p.runs) {
+          if (!sel.has(r.id)) continue;
+          const next = transform(r.text);
+          if (next === r.text) continue;
+          store.dispatch(
+            new EditTextCommand({
+              pageIndex: p.index,
+              runId: r.id,
+              nextText: next,
+            }),
+          );
+        }
+      }
+    },
+    [store],
+  );
+
   useEditorKeyboardShortcuts({
     store,
     onUndo: useCallback(() => store.undo(), [store]),
@@ -339,6 +430,21 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         onToggleBold={sel.toggleBold}
         onToggleItalic={sel.toggleItalic}
         onDelete={sel.deleteSelection}
+        onToggleLock={handleToggleLockSelection}
+        onChangeCase={handleChangeCase}
+        selectionAllLocked={(() => {
+          const runs = new Set(selection.runIds);
+          const images = new Set(selection.imageIds);
+          if (runs.size === 0 && images.size === 0) return false;
+          for (const p of state.pages) {
+            for (const r of p.runs)
+              if (runs.has(r.id) && !r.locked) return false;
+            for (const im of p.images)
+              if (images.has(im.id) && !im.locked) return false;
+          }
+          return true;
+        })()}
+        hasRunSelection={selection.runIds.length > 0}
         disabled={
           !state.hasDocument ||
           (selection.runIds.length === 0 && selection.imageIds.length === 0)

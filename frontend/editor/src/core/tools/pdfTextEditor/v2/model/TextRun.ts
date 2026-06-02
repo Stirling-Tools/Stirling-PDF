@@ -96,6 +96,12 @@ export class TextRun {
   paragraphLeafPtrs: number[];
   /** Parallel form-xobject containers for every leaf ptr. */
   paragraphLeafContainers: number[];
+  /**
+   * Session-only lock: when true the run is skipped by all hit-tests
+   * (mouse, marquee, Ctrl+A) and edit gestures are no-ops. Not written
+   * to the saved PDF; re-opens with all runs unlocked.
+   */
+  locked: boolean;
 
   constructor(
     init: TextRunSnapshot & {
@@ -127,6 +133,7 @@ export class TextRun {
     this.paragraphMemberFs = [];
     this.paragraphLeafPtrs = [];
     this.paragraphLeafContainers = [];
+    this.locked = init.locked ?? false;
   }
 
   snapshot(): TextRunSnapshot {
@@ -142,6 +149,7 @@ export class TextRun {
       fontSubset: this.fontSubset,
       paragraphLineHeight: this.paragraphLineHeight,
       paragraphLineCount: this.paragraphMemberPtrs.length || undefined,
+      locked: this.locked || undefined,
     };
   }
 }

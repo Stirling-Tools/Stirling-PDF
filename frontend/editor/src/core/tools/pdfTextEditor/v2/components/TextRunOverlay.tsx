@@ -226,10 +226,17 @@ export function TextRunOverlay({
     <div
       ref={ref}
       data-testid={`v2-run-${run.id}`}
-      contentEditable
+      contentEditable={!run.locked}
       suppressContentEditableWarning
+      data-locked={run.locked ? "true" : undefined}
+      title={run.locked ? "Locked - use the Unlock button to edit" : undefined}
       onMouseDown={(e) => {
         e.stopPropagation();
+        // Locked runs are inert: no select, no drag, no edit. They
+        // remain visible (the PDFium bitmap renders the source glyphs)
+        // and hit-test-able only as a no-op blocker so the user can
+        // tell something is there - but no command fires.
+        if (run.locked) return;
         if ((e.ctrlKey || e.metaKey) && onMove) {
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);

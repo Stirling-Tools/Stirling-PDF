@@ -56,6 +56,12 @@ export interface TextRunSnapshot {
   paragraphLineHeight?: number;
   /** Member-line count when paragraph (== 1 implies a single line). */
   paragraphLineCount?: number;
+  /**
+   * Editor-only metadata: when true the run cannot be selected or
+   * edited via mouse/keyboard. Not serialized to the PDF on save;
+   * lock is a session-time UX flag (re-opens with all runs unlocked).
+   */
+  locked?: boolean;
 }
 
 export interface ImageObjectSnapshot {
@@ -63,6 +69,8 @@ export interface ImageObjectSnapshot {
   pageIndex: number;
   bounds: PageRect;
   matrix: Affine;
+  /** Editor-only: see TextRunSnapshot.locked. */
+  locked?: boolean;
 }
 
 export interface PageSnapshot {
