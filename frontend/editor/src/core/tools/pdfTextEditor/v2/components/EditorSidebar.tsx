@@ -1,11 +1,22 @@
 import { Box, Stack, Text } from "@mantine/core";
-import { PageListPanel } from "@app/tools/pdfTextEditor/v2/components/PageListPanel";
 import type {
   EditorViewState,
   LoadProgress,
 } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
+/**
+ * Sidebar status panel for the v2 text/image editor.
+ *
+ * Scope: helpful status for the active editing session - dirty state,
+ * a brief usage hint, and current selection count. Document-level
+ * page navigator (thumbnails, click-to-jump, per-page dirty dot) lives
+ * in Stirling's dedicated page tools (PageStage, page-organizer);
+ * including it here doubled up with workbench-level affordances.
+ *
+ * Keyboard PageDown/PageUp + Ctrl+Home/Ctrl+End still navigate pages
+ * for editing visibility.
+ */
 interface SidebarProps {
   state: EditorViewState;
   selection: SelectionState;
@@ -64,27 +75,21 @@ function LoadedSidebar({
 }) {
   const selectionLabel = formatSelection(selection);
   return (
-    <Stack gap="md" data-testid="v2-sidebar-status">
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {state.pageCount} {state.pageCount === 1 ? "page" : "pages"}
+    <Stack gap="xs" data-testid="v2-sidebar-status">
+      <Text size="xs" c="dimmed">
+        Click any text in the document to edit it inline. Selecting a run
+        enables the colour and font-size controls above.
+      </Text>
+      <Text size="xs" c="dimmed">
+        {state.dirty
+          ? "Unsaved changes - press Save PDF to download."
+          : "No changes yet."}
+      </Text>
+      {selectionLabel && (
+        <Text size="xs" c="blue.6" data-testid="v2-selection-count">
+          {selectionLabel}
         </Text>
-        <Text size="xs" c="dimmed">
-          Click any text in the document to edit it inline. Selecting a run
-          enables the colour and font-size controls above.
-        </Text>
-        <Text size="xs" c="dimmed">
-          {state.dirty
-            ? "Unsaved changes - press Save PDF to download."
-            : "No changes yet."}
-        </Text>
-        {selectionLabel && (
-          <Text size="xs" c="blue.6" data-testid="v2-selection-count">
-            {selectionLabel}
-          </Text>
-        )}
-      </Stack>
-      <PageListPanel pages={state.pages} />
+      )}
     </Stack>
   );
 }

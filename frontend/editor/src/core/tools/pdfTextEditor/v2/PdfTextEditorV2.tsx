@@ -14,7 +14,6 @@ import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/v2/hooks/us
 import { FindBar } from "@app/tools/pdfTextEditor/v2/components/FindBar";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/v2/components/HelpOverlay";
 import { EditorTopBar } from "@app/tools/pdfTextEditor/v2/components/EditorTopBar";
-import { CharcodeDebugHud } from "@app/tools/pdfTextEditor/v2/components/CharcodeDebugHud";
 import { EditorSidebar } from "@app/tools/pdfTextEditor/v2/components/EditorSidebar";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/v2/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/v2/components/PageStage";
@@ -204,7 +203,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       style={{ overflow: "hidden" }}
       data-testid="v2-root"
     >
-      <CharcodeDebugHud />
       <EditorTopBar
         store={store}
         hasDocument={state.hasDocument}

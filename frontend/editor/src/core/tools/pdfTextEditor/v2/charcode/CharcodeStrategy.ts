@@ -10,12 +10,15 @@
  * charcodes the original PDF used - so the new chars hit the same
  * glyphs the embedded subset already contains.
  *
- * Toggleable at runtime via:
+ * Default strategy is `backend` (PDFBox-server-side encoding via the
+ * `encode-charcodes` REST endpoint, with frontend caches warmed on
+ * run focus). The other strategies remain as code paths for
+ * comparison/diagnostic builds and may be selected via:
  *   1. URL param `?charcodeStrategy=cmap` (per-window override)
  *   2. localStorage `v2.charcodeStrategy` (persisted across reloads)
- *   3. Toolbar dropdown
  *
- * Default is `helvetica` (preserves the legacy fallback behaviour).
+ * The runtime toolbar dropdown was removed - ship the editor with one
+ * strategy and let internal builds toggle via URL when comparing.
  */
 export type CharcodeStrategy =
   | "helvetica" // Legacy: always fall back to Helvetica for new chars.
@@ -39,8 +42,10 @@ const URL_PARAM = "charcodeStrategy";
  * user can flip a toggle and have it take effect on the next edit
  * without remounting the editor.
  */
+export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "backend";
+
 export function getActiveCharcodeStrategy(): CharcodeStrategy {
-  if (typeof window === "undefined") return "helvetica";
+  if (typeof window === "undefined") return DEFAULT_CHARCODE_STRATEGY;
   try {
     const url = new URL(window.location.href);
     const fromUrl = url.searchParams.get(URL_PARAM);
@@ -54,7 +59,7 @@ export function getActiveCharcodeStrategy(): CharcodeStrategy {
   } catch {
     /* localStorage may be disabled */
   }
-  return "helvetica";
+  return DEFAULT_CHARCODE_STRATEGY;
 }
 
 export function setActiveCharcodeStrategy(s: CharcodeStrategy): void {

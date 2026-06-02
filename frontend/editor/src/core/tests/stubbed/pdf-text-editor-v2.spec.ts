@@ -2864,11 +2864,6 @@ test.describe("PDF text editor v2 - multi-page", () => {
     });
     await expect(page.getByTestId("v2-page-1")).toBeVisible();
     await expect(page.getByTestId("v2-page-2")).toBeVisible();
-
-    // The sidebar status reports the page count.
-    await expect(page.getByTestId("v2-sidebar-status")).toContainText(
-      "3 pages",
-    );
   });
 
   test("edits on a non-first page are saved and round-trip", async ({
@@ -3665,12 +3660,11 @@ test.describe("PDF text editor v2 - workbench tab UX", () => {
 });
 
 test.describe("PDF text editor v2 - sidebar status", () => {
-  test("status panel reports page count and dirty state", async ({ page }) => {
+  test("status panel reports clean/dirty state", async ({ page }) => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
     const status = page.getByTestId("v2-sidebar-status");
-    await expect(status).toContainText("1 page");
     await expect(status).toContainText(/No changes yet/i);
 
     const firstRunTestId = await page
