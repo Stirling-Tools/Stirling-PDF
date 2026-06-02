@@ -1,3 +1,4 @@
+import apiClient from "@app/services/apiClient";
 import type {
   CharcodeResolver,
   CharcodeResolveResult,
@@ -36,39 +37,43 @@ const inFlight = new Set<string>();
 /** Endpoint config - resolved relative to current origin in dev. */
 const ENDPOINT = "/api/v1/general/pdf-text-editor-v2/encode-charcodes";
 
+/** Shape of the encode-charcodes JSON response (mirrors the controller). */
+interface EncodeCharcodesResponse {
+  charcodes?: number[];
+  missing?: string[];
+  note?: string;
+  error?: string;
+}
+
 /**
- * POST JSON to the charcode endpoint, automatically attaching the
- * session JWT (if present) and including same-origin credentials.
+ * POST JSON to the charcode endpoint via the shared `apiClient`.
  *
- * The Spring backend's security configuration requires authentication
- * for every non-public endpoint. Raw `fetch()` without these options
- * produces a 401 in any deployment that enables login. We piggyback
- * on the same `stirling_jwt` localStorage slot the rest of the app
- * uses (`apiClientSetup.ts`), so as long as the user is signed in,
- * the encode-charcodes call works.
+ * `apiClient` (axios) is the canonical Stirling HTTP helper - it
+ * already attaches the session JWT, XSRF token, and credentials, and
+ * transparently refreshes the token on 401 (in proprietary builds).
+ * Earlier this resolver rolled its own `fetch()` and shipped without
+ * any of that, which silently produced 401s the moment the backend
+ * security profile was enabled.
  *
- * In anonymous-mode dev deployments the JWT may be absent; the call
- * still goes out with `credentials: "include"` so any session cookie
- * is forwarded. The previous regression was: raw fetch + no creds +
- * security-enabled backend → 401 for every prewarm probe, so the
- * cache stayed empty and the per-char branch had nothing to look up.
+ * Returns the parsed body or `null` if the call failed (HTTP error,
+ * network error, etc.) - callers treat null as "no charcode for this
+ * char, fall through".
+ *
+ * `suppressErrorToast: true` keeps an individual probe failure quiet:
+ * we fire dozens of probes in parallel during prewarm, and a single
+ * one going sideways shouldn't pop a toast at the user.
  */
-async function postCharcodes(body: Record<string, unknown>): Promise<Response> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+async function postCharcodes(
+  body: Record<string, unknown>,
+): Promise<EncodeCharcodesResponse | null> {
   try {
-    const jwt = window.localStorage?.getItem("stirling_jwt");
-    if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
+    const resp = await apiClient.post<EncodeCharcodesResponse>(ENDPOINT, body, {
+      headers: { suppressErrorToast: "true" },
+    });
+    return resp.data ?? null;
   } catch {
-    /* localStorage may be unavailable */
+    return null;
   }
-  return fetch(ENDPOINT, {
-    method: "POST",
-    headers,
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
 }
 
 export class BackendResolver implements CharcodeResolver {
@@ -185,43 +190,30 @@ function maybeAutoPrefetch(
       //     font - giving Sample.pdf a visually-matching M.
       await Promise.all(
         chars.map(async (ch) => {
-          try {
-            const resp = await postCharcodes({
-              pdfBase64,
-              pageIndex: pageIdx >= 0 ? pageIdx : 0,
-              locatorChar: ch,
-              locatorX: 1,
-              locatorY: 1,
-              text: ch,
-            });
-            if (!resp.ok) {
-              charCache.set(cacheKey(fontPtr, ch), null);
-              return;
-            }
-            const json: {
-              charcodes?: number[];
-              missing?: string[];
-              error?: string;
-            } = await resp.json();
-            if (json.error || !json.charcodes || json.charcodes.length === 0) {
-              charCache.set(cacheKey(fontPtr, ch), null);
-              return;
-            }
-            const code = json.charcodes[0];
-            charCache.set(cacheKey(fontPtr, ch), code);
-            // Also cache under the per-char font handle so the
-            // per-char emit branch in editTextHelpers can find it.
-            const perCharFont = findFontForChar(ch, ctx);
-            if (perCharFont && perCharFont !== fontPtr) {
-              charCache.set(cacheKey(perCharFont, ch), code);
-            }
-            if (typeof console !== "undefined") {
-              console.debug(
-                `[v2.charcode] backend per-char prefetched ${JSON.stringify(ch)} -> ${code} (borrowed=${fontPtr}, perChar=${perCharFont ?? "n/a"})`,
-              );
-            }
-          } catch {
+          const json = await postCharcodes({
+            pdfBase64,
+            pageIndex: pageIdx >= 0 ? pageIdx : 0,
+            locatorChar: ch,
+            locatorX: 1,
+            locatorY: 1,
+            text: ch,
+          });
+          if (
+            !json ||
+            json.error ||
+            !json.charcodes ||
+            json.charcodes.length === 0
+          ) {
             charCache.set(cacheKey(fontPtr, ch), null);
+            return;
+          }
+          const code = json.charcodes[0];
+          charCache.set(cacheKey(fontPtr, ch), code);
+          // Also cache under the per-char font handle so the
+          // per-char emit branch in editTextHelpers can find it.
+          const perCharFont = findFontForChar(ch, ctx);
+          if (perCharFont && perCharFont !== fontPtr) {
+            charCache.set(cacheKey(perCharFont, ch), code);
           }
         }),
       );
@@ -491,7 +483,7 @@ export async function prewarmBackendCacheForPage(
             if (inFlight.has(reqKey)) continue;
             inFlight.add(reqKey);
             try {
-              const resp = await postCharcodes({
+              const json = await postCharcodes({
                 pdfBase64,
                 pageIndex,
                 locatorChar: ch,
@@ -499,37 +491,12 @@ export async function prewarmBackendCacheForPage(
                 locatorY: 1,
                 text: ch,
               });
-              if (!resp.ok) {
-                if (typeof console !== "undefined") {
-                  console.log(
-                    `[v2.charcode] prewarm http ${resp.status} for ${JSON.stringify(ch)}`,
-                  );
-                }
-                continue;
-              }
-              const json: {
-                charcodes?: number[];
-                missing?: string[];
-                error?: string;
-              } = await resp.json();
-              if (json.error || !json.charcodes?.length) {
-                if (typeof console !== "undefined") {
-                  console.log(
-                    `[v2.charcode] prewarm no-charcode for ${JSON.stringify(ch)}: error=${json.error ?? ""} charcodes=${JSON.stringify(json.charcodes)} missing=${JSON.stringify(json.missing)}`,
-                  );
-                }
+              if (!json || json.error || !json.charcodes?.length) {
                 continue;
               }
               const code = json.charcodes[0];
               charCache.set(cacheKey(perCharFont, ch), code);
               probesSucceeded += 1;
-            } catch (e) {
-              if (typeof console !== "undefined") {
-                const msg = e instanceof Error ? e.message : String(e);
-                console.log(
-                  `[v2.charcode] prewarm threw for ${JSON.stringify(ch)}: ${msg}`,
-                );
-              }
             } finally {
               inFlight.delete(reqKey);
             }
