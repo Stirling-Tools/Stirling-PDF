@@ -64,12 +64,37 @@ export function getRecentCharcodeEvents(): CharcodeEvent[] {
 function emitEvent(e: CharcodeEvent): void {
   recentEvents.push(e);
   if (recentEvents.length > MAX_RECENT) recentEvents.shift();
+  // Expose recent events on window for emit-path-aware Playwright
+  // tests. The HUD also subscribes via getRecentCharcodeEvents(), but
+  // tests need a window-readable reference because the HUD component
+  // was removed from production builds (debug-only). Without this
+  // hook tests can only inspect `run.text` from the model store,
+  // which updates on every keystroke regardless of how the underlying
+  // PDFium emit went - so a broken emit path (Helvetica fallback,
+  // .notdef stripes, duplicate emits) would silently pass.
+  if (typeof window !== "undefined") {
+    (
+      window as unknown as {
+        __v2_charcode_events?: CharcodeEvent[];
+      }
+    ).__v2_charcode_events = [...recentEvents];
+  }
   for (const cb of eventListeners) {
     try {
       cb(e);
     } catch {
       /* swallow listener errors */
     }
+  }
+}
+
+/** Test-only: clear the in-memory recent-events buffer + window hook. */
+export function _clearRecentCharcodeEventsForTests(): void {
+  recentEvents.length = 0;
+  if (typeof window !== "undefined") {
+    (
+      window as unknown as { __v2_charcode_events?: CharcodeEvent[] }
+    ).__v2_charcode_events = [];
   }
 }
 

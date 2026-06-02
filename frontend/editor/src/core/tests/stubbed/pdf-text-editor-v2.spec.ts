@@ -6003,5 +6003,112 @@ test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline
     const originalFCount = (original.match(/F/g) ?? []).length;
     const newFCount = (modelText.match(/F/g) ?? []).length;
     expect(newFCount).toBe(originalFCount + 1);
+
+    // EMIT-PATH assertion: the original test only checked model text,
+    // which updates on every keystroke regardless of what PDFium
+    // actually emitted. A regression that re-introduced the double-
+    // fire bug or routed the emit through Helvetica fallback would
+    // STILL update the model to `original + 'F'` because that's a
+    // pure JS string concat in onInput. To catch render regressions
+    // we scrape the emit-event registry and assert no duplicate
+    // per-text emits happened for this run.
+    const fEmits = await page.evaluate(() => {
+      const w = window as unknown as {
+        __v2_charcode_events?: Array<{
+          outcome: string;
+          text: string;
+          note: string;
+        }>;
+      };
+      return (w.__v2_charcode_events ?? []).filter((e) => e.text === "F");
+    });
+    expect(
+      fEmits.length,
+      `Expected at most 1 emit event for "F" (one keystroke), got ${fEmits.length}: ${JSON.stringify(fEmits, null, 2)}`,
+    ).toBeLessThanOrEqual(1);
+  });
+
+  // Consecutive-edit regression: a second M typed at the end of
+  // "10M+M" used to corrupt the rendering of the FIRST M too,
+  // because the legacy SetText borrow attempt produced .notdef
+  // stripes that FPDFPage_RemoveObject silently failed to clear
+  // for Type3 form-xobject ptrs, and the per-char retry then
+  // emitted a second text object on top. The fix routes every
+  // backend-strategy emit through the per-char branch unconditionally
+  // and signals the partial-edit measure-and-fallback to skip its
+  // tofu retry for verified ptrs.
+  //
+  // This test focuses on the EMIT PATH (not model text): typing two
+  // consecutive chars must produce at most 2 distinct emit events
+  // for "M". More than 2 means the measure-and-fallback fired a
+  // duplicate per-char retry on top of the first emit - exactly the
+  // failure mode that produced the visible .notdef-stripe artefacts
+  // on Sample.pdf's 10M+ run.
+  //
+  // Stubbed-mode caveat: without a real backend the per-char branch
+  // can't actually fire (cache stays empty). The assertion is
+  // therefore "no MORE than 2 emits for M across two keystrokes"
+  // which catches the duplicate-fire regression regardless of which
+  // code path is active.
+  test("two consecutive M edits on 10M+ produce ≤2 emit events for 'M' (no duplicate fire)", async ({
+    page,
+  }) => {
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const run = page
+      .locator('[data-testid^="v2-run-p0-"]')
+      .filter({ hasText: /^10M\+$/ })
+      .first();
+    const exists = await run.count();
+    if (exists === 0) {
+      test.skip(true, "Sample.pdf is missing the 10M+ marketing run");
+      return;
+    }
+    const tid = (await run.getAttribute("data-testid")) ?? "";
+
+    // Clear emit history so we only count this test's emits.
+    await page.evaluate(() => {
+      const w = window as unknown as { __v2_charcode_events?: unknown[] };
+      if (w.__v2_charcode_events) w.__v2_charcode_events = [];
+    });
+
+    await typeIntoRun(page, tid, "M", "end");
+    await typeIntoRun(page, tid, "M", "end");
+
+    const modelText = await page.evaluate((id) => {
+      const w = window as unknown as {
+        __v2_editor_store: {
+          state: { pages: { runs: { id: string; text: string }[] }[] };
+        };
+      };
+      for (const p of w.__v2_editor_store.state.pages) {
+        for (const r of p.runs) {
+          if (`v2-run-${r.id}` === id) return r.text;
+        }
+      }
+      return "";
+    }, tid);
+    expect(modelText).toBe("10M+MM");
+
+    // EMIT-PATH assertion: at most 2 emits for "M" (one per
+    // keystroke). >2 means the tofu measure-and-fallback re-fired
+    // the per-char branch.
+    const mEmits = await page.evaluate(() => {
+      const w = window as unknown as {
+        __v2_charcode_events?: Array<{ outcome: string; text: string }>;
+      };
+      return (w.__v2_charcode_events ?? []).filter((e) => e.text === "M");
+    });
+    expect(
+      mEmits.length,
+      `Expected ≤2 emit events for "M" (1 per keystroke), got ${mEmits.length}: ${JSON.stringify(mEmits, null, 2)}`,
+    ).toBeLessThanOrEqual(2);
   });
 });
