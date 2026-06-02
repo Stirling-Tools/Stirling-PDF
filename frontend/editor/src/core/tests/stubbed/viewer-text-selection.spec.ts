@@ -168,8 +168,6 @@ test("Ctrl+A selects all text on the current page", async ({ page }) => {
 
   const box = await firstPage.boundingBox();
   if (!box) throw new Error("no box");
-  // First move outside, then in, so onMouseEnter fires on the viewer Box
-  // (the keyboard handler bails out unless isViewerHovered).
   await page.mouse.move(0, 0);
   await page.waitForTimeout(50);
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -182,8 +180,34 @@ test("Ctrl+A selects all text on the current page", async ({ page }) => {
     ".pdf-selection-layer > div:first-child > div",
   );
   await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
-  const count = await selectionRects.count();
-  expect(count).toBeGreaterThan(0);
+  expect(await selectionRects.count()).toBeGreaterThan(0);
+});
+
+test("Ctrl+A works without first hovering the viewer", async ({ page }) => {
+  test.setTimeout(60_000);
+  const firstPage = await loadSampleAndOpenViewer(page);
+
+  // Park the cursor far away from the viewer so isViewerHovered is false.
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(200);
+
+  await page.keyboard.press("Control+A");
+  await page.waitForTimeout(500);
+
+  // The PDF selection plugin should have selection rects.
+  const selectionRects = firstPage.locator(
+    ".pdf-selection-layer > div:first-child > div",
+  );
+  await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+  expect(await selectionRects.count()).toBeGreaterThan(0);
+
+  // The browser must NOT have ranged the surrounding UI text — if it had,
+  // window.getSelection() would report a non-empty selection on the document.
+  const nativeSelectionLength = await page.evaluate(() => {
+    const sel = window.getSelection();
+    return sel ? sel.toString().length : 0;
+  });
+  expect(nativeSelectionLength).toBe(0);
 });
 
 test("text selection still works after toggling the pan tool off again", async ({

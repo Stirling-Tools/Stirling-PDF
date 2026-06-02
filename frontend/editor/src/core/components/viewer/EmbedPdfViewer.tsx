@@ -442,6 +442,20 @@ const EmbedPdfViewerContent = ({
                 event.preventDefault();
                 printActions.print();
                 return;
+              case "a":
+              case "A":
+                // Always intercept Ctrl+A while the viewer is mounted so
+                // the browser doesn't blanket-select the surrounding UI
+                // chrome. Hand off to the selection plugin so the PDF
+                // text gets selected instead.
+                event.preventDefault();
+                {
+                  const currentPage = getScrollState().currentPage;
+                  if (currentPage > 0) {
+                    selectionActions.selectAllOnPage(currentPage - 1);
+                  }
+                }
+                return;
             }
           }
         }
@@ -469,18 +483,6 @@ const EmbedPdfViewerContent = ({
             // Ctrl+0: Reset zoom to fit width
             event.preventDefault();
             zoomActions.requestZoom("fit-width");
-            return;
-          case "a":
-          case "A":
-            // Ctrl+A: select all text on the currently visible page in the
-            // PDF rather than letting the browser select the surrounding UI.
-            event.preventDefault();
-            {
-              const currentPage = getScrollState().currentPage;
-              if (currentPage > 0) {
-                selectionActions.selectAllOnPage(currentPage - 1);
-              }
-            }
             return;
           case "f":
           case "F":
