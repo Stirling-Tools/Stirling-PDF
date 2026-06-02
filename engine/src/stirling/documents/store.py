@@ -104,7 +104,7 @@ class DocumentStore(ABC):
 
     @abstractmethod
     async def revoke(
-    self,
+        self,
         collection: str,
         owner_id: OwnerId,
         principal: PrincipalId,
