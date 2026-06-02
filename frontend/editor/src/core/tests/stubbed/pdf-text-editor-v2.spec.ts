@@ -5937,3 +5937,71 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
     ).toBeLessThan(0.3);
   });
 });
+
+test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline)", () => {
+  // This regression guards against the bug fixed by gating the per-char
+  // backend-emit branch on `!reuse`. Before the fix, typing F at the
+  // end of "The Free Adobe Acrobat Alternative" with backend strategy
+  // active produced "The FFrFee Adobe AcFFFfffffrobat Alternative" -
+  // the partial-edit insert path's measure-and-fallback fired the
+  // per-char branch twice, stacking new F's on top of un-removed
+  // originals at the existing F positions.
+  //
+  // The test runs in stubbed mode (no real backend); the backend
+  // resolver's cache miss makes the per-char branch bail and the
+  // partial-edit borrow path keeps the originals + emits one new F.
+  // After the fix the model run text MUST equal exactly the original
+  // tagline + one F.
+  test("typing a single F at end of tagline produces exactly one F", async ({
+    page,
+  }) => {
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const tagline = page
+      .locator('[data-testid^="v2-run-p0-"]')
+      .filter({ hasText: /Adobe.+Acrobat.+Alternative/ })
+      .first();
+    const exists = await tagline.count();
+    if (exists === 0) {
+      test.skip(
+        true,
+        "Sample.pdf is missing the Adobe Acrobat Alternative tagline",
+      );
+      return;
+    }
+    const tid = (await tagline.getAttribute("data-testid")) ?? "";
+    const original = (await tagline.innerText()) ?? "";
+    await typeIntoRun(page, tid, "F", "end");
+
+    const modelText = await page.evaluate((id) => {
+      const w = window as unknown as {
+        __v2_editor_store: {
+          state: { pages: { runs: { id: string; text: string }[] }[] };
+        };
+      };
+      for (const p of w.__v2_editor_store.state.pages) {
+        for (const r of p.runs) {
+          if (`v2-run-${r.id}` === id) return r.text;
+        }
+      }
+      return "";
+    }, tid);
+    // CORE assertion: exactly one new F was appended; no F-duplication
+    // anywhere else in the tagline.
+    expect(
+      modelText,
+      `model text after typing F: ${JSON.stringify(modelText)}`,
+    ).toBe(`${original}F`);
+    // Defensive: total F-count in the model equals (original F-count + 1).
+    const originalFCount = (original.match(/F/g) ?? []).length;
+    const newFCount = (modelText.match(/F/g) ?? []).length;
+    expect(newFCount).toBe(originalFCount + 1);
+  });
+});
