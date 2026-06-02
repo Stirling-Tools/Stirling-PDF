@@ -27,19 +27,6 @@ import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/
  * See `PdfTextEditorV2CharcodeController.java`.
  */
 
-interface PrefetchKey {
-  fontPtr: number;
-  pageIdx: number;
-  locatorChar: string;
-  locatorX: number;
-  locatorY: number;
-}
-
-interface PrefetchEntry {
-  pdfBase64: string;
-  key: PrefetchKey;
-}
-
 /** Cache: per (fontPtr, char) → charcode integer (or null = missing). */
 const charCache = new Map<string, number | null>();
 
@@ -48,108 +35,6 @@ const inFlight = new Set<string>();
 
 /** Endpoint config - resolved relative to current origin in dev. */
 const ENDPOINT = "/api/v1/general/pdf-text-editor-v2/encode-charcodes";
-
-/**
- * Pre-fetch charcodes for `text` under the given font locator. Safe
- * to call repeatedly: each (font, char) pair is fetched at most once
- * per session.
- */
-export async function prefetchBackendEncoding(
-  entry: PrefetchEntry,
-  text: string,
-): Promise<void> {
-  const uniq = Array.from(new Set([...text]));
-  const needed = uniq.filter(
-    (ch) => !charCache.has(cacheKey(entry.key.fontPtr, ch)),
-  );
-  if (needed.length === 0) return;
-  const reqKey = `${entry.key.fontPtr}:${needed.join("")}`;
-  if (inFlight.has(reqKey)) return;
-  inFlight.add(reqKey);
-  try {
-    const body = {
-      pdfBase64: entry.pdfBase64,
-      pageIndex: entry.key.pageIdx,
-      locatorChar: entry.key.locatorChar,
-      locatorX: entry.key.locatorX,
-      locatorY: entry.key.locatorY,
-      text: needed.join(""),
-    };
-    const resp = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!resp.ok) {
-      if (typeof console !== "undefined") {
-        console.warn(
-          "[v2.charcode] backend prefetch HTTP error",
-          resp.status,
-          await resp.text().catch(() => ""),
-        );
-      }
-      for (const ch of needed)
-        charCache.set(cacheKey(entry.key.fontPtr, ch), null);
-      return;
-    }
-    const json: {
-      charcodes?: number[];
-      missing?: string[];
-      note?: string;
-      error?: string;
-    } = await resp.json();
-    if (json.error) {
-      if (typeof console !== "undefined") {
-        console.warn(
-          "[v2.charcode] backend prefetch reported error",
-          json.error,
-        );
-      }
-      for (const ch of needed)
-        charCache.set(cacheKey(entry.key.fontPtr, ch), null);
-      return;
-    }
-    const codes = json.charcodes ?? [];
-    const missing = new Set(json.missing ?? []);
-    // The server returns one charcode per CODE POINT of the request
-    // text in order. We requested `needed.join("")` so the indices
-    // line up.
-    let codeIdx = 0;
-    for (const ch of needed) {
-      if (missing.has(ch)) {
-        charCache.set(cacheKey(entry.key.fontPtr, ch), null);
-        continue;
-      }
-      const code = codes[codeIdx++];
-      charCache.set(
-        cacheKey(entry.key.fontPtr, ch),
-        typeof code === "number" ? code : null,
-      );
-    }
-    if (typeof console !== "undefined") {
-      console.debug(
-        "[v2.charcode] backend prefetched font=" +
-          entry.key.fontPtr +
-          " chars=" +
-          JSON.stringify(needed.join("")) +
-          " codes=" +
-          JSON.stringify(codes) +
-          " missing=" +
-          JSON.stringify([...missing]) +
-          " note=" +
-          (json.note ?? ""),
-      );
-    }
-  } catch (e) {
-    if (typeof console !== "undefined") {
-      console.warn("[v2.charcode] backend prefetch fetch threw", e);
-    }
-    for (const ch of needed)
-      charCache.set(cacheKey(entry.key.fontPtr, ch), null);
-  } finally {
-    inFlight.delete(reqKey);
-  }
-}
 
 export class BackendResolver implements CharcodeResolver {
   readonly name = "backend" as const;
@@ -346,12 +231,6 @@ interface TextPageModule {
   FPDFText_CountChars?: (textPage: number) => number;
   FPDFText_GetUnicode?: (textPage: number, idx: number) => number;
   FPDFText_GetTextObject?: (textPage: number, idx: number) => number;
-  FPDFText_GetCharOrigin?: (
-    textPage: number,
-    idx: number,
-    xPtr: number,
-    yPtr: number,
-  ) => boolean;
 }
 
 interface FontReadModule {
@@ -668,63 +547,6 @@ function getEditorContextForPage(pageIndex: number): {
     if (p.index === pageIndex) {
       return { module: doc.module, pagePtr: p.pagePtr, docPtr: doc.docPtr };
     }
-  }
-  return null;
-}
-
-function _locateExistingCharForFont(
-  fontPtr: number,
-  ctx: ResolverContext,
-): { pageIdx: number; char: string; x: number; y: number } | null {
-  const m = ctx.module;
-  const tpMod = m as unknown as TextPageModule;
-  const fontMod = m as unknown as FontReadModule;
-  if (
-    !tpMod.FPDFText_LoadPage ||
-    !tpMod.FPDFText_CountChars ||
-    !tpMod.FPDFText_GetUnicode ||
-    !tpMod.FPDFText_GetTextObject ||
-    !tpMod.FPDFText_GetCharOrigin ||
-    !fontMod.FPDFTextObj_GetFont
-  )
-    return null;
-  const textPage = tpMod.FPDFText_LoadPage(ctx.pagePtr);
-  if (!textPage) return null;
-  try {
-    const count = tpMod.FPDFText_CountChars(textPage);
-    const xp = m.pdfium.wasmExports.malloc(8);
-    const yp = m.pdfium.wasmExports.malloc(8);
-    try {
-      for (let i = 0; i < count; i++) {
-        const unicode = tpMod.FPDFText_GetUnicode(textPage, i);
-        if (!unicode) continue;
-        const obj = tpMod.FPDFText_GetTextObject(textPage, i);
-        if (!obj) continue;
-        let f = 0;
-        try {
-          f = fontMod.FPDFTextObj_GetFont(obj);
-        } catch {
-          continue;
-        }
-        if (f !== fontPtr) continue;
-        if (!tpMod.FPDFText_GetCharOrigin(textPage, i, xp, yp)) continue;
-        const x = m.pdfium.getValue(xp, "double");
-        const y = m.pdfium.getValue(yp, "double");
-        const pageIdx = pageIdxOfPagePtr(ctx);
-        if (pageIdx < 0) return null;
-        return { pageIdx, char: String.fromCharCode(unicode), x, y };
-      }
-    } finally {
-      m.pdfium.wasmExports.free(xp);
-      m.pdfium.wasmExports.free(yp);
-    }
-  } finally {
-    if (tpMod.FPDFText_ClosePage)
-      try {
-        tpMod.FPDFText_ClosePage(textPage);
-      } catch {
-        /* best-effort */
-      }
   }
   return null;
 }

@@ -6,6 +6,7 @@ import {
   measureObjRightEdgePt,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
 /**
  * Diff-driven partial editing. For runs that LineGrouper merged from
@@ -324,52 +325,6 @@ function borrowFontFromSurvivor(
   return 0;
 }
 
-/**
- * Per-char font borrowing: when each glyph in the source PDF lives
- * in its OWN dedicated subset font (the Adobe / Creative Cloud
- * pattern - e.g. "10M+" with 4 separate fonts for 1/0/M/+), borrowing
- * the FIRST surviving font for a newly-typed char gives the wrong
- * answer: typing M with font('1')'s handle produces tofu because the
- * '1' subset doesn't have an M glyph at all.
- *
- * This function returns a map: Unicode → font handle, derived from
- * which font each surviving sub-run actually uses. For "10M+" the map
- * is `{'1': font_for_1, '0': font_for_0, 'M': font_for_M, '+': font_for_plus}`.
- * The caller can then look up each inserted char in this map and
- * borrow the CORRECT font for that char, falling back to Helvetica
- * only for chars no surviving sub-run contains.
- */
-export function _buildPerCharFontMap(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  plan: PartialEditPlan,
-): Map<string, number> {
-  const map = new Map<string, number>();
-  const fontMod = m as unknown as FontReadingModule;
-  if (!fontMod.FPDFTextObj_GetFont) return map;
-  const removed = new Set(plan.removePtrs.map((r) => r.ptr));
-  for (let i = 0; i < plan.prevMergedFromPtrs.length; i++) {
-    const ptr = plan.prevMergedFromPtrs[i];
-    if (!ptr || removed.has(ptr)) continue;
-    const text = plan.prevMergedFromTexts[i];
-    if (!text) continue;
-    let fontPtr: number;
-    try {
-      fontPtr = fontMod.FPDFTextObj_GetFont(ptr);
-    } catch {
-      continue;
-    }
-    if (!fontPtr) continue;
-    // Each text object generally renders one char in subset fonts,
-    // but for multi-char objects, attribute the font to every char
-    // (best-effort: the same font CAN render every char of THAT
-    // particular text object's content stream).
-    for (const ch of text) {
-      if (!map.has(ch)) map.set(ch, fontPtr);
-    }
-  }
-  return map;
-}
-
 interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
@@ -470,32 +425,12 @@ export function applyPartialEditPlan(
   // 0`, in which case emitTextLine falls back to SetText for that
   // chunk (and the existing measure-and-fallback below catches any
   // resulting tofu).
-  const strategy =
-    typeof window === "undefined"
-      ? "helvetica"
-      : (() => {
-          try {
-            const fromUrl = new URL(window.location.href).searchParams.get(
-              "charcodeStrategy",
-            );
-            if (
-              fromUrl === "cmap" ||
-              fromUrl === "content-stream" ||
-              fromUrl === "backend"
-            )
-              return fromUrl;
-            const fromLs = window.localStorage?.getItem("v2.charcodeStrategy");
-            if (
-              fromLs === "cmap" ||
-              fromLs === "content-stream" ||
-              fromLs === "backend"
-            )
-              return fromLs;
-          } catch {
-            /* fall through to default */
-          }
-          return "helvetica";
-        })();
+  // Single source of truth: charcode/CharcodeStrategy.ts. Was a
+  // 26-line inline IIFE here that duplicated the URL/localStorage
+  // lookup with a hard-coded strategy-name union literal - now it
+  // imports the typed helper so any change to strategy resolution
+  // (e.g. adding a new strategy) only happens in one place.
+  const strategy = getActiveCharcodeStrategy();
 
   const survivingChars = new Set<string>();
   for (let i = 0; i < plan.prevMergedFromTexts.length; i++) {
