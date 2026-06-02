@@ -27,12 +27,12 @@ async def ingest_document(
 ) -> IngestDocumentResponse:
     """Replace-ingest a document's content under ``(owner_id, read_principals)``.
 
-    ``owner_id`` and ``read_principals`` are required on the request body.
-    For personal uploads the caller sets both to its user id;
-    for org-shared uploads it sets owner to the org and grantees to the
-    target groups (``group:engineering``, etc.).
-    We still require ``X-User-Id`` on the request so the caller is
-    authenticated and PostHog tracks the right user.
+    ``owner_id`` and ``read_principals`` are required on the request body and
+    are stored verbatim.
+
+    ``X-User-Id`` is still required so the caller is authenticated and
+    PostHog tracks the right user, but the value is not used to constrain
+    the body.
     """
     chunks_indexed = await documents.ingest(
         collection=request.document_id,
