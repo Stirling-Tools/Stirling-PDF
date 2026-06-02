@@ -19,6 +19,7 @@ import { EditorFileInputs } from "@app/tools/pdfTextEditor/v2/components/EditorF
 import { PageStage } from "@app/tools/pdfTextEditor/v2/components/PageStage";
 import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
+import { InsertTextCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertTextCommand";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
@@ -108,6 +109,92 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     void navigator.clipboard.writeText(texts.join("\n"));
   }, [store]);
 
+  /**
+   * Ctrl+X: copy the selected runs' text to the clipboard AND remove
+   * them. Browser's native cut on a contentEditable would just remove
+   * the text inside the focused run; we want the editor-level
+   * behaviour: clipboard gets the run text(s), the selected runs are
+   * deleted as text/image objects. The clipboard write is fire-and-
+   * forget (no await) so the delete fires immediately even if the
+   * clipboard API is slow.
+   */
+  const handleCutSelected = useCallback(() => {
+    handleCopySelected();
+    sel.deleteSelection();
+  }, [handleCopySelected, sel]);
+
+  /**
+   * Ctrl+V: read clipboard and create a fresh InsertTextCommand on
+   * the currently-visible page, positioned in roughly the centre.
+   * Each line of the clipboard becomes a new text object so paste of
+   * multi-line content works without flattening to one long run.
+   *
+   * Skipped silently when:
+   *   - no document loaded
+   *   - clipboard API unavailable / permission denied
+   *   - clipboard is empty
+   *   - focus is in a contentEditable run (the browser's default paste
+   *     into the active text run is what the user intends in that case)
+   */
+  const handlePaste = useCallback(
+    async (stripFormatting: boolean) => {
+      const doc = store.document;
+      if (!doc) return;
+      // Don't hijack the browser paste when the caret is in a text run.
+      const active = document.activeElement as HTMLElement | null;
+      if (active && active.isContentEditable) return;
+      let text: string;
+      try {
+        text = await navigator.clipboard.readText();
+      } catch {
+        return;
+      }
+      if (!text) return;
+      // `stripFormatting` is honoured by normalising line endings and
+      // collapsing leading/trailing whitespace - the underlying paste
+      // already drops everything but plain text since the clipboard
+      // API returns a string. The flag is kept so the same handler
+      // can be re-pointed at a richer source later.
+      const normalised = stripFormatting
+        ? text.replace(/\r\n?/g, "\n").trim()
+        : text.replace(/\r\n?/g, "\n");
+      if (!normalised) return;
+      // Find the visible page (Ctrl+End behaves the same way).
+      const stage = document.querySelector<HTMLElement>(
+        '[data-testid="v2-stage"]',
+      );
+      const stageRect = stage?.getBoundingClientRect();
+      const stageCentreY = stageRect ? stageRect.top + stageRect.height / 2 : 0;
+      let pageIndex = 0;
+      let bestDist = Infinity;
+      for (const p of doc.loadedPages()) {
+        const el = document.querySelector<HTMLElement>(
+          `[data-testid="v2-page-${p.index}"]`,
+        );
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        const centre = r.top + r.height / 2;
+        const dist = Math.abs(centre - stageCentreY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          pageIndex = p.index;
+        }
+      }
+      const page = doc.page(pageIndex);
+      // Position roughly at the page centre, biased toward the upper
+      // third so multi-line paste has room to flow downward.
+      const cmd = new InsertTextCommand({
+        pageIndex,
+        x: page.width / 2 - 80,
+        y: page.height * 0.55,
+        text: normalised,
+      });
+      store.dispatch(cmd);
+      if (cmd.insertedRunId) store.selection.selectOne(cmd.insertedRunId);
+    },
+    [store],
+  );
+
   const handleFindNext = useCallback((reverse: boolean) => {
     setFindOpen(true);
     const button = document.querySelector<HTMLButtonElement>(
@@ -176,6 +263,11 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       if (ids.length > 0) store.selection.selectMany(ids);
     }, [store]),
     onCopySelected: handleCopySelected,
+    onCutSelected: handleCutSelected,
+    onPaste: useCallback(
+      (stripFormatting: boolean) => void handlePaste(stripFormatting),
+      [handlePaste],
+    ),
     onToggleHelp: useCallback(() => setHelpOpen((v) => !v), []),
     onOpenFind: useCallback(() => setFindOpen(true), []),
     onFindNext: handleFindNext,
