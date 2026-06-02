@@ -36,9 +36,11 @@ import stirling.software.saas.payg.job.ProcessingJob;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.ProcessType;
+import stirling.software.saas.payg.model.ShadowChargeStatus;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
+import stirling.software.saas.payg.repository.ProcessingJobRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 
 /**
@@ -51,6 +53,7 @@ class JobChargeServiceTest {
     private PricingPolicyService policyService;
     private DocumentClassifier classifier;
     private PaygShadowChargeRepository shadowRepo;
+    private ProcessingJobRepository jobRepo;
     private JobChargeService service;
 
     @BeforeEach
@@ -59,7 +62,8 @@ class JobChargeServiceTest {
         policyService = Mockito.mock(PricingPolicyService.class);
         classifier = Mockito.mock(DocumentClassifier.class);
         shadowRepo = Mockito.mock(PaygShadowChargeRepository.class);
-        service = new JobChargeService(jobService, policyService, classifier, shadowRepo);
+        jobRepo = Mockito.mock(ProcessingJobRepository.class);
+        service = new JobChargeService(jobService, policyService, classifier, shadowRepo, jobRepo);
     }
 
     @Test
@@ -224,6 +228,105 @@ class JobChargeServiceTest {
                                         List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("inputs must not be empty");
+    }
+
+    @Test
+    void markFirstStepFailed_flipsShadowRowAndClosesProcess() {
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setJobId(jobId);
+        row.setStatus(ShadowChargeStatus.CHARGED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
+        ProcessingJob job = openJob(jobId);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        assertThat(row.getStatus()).isEqualTo(ShadowChargeStatus.REFUNDED);
+        assertThat(row.getRefundedAt()).isNotNull();
+        assertThat(row.getRefundReason()).isEqualTo("first-step-5xx:503");
+        assertThat(job.getStatus()).isEqualTo(JobStatus.CLOSED);
+        assertThat(job.getClosedAt()).isNotNull();
+        verify(shadowRepo).save(row);
+        verify(jobRepo).save(job);
+    }
+
+    @Test
+    void markFirstStepFailed_alreadyRefunded_isNoOp() {
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setJobId(jobId);
+        row.setStatus(ShadowChargeStatus.REFUNDED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
+        ProcessingJob job = openJob(jobId);
+        job.setStatus(JobStatus.CLOSED);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:500");
+
+        verify(shadowRepo, never()).save(any());
+        verify(jobRepo, never()).save(any());
+    }
+
+    @Test
+    void markFirstStepFailed_noShadowRow_stillClosesProcess() {
+        UUID jobId = UUID.randomUUID();
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.empty());
+        ProcessingJob job = openJob(jobId);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        assertThat(job.getStatus()).isEqualTo(JobStatus.CLOSED);
+        verify(jobRepo).save(job);
+    }
+
+    @Test
+    void markFirstStepFailed_trimsLongRefundReason() {
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setStatus(ShadowChargeStatus.CHARGED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
+
+        String oversized = "x".repeat(200);
+        service.markFirstStepFailed(jobId, oversized);
+
+        assertThat(row.getRefundReason()).hasSize(128);
+    }
+
+    @Test
+    void decrementStepCount_decrementsByOne() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        job.setStepCount(3);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.decrementStepCount(jobId);
+
+        assertThat(job.getStepCount()).isEqualTo(2);
+        verify(jobRepo).save(job);
+    }
+
+    @Test
+    void decrementStepCount_floorAtOne_neverDrivesNegative() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        job.setStepCount(1);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.decrementStepCount(jobId);
+
+        assertThat(job.getStepCount()).isEqualTo(1);
+        verify(jobRepo, never()).save(any());
+    }
+
+    @Test
+    void decrementStepCount_missingJob_isNoOp() {
+        UUID jobId = UUID.randomUUID();
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
+        service.decrementStepCount(jobId); // must not throw
+        verify(jobRepo, never()).save(any());
     }
 
     // --- helpers --------------------------------------------------------------------------------
