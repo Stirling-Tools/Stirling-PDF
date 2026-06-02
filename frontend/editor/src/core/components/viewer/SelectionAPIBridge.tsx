@@ -1,15 +1,21 @@
 import { useEffect, useRef } from "react";
-import { useSelectionCapability } from "@embedpdf/plugin-selection/react";
+import {
+  useSelectionCapability,
+  useSelectionPlugin,
+} from "@embedpdf/plugin-selection/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 
 /**
  * Connects the PDF selection plugin to the shared ViewerContext.
  */
 export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
+  const { plugin: selectionPlugin } = useSelectionPlugin();
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
+  const activeDocumentId = useActiveDocumentId();
 
   const hasSelectionRef = useRef(false);
   const selectedTextRef = useRef("");
@@ -17,10 +23,41 @@ export function SelectionAPIBridge() {
   useEffect(() => {
     if (!selection || !documentReady) return;
 
+    // Select every glyph on a single page using the plugin's begin/update/end
+    // primitives. The plugin marks these private in TypeScript but they are
+    // accessible at runtime - the same pattern the TextSelectionHandler uses
+    // for word/line selection.
+    const selectAllOnPage = (documentId: string, pageIndex: number) => {
+      const plugin = selectionPlugin as unknown as {
+        clearSelection: (id: string) => void;
+        beginSelection: (id: string, page: number, glyph: number) => void;
+        updateSelection: (id: string, page: number, glyph: number) => void;
+        endSelection: (id: string) => void;
+      };
+      const state = selection.getState(documentId);
+      const geo = state.geometry[pageIndex];
+      if (!geo || geo.runs.length === 0) return false;
+      let lastGlyph = 0;
+      for (const run of geo.runs) {
+        const end = run.charStart + run.glyphs.length - 1;
+        if (end > lastGlyph) lastGlyph = end;
+      }
+      plugin.clearSelection(documentId);
+      plugin.beginSelection(documentId, pageIndex, 0);
+      plugin.updateSelection(documentId, pageIndex, lastGlyph);
+      plugin.endSelection(documentId);
+      return true;
+    };
+
     const buildApi = () => ({
       copyToClipboard: () => selection.copyToClipboard(),
       getSelectedText: () => selection.getSelectedText(),
       getFormattedSelection: () => selection.getFormattedSelection(),
+      selectAllOnPage: (pageIndex: number) => {
+        const docId = activeDocumentId;
+        if (!docId || !selectionPlugin) return false;
+        return selectAllOnPage(docId, pageIndex);
+      },
     });
 
     registerBridge("selection", {
@@ -93,7 +130,13 @@ export function SelectionAPIBridge() {
       document.removeEventListener("keydown", handleKeyDown);
       registerBridge("selection", null);
     };
-  }, [selection, documentReady, registerBridge]);
+  }, [
+    selection,
+    selectionPlugin,
+    activeDocumentId,
+    documentReady,
+    registerBridge,
+  ]);
 
   return null;
 }

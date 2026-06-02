@@ -243,12 +243,12 @@ export function LocalEmbedPDF({
         drawBlackBoxes: false,
       }),
 
-      // Register pan plugin (depends on Viewport, InteractionManager)
+      // Register pan plugin. `defaultMode: "never"` keeps pointerMode (text
+      // selection) as the default - pan only activates when the user toggles
+      // the hand tool.
       createPluginRegistration(PanPluginPackage, {
-        defaultMode: "mobile", // Try mobile mode which might be more permissive
+        defaultMode: "never",
       }),
-      // Register pan plugin (depends on Viewport, InteractionManager) - keep disabled to prevent drag panning
-      createPluginRegistration(PanPluginPackage, {}),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {

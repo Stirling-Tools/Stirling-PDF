@@ -60,6 +60,7 @@ export interface SelectionAPIWrapper {
   copyToClipboard: () => void;
   getSelectedText: () => string | any;
   getFormattedSelection: () => any;
+  selectAllOnPage: (pageIndex: number) => boolean;
 }
 
 export interface SpreadAPIWrapper {

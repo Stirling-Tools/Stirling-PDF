@@ -172,6 +172,7 @@ const EmbedPdfViewerContent = ({
     isAnnotationsVisible,
     exportActions,
     printActions,
+    selectionActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
     pdfRenderMode,
@@ -471,8 +472,15 @@ const EmbedPdfViewerContent = ({
             return;
           case "a":
           case "A":
-            // Ctrl+A: Prevent browser from selecting all UI text
+            // Ctrl+A: select all text on the currently visible page in the
+            // PDF rather than letting the browser select the surrounding UI.
             event.preventDefault();
+            {
+              const currentPage = getScrollState().currentPage;
+              if (currentPage > 0) {
+                selectionActions.selectAllOnPage(currentPage - 1);
+              }
+            }
             return;
           case "f":
           case "F":
@@ -558,6 +566,8 @@ const EmbedPdfViewerContent = ({
     viewerApplyChanges,
     cyclePdfRenderMode,
     viewerKeyCommand,
+    selectionActions,
+    getScrollState,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".

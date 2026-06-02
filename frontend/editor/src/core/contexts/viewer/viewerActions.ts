@@ -33,6 +33,7 @@ export interface SelectionActions {
   copyToClipboard: () => void;
   getSelectedText: () => string;
   getFormattedSelection: () => any;
+  selectAllOnPage: (pageIndex: number) => boolean;
 }
 
 export interface SpreadActions {
@@ -268,6 +269,13 @@ export function createViewerActions({
         return api.getFormattedSelection();
       }
       return null;
+    },
+    selectAllOnPage: (pageIndex: number) => {
+      const api = registry.current.selection?.api;
+      if (api?.selectAllOnPage) {
+        return api.selectAllOnPage(pageIndex);
+      }
+      return false;
     },
   };
 
