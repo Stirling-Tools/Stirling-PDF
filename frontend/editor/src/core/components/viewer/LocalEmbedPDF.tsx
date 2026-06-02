@@ -957,10 +957,6 @@ export function LocalEmbedPDF({
                                   onDragStart={(e) => e.preventDefault()}
                                   onDrop={(e) => e.preventDefault()}
                                   onDragOver={(e) => e.preventDefault()}
-                                  // Block browser's "Copy image" menu; the
-                                  // TextSelectionMenu provides Copy when text
-                                  // is selected.
-                                  onContextMenu={(e) => e.preventDefault()}
                                 >
                                   <div
                                     style={{

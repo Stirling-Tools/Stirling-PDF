@@ -61,6 +61,7 @@ export interface SelectionAPIWrapper {
   getSelectedText: () => string | any;
   getFormattedSelection: () => any;
   selectAllOnPage: (pageIndex: number) => boolean;
+  selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
 }
 
 export interface SpreadAPIWrapper {

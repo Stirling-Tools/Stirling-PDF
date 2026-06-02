@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import {
   useSelectionCapability,
   useSelectionPlugin,
+  glyphAt,
 } from "@embedpdf/plugin-selection/react";
+import { useDocumentState } from "@embedpdf/core/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
@@ -16,6 +18,10 @@ export function SelectionAPIBridge() {
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
   const activeDocumentId = useActiveDocumentId();
+  const documentState = useDocumentState(activeDocumentId ?? "");
+  const scaleRef = useRef(1);
+  scaleRef.current =
+    (documentState as { scale?: number } | undefined)?.scale ?? 1;
 
   const hasSelectionRef = useRef(false);
   const selectedTextRef = useRef("");
@@ -47,6 +53,29 @@ export function SelectionAPIBridge() {
       return true;
     };
 
+    const selectWordAt = (
+      documentId: string,
+      pageIndex: number,
+      x: number,
+      y: number,
+    ) => {
+      const plugin = selectionPlugin as unknown as {
+        selectWord: (
+          id: string,
+          page: number,
+          glyph: number,
+          modeId: string,
+        ) => void;
+      };
+      const state = selection.getState(documentId);
+      const geo = state.geometry[pageIndex];
+      if (!geo) return false;
+      const g = glyphAt(geo, { x, y }, 3);
+      if (g === -1) return false;
+      plugin.selectWord(documentId, pageIndex, g, "pointerMode");
+      return true;
+    };
+
     const buildApi = () => ({
       copyToClipboard: () => selection.copyToClipboard(),
       getSelectedText: () => selection.getSelectedText(),
@@ -55,6 +84,11 @@ export function SelectionAPIBridge() {
         const docId = activeDocumentId;
         if (!docId || !selectionPlugin) return false;
         return selectAllOnPage(docId, pageIndex);
+      },
+      selectWordAt: (pageIndex: number, x: number, y: number) => {
+        const docId = activeDocumentId;
+        if (!docId || !selectionPlugin) return false;
+        return selectWordAt(docId, pageIndex, x, y);
       },
     });
 
@@ -118,14 +152,38 @@ export function SelectionAPIBridge() {
       }
     };
 
+    // Right-click anywhere inside a PDF page: suppress the browser's "Copy
+    // image" menu, and if nothing is currently selected, auto-select the
+    // word under the cursor so the floating Copy menu appears in place.
+    const handleContextMenu = (event: MouseEvent) => {
+      let el = event.target as HTMLElement | null;
+      while (el && !el.dataset?.pageIndex) {
+        el = el.parentElement;
+      }
+      if (!el) return;
+      event.preventDefault();
+      if (hasSelectionRef.current) return;
+      const docId = activeDocumentId;
+      if (!docId || !selectionPlugin) return;
+      const pageIndex = Number(el.dataset.pageIndex);
+      if (Number.isNaN(pageIndex)) return;
+      const rect = el.getBoundingClientRect();
+      const scale = scaleRef.current || 1;
+      const x = (event.clientX - rect.left) / scale;
+      const y = (event.clientY - rect.top) / scale;
+      selectWordAt(docId, pageIndex, x, y);
+    };
+
     document.addEventListener("copy", handleCopy);
     document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       unsubChange?.();
       unsubCopy?.();
       document.removeEventListener("copy", handleCopy);
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("contextmenu", handleContextMenu);
       registerBridge("selection", null);
     };
   }, [

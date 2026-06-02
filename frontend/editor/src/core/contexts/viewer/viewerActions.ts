@@ -34,6 +34,7 @@ export interface SelectionActions {
   getSelectedText: () => string;
   getFormattedSelection: () => any;
   selectAllOnPage: (pageIndex: number) => boolean;
+  selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
 }
 
 export interface SpreadActions {
@@ -274,6 +275,13 @@ export function createViewerActions({
       const api = registry.current.selection?.api;
       if (api?.selectAllOnPage) {
         return api.selectAllOnPage(pageIndex);
+      }
+      return false;
+    },
+    selectWordAt: (pageIndex: number, x: number, y: number) => {
+      const api = registry.current.selection?.api;
+      if (api?.selectWordAt) {
+        return api.selectWordAt(pageIndex, x, y);
       }
       return false;
     },
