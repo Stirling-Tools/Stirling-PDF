@@ -188,6 +188,13 @@ public class AiWorkflowService {
                     cannotContinue("AI engine requested content extraction more than once."));
         }
 
+        // Fast path: when the engine identifies a pdf-to-markdown task and pymupdf-convert is
+        // available, skip feeding content back to the engine and convert directly.
+        if ("pdf_to_markdown".equals(response.getResumeWith())
+                && request.isPymupdfWorkerAvailable()) {
+            return runPyMuPdfConversion(filesById, listener);
+        }
+
         List<AiWorkflowFileRequest> requestedFiles = response.getFiles();
 
         // Validate requested file ids before loading anything
@@ -368,6 +375,31 @@ public class AiWorkflowService {
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
         return new WorkflowState.Terminal(response);
+    }
+
+    private WorkflowState runPyMuPdfConversion(
+            Map<String, MultipartFile> filesById, ProgressListener listener) throws IOException {
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
+        List<Resource> outputs = new ArrayList<>();
+        for (MultipartFile file : filesById.values()) {
+            String baseName =
+                    file.getOriginalFilename() != null
+                            ? file.getOriginalFilename().replaceFirst("\\.[^.]+$", "")
+                            : "document";
+            String markdown =
+                    pyMuPdfConverter.convertToMarkdown(file.getBytes(), file.getOriginalFilename());
+            String safeFilename = Filenames.toSimpleFileName(baseName + ".md");
+            byte[] bytes = markdown.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            outputs.add(
+                    new org.springframework.core.io.ByteArrayResource(bytes) {
+                        @Override
+                        public String getFilename() {
+                            return safeFilename;
+                        }
+                    });
+        }
+        return new WorkflowState.Terminal(
+                buildCompletedResponse("Converted PDF to Markdown.", outputs, List.of(), null));
     }
 
     private WorkflowState onGenerateFile(AiWorkflowResponse response, ProgressListener listener)

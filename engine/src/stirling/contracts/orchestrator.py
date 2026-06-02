@@ -47,6 +47,7 @@ class OrchestratorRequest(ApiModel):
     enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
         default_factory=list
     )
+    pymupdf_worker_available: bool = False
 
 
 class UnsupportedCapabilityResponse(ApiModel):
