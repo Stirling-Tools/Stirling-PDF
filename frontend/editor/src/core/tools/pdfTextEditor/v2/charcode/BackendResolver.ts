@@ -36,6 +36,41 @@ const inFlight = new Set<string>();
 /** Endpoint config - resolved relative to current origin in dev. */
 const ENDPOINT = "/api/v1/general/pdf-text-editor-v2/encode-charcodes";
 
+/**
+ * POST JSON to the charcode endpoint, automatically attaching the
+ * session JWT (if present) and including same-origin credentials.
+ *
+ * The Spring backend's security configuration requires authentication
+ * for every non-public endpoint. Raw `fetch()` without these options
+ * produces a 401 in any deployment that enables login. We piggyback
+ * on the same `stirling_jwt` localStorage slot the rest of the app
+ * uses (`apiClientSetup.ts`), so as long as the user is signed in,
+ * the encode-charcodes call works.
+ *
+ * In anonymous-mode dev deployments the JWT may be absent; the call
+ * still goes out with `credentials: "include"` so any session cookie
+ * is forwarded. The previous regression was: raw fetch + no creds +
+ * security-enabled backend → 401 for every prewarm probe, so the
+ * cache stayed empty and the per-char branch had nothing to look up.
+ */
+async function postCharcodes(body: Record<string, unknown>): Promise<Response> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  try {
+    const jwt = window.localStorage?.getItem("stirling_jwt");
+    if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
+  } catch {
+    /* localStorage may be unavailable */
+  }
+  return fetch(ENDPOINT, {
+    method: "POST",
+    headers,
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+}
+
 export class BackendResolver implements CharcodeResolver {
   readonly name = "backend" as const;
 
@@ -151,17 +186,13 @@ function maybeAutoPrefetch(
       await Promise.all(
         chars.map(async (ch) => {
           try {
-            const resp = await fetch(ENDPOINT, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                pdfBase64,
-                pageIndex: pageIdx >= 0 ? pageIdx : 0,
-                locatorChar: ch,
-                locatorX: 1,
-                locatorY: 1,
-                text: ch,
-              }),
+            const resp = await postCharcodes({
+              pdfBase64,
+              pageIndex: pageIdx >= 0 ? pageIdx : 0,
+              locatorChar: ch,
+              locatorX: 1,
+              locatorY: 1,
+              text: ch,
             });
             if (!resp.ok) {
               charCache.set(cacheKey(fontPtr, ch), null);
@@ -367,6 +398,11 @@ export async function prewarmBackendCacheForPage(
     }
     return;
   }
+  // Tentatively mark - we'll un-mark below if every probe failed so
+  // the next focus retries. Previously a single failed prewarm round
+  // (e.g. all-401 because the JWT wasn't attached, all-500 because
+  // the backend was down) silently locked the page out of any future
+  // prewarm attempt for the rest of the session.
   prewarmedPages.add(pagePtr);
 
   const ctx: ResolverContext = { module: m, pagePtr, docPtr };
@@ -442,6 +478,7 @@ export async function prewarmBackendCacheForPage(
     // time out, leaving them un-cached).
     const CONCURRENCY = 6;
     let probeIdx = 0;
+    let probesSucceeded = 0;
     const workers: Promise<void>[] = [];
     for (let w = 0; w < CONCURRENCY; w++) {
       workers.push(
@@ -454,17 +491,13 @@ export async function prewarmBackendCacheForPage(
             if (inFlight.has(reqKey)) continue;
             inFlight.add(reqKey);
             try {
-              const resp = await fetch(ENDPOINT, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  pdfBase64,
-                  pageIndex,
-                  locatorChar: ch,
-                  locatorX: 1,
-                  locatorY: 1,
-                  text: ch,
-                }),
+              const resp = await postCharcodes({
+                pdfBase64,
+                pageIndex,
+                locatorChar: ch,
+                locatorX: 1,
+                locatorY: 1,
+                text: ch,
               });
               if (!resp.ok) {
                 if (typeof console !== "undefined") {
@@ -489,6 +522,7 @@ export async function prewarmBackendCacheForPage(
               }
               const code = json.charcodes[0];
               charCache.set(cacheKey(perCharFont, ch), code);
+              probesSucceeded += 1;
             } catch (e) {
               if (typeof console !== "undefined") {
                 const msg = e instanceof Error ? e.message : String(e);
@@ -519,11 +553,21 @@ export async function prewarmBackendCacheForPage(
     }
     if (typeof console !== "undefined") {
       console.log(
-        `[v2.charcode] backend prewarm pageIdx=${pageIndex} probes=${probes.length}`,
+        `[v2.charcode] backend prewarm pageIdx=${pageIndex} probes=${probes.length} succeeded=${probesSucceeded}`,
       );
+    }
+    // If EVERY probe failed (auth, backend down, all 500s) un-mark the
+    // page so a subsequent focus can retry instead of silently
+    // returning early forever. We deliberately keep the guard set
+    // when at least one probe succeeded - those entries are now in
+    // the cache and re-firing the prewarm would just waste round-
+    // trips re-fetching what we already have.
+    if (probesSucceeded === 0) {
+      prewarmedPages.delete(pagePtr);
     }
   } catch {
     /* prewarm is best-effort - errors are silently swallowed */
+    prewarmedPages.delete(pagePtr);
   }
   // Mark ctx as referenced so eslint doesn't flag unused.
   void ctx;
