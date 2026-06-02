@@ -28,9 +28,7 @@ class PgVectorStore(DocumentStore):
       on a ``(collection, owner_id)`` pair. Read methods take the caller's
       principal set and join through this table.
 
-    Writes are owner-scoped; reads are ACL-scoped. The engine treats principal
-    strings as opaque (``user:bob``, ``group:eng``, ``org:acme``) - Java decides
-    membership.
+    Writes are owner-scoped; reads are ACL-scoped.
     """
 
     def __init__(self, dsn: str) -> None:

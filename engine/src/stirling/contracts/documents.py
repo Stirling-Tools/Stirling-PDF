@@ -48,10 +48,7 @@ class IngestDocumentRequest(ApiModel):
     ``document_id`` is a hash.
 
     ``owner_id`` and ``read_principals`` are required: the engine never
-    defaults them. Callers must declare ownership and access explicitly,
-    even for personal uploads (``owner_id = user id``, ``read_principals =
-    [user id]``). This keeps a forgetful caller from silently writing a
-    personal-doc copy of org content (or vice versa).
+    defaults them. Callers must declare ownership and access explicitly.
     """
 
     document_id: FileId = Field(min_length=1)

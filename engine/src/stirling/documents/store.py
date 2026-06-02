@@ -42,25 +42,6 @@ class DocumentStore(ABC):
     * **Vector chunks** - small, embedded chunks used for RAG search.
     * **Ordered pages** - the original page text retained in document order,
       used for whole-document reading.
-
-    Both representations live under the same ``(collection, owner_id)`` parent
-    row in ``documents_meta``. Removing that parent row cascades, so
-    :meth:`delete_collection` is one logical delete.
-
-    **Tenancy / ownership.** ``owner_id`` is the tenant a doc belongs to
-    (``user:bob``, ``org:acme``, etc.). The same ``collection`` value under two
-    different owners is two physically-distinct rows. Only the owner can delete.
-
-    **Access control.** Reads are governed by a separate ``document_acl`` table
-    that maps ``(collection, owner_id) -> principal_id``. Read methods take a
-    ``principals`` list — the caller's accessible principal set — and return a
-    row only when at least one of those principals has been granted access in
-    the ACL. The engine treats principal strings as opaque; Java decides what
-    set of principals a given caller has (membership in groups, etc.).
-
-    Personal-doc semantics fall out for free: on ingest, the route grants the
-    owner read access to its own doc, so ``principals=[owner_id]`` returns
-    exactly that user's documents.
     """
 
     # ── lifecycle of the (collection, owner_id) row ────────────────────────
@@ -82,27 +63,17 @@ class DocumentStore(ABC):
 
     @abstractmethod
     async def delete_collection(self, collection: str, owner_id: OwnerId) -> None:
-        """Remove a collection's chunks, pages, and ACL rows. Owner-only."""
+        """Remove a collection's chunks, pages, and ACL rows."""
 
     @abstractmethod
     async def purge_owner(self, owner_id: OwnerId) -> int:
         """Remove every collection (and ACL row) belonging to ``owner_id``.
-
-        Drops the full doc footprint for each row: vector chunks, page text,
-        ACL entries. Used on explicit logout so a user's personal document
-        content disappears as soon as they end their session. Returns the
-        number of collections purged.
+        Returns the number of collections purged.
         """
 
     @abstractmethod
     async def reap_expired(self) -> int:
-        """Remove collections whose ``expires_at`` is non-null and in the past.
-
-        TTL backstop for cases the explicit logout path misses (tab close,
-        JWT expiry, engine restart). Rows with ``expires_at IS NULL`` are
-        persistent and never reaped; that's the shape for org-owned docs.
-        Returns the number of collections deleted.
-        """
+        """Remove collections whose ``expires_at`` is non-null and in the past."""
 
     # ── write paths (scoped by owner) ──────────────────────────────────────
 
@@ -129,11 +100,11 @@ class DocumentStore(ABC):
         owner_id: OwnerId,
         principals: list[PrincipalId],
     ) -> None:
-        """Grant read access on ``(collection, owner_id)`` to each principal. Idempotent."""
+        """Grant read access on ``(collection, owner_id)`` to each principal."""
 
     @abstractmethod
     async def revoke(
-        self,
+    self,
         collection: str,
         owner_id: OwnerId,
         principal: PrincipalId,

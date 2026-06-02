@@ -33,9 +33,7 @@ class SqliteVecStore(DocumentStore):
 
     Each ``(collection, owner_id)`` pair gets its own `vec0` virtual table with a
     fixed embedding dimension (detected on first insert). Document metadata lives
-    in a regular table joined by rowid. Reads are gated by the ``document_acl``
-    table, not by owner equality — the caller passes a principal set and a row
-    is returned when any principal has a matching read ACL entry.
+    in a regular table joined by rowid.
     """
 
     def __init__(self, db_path: str | Path) -> None:
@@ -458,9 +456,7 @@ class SqliteVecStore(DocumentStore):
         """Resolve which owner_id this caller is reading. ``None`` means no access.
 
         Same ``collection`` value can exist under multiple owners; we pick the
-        first owner the caller has read access to. (In practice collections are
-        keyed by content-hash file ids so cross-owner collisions are deliberate
-        - Alice and Bob both uploaded the same PDF.)
+        first owner the caller has read access to.
         """
         placeholders = ",".join("?" * len(principals))
         row = self._conn.execute(

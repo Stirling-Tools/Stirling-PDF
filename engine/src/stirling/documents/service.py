@@ -59,14 +59,9 @@ class DocumentService:
         same ``pages`` payload. Pages with empty/whitespace-only text are
         skipped for chunking but still written to the page store so page
         numbering is preserved end-to-end.
-
-        ``read_principals`` is required: the caller must declare who can read
-        this doc. For personal uploads pass ``[PrincipalId(owner_id)]``; for
-        org-shared docs pass the target groups/users explicitly. We never
-        derive an ACL silently from ``owner_id``.
         """
         if not read_principals:
-            raise ValueError("read_principals must not be empty — every doc needs at least one reader")
+            raise ValueError("read_principals must not be empty - every doc needs at least one reader")
 
         await self._store.delete_collection(collection, owner_id)
         await self._store.ensure_collection(collection, source, owner_id, expires_at)
@@ -147,21 +142,18 @@ class DocumentService:
         return await self._store.read_pages(collection, page_range, principals)
 
     async def delete_collection(self, collection: FileId, owner_id: OwnerId) -> None:
-        """Remove a collection (chunks, pages, ACL). Owner-only operation."""
+        """Remove a collection (chunks, pages, ACL)."""
         await self._store.delete_collection(collection, owner_id)
 
     async def purge_owner(self, owner_id: OwnerId) -> int:
         """Remove every collection ``owner_id`` owns, including vector chunks,
-        page text, and ACL rows. Called on user logout to clean up the user's
-        personal document content. Returns the number of collections purged."""
+        page text, and ACL rows. Returns the number of collections purged."""
         return await self._store.purge_owner(owner_id)
 
     async def reap_expired(self) -> int:
-        """Delete collections whose ``expires_at`` is set and in the past. TTL
-        backstop for sessions that ended without a clean logout (tab close,
-        JWT expiry, engine restart). Persistent collections (``expires_at``
-        null, i.e. org-owned shared docs) are never touched. Returns the
-        number of collections deleted."""
+        """Delete collections whose ``expires_at`` is set and in the past.
+        Persistent collections (``expires_at=null``) are never touched.
+        Returns the number of collections deleted."""
         return await self._store.reap_expired()
 
     async def has_collection(self, collection: FileId, principals: list[PrincipalId]) -> bool:

@@ -5,26 +5,16 @@ from typing import NewType
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-# Stable, opaque identifier for a file supplied by the caller. Owned by the caller's
-# ID strategy (content hash, filesystem path, etc.) and used as the RAG collection key
-# throughout the engine.
+# Stable, opaque identifier for a file supplied by the caller
 FileId = NewType("FileId", str)
 
-# Stable, opaque identifier for the calling user, supplied by the Java backend via the
-# X-User-Id header (and stamped into a ContextVar by UserIdMiddleware). Used as both
-# the default OwnerId and PrincipalId for personal documents.
+# Stable, opaque identifier for the calling user
 UserId = NewType("UserId", str)
 
-# Tenant that owns a document. May be a user (``user:bob``) or an org (``org:acme``);
-# the engine treats it as an opaque string. Determines the physical row in
-# ``documents_meta`` and is the only principal who can delete the doc.
+# Tenant that owns a document
 OwnerId = NewType("OwnerId", str)
 
-# An entity that can hold permissions on a document — a user, a group, a role, an
-# org. Stored in ``document_acl`` rows; matched against the caller's principal set
-# on every read. The engine doesn't interpret the string; Java decides what set of
-# principals a caller has (membership in groups, etc.) and which set to grant on
-# ingest.
+# An entity that can hold permissions on a document
 PrincipalId = NewType("PrincipalId", str)
 
 
