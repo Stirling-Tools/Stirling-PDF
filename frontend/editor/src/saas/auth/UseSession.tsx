@@ -6,6 +6,8 @@ import {
   ReactNode,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { supabase } from "@app/auth/supabase";
 import type {
   Session,
@@ -31,6 +33,29 @@ import {
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };
 
+/**
+ * Derive a display name from the Supabase user. Prefers the OAuth-provided
+ * full_name / name, then the email. Anonymous users get the localised
+ * "Guest" placeholder (SaaS's chosen label for guest sessions); returns
+ * null only when there is no user object at all so consumers can pick
+ * their own fallback.
+ *
+ * Exported for unit testing.
+ */
+export function deriveDisplayName(
+  user: User | null | undefined,
+  t: TFunction,
+): string | null {
+  if (!user) return null;
+  if (user.is_anonymous) return t("auth.displayName.guest", "Guest");
+  const metadata = user.user_metadata as
+    | { full_name?: string; name?: string }
+    | undefined;
+  return (
+    user.username || metadata?.full_name || metadata?.name || user.email || null
+  );
+}
+
 export interface TrialStatus {
   isTrialing: boolean;
   trialEnd: string;
@@ -43,6 +68,15 @@ export interface TrialStatus {
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  /**
+   * Human-readable name to show in the UI for the current session.
+   * - A real identity (full_name / name / email) when the user is signed in.
+   * - The localised "Guest" placeholder for anonymous (Supabase
+   *   `is_anonymous`) sessions - SaaS's chosen label, see deriveDisplayName.
+   * - null only when there is no user object at all (signed-out), so
+   *   consumers can fall back to whatever makes sense.
+   */
+  displayName: string | null;
   loading: boolean;
   error: AuthError | null;
   creditBalance: number | null;
@@ -66,6 +100,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
+  displayName: null,
   loading: true,
   error: null,
   creditBalance: null,
@@ -660,9 +695,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const { t } = useTranslation();
+  const user = session?.user ?? null;
   const value: AuthContextType = {
     session,
-    user: session?.user ?? null,
+    user,
+    displayName: deriveDisplayName(user, t),
     loading,
     error,
     creditBalance,

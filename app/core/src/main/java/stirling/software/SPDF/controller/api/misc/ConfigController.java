@@ -119,9 +119,28 @@ public class ConfigController {
         String localIp = GeneralUtils.getLocalNetworkIp();
         if (localIp != null) {
             String scheme = appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
-            return scheme + "://" + localIp + ":" + appConfig.getServerPort();
+            return scheme + "://" + localIp + ":" + resolveEffectiveServerPort(appConfig);
         }
         return "";
+    }
+
+    /**
+     * The port the embedded server is actually listening on. With {@code server.port=0} (an
+     * ephemeral port, which the desktop bundle uses to dodge port clashes) the configured value
+     * stays {@code "0"} while Spring publishes the real bound port as {@code local.server.port}
+     * once the server is up. Advertised URLs (the mobile-scanner QR, share links) must carry the
+     * real port - a literal {@code :0} is unreachable and browsers reject it as ERR_UNSAFE_PORT.
+     */
+    // visible for testing
+    String resolveEffectiveServerPort(AppConfig appConfig) {
+        String configured = appConfig.getServerPort();
+        if (configured == null || "0".equals(configured.trim())) {
+            String actual = applicationContext.getEnvironment().getProperty("local.server.port");
+            if (actual != null && !actual.isBlank()) {
+                return actual;
+            }
+        }
+        return configured;
     }
 
     private static boolean isLoopbackHost(String host) {
@@ -161,7 +180,7 @@ public class ConfigController {
             // Note: Frontend expects "baseUrl" field name for compatibility
             configData.put("baseUrl", appConfig.getBackendUrl());
             configData.put("contextPath", appConfig.getContextPath());
-            configData.put("serverPort", appConfig.getServerPort());
+            configData.put("serverPort", resolveEffectiveServerPort(appConfig));
 
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
             configData.put("frontendUrl", resolveFrontendUrl(request, appConfig));
