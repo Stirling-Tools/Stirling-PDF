@@ -111,6 +111,59 @@ test("Ctrl+C copies selected text to the clipboard", async ({
   expect(clipboardText.trim().length).toBeGreaterThan(0);
 });
 
+test("right-click on the page does not surface the browser context menu", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const firstPage = await loadSampleAndOpenViewer(page);
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("no box");
+
+  // Track whether the browser would have opened a context menu (defaultPrevented stays false).
+  const prevented = await page.evaluate(
+    ([x, y]) =>
+      new Promise<boolean>((resolve) => {
+        const target = document.elementFromPoint(x, y);
+        if (!target) {
+          resolve(false);
+          return;
+        }
+        const evt = new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: x,
+          clientY: y,
+        });
+        target.dispatchEvent(evt);
+        resolve(evt.defaultPrevented);
+      }),
+    [box.x + box.width * 0.21, box.y + box.height * 0.105],
+  );
+  expect(prevented).toBe(true);
+});
+
+test("floating Copy menu appears after drag-select and copies", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(60_000);
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const firstPage = await loadSampleAndOpenViewer(page);
+  await dragSelectAcrossPage(page, firstPage);
+  await page.waitForTimeout(500);
+
+  const copyButton = page.getByRole("button", { name: "Copy" }).first();
+  await expect(copyButton).toBeVisible({ timeout: 5_000 });
+
+  await copyButton.click();
+  await page.waitForTimeout(300);
+
+  const clipboardText = await page.evaluate(() =>
+    navigator.clipboard.readText(),
+  );
+  expect(clipboardText.trim().length).toBeGreaterThan(0);
+});
+
 test("selection highlight is actually rendered on screen", async ({ page }) => {
   test.setTimeout(60_000);
   const firstPage = await loadSampleAndOpenViewer(page);
