@@ -243,9 +243,7 @@ export function LocalEmbedPDF({
         drawBlackBoxes: false,
       }),
 
-      // Register pan plugin. `defaultMode: "never"` keeps pointerMode (text
-      // selection) as the default - pan only activates when the user toggles
-      // the hand tool.
+      // `defaultMode: "never"` keeps pointerMode (text selection) as the default.
       createPluginRegistration(PanPluginPackage, {
         defaultMode: "never",
       }),

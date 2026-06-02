@@ -444,10 +444,7 @@ const EmbedPdfViewerContent = ({
                 return;
               case "a":
               case "A":
-                // Always intercept Ctrl+A while the viewer is mounted so
-                // the browser doesn't blanket-select the surrounding UI
-                // chrome. Hand off to the selection plugin so the PDF
-                // text gets selected instead.
+                // Intercept unconditionally so the browser can't blanket-select the surrounding UI chrome.
                 event.preventDefault();
                 {
                   const currentPage = getScrollState().currentPage;

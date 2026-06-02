@@ -23,10 +23,8 @@ export function SelectionAPIBridge() {
   useEffect(() => {
     if (!selection || !documentReady) return;
 
-    // Select every glyph on a single page using the plugin's begin/update/end
-    // primitives. The plugin marks these private in TypeScript but they are
-    // accessible at runtime - the same pattern the TextSelectionHandler uses
-    // for word/line selection.
+    // begin/update/end are runtime-public but typed private; matches the
+    // TextSelectionHandler word/line cast.
     const selectAllOnPage = (documentId: string, pageIndex: number) => {
       const plugin = selectionPlugin as unknown as {
         clearSelection: (id: string) => void;
