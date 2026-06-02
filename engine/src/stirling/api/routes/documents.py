@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -15,6 +16,7 @@ from stirling.documents import DocumentService
 from stirling.models import FileId, OwnerId, PrincipalId, UserId
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("", response_model=IngestDocumentResponse)
@@ -77,4 +79,5 @@ async def purge_caller_documents(
     the calling user are removed.
     """
     deleted = await documents.purge_owner(OwnerId(user_id))
+    logger.info("Purged %d collection(s) for owner=%s", deleted, user_id)
     return PurgeOwnerResponse(owner_id=OwnerId(user_id), deleted=deleted)

@@ -283,13 +283,13 @@ public class AuthController {
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
-            String username = userService.getCurrentUsername();
+            String username = resolveUsernameForLogout(request);
             SecurityContextHolder.clearContext();
             aiUserDataService.purgeUserDocuments(username);
 
-            log.debug("User logged out successfully");
+            log.debug("User logged out successfully (username={})", username);
 
             return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
 
@@ -297,6 +297,26 @@ public class AuthController {
             log.error("Logout error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Internal server error"));
+        }
+    }
+
+    /**
+     * Extract the logging-out user's name from their JWT cookie, falling back to {@code null} when
+     * no parseable token is present. Used in place of {@link UserService#getCurrentUsername()} for
+     * the logout flow, where the security context can carry Spring's anonymous principal instead of
+     * the real user.
+     */
+    private String resolveUsernameForLogout(HttpServletRequest request) {
+        try {
+            String token = jwtService.extractToken(request);
+            if (token == null || token.isBlank()) {
+                return null;
+            }
+            String username = jwtService.extractUsernameAllowExpired(token);
+            return (username != null && !username.isBlank()) ? username : null;
+        } catch (Exception e) {
+            log.debug("Could not extract username from JWT during logout: {}", e.getMessage());
+            return null;
         }
     }
 

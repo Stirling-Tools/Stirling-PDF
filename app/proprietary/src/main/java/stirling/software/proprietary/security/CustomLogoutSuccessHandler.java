@@ -58,8 +58,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
 
-        if (authentication != null) {
-            aiUserDataService.purgeUserDocuments(authentication.getName());
+        String username = resolveUsername(request, authentication);
+        if (username != null) {
+            aiUserDataService.purgeUserDocuments(username);
         }
 
         if (!response.isCommitted()) {
@@ -93,6 +94,35 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 getRedirectStrategy().sendRedirect(request, response, path);
             }
         }
+    }
+
+    /**
+     * Pick the right name to purge under. JWT cookie wins if present and parseable; we fall through
+     * to whatever Spring handed us only when there's no cookie. ``anonymousUser`` is filtered out
+     * because it's the wrong owner for any real cleanup.
+     */
+    private String resolveUsername(HttpServletRequest request, Authentication authentication) {
+        try {
+            if (jwtService != null) {
+                String token = jwtService.extractToken(request);
+                if (token != null && !token.isBlank()) {
+                    String fromToken = jwtService.extractUsernameAllowExpired(token);
+                    if (fromToken != null && !fromToken.isBlank()) {
+                        return fromToken;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not extract username from JWT during logout: {}", e.getMessage());
+        }
+        if (authentication == null) {
+            return null;
+        }
+        String name = authentication.getName();
+        if (name == null || name.isBlank() || "anonymousUser".equals(name)) {
+            return null;
+        }
+        return name;
     }
 
     // Redirect for SAML2 authentication logout
