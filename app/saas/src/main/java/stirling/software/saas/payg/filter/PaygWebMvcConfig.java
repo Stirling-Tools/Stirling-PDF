@@ -38,6 +38,14 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
         return reg;
     }
 
+    /**
+     * Interceptor ordering: the legacy {@code UnifiedCreditInterceptor} (registered with default
+     * order = 0 in {@code CreditInterceptorConfig}) must run BEFORE this one so credit rejections
+     * short-circuit before we hash inputs. Explicit positive order guarantees this regardless of
+     * {@code WebMvcConfigurer} bean discovery order.
+     */
+    public static final int INTERCEPTOR_ORDER = 1000;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(paygChargeInterceptor)
@@ -46,6 +54,7 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/credits/**",
                         "/api/v1/config/**",
                         "/api/v1/info/**",
-                        "/api/v1/admin/**");
+                        "/api/v1/admin/**")
+                .order(INTERCEPTOR_ORDER);
     }
 }

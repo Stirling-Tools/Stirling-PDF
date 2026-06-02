@@ -12,3 +12,9 @@ ALTER TABLE payg_shadow_charge
 
 CREATE INDEX IF NOT EXISTS idx_payg_shadow_status_time
     ON payg_shadow_charge (status, occurred_at);
+
+-- Hot-path index for findFirstByJobIdOrderByIdAsc: hit on every 5xx-first-step refund to flip
+-- the row to REFUNDED. UNIQUE because at most one shadow row exists per processing_job by
+-- construction (openProcess writes exactly one on OPENED, zero on JOINED).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_payg_shadow_job_id
+    ON payg_shadow_charge (job_id);

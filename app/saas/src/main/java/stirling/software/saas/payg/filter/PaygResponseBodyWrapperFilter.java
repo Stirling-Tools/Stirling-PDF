@@ -80,45 +80,54 @@ public class PaygResponseBodyWrapperFilter extends OncePerRequestFilter {
             chain.doFilter(request, wrapper);
             asyncStarted = request.isAsyncStarted();
             if (asyncStarted) {
-                // Async controller: defer close to async dispatch completion. The interceptor's
-                // afterCompletion will run AFTER the async work resolves, and that close() is
-                // idempotent with this listener's.
-                request.getAsyncContext().addListener(new CloseOnAsyncComplete(wrapper));
+                // Async controller: defer attribute removal + close to async dispatch completion.
+                // The interceptor's afterCompletion fires on the async dispatch and needs the
+                // wrapper attribute still present at that point. close() is idempotent so a
+                // defensive call by the interceptor is harmless.
+                request.getAsyncContext().addListener(new ReleaseOnAsyncComplete(request, wrapper));
             }
         } finally {
-            request.removeAttribute(REQUEST_ATTRIBUTE);
             if (!asyncStarted) {
+                // Sync path: interceptor.afterCompletion has already run inside chain.doFilter.
+                request.removeAttribute(REQUEST_ATTRIBUTE);
                 wrapper.close();
             }
         }
     }
 
     /**
-     * Closes the wrapper after the async dispatch completes — covers normal completion, error, and
-     * timeout paths. Servlet container fires exactly one of {@code onComplete} / {@code onError} /
-     * {@code onTimeout} per async context lifecycle.
+     * For async dispatches, removes the wrapper attribute and closes the wrapper after the async
+     * dispatch completes. The Servlet container fires exactly one of {@code onComplete} / {@code
+     * onError} / {@code onTimeout} per async context lifecycle.
      */
-    private static final class CloseOnAsyncComplete implements AsyncListener {
+    private static final class ReleaseOnAsyncComplete implements AsyncListener {
 
+        private final HttpServletRequest request;
         private final PaygResponseBodyWrapper wrapper;
 
-        CloseOnAsyncComplete(PaygResponseBodyWrapper wrapper) {
+        ReleaseOnAsyncComplete(HttpServletRequest request, PaygResponseBodyWrapper wrapper) {
+            this.request = request;
             this.wrapper = wrapper;
+        }
+
+        private void release() {
+            request.removeAttribute(REQUEST_ATTRIBUTE);
+            wrapper.close();
         }
 
         @Override
         public void onComplete(AsyncEvent event) {
-            wrapper.close();
+            release();
         }
 
         @Override
         public void onTimeout(AsyncEvent event) {
-            wrapper.close();
+            release();
         }
 
         @Override
         public void onError(AsyncEvent event) {
-            wrapper.close();
+            release();
         }
 
         @Override
