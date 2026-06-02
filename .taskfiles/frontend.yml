@@ -284,10 +284,25 @@ tasks:
       - npx vitest --watch --root editor
 
   test:coverage:
-    desc: "Run tests with coverage"
+    desc: "Run tests with coverage (one-shot; CI-friendly)."
     deps: [install]
     cmds:
-      - npx vitest --coverage --root editor
+      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
+      # mode). Explicit reporter list because v8 + json-summary is what the
+      # coverage-summary.py helper consumes; html/text are kept for humans.
+      #
+      # reportsDirectory is pinned to ./coverage relative to vitest's root
+      # (--root editor), so output lands at frontend/editor/coverage/. The
+      # CI upload step reads from that path. An earlier attempt with
+      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
+      # pinning future-proofs against vitest changing the default.
+      - >
+        npx vitest run --root editor --coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage
 
   # ============================================================
   # Code Generation
