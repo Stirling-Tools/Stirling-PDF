@@ -3,6 +3,7 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
   emitTextLine,
+  isVerifiedPerCharPtr,
   measureObjRightEdgePt,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
@@ -565,7 +566,20 @@ export function applyPartialEditPlan(
       // re-emitted forever.
       const nonWhitespaceLen = insertText.replace(/\s/g, "").length;
       const minExpected = nonWhitespaceLen * run.fontSize * 0.15;
+      // Skip the tofu retry when ALL returned ptrs came from the
+      // per-char backend emit branch in emitTextLine. Those ptrs were
+      // created with known-good (font, charcode) pairs from the
+      // backend resolver cache; a sub-threshold measurement just
+      // means PDFium's page content stream hasn't been regenerated
+      // yet, NOT that the glyph is broken. Without this gate a second
+      // consecutive edit would fire a duplicate per-char emit on top
+      // of a still-rendering first emit, leaving visible
+      // .notdef-stripe artefacts that FPDFPage_RemoveObject can't
+      // always clear cleanly (form-xobject Type3 case).
+      const allVerified =
+        ptrs.length > 0 && ptrs.every((p) => isVerifiedPerCharPtr(p));
       if (
+        !allVerified &&
         borrowedFontPtr !== 0 &&
         nonWhitespaceLen > 0 &&
         measuredWidth < minExpected

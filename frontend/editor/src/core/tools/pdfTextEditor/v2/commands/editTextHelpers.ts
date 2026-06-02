@@ -10,6 +10,37 @@ import {
 } from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
+/**
+ * Pointers freshly created by the per-char BACKEND emit branch in
+ * `emitTextLine`. The partial-edit measure-and-fallback in
+ * `applyPartialEditPlan` consults `isVerifiedPerCharPtr` before
+ * deciding whether to remove + retry a "tofu" emit: ptrs in this set
+ * were created with known-good (font, charcode) pairs from the
+ * backend resolver cache, so a 0-width measurement just means the
+ * page content stream hasn't been regenerated yet, NOT that the
+ * glyph is broken. Without this signal the retry creates a duplicate
+ * per-char text object and the original .notdef-stripe ptr can't
+ * always be cleanly removed (FPDFPage_RemoveObject silently fails
+ * for some Type3 / form-xobject combinations).
+ *
+ * Entries are weak by convention: the Set grows over the session but
+ * each per-char emit is a small int (PDFium handle), so even after a
+ * long edit session the memory footprint is negligible. We don't
+ * bother removing entries on object delete because the check is
+ * one-shot (right after emit) - stale entries are harmless.
+ */
+const perCharBranchPtrs = new Set<number>();
+
+/** Caller check: was this ptr produced by the per-char emit branch? */
+export function isVerifiedPerCharPtr(ptr: number): boolean {
+  return perCharBranchPtrs.has(ptr);
+}
+
+/** Test-only: clear the verified-ptr set between cases. */
+export function _clearVerifiedPerCharPtrsForTests(): void {
+  perCharBranchPtrs.clear();
+}
+
 /** True when every character in `text` is also present in `pool`. */
 export function everyCharIn(text: string, pool: string): boolean {
   const set = new Set(pool);
@@ -351,40 +382,40 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // char with the CORRECT font + charcode, positioning them adjacently
   // so the visual output matches the source font.
   //
-  // Fires ONLY when the caller did NOT supply a borrowed source font
-  // (`!reuse`). Why: when the partial-edit path borrows the first
-  // surviving sub-object's font and asks us to emit an inserted char,
-  // we must let `writeViaCharcodesOrSetText` try the borrow first. If
-  // the borrow renders correctly we get one text object in the source
-  // font. If the borrow fails (tofu / 0-width glyph), the caller's own
-  // measure-and-fallback in `applyPartialEditPlan` retries with
-  // `originalFontPtr=0`, at which point this branch fires correctly
-  // (reuse becomes false). Without the `!reuse` gate the per-char
-  // branch pre-empted BOTH attempts and emitted the same char twice,
-  // producing the "The FFrFee Adobe AcFFFfffffrobat Alternative"
-  // visual on Sample.pdf's per-glyph tagline.
+  // Fires whenever the backend strategy is active AND every char has
+  // both a per-char font handle on the page AND a backend-resolved
+  // charcode. The result ptrs are recorded in `perCharBranchPtrs` so
+  // the partial-edit measure-and-fallback knows to TRUST them and
+  // skip its tofu retry. Without that signal the retry would fire a
+  // second per-char emit on top of the first - the F-duplication bug
+  // from before.
   //
-  // The 10M+ form-xobject case still works: `planPartialEdit` returns
-  // null for form-xobject runs (mergedFromPtrs is empty), the overlay
-  // path runs with `canReuseFont=false` (containerPtr != 0 ->
-  // `originalFontPtr=0` -> `reuse=false`), and this branch fires
-  // correctly on the FIRST and only emit attempt.
+  // The earlier `!reuse` gate (intended to avoid the double-emit) was
+  // too restrictive: with a borrowed font supplied, the per-char
+  // branch bailed, the legacy SetText path produced .notdef glyphs
+  // (visible as horizontal-bar stripes for Type3 fonts on Sample.pdf),
+  // FPDFPage_RemoveObject silently failed to clear those for
+  // form-xobject text, and the second consecutive M edit left visible
+  // stripes around BOTH the first and the second M. Per-char branch
+  // always firing (when it CAN) + verified-ptr signal to skip the
+  // retry sidesteps both failure modes.
   //
   // Bails out (falls through to the normal path) when:
   //   - text contains whitespace (whitespace doesn't have a per-char
   //     font on the page; the normal per-chunk path already handles it)
   //   - we're not in backend strategy mode
-  //   - the caller supplied a usable source font to borrow (reuse=true)
   //   - ANY char fails to resolve both a font handle AND a charcode
   const isBackendStrategy = getActiveCharcodeStrategy() === "backend";
   const hasAnyWhitespaceForBranch = /\s/.test(opts.text);
   if (
-    !reuse &&
     isBackendStrategy &&
     !hasAnyWhitespaceForBranch &&
     opts.text.length > 0 &&
     m2.FPDFPageObj_CreateTextObj
   ) {
+    // Surface `reuse` to keep lint happy; the per-char branch no longer
+    // gates on it but downstream chunks/fast-path still read it below.
+    void reuse;
     const ctx = {
       module: m,
       pagePtr: opts.page.pagePtr,
@@ -457,6 +488,16 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           outcome: "charcodes-ok",
         });
         ptrs.push(ptr);
+        // Mark this ptr as verified - it was created via the per-char
+        // branch with a known-good (font, charcode) pair from the
+        // backend resolver cache. Downstream callers (the
+        // partial-edit measure-and-fallback in applyPartialEditPlan)
+        // check this set and SKIP their tofu retry for these ptrs,
+        // because the retry would emit a second per-char text object
+        // on top and the duplicates can't all be cleanly removed
+        // (FPDFPage_RemoveObject silently fails for some Type3 /
+        // form-xobject combinations, leaving visible stripes).
+        perCharBranchPtrs.add(ptr);
       }
       if (ptrs.length === opts.text.length) return ptrs;
     }
