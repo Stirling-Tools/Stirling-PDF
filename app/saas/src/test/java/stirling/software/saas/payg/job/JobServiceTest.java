@@ -322,10 +322,17 @@ class JobServiceTest {
         return p;
     }
 
-    /** Test double: programmable detector + records observations. */
+    /**
+     * Test double: programmable detector + records observations. Synthesises one signature per
+     * path; every path seen by extractSignatures is reverse-mapped so the post-dedupe flow
+     * (extractSignatures → detect/record by signature) keeps the path-based test assertions working
+     * unchanged.
+     */
     private static class FakeDetector implements HashLineageDetector {
         private final Map<Path, LineageMatch> matches = new HashMap<>();
         private final Set<String> observations = new java.util.HashSet<>();
+        private final Map<stirling.software.saas.payg.lineage.LineageSignature, Path>
+                pathBySignature = new HashMap<>();
 
         void willMatch(Path input, LineageMatch match) {
             matches.put(input, match);
@@ -335,14 +342,53 @@ class JobServiceTest {
             return observations.contains(jobId + "|" + file + "|" + kind);
         }
 
+        private stirling.software.saas.payg.lineage.LineageSignature sigFor(Path file) {
+            stirling.software.saas.payg.lineage.LineageSignature sig =
+                    new stirling.software.saas.payg.lineage.LineageSignature(
+                            "test", Integer.toHexString(file.toString().hashCode()));
+            pathBySignature.put(sig, file);
+            return sig;
+        }
+
         @Override
         public Optional<LineageMatch> detect(Long userId, Path inputFile) {
             return Optional.ofNullable(matches.get(inputFile));
         }
 
         @Override
+        public Optional<LineageMatch> detect(
+                Long userId, Set<stirling.software.saas.payg.lineage.LineageSignature> signatures) {
+            for (stirling.software.saas.payg.lineage.LineageSignature sig : signatures) {
+                Path p = pathBySignature.get(sig);
+                if (p != null && matches.containsKey(p)) {
+                    return Optional.of(matches.get(p));
+                }
+            }
+            return Optional.empty();
+        }
+
+        @Override
         public void record(UUID jobId, Path file, ArtifactKind kind) {
             observations.add(jobId + "|" + file + "|" + kind);
+        }
+
+        @Override
+        public void record(
+                UUID jobId,
+                Set<stirling.software.saas.payg.lineage.LineageSignature> signatures,
+                ArtifactKind kind) {
+            for (stirling.software.saas.payg.lineage.LineageSignature sig : signatures) {
+                Path p = pathBySignature.get(sig);
+                if (p != null) {
+                    observations.add(jobId + "|" + p + "|" + kind);
+                }
+            }
+        }
+
+        @Override
+        public Set<stirling.software.saas.payg.lineage.LineageSignature> extractSignatures(
+                Path file) {
+            return Set.of(sigFor(file));
         }
     }
 }

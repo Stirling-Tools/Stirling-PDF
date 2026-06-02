@@ -127,10 +127,14 @@ public class JobChargeService {
 
     private int computeUnits(List<JobInput> inputs, PricingPolicy policy) {
         List<MultipartFile> multiparts = inputs.stream().map(JobInput::multipart).toList();
+        // Reuse the temp file the caller already wrote (in PaygChargeInterceptor.preHandle for
+        // lineage hashing) instead of materialising the same bytes a second time inside the
+        // classifier. Saves one write + one read per PDF input.
+        List<Path> paths = inputs.stream().map(JobInput::path).toList();
         DocumentMetrics metrics =
                 multiparts.size() == 1
-                        ? classifier.classify(multiparts.get(0), policy)
-                        : classifier.classify(multiparts, policy);
+                        ? classifier.classify(multiparts.get(0), paths.get(0), policy)
+                        : classifier.classify(multiparts, paths, policy);
         // Apply the policy-level minChargeUnits floor per design § 3.4. The classifier returns
         // raw docUnits with a "non-empty input → ≥1" floor; the charge formula's
         // max(min_charge_units, docUnits) layers on top.

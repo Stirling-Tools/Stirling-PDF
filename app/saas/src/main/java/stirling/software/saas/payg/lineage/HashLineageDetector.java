@@ -3,6 +3,7 @@ package stirling.software.saas.payg.lineage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import stirling.software.saas.payg.model.ArtifactKind;
@@ -33,4 +34,25 @@ public interface HashLineageDetector {
 
     /** Records the file's signatures against the given job as either INPUT or OUTPUT. */
     void record(UUID jobId, Path file, ArtifactKind kind) throws IOException;
+
+    /**
+     * Pre-computes the signature set for {@code file} so callers can avoid hashing the same bytes
+     * twice when they need both {@link #detect} and {@link #record} for the same file. Returned set
+     * may be empty (no extractor recognised the content) — treat as "no signatures to match or
+     * record" by both consumers.
+     */
+    Set<LineageSignature> extractSignatures(Path file);
+
+    /**
+     * Same as {@link #detect(Long, Path)} but operating on pre-computed signatures. Useful when the
+     * caller has already extracted them (e.g. via {@link #extractSignatures}) and wants to avoid
+     * re-hashing. Empty {@code signatures} short-circuits to {@link Optional#empty}.
+     */
+    Optional<LineageMatch> detect(Long userId, Set<LineageSignature> signatures);
+
+    /**
+     * Same as {@link #record(UUID, Path, ArtifactKind)} but operating on pre-computed signatures.
+     * Empty {@code signatures} is a no-op.
+     */
+    void record(UUID jobId, Set<LineageSignature> signatures, ArtifactKind kind);
 }

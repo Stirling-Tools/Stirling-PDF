@@ -101,7 +101,7 @@ class JobChargeServiceTest {
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
 
         JobInput in = jobInput(tmp, "in.pdf", "application/pdf");
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
 
         ChargeOutcome out =
@@ -111,9 +111,10 @@ class JobChargeServiceTest {
 
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.OPENED);
         assertThat(out.units()).isEqualTo(4);
-        // Single-file path called single-file classifier overload, not the list one.
-        verify(classifier, times(1)).classify(any(MultipartFile.class), eq(policy));
-        verify(classifier, never()).classify(anyList(), eq(policy));
+        // Single-file path called single-file classifier overload (with Path), not the list one.
+        verify(classifier, times(1))
+                .classify(any(MultipartFile.class), any(Path.class), eq(policy));
+        verify(classifier, never()).classify(anyList(), anyList(), eq(policy));
 
         ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
         verify(shadowRepo).save(captor.capture());
@@ -140,7 +141,7 @@ class JobChargeServiceTest {
 
         JobInput a = jobInput(tmp, "a.pdf", "application/pdf");
         JobInput b = jobInput(tmp, "b.pdf", "application/pdf");
-        when(classifier.classify(anyList(), eq(policy)))
+        when(classifier.classify(anyList(), anyList(), eq(policy)))
                 .thenReturn(new DocumentMetrics(100, 2048L, "application/pdf", 7));
 
         ChargeOutcome out =
@@ -149,8 +150,8 @@ class JobChargeServiceTest {
                         List.of(a, b));
 
         assertThat(out.units()).isEqualTo(7);
-        verify(classifier, never()).classify(any(MultipartFile.class), any());
-        verify(classifier, times(1)).classify(anyList(), eq(policy));
+        verify(classifier, never()).classify(any(MultipartFile.class), any(Path.class), any());
+        verify(classifier, times(1)).classify(anyList(), anyList(), eq(policy));
     }
 
     @Test
@@ -161,7 +162,7 @@ class JobChargeServiceTest {
         ProcessingJob newJob = openJob(UUID.randomUUID());
         when(jobService.joinOrOpen(any(JobContext.class), anyList()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(10, 1024L, "application/pdf", 2));
 
         ChargeOutcome out =
@@ -182,7 +183,7 @@ class JobChargeServiceTest {
         ProcessingJob newJob = openJob(UUID.randomUUID());
         when(jobService.joinOrOpen(any(JobContext.class), anyList()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
@@ -206,7 +207,7 @@ class JobChargeServiceTest {
         ProcessingJob newJob = openJob(UUID.randomUUID());
         when(jobService.joinOrOpen(any(JobContext.class), anyList()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
