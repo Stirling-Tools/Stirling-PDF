@@ -28,6 +28,9 @@ import AlignHorizontalRightIcon from "@mui/icons-material/AlignHorizontalRightOu
 // a dedicated DistributeHorizontally / DistributeVertically icon. Rotating
 // it for the vertical case keeps the two buttons visually distinguishable.
 import LinearScaleIcon from "@mui/icons-material/LinearScaleOutlined";
+import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
+import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
+import FlipIcon from "@mui/icons-material/FlipOutlined";
 import {
   parseCssColor,
   toCssHex,
@@ -43,6 +46,11 @@ export type AlignMode =
   | "middle-v"
   | "bottom";
 export type ZOrderToolbarMode = "to-front" | "to-back" | "forward" | "backward";
+export type ImageTransformToolbarMode =
+  | "rotate-cw"
+  | "rotate-ccw"
+  | "flip-h"
+  | "flip-v";
 
 interface ToolbarProps {
   state: ToolbarState;
@@ -61,10 +69,13 @@ interface ToolbarProps {
   onChangeZOrder: (mode: ZOrderToolbarMode) => void;
   onAlign: (mode: AlignMode) => void;
   onDistribute: (axis: "horizontal" | "vertical") => void;
+  onTransformImage: (mode: ImageTransformToolbarMode) => void;
   /** True when every selected run/image is currently locked. */
   selectionAllLocked: boolean;
   /** True when at least one text run is selected. Disables case + lock-for-runs when false. */
   hasRunSelection: boolean;
+  /** True when at least one image is selected. Gates rotate/flip buttons. */
+  hasImageSelection: boolean;
   /** Count of selected objects (runs + images). 0/1 disables align; <3 disables distribute. */
   selectionCount: number;
   disabled: boolean;
@@ -97,11 +108,14 @@ export function Toolbar({
   onChangeZOrder,
   onAlign,
   onDistribute,
+  onTransformImage,
   selectionAllLocked,
   hasRunSelection,
+  hasImageSelection,
   selectionCount,
   disabled,
 }: ToolbarProps) {
+  const imageDisabled = disabled || !hasImageSelection;
   const alignDisabled = disabled || selectionCount < 2;
   const distributeDisabled = disabled || selectionCount < 3;
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
@@ -404,6 +418,53 @@ export function Toolbar({
             fontSize="small"
             style={{ transform: "rotate(90deg)" }}
           />
+        </ActionIcon>
+      </Tooltip>
+      <Text size="sm" c="dimmed">
+        |
+      </Text>
+      <Tooltip label="Rotate image 90° counter-clockwise (image selected)">
+        <ActionIcon
+          variant="subtle"
+          onClick={() => onTransformImage("rotate-ccw")}
+          disabled={imageDisabled}
+          aria-label="Rotate image counter-clockwise"
+          data-testid="v2-image-rotate-ccw"
+        >
+          <RotateLeftIcon fontSize="small" />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Rotate image 90° clockwise (image selected)">
+        <ActionIcon
+          variant="subtle"
+          onClick={() => onTransformImage("rotate-cw")}
+          disabled={imageDisabled}
+          aria-label="Rotate image clockwise"
+          data-testid="v2-image-rotate-cw"
+        >
+          <RotateRightIcon fontSize="small" />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Flip image horizontally (image selected)">
+        <ActionIcon
+          variant="subtle"
+          onClick={() => onTransformImage("flip-h")}
+          disabled={imageDisabled}
+          aria-label="Flip image horizontally"
+          data-testid="v2-image-flip-h"
+        >
+          <FlipIcon fontSize="small" />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Flip image vertically (image selected)">
+        <ActionIcon
+          variant="subtle"
+          onClick={() => onTransformImage("flip-v")}
+          disabled={imageDisabled}
+          aria-label="Flip image vertically"
+          data-testid="v2-image-flip-v"
+        >
+          <FlipIcon fontSize="small" style={{ transform: "rotate(90deg)" }} />
         </ActionIcon>
       </Tooltip>
       <Tooltip label="Delete (Del)">

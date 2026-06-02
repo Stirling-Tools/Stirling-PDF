@@ -29,6 +29,10 @@ import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRuns
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/v2/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/v2/commands/SetImageTransformCommand";
 import { SetLockCommand } from "@app/tools/pdfTextEditor/v2/commands/SetLockCommand";
+import {
+  TransformImageObjectCommand,
+  type ImageTransformMode,
+} from "@app/tools/pdfTextEditor/v2/commands/TransformImageObjectCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
@@ -543,6 +547,34 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   );
 
   /**
+   * Apply a rotate/flip transform to every selected image. Text runs
+   * are skipped silently - rotation of text is meaningful but the
+   * UX surface (and PDF emit story) is different and lives behind a
+   * separate command.
+   */
+  const handleTransformImage = useCallback(
+    (mode: ImageTransformMode) => {
+      const doc = store.document;
+      if (!doc) return;
+      const selImages = new Set(store.selection.value.imageIds);
+      if (selImages.size === 0) return;
+      for (const p of doc.loadedPages()) {
+        for (const im of p.images) {
+          if (!selImages.has(im.id)) continue;
+          store.dispatch(
+            new TransformImageObjectCommand({
+              pageIndex: p.index,
+              imageId: im.id,
+              mode,
+            }),
+          );
+        }
+      }
+    },
+    [store],
+  );
+
+  /**
    * Transform every selected run's text via the chosen case rule and
    * dispatch one EditTextCommand per run. Pure string transform; no
    * PDFium plumbing.
@@ -681,6 +713,8 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         onChangeZOrder={handleChangeZOrder}
         onAlign={handleAlignSelection}
         onDistribute={handleDistributeSelection}
+        onTransformImage={handleTransformImage}
+        hasImageSelection={selection.imageIds.length > 0}
         selectionAllLocked={(() => {
           const runs = new Set(selection.runIds);
           const images = new Set(selection.imageIds);
