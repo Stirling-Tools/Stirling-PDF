@@ -15,23 +15,58 @@
         <encoder>
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.log</fileNamePattern>
+        <!-- SizeAndTimeBased: rotate daily OR every 100 MB, keep 1 day of history,
+             hard cap the appender's total disk footprint at 200 MB so a runaway
+             logger can't ever fill the disk (see GENERAL appender note). -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
             <maxHistory>1</maxHistory>
+            <totalSizeCap>200MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
-    <!-- Rolling File Appender for General Logs -->
+    <!-- Rolling File Appender for General Logs
+
+         Why SizeAndTimeBased + totalSizeCap: a previous build of the v2 PDF
+         text editor's reverse-CMap probe loop triggered PDSimpleFont to emit
+         one "No Unicode mapping for .notdef" WARN per probed charcode per
+         font per request. With TimeBasedRollingPolicy alone there was no
+         size ceiling; info.log grew to 1.4 GB in a single day before the JVM
+         choked. The class-level silencer fixes the specific offender, but
+         this size cap is the defence-in-depth: any future logger that
+         floods unexpectedly will roll + auto-delete instead of starving
+         disk + Jetty threads. -->
     <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/info.log</file>
         <encoder>
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.log</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
             <maxHistory>1</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
     </appender>
+
+    <!-- Suppress PDFBox PDSimpleFont's per-charcode .notdef WARN.
+
+         Required by the v2 PDF text editor's `buildReverseUnicodeMap`
+         which DELIBERATELY iterates every charcode in 0..0xFFFF to
+         discover the encoding-to-Unicode map of an embedded subset
+         font. For any subset font ~99% of those probes hit .notdef,
+         and the default WARN level for those misses turned info.log
+         into a 1.4 GB monster overnight. The class-level static
+         initialiser in PdfTextEditorV2CharcodeController sets the
+         same level at runtime as a belt; this XML entry is the
+         braces (works even before that class loads, e.g. for other
+         endpoints that ever call `font.toUnicode(cc)` on a Type3). -->
+    <logger name="org.apache.pdfbox.pdmodel.font.PDSimpleFont"
+            level="ERROR" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="GENERAL"/>
+    </logger>
 
     <!-- Root Logger -->
     <root level="INFO">

@@ -64,16 +64,14 @@ import stirling.software.common.annotations.api.GeneralApi;
 public class PdfTextEditorV2CharcodeController {
 
     /**
-     * Permanently silence PDFBox's per-charcode "No Unicode mapping for .notdef"
-     * WARN spam triggered by {@link #buildReverseUnicodeMap(PDFont)}. The reverse-
-     * CMap loop intentionally probes every charcode in 0..0xFFFF; for any subset
-     * font the vast majority of those probes return .notdef and PDSimpleFont
-     * logs a WARN for each one. Left unchecked this floods the log with 64K
-     * entries per probe per font per request - the previous build wrote ~3.5 GB
-     * to info.log in a few hours, which eventually starved Jetty's request
-     * threads and started returning 500s. Suppressing the logger costs nothing
-     * because the warnings are not actionable here: we DELIBERATELY want to
-     * iterate every charcode to discover which ones map to something.
+     * Permanently silence PDFBox's per-charcode "No Unicode mapping for .notdef" WARN spam
+     * triggered by {@link #buildReverseUnicodeMap(PDFont)}. The reverse- CMap loop intentionally
+     * probes every charcode in 0..0xFFFF; for any subset font the vast majority of those probes
+     * return .notdef and PDSimpleFont logs a WARN for each one. Left unchecked this floods the log
+     * with 64K entries per probe per font per request - the previous build wrote ~3.5 GB to
+     * info.log in a few hours, which eventually starved Jetty's request threads and started
+     * returning 500s. Suppressing the logger costs nothing because the warnings are not actionable
+     * here: we DELIBERATELY want to iterate every charcode to discover which ones map to something.
      */
     static {
         try {
