@@ -201,10 +201,14 @@ class GoogleDrivePickerService {
         .setOAuthToken(this.accessToken)
         .addView(view1)
         .addView(view2)
-        // Render above the FileManager modal that typically invokes the picker.
-        // Google's default is ~1001 which sits below Z_INDEX_FILE_MANAGER_MODAL (1200).
-        .setZIndex(Z_INDEX_OVER_FILE_MANAGER_MODAL)
         .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
+
+      // Render above the FileManager modal that typically invokes the picker.
+      // Google's default is ~1001 which sits below Z_INDEX_FILE_MANAGER_MODAL (1200).
+      // setZIndex exists in the runtime Google Picker API but is missing from @types/google.picker.
+      (builder as unknown as { setZIndex(z: number): void }).setZIndex(
+        Z_INDEX_OVER_FILE_MANAGER_MODAL,
+      );
 
       if (options.multiple) {
         builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);
