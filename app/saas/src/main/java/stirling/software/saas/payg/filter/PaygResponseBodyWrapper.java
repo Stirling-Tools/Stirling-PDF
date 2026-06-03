@@ -37,6 +37,14 @@ import stirling.software.common.util.TempFileManager;
  *
  * <p>{@link #close()} closes any {@link TempFile} the wrapper created. Callers MUST invoke close in
  * a finally — typically the interceptor's {@code afterCompletion} after it's done hashing.
+ *
+ * <p><b>Thread safety:</b> all mutating methods (record paths, materialisedPath, close,
+ * resetBuffer) synchronize on the wrapper instance. The Servlet spec serialises controller writes
+ * onto a single dispatch thread, but the {@link jakarta.servlet.AsyncListener#onComplete} callback
+ * that closes the wrapper for async controllers runs on a container thread distinct from the
+ * dispatch thread that produced the body. The synchronization makes that handoff safe and also
+ * guards against future callers (e.g. tests) that might invoke {@link #materialisedPath} or {@link
+ * #close} from a non-dispatch thread.
  */
 @Slf4j
 public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implements AutoCloseable {
@@ -107,7 +115,7 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
     }
 
     @Override
-    public void resetBuffer() {
+    public synchronized void resetBuffer() {
         super.resetBuffer();
         if (memoryBuffer != null) {
             memoryBuffer.reset();
@@ -134,7 +142,7 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
      * {@link TempFile} on demand so the caller always gets a file-based handle (uniform with the
      * spilled path).
      */
-    public Path materialisedPath() throws IOException {
+    public synchronized Path materialisedPath() throws IOException {
         if (bytesWritten == 0) {
             return null;
         }
@@ -154,12 +162,12 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
         return spillFile.getPath();
     }
 
-    public long bytesWritten() {
+    public synchronized long bytesWritten() {
         return bytesWritten;
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         closeSpillQuietly();
     }
 
@@ -229,7 +237,7 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
         }
     }
 
-    private void recordSingleByte(byte b) throws IOException {
+    private synchronized void recordSingleByte(byte b) throws IOException {
         if (spilled) {
             spillStream.write(b & 0xFF);
         } else if (bytesWritten + 1 > inMemoryThresholdBytes) {
@@ -241,7 +249,7 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
         bytesWritten++;
     }
 
-    private void recordRange(byte[] b, int off, int len) throws IOException {
+    private synchronized void recordRange(byte[] b, int off, int len) throws IOException {
         if (spilled) {
             spillStream.write(b, off, len);
         } else if (bytesWritten + len > inMemoryThresholdBytes) {

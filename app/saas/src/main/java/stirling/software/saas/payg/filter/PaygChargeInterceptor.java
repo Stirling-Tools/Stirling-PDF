@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -210,7 +211,12 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             }
             throw new RuntimeException("Failed to materialise multipart input", e);
         }
-        request.setAttribute(ATTR_INPUT_TEMP_FILES, tempFiles);
+        // Publish as an immutable list. preHandle fully populates `tempFiles` before this
+        // setAttribute, and cleanupInputs / afterCompletion are read-only consumers — exposing
+        // an unmodifiable view (a) makes the safe-publication guarantee from the container's
+        // attribute-map synchronization unambiguous to readers on different threads (sync vs
+        // async-dispatch), and (b) hard-fails any future caller that tries to mutate it.
+        request.setAttribute(ATTR_INPUT_TEMP_FILES, Collections.unmodifiableList(tempFiles));
         request.setAttribute(ATTR_INPUT_BYTES, totalInputBytes);
         request.setAttribute(ATTR_TOOL_ID, request.getRequestURI());
 
