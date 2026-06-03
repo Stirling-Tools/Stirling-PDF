@@ -106,6 +106,9 @@ export class UngroupParagraphCommand implements Command {
       next.splice(idx + 1, 0, ...tail);
       page.setRuns(next);
     }
+    // Bump revision so the dirty-only resnapshot republishes the page -
+    // this command only mutates the in-memory run model.
+    page.markDirty();
   }
 
   revert(doc: EditorDocument): void {
@@ -127,6 +130,7 @@ export class UngroupParagraphCommand implements Command {
     rep.paragraphLeafContainers = [...this.prev.paragraphLeafContainers];
     const tailIds = new Set(this.createdRunIds.slice(1));
     page.setRuns(page.runs.filter((r) => !tailIds.has(r.id)));
+    page.markDirty();
     this.createdRunIds = [];
   }
 

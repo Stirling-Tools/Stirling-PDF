@@ -11,11 +11,16 @@ import {
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import {
+  applyParagraphEditPlan,
   applyPartialEditPlan,
+  planParagraphEdit,
   planPartialEdit,
+  setObjText,
+  type ParagraphEditPlan,
   type PartialEditPlan,
 } from "@app/tools/pdfTextEditor/v2/commands/partialEdit";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import type { ParagraphLineSlot } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
 interface RevertLine {
   text: string;
@@ -59,6 +64,10 @@ export class EditTextCommand implements Command {
   private prevMergedFromPtrs: number[] = [];
   private prevMergedFromTexts: string[] = [];
   private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
+  /** Set when the apply path took the paragraph-aware partial shortcut. */
+  private paragraphPlan: ParagraphEditPlan | null = null;
+  private paragraphInsertedPtrs: number[] = [];
+  private prevParagraphSlots: ParagraphLineSlot[] = [];
 
   constructor(opts: { pageIndex: number; runId: string; nextText: string }) {
     this.pageIndex = opts.pageIndex;
@@ -74,14 +83,73 @@ export class EditTextCommand implements Command {
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
 
-    // SURGICAL DIFF PATH (try first, before any other branch):
-    // LCS the prev and next text against the per-sub-object layout so
-    // every surviving char keeps its ORIGINAL font, byte code, and
-    // glyph. Only the chars the user actually inserted are emitted in
-    // a Helvetica fallback. Sub-objects whose chars were all deleted
-    // get removed; everything else is shifted to fit. Bails out only
-    // for mixed-survival sub-objects (would need splitting).
-    if (this.partialPlan === null && run.mergedFromPtrs.length > 0) {
+    // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep
+    // per-line sub-run data in `paragraphLineSlots`. Walk each slot,
+    // run the LCS path per line, keep fonts where survival is clean.
+    // Bails to overlay when line count changes (typed Enter / deleted a
+    // newline) or any slot's per-line plan fails.
+    if (
+      this.partialPlan === null &&
+      this.paragraphPlan === null &&
+      run.paragraphLineSlots.length > 1
+    ) {
+      const paraPlan = planParagraphEdit(
+        run,
+        this.prevText ?? "",
+        this.nextText,
+      );
+      if (paraPlan) {
+        this.paragraphPlan = paraPlan;
+        this.prevParagraphSlots = paraPlan.prevSlots;
+        const result = applyParagraphEditPlan(
+          doc,
+          page,
+          run,
+          paraPlan,
+          this.nextText,
+        );
+        this.paragraphInsertedPtrs = result.insertedPtrs;
+        run.paragraphLineSlots = result.newSlots;
+        run.bounds = {
+          ...run.bounds,
+          x: result.newBoundsX,
+          width: result.newBoundsWidth,
+        };
+        // Keep mergedFrom* synchronized with slot[0] so a later
+        // single-line partial edit on the rep continues to work.
+        const firstSlot = result.newSlots[0];
+        run.mergedFromPtrs = [...firstSlot.mergedFromPtrs];
+        run.mergedFromTexts = [...firstSlot.mergedFromTexts];
+        run.mergedFromBounds = firstSlot.mergedFromBounds.map((b) => ({ ...b }));
+        run.mergedFromCharStarts = [...firstSlot.mergedFromCharStarts];
+        if (firstSlot.mergedFromPtrs.length > 0) {
+          run.pdfiumObjPtr = firstSlot.mergedFromPtrs[0];
+        }
+        run.text = this.nextText;
+        run.dirty = true;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
+    }
+
+    // SURGICAL DIFF PATH (single-line). Skipped when:
+    //   - the run is a paragraph (paragraphLineSlots > 1): the rep's own
+    //     mergedFromPtrs mirror only line 0, so a planner against the
+    //     whole paragraph text would emit wrong output.
+    //   - nextText contains a newline that prevText doesn't: the LCS
+    //     would classify the `\n` and everything after it as inserted,
+    //     and `applyPartialEditPlan` emits inserts at `run.matrix.f` -
+    //     the SAME baseline as the original line, so the would-be
+    //     second-line text lands past the right edge of line 1 and is
+    //     mostly clipped. Force overlay (which splits by `\n` and emits
+    //     each line at a real second baseline).
+    if (
+      this.partialPlan === null &&
+      run.mergedFromPtrs.length > 0 &&
+      run.paragraphLineSlots.length < 2 &&
+      !/\r?\n/.test(this.nextText)
+    ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       if (partial) {
         this.partialPlan = partial;
@@ -167,6 +235,20 @@ export class EditTextCommand implements Command {
 
     this.revertLines = snapshotRevertLines(run, this.prevText ?? "");
 
+    // Detach any cover rect that a PRIOR overlay edit left on the page.
+    // The previous EditTextCommand instance recorded its own coverRectPtr
+    // in its `createdPtrs`, but those references die with the command -
+    // PDFium still owns the rect. Without per-run tracking, a sequence
+    // of overlay edits stacks rects on top of each other.
+    if (run.coverRectPtr) {
+      try {
+        m.FPDFPage_RemoveObject(page.pagePtr, run.coverRectPtr);
+      } catch {
+        /* best-effort */
+      }
+      run.coverRectPtr = 0;
+    }
+
     const memberPtrs = collectMemberPtrs(run);
     const containers = collectContainersByPtr(run);
     const allRemoved = removeMemberPtrs(
@@ -179,7 +261,10 @@ export class EditTextCommand implements Command {
 
     if (!allRemoved) {
       this.coverRectPtr = emitFillRect(m, page, run.bounds, bg.fill);
-      if (this.coverRectPtr) this.createdPtrs.push(this.coverRectPtr);
+      if (this.coverRectPtr) {
+        this.createdPtrs.push(this.coverRectPtr);
+        run.coverRectPtr = this.coverRectPtr;
+      }
     }
 
     const outputLines = this.nextText.split(/\r?\n/);
@@ -192,13 +277,32 @@ export class EditTextCommand implements Command {
     // for leaf removal on subsequent edits.
     const lineAnchorPtrs: number[] = [];
     const allEmittedPtrs: number[] = [];
+    // Per-line emit metadata used to rebuild paragraphLineSlots so the
+    // NEXT edit can route back through paragraph-aware partial-edit
+    // (font-preserving) instead of falling to overlay again forever.
+    const perLineEmits: Array<{ ptrs: number[]; text: string; y: number }> = [];
     for (let i = 0; i < outputLines.length; i++) {
+      const y = run.matrix.f - i * lineHeight;
+      // Empty lines (a newline at end-of-text, or a blank line inserted
+      // mid-paragraph) get a placeholder slot - no PDFium object is
+      // emitted, because an empty text object's reported bounds are
+      // implementation-defined: `FPDFPageObj_GetBounds` can return
+      // {0,0,0,0} or fail, and either flavour breaks the next edit's
+      // anchor calculation (typed chars land at x=0 instead of at the
+      // line's intended left margin). The slot's `matrixE` carries the
+      // expected anchor; `planParagraphEdit` bails (mergedFromPtrs===0)
+      // on a type-into-empty-line edit so the overlay path handles it,
+      // and the overlay path emits at `run.matrix.e` directly.
+      if (outputLines[i].length === 0) {
+        perLineEmits.push({ ptrs: [], text: "", y });
+        continue;
+      }
       const ptrs = emitTextLine({
         doc,
         page,
         text: outputLines[i],
         x: run.matrix.e,
-        y: run.matrix.f - i * lineHeight,
+        y,
         fontSize: run.fontSize,
         fill: run.fill,
         originalFontPtr,
@@ -208,6 +312,7 @@ export class EditTextCommand implements Command {
       this.createdPtrs.push(...ptrs);
       allEmittedPtrs.push(...ptrs);
       lineAnchorPtrs.push(ptrs[0]);
+      perLineEmits.push({ ptrs, text: outputLines[i], y });
     }
 
     if (lineAnchorPtrs.length > 0) {
@@ -215,6 +320,13 @@ export class EditTextCommand implements Command {
       run.pdfiumObjPtr = lineAnchorPtrs[0];
       if (originalFontPtr === 0) {
         run.fontId = `base14:${fallbackFamily}`;
+        run.fontSubset = false;
+      } else {
+        // Borrow path: the new objects use the borrowed font handle.
+        // Mark fontSubset=false so the NEXT edit's `canReuseFont` check
+        // (which gates on `!run.fontSubset`) doesn't block the borrow
+        // even though the borrowed handle came from a subset source.
+        // The next edit re-validates via safeChars regardless.
         run.fontSubset = false;
       }
       run.paragraphMemberPtrs = lineAnchorPtrs;
@@ -226,6 +338,11 @@ export class EditTextCommand implements Command {
       // pass cleans them up alongside the anchors.
       run.paragraphLeafPtrs = allEmittedPtrs;
       run.paragraphLeafContainers = allEmittedPtrs.map(() => 0);
+      if (perLineEmits.length > 1) {
+        // Remember the line height so paragraph-partial / future overlay
+        // emits land at the same baselines we just established.
+        run.paragraphLineHeight = lineHeight;
+      }
     }
 
     run.mergedFromPtrs = [];
@@ -237,12 +354,31 @@ export class EditTextCommand implements Command {
     run.mergedFromTexts = [];
     run.mergedFromBounds = [];
     run.mergedFromCharStarts = [];
+    // Rebuild paragraphLineSlots from the fresh emit so the next edit on
+    // this paragraph can re-engage the font-preserving partial path.
+    // Each slot owns one output line; its `mergedFromPtrs` carry the
+    // freshly emitted per-word ptrs and `mergedFromBounds` are read
+    // directly from PDFium so subsequent inserts anchor correctly.
+    if (perLineEmits.length > 1) {
+      run.paragraphLineSlots = buildSlotsFromOverlayEmit(
+        m,
+        run,
+        perLineEmits,
+        originalFontPtr === 0 ? `base14:${fallbackFamily}` : run.fontId,
+      );
+    } else {
+      // Single-line emit. Skip slots; the single-line partial path
+      // works off mergedFromPtrs, which the overlay path deliberately
+      // clears (above) since the new emit may not carry per-sub-run
+      // bounds for the single-line case.
+      run.paragraphLineSlots = [];
+    }
     // Don't reset paragraphLeafPtrs here - we just set them above to the
     // freshly-emitted chunks so the next overlay edit can remove them.
     run.text = this.nextText;
     run.dirty = true;
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
@@ -250,6 +386,77 @@ export class EditTextCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run || this.prevText === null) return;
     const m = doc.module;
+
+    // Paragraph-aware partial revert: remove every per-slot insert ptr,
+    // re-emit fallback chunks at each removed sub-run's original spot.
+    // The original PDFium sub-objects are gone permanently (PDFium has
+    // no insert-into-page-at-position API that restores byte-identical
+    // glyphs) so the revert reads as the prev text in a base-14
+    // fallback font - matches what the overlay-revert path does too.
+    if (this.paragraphPlan) {
+      for (const ptr of this.paragraphInsertedPtrs) {
+        if (!ptr) continue;
+        try {
+          m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+        } catch {
+          /* best-effort */
+        }
+      }
+      this.paragraphInsertedPtrs = [];
+      // Re-emit the removed sub-objects as Helvetica fallback chunks at
+      // their original x positions and per-slot baselines.
+      const revertFallback = helveticaVariantFor(
+        this.prevFontId ?? run.fontId,
+      );
+      const restored: number[] = [];
+      for (const entry of this.paragraphPlan.perSlot) {
+        const prevSlot = this.prevParagraphSlots[entry.slotIdx];
+        if (!prevSlot) continue;
+        // Restore in-place "modify" sub-runs to their original text.
+        for (const op of entry.plan.ops) {
+          if (op.type === "modify" && op.subRunIdx !== undefined) {
+            setObjText(
+              m,
+              prevSlot.mergedFromPtrs[op.subRunIdx],
+              prevSlot.mergedFromTexts[op.subRunIdx] ?? "",
+            );
+          }
+        }
+        for (const { ptr } of entry.plan.removePtrs) {
+          const origIdx = prevSlot.mergedFromPtrs.indexOf(ptr);
+          if (origIdx < 0) continue;
+          const text = prevSlot.mergedFromTexts[origIdx] ?? "";
+          const bounds = prevSlot.mergedFromBounds[origIdx];
+          if (!text || !bounds) continue;
+          const ptrs = emitTextLine({
+            doc,
+            page,
+            text,
+            x: bounds.x,
+            y: prevSlot.baselineY,
+            fontSize: prevSlot.fontSize,
+            fill: run.fill,
+            originalFontPtr: 0,
+            fallbackFamily: revertFallback,
+          });
+          restored.push(...ptrs);
+        }
+      }
+      this.revertCreatedPtrs = restored;
+      run.paragraphLineSlots = this.prevParagraphSlots.map((s) => ({
+        ...s,
+        mergedFromPtrs: [...s.mergedFromPtrs],
+        mergedFromTexts: [...s.mergedFromTexts],
+        mergedFromBounds: s.mergedFromBounds.map((b) => ({ ...b })),
+        mergedFromCharStarts: [...s.mergedFromCharStarts],
+      }));
+      run.text = this.prevText;
+      run.dirty = true;
+      this.paragraphPlan = null;
+      page.markDirty();
+      page.markNeedsGenerate();
+      return;
+    }
 
     // Partial-edit fast path revert: the removed sub-objects are gone
     // from PDFium permanently, so we re-emit Helvetica fallback chunks
@@ -266,6 +473,17 @@ export class EditTextCommand implements Command {
         }
       }
       this.partialInsertedPtrs = [];
+      // In-place "modify" sub-runs kept their object (and font); restore
+      // their original text so undo shows the pre-edit characters.
+      for (const op of this.partialPlan.ops) {
+        if (op.type === "modify" && op.subRunIdx !== undefined) {
+          setObjText(
+            m,
+            this.prevMergedFromPtrs[op.subRunIdx],
+            this.prevMergedFromTexts[op.subRunIdx] ?? "",
+          );
+        }
+      }
       run.mergedFromPtrs = this.prevMergedFromPtrs;
       run.mergedFromTexts = this.prevMergedFromTexts;
       run.mergedFromBounds = this.prevMergedFromBounds.map((b) => ({ ...b }));
@@ -295,7 +513,7 @@ export class EditTextCommand implements Command {
       run.dirty = true;
       this.partialPlan = null;
       page.markDirty();
-      m.FPDFPage_GenerateContent(page.pagePtr);
+      page.markNeedsGenerate();
       return;
     }
 
@@ -358,7 +576,7 @@ export class EditTextCommand implements Command {
     run.dirty = true;
     this.overlaid = false;
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   describe(): string {
@@ -394,4 +612,135 @@ function snapshotRevertLines(
     fill: { ...run.fill },
     fontSize: Math.max(4, run.fontSize),
   }));
+}
+
+/**
+ * Reconstruct `paragraphLineSlots` from the data the overlay loop
+ * just emitted, so a subsequent edit on this paragraph can re-engage
+ * `planParagraphEdit` (font-preserving per-line LCS) instead of
+ * falling to the overlay path again forever.
+ *
+ * Each slot owns one output line. `mergedFromPtrs` carries the per-word
+ * ptrs we created via `emitTextLine`; `mergedFromBounds` is read straight
+ * from PDFium so subsequent inserts anchor at the exact glyph positions
+ * the renderer used.
+ */
+function buildSlotsFromOverlayEmit(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  run: import("@app/tools/pdfTextEditor/v2/model/TextRun").TextRun,
+  perLineEmits: Array<{ ptrs: number[]; text: string; y: number }>,
+  fontId: string,
+): import("@app/tools/pdfTextEditor/v2/model/TextRun").ParagraphLineSlot[] {
+  const slots = [];
+  let cursor = 0;
+  for (const emit of perLineEmits) {
+    const text = emit.text;
+    const startChar = cursor;
+    const endChar = startChar + text.length;
+    // Empty-line slot: no PDFium sub-objects, no bounds. matrixE +
+    // baselineY carry the expected anchor for the next edit. The next
+    // keystroke on this line triggers `planParagraphEdit`, which bails
+    // when slot.mergedFromPtrs is empty - the overlay path then runs
+    // and emits at run.matrix.e (correct), and the rebuilt slot picks
+    // up real bounds from the fresh emit.
+    if (emit.ptrs.length === 0 || text.length === 0) {
+      slots.push({
+        startChar,
+        endChar,
+        baselineY: emit.y,
+        matrixE: run.matrix.e,
+        containerPtr: 0,
+        fontId,
+        fontSize: run.fontSize,
+        fontSubset: false,
+        mergedFromPtrs: [],
+        mergedFromTexts: [],
+        mergedFromBounds: [],
+        mergedFromCharStarts: [],
+      });
+      cursor = endChar + 1;
+      continue;
+    }
+    // Distribute the text across the emitted ptrs by character-count
+    // proportion. emitTextLine emits one ptr per whitespace-separated
+    // word, so partition `text` on whitespace runs and align with ptrs.
+    // For lines without whitespace, ptrs.length === 1 and the whole
+    // line is one sub-run.
+    const mergedFromTexts: string[] = [];
+    const mergedFromPtrs: number[] = [];
+    const mergedFromBounds: Array<{ x: number; right: number }> = [];
+    const mergedFromCharStarts: number[] = [];
+    if (emit.ptrs.length === 1) {
+      mergedFromPtrs.push(emit.ptrs[0]);
+      mergedFromTexts.push(text);
+      mergedFromBounds.push(boundsFromPtr(m, emit.ptrs[0], run.matrix.e));
+      mergedFromCharStarts.push(0);
+    } else {
+      const words = text.split(/(\s+)/).filter((w) => w.length > 0);
+      const nonGapWords = words.filter((w) => !/^\s+$/.test(w));
+      const used = Math.min(emit.ptrs.length, nonGapWords.length);
+      let cur = 0;
+      let wordIdx = 0;
+      for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        if (/^\s+$/.test(w)) {
+          cur += w.length;
+          continue;
+        }
+        if (wordIdx >= used) {
+          cur += w.length;
+          wordIdx += 1;
+          continue;
+        }
+        const ptr = emit.ptrs[wordIdx];
+        mergedFromPtrs.push(ptr);
+        mergedFromTexts.push(w);
+        mergedFromBounds.push(boundsFromPtr(m, ptr, run.matrix.e));
+        mergedFromCharStarts.push(cur);
+        cur += w.length;
+        wordIdx += 1;
+      }
+    }
+    slots.push({
+      startChar,
+      endChar,
+      baselineY: emit.y,
+      matrixE: run.matrix.e,
+      containerPtr: 0,
+      fontId,
+      fontSize: run.fontSize,
+      fontSubset: false,
+      mergedFromPtrs,
+      mergedFromTexts,
+      mergedFromBounds,
+      mergedFromCharStarts,
+    });
+    cursor = endChar + 1; // +1 for the "\n" separator
+  }
+  return slots;
+}
+
+function boundsFromPtr(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  ptr: number,
+  fallbackX: number,
+): { x: number; right: number } {
+  const l = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const r = m.pdfium.wasmExports.malloc(4);
+  const t = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
+      return { x: fallbackX, right: fallbackX };
+    }
+    return {
+      x: m.pdfium.getValue(l, "float"),
+      right: m.pdfium.getValue(r, "float"),
+    };
+  } finally {
+    m.pdfium.wasmExports.free(l);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(t);
+  }
 }

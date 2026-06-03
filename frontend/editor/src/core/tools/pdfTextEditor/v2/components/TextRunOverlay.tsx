@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import type { TextRunSnapshot } from "@app/tools/pdfTextEditor/v2/types";
+import type {
+  TextRunSnapshot,
+  WidthMode,
+} from "@app/tools/pdfTextEditor/v2/types";
 import { toCssHex } from "@app/tools/pdfTextEditor/v2/model/Color";
 
 // React + contentEditable do not play well together when JSX manages the
@@ -87,48 +90,54 @@ function measureMaxLineWidth(
 }
 
 /**
- * Walk a contentEditable element character-by-character and detect
- * soft line wraps (where the browser broke a line because the next
- * word didn't fit). Each transition between Y rows becomes a `\n`.
- * Combined with the user's hard breaks (Enter inserts a real `\n`),
- * the returned string captures every visual line of the rendered
- * paragraph - which is what EditTextCommand needs to emit one
- * PDFium text object per line.
+ * Measure the font's ascent / descent (px) for the given CSS font, so the
+ * overlay can place its first text line's alphabetic baseline exactly on
+ * the PDF baseline. Falls back to typical sans ratios if the browser
+ * doesn't expose `fontBoundingBox*` (it does in Chromium).
  */
-function extractTextWithSoftBreaks(element: HTMLElement): string {
-  const normalized = element.innerText.replace(/\u00A0/g, " ");
-  if (!element.isConnected) return normalized;
-  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
-  const range = document.createRange();
-  let result = "";
-  let previousTop: number | null = null;
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const nodeText = node.textContent ?? "";
-    for (let index = 0; index < nodeText.length; index += 1) {
-      const char = nodeText[index];
-      range.setStart(node, index);
-      range.setEnd(node, index + 1);
-      const rect = range.getClientRects()[0];
-      if (
-        previousTop !== null &&
-        rect &&
-        Math.abs(rect.top - previousTop) > 0.5 &&
-        result[result.length - 1] !== "\n"
-      ) {
-        result += "\n";
-      }
-      result += char;
-      if (rect) previousTop = rect.top;
-    }
+function measureFontMetrics(
+  fontFamily: string,
+  fontWeight: number,
+  fontStyle: string,
+  fontSizePx: number,
+): { ascent: number; descent: number } {
+  const fallback = { ascent: 0.8 * fontSizePx, descent: 0.2 * fontSizePx };
+  if (typeof document === "undefined") return fallback;
+  if (!sharedMeasureCanvas)
+    sharedMeasureCanvas = document.createElement("canvas");
+  const ctx = sharedMeasureCanvas.getContext("2d");
+  if (!ctx) return fallback;
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+  const m = ctx.measureText("Hg");
+  const ascent = m.fontBoundingBoxAscent;
+  const descent = m.fontBoundingBoxDescent;
+  if (typeof ascent !== "number" || typeof descent !== "number") {
+    return fallback;
   }
-  return result || normalized;
+  return { ascent, descent };
+}
+
+/**
+ * Read the editable element's hard-break text.
+ *
+ * `innerText` already represents user-typed Enter as `\n`. We deliberately
+ * do NOT synthesise newlines for browser soft-wraps: the wrap point in CSS
+ * is determined by Liberation Sans / Arial advance widths, which diverge
+ * from the source PDF font by 5-20%. Inserting a `\n` at the CSS wrap
+ * point persists a hard break the user never typed; after save + reload
+ * the paragraph reads with phantom breaks and the next edit compounds the
+ * drift. Hard-break-only is the only round-trip-safe choice.
+ */
+function extractHardBreaks(element: HTMLElement): string {
+  return element.innerText.replace(/\u00A0/g, " ");
 }
 
 interface TextRunOverlayProps {
   run: TextRunSnapshot;
   pageHeight: number;
   scale: number;
+  /** "grow": box widens to the right. "wrap": locked width, wraps down. */
+  widthMode: WidthMode;
   selected: boolean;
   /** True when this run is the active find-match (yellow highlight). */
   highlighted?: boolean;
@@ -148,6 +157,7 @@ export function TextRunOverlay({
   run,
   pageHeight,
   scale,
+  widthMode,
   selected,
   highlighted,
   onSelect,
@@ -157,9 +167,14 @@ export function TextRunOverlay({
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  // Ctrl+drag-to-move state.
+  // Ctrl+drag-to-move state. `dragOffset` is the live cursor delta (px)
+  // applied as a CSS transform so the box follows the cursor during the
+  // drag; it's committed to a real move (and reset) on mouseup.
   const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
+    null,
+  );
 
   // Sync the contenteditable's text with the snapshot on external
   // changes (undo/redo, multi-select). We never render the text via
@@ -177,29 +192,51 @@ export function TextRunOverlay({
   }, []);
 
   const left = run.bounds.x * scale;
-  // PDFium-reported bounds.height only captures the visible glyph
-  // extent (often x-height for lowercase-heavy runs, not cap+descender),
-  // so a line of body text often reports height=3pt for a 12pt font.
-  // Use max(bounds.height, fontSize*1.1) so the overlay covers the full
-  // line vertically and the contenteditable hit area lines up with what
-  // the user sees in the bitmap. Multi-line paragraphs already report a
-  // sensible height so the max is harmless for them.
-  const boxHeightPt = Math.max(
-    run.bounds.height,
-    run.fontSize * 1.1,
-    run.paragraphLineHeight ?? 0,
-  );
-  const top = (pageHeight - run.bounds.y - boxHeightPt) * scale;
-  const pdfWidth = run.bounds.width * scale;
-  const height = boxHeightPt * scale;
 
-  // Paragraphs: widen the overlay enough that every source line still
-  // fits in CSS metrics. Without this the Arial fallback's slightly
-  // wider glyphs make each line's last word wrap onto a new visual row.
+  // CSS font for the overlay - derived before the vertical math because
+  // baseline placement needs the font's measured ascent.
   const fontFamily = cssFontFamilyFor(run.fontId);
   const fontWeight = cssWeightFor(run.fontId);
   const fontStyle = cssStyleFor(run.fontId);
   const fontSizePx = Math.max(4, run.fontSize * scale);
+
+  // Line height (px). Paragraphs use the measured inter-baseline spacing;
+  // single lines get light leading. The same value drives this layout
+  // math AND the CSS `line-height`, so per-line baselines stay aligned.
+  const lineHeightPx =
+    run.paragraphLineHeight && run.paragraphLineHeight > 0
+      ? run.paragraphLineHeight * scale
+      : fontSizePx * 1.2;
+
+  // VERTICAL PLACEMENT - anchor the first line's CSS alphabetic baseline
+  // exactly onto the PDF baseline (`run.matrix.f`). PDFium's bounds.height
+  // is only the visible glyph extent, so the old "top = pageHeight -
+  // bounds.y - inflatedHeight" placed the top-aligned text well above the
+  // real glyph and every run read slightly high. Using the font's real
+  // ascent plus the CSS half-leading lands the baseline on the mark, and
+  // because line spacing matches paragraphLineHeight every subsequent
+  // line lines up too.
+  const { ascent, descent } = measureFontMetrics(
+    fontFamily,
+    fontWeight,
+    fontStyle,
+    fontSizePx,
+  );
+  const halfLeading = Math.max(0, (lineHeightPx - (ascent + descent)) / 2);
+  const firstBaselineFromTop = halfLeading + ascent;
+  const baselineScreen = (pageHeight - run.matrix.f) * scale;
+  const top = baselineScreen - firstBaselineFromTop;
+
+  // Height covers every (typed) line plus descender slack, so the
+  // contenteditable hit area matches what's drawn and typed extra lines
+  // aren't clipped by `overflow: hidden`.
+  const lineCount = Math.max(1, run.text.split(/\r?\n/).length);
+  const height = lineCount * lineHeightPx + descent;
+
+  const pdfWidth = run.bounds.width * scale;
+  // Widen the overlay so every source line still fits in CSS metrics
+  // (the Arial fallback is slightly wider than the source font), and so
+  // typed text wider than the original bounds isn't clipped.
   const measuredWidth = measureMaxLineWidth(
     run.text,
     fontFamily,
@@ -207,10 +244,22 @@ export function TextRunOverlay({
     fontStyle,
     fontSizePx,
   );
-  // Always grow the overlay to fit the typed text + a small buffer.
-  // Without this, typing wider content than the original bounds gets
-  // clipped by `overflow: hidden` and the user sees only a few chars.
-  const width = Math.max(pdfWidth, measuredWidth + fontSizePx);
+  // Width behaviour is user-controlled:
+  //  - "grow": box widens to the right to fit the content (no wrap).
+  //  - "wrap": box width is LOCKED to the source width; content word-
+  //    wraps and the box grows downward instead. A small floor keeps
+  //    very narrow source runs usable.
+  const isParagraph = (run.paragraphLineCount ?? 1) > 1;
+  const wrapMode = widthMode === "wrap";
+  const width = wrapMode
+    ? Math.max(pdfWidth, fontSizePx * 3)
+    : Math.max(pdfWidth, measuredWidth + fontSizePx);
+  // `min-height` (not a fixed height) is used below, so in BOTH modes the
+  // box grows downward when content needs it. The mode only changes
+  // whether the width is locked (wrap) or free (grow), and whether single
+  // lines wrap.
+  const whiteSpace: "pre" | "pre-wrap" =
+    wrapMode || isParagraph ? "pre-wrap" : "pre";
 
   return (
     <div
@@ -223,10 +272,22 @@ export function TextRunOverlay({
         if ((e.ctrlKey || e.metaKey) && onMove) {
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);
+          setDragOffset({ x: 0, y: 0 });
           (e.currentTarget as HTMLDivElement).blur();
+          // Live preview: translate the box with the cursor while dragging.
+          const onMouseMove = (ev: MouseEvent) => {
+            const origin = dragOriginRef.current;
+            if (!origin) return;
+            setDragOffset({
+              x: ev.clientX - origin.x,
+              y: ev.clientY - origin.y,
+            });
+          };
           const onMouseUp = (ev: MouseEvent) => {
+            window.removeEventListener("mousemove", onMouseMove);
             window.removeEventListener("mouseup", onMouseUp);
             setDragging(false);
+            setDragOffset(null);
             const origin = dragOriginRef.current;
             dragOriginRef.current = null;
             if (!origin) return;
@@ -235,6 +296,7 @@ export function TextRunOverlay({
             if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
             onMove(dx, dy);
           };
+          window.addEventListener("mousemove", onMouseMove);
           window.addEventListener("mouseup", onMouseUp);
           return;
         }
@@ -257,14 +319,13 @@ export function TextRunOverlay({
       onBlur={() => setFocused(false)}
       onInput={(e) => {
         const el = e.currentTarget as HTMLDivElement;
-        // Paragraphs preserve soft-wrap line breaks so the commit can
-        // emit one PDF text object per visual line. Always strip NBSP
-        // (U+00A0): browsers can substitute it for a typed Space at
-        // word boundaries to preserve the visual gap, but PDFium's
-        // base-14 Helvetica maps U+00A0 to 0xFF (ydieresis), so any
-        // NBSP that survives to PDFium SetText renders as junk.
-        const isParagraph = (run.paragraphLineCount ?? 1) > 1;
-        const raw = isParagraph ? extractTextWithSoftBreaks(el) : el.innerText;
+        // Always read hard breaks only - never synthesise newlines from
+        // browser soft-wraps. Visual CSS wraps come from Liberation Sans
+        // advance widths, which differ from the source PDF font; inserting
+        // a `\n` at the CSS wrap persists a hard break the user never
+        // typed. Strip NBSP (U+00A0) because base-14 Helvetica maps it to
+        // 0xFF (ydieresis) and renders as junk through PDFium SetText.
+        const raw = extractHardBreaks(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
       }}
@@ -276,6 +337,14 @@ export function TextRunOverlay({
         top,
         width,
         minHeight: height,
+        // Live Ctrl+drag preview: follow the cursor via transform, and
+        // float above siblings + dim slightly so the move reads clearly.
+        transform: dragOffset
+          ? `translate(${dragOffset.x}px, ${dragOffset.y}px)`
+          : undefined,
+        opacity: dragging ? 0.75 : 1,
+        zIndex: dragging ? 20 : undefined,
+        transition: dragging ? "none" : "transform 80ms ease-out",
         // While focused: real glyphs in a CSS-stack approximation of
         // the PDFium font, so the user sees their input before the
         // bitmap re-renders. While unfocused: transparent so the PDFium
@@ -284,11 +353,13 @@ export function TextRunOverlay({
         fontWeight,
         fontStyle,
         fontSize: fontSizePx,
-        lineHeight: run.paragraphLineHeight
-          ? `${run.paragraphLineHeight * scale}px`
-          : 1,
-        whiteSpace: (run.paragraphLineCount ?? 1) > 1 ? "pre-wrap" : "pre",
-        color: focused ? toCssHex(run.fill) : "transparent",
+        // Same line-height used in the baseline math above, so the CSS
+        // baselines land exactly where we computed `top`.
+        lineHeight: `${lineHeightPx}px`,
+        whiteSpace,
+        // Show the glyphs while focused OR mid-drag so the Ctrl+drag
+        // preview is a visible chip that follows the cursor.
+        color: focused || dragging ? toCssHex(run.fill) : "transparent",
         // Mask the underlying bitmap while editing. Light text needs a
         // dark mask and vice versa - white text on a white mask would
         // be invisible. Use the perceived luminance of the text color

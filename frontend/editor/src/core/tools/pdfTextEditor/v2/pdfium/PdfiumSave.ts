@@ -13,7 +13,12 @@ export class PdfiumSave {
     const m = doc.module;
     for (const page of doc.loadedPages()) {
       try {
-        m.FPDFPage_GenerateContent(page.pagePtr);
+        // Always force a flush before save - the deferred flag may be
+        // false because a render already flushed, but mark+flush is
+        // idempotent and the safe default for any page that's still
+        // marked dirty.
+        if (page.dirty) page.markNeedsGenerate();
+        page.flushGenerate(m);
         page.clearDirty();
       } catch {
         /* best-effort */

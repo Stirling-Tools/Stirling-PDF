@@ -96,7 +96,7 @@ export class InsertImageCommand implements Command {
     });
     page.setImages([...page.images, created]);
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
     this.createdImageId = imageId;
     this.createdObjPtr = newObjPtr;
   }
@@ -109,6 +109,6 @@ export class InsertImageCommand implements Command {
       page.setImages(page.images.filter((i) => i.id !== this.createdImageId));
     }
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }

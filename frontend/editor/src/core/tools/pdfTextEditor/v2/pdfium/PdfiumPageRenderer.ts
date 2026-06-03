@@ -16,6 +16,9 @@ export class PdfiumPageRenderer {
     scale: number,
   ): Promise<ImageData> {
     const m = doc.module;
+    // Flush any deferred mutations so the bitmap reflects the current
+    // edit state. Cheap no-op when nothing has changed.
+    page.flushGenerate(m);
     const rawW = page.width;
     const rawH = page.height;
     const w = Math.max(1, Math.round(rawW * scale));

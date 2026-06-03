@@ -1,21 +1,33 @@
-import { Box, Stack, Text } from "@mantine/core";
+import { Box, SegmentedControl, Stack, Text } from "@mantine/core";
 import { PageListPanel } from "@app/tools/pdfTextEditor/v2/components/PageListPanel";
 import type {
   EditorViewState,
   LoadProgress,
 } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
-import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
+import type {
+  GroupingMode,
+  SelectionState,
+} from "@app/tools/pdfTextEditor/v2/types";
 
 interface SidebarProps {
   state: EditorViewState;
   selection: SelectionState;
+  onSetGroupingMode: (mode: GroupingMode) => void;
 }
 
-export function EditorSidebar({ state, selection }: SidebarProps) {
+export function EditorSidebar({
+  state,
+  selection,
+  onSetGroupingMode,
+}: SidebarProps) {
   return (
     <Box p="md" style={{ flex: 1, overflow: "auto" }}>
       {state.hasDocument ? (
-        <LoadedSidebar state={state} selection={selection} />
+        <LoadedSidebar
+          state={state}
+          selection={selection}
+          onSetGroupingMode={onSetGroupingMode}
+        />
       ) : (
         <EmptySidebar progress={state.progress} loading={state.loading} />
       )}
@@ -58,9 +70,11 @@ function EmptySidebar({
 function LoadedSidebar({
   state,
   selection,
+  onSetGroupingMode,
 }: {
   state: EditorViewState;
   selection: SelectionState;
+  onSetGroupingMode: (mode: GroupingMode) => void;
 }) {
   const selectionLabel = formatSelection(selection);
   return (
@@ -84,7 +98,48 @@ function LoadedSidebar({
           </Text>
         )}
       </Stack>
+      <GroupingModeControl
+        mode={state.groupingMode}
+        onChange={onSetGroupingMode}
+      />
       <PageListPanel pages={state.pages} />
+    </Stack>
+  );
+}
+
+/**
+ * Toggle between Auto (detect equal-spaced lines as paragraphs) and
+ * Line (every source line is its own run). Switching re-reads the
+ * document under the new grouping and clears the undo history.
+ */
+function GroupingModeControl({
+  mode,
+  onChange,
+}: {
+  mode: GroupingMode;
+  onChange: (mode: GroupingMode) => void;
+}) {
+  return (
+    <Stack gap={4} data-testid="v2-grouping-mode">
+      <Text size="xs" fw={500}>
+        Text grouping
+      </Text>
+      <SegmentedControl
+        size="xs"
+        fullWidth
+        value={mode}
+        onChange={(value) => onChange(value as GroupingMode)}
+        data={[
+          { label: "Auto", value: "auto" },
+          { label: "Line", value: "line" },
+        ]}
+        data-testid="v2-grouping-mode-control"
+      />
+      <Text size="xs" c="dimmed">
+        {mode === "auto"
+          ? "Equal-spaced lines are grouped into editable paragraphs."
+          : "Each source line is edited on its own. Switching re-reads the document and clears undo history."}
+      </Text>
     </Stack>
   );
 }

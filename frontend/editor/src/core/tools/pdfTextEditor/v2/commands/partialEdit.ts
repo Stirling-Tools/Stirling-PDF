@@ -1,11 +1,37 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
-import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import type {
+  ParagraphLineSlot,
+  TextRun,
+} from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
   emitTextLine,
   measureObjRightEdgePt,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import { writeUtf16 } from "@app/services/pdfiumService";
+
+/**
+ * Set the text of an EXISTING PDFium text object, preserving its font.
+ * Used to edit a "mixed" sub-run in place (e.g. trim a trailing space
+ * off "n ") so the embedded glyph is kept instead of re-emitted in a
+ * fallback font.
+ */
+export function setObjText(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  ptr: number,
+  text: string,
+): void {
+  if (!ptr) return;
+  const buf = writeUtf16(m, text);
+  try {
+    m.FPDFText_SetText(ptr, buf);
+  } catch {
+    /* best-effort */
+  } finally {
+    m.pdfium.wasmExports.free(buf);
+  }
+}
 
 /**
  * Diff-driven partial editing. For runs that LineGrouper merged from
@@ -23,10 +49,11 @@ import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaV
  * falls back to the per-word Helvetica emit in that rare case.
  */
 export interface PartialEditOp {
-  type: "keep" | "insert";
-  /** keep: sub-run index in run.mergedFromPtrs */
+  type: "keep" | "insert" | "modify";
+  /** keep / modify: sub-run index in run.mergedFromPtrs */
   subRunIdx?: number;
-  /** insert: text to emit in fallback font */
+  /** insert: text to emit in fallback font. modify: surviving chars to
+   * SetText onto the existing object (keeps its embedded font). */
   text?: string;
   /**
    * insert only: the original sub-run this insert is replacing (came
@@ -159,6 +186,13 @@ export function planPartialEdit(
   // tracked range, not ghost gaps) survived the LCS.
   const subRunStatus: Array<"all-kept" | "all-deleted" | "mixed"> = [];
   const mixedSubRuns = new Set<number>();
+  // For each mixed sub-run, the surviving chars (in original order). We
+  // SetText these back onto the EXISTING object so its embedded font is
+  // preserved - critical when a letter and a trailing space share one
+  // source object ("n ") and the user deletes the space: re-emitting the
+  // "n" in a borrowed/Helvetica font would drop the glyph for subset
+  // fonts, so we edit the object in place instead.
+  const mixedSurviving = new Map<number, string>();
   for (let i = 0; i < run.mergedFromTexts.length; i++) {
     const range = subRunRanges[i];
     if (!range) {
@@ -171,14 +205,19 @@ export function planPartialEdit(
       continue;
     }
     let keptCount = 0;
+    let surviving = "";
     for (let c = range.start; c < range.end; c++) {
-      if (keptA.has(c)) keptCount += 1;
+      if (keptA.has(c)) {
+        keptCount += 1;
+        surviving += prevText[c];
+      }
     }
     if (keptCount === 0) subRunStatus.push("all-deleted");
     else if (keptCount === subLen) subRunStatus.push("all-kept");
     else {
       subRunStatus.push("mixed");
       mixedSubRuns.add(i);
+      mixedSurviving.set(i, surviving);
     }
   }
 
@@ -197,6 +236,9 @@ export function planPartialEdit(
   let insertBuf = "";
   let insertAnchorSubRun: number | undefined;
   let insertStartBIdx = 0;
+  // Mixed sub-runs we've already emitted a single "modify" op for, so a
+  // later surviving char from the same sub-run doesn't emit a second.
+  const modifiedSubRuns = new Set<number>();
   function flushInsert(): void {
     if (insertBuf.length === 0) return;
     ops.push({
@@ -221,20 +263,22 @@ export function planPartialEdit(
       // whitespace. Don't reset lastSubRun either, so two real chars
       // from the same sub-run on either side of a ghost still dedupe.
       if (subRunIdx === -1) continue;
-      // Kept chars in mixed sub-runs are treated as inserts so we can
-      // emit them via Helvetica fallback (the only chars in the line
-      // that lose their original font - the surrounding unchanged
-      // sub-runs are fully preserved).
+      // Surviving chars of a mixed sub-run keep their ORIGINAL embedded
+      // font: we SetText the surviving substring back onto the existing
+      // object (one "modify" op per mixed sub-run) rather than removing
+      // it and re-emitting in a fallback font. This is what stops a
+      // letter from losing its font when its trailing space is deleted.
       if (mixedSubRuns.has(subRunIdx)) {
-        // First mixed-sub-run char seen sets the anchor; if a later
-        // char comes from a DIFFERENT mixed sub-run, drop the anchor
-        // (we can only anchor a single insert at one position).
-        if (insertBuf.length === 0) {
-          insertAnchorSubRun = subRunIdx;
-          insertStartBIdx = b;
-        } else if (insertAnchorSubRun !== subRunIdx)
-          insertAnchorSubRun = undefined;
-        insertBuf += nextText[b];
+        flushInsert();
+        if (!modifiedSubRuns.has(subRunIdx)) {
+          ops.push({
+            type: "modify",
+            subRunIdx,
+            text: mixedSurviving.get(subRunIdx) ?? "",
+            startBIdx: b,
+          });
+          modifiedSubRuns.add(subRunIdx);
+        }
         continue;
       }
       flushInsert();
@@ -249,11 +293,12 @@ export function planPartialEdit(
   }
   flushInsert();
 
-  // Collect removals: both all-deleted sub-runs AND mixed sub-runs
-  // (mixed sub-runs get re-emitted via Helvetica chunks above).
+  // Collect removals: only ALL-deleted sub-runs. Mixed sub-runs are
+  // edited in place via "modify" ops (keeping their object + font), so
+  // they must NOT be removed.
   const removePtrs: Array<{ ptr: number; containerPtr: number }> = [];
   for (let i = 0; i < run.mergedFromPtrs.length; i++) {
-    if (subRunStatus[i] === "all-deleted" || subRunStatus[i] === "mixed") {
+    if (subRunStatus[i] === "all-deleted") {
       removePtrs.push({
         ptr: run.mergedFromPtrs[i],
         containerPtr: run.containerPtr,
@@ -302,6 +347,53 @@ function borrowFontFromSurvivor(
   return 0;
 }
 
+/**
+ * Borrow the font of a surviving sub-object that ACTUALLY CONTAINS the
+ * characters we're about to insert - so the new glyph reuses the exact
+ * embedded font that already renders that char ("use the glyph of the
+ * i next to it"). Many PDFs embed one subset font per glyph-group, so
+ * the first survivor ("W") may be a subset that lacks "i"; borrowing it
+ * forces PDFium to guess a substitute (or fall back to Helvetica).
+ * Preferring a survivor that holds the inserted char makes the reuse
+ * deterministic. Falls back to the first survivor, then 0.
+ */
+function borrowFontForChars(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  plan: PartialEditPlan,
+  chars: string,
+): number {
+  const fontMod = m as unknown as FontReadingModule;
+  if (!fontMod.FPDFTextObj_GetFont) return 0;
+  const removed = new Set(plan.removePtrs.map((r) => r.ptr));
+  const want = new Set([...chars].filter((c) => c.trim().length > 0));
+  if (want.size > 0) {
+    // Prefer a survivor whose text shares the most chars with the insert
+    // (so multi-char inserts pick a font covering as much as possible).
+    let bestPtr = 0;
+    let bestScore = 0;
+    for (let i = 0; i < plan.prevMergedFromPtrs.length; i++) {
+      const ptr = plan.prevMergedFromPtrs[i];
+      if (!ptr || removed.has(ptr)) continue;
+      const text = plan.prevMergedFromTexts[i] ?? "";
+      let score = 0;
+      for (const c of text) if (want.has(c)) score += 1;
+      if (score > bestScore) {
+        bestScore = score;
+        bestPtr = ptr;
+      }
+    }
+    if (bestPtr) {
+      try {
+        const fontPtr = fontMod.FPDFTextObj_GetFont(bestPtr);
+        if (fontPtr) return fontPtr;
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+  return borrowFontFromSurvivor(m, plan);
+}
+
 interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
@@ -329,9 +421,24 @@ export function applyPartialEditPlan(
   page: Page,
   run: TextRun,
   plan: PartialEditPlan,
+  /**
+   * Override the baseline used for emitted inserts. When the caller is
+   * the paragraph-partial path, this is the slot's `matrixF`, not the
+   * paragraph rep's overall `matrix.f`. Defaults to `run.matrix.f`.
+   */
+  baselineY?: number,
+  /**
+   * Override the left edge used for the FIRST unanchored insert (before
+   * any keep op has set the cursor). Paragraph slots pass the slot's
+   * own left x so an inserted-at-line-start edit anchors at the line,
+   * not at the paragraph's overall bounds. Defaults to `run.bounds.x`.
+   */
+  defaultX?: number,
 ): PartialEditApplyResult {
   const m = doc.module;
   const formMod = m as unknown as FormRemovalModule;
+  const emitY = baselineY ?? run.matrix.f;
+  const startX = defaultX ?? run.bounds.x;
   // Step 1: remove deleted sub-objects.
   for (const { ptr, containerPtr } of plan.removePtrs) {
     if (!ptr) continue;
@@ -408,9 +515,6 @@ export function applyPartialEditPlan(
     }
     if (!allInsertCharsAreSafe) break;
   }
-  const borrowedFontPtr = allInsertCharsAreSafe
-    ? borrowFontFromSurvivor(m, plan)
-    : 0;
 
   // Strategy: walk ops in order. Track a cumulative `offset` that gets
   // added to subsequent kept sub-runs' positions, accounting for the
@@ -426,8 +530,8 @@ export function applyPartialEditPlan(
   //     narrower than original LMRoman "Moodle ", so offset = -13pt
   //   * keep ops AFTER the mixed word: shift left by 13pt, closing
   //     the gap that would otherwise appear
-  let firstX = run.bounds.x;
-  let lastEnd = run.bounds.x;
+  let firstX = startX;
+  let lastEnd = startX;
   let offset = 0;
   // Tracks the highest sub-run index we've already accounted for in
   // `offset`. Before processing each keep/anchor op, we walk forward
@@ -466,6 +570,40 @@ export function applyPartialEditPlan(
       newMergedFromBounds.push({ x: newX, right: newRight });
       newMergedFromCharStarts.push(op.startBIdx);
       if (newRight > lastEnd) lastEnd = newRight;
+    } else if (
+      op.type === "modify" &&
+      op.subRunIdx !== undefined &&
+      op.text !== undefined
+    ) {
+      // Edit a mixed sub-run's EXISTING object in place: SetText the
+      // surviving chars so the embedded (often subset) font is kept -
+      // the glyphs were already in the object, so they always render,
+      // unlike a borrowed-handle re-emit. Shift by the accumulated
+      // offset and remeasure to keep following sub-runs aligned.
+      absorbDeletesBefore(op.subRunIdx);
+      const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
+      const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
+      const origWidth = origBounds.right - origBounds.x;
+      setObjText(m, ptr, op.text);
+      if (Math.abs(offset) > 0.05) {
+        try {
+          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
+        } catch {
+          /* best-effort */
+        }
+      }
+      const newX = origBounds.x + offset;
+      const measuredRight = measureObjRightEdgePt(m, ptr);
+      const newRight =
+        measuredRight > newX ? measuredRight : newX + origWidth;
+      newMergedFromPtrs.push(ptr);
+      newMergedFromTexts.push(op.text);
+      newMergedFromBounds.push({ x: newX, right: newRight });
+      newMergedFromCharStarts.push(op.startBIdx);
+      if (newRight > lastEnd) lastEnd = newRight;
+      // Subsequent sub-runs shift by the width delta (surviving text is
+      // usually narrower than the original).
+      offset += newRight - newX - origWidth;
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
       const anchorIdx = op.anchorSubRunIdx;
@@ -478,16 +616,23 @@ export function applyPartialEditPlan(
       // at lastEnd.
       const anchorX = origBounds ? origBounds.x + offset : lastEnd;
 
-      // Try borrowed source font first when every insert char is
-      // safe; measure the result and fall back to Helvetica if the
-      // rendered width is sub-threshold (font didn't have working
-      // glyphs at the chars we passed via SetText).
+      // Borrow the font from a survivor that actually contains the
+      // inserted chars (e.g. the neighbouring "i"), so the new glyph
+      // reuses that exact embedded font. Only when every insert char is
+      // already present somewhere in the line (safe), else go base-14.
+      const borrowedFontPtr = allInsertCharsAreSafe
+        ? borrowFontForChars(m, plan, insertText)
+        : 0;
+
+      // Try the borrowed source font first; measure the result and fall
+      // back to Helvetica if the rendered width is sub-threshold (font
+      // didn't have working glyphs at the chars we passed via SetText).
       let ptrs = emitTextLine({
         doc,
         page,
         text: insertText,
         x: anchorX,
-        y: run.matrix.f,
+        y: emitY,
         fontSize: run.fontSize,
         fill: run.fill,
         originalFontPtr: borrowedFontPtr,
@@ -521,7 +666,7 @@ export function applyPartialEditPlan(
           page,
           text: insertText,
           x: anchorX,
-          y: run.matrix.f,
+          y: emitY,
           fontSize: run.fontSize,
           fill: run.fill,
           originalFontPtr: 0,
@@ -576,7 +721,7 @@ export function applyPartialEditPlan(
     }
   }
 
-  m.FPDFPage_GenerateContent(page.pagePtr);
+  page.markNeedsGenerate();
 
   if (newMergedFromBounds.length > 0) {
     firstX = newMergedFromBounds[0].x;
@@ -596,5 +741,230 @@ export function applyPartialEditPlan(
     insertedPtrs,
     newBoundsX: firstX,
     newBoundsWidth: lastEnd - firstX,
+  };
+}
+
+/**
+ * Paragraph-aware partial edit.
+ *
+ * The single-line `planPartialEdit` only sees the rep's own `mergedFrom*`
+ * arrays, which for paragraphs only mirror the first line (rep IS
+ * members[0]). This variant walks `run.paragraphLineSlots` instead,
+ * runs the same LCS machinery per slot, and keeps every line's original
+ * font when the slot has sub-run data.
+ *
+ * Bails (returns null) when:
+ *   - the run isn't a paragraph (let `planPartialEdit` handle it)
+ *   - the paragraph has no slot data (legacy paragraph rebuilt by an
+ *     overlay-path edit; let the overlay path handle it again)
+ *   - the user typed Enter or deleted a newline (line count changed -
+ *     splitting / merging slots needs PDFium ops the slot model doesn't
+ *     express yet)
+ *   - any slot's per-line plan fails (mixed-survival sub-runs, etc.) -
+ *     the caller falls back to overlay so we never half-apply
+ */
+export interface ParagraphEditPlan {
+  /** Per-slot per-line plan, parallel to `run.paragraphLineSlots`. */
+  perSlot: Array<{ slotIdx: number; plan: PartialEditPlan; nextLine: string }>;
+  /** Snapshot of the rep's slots for revert. */
+  prevSlots: ParagraphLineSlot[];
+}
+
+export function planParagraphEdit(
+  run: TextRun,
+  prevText: string,
+  nextText: string,
+): ParagraphEditPlan | null {
+  if (run.paragraphLineSlots.length < 2) return null;
+  if (prevText === nextText) return null;
+  // Line-count guard: typing Enter or deleting a newline changes the
+  // slot count. Bail to overlay for those edits.
+  const prevLines = prevText.split("\n");
+  const nextLines = nextText.split("\n");
+  if (prevLines.length !== nextLines.length) return null;
+  if (prevLines.length !== run.paragraphLineSlots.length) return null;
+
+  const perSlot: Array<{
+    slotIdx: number;
+    plan: PartialEditPlan;
+    nextLine: string;
+  }> = [];
+
+  for (let i = 0; i < run.paragraphLineSlots.length; i++) {
+    const slot = run.paragraphLineSlots[i];
+    const prevLine = prevLines[i];
+    const nextLine = nextLines[i];
+    if (prevLine === nextLine) continue;
+    // Slots without sub-run data can't be partially edited - they're
+    // single-PDFium-object lines. We could route them through SetText
+    // directly, but bailing keeps the implementation small and the
+    // overlay path handles the whole paragraph atomically.
+    if (slot.mergedFromPtrs.length === 0) return null;
+
+    // Build a synthetic mini-TextRun view of the slot so the existing
+    // planPartialEdit / applyPartialEditPlan code can operate on it.
+    const slotView = makeSlotView(run, slot, prevLine);
+    const plan = planPartialEdit(slotView, prevLine, nextLine);
+    if (!plan) return null;
+    perSlot.push({ slotIdx: i, plan, nextLine });
+  }
+
+  if (perSlot.length === 0) return null;
+
+  return {
+    perSlot,
+    prevSlots: run.paragraphLineSlots.map((s) => cloneSlot(s)),
+  };
+}
+
+export interface ParagraphEditApplyResult {
+  newSlots: ParagraphLineSlot[];
+  insertedPtrs: number[];
+  newBoundsX: number;
+  newBoundsWidth: number;
+}
+
+export function applyParagraphEditPlan(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  paraPlan: ParagraphEditPlan,
+  nextText: string,
+): ParagraphEditApplyResult {
+  const lines = nextText.split("\n");
+  const newSlots: ParagraphLineSlot[] = run.paragraphLineSlots.map((s) =>
+    cloneSlot(s),
+  );
+  const planBySlot = new Map<number, { plan: PartialEditPlan }>();
+  for (const entry of paraPlan.perSlot) {
+    planBySlot.set(entry.slotIdx, { plan: entry.plan });
+  }
+
+  const allInsertedPtrs: number[] = [];
+  let minX = Infinity;
+  let maxRight = -Infinity;
+
+  for (let i = 0; i < newSlots.length; i++) {
+    const slot = newSlots[i];
+    const lineText = lines[i] ?? "";
+    const planEntry = planBySlot.get(i);
+    if (!planEntry) {
+      // Unchanged line - keep slot data, just update bounds tracking.
+      if (slot.mergedFromBounds.length > 0) {
+        const first = slot.mergedFromBounds[0];
+        const last = slot.mergedFromBounds[slot.mergedFromBounds.length - 1];
+        if (first.x < minX) minX = first.x;
+        if (last.right > maxRight) maxRight = last.right;
+      }
+      continue;
+    }
+
+    // Run the existing applyPartialEditPlan against the slot, emitting
+    // at the slot's own baseline and starting from the slot's left x.
+    const slotView = makeSlotView(run, slot, "");
+    const result = applyPartialEditPlan(
+      doc,
+      page,
+      slotView,
+      planEntry.plan,
+      slot.baselineY,
+      slot.mergedFromBounds[0]?.x ?? slot.matrixE,
+    );
+    slot.mergedFromPtrs = result.newMergedFromPtrs;
+    slot.mergedFromTexts = result.newMergedFromTexts;
+    slot.mergedFromBounds = result.newMergedFromBounds;
+    slot.mergedFromCharStarts = result.newMergedFromCharStarts;
+    allInsertedPtrs.push(...result.insertedPtrs);
+    if (result.newBoundsX < minX) minX = result.newBoundsX;
+    if (result.newBoundsX + result.newBoundsWidth > maxRight) {
+      maxRight = result.newBoundsX + result.newBoundsWidth;
+    }
+    // Update slot's char range against the new line text.
+    slot.endChar = slot.startChar + lineText.length;
+  }
+
+  // Fix up startChar/endChar across all slots so each slot's range
+  // reflects the new joined text (line lengths may have changed even on
+  // slots we didn't touch via planPartialEdit if their text content
+  // shifted - they're identical here, but the running cursor moves).
+  let cursor = 0;
+  for (let i = 0; i < newSlots.length; i++) {
+    const lineLen = (lines[i] ?? "").length;
+    newSlots[i].startChar = cursor;
+    newSlots[i].endChar = cursor + lineLen;
+    cursor += lineLen + (i < newSlots.length - 1 ? 1 : 0);
+  }
+
+  // Re-flatten leaf ptrs from the updated slots so EditTextCommand's
+  // removal pass can find every original sub-object next time.
+  const leafPtrs: number[] = [];
+  const leafContainers: number[] = [];
+  for (const s of newSlots) {
+    for (const p of s.mergedFromPtrs) {
+      leafPtrs.push(p);
+      leafContainers.push(s.containerPtr);
+    }
+  }
+  run.paragraphLeafPtrs = leafPtrs;
+  run.paragraphLeafContainers = leafContainers;
+
+  return {
+    newSlots,
+    insertedPtrs: allInsertedPtrs,
+    newBoundsX: isFinite(minX) ? minX : run.bounds.x,
+    newBoundsWidth: isFinite(maxRight)
+      ? maxRight - (isFinite(minX) ? minX : run.bounds.x)
+      : run.bounds.width,
+  };
+}
+
+/**
+ * Build a synthetic TextRun "view" of a paragraph slot so the existing
+ * planPartialEdit / applyPartialEditPlan can operate on it. Only the
+ * fields those functions read are populated; everything else stays at
+ * the run's value (most importantly `fill` for emit color).
+ */
+function makeSlotView(
+  run: TextRun,
+  slot: ParagraphLineSlot,
+  text: string,
+): TextRun {
+  return {
+    ...run,
+    text,
+    fontId: slot.fontId,
+    fontSize: slot.fontSize,
+    fontSubset: slot.fontSubset,
+    containerPtr: slot.containerPtr,
+    matrix: { ...run.matrix, e: slot.matrixE, f: slot.baselineY },
+    bounds: {
+      x: slot.mergedFromBounds[0]?.x ?? slot.matrixE,
+      y: run.bounds.y,
+      width:
+        (slot.mergedFromBounds[slot.mergedFromBounds.length - 1]?.right ??
+          slot.matrixE) - (slot.mergedFromBounds[0]?.x ?? slot.matrixE),
+      height: slot.fontSize * 1.2,
+    },
+    mergedFromPtrs: slot.mergedFromPtrs,
+    mergedFromTexts: slot.mergedFromTexts,
+    mergedFromBounds: slot.mergedFromBounds,
+    mergedFromCharStarts: slot.mergedFromCharStarts,
+  } as TextRun;
+}
+
+function cloneSlot(s: ParagraphLineSlot): ParagraphLineSlot {
+  return {
+    startChar: s.startChar,
+    endChar: s.endChar,
+    baselineY: s.baselineY,
+    matrixE: s.matrixE,
+    containerPtr: s.containerPtr,
+    fontId: s.fontId,
+    fontSize: s.fontSize,
+    fontSubset: s.fontSubset,
+    mergedFromPtrs: [...s.mergedFromPtrs],
+    mergedFromTexts: [...s.mergedFromTexts],
+    mergedFromBounds: s.mergedFromBounds.map((b) => ({ ...b })),
+    mergedFromCharStarts: [...s.mergedFromCharStarts],
   };
 }

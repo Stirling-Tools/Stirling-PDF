@@ -35,6 +35,9 @@ export function sampleBackground(
 ): SampleResult {
   const fallback: RGBA = { r: 255, g: 255, b: 255, a: 255 };
   try {
+    // Render path reads the content stream - flush any deferred edits
+    // so the sample reflects what the user actually sees.
+    page.flushGenerate(m);
     const left = Math.max(0, bounds.x - MARGIN_POINTS);
     const right = Math.min(page.width, bounds.x + bounds.width + MARGIN_POINTS);
     const top = Math.min(page.height, bounds.y + bounds.height + MARGIN_POINTS);

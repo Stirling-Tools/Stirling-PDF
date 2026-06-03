@@ -208,6 +208,7 @@ export function PageStage() {
                   document={store.document}
                   page={page}
                   scale={state.renderScale || DEFAULT_SCALE}
+                  widthMode={state.widthMode}
                   selectedRunIds={selection.runIds}
                   selectedImageIds={selection.imageIds}
                   highlightedRunId={highlightedRunId}

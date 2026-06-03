@@ -36,7 +36,6 @@ const SHORTCUTS: Array<{ heading: string; items: Array<[string, string]> }> = [
     heading: "Document",
     items: [
       ["Ctrl+S", "Download edited PDF"],
-      ["Ctrl+P", "Print"],
       ["?", "This help"],
     ],
   },

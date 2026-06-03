@@ -11,10 +11,7 @@ import { useWorkbenchPin } from "@app/tools/pdfTextEditor/v2/hooks/useWorkbenchP
 import { useUnsavedChangesGuard } from "@app/tools/pdfTextEditor/v2/hooks/useUnsavedChangesGuard";
 import { useEditorTestGlobal } from "@app/tools/pdfTextEditor/v2/hooks/useEditorTestGlobal";
 import { useSelectionActions } from "@app/tools/pdfTextEditor/v2/hooks/useSelectionActions";
-import {
-  rotateVisiblePage,
-  useEditorKeyboardShortcuts,
-} from "@app/tools/pdfTextEditor/v2/hooks/useEditorKeyboardShortcuts";
+import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/v2/hooks/useEditorKeyboardShortcuts";
 import { FindBar } from "@app/tools/pdfTextEditor/v2/components/FindBar";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/v2/components/HelpOverlay";
 import { EditorTopBar } from "@app/tools/pdfTextEditor/v2/components/EditorTopBar";
@@ -25,10 +22,7 @@ import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
-import {
-  exportToBlob,
-  printDocument,
-} from "@app/tools/pdfTextEditor/v2/util/exportPdf";
+import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -67,11 +61,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     if (!store.document) return;
     const { blob, filename } = exportToBlob(store.document);
     downloadBlob(blob, filename);
-  }, [store]);
-
-  const handlePrint = useCallback(() => {
-    if (!store.document) return;
-    printDocument(store.document, downloadBlob);
   }, [store]);
 
   const handleSaveToWorkbench = useCallback(async () => {
@@ -190,7 +179,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     onUndo: useCallback(() => store.undo(), [store]),
     onRedo: useCallback(() => store.redo(), [store]),
     onSave: handleSave,
-    onPrint: handlePrint,
     onDelete: sel.deleteSelection,
     onDuplicate: sel.duplicateFirstSelected,
     onSelectAll: useCallback(() => {
@@ -245,6 +233,8 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
             .find((r) => r.id === id);
           return !!run && (run.paragraphLineCount ?? 0) > 1;
         })()}
+        widthMode={state.widthMode}
+        onSetWidthMode={(m) => store.setWidthMode(m)}
         onToggleAddText={() =>
           store.setMode(state.mode === "addText" ? "select" : "addText")
         }
@@ -255,12 +245,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
             ) as HTMLInputElement | null
           )?.click()
         }
-        onRotate={(delta) => rotateVisiblePage(store, delta)}
         onGroup={handleMergeSelection}
         onUngroup={handleUngroupSelection}
         onReset={() => store.resetAll()}
         onSaveToWorkbench={handleSaveToWorkbench}
-        onPrint={handlePrint}
         onSave={handleSave}
         onShowHelp={() => setHelpOpen(true)}
       />
@@ -295,7 +283,11 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         />
       )}
       <HelpOverlay opened={helpOpen} onClose={() => setHelpOpen(false)} />
-      <EditorSidebar state={state} selection={selection} />
+      <EditorSidebar
+        state={state}
+        selection={selection}
+        onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
+      />
     </Stack>
   );
 }

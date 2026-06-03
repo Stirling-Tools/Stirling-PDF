@@ -81,7 +81,7 @@ export class DuplicateRunCommand implements Command {
     });
     page.setRuns([...page.runs, clone]);
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
     this.createdRunId = id;
     this.createdObjPtr = newPtr;
   }
@@ -92,6 +92,6 @@ export class DuplicateRunCommand implements Command {
     doc.module.FPDFPage_RemoveObject(page.pagePtr, this.createdObjPtr);
     page.setRuns(page.runs.filter((r) => r.id !== this.createdRunId));
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }

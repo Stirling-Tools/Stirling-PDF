@@ -31,6 +31,14 @@ export class MergeRunsCommand implements Command {
   private readonly pageIndex: number;
   private readonly runIds: string[];
   private removedRunSnapshots: RunSnapshot[] = [];
+  // The TextRun instances we removed from page.runs at apply time. Kept
+  // in memory so revert can put them back without needing to re-read the
+  // page from PDFium. Order is preserved so the original render order is
+  // restored.
+  private removedRunInstances: TextRun[] = [];
+  // Original `page.runs` order at apply time so revert restores the
+  // ordering callers depend on (z-order, find-bar iteration order).
+  private prevRunOrder: string[] = [];
   private repPrev: RunSnapshot | null = null;
   private repId: string | null = null;
 
@@ -57,6 +65,8 @@ export class MergeRunsCommand implements Command {
     this.repId = rep.id;
     this.repPrev = snapshotRun(rep);
     this.removedRunSnapshots = members.map(snapshotRun);
+    this.removedRunInstances = members;
+    this.prevRunOrder = page.runs.map((r) => r.id);
 
     const minX = Math.min(...runs.map((r) => r.bounds.x));
     const maxRight = Math.max(...runs.map((r) => r.bounds.x + r.bounds.width));
@@ -105,6 +115,12 @@ export class MergeRunsCommand implements Command {
 
     const removedIds = new Set(members.map((r) => r.id));
     page.setRuns(page.runs.filter((r) => !removedIds.has(r.id)));
+    // Bump the page revision so the dirty-only resnapshot in EditorStore
+    // republishes this page. MergeRuns mutates only the in-memory run
+    // model (no PDFium edit), so without an explicit markDirty the
+    // revision wouldn't change and the merged overlay would never reach
+    // the React layer.
+    page.markDirty();
   }
 
   revert(doc: EditorDocument): void {
@@ -112,21 +128,33 @@ export class MergeRunsCommand implements Command {
     const page = doc.page(this.pageIndex);
     const rep = page.findRun(this.repId);
     if (rep) restoreRun(rep, this.repPrev);
-    const restored: TextRun[] = [...page.runs];
-    for (const snap of this.removedRunSnapshots) {
-      const orphan = doc
-        .loadedPages()
-        .flatMap((p) => p.runs)
-        .find((r) => r.id === snap.id);
-      if (orphan) continue;
-      // The original TextRun objects were dropped from the page; the
-      // user can re-read the page to restore them. For undo to work
-      // without a re-read we'd have to keep references, which we don't.
-      // In practice undo right after merge is the common path and the
-      // model still holds the originals when no other command ran in
-      // between (page.findRun checked above).
+
+    // Re-attach the member TextRun instances we held aside at apply
+    // time. Rebuild page.runs in the original order; any runs that
+    // appeared on the page from unrelated work since the merge keep
+    // their relative position at the tail.
+    const byId = new Map<string, TextRun>();
+    for (const r of page.runs) byId.set(r.id, r);
+    for (const r of this.removedRunInstances) {
+      if (!byId.has(r.id)) byId.set(r.id, r);
     }
-    page.setRuns(restored);
+    const ordered: TextRun[] = [];
+    const seen = new Set<string>();
+    for (const id of this.prevRunOrder) {
+      const r = byId.get(id);
+      if (r) {
+        ordered.push(r);
+        seen.add(id);
+      }
+    }
+    for (const r of page.runs) {
+      if (!seen.has(r.id)) {
+        ordered.push(r);
+        seen.add(r.id);
+      }
+    }
+    page.setRuns(ordered);
+    page.markDirty();
   }
 
   describe(): string {

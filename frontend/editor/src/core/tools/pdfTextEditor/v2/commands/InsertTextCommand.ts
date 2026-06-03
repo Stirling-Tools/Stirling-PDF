@@ -83,7 +83,7 @@ export class InsertTextCommand implements Command {
     });
     page.setRuns([...page.runs, run]);
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
 
     this.createdRunId = runId;
     this.createdObjPtr = objPtr;
@@ -97,6 +97,6 @@ export class InsertTextCommand implements Command {
       page.setRuns(page.runs.filter((r) => r.id !== this.createdRunId));
     }
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }

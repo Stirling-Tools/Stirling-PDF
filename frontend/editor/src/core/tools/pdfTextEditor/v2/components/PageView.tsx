@@ -14,6 +14,7 @@ interface PageViewProps {
   /** Fires when the page's bitmap finishes its first render. */
   onFirstRendered?: (pageIndex: number) => void;
   scale: number;
+  widthMode: import("@app/tools/pdfTextEditor/v2/types").WidthMode;
   selectedRunIds: string[];
   selectedImageIds: string[];
   /** Run id currently highlighted by the find-bar (yellow). */
@@ -49,6 +50,7 @@ export function PageView({
   document,
   page,
   scale,
+  widthMode,
   selectedRunIds,
   selectedImageIds,
   highlightedRunId,
@@ -286,6 +288,7 @@ export function PageView({
             run={run}
             pageHeight={page.height}
             scale={scale}
+            widthMode={widthMode}
             selected={selectedRunIds.includes(run.id)}
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}

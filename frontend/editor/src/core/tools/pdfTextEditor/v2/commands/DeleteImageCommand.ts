@@ -56,7 +56,7 @@ export class DeleteImageCommand implements Command {
     }
     page.setImages(page.images.filter((i) => i.id !== img.id));
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
@@ -122,6 +122,6 @@ export class DeleteImageCommand implements Command {
     }
     page.setImages(images);
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }

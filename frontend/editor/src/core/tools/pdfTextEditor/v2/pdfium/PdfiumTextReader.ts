@@ -5,7 +5,12 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { LineGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
-import type { Affine, PageRect, RGBA } from "@app/tools/pdfTextEditor/v2/types";
+import type {
+  Affine,
+  GroupingMode,
+  PageRect,
+  RGBA,
+} from "@app/tools/pdfTextEditor/v2/types";
 import { readUtf16 } from "@app/services/pdfiumService";
 
 /**
@@ -30,9 +35,17 @@ const FPDF_PAGEOBJ_FORM = 5;
  * into the `Page`.
  */
 export class PdfiumTextReader {
-  static populate(doc: EditorDocument, page: Page): void {
+  static populate(
+    doc: EditorDocument,
+    page: Page,
+    mode: GroupingMode = "auto",
+  ): void {
     if (page.loaded) return;
     const m = doc.module;
+    // FPDFText_LoadPage / FPDFTextObj_GetText read the content stream.
+    // Flush any deferred mutations so the populated runs reflect the
+    // current edit state.
+    page.flushGenerate(m);
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);
 
@@ -41,13 +54,18 @@ export class PdfiumTextReader {
 
     // Recurse into form xobjects: InDesign/Quark wrap content in
     // FPDF_PAGEOBJ_FORM containers and the real text/images only show
-    // up when we descend with FPDFFormObj_GetObject.
-    walkObjects(m, pagePtr, count, runs, images, doc, page, [], 0);
+    // up when we descend with FPDFFormObj_GetObject. The identity
+    // transform accumulates each form's matrix so nested objects'
+    // form-local bounds are lifted into page space.
+    walkObjects(m, pagePtr, count, runs, images, doc, page, [], 0, IDENTITY);
 
     page.setRuns(runs);
     page.setImages(images);
+    // LineGrouper always runs (merges per-glyph/per-word source objects
+    // into one line). ParagraphGrouper only runs in "auto" mode, where
+    // vertically-adjacent equal-spaced lines fold into one paragraph.
     LineGrouper.apply(page);
-    ParagraphGrouper.apply(page);
+    if (mode === "auto") ParagraphGrouper.apply(page);
     page.loaded = true;
   }
 }
@@ -74,6 +92,7 @@ function walkObjects(
   page: Page,
   path: number[],
   depth: number,
+  transform: Affine,
 ): void {
   const MAX_DEPTH = 4;
   const formModule = m as PdfiumWithForms;
@@ -92,7 +111,7 @@ function walkObjects(
     const type = m.FPDFPageObj_GetType(objPtr);
     if (type === FPDF_PAGEOBJ_TEXT) {
       const indexId = [...path, i].join("-");
-      const run = readTextRun(m, doc, page, objPtr, indexId);
+      const run = readTextRun(m, doc, page, objPtr, indexId, transform);
       if (run) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
@@ -100,7 +119,7 @@ function walkObjects(
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
       const indexId = [...path, i].join("-");
-      const img = readImage(m, page, objPtr, indexId);
+      const img = readImage(m, page, objPtr, indexId, transform);
       if (img) images.push(img);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
       let formCount: number;
@@ -110,6 +129,9 @@ function walkObjects(
         formCount = 0;
       }
       if (formCount > 0) {
+        // Compose the form's own matrix onto the running transform so
+        // children's form-local coordinates resolve to page space.
+        const childTransform = composeAffine(transform, readMatrix(m, objPtr));
         walkObjects(
           m,
           pagePtr,
@@ -120,10 +142,62 @@ function walkObjects(
           page,
           [...path, i],
           depth + 1,
+          childTransform,
         );
       }
     }
   }
+}
+
+/** Identity affine - the page-level transform. */
+const IDENTITY: Affine = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+
+/**
+ * Compose two affines: returns `parent ∘ child` (child applied first,
+ * then parent). PDF matrices map (x,y) -> (a·x + c·y + e, b·x + d·y + f).
+ */
+function composeAffine(parent: Affine, child: Affine): Affine {
+  return {
+    a: parent.a * child.a + parent.c * child.b,
+    b: parent.b * child.a + parent.d * child.b,
+    c: parent.a * child.c + parent.c * child.d,
+    d: parent.b * child.c + parent.d * child.d,
+    e: parent.a * child.e + parent.c * child.f + parent.e,
+    f: parent.b * child.e + parent.d * child.f + parent.f,
+  };
+}
+
+/** Map a point through an affine. */
+function applyAffine(t: Affine, x: number, y: number): { x: number; y: number } {
+  return { x: t.a * x + t.c * y + t.e, y: t.b * x + t.d * y + t.f };
+}
+
+/**
+ * Transform an axis-aligned rect by an affine and return the new AABB
+ * (all four corners mapped, then min/max).
+ */
+function transformRect(t: Affine, r: PageRect): PageRect {
+  const c0 = applyAffine(t, r.x, r.y);
+  const c1 = applyAffine(t, r.x + r.width, r.y);
+  const c2 = applyAffine(t, r.x, r.y + r.height);
+  const c3 = applyAffine(t, r.x + r.width, r.y + r.height);
+  const xs = [c0.x, c1.x, c2.x, c3.x];
+  const ys = [c0.y, c1.y, c2.y, c3.y];
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(...xs) - minX,
+    height: Math.max(...ys) - minY,
+  };
+}
+
+/** True when the affine is (close to) the identity - skip work if so. */
+function isIdentity(t: Affine): boolean {
+  return (
+    t.a === 1 && t.b === 0 && t.c === 0 && t.d === 1 && t.e === 0 && t.f === 0
+  );
 }
 
 /**
@@ -253,16 +327,23 @@ function readTextRun(
   page: Page,
   objPtr: number,
   index: number | string,
+  transform: Affine,
 ): TextRun | null {
   const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
   try {
     const text = readTextObjString(m, textPagePtr, objPtr);
     if (!text || text.length === 0) return null;
 
-    const bounds = readBounds(m, objPtr);
-    if (!bounds) return null;
-    const matrix = readMatrix(m, objPtr);
+    const localBounds = readBounds(m, objPtr);
+    if (!localBounds) return null;
+    const localMatrix = readMatrix(m, objPtr);
     const fill = readFill(m, objPtr);
+
+    // Lift form-local coordinates into page space. For page-level text
+    // `transform` is identity and these are no-ops.
+    const ident = isIdentity(transform);
+    const bounds = ident ? localBounds : transformRect(transform, localBounds);
+    const matrix = ident ? localMatrix : composeAffine(transform, localMatrix);
 
     const sizePtr = m.pdfium.wasmExports.malloc(4);
     let rawFontSize = 12;
@@ -275,7 +356,9 @@ function readTextRun(
     }
     // The on-page visible font size is `rawFontSize * |matrix scale|`. PDFium
     // encodes the size split between a unit font and a scaling matrix; users
-    // think in points, so we expose the product as the run's fontSize.
+    // think in points, so we expose the product as the run's fontSize. Use
+    // the PAGE-space (composed) matrix so a form's own scale is included -
+    // otherwise a form-nested label reports its unscaled font size.
     const matrixScale =
       Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b) || 1;
     const fontSize = rawFontSize * matrixScale;
@@ -307,15 +390,17 @@ function readImage(
   page: Page,
   objPtr: number,
   index: number | string,
+  transform: Affine,
 ): ImageObject | null {
-  const bounds = readBounds(m, objPtr);
-  if (!bounds) return null;
-  const matrix = readMatrix(m, objPtr);
+  const localBounds = readBounds(m, objPtr);
+  if (!localBounds) return null;
+  const localMatrix = readMatrix(m, objPtr);
+  const ident = isIdentity(transform);
   return new ImageObject({
     id: `p${page.index}-i${index}`,
     pageIndex: page.index,
     pdfiumObjPtr: objPtr,
-    bounds,
-    matrix,
+    bounds: ident ? localBounds : transformRect(transform, localBounds),
+    matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
   });
 }

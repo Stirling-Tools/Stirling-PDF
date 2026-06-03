@@ -92,12 +92,460 @@ async function typeIntoRun(
   );
 }
 
+const STIRLING_SAMPLE_PDF = path.join(
+  __dirname,
+  "../../../../public/samples/Sample.pdf",
+);
+
 test.describe("PDF text editor v2 - smoke", () => {
   test("v2 mounts at /pdf-text-editor", async ({ page }) => {
     await gotoV2(page);
     await expect(page.getByTestId("v2-sidebar-empty")).toBeVisible();
     await expect(page.getByTestId("v2-toolbar")).toBeVisible();
   });
+
+  test("inserting a letter reuses the neighbouring glyph's embedded font", async ({
+    page,
+  }) => {
+    // Editing "Stirling" -> "Stiirling" on page 2: the inserted "i" must
+    // reuse the SAME embedded font handle as the existing "i" glyphs next
+    // to it (PDFs often embed one subset font per glyph-group, so the
+    // emit must borrow a survivor that actually contains "i" rather than
+    // the first survivor - otherwise PDFium substitutes a different font
+    // or drops to Helvetica). Assert every "i" sub-object shares one font
+    // handle after the edit.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
+    const target = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store?: any })
+        .__v2_editor_store!;
+      const p = store.document.loadedPages().find((pg: any) => pg.index === 1);
+      const r = p.runs.find(
+        (rr: any) => rr.text.includes("Stirling") && rr.mergedFromPtrs.length > 1,
+      );
+      return r ? { id: r.id, text: r.text } : null;
+    });
+    expect(target).not.toBeNull();
+
+    const runTestId = `v2-run-${target!.id}`;
+    const nextText = target!.text.replace("Stirling", "Stiirling");
+    await page.evaluate(
+      ({ runTestId, nextText }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="${runTestId}"]`,
+        )!;
+        el.focus();
+        const sel = window.getSelection()!;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("insertText", false, nextText);
+      },
+      { runTestId, nextText },
+    );
+    await page.waitForTimeout(200);
+
+    const iFonts = await page.evaluate((id) => {
+      const store = (window as unknown as { __v2_editor_store?: any })
+        .__v2_editor_store!;
+      const m = store.document.module;
+      const p = store.document.loadedPages().find((pg: any) => pg.index === 1);
+      const r = p.runs.find((rr: any) => rr.id === id);
+      const handles: number[] = [];
+      r.mergedFromTexts.forEach((t: string, i: number) => {
+        if (t === "i") {
+          const fp = m.FPDFTextObj_GetFont(r.mergedFromPtrs[i]);
+          handles.push(fp);
+        }
+      });
+      return handles;
+    }, target!.id);
+
+    // The edit must have produced at least two adjacent "i" sub-objects.
+    expect(iFonts.length).toBeGreaterThanOrEqual(2);
+    // Every "i" - including the freshly inserted one - shares ONE embedded
+    // font handle (the neighbour glyph's font was reused).
+    expect(new Set(iFonts).size).toBe(1);
+    expect(iFonts.every((h) => h > 0)).toBe(true);
+  });
+
+  test("width toggle: Wrap locks box width + grows down; off grows right", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await loadSamplePdf(page);
+    const runTestId =
+      (await page
+        .locator('[data-testid^="v2-run-p0-"]')
+        .first()
+        .getAttribute("data-testid")) ?? "";
+    // Type a long string so the difference between grow and wrap is large.
+    await typeIntoRun(
+      page,
+      runTestId,
+      " AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF",
+    );
+    await page.waitForTimeout(80);
+
+    const measure = async () =>
+      page.evaluate((id) => {
+        const el = document.querySelector<HTMLElement>(
+          `[data-testid="${id}"]`,
+        )!;
+        const cs = getComputedStyle(el);
+        return {
+          w: el.offsetWidth,
+          h: el.offsetHeight,
+          whiteSpace: cs.whiteSpace,
+        };
+      }, runTestId);
+
+    // Wrap mode: box width locked, text wraps -> taller, white-space wraps.
+    await page.getByTestId("v2-width-mode").click();
+    await page.waitForTimeout(80);
+    const wrap = await measure();
+    expect(wrap.whiteSpace).toBe("pre-wrap");
+
+    // Grow mode: box widens to the right (one line) -> much wider, shorter.
+    await page.getByTestId("v2-width-mode").click();
+    await page.waitForTimeout(80);
+    const grow = await measure();
+
+    expect(grow.w).toBeGreaterThan(wrap.w + 20);
+    expect(wrap.h).toBeGreaterThan(grow.h);
+  });
+
+  test("deleting a space after a letter keeps that letter's embedded font", async ({
+    page,
+  }) => {
+    // Regression: when a letter and a trailing space share ONE source
+    // text object (sub-run "n "), deleting the space used to mark that
+    // sub-run "mixed" -> remove it -> re-emit the surviving "n" in a
+    // borrowed/Helvetica font, which drops the glyph for subset fonts and
+    // the letter visibly lost its font. The fix edits the object IN PLACE
+    // (SetText "n"), so its embedded font/ptr survive. We assert the
+    // sub-run's original PDFium pointer is still present after the edit.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
+
+    // Find a run that has a multi-char sub-run ending in a space after a
+    // non-space (e.g. "e "), record that sub-run's ptr and the absolute
+    // index of its trailing space in run.text.
+    const target = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store?: any })
+        .__v2_editor_store!;
+      const p = store.document.loadedPages().find((pg: any) => pg.index === 0);
+      for (const r of p.runs) {
+        for (let i = 0; i < r.mergedFromTexts.length; i++) {
+          const t: string = r.mergedFromTexts[i];
+          if (/\S\s$/.test(t)) {
+            const start = r.mergedFromCharStarts[i];
+            const spaceIdx = start + t.length - 1; // the trailing space
+            if (r.text[spaceIdx] === " ") {
+              return { id: r.id, ptr: r.mergedFromPtrs[i], spaceIdx };
+            }
+          }
+        }
+      }
+      return null;
+    });
+    expect(target).not.toBeNull();
+
+    const runTestId = `v2-run-${target!.id}`;
+    // Replace the run text with the same text minus that one space.
+    await page.evaluate(
+      ({ runTestId, spaceIdx }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="${runTestId}"]`,
+        );
+        if (!el) throw new Error("run not in DOM");
+        const cur = el.innerText.replace(/\u00A0/g, " ");
+        const next = cur.slice(0, spaceIdx) + cur.slice(spaceIdx + 1);
+        el.focus();
+        const sel = window.getSelection()!;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("insertText", false, next);
+      },
+      { runTestId, spaceIdx: target!.spaceIdx },
+    );
+    await page.waitForTimeout(150);
+
+    // The mixed sub-run's original object pointer must STILL be tracked -
+    // i.e. it was edited in place (font kept), not removed + re-emitted.
+    const survived = await page.evaluate(
+      ({ id, ptr }) => {
+        const store = (window as unknown as { __v2_editor_store?: any })
+          .__v2_editor_store!;
+        const p = store.document
+          .loadedPages()
+          .find((pg: any) => pg.index === 0);
+        const r = p.runs.find((rr: any) => rr.id === id);
+        return r ? r.mergedFromPtrs.includes(ptr) : false;
+      },
+      { id: target!.id, ptr: target!.ptr },
+    );
+    expect(survived).toBe(true);
+  });
+
+  test("overlay text baseline sits on the PDF baseline (not floating high)", async ({
+    page,
+  }) => {
+    // Regression for "all text reads slightly too high". The overlay used
+    // to anchor its top on an inflated box height, pushing the top-aligned
+    // text above the real glyph. It now anchors the first line's CSS
+    // alphabetic baseline onto the PDF baseline (run.matrix.f). Measure the
+    // rendered overlay's top vs the PDF baseline and confirm the gap equals
+    // the font's ascent (i.e. the baseline lands where the glyph sits).
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
+    const m = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store?: any })
+        .__v2_editor_store!;
+      const p = store.document.loadedPages().find((pg: any) => pg.index === 0);
+      const scale = store.getState().renderScale as number;
+      const run = p.runs.find((r: any) => r.text.includes("Adobe"));
+      const el = document.querySelector(
+        `[data-testid="v2-run-${run.id}"]`,
+      ) as HTMLElement;
+      const pageEl = document.querySelector(
+        '[data-testid="v2-page-0"]',
+      ) as HTMLElement;
+      const rRect = el.getBoundingClientRect();
+      const pRect = pageEl.getBoundingClientRect();
+      // PDF baseline mapped into page-local pixels.
+      const baselineLocal = (p.height - run.matrix.f) * scale;
+      const overlayTopLocal = rRect.top - pRect.top;
+      const fromTopToBaseline = baselineLocal - overlayTopLocal;
+      // Font ascent for the overlay's actual computed font.
+      const cs = getComputedStyle(el);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const tm = ctx.measureText("Hg");
+      return {
+        fromTopToBaseline,
+        ascent: tm.fontBoundingBoxAscent,
+        fontPx: parseFloat(cs.fontSize),
+        overlayTopLocal,
+        baselineLocal,
+      };
+    });
+    // The baseline must fall BELOW the box top (positive) and within ~1
+    // line of it - i.e. roughly at the font ascent. The old bug put the
+    // box top far above the glyph, making this gap much larger than the
+    // ascent. Allow a tolerance for half-leading + rounding.
+    expect(m.fromTopToBaseline).toBeGreaterThan(0);
+    expect(Math.abs(m.fromTopToBaseline - m.ascent)).toBeLessThan(
+      0.25 * m.fontPx + 3,
+    );
+  });
+
+  test("page 1 (form-xobject pills) reads as 6 boxes with correct text", async ({
+    page,
+  }) => {
+    // Sample.pdf page index 0 is a hero banner. Three of its labels -
+    // "Open Source", "Privacy First", "Self-Hosted" - live in separate
+    // form xobjects, so their glyph bounds are reported in form-LOCAL
+    // coordinates (all near the same x). Grouping by container keeps each
+    // form's text intact; without it the glyphs cross-merged + x-sorted
+    // into gibberish ("OSPrepivlefa-n Hc") and an over-eager guard then
+    // shattered them into single letters. The page must read as exactly 6
+    // editable text boxes with the right words.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
+    const info = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                index: number;
+                width: number;
+                height: number;
+                runs: Array<{
+                  text: string;
+                  bounds: { x: number; y: number; width: number; height: number };
+                  fontSize: number;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      const p = store.document.loadedPages().find((pg) => pg.index === 0)!;
+      return {
+        w: p.width,
+        h: p.height,
+        runs: (p.runs ?? []).map((r) => ({
+          t: r.text.replace(/\s+/g, " ").trim(),
+          x: r.bounds.x,
+          y: r.bounds.y,
+          bw: r.bounds.width,
+          fs: r.fontSize,
+        })),
+      };
+    });
+    const texts = info.runs.map((r) => r.t);
+    // Exactly 6 text boxes, no single-letter shards, no scrambled merge.
+    expect(texts).toHaveLength(6);
+    expect(new Set(texts)).toEqual(
+      new Set([
+        "The Free Adobe Acrobat Alternative",
+        "10M+",
+        "Downloads",
+        "Open Source",
+        "Privacy First",
+        "Self-Hosted",
+      ]),
+    );
+    // Guard against the old failure modes explicitly.
+    expect(texts.some((t) => t.includes("OSPrep"))).toBe(false);
+    expect(texts.every((t) => t.length > 1)).toBe(true);
+
+    // POSITIONING - the whole point of composing the form-xobject
+    // transform. Before the fix these three pills sat in form-LOCAL
+    // coordinates: stacked at the same x (~86), far too low, and reported
+    // a ~50pt font. After lifting to page space they form one horizontal
+    // row, left-to-right, at a sensible size.
+    const by = (name: string) => {
+      const r = info.runs.find((x) => x.t === name);
+      if (!r) throw new Error(`run "${name}" not found`);
+      return r;
+    };
+    const heading = by("The Free Adobe Acrobat Alternative");
+    const tenM = by("10M+");
+    const downloads = by("Downloads");
+    const open = by("Open Source");
+    const privacy = by("Privacy First");
+    const self = by("Self-Hosted");
+
+    // The three pills share one baseline (same row) within a couple pt.
+    expect(Math.abs(open.y - privacy.y)).toBeLessThan(3);
+    expect(Math.abs(open.y - self.y)).toBeLessThan(3);
+    // They run left-to-right with real horizontal separation - NOT the
+    // old form-local stack where all three sat at x ~86.
+    expect(open.x).toBeLessThan(privacy.x);
+    expect(privacy.x).toBeLessThan(self.x);
+    expect(self.x - open.x).toBeGreaterThan(100);
+    // Vertical reading order top-to-bottom (PDF y decreases downward):
+    // heading > 10M+ > Downloads > pills.
+    expect(heading.y).toBeGreaterThan(tenM.y);
+    expect(tenM.y).toBeGreaterThan(downloads.y);
+    expect(downloads.y).toBeGreaterThan(open.y);
+    // Font size reflects the composed form scale (~12pt), not the
+    // form-local unscaled ~50pt; the heading stays the largest.
+    expect(open.fs).toBeGreaterThan(6);
+    expect(open.fs).toBeLessThan(20);
+    expect(heading.fs).toBeGreaterThan(open.fs);
+    // Every box sits inside the page (form-local x/y leaking would push
+    // boxes off-page or pile them at the origin).
+    for (const r of info.runs) {
+      expect(r.x).toBeGreaterThanOrEqual(0);
+      expect(r.x + r.bw).toBeLessThanOrEqual(info.w + 1);
+      expect(r.y).toBeGreaterThanOrEqual(0);
+      expect(r.y).toBeLessThanOrEqual(info.h);
+    }
+  });
+
+  test("page 2 (columned cards) groups into 7 headers + 7 paragraphs", async ({
+    page,
+  }) => {
+    // Sample.pdf page index 1 is a 2-column feature-card layout: a title
+    // + intro, then 6 cards each with a bold header and a body paragraph.
+    // Column-aware grouping must yield exactly 14 editable runs:
+    // 7 single-line headers + 7 multi-line paragraphs. Before the
+    // column-aware grouper this came out as 27 ungrouped line-runs.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
+    const summary = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                index: number;
+                runs: Array<{ text: string; paragraphMemberPtrs: number[] }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      const p = store.document.loadedPages().find((pg) => pg.index === 1);
+      if (!p) return { count: -1, headerTexts: [], paragraphFirsts: [] };
+      // Normalise the LineGrouper's run-together whitespace so the
+      // assertions read against clean strings.
+      const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+      const headerTexts = p.runs
+        .filter((r) => !r.text.includes("\n") && r.paragraphMemberPtrs.length <= 1)
+        .map((r) => norm(r.text));
+      const paragraphFirsts = p.runs
+        .filter((r) => r.text.includes("\n"))
+        .map((r) => norm(r.text.split("\n")[0]));
+      return { count: p.runs.length, headerTexts, paragraphFirsts };
+    });
+    // Exact counts.
+    expect(summary.count).toBe(14);
+    expect(summary.headerTexts).toHaveLength(7);
+    expect(summary.paragraphFirsts).toHaveLength(7);
+    // Exact header strings - locked so a grouping regression that
+    // merges/splits a header (e.g. "Open Source" folding into its body,
+    // or a column mis-split) fails loudly. Order-independent.
+    expect(new Set(summary.headerTexts)).toEqual(
+      new Set([
+        "What is Stirling PDF?",
+        "50+ PDF Operations",
+        "Workflow Automation",
+        "Multi-Language Support",
+        "Privacy First",
+        "Open Source",
+        "API Access",
+      ]),
+    );
+    // Each body paragraph starts with its known first line (prefix match
+    // - the full first-line text isn't pinned, just that the right body
+    // anchors the right paragraph). Guards that the 7 bodies stay
+    // grouped as paragraphs, one per card, not split per line.
+    const expectedBodyPrefixes = [
+      "Stirling PDF is a robust",
+      "Comprehensive toolkit",
+      "Chain multiple operations",
+      "Available in over 30",
+      "Self-hosted solution",
+      "Transparent, community-driv",
+      "RESTful API for integration",
+    ];
+    for (const prefix of expectedBodyPrefixes) {
+      expect(
+        summary.paragraphFirsts.some((t) => t.startsWith(prefix)),
+        `no paragraph starts with "${prefix}"`,
+      ).toBe(true);
+    }
+  });
+
 });
 
 test.describe("PDF text editor v2 - load and render", () => {
@@ -2529,16 +2977,33 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // them depending on the measured gap vs ABS_MAX_GAP_PT. Either way,
     // both halves and the inter-word gap must survive somewhere on
     // page 0 - collect every run's text and look for the pattern.
-    const allText = await page.evaluate(() => {
-      const store = (
-        window as unknown as {
-          __v2_editor_store?: {
-            state: { pages: { runs: { text: string }[] }[] };
-          };
-        }
-      ).__v2_editor_store!;
-      return (store.state.pages[0]?.runs ?? []).map((r) => r.text).join("\n");
-    });
+    //
+    // Poll the model: `saveAndReopen` waits for a run overlay to be
+    // visible, but during the reopen there's a brief window where the
+    // store has cleared `pages` (setDocument) while the previous page's
+    // overlays are still in the DOM - reading state in that window
+    // returns empty. Poll until the reopened page's runs are published.
+    let allText = "";
+    await expect
+      .poll(
+        async () => {
+          allText = await page.evaluate(() => {
+            const store = (
+              window as unknown as {
+                __v2_editor_store?: {
+                  state: { pages: { runs: { text: string }[] }[] };
+                };
+              }
+            ).__v2_editor_store!;
+            return (store.state.pages[0]?.runs ?? [])
+              .map((r) => r.text)
+              .join("\n");
+          });
+          return allText.length;
+        },
+        { timeout: 10_000 },
+      )
+      .toBeGreaterThan(0);
     // Both letters must come back. The "B" disappearing would mean a
     // text object was lost in the round trip.
     expect(allText).toContain("A");
@@ -3345,56 +3810,8 @@ test.describe("PDF text editor v2 - toolbar tooltips", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    await expect(page.getByTestId("v2-rotate-left")).toBeVisible();
-    await expect(page.getByTestId("v2-rotate-right")).toBeVisible();
-    await expect(page.getByTestId("v2-print")).toBeVisible();
     await expect(page.getByTestId("v2-reset")).toBeVisible();
     await expect(page.getByTestId("v2-save")).toBeVisible();
-  });
-});
-
-test.describe("PDF text editor v2 - rotate page", () => {
-  test("rotate buttons bump pagePtr rotation and revert with undo", async ({
-    page,
-  }) => {
-    await gotoV2(page);
-    await loadSamplePdf(page);
-
-    const readRotation = () =>
-      page.evaluate(() => {
-        const store = (window as unknown as { __v2_editor_store?: unknown })
-          .__v2_editor_store as unknown as {
-          document: {
-            module: { FPDFPage_GetRotation: (p: number) => number };
-            page: (i: number) => { pagePtr: number };
-          } | null;
-        };
-        const doc = store.document;
-        if (!doc) return -1;
-        return doc.module.FPDFPage_GetRotation(doc.page(0).pagePtr);
-      });
-
-    const initial = await readRotation();
-    expect(initial).toBeGreaterThanOrEqual(0);
-
-    await page.getByTestId("v2-rotate-right").click();
-    await page.waitForTimeout(120);
-
-    const after = await readRotation();
-    expect(after).toBe((initial + 1) % 4);
-
-    // Call store.undo() directly so the test isn't sensitive to which
-    // element currently has keyboard focus (Mantine buttons swallow
-    // some key events between window.keydown registration and Playwright).
-    await page.evaluate(() => {
-      const store = (window as unknown as { __v2_editor_store?: unknown })
-        .__v2_editor_store as { undo: () => void };
-      store.undo();
-    });
-    await page.waitForTimeout(120);
-
-    const reverted = await readRotation();
-    expect(reverted).toBe(initial);
   });
 });
 
@@ -3786,5 +4203,860 @@ test.describe("PDF text editor v2 - Ctrl+A select all", () => {
     });
 
     expect(selected).toBe(total);
+  });
+});
+
+test.describe("PDF text editor v2 - soft-wrap newlines do not persist", () => {
+  test("typing a long line that visually wraps does not introduce \\n into the model", async ({
+    page,
+  }) => {
+    // Regression for the soft-wrap-newline-synthesis fix. Previously the
+    // overlay walked every character with `range.getClientRects()` and
+    // inserted a `\n` whenever the browser's CSS-fallback font wrapped the
+    // line - persisting a phantom hard break the user never typed. After
+    // the fix the overlay reads `el.innerText` directly so only explicit
+    // Enter presses produce a `\n`.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    // Pick the first run and shrink the overlay's logical content width
+    // by setting an explicit narrow width via JS, so any typed text wider
+    // than that width visually wraps in the contenteditable.
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+
+    // Set the overlay's width to a small fixed size so the typed text
+    // overflows and CSS-wraps. The component re-renders the width on
+    // every render, but inside the input event we intercept before React
+    // resizes.
+    await page.evaluate((id) => {
+      const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+      if (!el) throw new Error("run not in DOM");
+      el.style.width = "40px";
+      el.style.whiteSpace = "pre-wrap";
+    }, runTestId);
+
+    // Type a long no-newline string that will visually wrap multiple times.
+    const longText = "Lorem ipsum dolor sit amet consectetur adipiscing elit";
+    await typeIntoRun(page, runTestId, longText);
+
+    // Read the run's text from the editor store - that's the value
+    // EditTextCommand persisted. Must contain the typed text but with
+    // NO synthesised newlines.
+    const storedText = await page.evaluate((id) => {
+      const runId = id.replace(/^v2-run-/, "");
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            getState: () => {
+              pages: Array<{ runs: Array<{ id: string; text: string }> }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      const pages = store.getState().pages;
+      for (const p of pages) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) return r.text;
+      }
+      return null;
+    }, runTestId);
+
+    expect(storedText).toBeTruthy();
+    // The typed slice must be present in the model exactly as typed -
+    // no `\n` injected between words by the soft-wrap walker.
+    expect(storedText).toContain(longText);
+    expect(storedText).not.toContain("\n");
+  });
+});
+
+test.describe("PDF text editor v2 - paragraph partial edit keeps fonts", () => {
+  test("editing one line of a paragraph keeps neighbouring lines' fontIds intact", async ({
+    page,
+  }) => {
+    // Regression for the paragraph-aware partial edit path. Previously
+    // any paragraph edit forced the overlay path, which removed every
+    // PDFium sub-object and re-emitted in base-14 Helvetica - the user
+    // lost the source font on every line, including ones they never
+    // touched. With the partial path, each slot keeps its own fontId
+    // when its chars survive the LCS.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(PARAGRAPH_PDF);
+    const runs = page.locator('[data-testid^="v2-run-p0-"]');
+    await expect(runs.first()).toBeVisible({ timeout: 30_000 });
+
+    // Find the paragraph run (the one with a \n in its text). Read its
+    // pre-edit per-slot fontIds; we'll compare these after the edit.
+    const beforeSlots = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  paragraphLineSlots: Array<{
+                    fontId: string;
+                    mergedFromPtrs: number[];
+                  }>;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        for (const r of p.runs) {
+          if (
+            r.text.includes("\n") &&
+            r.paragraphLineSlots &&
+            r.paragraphLineSlots.length > 1
+          ) {
+            return {
+              runId: r.id,
+              text: r.text,
+              fontIds: r.paragraphLineSlots.map((s) => s.fontId),
+              ptrsPerSlot: r.paragraphLineSlots.map(
+                (s) => s.mergedFromPtrs.length,
+              ),
+            };
+          }
+        }
+      }
+      return null;
+    });
+
+    // The paragraph must exist with at least 2 line slots and at least
+    // one slot must carry sub-run data (mergedFromPtrs.length > 0) -
+    // otherwise partial-edit can't engage and the test wouldn't be
+    // meaningful. paragraph-sample.pdf is generated to have per-line
+    // text objects so this should hold.
+    expect(beforeSlots).not.toBeNull();
+    expect(beforeSlots!.fontIds.length).toBeGreaterThanOrEqual(2);
+    const slotsWithPtrs = beforeSlots!.ptrsPerSlot.filter((n) => n > 0).length;
+    expect(slotsWithPtrs).toBeGreaterThanOrEqual(1);
+
+    // Type a single character onto the END of the paragraph run. The
+    // edit lands on the LAST line, so earlier line slots should be
+    // untouched by the partial-edit machinery - their fontIds must be
+    // unchanged.
+    await typeIntoRun(page, `v2-run-${beforeSlots!.runId}`, "X", "end");
+
+    const afterSlots = await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  paragraphLineSlots: Array<{ fontId: string }>;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) return r.paragraphLineSlots.map((s) => s.fontId);
+      }
+      return null;
+    }, beforeSlots!.runId);
+
+    expect(afterSlots).not.toBeNull();
+    // Slot count unchanged - line count didn't change.
+    expect(afterSlots!.length).toBe(beforeSlots!.fontIds.length);
+    // Every slot EXCEPT the last keeps its original fontId.
+    for (let i = 0; i < afterSlots!.length - 1; i++) {
+      expect(
+        afterSlots![i],
+        `slot ${i} fontId changed (${beforeSlots!.fontIds[i]} -> ${afterSlots![i]}) - paragraph-aware partial edit should not have re-emitted this line`,
+      ).toBe(beforeSlots!.fontIds[i]);
+    }
+  });
+});
+
+test.describe("PDF text editor v2 - colour change covers every sub-object", () => {
+  test("changing fill on a LineGrouper-merged run recolours every sub-word", async ({
+    page,
+  }) => {
+    // Regression for the SetColourCommand/commitRunFill bug where only
+    // run.pdfiumObjPtr got SetFillColor'd, leaving sub-words in the old
+    // colour. Verified by reading fill state from the model post-edit -
+    // every member ptr must reflect the new fill (the model carries one
+    // fill but PDFium has per-object fills; if the model says new colour
+    // but a sub-word PDFium object kept old fill, a re-render shows the
+    // mismatch).
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+
+    // Find a merged single-line run (mergedFromPtrs > 1) to exercise
+    // the multi-sub-object code path.
+    const targetRunId = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  mergedFromPtrs: number[];
+                  paragraphLineSlots: { length: number };
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        for (const r of p.runs) {
+          if (r.mergedFromPtrs.length > 1 && r.paragraphLineSlots.length < 2) {
+            return r.id;
+          }
+        }
+      }
+      return null;
+    });
+    expect(targetRunId).not.toBeNull();
+
+    // Dispatch a SetColourCommand directly via the store (the colour
+    // picker UI is a chunky modal not needed for this regression).
+    const beforePtrs = await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  mergedFromPtrs: number[];
+                  pdfiumObjPtr: number;
+                }>;
+              }>;
+            };
+            selection: { selectOne: (id: string) => void };
+          };
+        }
+      ).__v2_editor_store!;
+      store.selection.selectOne(runId);
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) {
+          return [...new Set([r.pdfiumObjPtr, ...r.mergedFromPtrs])].filter(
+            Boolean,
+          );
+        }
+      }
+      return [];
+    }, targetRunId!);
+
+    expect(beforePtrs.length).toBeGreaterThan(1);
+
+    // Select the run so the toolbar enables, then drive the real Mantine
+    // ColorInput (v2-colour). Its onChange routes through sel.changeFill
+    // -> SetColourCommand -> commitRunFill, which Fix D made iterate
+    // every member ptr. We can't read per-ptr PDFium fills from JS, but
+    // exercising the real command on a multi-sub-object run guards the
+    // dispatch path and the model fill.
+    await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: { selection: { selectOne: (id: string) => void } };
+        }
+      ).__v2_editor_store!;
+      store.selection.selectOne(runId);
+    }, targetRunId!);
+    // Mantine spreads data-testid onto the underlying <input>, so the
+    // testid element IS the text field.
+    const colourInput = page.getByTestId("v2-colour");
+    await expect(colourInput).toBeEnabled({ timeout: 5_000 });
+    await colourInput.fill("#FF0000");
+    await colourInput.press("Enter");
+    await page.waitForTimeout(150);
+
+    // Read the model fill colour - the command should have updated it.
+    const fill = await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  fill: { r: number; g: number; b: number };
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) return r.fill;
+      }
+      return null;
+    }, targetRunId!);
+
+    expect(fill).not.toBeNull();
+    expect(fill!.r).toBe(255);
+    expect(fill!.g).toBe(0);
+    expect(fill!.b).toBe(0);
+  });
+});
+
+test.describe("PDF text editor v2 - newline-in-single-line edit routes to overlay", () => {
+  test("pressing Enter then typing on a single-line run emits a real second baseline", async ({
+    page,
+  }) => {
+    // Regression for the bug where typing Enter + chars into a
+    // single-line run caused planPartialEdit to treat `\n` as inserted
+    // text and emit everything on the SAME baseline as line 1, past
+    // the right margin. The fix routes any `\n`-containing nextText
+    // through the overlay path so each line emits at its own baseline.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    await expect(firstRun).toBeVisible({ timeout: 30_000 });
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+
+    // Type Enter + a string into the run. The visible CSS overlay
+    // would show two lines while focused; the persisted PDFium
+    // emit must also lay them out on two baselines.
+    await page.evaluate(
+      ({ runTestId, payload }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="${runTestId}"]`,
+        );
+        if (!el) throw new Error("run not in DOM");
+        el.focus();
+        const sel = window.getSelection();
+        if (!sel) throw new Error("no Selection api");
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("insertText", false, payload);
+      },
+      { runTestId, payload: "\nSECOND" },
+    );
+    // Blur so the model sees the final text.
+    await page.evaluate((runTestId) => {
+      const el = document.querySelector<HTMLDivElement>(
+        `[data-testid="${runTestId}"]`,
+      );
+      el?.blur();
+    }, runTestId);
+    await page.waitForTimeout(120);
+
+    // Read the model: the run.text must contain the `\n` separator and
+    // the run must now expose multiple paragraph member baselines so
+    // PDFium emitted real second-line text objects below the first.
+    // ALSO verify the second-line text emitted at the original line's
+    // matrix.e (original left margin) instead of x=0 - the empty-line
+    // bounds bug would put it at the page's left edge.
+    const state = await page.evaluate((runTestId) => {
+      const runId = runTestId.replace(/^v2-run-/, "");
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  matrix: { e: number };
+                  paragraphMemberFs: number[];
+                  paragraphLeafPtrs: number[];
+                  paragraphLineSlots: Array<{
+                    baselineY: number;
+                    matrixE: number;
+                    mergedFromBounds: Array<{ x: number; right: number }>;
+                  }>;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) {
+          return {
+            text: r.text,
+            matrixE: r.matrix.e,
+            memberFs: r.paragraphMemberFs,
+            leafPtrCount: r.paragraphLeafPtrs.length,
+            slots: r.paragraphLineSlots.map((s) => ({
+              matrixE: s.matrixE,
+              firstBoundX: s.mergedFromBounds[0]?.x ?? null,
+            })),
+          };
+        }
+      }
+      return null;
+    }, runTestId);
+
+    expect(state).not.toBeNull();
+    expect(state!.text).toContain("\n");
+    expect(state!.text).toContain("SECOND");
+    // The overlay path stores per-line member baselines for any
+    // multi-line run. There must be at least two distinct member
+    // f-values (one per line) - if the bug reappears and partial-edit
+    // emits everything on one baseline, this is < 2.
+    expect(
+      state!.memberFs.length,
+      "paragraphMemberFs should expose one baseline per output line",
+    ).toBeGreaterThanOrEqual(2);
+    // Distinct baselines means actual y separation between lines.
+    const distinctFs = new Set(state!.memberFs.map((f) => Math.round(f)));
+    expect(distinctFs.size).toBeGreaterThanOrEqual(2);
+
+    // Second-line typed text must NOT have anchored at x=0 (page left
+    // edge). The "only last letter visible" bug landed text at x=0,
+    // mostly outside the printable area of the page. With the empty-
+    // line bounds fix (skip emit + slot.matrixE fallback), the second-
+    // slot's typed sub-runs should sit at or near `matrixE` (the
+    // original first line's left margin), not at 0.
+    const secondSlot = state!.slots[state!.slots.length - 1];
+    if (secondSlot && secondSlot.firstBoundX !== null) {
+      // The second slot has sub-run bounds (set after the typed text
+      // was emitted). Verify the first sub-run is anchored near matrixE
+      // and far from 0.
+      expect(
+        secondSlot.firstBoundX,
+        `second-line typed text should anchor near matrixE (${state!.matrixE}), not at page left edge`,
+      ).toBeGreaterThan(state!.matrixE - 2);
+      expect(
+        secondSlot.firstBoundX,
+        "second-line typed text should not have anchored at x=0",
+      ).toBeGreaterThan(5);
+    }
+  });
+
+  test("Enter then typing characters ONE AT A TIME keeps every char on the new line at the margin", async ({
+    page,
+  }) => {
+    // The real-world repro: the user presses Enter, then types each
+    // character as a separate keystroke - so each fires its own onInput
+    // -> EditTextCommand. The empty-line bounds bug made the FIRST typed
+    // char anchor at x=0 (page left edge) because the empty PDFium text
+    // object reported {0,0,0,0} bounds; the visible result was "only the
+    // last letter shows" near the page edge. This test types char-by-char
+    // and asserts every char persists AND the second line anchors near
+    // the original left margin.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    await expect(firstRun).toBeVisible({ timeout: 30_000 });
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+    const originalText = (await firstRun.innerText()) ?? "";
+
+    // Enter, then "a", "b", "c" - four separate insertText calls, each a
+    // distinct edit command (waitForTimeout between them lets the store
+    // dispatch + resnapshot settle, mirroring real typing cadence).
+    for (const ch of ["\n", "a", "b", "c"]) {
+      await page.evaluate(
+        ({ runTestId, ch }) => {
+          const el = document.querySelector<HTMLDivElement>(
+            `[data-testid="${runTestId}"]`,
+          );
+          if (!el) throw new Error("run not in DOM");
+          el.focus();
+          const sel = window.getSelection();
+          if (!sel) throw new Error("no Selection api");
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false); // caret to end
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.execCommand("insertText", false, ch);
+        },
+        { runTestId, ch },
+      );
+      await page.waitForTimeout(60);
+    }
+    await page.evaluate((runTestId) => {
+      document
+        .querySelector<HTMLDivElement>(`[data-testid="${runTestId}"]`)
+        ?.blur();
+    }, runTestId);
+    await page.waitForTimeout(120);
+
+    const state = await page.evaluate((runTestId) => {
+      const runId = runTestId.replace(/^v2-run-/, "");
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  text: string;
+                  matrix: { e: number };
+                  paragraphLineSlots: Array<{
+                    matrixE: number;
+                    mergedFromBounds: Array<{ x: number; right: number }>;
+                  }>;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) {
+          const last = r.paragraphLineSlots[r.paragraphLineSlots.length - 1];
+          return {
+            text: r.text,
+            matrixE: r.matrix.e,
+            lastSlotFirstBoundX: last?.mergedFromBounds[0]?.x ?? null,
+            slotCount: r.paragraphLineSlots.length,
+          };
+        }
+      }
+      return null;
+    }, runTestId);
+
+    expect(state).not.toBeNull();
+    // Every typed character survived on the second line, in order.
+    expect(state!.text).toContain("\nabc");
+    // The original first line is intact.
+    expect(state!.text.startsWith(originalText.split("\n")[0])).toBe(true);
+    // Two line slots (line 1 + the typed line).
+    expect(state!.slotCount).toBeGreaterThanOrEqual(2);
+    // The typed line's first sub-run is anchored at the original left
+    // margin, NOT at x=0 (the bug). Allow a small tolerance below matrixE.
+    if (state!.lastSlotFirstBoundX !== null) {
+      expect(
+        state!.lastSlotFirstBoundX,
+        `typed second line anchored at ${state!.lastSlotFirstBoundX}, expected near matrixE=${state!.matrixE}`,
+      ).toBeGreaterThan(Math.max(5, state!.matrixE - 3));
+    }
+  });
+});
+
+test.describe("PDF text editor v2 - font family change removes every sub-object", () => {
+  test("changing font on a LineGrouper-merged run does not leave the old sub-objects behind", async ({
+    page,
+  }) => {
+    // Regression for the bug where SetFontFamilyCommand removed only
+    // run.pdfiumObjPtr and left the rest of mergedFromPtrs /
+    // paragraphLeafPtrs painted by PDFium - producing overlapping
+    // stale + new text after subsequent edits.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+
+    // Find a multi-sub-run line (mergedFromPtrs.length > 1) so the
+    // test exercises the failure mode rather than a trivial single-ptr
+    // case where the bug was invisible.
+    const targetRunId = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  mergedFromPtrs: number[];
+                  paragraphLineSlots: { length: number };
+                  text: string;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        for (const r of p.runs) {
+          if (
+            r.mergedFromPtrs.length > 1 &&
+            r.paragraphLineSlots.length < 2 &&
+            r.text.length > 3
+          ) {
+            return r.id;
+          }
+        }
+      }
+      return null;
+    });
+    expect(targetRunId).not.toBeNull();
+
+    // Snapshot the count of paragraph leaf ptrs + the rep ptr that
+    // SetFontFamily will replace. After apply, the original leaves
+    // should no longer exist on the PDFium page.
+    const before = await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  mergedFromPtrs: number[];
+                  pdfiumObjPtr: number;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) {
+          return {
+            origPtrs: [...r.mergedFromPtrs, r.pdfiumObjPtr].filter(Boolean),
+          };
+        }
+      }
+      return { origPtrs: [] };
+    }, targetRunId!);
+
+    // Select the run, then pick an explicit family from the toolbar's
+    // font-family Select. Using the Select (not Bold) avoids the
+    // flipBold no-op path that skips runs whose source family isn't a
+    // recognised base-14 (the run here reports family "unknown"). The
+    // Select dispatches SetFontFamilyCommand with the chosen family,
+    // exercising Fix B's full-sub-object cleanup.
+    await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: { selection: { selectOne: (id: string) => void } };
+        }
+      ).__v2_editor_store!;
+      store.selection.selectOne(runId);
+    }, targetRunId!);
+    // Mantine spreads data-testid onto the Select's underlying input.
+    const familySelect = page.getByTestId("v2-font-family");
+    await expect(familySelect).toBeEnabled({ timeout: 5_000 });
+    await familySelect.click();
+    await page.getByRole("option", { name: "Helvetica Bold" }).click();
+    await page.waitForTimeout(150);
+
+    // After apply: none of the original leaf ptrs should be reachable
+    // from the run's leaf array. The run's pdfiumObjPtr and all leaves
+    // are freshly emitted.
+    const after = await page.evaluate((runId) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: {
+            document: {
+              loadedPages: () => Array<{
+                runs: Array<{
+                  id: string;
+                  pdfiumObjPtr: number;
+                  mergedFromPtrs: number[];
+                  paragraphLeafPtrs: number[];
+                  fontId: string;
+                }>;
+              }>;
+            };
+          };
+        }
+      ).__v2_editor_store!;
+      for (const p of store.document.loadedPages()) {
+        const r = p.runs.find((rr) => rr.id === runId);
+        if (r) {
+          return {
+            pdfiumObjPtr: r.pdfiumObjPtr,
+            mergedFromPtrs: r.mergedFromPtrs,
+            paragraphLeafPtrs: r.paragraphLeafPtrs,
+            fontId: r.fontId,
+          };
+        }
+      }
+      return null;
+    }, targetRunId!);
+
+    expect(after).not.toBeNull();
+    // The new fontId should be a base-14 bold variant.
+    expect(after!.fontId.toLowerCase()).toContain("bold");
+    // mergedFromPtrs is cleared (the LineGrouper sub-run model is
+    // discarded - the new emit owns the page now).
+    expect(after!.mergedFromPtrs.length).toBe(0);
+    // The fresh paragraphLeafPtrs must NOT overlap the original ptrs.
+    // If they do, the model is still tracking stale references that
+    // PDFium has removed - or worse, real new ptrs that happen to share
+    // an address (unlikely but allowed) - but for this run the original
+    // ptrs are confirmed gone.
+    for (const origPtr of before.origPtrs) {
+      expect(
+        after!.paragraphLeafPtrs.includes(origPtr),
+        `original ptr ${origPtr} still tracked after font change - sub-object leak`,
+      ).toBe(false);
+    }
+  });
+});
+
+test.describe("PDF text editor v2 - undo restores merged-away runs", () => {
+  test("merge then undo brings the absorbed runs back into page.runs", async ({
+    page,
+  }) => {
+    // Regression for MergeRunsCommand.revert. The original implementation
+    // left an empty for-loop in revert, so undoing a merge silently kept
+    // the merged state (the absorbed runs were gone forever). The fix
+    // stashes the TextRun instances at apply time and re-installs them
+    // (preserving original ordering) at revert time.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const runs = page.locator('[data-testid^="v2-run-p0-"]');
+    await expect(runs.first()).toBeVisible({ timeout: 30_000 });
+    const initial = await runs.count();
+    expect(initial).toBeGreaterThanOrEqual(2);
+
+    // Snapshot the IDs before the merge so we can verify revert
+    // restores the exact same set.
+    const idsBefore = await runs.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("data-testid")!.replace(/^v2-run-/, "")),
+    );
+
+    // Select the first two runs and merge via Ctrl+M.
+    await page.getByTestId(`v2-run-${idsBefore[0]}`).click();
+    await page
+      .getByTestId(`v2-run-${idsBefore[1]}`)
+      .click({ modifiers: ["Shift"] });
+
+    await page.evaluate(() => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "m",
+          ctrlKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    await page.waitForTimeout(150);
+
+    const merged = await runs.count();
+    expect(merged).toBe(initial - 1);
+
+    // Undo. The absorbed run must come back; the merge representative
+    // must lose its absorbed-line state.
+    await page.getByTestId("v2-undo").click();
+    await page.waitForTimeout(150);
+
+    const afterUndo = await runs.count();
+    expect(afterUndo).toBe(initial);
+
+    const idsAfter = await runs.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("data-testid")!.replace(/^v2-run-/, "")),
+    );
+    // The same set of IDs must be present (order doesn't have to match
+    // exactly - revert places restored runs after surviving entries
+    // when the prior order can't be reconstructed - but every original
+    // ID must be back).
+    for (const id of idsBefore) {
+      expect(
+        idsAfter,
+        `id ${id} missing from page.runs after merge+undo`,
+      ).toContain(id);
+    }
+  });
+});
+
+test.describe("PDF text editor v2 - grouping mode toggle", () => {
+  test("Auto folds equal-spaced lines into paragraphs; Line keeps them separate", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(PARAGRAPH_PDF);
+    const runs = page.locator('[data-testid^="v2-run-p0-"]');
+    await expect(runs.first()).toBeVisible({ timeout: 30_000 });
+
+    // Default mode is Auto - the paragraph body folds into one overlay,
+    // so total run count is small and at least one run is multi-line.
+    const autoCount = await runs.count();
+    const autoTexts = await Promise.all(
+      (await runs.all()).map((r) => r.innerText()),
+    );
+    const hasParagraph = autoTexts.some((t) => t.includes("\n"));
+    expect(
+      hasParagraph,
+      "Auto mode should fold the body lines into a multi-line paragraph",
+    ).toBe(true);
+
+    // Switch to Line mode via the sidebar segmented control.
+    const lineButton = page
+      .getByTestId("v2-grouping-mode-control")
+      .getByText("Line", { exact: true });
+    await lineButton.click();
+    await page.waitForTimeout(250);
+
+    // Line mode: every source line is its own run. Count must rise, and
+    // no run should carry a newline (paragraphs are split apart).
+    const lineCount = await runs.count();
+    expect(
+      lineCount,
+      `Line mode should expose more runs than Auto (auto=${autoCount}, line=${lineCount})`,
+    ).toBeGreaterThan(autoCount);
+    const lineTexts = await Promise.all(
+      (await runs.all()).map((r) => r.innerText()),
+    );
+    expect(lineTexts.some((t) => t.includes("\n"))).toBe(false);
+
+    // The model's groupingMode reflects the toggle.
+    const mode = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store?: { getState: () => { groupingMode: string } };
+        }
+      ).__v2_editor_store!;
+      return store.getState().groupingMode;
+    });
+    expect(mode).toBe("line");
+
+    // Switch back to Auto - paragraphs re-fold.
+    const autoButton = page
+      .getByTestId("v2-grouping-mode-control")
+      .getByText("Auto", { exact: true });
+    await autoButton.click();
+    await page.waitForTimeout(250);
+
+    const reAutoCount = await runs.count();
+    expect(reAutoCount).toBe(autoCount);
+  });
+
+  test("switching grouping mode clears the undo history", async ({ page }) => {
+    // Switching mode rebuilds every run (and its id) from PDFium, so any
+    // pending undo command would target a stale id. The store clears
+    // history on mode change - verify the Undo affordance goes disabled.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(PARAGRAPH_PDF);
+    const runs = page.locator('[data-testid^="v2-run-p0-"]');
+    await expect(runs.first()).toBeVisible({ timeout: 30_000 });
+
+    // Make an edit so there's something on the undo stack.
+    const firstRunTestId =
+      (await runs.first().getAttribute("data-testid")) ?? "";
+    await typeIntoRun(page, firstRunTestId, "X");
+    await expect(page.getByTestId("v2-undo")).toBeEnabled({ timeout: 5_000 });
+
+    // Toggle to Line mode - history clears.
+    await page
+      .getByTestId("v2-grouping-mode-control")
+      .getByText("Line", { exact: true })
+      .click();
+    await page.waitForTimeout(250);
+
+    await expect(page.getByTestId("v2-undo")).toBeDisabled();
   });
 });

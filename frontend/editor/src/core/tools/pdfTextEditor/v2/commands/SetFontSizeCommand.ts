@@ -1,5 +1,6 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
+import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
  * Scale a text run so its effective on-page size matches `nextSize`.
@@ -8,6 +9,11 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
  * the recommended path is to scale the object's matrix by the ratio of
  * the new size to the current effective size. The visible bitmap then
  * re-renders at the requested size when `FPDFPage_GenerateContent` runs.
+ *
+ * For LineGrouper-merged runs and paragraphs (which back the rep with
+ * multiple PDFium sub-objects), Transform is applied to EVERY sub-ptr -
+ * scaling only `run.pdfiumObjPtr` would leave the other sub-words at
+ * their original size.
  *
  * `nextSize` is in points (matches what the user types in the toolbar).
  */
@@ -32,11 +38,8 @@ export class SetFontSizeCommand implements Command {
     if (this.prevSize === null) {
       this.prevSize = run.fontSize;
     }
-    this.scaleTo(
-      doc,
-      run.pdfiumObjPtr,
-      this.nextSize / Math.max(0.01, run.fontSize),
-    );
+    const ratio = this.nextSize / Math.max(0.01, run.fontSize);
+    this.scaleAllPtrs(doc, collectMemberPtrs(run), ratio);
     run.fontSize = this.nextSize;
     run.matrix = scaleMatrix(
       run.matrix,
@@ -44,7 +47,7 @@ export class SetFontSizeCommand implements Command {
     );
     run.dirty = true;
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
@@ -52,34 +55,32 @@ export class SetFontSizeCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || !run.pdfiumObjPtr) return;
-    this.scaleTo(
-      doc,
-      run.pdfiumObjPtr,
-      this.prevSize / Math.max(0.01, run.fontSize),
-    );
     const ratio = this.prevSize / Math.max(0.01, run.fontSize);
+    this.scaleAllPtrs(doc, collectMemberPtrs(run), ratio);
     run.fontSize = this.prevSize;
     run.matrix = scaleMatrix(run.matrix, ratio);
     run.dirty = true;
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
-  private scaleTo(
+  private scaleAllPtrs(
     doc: EditorDocument,
-    objPtr: number,
+    ptrs: number[],
     relativeScale: number,
   ): void {
     if (!Number.isFinite(relativeScale) || relativeScale === 1) return;
-    doc.module.FPDFPageObj_Transform(
-      objPtr,
-      relativeScale,
-      0,
-      0,
-      relativeScale,
-      0,
-      0,
-    );
+    const m = doc.module;
+    const seen = new Set<number>();
+    for (const ptr of ptrs) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      try {
+        m.FPDFPageObj_Transform(ptr, relativeScale, 0, 0, relativeScale, 0, 0);
+      } catch {
+        /* best-effort - missing ptr is silently skipped */
+      }
+    }
   }
 }
 

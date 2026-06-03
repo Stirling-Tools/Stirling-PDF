@@ -59,7 +59,7 @@ export class SetImageTransformCommand implements Command {
     };
     img.dirty = true;
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
@@ -100,7 +100,7 @@ export class SetImageTransformCommand implements Command {
     img.matrix = { ...this.prevMatrix };
     img.dirty = true;
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }
 

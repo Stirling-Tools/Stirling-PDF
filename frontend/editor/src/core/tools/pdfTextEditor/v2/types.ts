@@ -30,6 +30,23 @@ export interface Affine {
 export type FontStyle = "normal" | "italic";
 export type FontWeight = "normal" | "bold";
 
+/**
+ * How the reader clusters source text objects into editable runs.
+ *  - "auto": run `LineGrouper` then `ParagraphGrouper` - vertically
+ *    adjacent equal-spaced lines fold into one multi-line paragraph
+ *    overlay (word-processor-like editing).
+ *  - "line": run `LineGrouper` only - every source line stays a
+ *    separate single-line run (closer to the raw PDF structure).
+ */
+export type GroupingMode = "auto" | "line";
+
+/**
+ * How an editable text box grows when its content exceeds the source
+ * width: "grow" widens to the right (no wrap); "wrap" keeps the source
+ * width and word-wraps, growing downward.
+ */
+export type WidthMode = "grow" | "wrap";
+
 export interface FontDescriptor {
   /** Stable id used internally for ref equality */
   id: string;

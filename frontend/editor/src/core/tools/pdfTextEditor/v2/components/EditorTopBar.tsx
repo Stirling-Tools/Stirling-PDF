@@ -1,6 +1,9 @@
-import { Box, Button, Group, Text, Tooltip } from "@mantine/core";
+import { Box, Button, Group, Switch, Text, Tooltip } from "@mantine/core";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
+import type {
+  PageSnapshot,
+  WidthMode,
+} from "@app/tools/pdfTextEditor/v2/types";
 
 interface TopBarProps {
   store: EditorStore;
@@ -15,14 +18,15 @@ interface TopBarProps {
   canGroup: boolean;
   /** True when exactly one paragraph-grouped run is selected. */
   canUngroup: boolean;
+  /** Text-box growth behaviour. */
+  widthMode: WidthMode;
+  onSetWidthMode: (mode: WidthMode) => void;
   onToggleAddText: () => void;
   onPickImage: () => void;
-  onRotate: (delta: 1 | -1) => void;
   onGroup: () => void;
   onUngroup: () => void;
   onReset: () => void;
   onSaveToWorkbench: () => void;
-  onPrint: () => void;
   onSave: () => void;
   onShowHelp: () => void;
 }
@@ -44,14 +48,14 @@ export function EditorTopBar(props: TopBarProps) {
     canReset,
     canGroup,
     canUngroup,
+    widthMode,
+    onSetWidthMode,
     onToggleAddText,
     onPickImage,
-    onRotate,
     onGroup,
     onUngroup,
     onReset,
     onSaveToWorkbench,
-    onPrint,
     onSave,
     onShowHelp,
   } = props;
@@ -201,25 +205,22 @@ export function EditorTopBar(props: TopBarProps) {
               Ungroup
             </Button>
           </Tooltip>
-          <Tooltip label="Rotate page left (90° counter-clockwise)">
-            <Button
+          <Tooltip
+            label={
+              widthMode === "wrap"
+                ? "Text boxes are locked to their width and wrap downward. Toggle off to let them grow to the right."
+                : "Text boxes grow to the right as you type. Toggle on to lock width and wrap downward instead."
+            }
+          >
+            <Switch
               size="xs"
-              variant="subtle"
-              onClick={() => onRotate(-1)}
-              data-testid="v2-rotate-left"
-            >
-              ↺
-            </Button>
-          </Tooltip>
-          <Tooltip label="Rotate page right (90° clockwise)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={() => onRotate(1)}
-              data-testid="v2-rotate-right"
-            >
-              ↻
-            </Button>
+              checked={widthMode === "wrap"}
+              onChange={(e) =>
+                onSetWidthMode(e.currentTarget.checked ? "wrap" : "grow")
+              }
+              label="Wrap"
+              data-testid="v2-width-mode"
+            />
           </Tooltip>
           <Tooltip label="Reset every edit">
             <Button
@@ -240,16 +241,6 @@ export function EditorTopBar(props: TopBarProps) {
               data-testid="v2-save-workbench"
             >
               Save to Workbench
-            </Button>
-          </Tooltip>
-          <Tooltip label="Print (Ctrl+P)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={onPrint}
-              data-testid="v2-print"
-            >
-              Print
             </Button>
           </Tooltip>
           <Tooltip label="Download edited PDF (Ctrl+S)">

@@ -34,48 +34,129 @@ const BASELINE_TOLERANCE = 0.4;
 // column gutters that would otherwise merge across the column break.
 const ABS_MAX_GAP_PT = 12;
 
+/**
+ * True when a same-baseline cluster's glyphs overlap so heavily that it
+ * can't be normal running text - the x-positions barely advance (or go
+ * backwards) between consecutive glyphs, the hallmark of layered /
+ * stacked decorative big text (gradient fills, outline+fill passes,
+ * drop shadows). Merging + x-sorting such glyphs interleaves the layers
+ * into scrambled output, so the caller keeps them as individual runs.
+ *
+ * `members` are already x-sorted. A pair "barely advances" when the next
+ * glyph starts less than 12% of the font size to the right of the
+ * previous glyph's start. Normal running text advances by roughly a
+ * glyph width every step (~0.2-0.7em), so it has essentially zero such
+ * pairs; a layered/overlapping cluster has many. The 30% threshold
+ * cleanly separates the two (stacked headings run 40-90%) while leaving
+ * even tightly-kerned real text untouched.
+ */
+function isDecorativeOverlap(members: TextRun[]): boolean {
+  if (members.length < 3) return false;
+  let overlapping = 0;
+  for (let i = 1; i < members.length; i++) {
+    const minAdvance = 0.12 * Math.max(members[i].fontSize, 4);
+    if (members[i].bounds.x - members[i - 1].bounds.x < minAdvance) {
+      overlapping += 1;
+    }
+  }
+  return overlapping / (members.length - 1) > 0.3;
+}
+
+/**
+ * Sort one container's runs top-to-bottom / left-to-right and merge
+ * same-baseline, close-together runs into line groups, appending each
+ * group to `out`. Only ever called with runs that share a coordinate
+ * space (one form xobject, or page level), so `bounds.x` is comparable.
+ */
+function groupPartitionIntoLines(
+  runs: TextRun[],
+  out: LineGroupInfo[],
+): void {
+  const sorted = [...runs].sort((a, b) => {
+    const yDiff = b.matrix.f - a.matrix.f;
+    if (Math.abs(yDiff) > 1) return yDiff;
+    return a.bounds.x - b.bounds.x;
+  });
+
+  let current: LineGroupInfo | null = null;
+  for (const run of sorted) {
+    if (!current) {
+      current = { representative: run, members: [run] };
+      out.push(current);
+      continue;
+    }
+    const ref = current.representative;
+    const baseDiff = Math.abs(run.matrix.f - ref.matrix.f);
+    const sameLine = baseDiff <= BASELINE_TOLERANCE * Math.max(ref.fontSize, 4);
+    const prev = current.members[current.members.length - 1];
+    const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
+    // The gap cap must scale with font size: an inter-word space in a
+    // 50pt heading is ~15-25pt, which a flat 12pt cap would treat as a
+    // line break (splitting "Open Source" into "Open" + "Source"). Allow
+    // the larger of the absolute cap (for small per-word save chunks) and
+    // half the font size (for large display text). Column gutters stay
+    // wider than this in practice, so they still split correctly.
+    const maxGap = Math.max(ABS_MAX_GAP_PT, 0.5 * Math.max(ref.fontSize, 4));
+    const close = gap <= maxGap;
+
+    if (sameLine && close) {
+      current.members.push(run);
+    } else {
+      current = { representative: run, members: [run] };
+      out.push(current);
+    }
+  }
+}
+
 export class LineGrouper {
   /**
    * Group a page's runs and store the result back onto the page.
    * Returns the list of LineGroup metadata for downstream commands.
    */
   static apply(page: Page): LineGroupInfo[] {
-    const sorted = [...page.runs].sort((a, b) => {
-      // Sort by line (descending y because PDF origin is lower-left, so
-      // larger y = higher line), then by left x.
-      const yDiff = b.matrix.f - a.matrix.f;
-      if (Math.abs(yDiff) > 1) return yDiff;
-      return a.bounds.x - b.bounds.x;
-    });
+    // Partition by form-xobject container BEFORE grouping. Objects inside
+    // a form xobject report their bounds in the form's LOCAL coordinate
+    // space, not page space - so glyphs from three side-by-side form
+    // "pills" (e.g. Open Source / Privacy First / Self-Hosted) all read
+    // near the same x and, when merged + x-sorted together, interleave
+    // into gibberish ("OSPrepivlefa-n Hc"). Grouping each container
+    // independently keeps every form's text intact and correctly ordered.
+    // Page-level objects (container 0) all share one partition and behave
+    // exactly as before.
+    const partitions = new Map<number, TextRun[]>();
+    for (const run of page.runs) {
+      const key = run.containerPtr || 0;
+      const list = partitions.get(key);
+      if (list) list.push(run);
+      else partitions.set(key, [run]);
+    }
 
     const groups: LineGroupInfo[] = [];
-    let current: LineGroupInfo | null = null;
+    for (const partition of partitions.values()) {
+      groupPartitionIntoLines(partition, groups);
+    }
 
-    for (const run of sorted) {
-      if (!current) {
-        current = { representative: run, members: [run] };
-        groups.push(current);
-        continue;
-      }
-      const ref = current.representative;
-      const baseDiff = Math.abs(run.matrix.f - ref.matrix.f);
-      const sameLine =
-        baseDiff <= BASELINE_TOLERANCE * Math.max(ref.fontSize, 4);
-      const prev = current.members[current.members.length - 1];
-      const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
-      // The relative factor matched typical inter-word spacing but
-      // rejected gaps from our per-word save emit (where chunks land
-      // ~6-10pt apart). The absolute cap still catches column gutters
-      // (typically 20pt+) so dropping the relative is safe.
-      const close = gap <= ABS_MAX_GAP_PT;
-
-      if (sameLine && close) {
-        current.members.push(run);
+    // Refine: a "line" whose glyphs heavily OVERLAP in x (consecutive
+    // glyphs barely advancing, or starting at/before the previous one)
+    // is not real running text - it's decorative / layered / multi-pass
+    // big text (drop shadows, gradient fills, outline+fill, etc.) that a
+    // typesetter stacks at near-identical positions. Merging + x-sorting
+    // those interleaves the layers into scrambled gibberish
+    // ("OSPrepivlefa-n Hc"). Keep such clusters as their individual
+    // single-glyph runs instead so the editor never surfaces a garbled
+    // merged run. Normal text advances monotonically and is untouched.
+    const refined: LineGroupInfo[] = [];
+    for (const group of groups) {
+      if (group.members.length > 2 && isDecorativeOverlap(group.members)) {
+        for (const m of group.members) {
+          refined.push({ representative: m, members: [m] });
+        }
       } else {
-        current = { representative: run, members: [run] };
-        groups.push(current);
+        refined.push(group);
       }
     }
+    groups.length = 0;
+    groups.push(...refined);
 
     // Mutate the representative's text/bounds to reflect the merged group
     // and remember the underlying object pointers so ReplaceLineGroupCommand

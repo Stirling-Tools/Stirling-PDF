@@ -2,7 +2,10 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { writeUtf16 } from "@app/services/pdfiumService";
-import { preserveConsecutiveSpaces } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import {
+  collectMemberPtrs,
+  preserveConsecutiveSpaces,
+} from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
  * Pushes `TextRun` mutations into PDFium.
@@ -22,20 +25,34 @@ export class PdfiumTextWriter {
     } finally {
       m.pdfium.wasmExports.free(ptr);
     }
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   static commitRunFill(doc: EditorDocument, page: Page, run: TextRun): void {
     if (!run.pdfiumObjPtr) return;
     const m = doc.module;
-    m.FPDFPageObj_SetFillColor(
-      run.pdfiumObjPtr,
-      run.fill.r,
-      run.fill.g,
-      run.fill.b,
-      run.fill.a,
-    );
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    // Recolour EVERY sub-object - LineGrouper-merged runs and paragraphs
+    // back the rep with many PDFium text objects, and FPDFPageObj_SetFillColor
+    // operates per-object. Recolouring only the rep ptr left the rest of
+    // the words / lines in the previous colour.
+    const ptrs = collectMemberPtrs(run);
+    const seen = new Set<number>();
+    for (const ptr of ptrs) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      try {
+        m.FPDFPageObj_SetFillColor(
+          ptr,
+          run.fill.r,
+          run.fill.g,
+          run.fill.b,
+          run.fill.a,
+        );
+      } catch {
+        /* best-effort - stale ptrs silently skipped */
+      }
+    }
+    page.markNeedsGenerate();
   }
 
   static commitRunFontSize(
@@ -56,6 +73,6 @@ export class PdfiumTextWriter {
       a: run.matrix.a * sx,
       d: run.matrix.d * sy,
     };
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }

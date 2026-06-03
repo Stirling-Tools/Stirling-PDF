@@ -55,7 +55,7 @@ export function useDocumentLoader(store: EditorStore) {
           });
           await yieldToBrowser();
           const page = doc.page(i);
-          PdfiumTextReader.populate(doc, page);
+          PdfiumTextReader.populate(doc, page, store.groupingMode);
           snapshots.push({
             pageIndex: i,
             width: page.width,
@@ -105,7 +105,7 @@ export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   if (!doc) return;
   const page = doc.page(pageIndex);
   if (page.loaded) return;
-  PdfiumTextReader.populate(doc, page);
+  PdfiumTextReader.populate(doc, page, store.groupingMode);
   const state = store.getState();
   const next = state.pages.map((p) =>
     p.pageIndex === pageIndex

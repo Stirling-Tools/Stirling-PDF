@@ -7,6 +7,33 @@ import type {
 import { BLACK } from "@app/tools/pdfTextEditor/v2/model/Color";
 
 /**
+ * One line's worth of sub-run data inside a paragraph. Lives on the
+ * paragraph rep's `paragraphLineSlots`. The sub-run arrays use the
+ * SAME shape as the rep-level `mergedFrom*` fields so the existing
+ * partial-edit machinery can treat a slot as a mini-TextRun.
+ *
+ * `startChar`/`endChar` are offsets into the rep's joined text - the
+ * paragraph's text is the per-line texts joined by `\n`, so each slot
+ * owns `[startChar, endChar)` and the `\n` separators live at
+ * `slots[i].endChar` (== `slots[i+1].startChar - 1`).
+ */
+export interface ParagraphLineSlot {
+  startChar: number;
+  endChar: number;
+  baselineY: number;
+  matrixE: number;
+  containerPtr: number;
+  fontId: string;
+  fontSize: number;
+  fontSubset: boolean;
+  mergedFromPtrs: number[];
+  mergedFromTexts: string[];
+  mergedFromBounds: Array<{ x: number; right: number }>;
+  /** Char-start positions RELATIVE to the line's text (0..lineText.length). */
+  mergedFromCharStarts: number[];
+}
+
+/**
  * One PDF text object. Mutable inside the editor; commands mutate it,
  * the PdfiumTextWriter is what pushes the change down into PDFium.
  */
@@ -96,6 +123,38 @@ export class TextRun {
   paragraphLeafPtrs: number[];
   /** Parallel form-xobject containers for every leaf ptr. */
   paragraphLeafContainers: number[];
+  /**
+   * Pointer to the LATEST background cover-rect emitted on the page for
+   * this run, or 0 when none is currently in play. `EditTextCommand`'s
+   * overlay path emits a cover rect when `removeMemberPtrs` can't take
+   * down every original sub-object (e.g. form-xobject text); the rect
+   * masks the leftover glyphs while fresh text emits on top.
+   *
+   * Without per-run tracking the cover rect from edit N would persist
+   * into edit N+1 (each `EditTextCommand` only owns its own ptrs), and
+   * a sequence of overlay edits could stack rects on top of each other.
+   * `EditTextCommand.apply` removes any existing `coverRectPtr` at the
+   * start of its overlay path, then either reuses 0 (when allRemoved)
+   * or stores the new rect ptr here.
+   */
+  coverRectPtr: number;
+  /**
+   * Per-line sub-run snapshots for paragraph-aware partial edits.
+   *
+   * One entry per line in the paragraph (parallel to
+   * `paragraphMemberPtrs`/`paragraphMemberFs`). Each carries the
+   * line-level `mergedFrom*` arrays captured at paragraph-group time so
+   * subsequent edits can run the surgical LCS path per line and keep
+   * the original fonts. Without this, the rep's own `mergedFrom*`
+   * arrays only mirror `members[0]` (rep IS members[0] by reference)
+   * and every line past the first looks like a blank slate to the
+   * partial-edit planner.
+   *
+   * Empty when this run is not a paragraph (single line) or when the
+   * paragraph was rebuilt by an overlay-path edit without per-line
+   * sub-run data.
+   */
+  paragraphLineSlots: ParagraphLineSlot[];
 
   constructor(
     init: TextRunSnapshot & {
@@ -127,6 +186,8 @@ export class TextRun {
     this.paragraphMemberFs = [];
     this.paragraphLeafPtrs = [];
     this.paragraphLeafContainers = [];
+    this.paragraphLineSlots = [];
+    this.coverRectPtr = 0;
   }
 
   snapshot(): TextRunSnapshot {
