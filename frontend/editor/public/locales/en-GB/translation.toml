@@ -9008,6 +9008,7 @@ message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
 
 [smartFolders]
+alreadyInFolder = "Already in this folder"
 deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
 deleteConfirmTitle = "Delete folder?"
 defaultFolderWarning = "This is a default folder and will be recreated on next reload."

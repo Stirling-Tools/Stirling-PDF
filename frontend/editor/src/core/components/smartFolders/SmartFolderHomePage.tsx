@@ -28,6 +28,7 @@ import { SmartFolder } from "@app/types/smartFolders";
 import { AutomationConfig } from "@app/types/automation";
 import { automationStorage } from "@app/services/automationStorage";
 import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
+import { getWatchFolderDraggedFileIds } from "@app/components/smartFolders/watchFolderDragState";
 import { fileStorage } from "@app/services/fileStorage";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
@@ -78,6 +79,11 @@ function FolderCard({
   const [fileCount, setFileCount] = useState(0);
   const [lastAdded, setLastAdded] = useState<Date | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  // True while a drag hovers this card AND every dragged file is already in it
+  // (so the drop would be a no-op — see the guard in processFiles).
+  const [dragAlreadyPresent, setDragAlreadyPresent] = useState(false);
+  // Ids of files currently in this folder, used for the live dragover check.
+  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     automationStorage.getAutomation(folder.automationId).then(setAutomation);
@@ -87,10 +93,12 @@ function FolderCard({
         if (!record) {
           setFileCount(0);
           setLastAdded(null);
+          setMemberIds(new Set());
           return;
         }
         const files = Object.values(record.files);
         setFileCount(files.length);
+        setMemberIds(new Set(Object.keys(record.files)));
         const dates = files
           .map((f) => new Date(f.addedAt))
           .filter((d) => !isNaN(d.getTime()));
@@ -132,14 +140,22 @@ function FolderCard({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
+    // Live feedback: are all the files being dragged already in this folder?
+    const dragged = getWatchFolderDraggedFileIds();
+    setDragAlreadyPresent(
+      dragged.length > 0 && dragged.every((id) => memberIds.has(id)),
+    );
   };
   const handleDragLeave = (e: React.DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node))
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragOver(false);
+      setDragAlreadyPresent(false);
+    }
   };
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    setDragAlreadyPresent(false);
     const multiRaw = e.dataTransfer.getData("watchFolderFileIds");
     if (multiRaw) {
       try {
@@ -166,7 +182,9 @@ function FolderCard({
 
   return (
     <div
-      className={`wf-card${isDragOver ? " is-drop-target" : ""}`}
+      className={`wf-card${isDragOver ? " is-drop-target" : ""}${
+        isDragOver && dragAlreadyPresent ? " is-already-member" : ""
+      }`}
       role="listitem"
       tabIndex={0}
       onDragOver={handleDragOver}
@@ -177,6 +195,11 @@ function FolderCard({
         if (e.key === "Enter") onOpen(folder.id);
       }}
     >
+      {isDragOver && dragAlreadyPresent && (
+        <div className="wf-card-drag-message" aria-hidden="true">
+          {t("smartFolders.alreadyInFolder", "Already in this folder")}
+        </div>
+      )}
       <div
         className="wf-card-thumb"
         style={{
@@ -453,7 +476,7 @@ export function SmartFolderHomePage() {
       const pdfs = files.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
       if (pdfs.length === 0) return;
 
-      // Load existing folder data once to detect re-runs (same sidebar file dropped again)
+      // Load existing folder data once so we can skip files already in the folder.
       const existingData = await watchFolderFileStorage.getFolderData(
         folder.id,
       );
@@ -466,24 +489,22 @@ export function SmartFolderHomePage() {
       }> = [];
       for (const file of pdfs) {
         const { inputFileId, ownedByFolder } = await resolveInputFile(file);
+        // Guard against multiple adds: if this file is already in the folder,
+        // skip it entirely rather than resetting its status and reprocessing.
+        // (Dropping the same sidebar file onto a card again is a no-op.)
         if (existingData?.files[inputFileId]) {
-          await watchFolderFileStorage.updateFileMetadata(
-            folder.id,
-            inputFileId,
-            {
-              status: "pending",
-              errorMessage: undefined,
-            },
-          );
-        } else {
-          await watchFolderFileStorage.addFileToFolder(folder.id, inputFileId, {
-            status: "pending",
-            name: file.name,
-            ownedByFolder: ownedByFolder || undefined,
-          });
+          continue;
         }
+        await watchFolderFileStorage.addFileToFolder(folder.id, inputFileId, {
+          status: "pending",
+          name: file.name,
+          ownedByFolder: ownedByFolder || undefined,
+        });
         items.push({ file, inputFileId, ownedByFolder });
       }
+
+      // Nothing new to process (every dropped file was already in the folder).
+      if (items.length === 0) return;
 
       if (folder.isPaused) return;
 
@@ -564,36 +585,6 @@ export function SmartFolderHomePage() {
         overflow: "hidden",
       }}
     >
-      <Box
-        px="xl"
-        py="md"
-        style={{
-          borderBottom: "0.0625rem solid var(--border-subtle)",
-          backgroundColor: "var(--bg-toolbar)",
-          flexShrink: 0,
-        }}
-      >
-        <Group justify="space-between" align="center">
-          <Stack gap={2}>
-            <Text fw={700} size="lg" style={{ letterSpacing: "-0.02em" }}>
-              {t("smartFolders.home.title", "Watch Folders")}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "smartFolders.home.subtitle",
-                "Folders that automatically process PDFs with your configured pipeline",
-              )}
-            </Text>
-          </Stack>
-          <Button
-            leftSection={<AddIcon style={{ fontSize: "1rem" }} />}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            {t("smartFolders.newFolder", "New folder")}
-          </Button>
-        </Group>
-      </Box>
-
       <ScrollArea style={{ flex: 1 }}>
         <Box p="xl">
           {loading ? (

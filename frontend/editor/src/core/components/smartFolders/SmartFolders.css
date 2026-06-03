@@ -65,6 +65,32 @@
   border-color: var(--accent-interactive, #6366f1);
 }
 
+/* Dragging a file the folder already contains — signal it's a no-op, not an add. */
+.wf-card.is-already-member {
+  background: color-mix(in srgb, #f59e0b 8%, var(--bg-surface));
+  box-shadow: 0 0 0 2px #f59e0b;
+  border-color: #f59e0b;
+}
+
+.wf-card-drag-message {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+  backdrop-filter: blur(1px);
+  border-radius: inherit;
+  /* Let drag/drop events pass through to the card underneath. */
+  pointer-events: none;
+}
+
 .wf-card-thumb {
   display: flex;
   align-items: center;

@@ -1,6 +1,7 @@
 import React, {
   useState,
   useCallback,
+  useMemo,
   useRef,
   useEffect,
   forwardRef,
@@ -38,6 +39,12 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import { useFolderMembership } from "@app/hooks/useFolderMembership";
+import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
+import {
+  setWatchFolderDraggedFileIds,
+  clearWatchFolderDraggedFileIds,
+} from "@app/components/smartFolders/watchFolderDragState";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
@@ -115,6 +122,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const activeWatchFolderId = (customWorkbenchViews.find(
       (v) => v.id === SMART_FOLDER_VIEW_ID,
     )?.data?.folderId ?? null) as string | null;
+    // fileId → folderId[] across all watch folders. In the Watch Folders view the
+    // sidebar tick reflects "already in the open folder" instead of workbench
+    // membership (which is meaningless there - a click sends to the folder, not
+    // the workbench). The same map drives the per-file membership dots.
+    const folderMembership = useFolderMembership();
+    const allFolders = useAllSmartFolders();
+    const folderById = useMemo(
+      () => new Map(allFolders.map((f) => [f.id, f])),
+      [allFolders],
+    );
 
     const openWatchFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
@@ -122,12 +139,31 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       navActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
 
+    // Clicking a file's membership dot jumps straight into that folder.
+    const openWatchFolder = useCallback(
+      (folderId: string) => {
+        if (collapsed && onToggleCollapse) onToggleCollapse();
+        setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
+        navActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+      },
+      [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
+    );
+
     // In Watch Folders view, sidebar files can be dragged onto a folder card / drop
     // zone (which read the watchFolderFileId dataTransfer key).
     const handleWatchFolderDragStart = useCallback(
       (e: React.DragEvent, fileId: FileId) => {
         e.dataTransfer.setData("watchFolderFileId", String(fileId));
         e.dataTransfer.effectAllowed = "copy";
+        // Publish the id so drop targets can detect "already in folder" during
+        // dragover (dataTransfer values are unreadable then). Clear on dragend
+        // regardless of whether the drag ended in a drop or was cancelled.
+        setWatchFolderDraggedFileIds([String(fileId)]);
+        const clear = () => {
+          clearWatchFolderDraggedFileIds();
+          document.removeEventListener("dragend", clear);
+        };
+        document.addEventListener("dragend", clear);
       },
       [],
     );
@@ -785,6 +821,32 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         (id) => (id as string) === (stub.id as string),
                       );
                       const isInWorkbench = !!workbenchFileId;
+                      // On Watch Folders, the tick means "this file is already in
+                      // the open folder"; on the folder home (no folder open) a
+                      // click is a no-op, so show no tick at all.
+                      const isSelected = isWatchFoldersActive
+                        ? activeWatchFolderId != null &&
+                          (folderMembership
+                            .get(stub.id as string)
+                            ?.includes(activeWatchFolderId) ??
+                            false)
+                        : isInWorkbench;
+                      // Membership dots only on the Watch Folders home (the folder
+                      // grid, no folder open). Inside a specific folder the tick
+                      // already shows "in this folder"; in other views they'd just
+                      // be noise.
+                      const showFolderDots =
+                        isWatchFoldersActive && activeWatchFolderId === null;
+                      const memberFolders = showFolderDots
+                        ? (folderMembership.get(stub.id as string) ?? [])
+                            .map((fid) => folderById.get(fid))
+                            .filter((f): f is NonNullable<typeof f> => !!f)
+                            .map((f) => ({
+                              id: f.id,
+                              name: f.name,
+                              accentColor: f.accentColor,
+                            }))
+                        : [];
                       // Both active and viewed-in-viewer are ID-based - never index-based.
                       const isViewedInViewer = !!(
                         viewedWorkbenchId &&
@@ -808,7 +870,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           name={stub.name}
                           size={stub.size}
                           lastModified={stub.lastModified}
-                          isSelected={isInWorkbench}
+                          isSelected={isSelected}
                           isActive={isActive}
                           isViewedInViewer={isViewedInViewer}
                           thumbnailUrl={thumbnailUrl}
@@ -816,6 +878,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           onEyeClick={handleEyeClick}
                           draggable={isWatchFoldersActive}
                           onDragStart={handleWatchFolderDragStart}
+                          folders={memberFolders}
+                          onFolderClick={openWatchFolder}
                         />
                       );
                     })}

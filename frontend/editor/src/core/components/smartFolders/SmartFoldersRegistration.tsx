@@ -39,7 +39,9 @@ export default function SmartFoldersRegistration() {
       workbenchId: SMART_FOLDER_WORKBENCH_ID,
       label: t("smartFolders.sidebarTitle", "Watch Folders"),
       component: SmartFolderWorkbenchView,
-      hideTopControls: true,
+      // Show the standard workbench bar (view switcher) so users can navigate
+      // back to Viewer / Active Files instead of being stranded in this view.
+      hideTopControls: false,
       hideToolPanel: true,
     });
     return () => {
