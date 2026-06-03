@@ -40,12 +40,14 @@ FIXTURE_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     "exampleFiles",
 )
-# Existing cucumber fixtures — ghost1.pdf is a small single-page test PDF;
-# tables.pdf is multi-page. If you add more PAYG scenarios that need a
-# specific shape, drop the new fixture in exampleFiles/ and reference it
-# here so the rest of the test corpus stays close to the regular cucumber suite.
-SINGLE_PAGE_PDF = os.path.join(FIXTURE_DIR, "ghost1.pdf")
-THREE_PAGE_PDF = os.path.join(FIXTURE_DIR, "tables.pdf")
+# Existing cucumber fixtures (verified page counts via pypdf):
+#   tables.pdf  = 1 page    → SINGLE_PAGE_PDF
+#   ghost1.pdf  = 3 pages   → THREE_PAGE_PDF
+#   images.pdf  = 5 pages   (available if a scenario needs more)
+# If you add more PAYG scenarios that need a different shape, drop the
+# new fixture in exampleFiles/ and reference it here.
+SINGLE_PAGE_PDF = os.path.join(FIXTURE_DIR, "tables.pdf")
+THREE_PAGE_PDF = os.path.join(FIXTURE_DIR, "ghost1.pdf")
 
 
 # ---------------------------------------------------------------------------
@@ -261,29 +263,19 @@ def step_post_three_page_pdf(context, endpoint):
     _post_pdf(context, endpoint, THREE_PAGE_PDF)
 
 
-@when('I POST a malformed PDF to "{endpoint}" expecting 5xx')
-def step_post_malformed(context, endpoint):
-    malformed = b"%PDF-not-actually-a-pdf\nbroken bytes here"
-    files = {"fileInput": ("broken.pdf", malformed, "application/pdf")}
-    context.response = requests.post(
-        f"{BASE_URL}{endpoint}",
-        files=files,
-        headers=_api_headers(),
-        timeout=30,
-    )
+@when('I POST a single-page PDF to "{endpoint}" with form fields:')
+def step_post_with_form_fields(context, endpoint):
+    """The Gherkin step takes a `table` of key/value pairs that become
+    multipart form fields. Use this when the default `password=...` field
+    from _post_pdf() isn't what we want for the scenario."""
+    data = {row[0]: row[1] for row in context.table.rows} if context.table else {}
+    _post_pdf(context, endpoint, SINGLE_PAGE_PDF, form_data=data)
 
 
-@when('I POST a single-page PDF to "{endpoint}" with invalid params expecting 4xx')
-def step_post_invalid_params(context, endpoint):
-    # add-password without the required `password` form field → 400/422.
-    with open(SINGLE_PAGE_PDF, "rb") as f:
-        files = {"fileInput": ("input.pdf", f, "application/pdf")}
-        context.response = requests.post(
-            f"{BASE_URL}{endpoint}",
-            files=files,
-            headers=_api_headers(),
-            timeout=30,
-        )
+@when('I POST a 3-page PDF to "{endpoint}" with form fields:')
+def step_post_three_page_with_form_fields(context, endpoint):
+    data = {row[0]: row[1] for row in context.table.rows} if context.table else {}
+    _post_pdf(context, endpoint, THREE_PAGE_PDF, form_data=data)
 
 
 @when('I POST a single-page PDF with header "{header_name}: {header_value}" to "{endpoint}"')
@@ -328,11 +320,14 @@ def step_post_captured(context, captured_name, endpoint):
     )
 
 
-def _post_pdf(context, endpoint, fixture_path, extra_headers=None):
+def _post_pdf(context, endpoint, fixture_path, extra_headers=None, form_data=None):
+    """Default form data carries `password=cucumber-test-password` because
+    /add-password (our most-used scenario endpoint) requires it. Pass
+    {@code form_data} to override (e.g. to send the wrong password to
+    /remove-password for the 4xx scenario)."""
     with open(fixture_path, "rb") as f:
         files = {"fileInput": (os.path.basename(fixture_path), f, "application/pdf")}
-        # add-password needs a password field; harmless for tools that ignore extra fields.
-        data = {"password": "cucumber-test-password"}
+        data = form_data if form_data is not None else {"password": "cucumber-test-password"}
         context.response = requests.post(
             f"{BASE_URL}{endpoint}",
             files=files,
