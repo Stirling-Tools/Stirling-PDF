@@ -56,6 +56,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.policy.engine.PolicyExecutor;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -106,18 +107,20 @@ class AiWorkflowServiceTest {
                 .when(fileIdStrategy.idFor(any(MultipartFile.class)))
                 .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
+        PolicyExecutor policyExecutor =
+                new PolicyExecutor(
+                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
         service =
                 new AiWorkflowService(
                         pdfDocumentFactory,
                         aiEngineClient,
                         pdfContentExtractor,
                         objectMapper,
-                        internalApiClient,
                         fileStorage,
-                        toolMetadataService,
                         tempFileManager,
                         fileIdStrategy,
-                        endpointResolver);
+                        endpointResolver,
+                        policyExecutor);
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 
