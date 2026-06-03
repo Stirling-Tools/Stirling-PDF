@@ -368,7 +368,8 @@
 /* Bubble styling — user only */
 
 .chat-bubble {
-  max-width: 85%;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .chat-bubble-user {

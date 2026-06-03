@@ -117,7 +117,10 @@ export default function RightSidebar() {
         setChatWidthPx(
           Math.max(
             MIN_CHAT_WIDTH_PX,
-            Math.min(MAX_CHAT_WIDTH_PX, chatDragState.current.startWidth + delta),
+            Math.min(
+              MAX_CHAT_WIDTH_PX,
+              chatDragState.current.startWidth + delta,
+            ),
           ),
         );
       };
