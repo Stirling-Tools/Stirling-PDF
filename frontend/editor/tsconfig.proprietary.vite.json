@@ -4,13 +4,9 @@
     "paths": {
       "@app/*": ["src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
-  "exclude": [
-    "src/core/**/*.test.ts*",
-    "src/core/**/*.spec.ts*",
-    "src/desktop",
-    "node_modules"
-  ]
+  "exclude": ["src/core/**/*.test.ts*", "src/core/**/*.spec.ts*", "src/desktop"]
 }

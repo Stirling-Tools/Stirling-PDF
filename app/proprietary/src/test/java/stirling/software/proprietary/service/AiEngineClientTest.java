@@ -46,7 +46,7 @@ class AiEngineClientTest {
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
         ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}"));
+                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
         assertSame(cause, ex.getCause(), "Original cause should be preserved for diagnostics");
@@ -58,7 +58,7 @@ class AiEngineClientTest {
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
         ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}"));
+                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
 
         assertEquals(HttpStatus.GATEWAY_TIMEOUT, ex.getStatusCode());
         assertSame(cause, ex.getCause());
@@ -70,7 +70,7 @@ class AiEngineClientTest {
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
         ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.get("/x"));
+                assertThrows(ResponseStatusException.class, () -> client.get("/x", null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
@@ -80,7 +80,7 @@ class AiEngineClientTest {
         applicationProperties.getAiEngine().setEnabled(false);
 
         ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}"));
+                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
