@@ -1,21 +1,24 @@
 package stirling.software.proprietary.policy.trigger;
 
 /**
- * A source of pipeline runs. Triggers are Spring beans that, on some condition, build a {@code
- * PipelineDefinition} with inputs and hand it to the {@code PolicyEngine}.
+ * Activates policies of one trigger type. A trigger owns a {@link #type()} (matching {@code
+ * TriggerConfig.type()}); when its condition fires it runs the relevant {@code Policy} through the
+ * {@code PolicyEngine}.
  *
- * <p>Background triggers (folder watcher, schedule) own their own lifecycle via {@link #start()} /
- * {@link #stop()}. Request-driven triggers (manual) leave those as no-ops and fire directly in
- * response to a call. New trigger kinds are added as new beans without changing the engine.
+ * <p>Background triggers (folder watcher, schedule) are driven by configuration: on {@link
+ * #start()} they begin watching/scheduling for the policies returned by {@code
+ * PolicyStore.findByTriggerType(type())}, and stop on {@link #stop()}. Request-driven triggers
+ * (manual) have no background lifecycle and run a policy directly in response to a call. New
+ * trigger kinds are new beans of this type; the engine and the {@code Policy} model do not change.
  */
 public interface PolicyTrigger {
 
-    /** Stable identifier for this trigger kind (e.g. "manual", "folder", "schedule"). */
+    /** Stable identifier for this trigger kind, matching {@code TriggerConfig.type()}. */
     String type();
 
-    /** Begin listening for the trigger condition. No-op for request-driven triggers. */
+    /** Begin activating policies of this type (e.g. start a folder watcher). No-op for manual. */
     default void start() {}
 
-    /** Stop listening and release any resources. */
+    /** Stop activating and release any resources. */
     default void stop() {}
 }

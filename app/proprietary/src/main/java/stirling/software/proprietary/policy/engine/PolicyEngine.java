@@ -25,6 +25,7 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
@@ -43,8 +44,8 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
  * <p>The engine deliberately manages its own virtual-thread execution rather than routing through
  * {@code JobExecutorService}: that path force-completes a job once its work returns, which is
  * incompatible with a run that suspends in {@code WAITING_FOR_INPUT}. It still applies the shared
- * {@link ResourceMonitor}/{@link JobQueue} admission control, so heavy runs queue under load instead
- * of oversubscribing.
+ * {@link ResourceMonitor}/{@link JobQueue} admission control, so heavy runs queue under load
+ * instead of oversubscribing.
  */
 @Slf4j
 @Service
@@ -53,9 +54,9 @@ public class PolicyEngine {
 
     /**
      * Resource weight of a pipeline run for admission control. A run chains many tools and holds
-     * intermediate files, so it is weighted as heavy work: the shared {@link ResourceMonitor} should
-     * let it start while the system is healthy but hold it back under memory/CPU pressure. See
-     * {@link ResourceMonitor#shouldQueueJob(int)} for how a weight maps to that decision.
+     * intermediate files, so it is weighted as heavy work: the shared {@link ResourceMonitor}
+     * should let it start while the system is healthy but hold it back under memory/CPU pressure.
+     * See {@link ResourceMonitor#shouldQueueJob(int)} for how a weight maps to that decision.
      */
     private static final int RUN_RESOURCE_WEIGHT = 50;
 
@@ -107,6 +108,15 @@ public class PolicyEngine {
             asyncExecutor.execute(task);
         }
         return new PolicyRunHandle(runId, completion);
+    }
+
+    /**
+     * Run a stored policy on demand. Builds the policy's pipeline and submits it. {@code enabled}
+     * gates automatic triggering, not explicit runs, so this runs regardless of that flag.
+     */
+    public PolicyRunHandle runPolicy(
+            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+        return submit(policy.toDefinition(), inputs, listener);
     }
 
     public PolicyRun getRun(String runId) {

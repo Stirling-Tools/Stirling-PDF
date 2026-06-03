@@ -46,9 +46,11 @@ import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
+import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 
@@ -167,6 +169,40 @@ class PolicyEngineTest {
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
+    }
+
+    @Test
+    void runPolicyExecutesThePolicysPipeline() throws Exception {
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv -> {
+                            InputStream is = inv.getArgument(0);
+                            return new StoredFile("file-" + ++counter[0], is.readAllBytes().length);
+                        });
+
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "rotate",
+                        "owner",
+                        true,
+                        TriggerConfig.manual(),
+                        List.of(new PipelineStep(ROTATE, Map.of())),
+                        OutputSpec.inline());
+
+        PolicyRunHandle handle =
+                engine.runPolicy(
+                        policy,
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        verify(internalApiClient).post(eq(ROTATE), any());
     }
 
     @Test

@@ -13,9 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,11 +40,13 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.ManualTrigger;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 
@@ -50,12 +54,13 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Manually triggers and inspects pipeline runs. The premium backend entry point for running a
- * pipeline of tools; the Automate frontend targets this once it moves server-side.
+ * Manages policies and runs pipelines. The premium backend entry point: CRUD for stored {@code
+ * Policy} objects, running a stored policy by id, and running an ad-hoc pipeline (for AI/Automate
+ * one-offs).
  *
- * <p>Runs execute asynchronously: {@code POST /run} returns a run id immediately. Poll {@code GET
- * /run/{runId}} for status, and download outputs via the existing {@code GET
- * /api/v1/general/files/{fileId}} using the file ids in the run view.
+ * <p>Runs execute asynchronously and return a run id immediately. Poll {@code GET /run/{runId}} for
+ * status, and download outputs via the existing {@code GET /api/v1/general/files/{fileId}} using the
+ * file ids in the run view.
  */
 @Slf4j
 @RestController
@@ -68,6 +73,7 @@ public class PolicyController {
 
     private final ManualTrigger manualTrigger;
     private final PolicyRunRegistry runRegistry;
+    private final PolicyStore policyStore;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
@@ -138,6 +144,71 @@ public class PolicyController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(PolicyRunView.of(run));
+    }
+
+    // --- Policy management ---
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Create or update a policy",
+            description =
+                    "Stores a policy (trigger config + steps + output + metadata). A blank id is"
+                            + " assigned; returns the stored policy with its id.")
+    public ResponseEntity<Policy> savePolicy(@RequestBody String json) {
+        return ResponseEntity.ok(policyStore.save(parsePolicy(json)));
+    }
+
+    @GetMapping
+    @Operation(summary = "List policies")
+    public List<Policy> listPolicies() {
+        return policyStore.all();
+    }
+
+    @GetMapping("/{policyId}")
+    @Operation(summary = "Get a policy by id")
+    public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
+        return policyStore
+                .get(policyId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{policyId}")
+    @Operation(summary = "Delete a policy by id")
+    public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
+        return policyStore.delete(policyId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping(value = "/{policyId}/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Run a stored policy",
+            description =
+                    "Runs the stored policy's pipeline on the supplied files (primary documents"
+                            + " under 'fileInput', supporting files under their asset-key fields)."
+                            + " Runs regardless of the policy's enabled flag, which only gates"
+                            + " automatic triggering. Returns a run id.")
+    public ResponseEntity<JobResponse<Void>> runStoredPolicy(
+            @PathVariable String policyId, MultipartHttpServletRequest request) throws IOException {
+        Policy policy =
+                policyStore
+                        .get(policyId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "No policy: " + policyId));
+        PolicyInputs inputs = collectInputs(request);
+        String runId = manualTrigger.run(policy, inputs, PolicyProgressListener.NOOP).runId();
+        return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
+    }
+
+    private Policy parsePolicy(String json) {
+        try {
+            return objectMapper.readValue(json, Policy.class);
+        } catch (JacksonException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid policy JSON");
+        }
     }
 
     private PipelineDefinition parseDefinition(String json) {
