@@ -42,7 +42,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import JSZip from "jszip";
 import { useSmartFolders } from "@app/hooks/useSmartFolders";
 import { useFolderData } from "@app/hooks/useFolderData";
-import { useFolderRunState } from "@app/hooks/useFolderRunState";
+import type { TFunction } from "i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   SMART_FOLDER_VIEW_ID,
@@ -174,10 +174,7 @@ interface SmartFolderWorkbenchViewProps {
   };
 }
 
-export function timeAgo(
-  date: Date,
-  t: (key: string, options?: any) => string,
-): string {
+export function timeAgo(date: Date, t: TFunction): string {
   const secs = Math.floor((Date.now() - date.getTime()) / 1000);
   if (secs < 60) return t("smartFolders.time.justNow", "just now");
   const mins = Math.floor(secs / 60);
@@ -204,7 +201,7 @@ function RetryCountdown({
   t,
 }: {
   nextRetryAt: number;
-  t: (key: string, opts?: any) => string;
+  t: TFunction;
 }) {
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, nextRetryAt - Date.now()),
@@ -243,13 +240,10 @@ export function SmartFolderWorkbenchView({
     folderRecord,
     fileIds,
     processingFileIds,
-    processedFileIds,
     addFile,
     updateFileMetadata,
     removeFile,
   } = useFolderData(folderId ?? "");
-
-  const { recentRuns } = useFolderRunState(folderId ?? "");
 
   const isLocalFolder = folder?.inputSource === "local-folder";
 
@@ -425,7 +419,7 @@ export function SmartFolderWorkbenchView({
   );
 
   const handleView = useCallback((file: StirlingFile) => {
-    setPreviewFileId(file.fileId as FileId);
+    setPreviewFileId(file.fileId);
     setPreviewFileName(file.name);
   }, []);
 
@@ -485,7 +479,7 @@ export function SmartFolderWorkbenchView({
           ? d.getTime()
           : typeof d === "number"
             ? d
-            : new Date(d as string).getTime();
+            : new Date(d).getTime();
     const now = Date.now();
     const cutoff =
       statsPeriod === "24h"
@@ -604,7 +598,8 @@ export function SmartFolderWorkbenchView({
         const id = ids[cur];
         setSelectedActivityIds((prev) => {
           const n = new Set(prev);
-          n.has(id) ? n.delete(id) : n.add(id);
+          if (n.has(id)) n.delete(id);
+          else n.add(id);
           return n;
         });
       } else if (e.key === "Enter" && cur >= 0) {
@@ -1470,7 +1465,7 @@ export function SmartFolderWorkbenchView({
 
           <ScrollArea
             style={{ flex: 1 }}
-            viewportRef={listRef as any}
+            viewportRef={listRef}
             onKeyDown={(e) => handleListKeyDown(e, filteredActivityIds)}
             tabIndex={0}
             styles={{ viewport: { outline: "none" } }}
@@ -1534,7 +1529,8 @@ export function SmartFolderWorkbenchView({
                           onClick={() =>
                             setSelectedActivityIds((prev) => {
                               const n = new Set(prev);
-                              n.has(fileId) ? n.delete(fileId) : n.add(fileId);
+                              if (n.has(fileId)) n.delete(fileId);
+                              else n.add(fileId);
                               return n;
                             })
                           }
@@ -1651,7 +1647,7 @@ export function SmartFolderWorkbenchView({
                           >
                             {meta?.processedAt || meta?.addedAt
                               ? timeAgo(
-                                  new Date((meta.processedAt ?? meta.addedAt)!),
+                                  new Date(meta.processedAt ?? meta.addedAt),
                                   t,
                                 )
                               : ""}
@@ -1931,7 +1927,7 @@ export function SmartFolderWorkbenchView({
                                         errorMessage: undefined,
                                       });
                                       runPipeline(
-                                        folder!,
+                                        folder,
                                         inputFile,
                                         fileId,
                                         folderRecord?.files[fileId]

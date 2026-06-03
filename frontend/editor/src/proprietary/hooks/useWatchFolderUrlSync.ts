@@ -113,7 +113,7 @@ export function useWatchFolderUrlSync() {
     if (isWatchFolder) {
       mountSlugRef.current = slug;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Phase 1b: navigate once the view is registered
   useEffect(() => {
@@ -130,12 +130,12 @@ export function useWatchFolderUrlSync() {
 
     if (!slug) {
       setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-      actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+      actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
       return;
     }
 
     setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-    actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+    actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
 
     if (foldersRef.current.length > 0) {
       const id = slugToIdRef.current.get(slug) ?? null;
@@ -178,12 +178,12 @@ export function useWatchFolderUrlSync() {
 
       if (!slug) {
         setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-        actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+        actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
         return;
       }
 
       setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-      actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+      actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
 
       if (foldersRef.current.length > 0) {
         const id = slugToIdRef.current.get(slug) ?? null;

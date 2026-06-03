@@ -84,7 +84,11 @@ export function useLocalFolderPoller(
               .filter(Boolean) as string[],
           );
 
-          for await (const [, entry] of (inputHandle as any).entries()) {
+          for await (const [, entry] of (
+            inputHandle as unknown as {
+              entries(): AsyncIterableIterator<[string, FileSystemHandle]>;
+            }
+          ).entries()) {
             if (cancelled) return;
             if (entry.kind !== "file") continue;
 

@@ -26,7 +26,6 @@ import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandl
 import {
   canReadLocalFolder,
   canWriteLocalFolder,
-  FS_READ_UNSUPPORTED_MSG,
   FS_WRITE_UNSUPPORTED_MSG,
 } from "@app/utils/fsAccessCapability";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
@@ -481,7 +480,11 @@ export function SmartFolderManagementModal({
                             onClick={async () => {
                               try {
                                 const handle = await (
-                                  window as any
+                                  window as unknown as {
+                                    showDirectoryPicker: (options?: {
+                                      mode?: "read" | "readwrite";
+                                    }) => Promise<FileSystemDirectoryHandle>;
+                                  }
                                 ).showDirectoryPicker({ mode: "read" });
                                 pendingInputDirHandle.current = handle;
                                 setInputDirName(handle.name);
@@ -572,7 +575,11 @@ export function SmartFolderManagementModal({
                           onClick={async () => {
                             try {
                               const handle = await (
-                                window as any
+                                window as unknown as {
+                                  showDirectoryPicker: (options?: {
+                                    mode?: "read" | "readwrite";
+                                  }) => Promise<FileSystemDirectoryHandle>;
+                                }
                               ).showDirectoryPicker({ mode: "readwrite" });
                               pendingDirHandle.current = handle;
                               setOutputDirName(handle.name);

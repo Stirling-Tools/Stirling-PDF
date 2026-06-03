@@ -25,6 +25,7 @@ import {
   resolveInputFile,
 } from "@app/hooks/useFolderAutomation";
 import { SmartFolder } from "@app/types/smartFolders";
+import { type FileId } from "@app/types/file";
 import { AutomationConfig } from "@app/types/automation";
 import { automationStorage } from "@app/services/automationStorage";
 import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
@@ -542,7 +543,9 @@ export function SmartFolderHomePage() {
               ownedByFolder: boolean;
             }> = [];
             for (const [id, meta] of pendingEntries) {
-              const stirlingFile = await fileStorage.getStirlingFile(id as any);
+              const stirlingFile = await fileStorage.getStirlingFile(
+                id as FileId,
+              );
               if (stirlingFile) {
                 items.push({
                   file: stirlingFile,
@@ -562,7 +565,7 @@ export function SmartFolderHomePage() {
   const handleDropSidebarFile = useCallback(
     async (folder: SmartFolder, fileIds: string[]) => {
       const results = await Promise.all(
-        fileIds.map((id) => fileStorage.getStirlingFile(id as any)),
+        fileIds.map((id) => fileStorage.getStirlingFile(id as FileId)),
       );
       const stirlingFiles = results.filter(Boolean) as File[];
       if (stirlingFiles.length > 0) processFiles(folder, stirlingFiles);

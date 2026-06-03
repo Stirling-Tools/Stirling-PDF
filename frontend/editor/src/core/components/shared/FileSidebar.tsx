@@ -45,6 +45,7 @@ import {
   setWatchFolderDraggedFileIds,
   clearWatchFolderDraggedFileIds,
 } from "@app/components/smartFolders/watchFolderDragState";
+import { WATCH_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
@@ -758,28 +759,30 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             {/* Watch Folders entry */}
-            <div
-              className="file-sidebar-action-row"
-              data-testid="watchFolders-button"
-              data-active={isWatchFoldersActive}
-              onClick={openWatchFolders}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && openWatchFolders()}
-              aria-label={t("smartFolders.sidebarTitle", "Watch Folders")}
-              style={
-                isWatchFoldersActive
-                  ? { backgroundColor: "var(--active-bg)" }
-                  : undefined
-              }
-            >
-              <FolderSpecialIcon className="file-sidebar-action-icon" />
-              {!collapsed && (
-                <span className="file-sidebar-action-label sidebar-content-fade">
-                  {t("smartFolders.sidebarTitle", "Watch Folders")}
-                </span>
-              )}
-            </div>
+            {WATCH_FOLDERS_ENABLED && (
+              <div
+                className="file-sidebar-action-row"
+                data-testid="watchFolders-button"
+                data-active={isWatchFoldersActive}
+                onClick={openWatchFolders}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && openWatchFolders()}
+                aria-label={t("smartFolders.sidebarTitle", "Watch Folders")}
+                style={
+                  isWatchFoldersActive
+                    ? { backgroundColor: "var(--active-bg)" }
+                    : undefined
+                }
+              >
+                <FolderSpecialIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("smartFolders.sidebarTitle", "Watch Folders")}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Files section - always visible when expanded */}
             {!collapsed && (
@@ -836,7 +839,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       // already shows "in this folder"; in other views they'd just
                       // be noise.
                       const showFolderDots =
-                        isWatchFoldersActive && activeWatchFolderId === null;
+                        WATCH_FOLDERS_ENABLED &&
+                        isWatchFoldersActive &&
+                        activeWatchFolderId === null;
                       const memberFolders = showFolderDots
                         ? (folderMembership.get(stub.id as string) ?? [])
                             .map((fid) => folderById.get(fid))

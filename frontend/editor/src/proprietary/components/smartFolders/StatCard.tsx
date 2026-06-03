@@ -25,7 +25,7 @@ export function StatCard({
   return (
     <div
       onClick={(e) => {
-        if (isClickable) onClick!(e.currentTarget.getBoundingClientRect());
+        if (isClickable) onClick(e.currentTarget.getBoundingClientRect());
       }}
       style={{
         padding: "0.5rem 0.75rem 2rem",

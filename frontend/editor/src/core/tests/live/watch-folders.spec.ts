@@ -12,16 +12,6 @@ import { test, expect, Page } from "@playwright/test";
 const USER = process.env.STIRLING_USER ?? "admin";
 const PASS = process.env.STIRLING_PASS ?? "stirling";
 
-// Minimal 1-page valid PDF
-const MINIMAL_PDF = Buffer.from(
-  "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj " +
-    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj " +
-    "3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj " +
-    "xref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n" +
-    "0000000058 00000 n\n0000000115 00000 n\n" +
-    "trailer<</Size 4/Root 1 0 R>>\nstartxref\n190\n%%EOF",
-);
-
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------

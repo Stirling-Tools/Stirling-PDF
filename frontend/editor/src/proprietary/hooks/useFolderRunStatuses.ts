@@ -87,7 +87,7 @@ export function useFolderRunStatuses(
         }, DONE_TTL_MS);
         timers.set(folderId, timer);
       } else if (status !== "done" && timers.has(folderId)) {
-        clearTimeout(timers.get(folderId)!);
+        clearTimeout(timers.get(folderId));
         timers.delete(folderId);
       }
     });
