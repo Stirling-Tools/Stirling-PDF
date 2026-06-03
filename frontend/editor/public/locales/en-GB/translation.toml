@@ -3132,6 +3132,10 @@ integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
 
+[config.payg]
+label = "Billing & usage"
+section = "Pay-as-you-go"
+
 [connectionMode.status]
 localOffline = "Offline mode running"
 localOnline = "Offline mode running"
@@ -5567,6 +5571,72 @@ bullet2 = "Spaces are automatically removed"
 bullet3 = "Invalid expressions are ignored"
 text = "Keep these guidelines in mind:"
 title = "Tips"
+
+[payg]
+subtitle = "Pay-as-you-go — you only pay for what you process. Billing period {{start}} – {{end}}."
+
+[payg.activity]
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
+units = "units"
+viewAll = "View all"
+
+[payg.cap]
+amount = "Cap amount"
+currency = "Currency"
+degradeAt = "Limit spend at"
+degradeAtDesc = "Set below 100% to leave yourself headroom."
+perMonth = "/ month"
+preview = "{{money}} ≈ {{units}} documents per month"
+previewNote = "At current pricing. Final translation happens server-side on save."
+previewShort = "≈ {{units}} documents per month at current pricing."
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to documents using the current price tier."
+title = "Monthly spending cap"
+warnAt = "Warn me at"
+warnAtDesc = "Notify when usage crosses this threshold."
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+subtitle = "Your everyday tools keep working. Only AI and automation pause until the cap resets or is raised."
+title = "What happens when the cap is reached"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+contactLeader = "Ask team owner to raise cap"
+editCap = "Edit"
+noCap = "· no sub-cap"
+setCap = "Set cap"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.subcaps]
+subtitle = "Optional: cap individual teammates so one person can't drain the team budget."
+title = "Per-member sub-caps"
+
+[payg.usage]
+credit = "{{amount}} account credit"
+docs = "documents"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+spent = "{{spend}} of {{cap}} used"
+thisPeriod = "This billing period"
 
 [payment]
 autoClose = "This window will close automatically..."
