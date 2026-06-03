@@ -138,8 +138,8 @@ public class PolicyExecutor {
      * Call an endpoint and return its result files and optional report.
      *
      * <ul>
-     *   <li>JSON body (Content-Type: application/json): the entire body is the report, no files
-     *       are returned.
+     *   <li>JSON body (Content-Type: application/json): the entire body is the report, no files are
+     *       returned.
      *   <li>File body (PDF etc.): the file is returned; if an {@link
      *       AiToolResponseHeaders#TOOL_REPORT} header is present, its (minified JSON) value is
      *       parsed as the report.
