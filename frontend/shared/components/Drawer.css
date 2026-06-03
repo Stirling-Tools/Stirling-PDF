@@ -1,0 +1,110 @@
+.sui-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.32);
+  z-index: var(--z-drawer);
+  animation: fadeIn 0.18s ease both;
+}
+
+.sui-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  max-width: 100vw;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  z-index: calc(var(--z-drawer) + 1);
+  animation: slideInRight 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.sui-drawer--right {
+  right: 0;
+  border-left: 1px solid var(--color-border);
+  box-shadow: -4px 0 24px rgba(15, 23, 42, 0.12);
+}
+
+.sui-drawer--left {
+  left: 0;
+  border-right: 1px solid var(--color-border);
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+  animation-name: slideInLeft;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sui-drawer--sm {
+  width: 22rem;
+}
+.sui-drawer--md {
+  width: 27.5rem;
+}
+.sui-drawer--lg {
+  width: 36rem;
+}
+
+.sui-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.sui-drawer__header-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sui-drawer__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.sui-drawer__sub {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+.sui-drawer__close {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-4);
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.sui-drawer__close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+
+.sui-drawer__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4) var(--space-6);
+}
+
+.sui-drawer__footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border-light);
+  background: var(--color-bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

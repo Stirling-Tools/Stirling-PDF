@@ -32,9 +32,16 @@ use commands::{
     set_connection_mode,
     set_as_default_pdf_handler,
     get_desktop_os,
+    get_update_mode,
     print_pdf_file_native,
+    set_update_mode,
     start_backend,
     start_oauth_login,
+    can_install_updates,
+    check_for_update,
+    download_and_install_update,
+    get_app_version,
+    restart_app,
     target_window_label,
     MAIN_WINDOW_LABEL,
 };
@@ -79,6 +86,7 @@ pub fn run() {
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_window_state::Builder::default().build())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
@@ -181,6 +189,13 @@ pub fn run() {
       start_oauth_login,
       get_desktop_os,
       print_pdf_file_native,
+      can_install_updates,
+      check_for_update,
+      download_and_install_update,
+      get_app_version,
+      get_update_mode,
+      set_update_mode,
+      restart_app,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
