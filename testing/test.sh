@@ -509,6 +509,23 @@ verify_app_version() {
     fi
 }
 
+# Optional second compose file injected on every up/down call (e.g. the
+# JaCoCo coverage override). Set externally by callers that want the
+# extra layer applied; left empty so production runs are unchanged.
+COVERAGE_COMPOSE_FILE="${COVERAGE_COMPOSE_FILE:-}"
+
+# Helper that joins the base compose file with any optional override into
+# the `-f a -f b` form docker-compose expects. Keeps callers terse and
+# means we only have one place to add new overrides later.
+compose_args() {
+    local base=$1
+    if [ -n "$COVERAGE_COMPOSE_FILE" ]; then
+        printf -- '-f %s -f %s' "$base" "$COVERAGE_COMPOSE_FILE"
+    else
+        printf -- '-f %s' "$base"
+    fi
+}
+
 # Function to test a Docker Compose configuration
 test_compose() {
     local compose_file=$1
@@ -519,18 +536,18 @@ test_compose() {
     echo "Testing ${compose_file} configuration..."
 
     # Start up the Docker Compose service
-    docker-compose -f "$compose_file" up -d
+    docker-compose $(compose_args "$compose_file") up -d
 
     # Wait a moment for containers to appear
     sleep 3
 
     local container_name
-    container_name=$(docker-compose -f "$compose_file" ps --format '{{.Names}}' --filter "status=running" | head -n1)
+    container_name=$(docker-compose $(compose_args "$compose_file") ps --format '{{.Names}}' --filter "status=running" | head -n1)
 
     if [[ -z "$container_name" ]]; then
         echo "ERROR: No running container found for ${compose_file}"
         local compose_output
-        compose_output=$(docker-compose -f "$compose_file" ps 2>&1)
+        compose_output=$(docker-compose $(compose_args "$compose_file") ps 2>&1)
         echo "$compose_output"
         capture_failure_logs "$test_name" "" "docker-compose failed for: ${compose_file}
 ${compose_output}"
@@ -856,6 +873,24 @@ main() {
     # ==================================================================
     # 3. Regression test with login (test_cicd.yml)
     # ==================================================================
+    # STIRLING_PDF_TEST_COVERAGE=1 layers the JaCoCo agent override over
+    # the cucumber container ONLY. The agent jar is bind-mounted from
+    # build/jacoco/jacocoagent.jar so the published image never carries
+    # it. After behave finishes, we trigger `docker compose down` (further
+    # down) which sends SIGTERM and lets dumponexit=true flush the .exec
+    # to testing/cucumber-coverage/cucumber.exec on the host.
+    COVERAGE_COMPOSE_FILE=""
+    if [ -n "${STIRLING_PDF_TEST_COVERAGE:-}" ]; then
+        if [ ! -f "$PROJECT_ROOT/build/jacoco/jacocoagent.jar" ]; then
+            echo "::warning::STIRLING_PDF_TEST_COVERAGE=1 but build/jacoco/jacocoagent.jar is missing - run ./gradlew copyJacocoAgent first"
+        else
+            mkdir -p "$PROJECT_ROOT/testing/cucumber-coverage"
+            rm -f "$PROJECT_ROOT/testing/cucumber-coverage/cucumber.exec"
+            COVERAGE_COMPOSE_FILE="$PROJECT_ROOT/testing/compose/docker-compose-coverage.override.yml"
+            echo "Cucumber JaCoCo coverage enabled - exec will land at testing/cucumber-coverage/cucumber.exec"
+        fi
+    fi
+
     run_tests "Stirling-PDF-Security-Fat-with-login" "./docker/embedded/compose/test_cicd.yml"
 
     # Only run behave tests if the container started successfully
@@ -979,7 +1014,13 @@ main() {
         fi
         stop_test_timer "Stirling-PDF-Regression"
     fi
-    docker-compose -f "./docker/embedded/compose/test_cicd.yml" down -v
+    # `down` with the override removes the agent bind-mount cleanly. The
+    # SIGTERM that `down` sends is what triggers dumponexit=true in the
+    # agent to flush testing/cucumber-coverage/cucumber.exec to disk.
+    docker-compose $(compose_args "./docker/embedded/compose/test_cicd.yml") down -v
+    # Reset so subsequent compose calls (CI cleanup, non-cucumber tests)
+    # don't accidentally pick up the override.
+    COVERAGE_COMPOSE_FILE=""
 
     # ==================================================================
     # 4. Disabled Endpoints Test

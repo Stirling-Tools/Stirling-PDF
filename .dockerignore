@@ -26,8 +26,9 @@ version_builds/
 node_modules/
 **/node_modules/
 frontend/node_modules/
-frontend/dist/
-frontend/playwright-report/
+frontend/editor/dist/
+frontend/dist-portal/
+frontend/editor/playwright-report/
 .npm/
 .yarn/
 
