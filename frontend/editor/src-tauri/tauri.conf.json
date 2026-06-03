@@ -23,6 +23,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": "v1Compatible",
     "publisher": "Stirling PDF Inc.",
     "targets": ["deb", "rpm", "appimage", "dmg", "msi"],
     "icon": [
