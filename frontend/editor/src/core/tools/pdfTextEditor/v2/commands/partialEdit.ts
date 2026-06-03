@@ -64,6 +64,28 @@ export interface PartialEditOp {
    */
   anchorSubRunIdx?: number;
   /**
+   * insert only: the FOLLOWING kept sub-run this insert is a prefix of.
+   * Set when the user typed chars directly in front of a word (preceded
+   * by whitespace / line-start, with no space between the insert and the
+   * word) - e.g. "AA" before "Acrobat". The emit then anchors at that
+   * sub-run's ORIGINAL left edge so the result reads "AAAcrobat" in
+   * Acrobat's slot, and the following kept sub-runs shift right by the
+   * full inserted width. Without this, the insert lands at the running
+   * cursor (the previous word's right edge) and glues on as "AdobeAA".
+   * Mutually exclusive with `anchorSubRunIdx`.
+   */
+  anchorBeforeSubRunIdx?: number;
+  /**
+   * insert only: how many whitespace chars in nextText sit between the
+   * previous emitted glyph and this insert but belong to NO sub-run (ghost
+   * spaces - e.g. a space the user just typed, which emits no object). The
+   * apply step advances the insert's x by this many space-widths so the
+   * new text isn't glued onto the preceding word ("more.ZEBRA"). Only used
+   * for unanchored inserts (the anchored variants position off a sub-run's
+   * own x, which already sits past the gap).
+   */
+  leadingGhostCount?: number;
+  /**
    * Position in nextText where this op's first char lives. Used by
    * apply to write the correct `mergedFromCharStarts` entry so the
    * stored char-positions stay aligned with the run.text layout
@@ -236,19 +258,29 @@ export function planPartialEdit(
   let insertBuf = "";
   let insertAnchorSubRun: number | undefined;
   let insertStartBIdx = 0;
+  // bIdx of the last char that produced (or rode on) a glyph - i.e. a kept
+  // real char, a modified char, or an inserted char. Ghost whitespace does
+  // NOT advance it, so the count of ghosts immediately before an insert is
+  // `insertStartBIdx - lastEmittedBIdx - 1`.
+  let lastEmittedBIdx = -1;
+  // Ghost whitespace chars sitting right before the pending insert.
+  let insertLeadingGhosts = 0;
   // Mixed sub-runs we've already emitted a single "modify" op for, so a
   // later surviving char from the same sub-run doesn't emit a second.
   const modifiedSubRuns = new Set<number>();
-  function flushInsert(): void {
+  function flushInsert(anchorBeforeSubRunIdx?: number): void {
     if (insertBuf.length === 0) return;
     ops.push({
       type: "insert",
       text: insertBuf,
       anchorSubRunIdx: insertAnchorSubRun,
+      anchorBeforeSubRunIdx,
+      leadingGhostCount: insertLeadingGhosts,
       startBIdx: insertStartBIdx,
     });
     insertBuf = "";
     insertAnchorSubRun = undefined;
+    insertLeadingGhosts = 0;
   }
   // Map next-bIdx → aIdx via alignment array
   const bToA = new Map<number, number>();
@@ -279,16 +311,42 @@ export function planPartialEdit(
           });
           modifiedSubRuns.add(subRunIdx);
         }
+        lastEmittedBIdx = b;
         continue;
       }
-      flushInsert();
+      // A pending pure-insert that ends in a non-whitespace char, sits at
+      // the START of this NEW sub-run, and is itself preceded by
+      // whitespace (or the line start) is a PREFIX the user typed onto
+      // this following word - e.g. "AA" before "Acrobat". Anchor it at
+      // this sub-run's original left edge so it renders "AAAcrobat" in
+      // Acrobat's slot rather than glued to the previous word ("AdobeAA").
+      // A non-whitespace char before the insert (a mid-word insert) leaves
+      // it anchored at the running cursor (grow-right), unchanged.
+      let anchorBeforeIdx: number | undefined;
+      if (
+        insertBuf.length > 0 &&
+        insertAnchorSubRun === undefined &&
+        subRunIdx !== lastSubRun &&
+        !/\s$/.test(insertBuf) &&
+        (insertStartBIdx === 0 || /\s/.test(nextText[insertStartBIdx - 1]))
+      ) {
+        anchorBeforeIdx = subRunIdx;
+      }
+      flushInsert(anchorBeforeIdx);
       if (subRunIdx !== lastSubRun) {
         ops.push({ type: "keep", subRunIdx, startBIdx: b });
         lastSubRun = subRunIdx;
       }
+      lastEmittedBIdx = b;
     } else {
-      if (insertBuf.length === 0) insertStartBIdx = b;
+      if (insertBuf.length === 0) {
+        insertStartBIdx = b;
+        // Whitespace chars skipped since the last real glyph are ghost
+        // spaces this insert must sit AFTER (not on top of).
+        insertLeadingGhosts = Math.max(0, b - lastEmittedBIdx - 1);
+      }
       insertBuf += nextText[b];
+      lastEmittedBIdx = b;
     }
   }
   flushInsert();
@@ -606,14 +664,33 @@ export function applyPartialEditPlan(
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
       const anchorIdx = op.anchorSubRunIdx;
+      const beforeIdx = op.anchorBeforeSubRunIdx;
       if (anchorIdx !== undefined) absorbDeletesBefore(anchorIdx);
+      else if (beforeIdx !== undefined) absorbDeletesBefore(beforeIdx);
       const origBounds =
         anchorIdx !== undefined ? plan.prevMergedFromBounds[anchorIdx] : null;
-      // Anchored inserts (replacing a mixed sub-run) emit at the
-      // original sub-run's x PLUS any offset already accumulated from
-      // earlier replacements. Unanchored inserts (typed-at-end) emit
-      // at lastEnd.
-      const anchorX = origBounds ? origBounds.x + offset : lastEnd;
+      // "prefix of the following word" anchor: emit at that kept sub-run's
+      // original left edge so the insert + the glyphs after it read as one
+      // word. The following keeps shift right by the full inserted width
+      // (handled by the `else` offset branch below, same as an unanchored
+      // insert), so they make room rather than overlap.
+      const beforeBounds =
+        beforeIdx !== undefined ? plan.prevMergedFromBounds[beforeIdx] : null;
+      // Anchor priority:
+      //   * anchorSubRunIdx (mixed-replacement): emit at the replaced
+      //     sub-run's x; subsequent keeps shift by the WIDTH DELTA.
+      //   * anchorBeforeSubRunIdx (typed-prefix): emit at the following
+      //     sub-run's x; subsequent keeps shift by the FULL inserted width.
+      //   * neither (typed-at-end / mid-word): emit at the running cursor,
+      //     advanced past any ghost spaces typed just before it so the new
+      //     text isn't glued to the preceding word.
+      const leadingGap =
+        (op.leadingGhostCount ?? 0) * Math.max(1, run.fontSize) * 0.25;
+      const anchorX = origBounds
+        ? origBounds.x + offset
+        : beforeBounds
+          ? beforeBounds.x + offset
+          : lastEnd + leadingGap;
 
       // Borrow the font from a survivor that actually contains the
       // inserted chars (e.g. the neighbouring "i"), so the new glyph
@@ -714,8 +791,11 @@ export function applyPartialEditPlan(
       if (origBounds) {
         const origWidth = origBounds.right - origBounds.x;
         offset += measuredWidth - origWidth;
-      } else {
+      } else if (beforeBounds) {
         offset += measuredWidth;
+      } else {
+        // The ghost-space gap also pushes everything after this insert right.
+        offset += leadingGap + measuredWidth;
       }
     }
   }

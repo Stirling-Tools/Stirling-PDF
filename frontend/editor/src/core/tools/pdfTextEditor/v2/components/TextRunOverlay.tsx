@@ -135,6 +135,8 @@ function extractHardBreaks(element: HTMLElement): string {
 interface TextRunOverlayProps {
   run: TextRunSnapshot;
   pageHeight: number;
+  /** Page width in PDF points - caps the box so it never runs off-page. */
+  pageWidth: number;
   scale: number;
   /** "grow": box widens to the right. "wrap": locked width, wraps down. */
   widthMode: WidthMode;
@@ -145,6 +147,13 @@ interface TextRunOverlayProps {
   onEdit: (nextText: string) => void;
   /** Fires when the user Ctrl+drags the run to a new position. dx/dy are PDF points. */
   onMove?: (dx: number, dy: number) => void;
+  /**
+   * Fires on blur in Wrap mode when the edited content overflows the locked
+   * box width - asks the editor to reflow the run's glyphs to `maxWidthPt`
+   * (PDF points) by repositioning them, so the wrap persists without
+   * re-setting (and garbling) the embedded font.
+   */
+  onWrap?: (maxWidthPt: number) => void;
 }
 
 /**
@@ -156,6 +165,7 @@ interface TextRunOverlayProps {
 export function TextRunOverlay({
   run,
   pageHeight,
+  pageWidth,
   scale,
   widthMode,
   selected,
@@ -163,10 +173,14 @@ export function TextRunOverlay({
   onSelect,
   onEdit,
   onMove,
+  onWrap,
 }: TextRunOverlayProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  // Text content captured when the box gains focus, so blur can tell whether
+  // the user actually edited it (and a Wrap reflow is warranted).
+  const focusTextRef = useRef<string>("");
   // Ctrl+drag-to-move state. `dragOffset` is the live cursor delta (px)
   // applied as a CSS transform so the box follows the cursor during the
   // drag; it's committed to a real move (and reset) on mouseup.
@@ -175,6 +189,16 @@ export function TextRunOverlay({
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
   );
+  // The run's text and bounds width on first render - the stable baselines
+  // for the wrap-mode lock width (see below). The component is keyed by
+  // run.id, so these refs are per-run and never cross to a different run.
+  const originalTextRef = useRef<string>(run.text);
+  const originalBoundsWidthRef = useRef<number>(run.bounds.width);
+  // Whether this run was a real (multi-line) paragraph when it first
+  // mounted. Only those force a re-flow on click-off; a single-line run
+  // (e.g. a heading) that merely gained a manual break must NOT be
+  // re-flowed - that would collapse its original spacing.
+  const wasParagraphRef = useRef<boolean>((run.paragraphLineCount ?? 1) > 1);
 
   // Sync the contenteditable's text with the snapshot on external
   // changes (undo/redo, multi-select). We never render the text via
@@ -251,15 +275,50 @@ export function TextRunOverlay({
   //    very narrow source runs usable.
   const isParagraph = (run.paragraphLineCount ?? 1) > 1;
   const wrapMode = widthMode === "wrap";
-  const width = wrapMode
-    ? Math.max(pdfWidth, fontSizePx * 3)
+  // Wrap-mode lock width. Lock to the CSS width the run's ORIGINAL text
+  // needs - NOT the PDF bounds width. The CSS fallback font is wider than
+  // the embedded PDF font, so locking to the (narrower) PDF width instantly
+  // wraps the existing line the moment the box is focused, and the text
+  // appears to jump ("teleport"). Measuring the original text in the SAME
+  // CSS font the box renders with guarantees the existing content stays on
+  // its line; only text the user adds beyond it wraps onto new lines. The
+  // small pad absorbs sub-pixel rounding between canvas and layout metrics.
+  // Lock to the ORIGINAL box: the wider of the run's original bounds width
+  // and the CSS width its original text needs. Both are captured on first
+  // render, so neither grows as the user types. Using the LIVE `pdfWidth`
+  // here would be wrong - committing one-line text grows `run.bounds.width`
+  // to fit it, so the box (and the wrap point) would widen with every
+  // keystroke and only the final word would ever wrap.
+  const wrapLockWidth = Math.max(
+    originalBoundsWidthRef.current * scale,
+    measureMaxLineWidth(
+      originalTextRef.current,
+      fontFamily,
+      fontWeight,
+      fontStyle,
+      fontSizePx,
+    ) +
+      fontSizePx * 0.5,
+  );
+  // A multi-line paragraph always WRAPS (never grows off to the right) - it
+  // is body text, not a single-line label. "grow" only applies to genuine
+  // single-line runs. Without this, focusing a paragraph and typing made
+  // the box widen to the (double-spaced, CSS-font) widest line, which blew
+  // out past the page edge and clipped text the user never touched.
+  const wantWrap = wrapMode || isParagraph;
+  // Never let the box extend past the page's right edge. The available width
+  // from this run's left edge to the page margin caps every mode, so the
+  // editing box always stays on-page and the content wraps to fit.
+  const maxOnPageWidth = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
+  const naturalWidth = wantWrap
+    ? wrapLockWidth
     : Math.max(pdfWidth, measuredWidth + fontSizePx);
-  // `min-height` (not a fixed height) is used below, so in BOTH modes the
-  // box grows downward when content needs it. The mode only changes
-  // whether the width is locked (wrap) or free (grow), and whether single
-  // lines wrap.
+  const width = Math.min(naturalWidth, maxOnPageWidth);
+  // `min-height` (not a fixed height) is used below, so the box grows
+  // DOWNWARD when content needs it. Wrap whenever wrapping is wanted OR the
+  // box had to be capped to the page (so the clipped content reflows).
   const whiteSpace: "pre" | "pre-wrap" =
-    wrapMode || isParagraph ? "pre-wrap" : "pre";
+    wantWrap || width < naturalWidth - 0.5 ? "pre-wrap" : "pre";
 
   return (
     <div
@@ -305,8 +364,10 @@ export function TextRunOverlay({
       }}
       onFocus={(e) => {
         setFocused(true);
-        // Place caret at end so typed keys route into the element.
         const el = e.currentTarget as HTMLDivElement;
+        // Remember the text at focus so blur can tell if the user edited it.
+        focusTextRef.current = extractHardBreaks(el);
+        // Place caret at end so typed keys route into the element.
         const sel = window.getSelection();
         if (!sel) return;
         if (sel.rangeCount > 0 && el.contains(sel.anchorNode)) return;
@@ -316,7 +377,32 @@ export function TextRunOverlay({
         sel.removeAllRanges();
         sel.addRange(range);
       }}
-      onBlur={() => setFocused(false)}
+      onBlur={(e) => {
+        setFocused(false);
+        // Wrap mode: when the just-edited content overflows the locked box
+        // width, persist the wrap by REPOSITIONING the run's existing glyph
+        // objects onto new lines (ReflowWrapCommand) - never by re-setting
+        // text, which garbles embedded fonts. Only fires when the user
+        // actually changed the box and a line now exceeds the box width.
+        if (!wantWrap || !onWrap) return;
+        const el = e.currentTarget as HTMLDivElement;
+        const domText = extractHardBreaks(el);
+        if (domText === focusTextRef.current) return; // not edited
+        const widest = measureMaxLineWidth(
+          domText,
+          fontFamily,
+          fontWeight,
+          fontStyle,
+          fontSizePx,
+        );
+        // Runs that were paragraphs on mount always re-flow when edited (an
+        // edit re-emits a line at PDF metrics that can overflow the page even
+        // when the CSS measure says it fits). Other runs (a heading that just
+        // gained a manual break, or a single-line wrap run) re-flow only when
+        // they actually overflow the box - so their spacing is left intact.
+        if (!wasParagraphRef.current && widest <= width + 1) return;
+        onWrap(width / scale);
+      }}
       onInput={(e) => {
         const el = e.currentTarget as HTMLDivElement;
         // Always read hard breaks only - never synthesise newlines from
@@ -328,6 +414,11 @@ export function TextRunOverlay({
         const raw = extractHardBreaks(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
+        // No per-keystroke reflow: while focused, the box is CAPPED to the
+        // page and wraps via CSS, so the editing view is always on-page (any
+        // underlying glyphs that grew past the page sit off the page canvas
+        // and aren't visible). The reflow that bakes the real wrapped layout
+        // runs once on blur - keeping the undo history one step per edit.
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -344,7 +435,13 @@ export function TextRunOverlay({
           : undefined,
         opacity: dragging ? 0.75 : 1,
         zIndex: dragging ? 20 : undefined,
-        transition: dragging ? "none" : "transform 80ms ease-out",
+        // Only the opacity settle is animated. The transform must NOT be
+        // transitioned: on drop, `dragOffset` resets to null in the same
+        // commit that `left`/`top` jump to the committed position, so a
+        // transform transition would animate the box from double-offset
+        // back to the drop point - it "flew in from the edge". Resetting
+        // transform instantly keeps the drop crisp.
+        transition: dragging ? "none" : "opacity 120ms ease-out",
         // While focused: real glyphs in a CSS-stack approximation of
         // the PDFium font, so the user sees their input before the
         // bitmap re-renders. While unfocused: transparent so the PDFium

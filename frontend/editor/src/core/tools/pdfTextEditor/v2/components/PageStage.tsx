@@ -13,6 +13,7 @@ import { ensurePageRead } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoa
 import { MarqueeSelector } from "@app/tools/pdfTextEditor/v2/components/MarqueeSelector";
 import { PageView } from "@app/tools/pdfTextEditor/v2/components/PageView";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
+import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/v2/commands/ReflowWrapCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertTextCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/v2/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/v2/commands/SetImageTransformCommand";
@@ -227,6 +228,11 @@ export function PageStage() {
                   onMoveRun={(pageIndex, runId, dx, dy) => {
                     store.dispatch(
                       new MoveTextRunCommand({ pageIndex, runId, dx, dy }),
+                    );
+                  }}
+                  onWrapRun={(pageIndex, runId, maxWidthPt) => {
+                    store.dispatch(
+                      new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }),
                     );
                   }}
                   onPageClick={(pageIndex, pageX, pageY) => {

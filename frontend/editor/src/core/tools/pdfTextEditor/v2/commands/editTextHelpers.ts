@@ -244,24 +244,56 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const size = Math.max(4, opts.fontSize);
   const family = opts.fallbackFamily ?? "Helvetica";
   const m2 = m as unknown as CreateTextObjModule;
-  const reuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
-  const create = (): number =>
-    reuse
+  const canReuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
+
+  // Emit ONE word at (x, y) and return its pointer (0 on failure).
+  //
+  // When reusing the source font, VALIDATE that it actually rendered visible
+  // glyphs: subset / CID fonts without a usable Unicode->glyph map return
+  // ~0-width `.notdef` glyphs from `FPDFText_SetText`, which is how a font
+  // re-emit "rewrites a whole paragraph with broken glyphs". If the rendered
+  // width is sub-threshold we drop the object and re-emit the word in base-14
+  // Helvetica, so a rewrite NEVER persists invisible / garbled text - it
+  // keeps the source font only where that font genuinely renders the chars.
+  const emitWord = (text: string, x: number): number => {
+    const newBase14 = (): number =>
+      m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
+    let ptr = canReuse
       ? m2.FPDFPageObj_CreateTextObj!(
           opts.doc.docPtr,
           opts.originalFontPtr,
           size,
         )
-      : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
+      : newBase14();
+    if (!ptr) return 0;
+    setTextOn(m, ptr, text);
+    applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+    if (canReuse) {
+      const right = measureObjRightEdgePt(m, ptr);
+      const visible = text.replace(/\s+/g, "").length;
+      // Narrowest base-14 glyph ("i") is ~0.22em; anything well under ~0.15em
+      // per visible char means the reused font produced .notdef / 0-width.
+      const minExpected = visible * size * 0.15;
+      if (visible > 0 && right - x < minExpected) {
+        try {
+          m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+        } catch {
+          /* best-effort - the failed object is discarded */
+        }
+        ptr = newBase14();
+        if (!ptr) return 0;
+        setTextOn(m, ptr, text);
+        applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+      }
+    }
+    return ptr;
+  };
 
   // Fast path: no whitespace at all → one text object holds the whole word.
   const hasAnyWhitespace = /\s/.test(opts.text);
   if (!hasAnyWhitespace) {
-    const ptr = create();
-    if (!ptr) return [];
-    setTextOn(m, ptr, preserveSpaceRuns(opts.text));
-    applyFillAndPos(m, opts.page, ptr, opts.fill, opts.x, opts.y);
-    return [ptr];
+    const ptr = emitWord(preserveSpaceRuns(opts.text), opts.x);
+    return ptr ? [ptr] : [];
   }
 
   // Per-chunk emit (split on ANY whitespace run). After each emit we
@@ -276,10 +308,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   let cursor = opts.x + (chunks.leadingGapPt ?? 0);
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
-      const ptr = create();
+      const ptr = emitWord(chunk.text, cursor);
       if (!ptr) continue;
-      setTextOn(m, ptr, chunk.text);
-      applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
       const measured = measureObjRightEdgePt(m, ptr);
       cursor =
         measured > cursor

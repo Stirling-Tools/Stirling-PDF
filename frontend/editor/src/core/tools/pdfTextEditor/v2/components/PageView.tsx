@@ -29,6 +29,8 @@ interface PageViewProps {
     dx: number,
     dy: number,
   ) => void;
+  /** Wrap-mode reflow request; maxWidthPt in PDF points. */
+  onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
   /**
@@ -58,6 +60,7 @@ export function PageView({
   onSelectImage,
   onEditRun,
   onMoveRun,
+  onWrapRun,
   onPageClick,
   onTransformImage,
   onFirstVisible,
@@ -287,6 +290,7 @@ export function PageView({
             key={run.id}
             run={run}
             pageHeight={page.height}
+            pageWidth={page.width}
             scale={scale}
             widthMode={widthMode}
             selected={selectedRunIds.includes(run.id)}
@@ -294,6 +298,9 @@ export function PageView({
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
+            onWrap={(maxWidthPt) =>
+              onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
+            }
           />
         ))}
       </Box>

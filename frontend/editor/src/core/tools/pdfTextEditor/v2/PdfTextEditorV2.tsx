@@ -233,8 +233,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
             .find((r) => r.id === id);
           return !!run && (run.paragraphLineCount ?? 0) > 1;
         })()}
-        widthMode={state.widthMode}
-        onSetWidthMode={(m) => store.setWidthMode(m)}
         onToggleAddText={() =>
           store.setMode(state.mode === "addText" ? "select" : "addText")
         }
@@ -287,6 +285,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         state={state}
         selection={selection}
         onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
+        onSetWidthMode={(m) => store.setWidthMode(m)}
       />
     </Stack>
   );

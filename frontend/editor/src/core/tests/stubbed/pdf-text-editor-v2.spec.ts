@@ -208,19 +208,599 @@ test.describe("PDF text editor v2 - smoke", () => {
         };
       }, runTestId);
 
+    // The width control is a SegmentedControl (Grow / Wrap) in the sidebar,
+    // styled next to the Auto/Line grouping control.
+    const widthControl = page.getByTestId("v2-width-mode-control");
+
     // Wrap mode: box width locked, text wraps -> taller, white-space wraps.
-    await page.getByTestId("v2-width-mode").click();
+    await widthControl.getByText("Wrap", { exact: true }).click();
     await page.waitForTimeout(80);
     const wrap = await measure();
     expect(wrap.whiteSpace).toBe("pre-wrap");
 
     // Grow mode: box widens to the right (one line) -> much wider, shorter.
-    await page.getByTestId("v2-width-mode").click();
+    await widthControl.getByText("Grow", { exact: true }).click();
     await page.waitForTimeout(80);
     const grow = await measure();
 
     expect(grow.w).toBeGreaterThan(wrap.w + 20);
     expect(wrap.h).toBeGreaterThan(grow.h);
+  });
+
+  test("wrap mode does not re-wrap existing single-line text (no teleport on focus)", async ({
+    page,
+  }) => {
+    // Repro: with Wrap enabled, clicking an existing one-line text box made
+    // the text instantly "teleport" - it reflowed onto two lines. Cause:
+    // wrap locked the box to the PDF bounds width, but the CSS fallback
+    // font is wider than the embedded font, so the existing line no longer
+    // fit and wrapped. The box must instead lock to the width the existing
+    // text actually needs, so a line that was one line in the PDF stays one
+    // line in the overlay.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    // The tagline is a wide single-line run - the worst case for the bug.
+    const target = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x: any) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r ? { id: r.id, lineCount: r.paragraphLineCount ?? 1 } : null;
+    });
+    if (!target) {
+      test.skip(true, "fixture missing the Adobe Acrobat Alternative tagline");
+      return;
+    }
+    // Precondition: it really is a single source line.
+    expect(target.lineCount).toBe(1);
+
+    // Enable Wrap.
+    await page
+      .getByTestId("v2-width-mode-control")
+      .getByText("Wrap", { exact: true })
+      .click();
+    await page.waitForTimeout(150);
+
+    // Click the box (focus) exactly like the user did when it teleported.
+    const overlay = page.getByTestId(`v2-run-${target.id}`);
+    await overlay.click();
+    await page.waitForTimeout(100);
+
+    const metrics = await page.evaluate((tid: string) => {
+      const el = document.querySelector<HTMLElement>(`[data-testid="${tid}"]`)!;
+      const cs = getComputedStyle(el);
+      return {
+        scrollHeight: el.scrollHeight,
+        lineHeight: parseFloat(cs.lineHeight),
+        clientWidth: el.clientWidth,
+        scrollWidth: el.scrollWidth,
+      };
+    }, `v2-run-${target.id}`);
+
+    // The existing single line must still occupy ONE visual line in the
+    // wrap box (allowing for descender slack), i.e. it did not teleport.
+    const visualLines = Math.round(metrics.scrollHeight / metrics.lineHeight);
+    expect(
+      visualLines,
+      `existing one-line text wrapped to ${visualLines} lines in Wrap mode ` +
+        `(scrollHeight=${metrics.scrollHeight}, lineHeight=${metrics.lineHeight}, ` +
+        `clientWidth=${metrics.clientWidth}, scrollWidth=${metrics.scrollWidth})`,
+    ).toBe(1);
+  });
+
+  test("wrap mode bakes the visual wrap into line breaks when you click off", async ({
+    page,
+  }) => {
+    // With Wrap enabled, the box soft-wraps long text visually while you
+    // edit, but clicking off used to snap it back to one line because soft
+    // wraps never reached the model. The wrap must now be baked into real
+    // line breaks on blur so the wrapped layout persists into the PDF.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const target = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x: any) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r ? { id: r.id, lineCount: r.paragraphLineCount ?? 1 } : null;
+    });
+    if (!target) {
+      test.skip(true, "fixture missing the Adobe Acrobat Alternative tagline");
+      return;
+    }
+    expect(target.lineCount).toBe(1);
+
+    // Enable Wrap and capture the locked box width (before typing).
+    await page
+      .getByTestId("v2-width-mode-control")
+      .getByText("Wrap", { exact: true })
+      .click();
+    await page.waitForTimeout(150);
+
+    const eid = `v2-run-${target.id}`;
+    const widthBefore = await page.evaluate(
+      (id: string) =>
+        document.querySelector<HTMLElement>(`[data-testid="${id}"]`)
+          ?.clientWidth ?? 0,
+      eid,
+    );
+    expect(widthBefore).toBeGreaterThan(0);
+
+    // Type a lot of extra text - enough to overflow the locked width
+    // multiple times.
+    await typeIntoRun(
+      page,
+      eid,
+      " wwwwwwwwww wwwwwwwwww wwwwwwwwww wwwwwwwwww wwwwwwwwww wwwwwwwwww",
+      "end",
+    );
+    await page.waitForTimeout(150);
+
+    // The box must STAY locked to its width (wrapping downward), NOT widen to
+    // fit the typed text on one line. (The bug let the box follow the grown
+    // model bounds, so it ballooned off-page and only the final word wrapped.)
+    const sized = await page.evaluate((id: string) => {
+      const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+      const cs = el ? getComputedStyle(el) : null;
+      return el && cs
+        ? {
+            clientWidth: el.clientWidth,
+            offsetHeight: el.offsetHeight,
+            lineHeight: parseFloat(cs.lineHeight),
+          }
+        : null;
+    }, eid);
+    if (!sized) throw new Error("overlay vanished while typing");
+    expect(
+      sized.clientWidth,
+      `box widened in Wrap mode (before=${widthBefore}, after=${sized.clientWidth}) - width not locked`,
+    ).toBeLessThanOrEqual(widthBefore + 2);
+    expect(
+      Math.round(sized.offsetHeight / sized.lineHeight),
+      `text did not wrap to multiple lines (offsetHeight=${sized.offsetHeight}, lineHeight=${sized.lineHeight})`,
+    ).toBeGreaterThanOrEqual(2);
+
+    // Click off (blur the box) - the moment the wrap must persist.
+    await page.evaluate((id: string) => {
+      document.querySelector<HTMLElement>(`[data-testid="${id}"]`)?.blur();
+    }, eid);
+    await page.waitForTimeout(200);
+
+    const after = await page.evaluate((tid: string) => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x: any) => x.id === tid);
+      return r
+        ? { text: r.text, vlines: r.paragraphMemberPtrs?.length ?? 0 }
+        : null;
+    }, target.id);
+    if (!after) throw new Error("run vanished after blur");
+
+    // The wrap persisted as a multi-line VISUAL layout (the run now has
+    // several positioned lines), so the saved PDF renders it wrapped rather
+    // than as one long off-page line. (Soft wraps are visual, not "\n" in the
+    // logical text - only manual Enter breaks become "\n".)
+    expect(
+      after.vlines,
+      `wrap not persisted - only ${after.vlines} visual line(s); text=${JSON.stringify(after.text)}`,
+    ).toBeGreaterThanOrEqual(2);
+    // The original tagline words are still intact (not corrupted by wrap).
+    expect(after.text.replace(/\s+/g, " ")).toMatch(
+      /Adobe\s+Acrobat\s+Alternative/,
+    );
+  });
+
+  test("wrap mode reflows a paragraph by moving glyphs (no corruption, font kept)", async ({
+    page,
+  }) => {
+    // Repro of the paragraph-wrap corruption: appending text to a multi-line
+    // body paragraph in Wrap mode used to re-emit every line via SetText,
+    // which garbled the embedded font (glyphs vanished / text duplicated).
+    // The reflow must instead REPOSITION the existing glyph objects, so the
+    // same object pointers survive, the font id is unchanged, and the text
+    // appears exactly once.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(600);
+
+    await page
+      .getByTestId("v2-width-mode-control")
+      .getByText("Wrap", { exact: true })
+      .click();
+    await page.waitForTimeout(150);
+
+    const before = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc
+        .page(1)
+        .runs.find((x: any) => /Stirling\s+PDF\s+is\s+a\s+robust/.test(x.text));
+      return r
+        ? {
+            id: r.id,
+            lines: r.paragraphLineSlots?.length || r.text.split("\n").length,
+            fontId: r.fontId,
+          }
+        : null;
+    });
+    if (!before) {
+      test.skip(true, "intro paragraph missing on page 2");
+      return;
+    }
+    expect(before.lines).toBeGreaterThanOrEqual(2);
+
+    const marker =
+      " QWXReflowMarker plus several more words appended here to force the paragraph to wrap onto extra lines";
+    await typeIntoRun(page, `v2-run-${before.id}`, marker, "end");
+    await page.waitForTimeout(150);
+
+    // The leaf objects present right after typing (originals + the per-word
+    // objects the insert emitted) - the reflow must reuse exactly these.
+    const leavesAfterType = await page.evaluate((id: string) => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc.page(1).runs.find((x: any) => x.id === id);
+      return r
+        ? [...(r.paragraphLeafPtrs ?? [])].sort((a: number, b: number) => a - b)
+        : [];
+    }, before.id);
+
+    await page.evaluate((id: string) => {
+      document
+        .querySelector<HTMLElement>(`[data-testid="v2-run-${id}"]`)
+        ?.blur();
+    }, before.id);
+    await page.waitForTimeout(400);
+
+    const after = await page.evaluate((id: string) => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc.page(1).runs.find((x: any) => x.id === id);
+      return r
+        ? {
+            text: r.text,
+            lines: r.paragraphLineSlots?.length || r.text.split("\n").length,
+            fontId: r.fontId,
+            leaves: [...(r.paragraphLeafPtrs ?? [])].sort(
+              (a: number, b: number) => a - b,
+            ),
+          }
+        : null;
+    }, before.id);
+    if (!after) throw new Error("paragraph vanished after wrap");
+
+    const countOf = (hay: string, needle: string) =>
+      hay.split(needle).length - 1;
+    // No duplication: the appended marker and an original word appear once.
+    expect(
+      countOf(after.text, "QWXReflowMarker"),
+      `marker duplicated - text corrupted: ${JSON.stringify(after.text)}`,
+    ).toBe(1);
+    expect(countOf(after.text, "manipulation")).toBe(1);
+    // It actually wrapped onto more lines than before.
+    expect(after.lines).toBeGreaterThan(before.lines);
+    // Reposition, NOT re-emit: identical leaf object pointers.
+    expect(after.leaves).toEqual(leavesAfterType);
+    // Font preserved (not flipped to a base-14 fallback / garbled).
+    expect(after.fontId).toBe(before.fontId);
+  });
+
+  test("wrap mode reflows EVERY page-2 body paragraph without corruption", async ({
+    page,
+  }) => {
+    // Comprehensive guard for the paragraph-wrap corruption: append text to
+    // each multi-line body paragraph on page 2 in Wrap mode and assert every
+    // one reflows by REPOSITIONING its glyphs - text appears once (no
+    // duplication / garble), it wraps onto more lines, the leaf object
+    // pointers are unchanged (not re-emitted), and the font id is kept.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(600);
+
+    await page
+      .getByTestId("v2-width-mode-control")
+      .getByText("Wrap", { exact: true })
+      .click();
+    await page.waitForTimeout(150);
+
+    const ids: string[] = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      return store.doc
+        .page(1)
+        .runs.filter((r: any) => r.text.includes("\n"))
+        .map((r: any) => r.id);
+    });
+    expect(
+      ids.length,
+      "expected several multi-line body paragraphs on page 2",
+    ).toBeGreaterThanOrEqual(3);
+
+    const readP1 = (id: string) =>
+      page.evaluate((rid: string) => {
+        const store = (window as unknown as { __v2_editor_store: any })
+          .__v2_editor_store;
+        const r = store.doc.page(1).runs.find((x: any) => x.id === rid);
+        return r
+          ? {
+              text: r.text,
+              lines: r.paragraphLineSlots?.length || r.text.split("\n").length,
+              fontId: r.fontId,
+              leaves: [...(r.paragraphLeafPtrs ?? [])].sort(
+                (a: number, b: number) => a - b,
+              ),
+            }
+          : null;
+      }, id);
+
+    const countOf = (hay: string, needle: string) =>
+      hay.split(needle).length - 1;
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      const ctx = `paragraph #${i} (${id})`;
+      const before = await readP1(id);
+      if (!before) continue;
+      const marker = `MARKERZQ${i}`;
+      await typeIntoRun(
+        page,
+        `v2-run-${id}`,
+        ` ${marker} plus several appended words here to force this paragraph to wrap onto more lines`,
+        "end",
+      );
+      await page.waitForTimeout(120);
+      const afterType = await readP1(id);
+      if (!afterType) throw new Error(`${ctx}: vanished after type`);
+      await page.evaluate((rid: string) => {
+        document
+          .querySelector<HTMLElement>(`[data-testid="v2-run-${rid}"]`)
+          ?.blur();
+      }, id);
+      await page.waitForTimeout(300);
+      const after = await readP1(id);
+      if (!after) throw new Error(`${ctx}: vanished after blur`);
+
+      expect(
+        countOf(after.text, marker),
+        `${ctx}: marker not present exactly once - text corrupted: ${JSON.stringify(after.text)}`,
+      ).toBe(1);
+      expect(
+        after.lines,
+        `${ctx}: did not wrap onto more lines (before=${before.lines}, after=${after.lines})`,
+      ).toBeGreaterThan(before.lines);
+      expect(
+        after.leaves,
+        `${ctx}: leaf ptrs changed - re-emitted instead of repositioned`,
+      ).toEqual(afterType.leaves);
+      expect(after.fontId, `${ctx}: font flipped`).toBe(before.fontId);
+    }
+  });
+
+  test("typing words char-by-char keeps the spaces between them (no glued text)", async ({
+    page,
+  }) => {
+    // Repro: a typed space emits no glyph and used to not advance the
+    // cursor, so the next word butted against the previous one
+    // ("more.ZEBRAQUOKKA"). Each typed space must still open a positional
+    // gap, even though only the letters become objects.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const target = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x: any) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r ? { id: r.id, fontSize: r.fontSize } : null;
+    });
+    if (!target) {
+      test.skip(true, "tagline missing");
+      return;
+    }
+
+    const eid = `v2-run-${target.id}`;
+    await page.evaluate((e: string) => {
+      const el = document.querySelector<HTMLDivElement>(
+        `[data-testid="${e}"]`,
+      )!;
+      el.focus();
+      const sel = window.getSelection()!;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }, eid);
+    // Type "ZZZ QQQ" one character at a time (the way a user does).
+    for (const ch of " ZZZ QQQ") {
+      await page.evaluate((c: string) => {
+        document.execCommand("insertText", false, c);
+      }, ch);
+      await page.waitForTimeout(25);
+    }
+    await page.waitForTimeout(150);
+
+    const data = await page.evaluate((rid: string) => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x: any) => x.id === rid);
+      if (!r) return null;
+      const zRights: number[] = [];
+      const qLefts: number[] = [];
+      for (let i = 0; i < r.mergedFromTexts.length; i++) {
+        const t = r.mergedFromTexts[i];
+        const b = r.mergedFromBounds[i];
+        if (!b) continue;
+        if (t === "Z") zRights.push(b.right);
+        if (t === "Q") qLefts.push(b.x);
+      }
+      return {
+        text: r.text,
+        zCount: zRights.length,
+        qCount: qLefts.length,
+        zMaxRight: zRights.length ? Math.max(...zRights) : null,
+        qMinX: qLefts.length ? Math.min(...qLefts) : null,
+      };
+    }, target.id);
+    if (!data) throw new Error("run vanished after typing");
+
+    // The model keeps the literal spaces, and the typed letters became
+    // their own glyph objects.
+    expect(data.text).toMatch(/ZZZ\s+QQQ/);
+    expect(
+      data.zCount,
+      `Z/Q glyphs not found: ${JSON.stringify(data)}`,
+    ).toBeGreaterThanOrEqual(1);
+    expect(data.qCount).toBeGreaterThanOrEqual(1);
+    // The space between the typed words must open a real visual gap - not
+    // zero (the "ZZZQQQ" glued bug).
+    const gap = (data.qMinX ?? 0) - (data.zMaxRight ?? 0);
+    expect(
+      gap,
+      `typed words glued together (gap=${gap}, fontSize=${target.fontSize})`,
+    ).toBeGreaterThan(target.fontSize * 0.12);
+  });
+
+  test("a paragraph re-emit (newline edit) never persists broken 0-width glyphs", async ({
+    page,
+  }) => {
+    // A newline edit forces the overlay RE-EMIT path (the whole paragraph is
+    // re-laid via FPDFText_SetText). Some embedded body fonts have no usable
+    // Unicode->glyph map and return 0-width .notdef glyphs on a re-set - the
+    // "rewrite with broken glyphs" the user flagged. emitTextLine must detect
+    // that and fall back to base-14, so NO emitted word collapses to ~0 width.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(600);
+
+    const id = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc
+        .page(1)
+        .runs.find((x: any) => /Comprehensive\s+toolkit/.test(x.text));
+      return r ? r.id : null;
+    });
+    if (!id) {
+      test.skip(true, "card paragraph missing on page 2");
+      return;
+    }
+    const eid = `v2-run-${id}`;
+
+    // Insert ONLY a newline (no new letters). This keeps every char already
+    // present in the source, so the overlay path REUSES the embedded font and
+    // re-emits every line through it - the worst case for a font with a
+    // broken Unicode->glyph map. (Typing new letters would flip to base-14
+    // and dodge the bug.)
+    await page.evaluate((e: string) => {
+      const el = document.querySelector<HTMLDivElement>(
+        `[data-testid="${e}"]`,
+      )!;
+      el.focus();
+      const sel = window.getSelection()!;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand("insertText", false, "\n");
+    }, eid);
+    await page.waitForTimeout(80);
+    await page.evaluate((e: string) => {
+      document.querySelector<HTMLElement>(`[data-testid="${e}"]`)?.blur();
+    }, eid);
+    await page.waitForTimeout(300);
+
+    const info = await page.evaluate((rid: string) => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const m = store.doc.module;
+      const r = store.doc.page(1).runs.find((x: any) => x.id === rid);
+      if (!r) return null;
+      const ptrs =
+        r.paragraphLeafPtrs && r.paragraphLeafPtrs.length
+          ? r.paragraphLeafPtrs
+          : r.mergedFromPtrs;
+      let collapsed = 0;
+      let measured = 0;
+      let sum = 0;
+      for (const ptr of ptrs) {
+        if (!ptr) continue;
+        const l = m.pdfium.wasmExports.malloc(4);
+        const b = m.pdfium.wasmExports.malloc(4);
+        const rr = m.pdfium.wasmExports.malloc(4);
+        const t = m.pdfium.wasmExports.malloc(4);
+        try {
+          if (m.FPDFPageObj_GetBounds(ptr, l, b, rr, t)) {
+            const w =
+              m.pdfium.getValue(rr, "float") - m.pdfium.getValue(l, "float");
+            measured += 1;
+            sum += w;
+            if (w < r.fontSize * 0.1) collapsed += 1;
+          }
+        } finally {
+          m.pdfium.wasmExports.free(l);
+          m.pdfium.wasmExports.free(b);
+          m.pdfium.wasmExports.free(rr);
+          m.pdfium.wasmExports.free(t);
+        }
+      }
+      return {
+        text: r.text,
+        fontSize: r.fontSize,
+        measured,
+        collapsed,
+        sum: Math.round(sum),
+      };
+    }, id);
+    if (!info) throw new Error("run vanished after newline edit");
+
+    // The re-emit produced real word objects, the text survived, and NONE of
+    // them rendered as a broken ~0-width glyph.
+    expect(info.measured).toBeGreaterThan(3);
+    expect(info.text.replace(/\n/g, " ")).toMatch(/Comprehensive\s+toolkit/);
+    expect(
+      info.collapsed,
+      `${info.collapsed}/${info.measured} word objects rendered as broken 0-width glyphs (sum=${info.sum})`,
+    ).toBe(0);
   });
 
   test("deleting a space after a letter keeps that letter's embedded font", async ({
@@ -1829,6 +2409,154 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       widthGrowth,
       `bounds.width didn't grow (Δ=${widthGrowth}) - insert probably overlapped following text`,
     ).toBeGreaterThan(10);
+  });
+
+  test("user-sample.pdf: inserting chars before a word attaches to that word, not the previous one", async ({
+    page,
+  }) => {
+    // Repro of the "AdobeAA" bug: editing the tagline
+    //   "The  Free  Adobe  Acrobat  Alternative"
+    // by typing "AA" immediately before "Acrobat" (so it reads
+    // "...Adobe  AAAcrobat...") must render the inserted glyphs at
+    // Acrobat's ORIGINAL left edge - the word should read "AAAcrobat".
+    //
+    // The bug emitted the inserted text at the running cursor (the right
+    // edge of the PREVIOUS word), gluing it to "Adobe" ("AdobeAA") and
+    // stranding the word gap after the inserted chars.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await page.evaluate(() => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc
+        .page(0)
+        .runs.find((x: any) => /Adobe.*Acrobat.*Alternative/.test(x.text));
+      return r
+        ? {
+            id: r.id,
+            text: r.text,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromCharStarts: [...r.mergedFromCharStarts],
+            mergedFromBounds: r.mergedFromBounds.map((b: any) => ({
+              x: b.x,
+              right: b.right,
+            })),
+          }
+        : null;
+    });
+    if (!baseline) {
+      test.skip(true, "fixture missing the Adobe Acrobat Alternative tagline");
+      return;
+    }
+
+    // Map a char index in run.text to the sub-run that owns it. Char-start
+    // ranges can have gaps (LineGrouper-synthesised whitespace), so we test
+    // membership rather than assuming contiguity.
+    const subRunAt = (
+      charStarts: number[],
+      texts: string[],
+      charIdx: number,
+    ): number => {
+      for (let i = 0; i < charStarts.length; i++) {
+        const s = charStarts[i];
+        const e = s + texts[i].length;
+        if (charIdx >= s && charIdx < e) return i;
+      }
+      return -1;
+    };
+
+    const acrobatIdx = baseline.text.indexOf("Acrobat");
+    const adobeIdx = baseline.text.indexOf("Adobe");
+    expect(acrobatIdx).toBeGreaterThan(0);
+    expect(adobeIdx).toBeGreaterThanOrEqual(0);
+    const adobeEndIdx = adobeIdx + "Adobe".length - 1; // the 'e' of Adobe
+
+    const acrobatSub = subRunAt(
+      baseline.mergedFromCharStarts,
+      baseline.mergedFromTexts,
+      acrobatIdx,
+    );
+    const adobeSub = subRunAt(
+      baseline.mergedFromCharStarts,
+      baseline.mergedFromTexts,
+      adobeEndIdx,
+    );
+    if (acrobatSub < 0 || adobeSub < 0) {
+      test.skip(true, "tagline sub-run structure not as expected");
+      return;
+    }
+    const acrobatLeft = baseline.mergedFromBounds[acrobatSub].x;
+    const adobeRight = baseline.mergedFromBounds[adobeSub].right;
+    const spaceGap = acrobatLeft - adobeRight;
+    // Sanity: there is a real inter-word gap before "Acrobat" to begin with.
+    expect(
+      spaceGap,
+      `no word gap before Acrobat (acrobatLeft=${acrobatLeft}, adobeRight=${adobeRight})`,
+    ).toBeGreaterThan(2);
+
+    // Type "AA" immediately before "Acrobat".
+    await execAt(page, baseline.id, acrobatIdx, "insertText", "AA");
+
+    const after = await page.evaluate((tid: string) => {
+      const store = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = store.doc.page(0).runs.find((x: any) => x.id === tid);
+      return r
+        ? {
+            text: r.text,
+            mergedFromTexts: [...r.mergedFromTexts],
+            mergedFromCharStarts: [...r.mergedFromCharStarts],
+            mergedFromBounds: r.mergedFromBounds.map((b: any) => ({
+              x: b.x,
+              right: b.right,
+            })),
+          }
+        : null;
+    }, baseline.id);
+    if (!after) throw new Error("post-edit run vanished");
+
+    const expectedText =
+      baseline.text.slice(0, acrobatIdx) +
+      "AA" +
+      baseline.text.slice(acrobatIdx);
+    expect(after.text).toBe(expectedText);
+
+    // The inserted glyphs are emitted as a single "AA" sub-run.
+    const insIdx = after.mergedFromTexts.findIndex((t) => t === "AA");
+    expect(insIdx, "inserted 'AA' sub-run not found").toBeGreaterThanOrEqual(0);
+    const insX = after.mergedFromBounds[insIdx].x;
+    const insRight = after.mergedFromBounds[insIdx].right;
+
+    // Adobe's 'e' didn't move (the insert is after it), so its right edge is
+    // still ~adobeRight. The inserted text must sit AFTER the word gap, near
+    // Acrobat's original left edge - NOT glued to the end of "Adobe".
+    const gapBeforeInsert = insX - adobeRight;
+    expect(
+      gapBeforeInsert,
+      `inserted text glued to the previous word ("AdobeAA"): insX=${insX}, adobeRight=${adobeRight}, original gap=${spaceGap}`,
+    ).toBeGreaterThan(spaceGap * 0.5);
+
+    // ...and it must be contiguous with the (shifted) "Acrobat" glyphs that
+    // follow it, so the word reads "AAAcrobat" with no gap inside it. The
+    // Acrobat 'A' is now two chars later in run.text.
+    const newAcrobatSub = subRunAt(
+      after.mergedFromCharStarts,
+      after.mergedFromTexts,
+      acrobatIdx + 2,
+    );
+    expect(newAcrobatSub).toBeGreaterThanOrEqual(0);
+    const newAcrobatLeft = after.mergedFromBounds[newAcrobatSub].x;
+    expect(
+      Math.abs(newAcrobatLeft - insRight),
+      `"AAAcrobat" not contiguous: AA.right=${insRight}, Acrobat.left=${newAcrobatLeft}`,
+    ).toBeLessThan(spaceGap * 0.5 + 2);
   });
 
   test("user-sample.pdf: deleting an entire word closes the gap (text after shifts left)", async ({
@@ -3545,6 +4273,45 @@ test.describe("PDF text editor v2 - text run move (Ctrl+drag)", () => {
     await page.keyboard.up("Control");
 
     await expect(page.getByTestId("v2-undo")).toBeEnabled({ timeout: 5_000 });
+  });
+
+  test("Ctrl+drag drop is crisp (no transform transition that flies the box in)", async ({
+    page,
+  }) => {
+    // Regression: the overlay transitioned `transform`. On drop, dragOffset
+    // resets to null in the same commit that left/top jump to the new
+    // position, so a transform transition animated the box from double
+    // offset back to the drop point - it "flew in from the edge". The drop
+    // must be instant: the transition must not target `transform`.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const run = page.locator('[data-testid^="v2-run-p0-"]').first();
+    await expect(run).toBeVisible({ timeout: 30_000 });
+    const tid = (await run.getAttribute("data-testid")) ?? "";
+    const box = await run.boundingBox();
+    if (!box) throw new Error("text run has no bounding box");
+
+    await page.keyboard.down("Control");
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(
+      box.x + box.width / 2 + 80,
+      box.y + box.height / 2 + 30,
+      { steps: 5 },
+    );
+    await page.mouse.up();
+    await page.keyboard.up("Control");
+    await page.waitForTimeout(120);
+
+    // The move actually happened...
+    await expect(page.getByTestId("v2-undo")).toBeEnabled({ timeout: 5_000 });
+    // ...and the settled box does not animate its transform.
+    const transitionProperty = await page.evaluate((id: string) => {
+      const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
+      return getComputedStyle(el).transitionProperty;
+    }, tid);
+    expect(transitionProperty).not.toContain("transform");
   });
 });
 
