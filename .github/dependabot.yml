@@ -154,11 +154,3 @@ updates:
         patterns:
           - "tokio"
           - "tokio-*"
-
-  - package-ecosystem: pip
-    directory: /testing/cucumber
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    rebase-strategy: "auto"

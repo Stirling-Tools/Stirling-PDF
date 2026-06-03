@@ -1,7 +1,0 @@
-behave
-behave-html-formatter
-requests
-pypdf
-reportlab
-PyCryptodome
-qrcode[pil]

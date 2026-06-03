@@ -76,16 +76,12 @@ jobs:
           sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: "3.13"
-          cache: "pip" # caching pip dependencies
-          cache-dependency-path: ./testing/cucumber/requirements.txt
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
 
-      - name: Pip requirements
-        run: |
-          pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
+      - name: Sync Cucumber environment
+        working-directory: ./testing/cucumber
+        run: uv sync --frozen
 
       - name: Run Docker Compose Tests
         run: |

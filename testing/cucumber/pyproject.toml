@@ -1,0 +1,15 @@
+[project]
+name = "stirling-pdf-cucumber-tests"
+version = "0.0.0"
+requires-python = ">=3.13"
+dependencies = [
+    "behave>=1.3.3",
+    "behave-html-formatter>=0.9.10",
+    "pycryptodome>=3.23.0",
+    "pypdf>=6.12.2",
+    "qrcode[pil]>=8.2",
+    "reportlab>=4.5.1",
+]
+
+[tool.uv]
+package = false
