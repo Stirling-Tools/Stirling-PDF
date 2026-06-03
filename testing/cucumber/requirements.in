@@ -5,3 +5,7 @@ pypdf
 reportlab
 PyCryptodome
 qrcode[pil]
+# PAYG cucumber scenarios inspect shadow rows directly against the
+# saas-profile Postgres container — see testing/cucumber/features/steps/payg_step_definitions.py.
+# Loaded by the saas-cucumber CI job only; main behave run doesn't touch it.
+psycopg[binary]
