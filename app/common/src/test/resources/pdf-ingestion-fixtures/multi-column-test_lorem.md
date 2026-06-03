@@ -18,7 +18,7 @@ Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserun
 
 ## 5. Typography
 
-Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius turpis et commodo pharetra est.
+Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam various turpis et commodo pharetra est.
 
 ## 6. Conclusion
 
