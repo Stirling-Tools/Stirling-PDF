@@ -515,7 +515,7 @@
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2a2f36;
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-default: #3a4047;
   --border-strong: #4b5563;
   --hover-bg: #374151;
