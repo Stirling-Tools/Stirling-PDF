@@ -213,16 +213,26 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
         @Override
         public void flush() throws IOException {
             delegate.flush();
-            if (spilled && spillStream != null) {
-                spillStream.flush();
+            // Read spilled / spillStream under the outer monitor so we observe the publication
+            // written by spillToDisk() on another thread. The writers (recordSingleByte,
+            // recordRange, spillToDisk) already mutate these fields under
+            // synchronized(PaygResponseBodyWrapper.this); without matching locking here the
+            // JMM permits stale reads (false `spilled`, null `spillStream`) and Aikido AI
+            // flagged that gap.
+            synchronized (PaygResponseBodyWrapper.this) {
+                if (spilled && spillStream != null) {
+                    spillStream.flush();
+                }
             }
         }
 
         @Override
         public void close() throws IOException {
             delegate.close();
-            if (spilled && spillStream != null) {
-                spillStream.flush();
+            synchronized (PaygResponseBodyWrapper.this) {
+                if (spilled && spillStream != null) {
+                    spillStream.flush();
+                }
             }
         }
 
