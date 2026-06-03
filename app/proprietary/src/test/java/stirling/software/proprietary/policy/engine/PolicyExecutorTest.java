@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -248,6 +249,57 @@ class PolicyExecutorTest {
                                         PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
                                         PolicyProgressListener.NOOP));
         assertTrue(ex.getMessage().contains("logo"));
+    }
+
+    @Test
+    void documentOfAnUnacceptedTypeFailsTheStep() {
+        String compress = "/api/v1/misc/compress-pdf";
+        when(toolMetadataService.getExtensionTypes(false, compress)).thenReturn(List.of("pdf"));
+
+        IOException ex =
+                assertThrows(
+                        IOException.class,
+                        () ->
+                                executor.execute(
+                                        definition(new PipelineStep(compress, Map.of())),
+                                        PolicyInputs.of(List.of(pdf("img", "image.png"))),
+                                        PolicyProgressListener.NOOP));
+        assertTrue(ex.getMessage().contains("image.png"));
+        // Type check happens before any dispatch.
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void documentOfAnAcceptedTypeProceeds() throws IOException {
+        String compress = "/api/v1/misc/compress-pdf";
+        when(toolMetadataService.getExtensionTypes(false, compress)).thenReturn(List.of("pdf"));
+        when(toolMetadataService.isMultiInput(compress)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(compress)).thenReturn(false);
+        stubEndpoint(compress, pdf("compressed", "compressed.pdf"));
+
+        PolicyExecutionResult result =
+                executor.execute(
+                        definition(new PipelineStep(compress, Map.of())),
+                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        assertEquals(1, result.files().size());
+        verify(internalApiClient, times(1)).post(eq(compress), any());
+    }
+
+    @Test
+    void filterOperationWithEmptyResultDropsTheFile() throws IOException {
+        String filter = "/api/v1/filter/filter-page-count";
+        when(toolMetadataService.isMultiInput(filter)).thenReturn(false);
+        stubEndpoint(filter, pdf("", "filtered.pdf")); // empty body => filtered out
+
+        PolicyExecutionResult result =
+                executor.execute(
+                        definition(new PipelineStep(filter, Map.of())),
+                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        assertEquals(0, result.files().size());
     }
 
     @Test

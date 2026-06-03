@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.core.io.Resource;
@@ -49,6 +50,8 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 @RequiredArgsConstructor
 public class PolicyExecutor {
+
+    private static final String FILTER_OPERATION_PREFIX = "/api/v1/filter/filter-";
 
     private final InternalApiClient internalApiClient;
     private final ToolMetadataService toolMetadataService;
@@ -123,6 +126,7 @@ public class PolicyExecutor {
             List<Resource> inputFiles,
             Map<String, List<Resource>> supportingFiles)
             throws IOException {
+        requireAcceptedTypes(step.operation(), inputFiles);
         List<Resource> files = new ArrayList<>();
         JsonNode report = null;
         if (toolMetadataService.isMultiInput(step.operation())) {
@@ -204,6 +208,13 @@ public class PolicyExecutor {
                     "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
         }
         Resource resource = response.getBody();
+
+        // Filter operations return an empty body to signal the file was filtered out: drop it
+        // rather than forwarding a zero-byte document.
+        if (isFilterOperation(endpointPath) && isEmpty(resource)) {
+            return new ToolResult(List.of(), null);
+        }
+
         HttpHeaders headers = response.getHeaders();
         MediaType contentType = headers.getContentType();
 
@@ -250,5 +261,52 @@ public class PolicyExecutor {
             }
         }
         return false;
+    }
+
+    /**
+     * Fail the run if any document in the primary stream is not a file type the step accepts. An
+     * endpoint that declares no specific input type accepts anything.
+     */
+    private void requireAcceptedTypes(String operation, List<Resource> files) throws IOException {
+        List<String> accepted = toolMetadataService.getExtensionTypes(false, operation);
+        if (accepted == null || accepted.isEmpty()) {
+            return;
+        }
+        for (Resource file : files) {
+            if (!matchesType(file, accepted)) {
+                throw new IOException(
+                        "Step "
+                                + operation
+                                + " accepts "
+                                + accepted
+                                + " but received '"
+                                + file.getFilename()
+                                + "'");
+            }
+        }
+    }
+
+    private static boolean matchesType(Resource file, List<String> acceptedExtensions) {
+        String filename = file.getFilename();
+        if (filename == null) {
+            return false;
+        }
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            return false;
+        }
+        return acceptedExtensions.contains(filename.substring(dot + 1).toLowerCase(Locale.ROOT));
+    }
+
+    private static boolean isFilterOperation(String operation) {
+        return operation.startsWith(FILTER_OPERATION_PREFIX);
+    }
+
+    private static boolean isEmpty(Resource resource) {
+        try {
+            return resource.contentLength() == 0;
+        } catch (IOException e) {
+            return false;
+        }
     }
 }
