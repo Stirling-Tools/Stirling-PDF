@@ -19,9 +19,14 @@ import {
 } from "@app/types/fileContext";
 import type { ToolOperation } from "@app/types/file";
 
+export enum ChatRole {
+  USER = "user",
+  ASSISTANT = "assistant",
+}
+
 export interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
   timestamp: number;
   /**
@@ -437,7 +442,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       const userMessage: ChatMessage = {
         id: generateId(),
-        role: "user",
+        role: ChatRole.USER,
         content,
         timestamp: Date.now(),
       };
@@ -513,7 +518,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               type: "ADD_MESSAGE",
               message: {
                 id: generateId(),
-                role: "assistant",
+                role: ChatRole.ASSISTANT,
                 content: replyContent,
                 timestamp: Date.now(),
                 toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
@@ -526,7 +531,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                   type: "ADD_MESSAGE",
                   message: {
                     id: generateId(),
-                    role: "assistant",
+                    role: ChatRole.ASSISTANT,
                     content:
                       "The file was processed but I couldn't download it.",
                     timestamp: Date.now(),
@@ -542,7 +547,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               type: "ADD_MESSAGE",
               message: {
                 id: generateId(),
-                role: "assistant",
+                role: ChatRole.ASSISTANT,
                 content: data.message || "Something went wrong.",
                 timestamp: Date.now(),
               },
@@ -568,7 +573,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           type: "ADD_MESSAGE",
           message: {
             id: generateId(),
-            role: "assistant",
+            role: ChatRole.ASSISTANT,
             content,
             timestamp: Date.now(),
           },

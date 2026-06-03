@@ -33,9 +33,9 @@ import {
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import "@app/components/tools/ToolPanel.css";
 
-const DEFAULT_CHAT_WIDTH = 18.5 * 16; // 18.5rem in px
-const MIN_CHAT_WIDTH = 240;
-const MAX_CHAT_WIDTH = 720;
+const DEFAULT_CHAT_WIDTH_PX = 18.5 * 16; // 18.5rem in px
+const MIN_CHAT_WIDTH_PX = 240;
+const MAX_CHAT_WIDTH_PX = 720;
 
 /**
  * Right-side rail wrapping the tool panel.
@@ -92,7 +92,7 @@ export default function RightSidebar() {
   const [allToolsView, setAllToolsView] = useState(false);
 
   const { isOpen: isChatOpen, setOpen: setChatOpen } = useChat();
-  const [chatWidthPx, setChatWidthPx] = useState(DEFAULT_CHAT_WIDTH);
+  const [chatWidthPx, setChatWidthPx] = useState(DEFAULT_CHAT_WIDTH_PX);
   const [isChatDragging, setIsChatDragging] = useState(false);
   const chatDragState = useRef<{ startX: number; startWidth: number } | null>(
     null,
@@ -100,7 +100,7 @@ export default function RightSidebar() {
 
   const handleChatClose = useCallback(() => {
     withViewTransition(() => setChatOpen(false));
-    setChatWidthPx(DEFAULT_CHAT_WIDTH);
+    setChatWidthPx(DEFAULT_CHAT_WIDTH_PX);
   }, [setChatOpen]);
 
   const handleResizeChatPointerDown = useCallback(
@@ -116,8 +116,8 @@ export default function RightSidebar() {
         const delta = chatDragState.current.startX - ev.clientX;
         setChatWidthPx(
           Math.max(
-            MIN_CHAT_WIDTH,
-            Math.min(MAX_CHAT_WIDTH, chatDragState.current.startWidth + delta),
+            MIN_CHAT_WIDTH_PX,
+            Math.min(MAX_CHAT_WIDTH_PX, chatDragState.current.startWidth + delta),
           ),
         );
       };

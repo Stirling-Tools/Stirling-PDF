@@ -14,7 +14,7 @@ import lombok.Data;
 public class AiWorkflowRequest {
 
     @Schema(description = "The input PDF files")
-    private List<AiWorkflowFileInput> fileInputs;
+    private List<AiWorkflowFileInput> fileInputs = new ArrayList<>();
 
     @NotBlank
     @Schema(description = "The user message to orchestrate", example = "Summarise these documents")

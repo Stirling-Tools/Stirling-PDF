@@ -31,10 +31,12 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   useChat,
   AiWorkflowPhase,
+  ChatRole,
   isKnownEngineProgressDetail,
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
+import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
@@ -45,17 +47,6 @@ type TranslateFn = ReturnType<typeof useTranslation>["t"];
 
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
-
-function formatRelativeTime(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 /**
  * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
@@ -189,7 +180,7 @@ function ChatMessageBubble({
   resolveToolName,
   t,
 }: {
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
   timestamp: number;
   toolsUsed?: string[];
@@ -221,7 +212,7 @@ function ChatMessageBubble({
     </div>
   );
 
-  if (role === "user") {
+  if (role === ChatRole.USER) {
     return (
       <div className="chat-message chat-message-user">
         <div className="chat-message-user__inner">
