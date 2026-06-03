@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.engine.PolicyEngine;
+import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 
@@ -27,8 +28,8 @@ public class ManualTrigger implements PolicyTrigger {
         return "manual";
     }
 
-    /** Submit a pipeline immediately and return its run id. */
-    public String fire(
+    /** Submit a pipeline immediately and return its run handle. */
+    public PolicyRunHandle fire(
             PipelineDefinition definition, List<Resource> inputs, PolicyProgressListener listener) {
         return policyEngine.submit(definition, inputs, listener);
     }

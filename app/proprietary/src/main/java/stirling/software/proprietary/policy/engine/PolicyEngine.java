@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.springframework.core.io.Resource;
@@ -55,11 +56,12 @@ public class PolicyEngine {
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
     /**
-     * Submit a pipeline to run asynchronously. The returned run id scopes a job in {@link
+     * Submit a pipeline to run asynchronously. The returned handle's run id scopes a job in {@link
      * TaskManager}, so progress (notes), status, and result files are observable via the existing
-     * job endpoints as well as via {@link #getRun(String)}.
+     * job endpoints as well as via {@link #getRun(String)}; its completion future resolves when the
+     * run reaches a terminal or paused state.
      */
-    public String submit(
+    public PolicyRunHandle submit(
             PipelineDefinition definition, List<Resource> inputs, PolicyProgressListener listener) {
         // Scope the run id to the current user (on this request thread) so the file-download
         // ownership check passes; NoOpJobOwnershipService returns the id unchanged when security
@@ -68,9 +70,10 @@ public class PolicyEngine {
         taskManager.createTask(runId);
         PolicyRun run = new PolicyRun(runId, definition);
         registry.register(run);
+        CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
-        asyncExecutor.execute(() -> runToCompletion(run, inputs, tracking));
-        return runId;
+        asyncExecutor.execute(() -> runToCompletion(run, inputs, tracking, completion));
+        return new PolicyRunHandle(runId, completion);
     }
 
     public PolicyRun getRun(String runId) {
@@ -102,7 +105,10 @@ public class PolicyEngine {
     }
 
     private void runToCompletion(
-            PolicyRun run, List<Resource> inputs, PolicyProgressListener listener) {
+            PolicyRun run,
+            List<Resource> inputs,
+            PolicyProgressListener listener,
+            CompletableFuture<PolicyRun> completion) {
         String runId = run.getRunId();
         try {
             run.markRunning();
@@ -133,6 +139,9 @@ public class PolicyEngine {
             log.error("Policy run {} failed", runId, e);
             run.fail(message);
             taskManager.setError(runId, message);
+        } finally {
+            // Always resolve the handle with the run's final state so stream/await callers unblock.
+            completion.complete(run);
         }
     }
 

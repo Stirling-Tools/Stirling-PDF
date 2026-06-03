@@ -14,10 +14,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -116,7 +115,7 @@ class PolicyEngineTest {
                             return new StoredFile("file-" + ++counter[0], size);
                         });
 
-        String runId =
+        PolicyRunHandle handle =
                 engine.submit(
                         definition(
                                 new PipelineStep(ROTATE, Map.of()),
@@ -124,7 +123,9 @@ class PolicyEngineTest {
                         List.of(pdf("input", "input.pdf")),
                         PolicyProgressListener.NOOP);
 
-        PolicyRun run = awaitTerminal(runId);
+        // The completion future resolves with the final run state, no polling needed.
+        String runId = handle.runId();
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
         assertEquals(1, run.getOutputs().size());
         assertEquals("compressed.pdf", run.getOutputs().get(0).getFileName());
@@ -142,13 +143,14 @@ class PolicyEngineTest {
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
 
-        String runId =
+        PolicyRunHandle handle =
                 engine.submit(
                         definition(new PipelineStep(ROTATE, Map.of())),
                         List.of(pdf("input", "input.pdf")),
                         PolicyProgressListener.NOOP);
 
-        PolicyRun run = awaitTerminal(runId);
+        String runId = handle.runId();
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
@@ -165,21 +167,6 @@ class PolicyEngineTest {
     }
 
     // --- helpers ---
-
-    private PolicyRun awaitTerminal(String runId) throws InterruptedException {
-        Instant deadline = Instant.now().plus(Duration.ofSeconds(10));
-        PolicyRun run = registry.get(runId);
-        while (Instant.now().isBefore(deadline) && (run == null || !run.getStatus().isTerminal())) {
-            Thread.sleep(20);
-            run = registry.get(runId);
-        }
-        if (run == null || !run.getStatus().isTerminal()) {
-            throw new AssertionError(
-                    "Run did not reach a terminal state in time: "
-                            + (run == null ? "<missing>" : run.getStatus()));
-        }
-        return run;
-    }
 
     private static PipelineDefinition definition(PipelineStep... steps) {
         return new PipelineDefinition("test", List.of(steps), OutputSpec.inline());
