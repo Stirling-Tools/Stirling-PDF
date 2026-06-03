@@ -442,10 +442,6 @@ jobs:
           echo "Generated tauri.windows.conf.json (alias masked):"
           sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/editor/src-tauri/tauri.windows.conf.json
 
-      - name: Sign JPDFium dylibs inside bootJar (macOS only)
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
-        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
-
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         run: |
