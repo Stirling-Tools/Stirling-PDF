@@ -57,6 +57,8 @@ const CardSelector = <T, K extends CardOption<T>>({
               radius="md"
               w="100%"
               h={"2.8rem"}
+              data-testid={`method-card-${option.value}`}
+              data-disabled={disabled ? "true" : undefined}
               style={{
                 cursor: disabled ? "default" : "pointer",
                 backgroundColor: "var(--mantine-color-gray-2)",

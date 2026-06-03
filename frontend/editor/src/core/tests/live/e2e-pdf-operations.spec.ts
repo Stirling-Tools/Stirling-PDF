@@ -121,15 +121,16 @@ test.describe("E2E PDF Operations", () => {
       // Upload a PDF file
       await uploadFiles(page, [fixture("sample.pdf")]);
 
-      // Select "Page Numbers" split method from the CardSelector
-      await page
-        .getByText(/Page Numbers/i)
-        .first()
-        .click();
+      // Select "Page Numbers" split method. Retry until the card is interactive —
+      // the CardSelector is disabled while the endpoint-availability check loads,
+      // so a single click may be silently ignored if it fires too early.
+      const byPagesCard = page.getByTestId("method-card-byPages");
+      const pagesInput = page.getByTestId("split-pages-input");
+      await expect(async () => {
+        await byPagesCard.click();
+        await expect(pagesInput).toBeVisible({ timeout: 2000 });
+      }).toPass({ timeout: 15000 });
 
-      // Wait for the settings step to expand and find the page numbers input
-      const pagesInput = page.getByPlaceholder(/Custom Page Selection/i);
-      await pagesInput.waitFor({ state: "visible", timeout: 10000 });
       await pagesInput.fill("1");
 
       // Execute split
