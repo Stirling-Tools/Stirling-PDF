@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,6 +19,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +37,8 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.JobQueue;
+import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
@@ -65,6 +71,8 @@ class PolicyEngineTest {
     @Mock private TaskManager taskManager;
     @Mock private FileStorage fileStorage;
     @Mock private JobOwnershipService jobOwnershipService;
+    @Mock private ResourceMonitor resourceMonitor;
+    @Mock private JobQueue jobQueue;
 
     @TempDir Path tempDir;
 
@@ -92,13 +100,17 @@ class PolicyEngineTest {
                         registry,
                         fileStorage,
                         jobOwnershipService,
-                        List.of(sink));
+                        List.of(sink),
+                        resourceMonitor,
+                        jobQueue);
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
         lenient()
                 .when(jobOwnershipService.createScopedJobKey(anyString()))
                 .thenAnswer(inv -> inv.getArgument(0));
+        // Default to running immediately; the queueing test overrides this.
+        lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
     }
 
     @Test
@@ -155,6 +167,25 @@ class PolicyEngineTest {
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
+    }
+
+    @Test
+    void runIsQueuedUnderResourcePressure() {
+        when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(true);
+        // Returning an already-completed future keeps the run parked: the queued work (which would
+        // start the run) is never executed by this mock, so it stays PENDING.
+        doReturn(CompletableFuture.completedFuture(null))
+                .when(jobQueue)
+                .queueJob(anyString(), anyInt(), any(), anyLong());
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        verify(jobQueue).queueJob(eq(handle.runId()), anyInt(), any(), anyLong());
+        assertEquals(PolicyRunStatus.PENDING, registry.get(handle.runId()).getStatus());
     }
 
     @Test
