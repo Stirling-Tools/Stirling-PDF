@@ -79,31 +79,32 @@ public class PaygOutputExtractor {
         }
         String mediaType = stripParameters(contentType);
 
-        // Stirling-PDF tool endpoints sometimes set Content-Type to
-        // application/octet-stream (or no header at all) even when the body
-        // is a real PDF or ZIP — Spring's default StreamingResponseBody path
-        // doesn't always negotiate content type. When the declared
-        // Content-Type is missing or generic, sniff magic bytes to recover
-        // lineage capture.
-        boolean missingOrGeneric =
-                mediaType == null || OCTET_STREAM_CONTENT_TYPE.equalsIgnoreCase(mediaType);
-        boolean isPdf = PDF_CONTENT_TYPE.equalsIgnoreCase(mediaType);
-        boolean isZip = ZIP_CONTENT_TYPE.equalsIgnoreCase(mediaType);
-
-        if (missingOrGeneric) {
-            if (isMagic(bodyPath, PDF_MAGIC)) {
-                isPdf = true;
-            } else if (isMagic(bodyPath, ZIP_MAGIC)) {
-                isZip = true;
+        if (PDF_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
+            // Wrapper-owned path. Don't claim ownership. Magic-byte check protects against tools
+            // that emit application/pdf for non-PDF payloads (mirrors the ZIP-entry path below).
+            if (!isPdfMagic(bodyPath)) {
+                log.debug(
+                        "Response advertised application/pdf but content does not start with"
+                                + " %PDF- magic bytes; skipping OUTPUT recording. body={}",
+                        bodyPath);
+                return List.of();
             }
-        }
-
-        if (isPdf) {
-            // Wrapper-owned path. Don't claim ownership.
             return List.of(new ExtractedPdf(bodyPath, null));
         }
-        if (isZip) {
+        if (ZIP_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
             return extractZip(bodyPath);
+        }
+        // Stirling-PDF tool endpoints sometimes set Content-Type to application/octet-stream (or
+        // no header at all) even when the body is a real PDF or ZIP — Spring's default
+        // StreamingResponseBody path doesn't always negotiate content type. When the declared
+        // Content-Type is missing or generic, sniff magic bytes to recover lineage capture.
+        if (mediaType == null || OCTET_STREAM_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
+            if (isPdfMagic(bodyPath)) {
+                return List.of(new ExtractedPdf(bodyPath, null));
+            }
+            if (isMagic(bodyPath, ZIP_MAGIC)) {
+                return extractZip(bodyPath);
+            }
         }
         return List.of();
     }
