@@ -144,7 +144,7 @@ export interface FileItemProps {
   onFolderClick?: (folderId: string) => void;
 }
 
-const MAX_VISIBLE_FOLDER_DOTS = 3;
+const MAX_VISIBLE_FOLDER_TAGS = 2;
 
 export function FileItem({
   fileId,
@@ -166,8 +166,8 @@ export function FileItem({
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
 
-  const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_DOTS);
-  const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_DOTS);
+  const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
+  const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
 
   // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
   const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
@@ -235,44 +235,55 @@ export function FileItem({
               {dateLabel && typeLabel ? " · " : ""}
               {typeLabel}
             </span>
-            {folders.length > 0 && (
-              <span className="file-sidebar-folder-dots" data-no-select>
-                {visibleFolders.map((folder) => (
-                  <Tooltip
-                    key={folder.id}
-                    label={folder.name}
-                    withArrow
-                    position="top"
-                    withinPortal
+          </span>
+          {folders.length > 0 && (
+            <span className="file-sidebar-folder-tags" data-no-select>
+              {visibleFolders.map((folder) => (
+                <Tooltip
+                  key={folder.id}
+                  label={folder.name}
+                  withArrow
+                  position="top"
+                  withinPortal
+                >
+                  <span
+                    className="file-sidebar-folder-tag"
+                    style={{
+                      backgroundColor: `${folder.accentColor}1f`,
+                      borderColor: `${folder.accentColor}55`,
+                    }}
+                    role="button"
+                    tabIndex={-1}
+                    aria-label={folder.name}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFolderClick?.(folder.id);
+                    }}
                   >
                     <span
-                      className="file-sidebar-folder-dot"
+                      className="file-sidebar-folder-tag-dot"
                       style={{ backgroundColor: folder.accentColor }}
-                      role="button"
-                      tabIndex={-1}
-                      aria-label={folder.name}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onFolderClick?.(folder.id);
-                      }}
                     />
-                  </Tooltip>
-                ))}
-                {overflowFolders.length > 0 && (
-                  <Tooltip
-                    label={overflowFolders.map((f) => f.name).join(", ")}
-                    withArrow
-                    position="top"
-                    withinPortal
-                  >
-                    <span className="file-sidebar-folder-dot-more">
-                      +{overflowFolders.length}
+                    <span className="file-sidebar-folder-tag-label">
+                      {folder.name}
                     </span>
-                  </Tooltip>
-                )}
-              </span>
-            )}
-          </span>
+                  </span>
+                </Tooltip>
+              ))}
+              {overflowFolders.length > 0 && (
+                <Tooltip
+                  label={overflowFolders.map((f) => f.name).join(", ")}
+                  withArrow
+                  position="top"
+                  withinPortal
+                >
+                  <span className="file-sidebar-folder-tag-more">
+                    +{overflowFolders.length}
+                  </span>
+                </Tooltip>
+              )}
+            </span>
+          )}
         </div>
         <button
           className="file-sidebar-eye-btn"

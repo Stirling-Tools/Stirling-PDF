@@ -134,33 +134,55 @@
   text-overflow: ellipsis;
 }
 
-/* ---- Folder membership dots ---- */
-.file-sidebar-folder-dots {
+/* ---- Folder membership tags ---- */
+.file-sidebar-folder-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  min-width: 0;
+}
+
+.file-sidebar-folder-tag {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
+  gap: 4px;
+  max-width: 7.5rem;
+  padding: 1px 6px 1px 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.1s ease;
 }
 
-.file-sidebar-folder-dot {
-  width: 7px;
-  height: 7px;
+.file-sidebar-folder-tag:hover {
+  filter: brightness(1.1);
+}
+
+.file-sidebar-folder-tag-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  cursor: pointer;
-  transition: transform 0.1s ease;
 }
 
-.file-sidebar-folder-dot:hover {
-  transform: scale(1.3);
+.file-sidebar-folder-tag-label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.file-sidebar-folder-dot-more {
-  font-size: 9px;
+.file-sidebar-folder-tag-more {
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
   color: var(--text-muted);
   cursor: default;
+  flex-shrink: 0;
 }
 
 /* ---- Eye button (open in viewer) ---- */
