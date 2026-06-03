@@ -137,6 +137,7 @@ public class AiWorkflowService {
                         ? new ArrayList<>()
                         : new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+        initialRequest.setDocumentStyle(buildDocumentStyle(request));
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -493,7 +494,9 @@ public class AiWorkflowService {
             throws IOException {
         List<Resource> files = new ArrayList<>();
         JsonNode report = null;
-        if (toolMetadataService.isMultiInput(endpointPath)) {
+        if (toolMetadataService.isMultiInput(endpointPath) || inputFiles.isEmpty()) {
+            // Multi-input endpoints receive all files in one call.
+            // Generative endpoints (no file input) also take this path so they are called once.
             ToolResult r = callEndpoint(endpointPath, parameters, inputFiles);
             files.addAll(r.files());
             report = r.report();
@@ -669,6 +672,20 @@ public class AiWorkflowService {
         return completed;
     }
 
+    private Map<String, String> buildDocumentStyle(AiWorkflowRequest request) {
+        Map<String, String> style = new LinkedHashMap<>();
+        if (request.getDocumentStylePrimaryColor() != null) {
+            style.put("primaryColor", request.getDocumentStylePrimaryColor());
+        }
+        if (request.getDocumentStyleBackgroundColor() != null) {
+            style.put("backgroundColor", request.getDocumentStyleBackgroundColor());
+        }
+        if (request.getDocumentStyleBodyTextColor() != null) {
+            style.put("bodyTextColor", request.getDocumentStyleBodyTextColor());
+        }
+        return style.isEmpty() ? null : style;
+    }
+
     private void validateRequest(AiWorkflowRequest request) {
         for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
             if (fileInput.getFileInput().isEmpty()) {
@@ -745,5 +762,8 @@ public class AiWorkflowService {
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
         private List<String> enabledEndpoints = new ArrayList<>();
+
+        /** Explicit document style override from the UI. Null if no style was selected. */
+        private Map<String, String> documentStyle;
     }
 }

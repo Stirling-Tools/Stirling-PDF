@@ -34,6 +34,10 @@ import {
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
+import {
+  DocumentStylePicker,
+  type DocumentStyleSelection,
+} from "@app/components/chat/DocumentStylePicker";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import "@app/components/chat/ChatPanel.css";
 
@@ -225,6 +229,9 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
   } = useChat();
   const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
+  const [documentStyle, setDocumentStyle] = useState<DocumentStyleSelection>(
+    {},
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -247,7 +254,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
     setInput("");
-    sendMessage(trimmed);
+    sendMessage(trimmed, documentStyle);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -335,6 +342,10 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
 
             {/* Input */}
             <div className="chat-panel-input">
+              <DocumentStylePicker
+                value={documentStyle}
+                onChange={setDocumentStyle}
+              />
               <TextInput
                 ref={inputRef}
                 placeholder="Type a message..."

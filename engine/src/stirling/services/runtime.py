@@ -38,7 +38,10 @@ def _build_anthropic_http_client() -> httpx.AsyncClient:
     have died in the pool. See ``STIRLING_HTTP_DEBUG`` traces of slice 6
     on 2026-05-06 for the concrete failure mode this addresses.
     """
-    return httpx.AsyncClient(limits=httpx.Limits(max_keepalive_connections=0))
+    return httpx.AsyncClient(
+        limits=httpx.Limits(max_keepalive_connections=0),
+        timeout=httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=5.0),
+    )
 
 
 @dataclass(frozen=True)

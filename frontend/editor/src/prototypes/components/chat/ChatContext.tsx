@@ -6,6 +6,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import type { DocumentStyleSelection } from "@app/components/chat/DocumentStylePicker";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { generateId } from "@app/utils/generateId";
 import apiClient from "@app/services/apiClient";
@@ -301,7 +302,10 @@ interface ChatContextValue {
   progress: AiWorkflowProgress | null;
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (
+    content: string,
+    documentStyle?: DocumentStyleSelection,
+  ) => Promise<void>;
   cancelMessage: () => void;
 }
 
@@ -365,32 +369,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       const files = await Promise.all(descriptors.map(downloadFile));
 
-      const operation: ToolOperation = {
-        toolId: "ai-workflow",
-        timestamp: Date.now(),
-      };
-      const isVersionMapping =
-        sourceStubs.length > 0 && files.length === sourceStubs.length;
-      const stubs = files.map((file, i) =>
-        isVersionMapping
-          ? createChildStub(sourceStubs[i], operation, file)
-          : createNewStirlingFileStub(file),
-      );
-      const stirlingFiles = files.map((file, i) =>
-        createStirlingFile(file, stubs[i].id),
-      );
-
       if (sourceStubs.length > 0) {
         // Always consume the inputs so merge/split inputs are removed from the workbench.
         // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
         // merge/split they're fresh roots.
+        const operation: ToolOperation = {
+          toolId: "ai-workflow",
+          timestamp: Date.now(),
+        };
+        const isVersionMapping = files.length === sourceStubs.length;
+        const stubs = files.map((file, i) =>
+          isVersionMapping
+            ? createChildStub(sourceStubs[i], operation, file)
+            : createNewStirlingFileStub(file),
+        );
+        const stirlingFiles = files.map((file, i) =>
+          createStirlingFile(file, stubs[i].id),
+        );
         await fileActions.consumeFiles(
           sourceStubs.map((s) => s.id),
           stirlingFiles,
           stubs,
         );
       } else {
-        // No inputs were provided (unlikely for completed workflows, but handle it safely).
+        // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
+        // here would cause a fileId mismatch in filesRef, making getFiles() clone the file
+        // on every render and breaking useFileWithUrl's memoisation (continuous PDF reloads).
         await fileActions.addFiles(files, { selectFiles: true });
       }
     },
@@ -411,7 +415,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, documentStyle?: DocumentStyleSelection) => {
       // Abort any in-flight request
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -439,6 +443,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].role`, message.role);
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
+        if (documentStyle?.primaryColor) {
+          formData.append(
+            "documentStylePrimaryColor",
+            documentStyle.primaryColor,
+          );
+        }
+        if (documentStyle?.backgroundColor) {
+          formData.append(
+            "documentStyleBackgroundColor",
+            documentStyle.backgroundColor,
+          );
+        }
+        if (documentStyle?.bodyTextColor) {
+          formData.append(
+            "documentStyleBodyTextColor",
+            documentStyle.bodyTextColor,
+          );
+        }
 
         const response = await fetch("/api/v1/ai/orchestrate/stream", {
           method: "POST",

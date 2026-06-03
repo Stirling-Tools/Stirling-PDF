@@ -97,6 +97,18 @@ public class InternalApiClient {
             headers.add("X-API-KEY", apiKey);
         }
 
+        // Force multipart/form-data only when no Resource parts are present.
+        // When files are included, RestTemplate sets the content-type with the correct boundary
+        // automatically. When there are only string parameters (e.g. generative AI tools that
+        // produce output without file input), we must declare multipart explicitly or the
+        // HttpMessageConverter defaults to application/x-www-form-urlencoded.
+        boolean hasFilePart =
+                body.values().stream()
+                        .flatMap(java.util.List::stream)
+                        .anyMatch(v -> v instanceof Resource);
+        if (!hasFilePart) {
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        }
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
         RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
 

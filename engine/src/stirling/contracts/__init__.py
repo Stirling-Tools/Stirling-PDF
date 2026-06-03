@@ -78,6 +78,18 @@ from .pdf_comments import (
     PdfCommentResponse,
     TextChunk,
 )
+from .pdf_create import (
+    DocumentMeta,
+    DocumentSections,
+    PdfCreateCannotDoResponse,
+    PdfCreateOrchestrateResponse,
+    PdfCreateRequest,
+    PdfCreateResponse,
+    PdfCreateSuccessResponse,
+)
+from .pdf_create import (
+    DocumentStyle as DocumentStyle,
+)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -142,6 +154,9 @@ __all__ = [
     "PdfToMarkdownRequest",
     "PdfToMarkdownResponse",
     "Discrepancy",
+    "DocumentMeta",
+    "DocumentSections",
+    "DocumentStyle",
     "DiscrepancyKind",
     "EditCannotDoResponse",
     "EditClarificationRequest",
@@ -180,6 +195,11 @@ __all__ = [
     "PdfCommentRequest",
     "PdfCommentResponse",
     "PdfContentType",
+    "PdfCreateCannotDoResponse",
+    "PdfCreateOrchestrateResponse",
+    "PdfCreateRequest",
+    "PdfCreateResponse",
+    "PdfCreateSuccessResponse",
     "PdfEditRequest",
     "PdfEditResponse",
     "PdfEditTerminalResponse",

@@ -8,6 +8,7 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
+from stirling.agents.pdf_create import PdfCreateAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
@@ -27,6 +28,7 @@ from stirling.contracts import (
     format_conversation_history,
     format_file_names,
 )
+from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
 from stirling.contracts.pdf_to_markdown import PdfToMarkdownOrchestrateResponse
 from stirling.services import AppRuntime
 
@@ -77,6 +79,16 @@ class OrchestratorAgent:
                     description=("Delegate requests to reconstruct a PDF as a Markdown document."),
                 ),
                 ToolOutput(
+                    self.delegate_pdf_create,
+                    name="delegate_pdf_create",
+                    description=(
+                        "Delegate requests to create a new PDF document from scratch based on a"
+                        " description. Use this when the user wants to generate a new document"
+                        " (e.g. 'create an invoice', 'write a report', 'make a contract',"
+                        " 'draft a letter'). No input file is required."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -94,6 +106,8 @@ class OrchestratorAgent:
                 " 'leave feedback on the PDF'. "
                 "Use delegate_pdf_to_markdown for any request to convert a PDF to Markdown "
                 "or reconstruct its content as readable text. "
+                "Use delegate_pdf_create when the user wants to generate a new document from"
+                " scratch with no input file — invoices, reports, letters, contracts, etc. "
                 "Use unsupported_capability when the user asks about the assistant itself "
                 "or when none of the other outputs fit; supply a helpful message."
             ),
@@ -135,6 +149,8 @@ class OrchestratorAgent:
                 return await self._run_agent_draft(request)
             case SupportedCapability.PDF_TO_MARKDOWN:
                 return await self._run_pdf_to_markdown(request)
+            case SupportedCapability.PDF_CREATE:
+                return await self._run_pdf_create(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
@@ -174,6 +190,12 @@ class OrchestratorAgent:
 
     async def _run_pdf_review(self, request: OrchestratorRequest) -> PdfReviewOrchestrateResponse:
         return await PdfReviewAgent(self.runtime).orchestrate(request)
+
+    async def delegate_pdf_create(self, ctx: RunContext[OrchestratorDeps]) -> PdfCreateOrchestrateResponse:
+        return await self._run_pdf_create(ctx.deps.request)
+
+    async def _run_pdf_create(self, request: OrchestratorRequest) -> PdfCreateOrchestrateResponse:
+        return await PdfCreateAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(
         self,

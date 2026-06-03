@@ -87,6 +87,7 @@ class SupportedCapability(StrEnum):
     PDF_EDIT = "pdf_edit"
     PDF_QUESTION = "pdf_question"
     PDF_REVIEW = "pdf_review"
+    PDF_CREATE = "pdf_create"
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"

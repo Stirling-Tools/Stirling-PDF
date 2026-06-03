@@ -21,6 +21,7 @@ from .common import (
     drop_unknown_tool_endpoints,
 )
 from .execution import NextExecutionAction
+from .pdf_create import DocumentStyle
 from .pdf_edit import PdfEditTerminalResponse
 from .pdf_questions import PdfQuestionTerminalResponse
 from .pdf_to_markdown import PageLayoutArtifact
@@ -47,6 +48,9 @@ class OrchestratorRequest(ApiModel):
     enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
         default_factory=list
     )
+    # Explicit style override from the UI. When set, the pdf_create agent uses this
+    # directly and skips style inference by the meta planner.
+    document_style: DocumentStyle | None = None
 
 
 class UnsupportedCapabilityResponse(ApiModel):
