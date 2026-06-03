@@ -19,7 +19,7 @@ EMP-1047
 | Company | Summit Consulting Partners |
 |---|---|
 | Company Address | 88 Riverside Plaza, Suite 1400, New York, NY 10069 |
-| Accounting Department Email | expenses@summitconsulting.com |
+| Accounting Department Email | expenses@example.com |
 
 **Trip Purpose**
 
