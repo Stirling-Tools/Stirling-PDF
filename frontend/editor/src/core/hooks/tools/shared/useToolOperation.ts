@@ -21,6 +21,7 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
+import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
   createChildStub,
@@ -62,37 +63,6 @@ export type {
 
 // Re-export for backwards compatibility
 export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-
-// Signature-first ZIP detection. Content-Type alone is unreliable: proxies and
-// some backends ship merged PDFs as "application/pdf;charset=UTF-8" or
-// "application/octet-stream", which an exact-equality check would misroute
-// into ZIP extraction.
-export async function isZipResponse(
-  blob: Blob,
-  contentTypeHint?: string,
-): Promise<boolean> {
-  try {
-    const sig = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
-    if (
-      sig[0] === 0x50 &&
-      sig[1] === 0x4b &&
-      (sig[2] === 0x03 || sig[2] === 0x05 || sig[2] === 0x07)
-    ) {
-      return true;
-    }
-    if (
-      sig[0] === 0x25 &&
-      sig[1] === 0x50 &&
-      sig[2] === 0x44 &&
-      sig[3] === 0x46
-    ) {
-      return false;
-    }
-  } catch {
-    // Unreadable blob - fall back to Content-Type.
-  }
-  return (contentTypeHint || blob.type || "").toLowerCase().includes("zip");
-}
 
 /**
  * Shared hook for tool operations providing consistent error handling, progress tracking,
@@ -314,7 +284,7 @@ export const useToolOperation = <TParams>(
                 filesForAPI,
               );
             } else if (
-              await isZipResponse(
+              await zipFileService.isZipResponse(
                 responseBlob,
                 typeof contentTypeHeader === "string"
                   ? contentTypeHeader

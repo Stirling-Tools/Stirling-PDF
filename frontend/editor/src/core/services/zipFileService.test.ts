@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isZipResponse } from "@app/hooks/tools/shared/useToolOperation";
+import { zipFileService } from "@app/services/zipFileService";
 
 // jsdom's Blob.slice(...).arrayBuffer() returns an empty buffer in this
 // version, so a real Blob would never reach the magic-byte branch under test.
@@ -19,30 +19,35 @@ function fakeBlob(bytes: number[], type = ""): Blob {
 
 const PDF_BYTES = [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]; // "%PDF-1.7"
 
-describe("isZipResponse", () => {
+describe("zipFileService.isZipResponse", () => {
   describe("signature is authoritative", () => {
     test("PK\\x03\\x04 -> ZIP", async () => {
       expect(
-        await isZipResponse(fakeBlob([0x50, 0x4b, 0x03, 0x04, 0x00, 0x00])),
+        await zipFileService.isZipResponse(
+          fakeBlob([0x50, 0x4b, 0x03, 0x04, 0x00, 0x00]),
+        ),
       ).toBe(true);
     });
 
     test("PK\\x05\\x06 (empty archive) -> ZIP", async () => {
-      expect(await isZipResponse(fakeBlob([0x50, 0x4b, 0x05, 0x06]))).toBe(
-        true,
-      );
+      expect(
+        await zipFileService.isZipResponse(fakeBlob([0x50, 0x4b, 0x05, 0x06])),
+      ).toBe(true);
     });
 
     test("PK\\x07\\x08 (spanned marker) -> ZIP", async () => {
-      expect(await isZipResponse(fakeBlob([0x50, 0x4b, 0x07, 0x08]))).toBe(
-        true,
-      );
+      expect(
+        await zipFileService.isZipResponse(fakeBlob([0x50, 0x4b, 0x07, 0x08])),
+      ).toBe(true);
     });
 
     test("%PDF signature overrides a ZIP Content-Type", async () => {
-      expect(await isZipResponse(fakeBlob(PDF_BYTES), "application/zip")).toBe(
-        false,
-      );
+      expect(
+        await zipFileService.isZipResponse(
+          fakeBlob(PDF_BYTES),
+          "application/zip",
+        ),
+      ).toBe(false);
     });
   });
 
@@ -50,7 +55,7 @@ describe("isZipResponse", () => {
   describe("bug-trigger Content-Types must not misroute a PDF", () => {
     test('"application/pdf;charset=UTF-8" + %PDF -> NOT ZIP', async () => {
       expect(
-        await isZipResponse(
+        await zipFileService.isZipResponse(
           fakeBlob(PDF_BYTES),
           "application/pdf;charset=UTF-8",
         ),
@@ -59,14 +64,20 @@ describe("isZipResponse", () => {
 
     test('"application/octet-stream" + %PDF -> NOT ZIP', async () => {
       expect(
-        await isZipResponse(fakeBlob(PDF_BYTES), "application/octet-stream"),
+        await zipFileService.isZipResponse(
+          fakeBlob(PDF_BYTES),
+          "application/octet-stream",
+        ),
       ).toBe(false);
     });
 
     test('"APPLICATION/PDF" + %PDF -> NOT ZIP', async () => {
-      expect(await isZipResponse(fakeBlob(PDF_BYTES), "APPLICATION/PDF")).toBe(
-        false,
-      );
+      expect(
+        await zipFileService.isZipResponse(
+          fakeBlob(PDF_BYTES),
+          "APPLICATION/PDF",
+        ),
+      ).toBe(false);
     });
   });
 
@@ -75,13 +86,16 @@ describe("isZipResponse", () => {
 
     test('unknown bytes + "application/zip" -> ZIP', async () => {
       expect(
-        await isZipResponse(fakeBlob(UNKNOWN_BYTES), "application/zip"),
+        await zipFileService.isZipResponse(
+          fakeBlob(UNKNOWN_BYTES),
+          "application/zip",
+        ),
       ).toBe(true);
     });
 
     test('unknown bytes + "application/x-zip-compressed" -> ZIP', async () => {
       expect(
-        await isZipResponse(
+        await zipFileService.isZipResponse(
           fakeBlob(UNKNOWN_BYTES),
           "application/x-zip-compressed",
         ),
@@ -90,13 +104,18 @@ describe("isZipResponse", () => {
 
     test('unknown bytes + "application/json" -> NOT ZIP', async () => {
       expect(
-        await isZipResponse(fakeBlob(UNKNOWN_BYTES), "application/json"),
+        await zipFileService.isZipResponse(
+          fakeBlob(UNKNOWN_BYTES),
+          "application/json",
+        ),
       ).toBe(false);
     });
 
     test("unknown bytes, no hint, blob.type 'application/zip' -> ZIP", async () => {
       expect(
-        await isZipResponse(fakeBlob(UNKNOWN_BYTES, "application/zip")),
+        await zipFileService.isZipResponse(
+          fakeBlob(UNKNOWN_BYTES, "application/zip"),
+        ),
       ).toBe(true);
     });
   });

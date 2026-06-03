@@ -3,10 +3,8 @@ import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
 import { AutomationFileProcessor } from "@app/utils/automationFileProcessor";
-import {
-  ToolType,
-  isZipResponse,
-} from "@app/hooks/tools/shared/useToolOperation";
+import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import { zipFileService } from "@app/services/zipFileService";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 
 export const processMultiFileResponse = async (
@@ -17,7 +15,7 @@ export const processMultiFileResponse = async (
   preserveBackendFilename?: boolean,
 ): Promise<File[]> => {
   const contentTypeHeader = responseHeaders?.["content-type"];
-  const looksLikeZip = await isZipResponse(
+  const looksLikeZip = await zipFileService.isZipResponse(
     responseData,
     typeof contentTypeHeader === "string" ? contentTypeHeader : undefined,
   );
