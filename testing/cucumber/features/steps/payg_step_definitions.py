@@ -286,8 +286,8 @@ def step_post_invalid_params(context, endpoint):
         )
 
 
-@when('I POST a single-page PDF to "{endpoint}" with header "{header_name}: {header_value}"')
-def step_post_with_header(context, endpoint, header_name, header_value):
+@when('I POST a single-page PDF with header "{header_name}: {header_value}" to "{endpoint}"')
+def step_post_with_header(context, header_name, header_value, endpoint):
     _post_pdf(context, endpoint, SINGLE_PAGE_PDF, extra_headers={header_name: header_value})
 
 

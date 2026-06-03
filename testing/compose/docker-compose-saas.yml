@@ -66,6 +66,16 @@ services:
       SAAS_DB_PASSWORD: "postgres"
       SAAS_DB_PROJECT_REF: "disabled"
 
+      # The saas Flyway migrations assume `users` and `teams` already exist
+      # (V2 ALTERs `users`; V5 references `teams(id)`) because in production
+      # those tables are provisioned by Supabase before Stirling starts. On
+      # a clean test postgres they don't exist, so we disable Flyway and let
+      # Hibernate's `ddl-auto=create-drop` build the full schema from the
+      # entity graph. The default-pricing-policy row that V12 seeds in
+      # production is re-seeded by testing/compose/payg/saas-seed.sql.
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
+
       # Disable Supabase JWT enforcement for the test profile. The
       # PaygChargeInterceptor resolves via ApiKey-token authority — that
       # path is what we cover here.

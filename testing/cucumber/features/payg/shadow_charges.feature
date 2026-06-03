@@ -75,7 +75,7 @@ Feature: PAYG shadow-mode charging
 
   Scenario: PIPELINE header sets the job source
     Given there are no existing shadow charges for team "payg-cucumber-team"
-    When I POST a single-page PDF to "/api/v1/security/add-password" with header "X-Stirling-Automation: true"
+    When I POST a single-page PDF with header "X-Stirling-Automation: true" to "/api/v1/security/add-password"
     Then the response status is 200
     And exactly 1 shadow charge row exists for team "payg-cucumber-team"
     And the latest job's source is "PIPELINE"
