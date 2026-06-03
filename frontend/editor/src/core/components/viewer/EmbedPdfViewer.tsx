@@ -442,6 +442,20 @@ const EmbedPdfViewerContent = ({
                 event.preventDefault();
                 printActions.print();
                 return;
+              case "=":
+              case "+":
+                event.preventDefault();
+                zoomActions.zoomIn();
+                return;
+              case "-":
+              case "_":
+                event.preventDefault();
+                zoomActions.zoomOut();
+                return;
+              case "0":
+                event.preventDefault();
+                zoomActions.requestZoom("fit-width");
+                return;
             }
           }
         }
@@ -455,21 +469,6 @@ const EmbedPdfViewerContent = ({
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
         switch (event.key) {
-          case "=":
-          case "+":
-            event.preventDefault();
-            zoomActions.zoomIn();
-            return;
-          case "-":
-          case "_":
-            event.preventDefault();
-            zoomActions.zoomOut();
-            return;
-          case "0":
-            // Ctrl+0: Reset zoom to fit width
-            event.preventDefault();
-            zoomActions.requestZoom("fit-width");
-            return;
           case "a":
           case "A":
             // Ctrl+A: Prevent browser from selecting all UI text
