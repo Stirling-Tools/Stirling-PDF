@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -35,6 +38,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
@@ -75,19 +79,16 @@ public class PolicyController {
     @Operation(
             summary = "Run a tool pipeline",
             description =
-                    "Accepts input files and a JSON pipeline definition, runs the steps in order"
-                            + " asynchronously, and returns a run id. Poll the run status endpoint"
-                            + " and download outputs via /api/v1/general/files/{fileId}.")
+                    "Accepts the documents to process (multipart field 'fileInput'), any supporting"
+                            + " files (each under a multipart field named as its asset key, e.g."
+                            + " 'company-logo'), and a JSON pipeline definition ('json'). Runs the"
+                            + " steps in order asynchronously and returns a run id. Poll the run"
+                            + " status endpoint and download outputs via /api/v1/general/files/{id}.")
     public ResponseEntity<JobResponse<Void>> run(
-            @RequestParam(value = "fileInput", required = false) MultipartFile[] files,
-            @RequestParam("json") String json)
+            @RequestParam("json") String json, MultipartHttpServletRequest request)
             throws IOException {
         PipelineDefinition definition = parseDefinition(json);
-        if (definition.steps().isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
-        }
-        List<Resource> inputs = toResources(files);
+        PolicyInputs inputs = collectInputs(request);
         String runId = manualTrigger.fire(definition, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
@@ -100,15 +101,10 @@ public class PolicyController {
                             + " starts and completes, then a terminal 'completed', 'failed',"
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public SseEmitter runStream(
-            @RequestParam(value = "fileInput", required = false) MultipartFile[] files,
-            @RequestParam("json") String json)
+            @RequestParam("json") String json, MultipartHttpServletRequest request)
             throws IOException {
         PipelineDefinition definition = parseDefinition(json);
-        if (definition.steps().isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
-        }
-        List<Resource> inputs = toResources(files);
+        PolicyInputs inputs = collectInputs(request);
 
         SseEmitter emitter = new SseEmitter(streamTimeoutMs);
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
@@ -145,12 +141,39 @@ public class PolicyController {
     }
 
     private PipelineDefinition parseDefinition(String json) {
+        PipelineDefinition definition;
         try {
-            return objectMapper.readValue(json, PipelineDefinition.class);
+            definition = objectMapper.readValue(json, PipelineDefinition.class);
         } catch (JacksonException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Invalid pipeline definition JSON");
         }
+        if (definition.steps().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
+        }
+        return definition;
+    }
+
+    /**
+     * Split the multipart file parts into the primary document stream ("fileInput") and the named
+     * supporting-file store: every other file field becomes an asset keyed by its field name, which
+     * a step references from {@code fileParameters}.
+     */
+    private PolicyInputs collectInputs(MultipartHttpServletRequest request) throws IOException {
+        MultiValueMap<String, MultipartFile> fileMap = request.getMultiFileMap();
+        List<Resource> primary = toResources(fileMap.get("fileInput"));
+        Map<String, List<Resource>> supportingFiles = new LinkedHashMap<>();
+        for (Map.Entry<String, List<MultipartFile>> entry : fileMap.entrySet()) {
+            if ("fileInput".equals(entry.getKey())) {
+                continue;
+            }
+            List<Resource> assets = toResources(entry.getValue());
+            if (!assets.isEmpty()) {
+                supportingFiles.put(entry.getKey(), assets);
+            }
+        }
+        return new PolicyInputs(primary, supportingFiles);
     }
 
     /**
@@ -200,7 +223,7 @@ public class PolicyController {
         }
     }
 
-    private List<Resource> toResources(MultipartFile[] files) throws IOException {
+    private List<Resource> toResources(List<MultipartFile> files) throws IOException {
         List<Resource> resources = new ArrayList<>();
         if (files == null) {
             return resources;

@@ -22,6 +22,7 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
@@ -62,7 +63,7 @@ public class PolicyEngine {
      * run reaches a terminal or paused state.
      */
     public PolicyRunHandle submit(
-            PipelineDefinition definition, List<Resource> inputs, PolicyProgressListener listener) {
+            PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
         // Scope the run id to the current user (on this request thread) so the file-download
         // ownership check passes; NoOpJobOwnershipService returns the id unchanged when security
         // is off.
@@ -106,7 +107,7 @@ public class PolicyEngine {
 
     private void runToCompletion(
             PolicyRun run,
-            List<Resource> inputs,
+            PolicyInputs inputs,
             PolicyProgressListener listener,
             CompletableFuture<PolicyRun> completion) {
         String runId = run.getRunId();

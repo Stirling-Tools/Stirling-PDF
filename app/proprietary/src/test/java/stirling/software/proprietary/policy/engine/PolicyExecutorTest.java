@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.engine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,6 +44,7 @@ import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 
 import tools.jackson.databind.ObjectMapper;
@@ -103,7 +105,7 @@ class PolicyExecutorTest {
                         definition(
                                 new PipelineStep(ROTATE, Map.of()),
                                 new PipelineStep(COMPRESS, Map.of())),
-                        List.of(pdf("input", "input.pdf")),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         listener);
 
         assertEquals(1, result.files().size());
@@ -123,7 +125,7 @@ class PolicyExecutorTest {
         PolicyExecutionResult result =
                 executor.execute(
                         definition(new PipelineStep(MERGE, Map.of())),
-                        List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf")),
+                        PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
                         PolicyProgressListener.NOOP);
 
         assertEquals(1, result.files().size());
@@ -139,7 +141,7 @@ class PolicyExecutorTest {
         PolicyExecutionResult result =
                 executor.execute(
                         definition(new PipelineStep(ROTATE, Map.of())),
-                        List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf")),
+                        PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
                         PolicyProgressListener.NOOP);
 
         assertEquals(2, result.files().size());
@@ -159,7 +161,7 @@ class PolicyExecutorTest {
         PolicyExecutionResult result =
                 executor.execute(
                         definition(new PipelineStep(SPLIT, Map.of())),
-                        List.of(pdf("doc", "doc.pdf")),
+                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
                         PolicyProgressListener.NOOP);
 
         assertEquals(2, result.files().size());
@@ -184,7 +186,7 @@ class PolicyExecutorTest {
 
         executor.execute(
                 definition(new PipelineStep(editText, params)),
-                List.of(pdf("in", "in.pdf")),
+                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                 PolicyProgressListener.NOOP);
 
         @SuppressWarnings("unchecked")
@@ -197,6 +199,55 @@ class PolicyExecutorTest {
         assertNotNull(edits);
         assertEquals(1, edits.size());
         assertEquals("[{\"find\":\"foo\",\"replace\":\"bar\"}]", edits.get(0));
+    }
+
+    @Test
+    void supportingFilesAreBoundToTheirNamedFields() throws IOException {
+        String addStamp = "/api/v1/misc/add-stamp-to-pdf";
+        when(toolMetadataService.isMultiInput(addStamp)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(addStamp)).thenReturn(false);
+        stubEndpoint(addStamp, pdf("stamped", "stamped.pdf"));
+
+        PipelineStep step =
+                new PipelineStep(addStamp, Map.of("opacity", 0.5), Map.of("stampImage", "logo"));
+        PolicyInputs inputs =
+                new PolicyInputs(
+                        List.of(pdf("doc", "doc.pdf")),
+                        Map.of("logo", List.of(pdf("logo-bytes", "logo.png"))));
+
+        executor.execute(
+                new PipelineDefinition("stamp", List.of(step), OutputSpec.inline()),
+                inputs,
+                PolicyProgressListener.NOOP);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(addStamp), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+        // The document goes to fileInput; the supporting image is bound to its named field and is
+        // not part of the document stream.
+        assertEquals(1, body.get("fileInput").size());
+        assertNotNull(body.get("stampImage"));
+        assertEquals(1, body.get("stampImage").size());
+    }
+
+    @Test
+    void missingSupportingFileFailsTheStep() {
+        String addStamp = "/api/v1/misc/add-stamp-to-pdf";
+        when(toolMetadataService.isMultiInput(addStamp)).thenReturn(false);
+        PipelineStep step = new PipelineStep(addStamp, Map.of(), Map.of("stampImage", "logo"));
+
+        IOException ex =
+                assertThrows(
+                        IOException.class,
+                        () ->
+                                executor.execute(
+                                        new PipelineDefinition(
+                                                "stamp", List.of(step), OutputSpec.inline()),
+                                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                                        PolicyProgressListener.NOOP));
+        assertTrue(ex.getMessage().contains("logo"));
     }
 
     @Test
@@ -214,7 +265,7 @@ class PolicyExecutorTest {
                 () ->
                         executor.execute(
                                 definition(new PipelineStep(ROTATE, Map.of())),
-                                List.of(pdf("in", "in.pdf")),
+                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                                 PolicyProgressListener.NOOP));
     }
 
@@ -225,7 +276,7 @@ class PolicyExecutorTest {
                 () ->
                         executor.execute(
                                 new PipelineDefinition("empty", List.of(), OutputSpec.inline()),
-                                List.of(pdf("in", "in.pdf")),
+                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                                 PolicyProgressListener.NOOP));
     }
 

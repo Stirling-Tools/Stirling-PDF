@@ -46,6 +46,7 @@ import stirling.software.proprietary.policy.engine.PolicyExecutor;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
@@ -318,7 +319,8 @@ public class AiWorkflowService {
                             List.of(new PipelineStep(endpointPath, parameters)),
                             OutputSpec.inline());
             PolicyExecutionResult result =
-                    policyExecutor.execute(definition, inputFiles, stepProgress(listener));
+                    policyExecutor.execute(
+                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
                             response.getRationale(),
@@ -412,7 +414,8 @@ public class AiWorkflowService {
             PipelineDefinition definition =
                     new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
             PolicyExecutionResult result =
-                    policyExecutor.execute(definition, inputFiles, stepProgress(listener));
+                    policyExecutor.execute(
+                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
 
             // Multi-turn: if the plan was emitted with resume_with set, the delegate wants
             // Java to re-invoke the orchestrator with any captured report as an artifact.

@@ -40,6 +40,7 @@ import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
@@ -120,7 +121,7 @@ class PolicyEngineTest {
                         definition(
                                 new PipelineStep(ROTATE, Map.of()),
                                 new PipelineStep(COMPRESS, Map.of())),
-                        List.of(pdf("input", "input.pdf")),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP);
 
         // The completion future resolves with the final run state, no polling needed.
@@ -146,7 +147,7 @@ class PolicyEngineTest {
         PolicyRunHandle handle =
                 engine.submit(
                         definition(new PipelineStep(ROTATE, Map.of())),
-                        List.of(pdf("input", "input.pdf")),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP);
 
         String runId = handle.runId();

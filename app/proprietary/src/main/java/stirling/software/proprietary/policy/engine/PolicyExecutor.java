@@ -25,6 +25,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 
@@ -63,23 +64,27 @@ public class PolicyExecutor {
 
     /**
      * Execute every step in {@code definition} in order, feeding each step's output into the next.
+     * Supporting files supplied in {@code inputs} are bound to steps' named file fields and never
+     * enter the document stream.
      *
      * @param definition the pipeline to run (must have at least one step)
-     * @param inputs the initial input files
+     * @param inputs the primary documents plus the named supporting-file store
      * @param listener receives per-step progress
      * @return the final output files plus the last structured report produced, if any
      * @throws InternalApiTimeoutException if a tool does not respond within its read timeout
-     * @throws IOException if a tool returns a non-OK response or a file cannot be read
+     * @throws IOException if a tool returns a non-OK response, references a missing supporting
+     *     file, or a file cannot be read
      */
     public PolicyExecutionResult execute(
-            PipelineDefinition definition, List<Resource> inputs, PolicyProgressListener listener)
+            PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
             throws IOException {
         List<PipelineStep> steps = definition.steps();
         if (steps.isEmpty()) {
             throw new IllegalArgumentException("Pipeline definition has no steps");
         }
 
-        List<Resource> currentFiles = inputs;
+        List<Resource> currentFiles = inputs.primary();
+        Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
         // Propagate the *last* non-null report; the terminal step defines the output.
         JsonNode lastReport = null;
         String lastReportTool = null;
@@ -92,7 +97,7 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
-            ToolResult stepResult = executeStep(operation, step.parameters(), currentFiles);
+            ToolResult stepResult = executeStep(step, currentFiles, supportingFiles);
             currentFiles = stepResult.files();
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
@@ -114,17 +119,19 @@ public class PolicyExecutor {
      * non-null report wins.
      */
     private ToolResult executeStep(
-            String endpointPath, Map<String, Object> parameters, List<Resource> inputFiles)
+            PipelineStep step,
+            List<Resource> inputFiles,
+            Map<String, List<Resource>> supportingFiles)
             throws IOException {
         List<Resource> files = new ArrayList<>();
         JsonNode report = null;
-        if (toolMetadataService.isMultiInput(endpointPath)) {
-            ToolResult r = callEndpoint(endpointPath, parameters, inputFiles);
+        if (toolMetadataService.isMultiInput(step.operation())) {
+            ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
             files.addAll(r.files());
             report = r.report();
         } else {
             for (Resource file : inputFiles) {
-                ToolResult r = callEndpoint(endpointPath, parameters, List.of(file));
+                ToolResult r = callEndpoint(step, List.of(file), supportingFiles);
                 files.addAll(r.files());
                 if (report == null) {
                     report = r.report();
@@ -148,13 +155,34 @@ public class PolicyExecutor {
      * </ul>
      */
     private ToolResult callEndpoint(
-            String endpointPath, Map<String, Object> parameters, List<Resource> files)
+            PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles)
             throws IOException {
+        String endpointPath = step.operation();
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         for (Resource file : files) {
             body.add("fileInput", file);
         }
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+        // Bind supporting files to their named tool fields (e.g. stampImage, overlayFiles). These
+        // come from the run's named asset store, not the document stream.
+        for (Map.Entry<String, String> binding : step.fileParameters().entrySet()) {
+            String fieldName = binding.getKey();
+            String assetKey = binding.getValue();
+            List<Resource> assets = supportingFiles.get(assetKey);
+            if (assets == null || assets.isEmpty()) {
+                throw new IOException(
+                        "Step "
+                                + endpointPath
+                                + " references supporting file '"
+                                + assetKey
+                                + "' for field '"
+                                + fieldName
+                                + "' but no such file was provided");
+            }
+            for (Resource asset : assets) {
+                body.add(fieldName, asset);
+            }
+        }
+        for (Map.Entry<String, Object> entry : step.parameters().entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
                 if (containsStructuredElements(list)) {
                     // Endpoints binding lists of structured objects (e.g. /security/redact's
