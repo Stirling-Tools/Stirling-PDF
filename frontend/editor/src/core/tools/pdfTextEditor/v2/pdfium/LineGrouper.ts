@@ -68,10 +68,7 @@ function isDecorativeOverlap(members: TextRun[]): boolean {
  * group to `out`. Only ever called with runs that share a coordinate
  * space (one form xobject, or page level), so `bounds.x` is comparable.
  */
-function groupPartitionIntoLines(
-  runs: TextRun[],
-  out: LineGroupInfo[],
-): void {
+function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
   const sorted = [...runs].sort((a, b) => {
     const yDiff = b.matrix.f - a.matrix.f;
     if (Math.abs(yDiff) > 1) return yDiff;

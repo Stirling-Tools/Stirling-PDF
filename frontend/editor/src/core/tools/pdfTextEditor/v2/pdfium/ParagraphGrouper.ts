@@ -174,9 +174,7 @@ function buildLineSlots(
     const mergedFromBounds = hasSubRuns
       ? m.mergedFromBounds.map((b) => ({ ...b }))
       : [{ x: m.bounds.x, right: m.bounds.x + m.bounds.width }];
-    const mergedFromCharStarts = hasSubRuns
-      ? [...m.mergedFromCharStarts]
-      : [0];
+    const mergedFromCharStarts = hasSubRuns ? [...m.mergedFromCharStarts] : [0];
     slots.push({
       startChar: cursor,
       endChar: cursor + len,

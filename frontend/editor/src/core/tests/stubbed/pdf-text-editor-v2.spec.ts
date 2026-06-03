@@ -118,14 +118,17 @@ test.describe("PDF text editor v2 - smoke", () => {
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(STIRLING_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-1")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
     await page.waitForTimeout(500);
     const target = await page.evaluate(() => {
       const store = (window as unknown as { __v2_editor_store?: any })
         .__v2_editor_store!;
       const p = store.document.loadedPages().find((pg: any) => pg.index === 1);
       const r = p.runs.find(
-        (rr: any) => rr.text.includes("Stirling") && rr.mergedFromPtrs.length > 1,
+        (rr: any) =>
+          rr.text.includes("Stirling") && rr.mergedFromPtrs.length > 1,
       );
       return r ? { id: r.id, text: r.text } : null;
     });
@@ -234,7 +237,9 @@ test.describe("PDF text editor v2 - smoke", () => {
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(STIRLING_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
     await page.waitForTimeout(500);
 
     // Find a run that has a multi-char sub-run ending in a space after a
@@ -312,7 +317,9 @@ test.describe("PDF text editor v2 - smoke", () => {
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(STIRLING_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
     await page.waitForTimeout(500);
     const m = await page.evaluate(() => {
       const store = (window as unknown as { __v2_editor_store?: any })
@@ -371,7 +378,9 @@ test.describe("PDF text editor v2 - smoke", () => {
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(STIRLING_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
     await page.waitForTimeout(500);
     const info = await page.evaluate(() => {
       const store = (
@@ -384,7 +393,12 @@ test.describe("PDF text editor v2 - smoke", () => {
                 height: number;
                 runs: Array<{
                   text: string;
-                  bounds: { x: number; y: number; width: number; height: number };
+                  bounds: {
+                    x: number;
+                    y: number;
+                    width: number;
+                    height: number;
+                  };
                   fontSize: number;
                 }>;
               }>;
@@ -479,7 +493,9 @@ test.describe("PDF text editor v2 - smoke", () => {
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(STIRLING_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-1")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
     await page.waitForTimeout(500);
     const summary = await page.evaluate(() => {
       const store = (
@@ -500,7 +516,9 @@ test.describe("PDF text editor v2 - smoke", () => {
       // assertions read against clean strings.
       const norm = (s: string) => s.replace(/\s+/g, " ").trim();
       const headerTexts = p.runs
-        .filter((r) => !r.text.includes("\n") && r.paragraphMemberPtrs.length <= 1)
+        .filter(
+          (r) => !r.text.includes("\n") && r.paragraphMemberPtrs.length <= 1,
+        )
         .map((r) => norm(r.text));
       const paragraphFirsts = p.runs
         .filter((r) => r.text.includes("\n"))
@@ -545,7 +563,6 @@ test.describe("PDF text editor v2 - smoke", () => {
       ).toBe(true);
     }
   });
-
 });
 
 test.describe("PDF text editor v2 - load and render", () => {
@@ -4395,7 +4412,9 @@ test.describe("PDF text editor v2 - colour change covers every sub-object", () =
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(USER_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
 
     // Find a merged single-line run (mergedFromPtrs > 1) to exercise
     // the multi-sub-object code path.
@@ -4468,7 +4487,9 @@ test.describe("PDF text editor v2 - colour change covers every sub-object", () =
     await page.evaluate((runId) => {
       const store = (
         window as unknown as {
-          __v2_editor_store?: { selection: { selectOne: (id: string) => void } };
+          __v2_editor_store?: {
+            selection: { selectOne: (id: string) => void };
+          };
         }
       ).__v2_editor_store!;
       store.selection.selectOne(runId);
@@ -4758,7 +4779,9 @@ test.describe("PDF text editor v2 - font family change removes every sub-object"
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(USER_SAMPLE_PDF);
-    await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
 
     // Find a multi-sub-run line (mergedFromPtrs.length > 1) so the
     // test exercises the failure mode rather than a trivial single-ptr
@@ -4834,7 +4857,9 @@ test.describe("PDF text editor v2 - font family change removes every sub-object"
     await page.evaluate((runId) => {
       const store = (
         window as unknown as {
-          __v2_editor_store?: { selection: { selectOne: (id: string) => void } };
+          __v2_editor_store?: {
+            selection: { selectOne: (id: string) => void };
+          };
         }
       ).__v2_editor_store!;
       store.selection.selectOne(runId);

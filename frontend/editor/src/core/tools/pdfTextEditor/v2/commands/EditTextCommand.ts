@@ -120,7 +120,9 @@ export class EditTextCommand implements Command {
         const firstSlot = result.newSlots[0];
         run.mergedFromPtrs = [...firstSlot.mergedFromPtrs];
         run.mergedFromTexts = [...firstSlot.mergedFromTexts];
-        run.mergedFromBounds = firstSlot.mergedFromBounds.map((b) => ({ ...b }));
+        run.mergedFromBounds = firstSlot.mergedFromBounds.map((b) => ({
+          ...b,
+        }));
         run.mergedFromCharStarts = [...firstSlot.mergedFromCharStarts];
         if (firstSlot.mergedFromPtrs.length > 0) {
           run.pdfiumObjPtr = firstSlot.mergedFromPtrs[0];
@@ -405,9 +407,7 @@ export class EditTextCommand implements Command {
       this.paragraphInsertedPtrs = [];
       // Re-emit the removed sub-objects as Helvetica fallback chunks at
       // their original x positions and per-slot baselines.
-      const revertFallback = helveticaVariantFor(
-        this.prevFontId ?? run.fontId,
-      );
+      const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
       const restored: number[] = [];
       for (const entry of this.paragraphPlan.perSlot) {
         const prevSlot = this.prevParagraphSlots[entry.slotIdx];

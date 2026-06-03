@@ -594,8 +594,7 @@ export function applyPartialEditPlan(
       }
       const newX = origBounds.x + offset;
       const measuredRight = measureObjRightEdgePt(m, ptr);
-      const newRight =
-        measuredRight > newX ? measuredRight : newX + origWidth;
+      const newRight = measuredRight > newX ? measuredRight : newX + origWidth;
       newMergedFromPtrs.push(ptr);
       newMergedFromTexts.push(op.text);
       newMergedFromBounds.push({ x: newX, right: newRight });

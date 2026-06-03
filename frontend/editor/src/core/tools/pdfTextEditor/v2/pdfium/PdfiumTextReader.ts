@@ -168,7 +168,11 @@ function composeAffine(parent: Affine, child: Affine): Affine {
 }
 
 /** Map a point through an affine. */
-function applyAffine(t: Affine, x: number, y: number): { x: number; y: number } {
+function applyAffine(
+  t: Affine,
+  x: number,
+  y: number,
+): { x: number; y: number } {
   return { x: t.a * x + t.c * y + t.e, y: t.b * x + t.d * y + t.f };
 }
 
