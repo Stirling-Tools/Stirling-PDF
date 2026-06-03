@@ -25,6 +25,8 @@ import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
 import { SaasBillingProvider } from "@app/contexts/SaasBillingContext";
 import { SaaSCheckoutProvider } from "@app/contexts/SaaSCheckoutContext";
 import { CreditModalBootstrap } from "@app/components/shared/modals/CreditModalBootstrap";
+import UpdateModal from "@core/components/shared/UpdateModal";
+import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
@@ -48,6 +50,7 @@ const COMMON_TOOL_ENDPOINTS = [
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
+  const updatePopup = useDesktopUpdatePopup();
   const [connectionMode, setConnectionMode] = useState<
     "saas" | "selfhosted" | "local" | null
   >(null);
@@ -264,6 +267,38 @@ export function AppProviders({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [authChecked]);
 
+  // Desktop auto-update popup (shown on startup if update available)
+  const { state: popupState, actions: popupActions } = updatePopup;
+  const updatePopupModal = popupState.updateSummary && (
+    <UpdateModal
+      opened={popupState.showModal}
+      onClose={popupActions.dismissModal}
+      onRemindLater={popupActions.remindLater}
+      currentVersion={popupState.currentVersion}
+      updateSummary={popupState.updateSummary}
+      machineInfo={{
+        machineType: navigator.platform?.toLowerCase().includes("mac")
+          ? "Client-mac"
+          : navigator.platform?.toLowerCase().includes("linux")
+            ? "Client-unix"
+            : "Client-win",
+        activeSecurity: false,
+        licenseType: "NORMAL",
+      }}
+      desktopInstall={
+        popupState.tauriInstallReady
+          ? {
+              state: popupState.state,
+              progress: popupState.progress,
+              errorMessage: popupState.errorMessage,
+              canInstall: popupState.canInstall,
+              actions: popupActions,
+            }
+          : undefined
+      }
+    />
+  );
+
   if (!authChecked) {
     return (
       <ProprietaryAppProviders
@@ -278,6 +313,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <div style={{ minHeight: "100vh" }} />
+        {updatePopupModal}
       </ProprietaryAppProviders>
     );
   }
@@ -313,6 +349,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
               <DesktopOnboardingModal />
               {/* Global sign-in modal, opened via stirling:open-sign-in event */}
               <SignInModal />
+              {/* Desktop auto-update popup */}
+              {updatePopupModal}
             </SaaSCheckoutProvider>
           </SaasBillingProvider>
         </SaaSTeamProvider>

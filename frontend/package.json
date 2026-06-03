@@ -85,7 +85,13 @@
     "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
-    "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
+    "update:minor-strict": "npx npm-check-updates -u --target minor && npm install",
+    "tauri:setup-dev-update": "bash scripts/dev-update-test/setup-dev-updater.sh",
+    "tauri:build-dev-update": "bash scripts/dev-update-test/build-dev-update.sh",
+    "tauri:serve-dev-update": "bash scripts/dev-update-test/serve-update.sh",
+    "tauri:test-update-e2e": "bash scripts/dev-update-test/test-update-e2e.sh",
+    "tauri:test-update-e2e:install": "bash scripts/dev-update-test/test-update-e2e.sh --install",
+    "tauri:dev-with-update": "cd editor && npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
   },
   "browserslist": {
     "production": [
