@@ -204,7 +204,7 @@ public class PdfMarkdownConverter {
     }
 
     private static boolean isBulletGlyph(String gt) {
-        return "•".equals(gt) || "▪".equals(gt) || "◦".equals(gt) || "".equals(gt);
+        return "•".equals(gt) || "▪".equals(gt) || "◦".equals(gt);
     }
 
     /**
