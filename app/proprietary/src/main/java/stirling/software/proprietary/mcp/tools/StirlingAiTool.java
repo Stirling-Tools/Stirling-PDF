@@ -7,6 +7,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
@@ -23,6 +25,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Exposes curated Python agent capabilities as a single MCP tool, sourced from the engine
  * capabilities manifest.
  */
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingAiTool implements McpTool {
@@ -130,9 +133,9 @@ public class StirlingAiTool implements McpTool {
             String response = client.post(meta.endpointPath(), body, context.stirlingUserId());
             return McpResponses.text(mapper, response);
         } catch (IOException e) {
+            log.warn("MCP AI capability '{}' engine request failed", opId, e);
             return McpResponses.error(
-                    mapper,
-                    "Engine request failed for capability '" + opId + "': " + e.getMessage());
+                    mapper, "Engine request failed for capability '" + opId + "'.");
         }
     }
 

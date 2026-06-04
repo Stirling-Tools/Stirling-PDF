@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
@@ -17,6 +19,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Stores a file server-side and returns a fileId. For large files or multi-step workflows only -
  * most operations accept the file inline via their {@code file} argument.
  */
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingUploadTool implements McpTool {
@@ -86,7 +89,8 @@ public class StirlingUploadTool implements McpTool {
                             + fileId
                             + ". Pass this fileId to a Stirling operation's 'fileId' argument.");
         } catch (IOException e) {
-            return McpResponses.error(mapper, "Failed to store upload: " + e.getMessage());
+            log.warn("MCP upload failed to store file", e);
+            return McpResponses.error(mapper, "Failed to store the uploaded file.");
         }
     }
 }
