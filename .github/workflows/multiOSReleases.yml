@@ -619,9 +619,12 @@ jobs:
             find . -name "*.deb.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb.sig" \;
             find . -name "*.rpm" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.rpm.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm.sig" \;
+            # With createUpdaterArtifacts:true the raw .AppImage IS the updater
+            # payload (signed -> .AppImage.sig); there is no .tar.gz wrapper like
+            # v1Compatible produced. The single .AppImage serves manual download
+            # and the updater both.
             find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
-            find . -name "*.AppImage.tar.gz" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.tar.gz" \;
-            find . -name "*.AppImage.tar.gz.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.tar.gz.sig" \;
+            find . -name "*.AppImage.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.sig" \;
           fi
 
       - name: Upload build artifacts
@@ -715,7 +718,9 @@ jobs:
                   'targets': ['linux-x86_64-rpm'],
               },
               {
-                  'bundles': ['Stirling-PDF-linux-x86_64.AppImage.tar.gz'],
+                  # createUpdaterArtifacts:true signs the raw .AppImage (no
+                  # .tar.gz wrapper); install_appimage accepts raw bytes.
+                  'bundles': ['Stirling-PDF-linux-x86_64.AppImage'],
                   'targets': ['linux-x86_64-appimage'],
               },
               {
@@ -811,7 +816,6 @@ jobs:
             ./artifacts/**/*.deb
             ./artifacts/**/*.rpm
             ./artifacts/**/*.AppImage
-            ./artifacts/**/*.AppImage.tar.gz
             ./artifacts/latest.json
           draft: false
           prerelease: false
