@@ -6,15 +6,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.stereotype.Service;
-
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * In-memory {@link PolicyStore}. Policies live for the process lifetime; a durable JPA-backed store
- * (with real ownership/team scoping) replaces this behind the interface in a later stage.
+ * In-memory {@link PolicyStore}. Not the runtime bean - {@link JpaPolicyStore} is the durable
+ * store. Kept as a lightweight, dependency-free implementation for tests and for any future no-
+ * database mode.
  */
-@Service
 public class InProcessPolicyStore implements PolicyStore {
 
     private final Map<String, Policy> policies = new ConcurrentHashMap<>();
