@@ -63,6 +63,10 @@ public class StirlingDownloadTool implements McpTool {
 
     @Override
     public ObjectNode call(JsonNode arguments, McpCallContext context) {
+        if (!context.hasScope("mcp.tools.read")) {
+            return McpResponses.error(
+                    mapper, "Insufficient scope: stirling_download requires 'mcp.tools.read'.");
+        }
         String fileId = McpToolSupport.textArg(arguments, "fileId");
         if (fileId == null) {
             return McpResponses.error(mapper, "Missing required argument: fileId.");

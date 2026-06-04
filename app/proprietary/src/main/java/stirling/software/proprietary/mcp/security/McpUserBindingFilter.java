@@ -70,7 +70,7 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
                 if (account.isEmpty() || !account.get().isEnabled()) {
                     log.warn(
                             "MCP access denied: token subject '{}' has no active Stirling account",
-                            username);
+                            sanitizeForLog(username));
                     reject(
                             response,
                             "MCP access requires a provisioned, enabled Stirling account for this"
@@ -91,6 +91,11 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /** Strip CR/LF so a crafted claim value can't forge log lines. */
+    private static String sanitizeForLog(String value) {
+        return value == null ? null : value.replace('\r', ' ').replace('\n', ' ');
     }
 
     private void reject(HttpServletResponse response, String message) throws IOException {

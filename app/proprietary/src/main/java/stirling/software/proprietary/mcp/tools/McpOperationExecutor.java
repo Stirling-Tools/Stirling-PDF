@@ -115,8 +115,9 @@ public class McpOperationExecutor {
             return McpResponses.error(
                     mapper, meta.id() + " endpoint is not permitted for MCP dispatch.");
         } catch (RuntimeException e) {
-            log.warn("MCP execution of {} failed: {}", meta.id(), e.getMessage());
-            return McpResponses.error(mapper, meta.id() + " failed: " + e.getMessage());
+            log.warn("MCP execution of {} failed", meta.id(), e);
+            return McpResponses.error(
+                    mapper, meta.id() + " failed unexpectedly. See server logs for details.");
         }
         return buildResult(meta, response);
     }

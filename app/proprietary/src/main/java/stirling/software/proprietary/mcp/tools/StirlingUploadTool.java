@@ -57,6 +57,10 @@ public class StirlingUploadTool implements McpTool {
 
     @Override
     public ObjectNode call(JsonNode arguments, McpCallContext context) {
+        if (!context.hasScope("mcp.tools.write")) {
+            return McpResponses.error(
+                    mapper, "Insufficient scope: stirling_upload requires 'mcp.tools.write'.");
+        }
         String base64 = McpToolSupport.textArg(arguments, "file");
         if (base64 == null) {
             return McpResponses.error(
