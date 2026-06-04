@@ -1,15 +1,15 @@
 /**
- * Returns a map of fileId → folderId[] for all files currently in any smart folder.
+ * Returns a map of fileId → folderId[] for all files currently in any watched folder.
  * Both input files (keyed by their FileId in stirling-pdf-files) and their output
  * counterparts (displayFileId) are included so folder tags show on both versions.
  */
 
 import { useState, useEffect } from "react";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
-import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
+import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 
 export function useFolderMembership(): Map<string, string[]> {
-  const folders = useAllSmartFolders();
+  const folders = useAllWatchedFolders();
   const [membership, setMembership] = useState<Map<string, string[]>>(
     new Map(),
   );
@@ -30,7 +30,9 @@ export function useFolderMembership(): Map<string, string[]> {
       };
       for (const folder of folders) {
         try {
-          const record = await watchFolderFileStorage.getFolderData(folder.id);
+          const record = await watchedFolderFileStorage.getFolderData(
+            folder.id,
+          );
           if (record) {
             Object.entries(record.files).forEach(([fileId, meta]) => {
               add(fileId, folder.id);
@@ -48,7 +50,7 @@ export function useFolderMembership(): Map<string, string[]> {
     };
 
     load();
-    return watchFolderFileStorage.onFolderChange(load);
+    return watchedFolderFileStorage.onFolderChange(load);
   }, [folders]);
 
   return membership;

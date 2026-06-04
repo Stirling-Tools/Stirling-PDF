@@ -3320,7 +3320,7 @@ creditsRemaining = "{{current}} of {{total}} remaining"
 creditsThisMonth = "Monthly credits"
 current = "Current Plan"
 customPricing = "Custom"
-customSmartFolders = "Custom Smart Folders"
+customWatchedFolders = "Custom Watched Folders"
 dedicatedSupportSlas = "Dedicated support & SLAs"
 enterpriseSubscription = "Enterprise"
 everythingInCredits = "Everything in Credits, plus:"
@@ -3707,7 +3707,7 @@ pageCount_other = "{{count}} pages"
 
 [fileManager]
 active = "Active"
-addToSmartFolder = "Add to Watch Folder"
+addToWatchedFolder = "Add to Watched Folder"
 addToUpload = "Add to Upload"
 changesNotUploaded = "Changes not uploaded"
 clearAll = "Clear All"
@@ -6352,7 +6352,7 @@ label = "SMTP Username"
 
 [quickAccess]
 access = "Access"
-watchFolders = "Watch Folders"
+watchedFolders = "Watched Folders"
 accessAddPerson = "Add another person"
 accessBack = "Back"
 accessCopyLink = "Copy link"
@@ -9048,37 +9048,37 @@ confirm = "Extract"
 message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
 
-[smartFolders]
+[watchedFolders]
 alreadyInFolder = "Already in this folder"
 deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
 deleteConfirmTitle = "Delete folder?"
 defaultFolderWarning = "This is a default folder and will be recreated on next reload."
 folderNotFound = "Folder not found"
 newFolder = "New folder"
-noFolders = "No watch folders yet"
-sidebarTitle = "Watch Folders"
-title = "Watch Folders"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
 sidebarFiles = "My Files"
 
-[smartFolders.modal]
+[watchedFolders.modal]
 automation = "Automation"
 automationSaved = "Automation saved"
 createFolder = "Create Folder"
 stepsSaved = "Steps saved — click Create Folder to finish"
 automationRequired = "Add at least one configured step before saving."
 color = "Accent color"
-createTitle = "New Watch Folder"
+createTitle = "New Watched Folder"
 description = "Description"
 descriptionPlaceholder = "What does this folder do?"
-editTitle = "Edit Watch Folder"
+editTitle = "Edit Watched Folder"
 icon = "Icon"
 name = "Folder name"
-namePlaceholder = "My Watch Folder"
+namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
 saveChanges = "Save Changes"
 saveFailed = "Failed to save folder. Please try again."
-automationNameFallback = "Watch Folder automation"
+automationNameFallback = "Watched Folder automation"
 retryLabel = "Auto-retry"
 maxRetries = "Max retries"
 maxRetriesDesc = "0 to disable"
@@ -9114,45 +9114,45 @@ outputNamePrefix = "Filename prefix"
 positionPrefix = "Prefix"
 positionSuffix = "Suffix"
 
-[smartFolders.home]
-create = "Create your first Watch Folder"
+[watchedFolders.home]
+create = "Create your first Watched Folder"
 dropHere = "Drop to process"
 editFolder = "Edit folder"
-empty = "No watch folders yet"
+empty = "No watched folders yet"
 file = "file"
 files = "files"
 openFolder = "Open folder"
-title = "Watch Folders"
+title = "Watched Folders"
 subtitle = "Folders that automatically process PDFs with your configured pipeline"
 emptyTitle = "Automate your PDF workflows"
-emptyDesc = "Set up a Watch Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-addAnother = "Add another Watch Folder"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+addAnother = "Add another Watched Folder"
 addAnotherDesc = "Automatically process files with a new pipeline"
 resume = "Resume"
 pause = "Pause"
 deleteFolder = "Delete folder"
 noSteps = "No automation steps configured"
 
-[smartFolders.card]
+[watchedFolders.card]
 edit = "Edit folder"
 delete = "Delete folder"
 
-[smartFolders.status]
+[watchedFolders.status]
 done = "Done"
 processing = "Processing"
 paused = "Paused"
 active = "Active"
 
-[smartFolders.howItWorks]
-title = "How Watch Folders work"
+[watchedFolders.howItWorks]
+title = "How Watched Folders work"
 step1Title = "Drop files"
-step1Desc = "Drag PDFs onto any Watch Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
 step2Title = "Pipeline runs"
 step2Desc = "Your configured tools process each file automatically"
 step3Title = "Output ready"
 step3Desc = "Download processed files from inside the folder"
 
-[smartFolders.workbench]
+[watchedFolders.workbench]
 addFiles = "Add files"
 inputs = "Inputs"
 outputs = "Outputs"
@@ -9210,7 +9210,7 @@ removeNotificationsOnly = "Remove notifications only"
 deleteOutputs = "Delete outputs"
 previewLoadFailed = "Could not load file preview."
 
-[smartFolders.actions]
+[watchedFolders.actions]
 back = "Back"
 dismiss = "Dismiss"
 retry = "Retry"
@@ -9221,7 +9221,7 @@ downloadOutput = "Download output"
 collapse = "Collapse"
 expand = "Expand"
 
-[smartFolders.time]
+[watchedFolders.time]
 justNow = "just now"
 minutesAgo = "{{count}}m ago"
 hoursAgo = "{{count}}h ago"

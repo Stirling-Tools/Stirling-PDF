@@ -79,7 +79,7 @@ export function FilePreviewModal({
         <Center h="100%">
           <Text c="dimmed">
             {t(
-              "smartFolders.workbench.previewLoadFailed",
+              "watchedFolders.workbench.previewLoadFailed",
               "Could not load file preview.",
             )}
           </Text>

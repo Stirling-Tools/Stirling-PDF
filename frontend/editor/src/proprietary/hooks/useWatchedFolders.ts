@@ -1,14 +1,14 @@
 /**
- * Hook for managing Smart Folders — load, create, update, delete
+ * Hook for managing Watched Folders — load, create, update, delete
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import {
-  smartFolderStorage,
-  SMART_FOLDER_STORAGE_CHANGE_EVENT,
-} from "@app/services/smartFolderStorage";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
+  watchedFolderStorage,
+  WATCHED_FOLDER_STORAGE_CHANGE_EVENT,
+} from "@app/services/watchedFolderStorage";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderRetryScheduleStorage } from "@app/services/folderRetryScheduleStorage";
@@ -16,24 +16,24 @@ import { folderSeenFilesStorage } from "@app/services/folderSeenFilesStorage";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 import { FileId } from "@app/types/fileContext";
 
-interface UseSmartFoldersReturn {
-  folders: SmartFolder[];
+interface UseWatchedFoldersReturn {
+  folders: WatchedFolder[];
   loading: boolean;
   createFolder: (
-    data: Omit<SmartFolder, "id" | "createdAt" | "updatedAt">,
-  ) => Promise<SmartFolder>;
-  updateFolder: (folder: SmartFolder) => Promise<SmartFolder>;
+    data: Omit<WatchedFolder, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<WatchedFolder>;
+  updateFolder: (folder: WatchedFolder) => Promise<WatchedFolder>;
   deleteFolder: (id: string) => Promise<void>;
   refreshFolders: () => Promise<void>;
 }
 
-export function useSmartFolders(): UseSmartFoldersReturn {
-  const [folders, setFolders] = useState<SmartFolder[]>([]);
+export function useWatchedFolders(): UseWatchedFoldersReturn {
+  const [folders, setFolders] = useState<WatchedFolder[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshFolders = useCallback(async () => {
     try {
-      const all = await smartFolderStorage.getAllFolders();
+      const all = await watchedFolderStorage.getAllFolders();
       setFolders(all);
     } catch (error) {
       console.error("Failed to load smart folders:", error);
@@ -50,29 +50,29 @@ export function useSmartFolders(): UseSmartFoldersReturn {
     const handler = () => {
       refreshFolders();
     };
-    window.addEventListener(SMART_FOLDER_STORAGE_CHANGE_EVENT, handler);
+    window.addEventListener(WATCHED_FOLDER_STORAGE_CHANGE_EVENT, handler);
     return () =>
-      window.removeEventListener(SMART_FOLDER_STORAGE_CHANGE_EVENT, handler);
+      window.removeEventListener(WATCHED_FOLDER_STORAGE_CHANGE_EVENT, handler);
   }, [refreshFolders]);
 
   const createFolder = useCallback(
     async (
-      data: Omit<SmartFolder, "id" | "createdAt" | "updatedAt">,
-    ): Promise<SmartFolder> => {
-      return smartFolderStorage.createFolder(data);
+      data: Omit<WatchedFolder, "id" | "createdAt" | "updatedAt">,
+    ): Promise<WatchedFolder> => {
+      return watchedFolderStorage.createFolder(data);
     },
     [],
   );
 
   const updateFolder = useCallback(
-    async (folder: SmartFolder): Promise<SmartFolder> => {
-      return smartFolderStorage.updateFolder(folder);
+    async (folder: WatchedFolder): Promise<WatchedFolder> => {
+      return watchedFolderStorage.updateFolder(folder);
     },
     [],
   );
 
   const deleteFolder = useCallback(async (id: string): Promise<void> => {
-    const record = await watchFolderFileStorage.getFolderData(id);
+    const record = await watchedFolderFileStorage.getFolderData(id);
     if (record) {
       // Only delete input files the folder created from disk — never touch sidebar-sourced files.
       const ownedInputIds = Object.entries(record.files)
@@ -91,13 +91,13 @@ export function useSmartFolders(): UseSmartFoldersReturn {
         ),
       );
     }
-    await watchFolderFileStorage.clearFolder(id);
+    await watchedFolderFileStorage.clearFolder(id);
     await folderRunStateStorage.clearFolderRunState(id);
     await folderRetryScheduleStorage.clearFolder(id).catch(() => {});
     await folderSeenFilesStorage.clearFolder(id).catch(() => {});
     await folderDirectoryHandleStorage.remove(id).catch(() => {});
     await folderDirectoryHandleStorage.removeInput(id).catch(() => {});
-    await smartFolderStorage.deleteFolder(id);
+    await watchedFolderStorage.deleteFolder(id);
     window.dispatchEvent(new CustomEvent("stirling:files-changed"));
   }, []);
 

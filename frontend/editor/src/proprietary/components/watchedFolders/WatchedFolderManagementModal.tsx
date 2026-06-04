@@ -16,12 +16,12 @@ import {
   Modal,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import { AutomationConfig, AutomationMode } from "@app/types/automation";
-import { IconPicker as IconSelector } from "@app/components/smartFolders/IconPicker";
+import { IconPicker as IconSelector } from "@app/components/watchedFolders/IconPicker";
 import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 import {
   canReadLocalFolder,
@@ -67,21 +67,21 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-interface SmartFolderManagementModalProps {
+interface WatchedFolderManagementModalProps {
   opened: boolean;
-  editFolder?: SmartFolder | null;
+  editFolder?: WatchedFolder | null;
   existingAutomation?: AutomationConfig | null;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export function SmartFolderManagementModal({
+export function WatchedFolderManagementModal({
   opened,
   editFolder,
   existingAutomation,
   onClose,
   onSaved,
-}: SmartFolderManagementModalProps) {
+}: WatchedFolderManagementModalProps) {
   const { t } = useTranslation();
   const { toolRegistry } = useToolWorkflow();
   const isEditMode = !!editFolder;
@@ -107,7 +107,7 @@ export function SmartFolderManagementModal({
     "prefix" | "suffix" | "auto-number"
   >(editFolder?.outputNamePosition ?? "prefix");
   const [inputSource, setInputSource] = useState<
-    NonNullable<SmartFolder["inputSource"]>
+    NonNullable<WatchedFolder["inputSource"]>
   >(editFolder?.inputSource ?? "idb");
   const outputNameDirty = useRef(!!editFolder?.outputName);
   const [saving, setSaving] = useState(false);
@@ -202,7 +202,7 @@ export function SmartFolderManagementModal({
 
         if (isEditMode && editFolder) {
           const wasLocalFolder = editFolder.inputSource === "local-folder";
-          await smartFolderStorage.updateFolder({
+          await watchedFolderStorage.updateFolder({
             ...editFolder,
             ...folderData,
           });
@@ -225,7 +225,7 @@ export function SmartFolderManagementModal({
             await folderDirectoryHandleStorage.removeInput(editFolder.id);
           }
         } else {
-          const newFolder = await smartFolderStorage.createFolder(folderData);
+          const newFolder = await watchedFolderStorage.createFolder(folderData);
           if (pendingDirHandle.current) {
             await folderDirectoryHandleStorage.set(
               newFolder.id,
@@ -246,7 +246,7 @@ export function SmartFolderManagementModal({
         console.error("Failed to save smart folder:", error);
         setSaveError(
           t(
-            "smartFolders.modal.saveFailed",
+            "watchedFolders.modal.saveFailed",
             "Failed to save folder. Please try again.",
           ),
         );
@@ -278,14 +278,14 @@ export function SmartFolderManagementModal({
     const trimmedName = name.trim();
     if (!trimmedName) {
       setNameError(
-        t("smartFolders.modal.nameRequired", "Folder name is required"),
+        t("watchedFolders.modal.nameRequired", "Folder name is required"),
       );
       return;
     }
     if (trimmedName.length > 50) {
       setNameError(
         t(
-          "smartFolders.modal.nameTooLong",
+          "watchedFolders.modal.nameTooLong",
           "Folder name must be 50 characters or less",
         ),
       );
@@ -297,8 +297,8 @@ export function SmartFolderManagementModal({
   };
 
   const title = isEditMode
-    ? t("smartFolders.modal.editTitle", "Edit Watch Folder")
-    : t("smartFolders.modal.createTitle", "New Watch Folder");
+    ? t("watchedFolders.modal.editTitle", "Edit Watched Folder")
+    : t("watchedFolders.modal.createTitle", "New Watched Folder");
 
   return (
     <Modal
@@ -343,14 +343,14 @@ export function SmartFolderManagementModal({
               {/* ── Identity ── */}
               <div>
                 <SectionLabel>
-                  {t("smartFolders.modal.sectionFolder", "Folder")}
+                  {t("watchedFolders.modal.sectionFolder", "Folder")}
                 </SectionLabel>
                 <Stack gap="xs">
                   <Group gap="xs" align="flex-end">
                     <TextInput
                       placeholder={t(
-                        "smartFolders.modal.namePlaceholder",
-                        "My Watch Folder",
+                        "watchedFolders.modal.namePlaceholder",
+                        "My Watched Folder",
                       )}
                       value={name}
                       onChange={(e) => {
@@ -369,7 +369,7 @@ export function SmartFolderManagementModal({
                   </Group>
 
                   <ColorInput
-                    label={t("smartFolders.modal.color", "Accent colour")}
+                    label={t("watchedFolders.modal.color", "Accent colour")}
                     value={accentColor}
                     onChange={setAccentColor}
                     format="hex"
@@ -387,25 +387,28 @@ export function SmartFolderManagementModal({
               <div>
                 <SectionLabel>
                   {t(
-                    "smartFolders.modal.sectionSourceOutput",
+                    "watchedFolders.modal.sectionSourceOutput",
                     "Source & Output",
                   )}
                 </SectionLabel>
                 <Stack gap="sm">
                   <Select
-                    label={t("smartFolders.modal.inputSource", "Input source")}
+                    label={t(
+                      "watchedFolders.modal.inputSource",
+                      "Input source",
+                    )}
                     value={inputSource}
                     onChange={(v) =>
                       v &&
                       setInputSource(
-                        v as NonNullable<SmartFolder["inputSource"]>,
+                        v as NonNullable<WatchedFolder["inputSource"]>,
                       )
                     }
                     data={[
                       {
                         value: "idb",
                         label: t(
-                          "smartFolders.modal.inputSourceBrowser",
+                          "watchedFolders.modal.inputSourceBrowser",
                           "Browser — drop files here",
                         ),
                       },
@@ -413,11 +416,11 @@ export function SmartFolderManagementModal({
                         value: "local-folder",
                         label: canReadLocalFolder
                           ? t(
-                              "smartFolders.modal.inputSourceLocal",
+                              "watchedFolders.modal.inputSourceLocal",
                               "Local folder (auto-scan)",
                             )
                           : t(
-                              "smartFolders.modal.inputSourceLocalUnsupported",
+                              "watchedFolders.modal.inputSourceLocalUnsupported",
                               "Local folder (auto-scan) — Chrome/Edge only",
                             ),
                         disabled: !canReadLocalFolder,
@@ -462,14 +465,14 @@ export function SmartFolderManagementModal({
                           <Stack gap={1} style={{ flex: 1, minWidth: 0 }}>
                             <Text size="xs" fw={500}>
                               {t(
-                                "smartFolders.modal.inputFolder",
+                                "watchedFolders.modal.inputFolder",
                                 "Input folder",
                               )}
                             </Text>
                             <Text size="xs" c="dimmed" lineClamp={1}>
                               {inputDirName ??
                                 t(
-                                  "smartFolders.modal.inputFolderNotChosen",
+                                  "watchedFolders.modal.inputFolderNotChosen",
                                   "No folder chosen — required for auto-scan",
                                 )}
                             </Text>
@@ -494,8 +497,11 @@ export function SmartFolderManagementModal({
                             }}
                           >
                             {inputDirName
-                              ? t("smartFolders.modal.changeFolder", "Change")
-                              : t("smartFolders.modal.chooseFolder", "Choose")}
+                              ? t("watchedFolders.modal.changeFolder", "Change")
+                              : t(
+                                  "watchedFolders.modal.chooseFolder",
+                                  "Choose",
+                                )}
                           </Button>
                           {inputDirName && (
                             <Button
@@ -507,14 +513,14 @@ export function SmartFolderManagementModal({
                                 setInputDirName(null);
                               }}
                             >
-                              {t("smartFolders.modal.clearFolder", "Clear")}
+                              {t("watchedFolders.modal.clearFolder", "Clear")}
                             </Button>
                           )}
                         </Group>
                       </Box>
                       <Text size="xs" c="dimmed" mt={6}>
                         {t(
-                          "smartFolders.modal.autoScanHelp",
+                          "watchedFolders.modal.autoScanHelp",
                           "New PDF files in this folder are processed automatically every 10 seconds.",
                         )}
                       </Text>
@@ -545,19 +551,19 @@ export function SmartFolderManagementModal({
                       <Stack gap={1} style={{ flex: 1, minWidth: 0 }}>
                         <Text size="xs" fw={500}>
                           {t(
-                            "smartFolders.modal.localOutputFolder",
+                            "watchedFolders.modal.localOutputFolder",
                             "Local output folder",
                           )}
                         </Text>
                         <Text size="xs" c="dimmed" lineClamp={1}>
                           {!canWriteLocalFolder
                             ? t(
-                                "smartFolders.modal.outputFolderUnsupported",
+                                "watchedFolders.modal.outputFolderUnsupported",
                                 "Not supported in this browser",
                               )
                             : (outputDirName ??
                               t(
-                                "smartFolders.modal.outputFolderNotSet",
+                                "watchedFolders.modal.outputFolderNotSet",
                                 "Not set — outputs stay in app",
                               ))}
                         </Text>
@@ -589,8 +595,8 @@ export function SmartFolderManagementModal({
                           }}
                         >
                           {outputDirName
-                            ? t("smartFolders.modal.changeFolder", "Change")
-                            : t("smartFolders.modal.chooseFolder", "Choose")}
+                            ? t("watchedFolders.modal.changeFolder", "Change")
+                            : t("watchedFolders.modal.chooseFolder", "Choose")}
                         </Button>
                       </Tooltip>
                       {outputDirName && (
@@ -603,7 +609,7 @@ export function SmartFolderManagementModal({
                             setOutputDirName(null);
                           }}
                         >
-                          {t("smartFolders.modal.clearFolder", "Clear")}
+                          {t("watchedFolders.modal.clearFolder", "Clear")}
                         </Button>
                       )}
                     </Group>
@@ -638,7 +644,7 @@ export function SmartFolderManagementModal({
                       transition: "transform 160ms ease",
                     }}
                   />
-                  {t("smartFolders.modal.advanced", "Advanced")}
+                  {t("watchedFolders.modal.advanced", "Advanced")}
                 </button>
 
                 <Collapse in={showAdvanced} transitionDuration={180}>
@@ -646,17 +652,17 @@ export function SmartFolderManagementModal({
                     {/* Replace original */}
                     <Switch
                       label={t(
-                        "smartFolders.modal.replaceOriginal",
+                        "watchedFolders.modal.replaceOriginal",
                         "Replace original file",
                       )}
                       description={
                         outputMode === "new_version"
                           ? t(
-                              "smartFolders.modal.outputModeVersionDesc",
+                              "watchedFolders.modal.outputModeVersionDesc",
                               "Output replaces input as a new version",
                             )
                           : t(
-                              "smartFolders.modal.outputModeNewDesc",
+                              "watchedFolders.modal.outputModeNewDesc",
                               "Output saved as a separate new file",
                             )
                       }
@@ -682,13 +688,13 @@ export function SmartFolderManagementModal({
                           <Box style={{ flex: 1 }}>
                             <Text size="xs" fw={500} mb={4}>
                               {t(
-                                "smartFolders.modal.autoNumber",
+                                "watchedFolders.modal.autoNumber",
                                 "Auto-number",
                               )}
                             </Text>
                             <Text size="xs" c="dimmed">
                               {t(
-                                "smartFolders.modal.autoNumberExample",
+                                "watchedFolders.modal.autoNumberExample",
                                 "e.g. document.pdf → document (1).pdf",
                               )}
                             </Text>
@@ -698,11 +704,11 @@ export function SmartFolderManagementModal({
                             label={
                               outputNamePosition === "suffix"
                                 ? t(
-                                    "smartFolders.modal.outputNameSuffix",
+                                    "watchedFolders.modal.outputNameSuffix",
                                     "Filename suffix",
                                   )
                                 : t(
-                                    "smartFolders.modal.outputNamePrefix",
+                                    "watchedFolders.modal.outputNamePrefix",
                                     "Filename prefix",
                                   )
                             }
@@ -729,21 +735,21 @@ export function SmartFolderManagementModal({
                             {
                               value: "prefix",
                               label: t(
-                                "smartFolders.modal.positionPrefix",
+                                "watchedFolders.modal.positionPrefix",
                                 "Prefix",
                               ),
                             },
                             {
                               value: "suffix",
                               label: t(
-                                "smartFolders.modal.positionSuffix",
+                                "watchedFolders.modal.positionSuffix",
                                 "Suffix",
                               ),
                             },
                             {
                               value: "auto-number",
                               label: t(
-                                "smartFolders.modal.autoNumber",
+                                "watchedFolders.modal.autoNumber",
                                 "Auto-number",
                               ),
                             },
@@ -762,7 +768,7 @@ export function SmartFolderManagementModal({
                     <Group gap="sm" grow>
                       <NumberInput
                         label={t(
-                          "smartFolders.modal.maxRetries",
+                          "watchedFolders.modal.maxRetries",
                           "Max auto retries",
                         )}
                         value={maxRetries}
@@ -779,7 +785,7 @@ export function SmartFolderManagementModal({
                       />
                       <NumberInput
                         label={t(
-                          "smartFolders.modal.retryDelay",
+                          "watchedFolders.modal.retryDelay",
                           "Retry interval (min)",
                         )}
                         value={retryDelayMinutes}
@@ -837,8 +843,8 @@ export function SmartFolderManagementModal({
                 disabled={!name.trim()}
               >
                 {isEditMode
-                  ? t("smartFolders.modal.saveChanges", "Save changes")
-                  : t("smartFolders.modal.createFolder", "Create folder")}
+                  ? t("watchedFolders.modal.saveChanges", "Save changes")
+                  : t("watchedFolders.modal.createFolder", "Create folder")}
               </Button>
             </Group>
           </div>
@@ -856,7 +862,7 @@ export function SmartFolderManagementModal({
         >
           <div style={{ padding: "1rem 1.5rem 0.5rem", flexShrink: 0 }}>
             <SectionLabel>
-              {t("smartFolders.modal.sectionSteps", "Steps")}
+              {t("watchedFolders.modal.sectionSteps", "Steps")}
             </SectionLabel>
             {automationError && (
               <Text size="xs" c="red" mt={4}>
@@ -881,7 +887,7 @@ export function SmartFolderManagementModal({
                 setSaving(false);
                 setAutomationError(
                   t(
-                    "smartFolders.modal.automationRequired",
+                    "watchedFolders.modal.automationRequired",
                     "Add at least one configured step before saving.",
                   ),
                 );
@@ -891,8 +897,8 @@ export function SmartFolderManagementModal({
               nameOverride={
                 name.trim() ||
                 t(
-                  "smartFolders.modal.automationNameFallback",
-                  "Watch Folder Automation",
+                  "watchedFolders.modal.automationNameFallback",
+                  "Watched Folder Automation",
                 )
               }
               saveTriggerRef={automationSaveTrigger}

@@ -1,22 +1,22 @@
 /**
- * Shared hook for running a file through a Watch Folder's automation pipeline.
+ * Shared hook for running a file through a Watched Folder's automation pipeline.
  *
  * Local-only synchronous execution: each file is run through executeAutomationSequence
  * and the outputs are persisted to IndexedDB. Retries are scheduled in
  * folderRetryScheduleStorage and drained on mount / visibility / SW wake.
  *
- * Async server-side jobs and server watch folders are handled in a follow-up PR.
+ * Async server-side jobs and server watched folders are handled in a follow-up PR.
  */
 
 import { useCallback, useEffect, useRef } from "react";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import { automationStorage } from "@app/services/automationStorage";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 import { folderRetryScheduleStorage } from "@app/services/folderRetryScheduleStorage";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 import { executeAutomationSequence } from "@app/utils/automationExecutor";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 import {
@@ -69,13 +69,13 @@ function notifySW(message: { type: string }): void {
  * Stores pipeline output files, updates folder metadata, and cleans up superseded outputs.
  */
 async function finalizeRun(
-  folder: SmartFolder,
+  folder: WatchedFolder,
   file: File,
   inputFileId: string,
   ownedByFolder: boolean,
   resultFiles: File[],
 ): Promise<void> {
-  const currentFolderData = await watchFolderFileStorage.getFolderData(
+  const currentFolderData = await watchedFolderFileStorage.getFolderData(
     folder.id,
   );
   const currentMeta = currentFolderData?.files[inputFileId];
@@ -204,7 +204,7 @@ async function finalizeRun(
   const accumulatedIds = isAutoNumber
     ? [...prevOutputIds, ...allOutputIds]
     : allOutputIds;
-  await watchFolderFileStorage.updateFileMetadata(folder.id, inputFileId, {
+  await watchedFolderFileStorage.updateFileMetadata(folder.id, inputFileId, {
     status: "processed",
     processedAt,
     displayFileId: accumulatedIds[0],
@@ -223,7 +223,7 @@ async function finalizeRun(
 }
 
 /**
- * Returns a `runPipeline` function that executes a Watch Folder's automation
+ * Returns a `runPipeline` function that executes a Watched Folder's automation
  * against a single input file synchronously, persisting outputs and updating
  * folder metadata.
  */
@@ -232,7 +232,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
   const runPipeline = useCallback(
     async (
-      folder: SmartFolder,
+      folder: WatchedFolder,
       file: File,
       inputFileId: string,
       ownedByFolder: boolean,
@@ -245,7 +245,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           folder.automationId,
         );
         if (!automation) {
-          await watchFolderFileStorage.updateFileMetadata(
+          await watchedFolderFileStorage.updateFileMetadata(
             folder.id,
             inputFileId,
             {
@@ -256,7 +256,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           return;
         }
 
-        await watchFolderFileStorage.updateFileMetadata(
+        await watchedFolderFileStorage.updateFileMetadata(
           folder.id,
           inputFileId,
           {
@@ -277,7 +277,9 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           resultFiles,
         );
       } catch (err: unknown) {
-        const existing = await watchFolderFileStorage.getFolderData(folder.id);
+        const existing = await watchedFolderFileStorage.getFolderData(
+          folder.id,
+        );
         const prev = existing?.files[inputFileId];
         const attempts = (prev?.failedAttempts ?? 0) + 1;
         const maxRetries = folder.maxRetries ?? 3;
@@ -286,7 +288,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           maxRetries > 0 && attempts < maxRetries && retryDelayMs > 0;
         const nextRetryAt = willRetry ? Date.now() + retryDelayMs : undefined;
 
-        await watchFolderFileStorage.updateFileMetadata(
+        await watchedFolderFileStorage.updateFileMetadata(
           folder.id,
           inputFileId,
           {
@@ -311,10 +313,12 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       } finally {
         // Safety net: if still 'processing', something went wrong
         try {
-          const record = await watchFolderFileStorage.getFolderData(folder.id);
+          const record = await watchedFolderFileStorage.getFolderData(
+            folder.id,
+          );
           const fileMeta = record?.files[inputFileId];
           if (fileMeta?.status === "processing") {
-            await watchFolderFileStorage.updateFileMetadata(
+            await watchedFolderFileStorage.updateFileMetadata(
               folder.id,
               inputFileId,
               {
@@ -337,13 +341,15 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
     async function drainDueRetries() {
       const due = await folderRetryScheduleStorage.claimDue();
       for (const entry of due) {
-        const freshFolder = await smartFolderStorage.getFolder(entry.folderId);
+        const freshFolder = await watchedFolderStorage.getFolder(
+          entry.folderId,
+        );
         if (!freshFolder || freshFolder.isPaused) continue;
         const freshFile = await fileStorage.getStirlingFile(
           entry.fileId as FileId,
         );
         if (!freshFile) continue;
-        await watchFolderFileStorage.updateFileMetadata(
+        await watchedFolderFileStorage.updateFileMetadata(
           entry.folderId,
           entry.fileId,
           {
@@ -366,7 +372,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       navigator.serviceWorker
         .register("/sw-folder-retry.js", { scope: "/" })
         .catch((err) =>
-          console.warn("Watch Folder retry SW registration failed:", err),
+          console.warn("Watched Folder retry SW registration failed:", err),
         );
     }
 
@@ -391,7 +397,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
   /** Run multiple files through the pipeline concurrently. */
   const processBatch = useCallback(
     (
-      folder: SmartFolder,
+      folder: WatchedFolder,
       items: Array<{
         file: File;
         inputFileId: string;

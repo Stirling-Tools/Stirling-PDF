@@ -1,15 +1,15 @@
 /**
- * Polls local input directories for Watch Folders with inputSource === 'local-folder'.
+ * Polls local input directories for Watched Folders with inputSource === 'local-folder'.
  * On each cycle it scans the chosen directory, skips already-seen files,
- * registers new ones in watchFolderFileStorage, and kicks off the automation pipeline.
+ * registers new ones in watchedFolderFileStorage, and kicks off the automation pipeline.
  *
  * Polling only happens while the page is visible; the interval is reset on visibility restore.
  */
 
 import { useEffect, useRef } from "react";
-import { SmartFolder } from "@app/types/smartFolders";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
+import { WatchedFolder } from "@app/types/watchedFolders";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 import {
   folderSeenFilesStorage,
@@ -22,7 +22,7 @@ const POLL_INTERVAL_MS = 10_000;
 
 export function useLocalFolderPoller(
   runPipeline: (
-    folder: SmartFolder,
+    folder: WatchedFolder,
     file: File,
     inputFileId: string,
     ownedByFolder: boolean,
@@ -44,9 +44,9 @@ export function useLocalFolderPoller(
       )
         return;
 
-      let folders: SmartFolder[];
+      let folders: WatchedFolder[];
       try {
-        folders = await smartFolderStorage.getAllFolders();
+        folders = await watchedFolderStorage.getAllFolders();
       } catch {
         return;
       }
@@ -70,7 +70,7 @@ export function useLocalFolderPoller(
             );
           if (!hasPermission) continue;
 
-          const folderData = await watchFolderFileStorage.getFolderData(
+          const folderData = await watchedFolderFileStorage.getFolderData(
             folder.id,
           );
           // Build set of file names already in the folder (any status) to avoid duplicates
@@ -111,7 +111,7 @@ export function useLocalFolderPoller(
 
             const { inputFileId, ownedByFolder } = await resolveInputFile(file);
 
-            await watchFolderFileStorage.addFileToFolder(
+            await watchedFolderFileStorage.addFileToFolder(
               folder.id,
               inputFileId,
               {

@@ -21,8 +21,8 @@ import {
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 import { useCardModalAnimation } from "@app/hooks/useCardModalAnimation";
-import { CardExpansionModal } from "@app/components/smartFolders/CardExpansionModal";
-import { StatCard } from "@app/components/smartFolders/StatCard";
+import { CardExpansionModal } from "@app/components/watchedFolders/CardExpansionModal";
+import { StatCard } from "@app/components/watchedFolders/StatCard";
 import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -40,14 +40,14 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import JSZip from "jszip";
-import { useSmartFolders } from "@app/hooks/useSmartFolders";
+import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
 import { useFolderData } from "@app/hooks/useFolderData";
 import type { TFunction } from "i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
-  SMART_FOLDER_VIEW_ID,
-  SMART_FOLDER_WORKBENCH_ID,
-} from "@app/components/smartFolders/SmartFoldersRegistration";
+  WATCHED_FOLDER_VIEW_ID,
+  WATCHED_FOLDER_WORKBENCH_ID,
+} from "@app/components/watchedFolders/WatchedFoldersRegistration";
 import { automationStorage } from "@app/services/automationStorage";
 import {
   useFolderAutomation,
@@ -59,32 +59,32 @@ import { iconMap } from "@app/components/tools/automate/iconMap";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId, StirlingFile } from "@app/types/fileContext";
 import {
-  SmartFolderHomePage,
+  WatchedFolderHomePage,
   humaniseOp,
-} from "@app/components/smartFolders/SmartFolderHomePage";
+} from "@app/components/watchedFolders/WatchedFolderHomePage";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { FilePreviewModal } from "@app/components/smartFolders/FilePreviewModal";
+import { FilePreviewModal } from "@app/components/watchedFolders/FilePreviewModal";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
 
 const SORT_OPTIONS = [
   {
     value: "newest",
-    labelKey: "smartFolders.workbench.sortNewest",
+    labelKey: "watchedFolders.workbench.sortNewest",
     labelDefault: "Newest",
   },
   {
     value: "oldest",
-    labelKey: "smartFolders.workbench.sortOldest",
+    labelKey: "watchedFolders.workbench.sortOldest",
     labelDefault: "Oldest",
   },
   {
     value: "name-asc",
-    labelKey: "smartFolders.workbench.sortNameAsc",
+    labelKey: "watchedFolders.workbench.sortNameAsc",
     labelDefault: "A → Z",
   },
   {
     value: "name-desc",
-    labelKey: "smartFolders.workbench.sortNameDesc",
+    labelKey: "watchedFolders.workbench.sortNameDesc",
     labelDefault: "Z → A",
   },
 ];
@@ -92,27 +92,27 @@ const SORT_OPTIONS = [
 const ACTIVITY_STATUS_OPTIONS = [
   {
     value: "all",
-    labelKey: "smartFolders.workbench.filterAll",
+    labelKey: "watchedFolders.workbench.filterAll",
     labelDefault: "All",
   },
   {
     value: "processed",
-    labelKey: "smartFolders.status.done",
+    labelKey: "watchedFolders.status.done",
     labelDefault: "Done",
   },
   {
     value: "processing",
-    labelKey: "smartFolders.status.active",
+    labelKey: "watchedFolders.status.active",
     labelDefault: "Active",
   },
   {
     value: "error",
-    labelKey: "smartFolders.workbench.failed",
+    labelKey: "watchedFolders.workbench.failed",
     labelDefault: "Failed",
   },
   {
     value: "pending",
-    labelKey: "smartFolders.workbench.filterPending",
+    labelKey: "watchedFolders.workbench.filterPending",
     labelDefault: "Pending",
   },
 ];
@@ -142,7 +142,7 @@ function FilterSortBar({
     >
       <TextInput
         size="xs"
-        placeholder={t("smartFolders.workbench.search", "Search…")}
+        placeholder={t("watchedFolders.workbench.search", "Search…")}
         value={search}
         onChange={(e) => onSearchChange(e.currentTarget.value)}
         leftSection={<SearchIcon style={{ fontSize: "0.875rem" }} />}
@@ -166,7 +166,7 @@ function FilterSortBar({
   );
 }
 
-interface SmartFolderWorkbenchViewProps {
+interface WatchedFolderWorkbenchViewProps {
   data: {
     folderId: string | null;
     pendingFileId?: string;
@@ -176,21 +176,21 @@ interface SmartFolderWorkbenchViewProps {
 
 export function timeAgo(date: Date, t: TFunction): string {
   const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return t("smartFolders.time.justNow", "just now");
+  if (secs < 60) return t("watchedFolders.time.justNow", "just now");
   const mins = Math.floor(secs / 60);
   if (mins < 60)
-    return t("smartFolders.time.minutesAgo", {
+    return t("watchedFolders.time.minutesAgo", {
       count: mins,
       defaultValue: `${mins}m ago`,
     });
   const hours = Math.floor(mins / 60);
   if (hours < 24)
-    return t("smartFolders.time.hoursAgo", {
+    return t("watchedFolders.time.hoursAgo", {
       count: hours,
       defaultValue: `${hours}h ago`,
     });
   const days = Math.floor(hours / 24);
-  return t("smartFolders.time.daysAgo", {
+  return t("watchedFolders.time.daysAgo", {
     count: days,
     defaultValue: `${days}d ago`,
   });
@@ -215,8 +215,8 @@ function RetryCountdown({
   return (
     <Text size="xs" c="yellow.6" style={{ flexShrink: 0 }}>
       {remaining <= 0
-        ? t("smartFolders.workbench.retryingSoon", "retrying…")
-        : t("smartFolders.workbench.retryIn", {
+        ? t("watchedFolders.workbench.retryingSoon", "retrying…")
+        : t("watchedFolders.workbench.retryIn", {
             count: mins,
             defaultValue: `retry in ${mins}m`,
           })}
@@ -224,14 +224,14 @@ function RetryCountdown({
   );
 }
 
-export function SmartFolderWorkbenchView({
+export function WatchedFolderWorkbenchView({
   data,
-}: SmartFolderWorkbenchViewProps) {
+}: WatchedFolderWorkbenchViewProps) {
   const { folderId } = data;
   const { t } = useTranslation();
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
-  const { folders, updateFolder } = useSmartFolders();
+  const { folders, updateFolder } = useWatchedFolders();
   const folder = folders.find((f) => f.id === folderId);
   const { runPipeline } = useFolderAutomation(toolRegistry);
   useLocalFolderPoller(runPipeline);
@@ -349,7 +349,7 @@ export function SmartFolderWorkbenchView({
       const key = pendingFileIds.join(",");
       if (handledPendingRef.current === key) return;
       handledPendingRef.current = key;
-      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
+      setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
       Promise.all(
         pendingFileIds.map((id) => fileStorage.getStirlingFile(id as FileId)),
       ).then(async (results) => {
@@ -363,7 +363,7 @@ export function SmartFolderWorkbenchView({
     // Single pending file (legacy path)
     if (!pendingFileId || handledPendingRef.current === pendingFileId) return;
     handledPendingRef.current = pendingFileId;
-    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
+    setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
     fileStorage
       .getStirlingFile(pendingFileId as FileId)
       .then((stirlingFile) => {
@@ -377,7 +377,7 @@ export function SmartFolderWorkbenchView({
       setIsDragOver(false);
 
       // Multi-file sidebar drag
-      const multiRaw = e.dataTransfer.getData("watchFolderFileIds");
+      const multiRaw = e.dataTransfer.getData("watchedFolderFileIds");
       if (multiRaw) {
         try {
           const ids: string[] = JSON.parse(multiRaw);
@@ -395,7 +395,7 @@ export function SmartFolderWorkbenchView({
       }
 
       // Single sidebar drag
-      const sidebarFileId = e.dataTransfer.getData("watchFolderFileId");
+      const sidebarFileId = e.dataTransfer.getData("watchedFolderFileId");
       if (sidebarFileId) {
         fileStorage
           .getStirlingFile(sidebarFileId as FileId)
@@ -433,8 +433,8 @@ export function SmartFolderWorkbenchView({
   }, []);
 
   const goHome = useCallback(() => {
-    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
-    actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+    setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+    actions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
   }, [setCustomWorkbenchViewData, actions]);
 
   const handlePauseResume = useCallback(async () => {
@@ -689,7 +689,7 @@ export function SmartFolderWorkbenchView({
       hasMixed &&
       !window.confirm(
         t(
-          "smartFolders.workbench.retryMixedConfirm",
+          "watchedFolders.workbench.retryMixedConfirm",
           "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?",
         ),
       )
@@ -791,7 +791,7 @@ export function SmartFolderWorkbenchView({
   }, [filteredActivityIds, doRetryIds]);
 
   // Early returns — after all hooks
-  if (!folderId) return <SmartFolderHomePage />;
+  if (!folderId) return <WatchedFolderHomePage />;
 
   const FolderIcon = folder
     ? iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon
@@ -809,7 +809,7 @@ export function SmartFolderWorkbenchView({
         }}
       >
         <Text c="dimmed">
-          {t("smartFolders.folderNotFound", "Folder not found")}
+          {t("watchedFolders.folderNotFound", "Folder not found")}
         </Text>
       </Box>
     );
@@ -864,7 +864,7 @@ export function SmartFolderWorkbenchView({
               size="sm"
               color="gray"
               onClick={goHome}
-              aria-label={t("smartFolders.actions.back", "Back")}
+              aria-label={t("watchedFolders.actions.back", "Back")}
             >
               <ArrowBackIcon style={{ fontSize: "1rem" }} />
             </ActionIcon>
@@ -960,12 +960,12 @@ export function SmartFolderWorkbenchView({
                   style={{ fontSize: "0.6875rem" }}
                 >
                   {localInputFolderName
-                    ? t("smartFolders.workbench.watching", {
+                    ? t("watchedFolders.workbench.watching", {
                         name: localInputFolderName,
                         defaultValue: `Watching: ${localInputFolderName}`,
                       })
                     : t(
-                        "smartFolders.workbench.noInputFolder",
+                        "watchedFolders.workbench.noInputFolder",
                         "No input folder — edit to configure",
                       )}
                 </Text>
@@ -983,7 +983,7 @@ export function SmartFolderWorkbenchView({
                 onClick={handlePauseResume}
                 leftSection={<PlayArrowIcon style={{ fontSize: "0.875rem" }} />}
               >
-                {t("smartFolders.workbench.resume", "Resume")}
+                {t("watchedFolders.workbench.resume", "Resume")}
               </Button>
             ) : (
               <Button
@@ -993,7 +993,7 @@ export function SmartFolderWorkbenchView({
                 onClick={handlePauseResume}
                 leftSection={<PauseIcon style={{ fontSize: "0.875rem" }} />}
               >
-                {t("smartFolders.workbench.pause", "Pause")}
+                {t("watchedFolders.workbench.pause", "Pause")}
               </Button>
             )}
             <Button
@@ -1005,7 +1005,7 @@ export function SmartFolderWorkbenchView({
                   ?.click()
               }
             >
-              {t("smartFolders.workbench.addFiles", "Add files")}
+              {t("watchedFolders.workbench.addFiles", "Add files")}
             </Button>
             <input
               id={`folder-file-input-${folderId}`}
@@ -1068,7 +1068,7 @@ export function SmartFolderWorkbenchView({
                   />
                 }
                 count={inputFiles.length}
-                label={t("smartFolders.workbench.inputs", "Inputs")}
+                label={t("watchedFolders.workbench.inputs", "Inputs")}
                 hoverColor="var(--mantine-color-blue-filled)"
                 isActive={activityStatusFilter === "all"}
                 onClick={() => {
@@ -1095,7 +1095,7 @@ export function SmartFolderWorkbenchView({
                   />
                 }
                 count={outputFiles.length}
-                label={t("smartFolders.workbench.outputs", "Outputs")}
+                label={t("watchedFolders.workbench.outputs", "Outputs")}
                 hoverColor="var(--color-green-500)"
                 isActive={activityStatusFilter === "processed"}
                 onClick={() => {
@@ -1120,7 +1120,7 @@ export function SmartFolderWorkbenchView({
                   />
                 }
                 count={failedFileIds.length}
-                label={t("smartFolders.workbench.failed", "Failed")}
+                label={t("watchedFolders.workbench.failed", "Failed")}
                 hoverColor="var(--color-red-500)"
                 isActive={activityStatusFilter === "error"}
                 onClick={
@@ -1150,7 +1150,7 @@ export function SmartFolderWorkbenchView({
                     />
                   }
                   count={dataSavedBytes > 0 ? formatBytes(dataSavedBytes) : "—"}
-                  label={t("smartFolders.workbench.dataSaved", "Saved")}
+                  label={t("watchedFolders.workbench.dataSaved", "Saved")}
                 />
               )}
 
@@ -1169,7 +1169,7 @@ export function SmartFolderWorkbenchView({
                     ? `${daysRunning}d`
                     : "—"
                 }
-                label={t("smartFolders.workbench.running", "Running")}
+                label={t("watchedFolders.workbench.running", "Running")}
                 hoverColor="var(--mantine-color-dimmed)"
                 onClick={openStatsModal}
               />
@@ -1204,7 +1204,7 @@ export function SmartFolderWorkbenchView({
                           color: "var(--mantine-color-blue-filled)",
                         }}
                       >
-                        {t("smartFolders.workbench.countProcessing", {
+                        {t("watchedFolders.workbench.countProcessing", {
                           count: activeCount,
                           defaultValue: `${activeCount} processing`,
                         })}
@@ -1212,7 +1212,7 @@ export function SmartFolderWorkbenchView({
                     )}
                     {queuedCount > 0 && (
                       <Text style={{ fontSize: "0.625rem" }} c="dimmed">
-                        {t("smartFolders.workbench.countQueued", {
+                        {t("watchedFolders.workbench.countQueued", {
                           count: queuedCount,
                           defaultValue: `${queuedCount} queued`,
                         })}
@@ -1271,8 +1271,8 @@ export function SmartFolderWorkbenchView({
               }}
             >
               {isDragOver
-                ? t("smartFolders.workbench.dropToProcess", "Drop to process")
-                : t("smartFolders.workbench.activity", "Activity")}
+                ? t("watchedFolders.workbench.dropToProcess", "Drop to process")
+                : t("watchedFolders.workbench.activity", "Activity")}
             </Text>
             {activityStatusFilter === "error" &&
               filteredActivityIds.length > 0 && (
@@ -1282,7 +1282,7 @@ export function SmartFolderWorkbenchView({
                   onClick={handleRetryAllFiltered}
                   leftSection={<ReplayIcon style={{ fontSize: "0.75rem" }} />}
                 >
-                  {t("smartFolders.workbench.retryAll", "Retry all")}
+                  {t("watchedFolders.workbench.retryAll", "Retry all")}
                 </Button>
               )}
             {activityStatusFilter === "processed" &&
@@ -1298,7 +1298,7 @@ export function SmartFolderWorkbenchView({
                       <DownloadIcon style={{ fontSize: "0.75rem" }} />
                     }
                   >
-                    {t("smartFolders.workbench.exportZip", "Export zip")}
+                    {t("watchedFolders.workbench.exportZip", "Export zip")}
                   </Button>
                   <Button
                     size="xs"
@@ -1311,7 +1311,7 @@ export function SmartFolderWorkbenchView({
                     }
                   >
                     {t(
-                      "smartFolders.workbench.exportSeparately",
+                      "watchedFolders.workbench.exportSeparately",
                       "Export separately",
                     )}
                   </Button>
@@ -1377,7 +1377,7 @@ export function SmartFolderWorkbenchView({
                     fw={600}
                     style={{ color: "var(--mantine-color-blue-filled)" }}
                   >
-                    {t("smartFolders.workbench.countSelected", {
+                    {t("watchedFolders.workbench.countSelected", {
                       count: selectedActivityIds.size,
                       defaultValue: `${selectedActivityIds.size} selected`,
                     })}
@@ -1390,7 +1390,7 @@ export function SmartFolderWorkbenchView({
                         setSelectedActivityIds(new Set(filteredActivityIds))
                       }
                     >
-                      {t("smartFolders.workbench.selectAll", {
+                      {t("watchedFolders.workbench.selectAll", {
                         count: filteredActivityIds.length,
                         defaultValue: `Select all ${filteredActivityIds.length}`,
                       })}
@@ -1406,7 +1406,7 @@ export function SmartFolderWorkbenchView({
                         <ReplayIcon style={{ fontSize: "0.75rem" }} />
                       }
                     >
-                      {t("smartFolders.actions.retry", "Retry")}
+                      {t("watchedFolders.actions.retry", "Retry")}
                     </Button>
                   )}
                   {showExport && (
@@ -1419,7 +1419,7 @@ export function SmartFolderWorkbenchView({
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
                         }
                       >
-                        {t("smartFolders.workbench.exportZip", "Export zip")}
+                        {t("watchedFolders.workbench.exportZip", "Export zip")}
                       </Button>
                       <Button
                         size="xs"
@@ -1430,7 +1430,7 @@ export function SmartFolderWorkbenchView({
                         }
                       >
                         {t(
-                          "smartFolders.workbench.exportSeparately",
+                          "watchedFolders.workbench.exportSeparately",
                           "Export separately",
                         )}
                       </Button>
@@ -1445,7 +1445,7 @@ export function SmartFolderWorkbenchView({
                       <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} />
                     }
                   >
-                    {t("smartFolders.workbench.delete", "Delete")}
+                    {t("watchedFolders.workbench.delete", "Delete")}
                   </Button>
                   <ActionIcon
                     variant="subtle"
@@ -1453,7 +1453,7 @@ export function SmartFolderWorkbenchView({
                     color="gray"
                     onClick={() => setSelectedActivityIds(new Set())}
                     aria-label={t(
-                      "smartFolders.workbench.clearSelection",
+                      "watchedFolders.workbench.clearSelection",
                       "Clear selection",
                     )}
                   >
@@ -1474,14 +1474,14 @@ export function SmartFolderWorkbenchView({
               {fileIds.length === 0 ? (
                 <Text size="xs" c="dimmed" ta="center" py="lg">
                   {t(
-                    "smartFolders.workbench.noActivity",
+                    "watchedFolders.workbench.noActivity",
                     "No activity yet — drop a PDF to start",
                   )}
                 </Text>
               ) : filteredActivityIds.length === 0 ? (
                 <Text size="xs" c="dimmed" ta="center" py="lg">
                   {t(
-                    "smartFolders.workbench.noActivityMatch",
+                    "watchedFolders.workbench.noActivityMatch",
                     "No matching activity",
                   )}
                 </Text>
@@ -1546,8 +1546,11 @@ export function SmartFolderWorkbenchView({
                             }}
                             aria-label={
                               isExpanded
-                                ? t("smartFolders.actions.collapse", "Collapse")
-                                : t("smartFolders.actions.expand", "Expand")
+                                ? t(
+                                    "watchedFolders.actions.collapse",
+                                    "Collapse",
+                                  )
+                                : t("watchedFolders.actions.expand", "Expand")
                             }
                           >
                             <ChevronRightIcon
@@ -1671,7 +1674,7 @@ export function SmartFolderWorkbenchView({
                                     handleView(primaryFile);
                                   }}
                                   aria-label={t(
-                                    "smartFolders.workbench.preview",
+                                    "watchedFolders.workbench.preview",
                                     "Preview",
                                   )}
                                 >
@@ -1693,7 +1696,7 @@ export function SmartFolderWorkbenchView({
                                     );
                                   }}
                                   aria-label={t(
-                                    "smartFolders.workbench.export",
+                                    "watchedFolders.workbench.export",
                                     "Export",
                                   )}
                                 >
@@ -1711,7 +1714,7 @@ export function SmartFolderWorkbenchView({
                                   void handleDeleteOne(fileId);
                                 }}
                                 aria-label={t(
-                                  "smartFolders.workbench.delete",
+                                  "watchedFolders.workbench.delete",
                                   "Delete",
                                 )}
                               >
@@ -1755,7 +1758,7 @@ export function SmartFolderWorkbenchView({
                                   }}
                                 >
                                   {t(
-                                    "smartFolders.workbench.directionIn",
+                                    "watchedFolders.workbench.directionIn",
                                     "in",
                                   )}
                                 </Text>
@@ -1782,7 +1785,7 @@ export function SmartFolderWorkbenchView({
                                     handleView(inputFile);
                                   }}
                                   aria-label={t(
-                                    "smartFolders.workbench.previewInput",
+                                    "watchedFolders.workbench.previewInput",
                                     "Preview input",
                                   )}
                                 >
@@ -1799,7 +1802,7 @@ export function SmartFolderWorkbenchView({
                                     handleDownload(inputFile, inputFile.name);
                                   }}
                                   aria-label={t(
-                                    "smartFolders.actions.downloadInput",
+                                    "watchedFolders.actions.downloadInput",
                                     "Download input",
                                   )}
                                 >
@@ -1830,7 +1833,7 @@ export function SmartFolderWorkbenchView({
                                   }}
                                 >
                                   {t(
-                                    "smartFolders.workbench.directionOut",
+                                    "watchedFolders.workbench.directionOut",
                                     "out",
                                   )}
                                 </Text>
@@ -1857,7 +1860,7 @@ export function SmartFolderWorkbenchView({
                                     handleView(out);
                                   }}
                                   aria-label={t(
-                                    "smartFolders.workbench.previewOutput",
+                                    "watchedFolders.workbench.previewOutput",
                                     "Preview output",
                                   )}
                                 >
@@ -1874,7 +1877,7 @@ export function SmartFolderWorkbenchView({
                                     handleDownload(out, out.name);
                                   }}
                                   aria-label={t(
-                                    "smartFolders.actions.downloadOutput",
+                                    "watchedFolders.actions.downloadOutput",
                                     "Download output",
                                   )}
                                 >
@@ -1935,7 +1938,7 @@ export function SmartFolderWorkbenchView({
                                       );
                                     }}
                                   >
-                                    {t("smartFolders.actions.retry", "Retry")}
+                                    {t("watchedFolders.actions.retry", "Retry")}
                                   </Button>
                                 )}
                               </Box>
@@ -1945,7 +1948,7 @@ export function SmartFolderWorkbenchView({
                                 <Loader size={8} />
                                 <Text size="xs" c="dimmed">
                                   {t(
-                                    "smartFolders.status.processing",
+                                    "watchedFolders.status.processing",
                                     "Processing…",
                                   )}
                                 </Text>
@@ -1954,7 +1957,7 @@ export function SmartFolderWorkbenchView({
                             {status === "pending" && (
                               <Text size="xs" c="dimmed">
                                 {t(
-                                  "smartFolders.workbench.queuedWaiting",
+                                  "watchedFolders.workbench.queuedWaiting",
                                   "Queued — waiting to run",
                                 )}
                               </Text>
@@ -1986,8 +1989,8 @@ export function SmartFolderWorkbenchView({
           />
         }
         count={daysRunning !== null && daysRunning > 0 ? daysRunning : 0}
-        labelSingular={t("smartFolders.workbench.dayRunning", "day running")}
-        labelPlural={t("smartFolders.workbench.daysRunning", "days running")}
+        labelSingular={t("watchedFolders.workbench.dayRunning", "day running")}
+        labelPlural={t("watchedFolders.workbench.daysRunning", "days running")}
         widthRem={72}
         heightRem={48}
         fillHeight
@@ -2003,7 +2006,7 @@ export function SmartFolderWorkbenchView({
                   onClick={() => setStatsPeriod(p)}
                 >
                   {p === "all"
-                    ? t("smartFolders.workbench.allTime", "All time")
+                    ? t("watchedFolders.workbench.allTime", "All time")
                     : p}
                 </Button>
               ))}
@@ -2021,7 +2024,7 @@ export function SmartFolderWorkbenchView({
                 tt="uppercase"
                 fw={600}
               >
-                {t("smartFolders.status.done", "Done")}
+                {t("watchedFolders.status.done", "Done")}
               </Text>
               <Text size="xl" fw={800} c="var(--color-green-500)">
                 {dashboardStats.processed}
@@ -2035,7 +2038,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  {t("smartFolders.workbench.failed", "Failed")}
+                  {t("watchedFolders.workbench.failed", "Failed")}
                 </Text>
                 <Text size="xl" fw={800} c="red">
                   {dashboardStats.failed}
@@ -2050,7 +2053,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  {t("smartFolders.workbench.queued", "Queued")}
+                  {t("watchedFolders.workbench.queued", "Queued")}
                 </Text>
                 <Text size="xl" fw={800}>
                   {dashboardStats.pending}
@@ -2065,7 +2068,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  {t("smartFolders.workbench.inputSize", "Input size")}
+                  {t("watchedFolders.workbench.inputSize", "Input size")}
                 </Text>
                 <Text size="xl" fw={800}>
                   {formatBytes(dashboardStats.totalIn)}
@@ -2080,7 +2083,7 @@ export function SmartFolderWorkbenchView({
                   tt="uppercase"
                   fw={600}
                 >
-                  {t("smartFolders.workbench.dataSaved", "Saved")}
+                  {t("watchedFolders.workbench.dataSaved", "Saved")}
                 </Text>
                 <Text size="xl" fw={800} c="var(--color-green-500)">
                   ↓ {formatBytes(dashboardStats.saved)}
@@ -2142,7 +2145,7 @@ export function SmartFolderWorkbenchView({
                   year: "numeric",
                 });
               }
-              return `${dateStr}\n${t("smartFolders.workbench.chartTooltipComplete", { count: b.processed, defaultValue: `${b.processed} complete` })}  ${t("smartFolders.workbench.chartTooltipFailed", { count: b.failed, defaultValue: `${b.failed} failed` })}`;
+              return `${dateStr}\n${t("watchedFolders.workbench.chartTooltipComplete", { count: b.processed, defaultValue: `${b.processed} complete` })}  ${t("watchedFolders.workbench.chartTooltipFailed", { count: b.failed, defaultValue: `${b.failed} failed` })}`;
             };
             const yMax = Math.max(dashboardStats.maxBucket, 10);
             const yTicks = [
@@ -2164,7 +2167,7 @@ export function SmartFolderWorkbenchView({
               >
                 <Text size="xs" c="dimmed" mb="0.5rem">
                   {t(
-                    "smartFolders.workbench.filesProcessedOverTime",
+                    "watchedFolders.workbench.filesProcessedOverTime",
                     "Files processed over time",
                   )}
                 </Text>
@@ -2354,7 +2357,7 @@ export function SmartFolderWorkbenchView({
                       }}
                     />
                     <Text size="xs" c="dimmed">
-                      {t("smartFolders.workbench.legendComplete", "Complete")}
+                      {t("watchedFolders.workbench.legendComplete", "Complete")}
                     </Text>
                   </Group>
                   <Group gap="0.3rem">
@@ -2367,7 +2370,7 @@ export function SmartFolderWorkbenchView({
                       }}
                     />
                     <Text size="xs" c="dimmed">
-                      {t("smartFolders.workbench.failed", "Failed")}
+                      {t("watchedFolders.workbench.failed", "Failed")}
                     </Text>
                   </Group>
                 </Group>
@@ -2393,8 +2396,8 @@ export function SmartFolderWorkbenchView({
         onClose={() => setDeleteConfirm(null)}
         title={
           deleteConfirm && deleteConfirm.ids.length === 1
-            ? t("smartFolders.workbench.removeEntry", "Remove entry")
-            : t("smartFolders.workbench.removeEntries", {
+            ? t("watchedFolders.workbench.removeEntry", "Remove entry")
+            : t("watchedFolders.workbench.removeEntries", {
                 count: deleteConfirm?.ids.length ?? 0,
                 defaultValue: `Remove ${deleteConfirm?.ids.length ?? 0} entries`,
               })
@@ -2404,13 +2407,13 @@ export function SmartFolderWorkbenchView({
         <Stack gap="md">
           <Text size="sm" c="dimmed">
             {t(
-              "smartFolders.workbench.deleteConfirmBody",
+              "watchedFolders.workbench.deleteConfirmBody",
               "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched.",
             )}
           </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeleteConfirm(null)}>
-              {t("smartFolders.workbench.cancel", "Cancel")}
+              {t("watchedFolders.workbench.cancel", "Cancel")}
             </Button>
             <Button
               variant="default"
@@ -2419,7 +2422,7 @@ export function SmartFolderWorkbenchView({
               }
             >
               {t(
-                "smartFolders.workbench.removeNotificationsOnly",
+                "watchedFolders.workbench.removeNotificationsOnly",
                 "Remove notifications only",
               )}
             </Button>
@@ -2429,7 +2432,7 @@ export function SmartFolderWorkbenchView({
                 deleteConfirm && void execDelete(deleteConfirm.ids, true)
               }
             >
-              {t("smartFolders.workbench.deleteOutputs", "Delete outputs")}
+              {t("watchedFolders.workbench.deleteOutputs", "Delete outputs")}
             </Button>
           </Group>
         </Stack>

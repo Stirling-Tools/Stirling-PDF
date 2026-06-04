@@ -1,5 +1,5 @@
 /**
- * URL synchronization for Watch Folders workbench.
+ * URL synchronization for Watched Folders workbench.
  * Manages /watch-folders and /watch-folders/:slug routes
  * where :slug is derived from the folder name (e.g. "My Invoices" → "my-invoices").
  */
@@ -11,13 +11,13 @@ import {
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
+import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 
-// Inlined to avoid circular imports — must match SmartFoldersRegistration.tsx
-const SMART_FOLDER_VIEW_ID = "smartFolder";
-const SMART_FOLDER_WORKBENCH_ID = "custom:smartFolder";
+// Inlined to avoid circular imports — must match WatchedFoldersRegistration.tsx
+const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
+const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
 
-const WATCH_FOLDERS_BASE = "/watch-folders";
+const WATCHED_FOLDERS_BASE = "/watch-folders";
 
 export function slugifyFolderName(name: string): string {
   return (
@@ -29,8 +29,8 @@ export function slugifyFolderName(name: string): string {
   );
 }
 
-function parseWatchFolderRoute(): {
-  isWatchFolder: boolean;
+function parseWatchedFolderRoute(): {
+  isWatchedFolder: boolean;
   slug: string | null;
 } {
   const fullPath = window.location.pathname;
@@ -39,39 +39,39 @@ function parseWatchFolderRoute(): {
       ? fullPath.slice(BASE_PATH.length) || "/"
       : fullPath;
 
-  if (path === WATCH_FOLDERS_BASE || path === WATCH_FOLDERS_BASE + "/") {
-    return { isWatchFolder: true, slug: null };
+  if (path === WATCHED_FOLDERS_BASE || path === WATCHED_FOLDERS_BASE + "/") {
+    return { isWatchedFolder: true, slug: null };
   }
-  if (path.startsWith(WATCH_FOLDERS_BASE + "/")) {
-    const slug = path.slice(WATCH_FOLDERS_BASE.length + 1);
-    return { isWatchFolder: true, slug: slug || null };
+  if (path.startsWith(WATCHED_FOLDERS_BASE + "/")) {
+    const slug = path.slice(WATCHED_FOLDERS_BASE.length + 1);
+    return { isWatchedFolder: true, slug: slug || null };
   }
-  return { isWatchFolder: false, slug: null };
+  return { isWatchedFolder: false, slug: null };
 }
 
-function isWatchFolderUrl(): boolean {
+function isWatchedFolderUrl(): boolean {
   const fullPath = window.location.pathname;
   const path =
     BASE_PATH && fullPath.startsWith(BASE_PATH)
       ? fullPath.slice(BASE_PATH.length) || "/"
       : fullPath;
   return (
-    path === WATCH_FOLDERS_BASE || path.startsWith(WATCH_FOLDERS_BASE + "/")
+    path === WATCHED_FOLDERS_BASE || path.startsWith(WATCHED_FOLDERS_BASE + "/")
   );
 }
 
-export function useWatchFolderUrlSync() {
-  const folders = useAllSmartFolders();
+export function useWatchedFolderUrlSync() {
+  const folders = useAllWatchedFolders();
   const navigationState = useNavigationState();
   const { actions } = useNavigationActions();
   const { setCustomWorkbenchViewData, customWorkbenchViews } =
     useToolWorkflow();
 
-  const isWatchFolderWorkbench =
-    navigationState.workbench === SMART_FOLDER_WORKBENCH_ID;
+  const isWatchedFolderWorkbench =
+    navigationState.workbench === WATCHED_FOLDER_WORKBENCH_ID;
 
   const viewData = customWorkbenchViews.find(
-    (v) => v.id === SMART_FOLDER_VIEW_ID,
+    (v) => v.id === WATCHED_FOLDER_VIEW_ID,
   )?.data as { folderId: string | null } | null | undefined;
   const folderId = viewData?.folderId ?? null;
 
@@ -109,8 +109,8 @@ export function useWatchFolderUrlSync() {
 
   // Phase 1a: capture URL slug on mount
   useEffect(() => {
-    const { isWatchFolder, slug } = parseWatchFolderRoute();
-    if (isWatchFolder) {
+    const { isWatchedFolder, slug } = parseWatchedFolderRoute();
+    if (isWatchedFolder) {
       mountSlugRef.current = slug;
     }
   }, []);
@@ -121,7 +121,7 @@ export function useWatchFolderUrlSync() {
     if (mountSlugRef.current === "none") return;
 
     const isRegistered = customWorkbenchViews.some(
-      (v) => v.id === SMART_FOLDER_VIEW_ID,
+      (v) => v.id === WATCHED_FOLDER_VIEW_ID,
     );
     if (!isRegistered) return;
 
@@ -129,17 +129,17 @@ export function useWatchFolderUrlSync() {
     const slug = mountSlugRef.current;
 
     if (!slug) {
-      setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-      actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+      setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+      actionsRef.current.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
       return;
     }
 
-    setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-    actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+    setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+    actionsRef.current.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
 
     if (foldersRef.current.length > 0) {
       const id = slugToIdRef.current.get(slug) ?? null;
-      setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: id });
+      setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: id });
     } else {
       pendingSlugRef.current = slug;
     }
@@ -150,44 +150,44 @@ export function useWatchFolderUrlSync() {
     const slug = pendingSlugRef.current;
     pendingSlugRef.current = null;
     const id = slugToId.get(slug) ?? null;
-    setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: id });
+    setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: id });
   }, [folders, slugToId]);
 
   // Phase 2: State → URL
-  const prevIsWatchFolder = useRef(false);
+  const prevIsWatchedFolder = useRef(false);
   useEffect(() => {
-    if (isWatchFolderWorkbench) {
+    if (isWatchedFolderWorkbench) {
       const slug = folderId ? (idToSlug.get(folderId) ?? null) : null;
       const targetPath = slug
-        ? withBasePath(`${WATCH_FOLDERS_BASE}/${slug}`)
-        : withBasePath(WATCH_FOLDERS_BASE);
+        ? withBasePath(`${WATCHED_FOLDERS_BASE}/${slug}`)
+        : withBasePath(WATCHED_FOLDERS_BASE);
       if (window.location.pathname !== targetPath) {
         window.history.pushState(null, "", targetPath);
       }
-    } else if (prevIsWatchFolder.current && isWatchFolderUrl()) {
+    } else if (prevIsWatchedFolder.current && isWatchedFolderUrl()) {
       window.history.pushState(null, "", withBasePath("/"));
     }
-    prevIsWatchFolder.current = isWatchFolderWorkbench;
-  }, [isWatchFolderWorkbench, folderId, idToSlug]);
+    prevIsWatchedFolder.current = isWatchedFolderWorkbench;
+  }, [isWatchedFolderWorkbench, folderId, idToSlug]);
 
   // Phase 3: popstate → State
   useEffect(() => {
     const handlePopState = () => {
-      const { isWatchFolder, slug } = parseWatchFolderRoute();
-      if (!isWatchFolder) return;
+      const { isWatchedFolder, slug } = parseWatchedFolderRoute();
+      if (!isWatchedFolder) return;
 
       if (!slug) {
-        setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-        actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+        setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+        actionsRef.current.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
         return;
       }
 
-      setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: null });
-      actionsRef.current.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+      setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+      actionsRef.current.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
 
       if (foldersRef.current.length > 0) {
         const id = slugToIdRef.current.get(slug) ?? null;
-        setDataRef.current(SMART_FOLDER_VIEW_ID, { folderId: id });
+        setDataRef.current(WATCHED_FOLDER_VIEW_ID, { folderId: id });
       } else {
         pendingSlugRef.current = slug;
       }

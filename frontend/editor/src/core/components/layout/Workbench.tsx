@@ -62,7 +62,7 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
-  // Custom workbench views (e.g. Watch Folders) manage their own content and may
+  // Custom workbench views (e.g. Watched Folders) manage their own content and may
   // have no workbench files, but still need the bar's view switcher so users can
   // navigate back out.
   const isCustomViewActive = !isBaseWorkbench(currentView);

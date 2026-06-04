@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useFolderData } from "@app/hooks/useFolderData";
-import { FolderFileMetadata, FolderRecord } from "@app/types/smartFolders";
+import { FolderFileMetadata, FolderRecord } from "@app/types/watchedFolders";
 
 interface FolderFileContextValue {
   activeFolderId: string | null;

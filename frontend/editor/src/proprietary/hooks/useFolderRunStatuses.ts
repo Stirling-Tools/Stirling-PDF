@@ -4,14 +4,17 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { SmartFolder, SmartFolderRunEntry } from "@app/types/smartFolders";
+import {
+  WatchedFolder,
+  WatchedFolderRunEntry,
+} from "@app/types/watchedFolders";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 
 export type FolderRunStatus = "idle" | "processing" | "done";
 
 const DONE_TTL_MS = 5 * 60 * 1000;
 
-function deriveStatus(runs: SmartFolderRunEntry[]): FolderRunStatus {
+function deriveStatus(runs: WatchedFolderRunEntry[]): FolderRunStatus {
   if (runs.some((r) => r.status === "processing")) return "processing";
   // Only treat recent runs (within TTL) as 'done' — avoids permanent green tick on old folders
   if (
@@ -27,7 +30,7 @@ function deriveStatus(runs: SmartFolderRunEntry[]): FolderRunStatus {
 }
 
 export function useFolderRunStatuses(
-  folders: SmartFolder[],
+  folders: WatchedFolder[],
 ): Record<string, FolderRunStatus> {
   const [statuses, setStatuses] = useState<Record<string, FolderRunStatus>>({});
   const doneTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(

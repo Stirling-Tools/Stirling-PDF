@@ -2,32 +2,33 @@ import { useState } from "react";
 import { Box, Button, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
-import { useSmartFolders } from "@app/hooks/useSmartFolders";
+import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
 import { useFolderRunStatuses } from "@app/hooks/useFolderRunStatuses";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
-import { DeleteFolderConfirmModal } from "@app/components/smartFolders/DeleteFolderConfirmModal";
-import { SmartFolderCard } from "@app/components/smartFolders/SmartFolderCard";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolderManagementModal } from "@app/components/watchedFolders/WatchedFolderManagementModal";
+import { DeleteFolderConfirmModal } from "@app/components/watchedFolders/DeleteFolderConfirmModal";
+import { WatchedFolderCard } from "@app/components/watchedFolders/WatchedFolderCard";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import { AutomationConfig } from "@app/types/automation";
 import { automationStorage } from "@app/services/automationStorage";
 import {
-  SMART_FOLDER_VIEW_ID,
-  SMART_FOLDER_WORKBENCH_ID,
-} from "@app/components/smartFolders/SmartFoldersRegistration";
+  WATCHED_FOLDER_VIEW_ID,
+  WATCHED_FOLDER_WORKBENCH_ID,
+} from "@app/components/watchedFolders/WatchedFoldersRegistration";
 
-export function SmartFolderSection() {
+export function WatchedFolderSection() {
   const { t } = useTranslation();
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editFolder, setEditFolder] = useState<SmartFolder | null>(null);
+  const [editFolder, setEditFolder] = useState<WatchedFolder | null>(null);
   const [editAutomation, setEditAutomation] = useState<AutomationConfig | null>(
     null,
   );
-  const [deleteTarget, setDeleteTarget] = useState<SmartFolder | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WatchedFolder | null>(null);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
 
-  const { folders, loading, deleteFolder, refreshFolders } = useSmartFolders();
+  const { folders, loading, deleteFolder, refreshFolders } =
+    useWatchedFolders();
   const statuses = useFolderRunStatuses(folders);
 
   const { setCustomWorkbenchViewData } = useToolWorkflow();
@@ -35,11 +36,14 @@ export function SmartFolderSection() {
 
   const handleFolderClick = (folderId: string) => {
     setActiveFolderId(folderId);
-    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
-    actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+    setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
+    actions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
   };
 
-  const handleEditFolder = async (e: React.MouseEvent, folder: SmartFolder) => {
+  const handleEditFolder = async (
+    e: React.MouseEvent,
+    folder: WatchedFolder,
+  ) => {
     e.stopPropagation();
     setEditFolder(folder);
     const automation = await automationStorage.getAutomation(
@@ -49,7 +53,7 @@ export function SmartFolderSection() {
     setCreateModalOpen(true);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, folder: SmartFolder) => {
+  const handleDeleteClick = (e: React.MouseEvent, folder: WatchedFolder) => {
     e.stopPropagation();
     setDeleteTarget(folder);
   };
@@ -87,13 +91,13 @@ export function SmartFolderSection() {
             className="tool-subcategory-row-title"
             style={{ cursor: "pointer" }}
             onClick={() => {
-              setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, {
+              setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
                 folderId: null,
               });
-              actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+              actions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
             }}
           >
-            {t("smartFolders.title", "Watch Folders")}
+            {t("watchedFolders.title", "Watched Folders")}
           </Text>
           <Box className="tool-subcategory-row-rule" />
         </Box>
@@ -103,12 +107,12 @@ export function SmartFolderSection() {
         <Stack gap={0} pb="xs">
           {!loading && folders.length === 0 && (
             <Text size="xs" c="dimmed" ta="center" py="sm" px="sm">
-              {t("smartFolders.noFolders", "No watch folders yet")}
+              {t("watchedFolders.noFolders", "No watch folders yet")}
             </Text>
           )}
 
           {folders.map((folder) => (
-            <SmartFolderCard
+            <WatchedFolderCard
               key={folder.id}
               folder={folder}
               isActive={activeFolderId === folder.id}
@@ -117,11 +121,11 @@ export function SmartFolderSection() {
               onEdit={(e) => handleEditFolder(e, folder)}
               onDelete={(e) => handleDeleteClick(e, folder)}
               onFileDrop={(fileIds) => {
-                setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, {
+                setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
                   folderId: folder.id,
                   pendingFileIds: fileIds,
                 });
-                actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+                actions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
                 setActiveFolderId(folder.id);
               }}
             />
@@ -141,13 +145,13 @@ export function SmartFolderSection() {
             onClick={() => setCreateModalOpen(true)}
           >
             <Text size="sm" c="dimmed">
-              {t("smartFolders.newFolder", "New folder")}
+              {t("watchedFolders.newFolder", "New folder")}
             </Text>
           </Button>
         </Stack>
       </Box>
 
-      <SmartFolderManagementModal
+      <WatchedFolderManagementModal
         opened={createModalOpen}
         editFolder={editFolder}
         existingAutomation={editAutomation}

@@ -1,10 +1,10 @@
 /**
- * Comprehensive Playwright tests for the Watch Folders feature.
+ * Comprehensive Playwright tests for the Watched Folders feature.
  *
  * Tests cover: navigation, folder CRUD, preset seeding, drag-and-drop,
  * modal interactions, sidebar integration, IndexedDB state, and error states.
  *
- * Run: npx playwright test watch-folders --project=chromium --reporter=list
+ * Run: npx playwright test watched-folders --project=chromium --reporter=list
  */
 
 import type { Page } from "@playwright/test";
@@ -15,16 +15,16 @@ import { loginAndSetup } from "@app/tests/helpers/login";
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-// Watch Folders ships behind the WATCH_FOLDERS_ENABLED flag, which is off in
+// Watched Folders ships behind the WATCHED_FOLDERS_ENABLED flag, which is off in
 // every build today, so its entry points never render. This live suite is
 // therefore skipped unless the app under test is built with the feature enabled
-// and the runner opts in via WATCH_FOLDERS_E2E=1. When re-enabling, also revisit
+// and the runner opts in via WATCHED_FOLDERS_E2E=1. When re-enabling, also revisit
 // the sidebar entry point (the old QuickAccessBar button no longer exists).
 test.beforeEach(() => {
-  const enabled = ["1", "true"].includes(process.env.WATCH_FOLDERS_E2E ?? "");
+  const enabled = ["1", "true"].includes(process.env.WATCHED_FOLDERS_E2E ?? "");
   test.skip(
     !enabled,
-    "Watch Folders is feature-flagged off; set WATCH_FOLDERS_E2E=1 to run",
+    "Watched Folders is feature-flagged off; set WATCHED_FOLDERS_E2E=1 to run",
   );
 });
 
@@ -33,13 +33,13 @@ async function setupApp(page: Page): Promise<void> {
   // `admin / adminadmin` credentials). The previous bespoke /api/v1/auth/login
   // call used the pre-bootstrap `stirling` password and always 401'd.
   await loginAndSetup(page);
-  await page.waitForSelector('[data-testid="watchFolders-button"]', {
+  await page.waitForSelector('[data-testid="watchedFolders-button"]', {
     timeout: 30000,
   });
 }
 
-async function navigateToWatchFolders(page: Page): Promise<void> {
-  await page.locator('[data-testid="watchFolders-button"]').click();
+async function navigateToWatchedFolders(page: Page): Promise<void> {
+  await page.locator('[data-testid="watchedFolders-button"]').click();
   await page.waitForSelector('button:has-text("New folder")', {
     timeout: 10000,
   });
@@ -48,7 +48,7 @@ async function navigateToWatchFolders(page: Page): Promise<void> {
 async function getIDBFolderCount(page: Page): Promise<number> {
   return page.evaluate(async () => {
     return new Promise<number>((resolve) => {
-      const req = indexedDB.open("stirling-pdf-smart-folders");
+      const req = indexedDB.open("stirling-pdf-watched-folders");
       req.onsuccess = () => {
         const db = req.result;
         const storeName = db.objectStoreNames[0];
@@ -71,7 +71,7 @@ async function getIDBFolders(
 ): Promise<{ id: string; name: string }[]> {
   return page.evaluate(async () => {
     return new Promise<{ id: string; name: string }[]>((resolve) => {
-      const req = indexedDB.open("stirling-pdf-smart-folders");
+      const req = indexedDB.open("stirling-pdf-watched-folders");
       req.onsuccess = () => {
         const db = req.result;
         const storeName = db.objectStoreNames[0];
@@ -95,7 +95,7 @@ async function getIDBFolders(
 async function clearAllIDBFolders(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const dbNames = [
-      "stirling-pdf-smart-folders",
+      "stirling-pdf-watched-folders",
       "stirling-pdf-folder-files",
       "stirling-pdf-folder-run-state",
       "stirling-pdf-retry-schedule",
@@ -110,7 +110,7 @@ async function clearAllIDBFolders(page: Page): Promise<void> {
         req.onblocked = () => resolve();
       });
     }
-    localStorage.removeItem("smart_folders_seeded");
+    localStorage.removeItem("watched_folders_seeded");
   });
 }
 
@@ -118,25 +118,25 @@ async function clearAllIDBFolders(page: Page): Promise<void> {
 // Test: Navigation
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Navigation", () => {
+test.describe("Watched Folders — Navigation", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
   });
 
-  test("sidebar button navigates to Watch Folders home", async ({ page }) => {
-    await page.locator('[data-testid="watchFolders-button"]').click();
+  test("sidebar button navigates to Watched Folders home", async ({ page }) => {
+    await page.locator('[data-testid="watchedFolders-button"]').click();
     // Should see the home page with "New folder" button
     await expect(
       page.getByRole("button", { name: "New folder" }).first(),
     ).toBeVisible({ timeout: 10000 });
   });
 
-  test("clicking Watch Folders button twice returns to home", async ({
+  test("clicking Watched Folders button twice returns to home", async ({
     page,
   }) => {
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     // Click a folder card to navigate into it, then click the button again
-    const firstCard = page.locator('[data-testid="watchFolders-button"]');
+    const firstCard = page.locator('[data-testid="watchedFolders-button"]');
     await firstCard.click();
     await expect(
       page.getByRole("button", { name: "New folder" }).first(),
@@ -148,15 +148,15 @@ test.describe("Watch Folders — Navigation", () => {
 // Test: Preset Seeding
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Presets", () => {
+test.describe("Watched Folders — Presets", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
     await clearAllIDBFolders(page);
   });
 
   test("seeds 4 default folders on first visit", async ({ page }) => {
-    // Navigate to watch folders — this triggers SmartFoldersRegistration which calls seedDefaultFolders
-    await navigateToWatchFolders(page);
+    // Navigate to watched folders — this triggers WatchedFoldersRegistration which calls seedDefaultFolders
+    await navigateToWatchedFolders(page);
     // Wait a bit for seeding to complete
     await page.waitForTimeout(2000);
 
@@ -174,16 +174,16 @@ test.describe("Watch Folders — Presets", () => {
   });
 
   test("does not re-seed on second visit", async ({ page }) => {
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(2000);
     const count1 = await getIDBFolderCount(page);
 
     // Navigate away and back
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector('[data-testid="watchFolders-button"]', {
+    await page.waitForSelector('[data-testid="watchedFolders-button"]', {
       timeout: 15000,
     });
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1000);
 
     const count2 = await getIDBFolderCount(page);
@@ -195,13 +195,13 @@ test.describe("Watch Folders — Presets", () => {
 // Test: Folder CRUD
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Create / Edit / Delete", () => {
+test.describe("Watched Folders — Create / Edit / Delete", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
   });
 
   test("create a new folder via modal", async ({ page }) => {
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
 
     const initialCount = await getIDBFolderCount(page);
 
@@ -256,7 +256,7 @@ test.describe("Watch Folders — Create / Edit / Delete", () => {
   });
 
   test("delete a folder cleans up all related IDB stores", async ({ page }) => {
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1000);
 
     const folders = await getIDBFolders(page);
@@ -307,9 +307,9 @@ test.describe("Watch Folders — Create / Edit / Delete", () => {
     // We simulate what the delete button does by calling the storage directly
     await page.evaluate(
       async ({ folderId }) => {
-        // Delete from smart folder storage
+        // Delete from watched folder storage
         await new Promise<void>((resolve) => {
-          const req = indexedDB.open("stirling-pdf-smart-folders");
+          const req = indexedDB.open("stirling-pdf-watched-folders");
           req.onsuccess = () => {
             const db = req.result;
             const storeName = db.objectStoreNames[0];
@@ -338,10 +338,10 @@ test.describe("Watch Folders — Create / Edit / Delete", () => {
 // Test: Management Modal
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Management Modal", () => {
+test.describe("Watched Folders — Management Modal", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
   });
 
   test("modal opens and shows name input", async ({ page }) => {
@@ -386,10 +386,10 @@ test.describe("Watch Folders — Management Modal", () => {
 // Test: Home Page UI
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Home Page", () => {
+test.describe("Watched Folders — Home Page", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1500); // wait for seeding
   });
 
@@ -415,14 +415,14 @@ test.describe("Watch Folders — Home Page", () => {
   test('shows "How it works" section on first visit', async ({ page }) => {
     // Clear the session storage flag
     await page.evaluate(() =>
-      sessionStorage.removeItem("smartFolderHowItWorksDismissed"),
+      sessionStorage.removeItem("watchedFolderHowItWorksDismissed"),
     );
     // Re-navigate
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector('[data-testid="watchFolders-button"]', {
+    await page.waitForSelector('[data-testid="watchedFolders-button"]', {
       timeout: 15000,
     });
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1000);
 
     // Look for "How" text
@@ -448,10 +448,10 @@ test.describe("Watch Folders — Home Page", () => {
 // Test: Sidebar Section
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Sidebar", () => {
+test.describe("Watched Folders — Sidebar", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1500);
   });
 
@@ -476,13 +476,13 @@ test.describe("Watch Folders — Sidebar", () => {
 // Test: IndexedDB Storage Integrity
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Storage Integrity", () => {
+test.describe("Watched Folders — Storage Integrity", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
   });
 
   test("folder IDs are valid UUIDs (no prefix)", async ({ page }) => {
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(2000);
 
     const folders = await getIDBFolders(page);
@@ -497,11 +497,11 @@ test.describe("Watch Folders — Storage Integrity", () => {
   });
 
   test("seeded flag is set in localStorage after seeding", async ({ page }) => {
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(2000);
 
     const flag = await page.evaluate(() =>
-      localStorage.getItem("smart_folders_seeded"),
+      localStorage.getItem("watched_folders_seeded"),
     );
     expect(flag).toBe("true");
   });
@@ -512,7 +512,7 @@ test.describe("Watch Folders — Storage Integrity", () => {
     await clearAllIDBFolders(page);
 
     // Navigate to trigger seeding
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(2000);
 
     const count = await getIDBFolderCount(page);
@@ -524,10 +524,10 @@ test.describe("Watch Folders — Storage Integrity", () => {
 // Test: Responsive / Accessibility basics
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — Accessibility", () => {
+test.describe("Watched Folders — Accessibility", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1500);
   });
 
@@ -552,10 +552,10 @@ test.describe("Watch Folders — Accessibility", () => {
 // Test: File Count Display
 // ---------------------------------------------------------------------------
 
-test.describe("Watch Folders — File Count", () => {
+test.describe("Watched Folders — File Count", () => {
   test.beforeEach(async ({ page }) => {
     await setupApp(page);
-    await navigateToWatchFolders(page);
+    await navigateToWatchedFolders(page);
     await page.waitForTimeout(1500);
   });
 

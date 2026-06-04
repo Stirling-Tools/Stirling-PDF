@@ -1,14 +1,14 @@
 /**
- * Service for managing Watch Folder run state in IndexedDB
+ * Service for managing Watched Folder run state in IndexedDB
  */
 
-import { SmartFolderRunEntry } from "@app/types/smartFolders";
+import { WatchedFolderRunEntry } from "@app/types/watchedFolders";
 
 const FOLDER_RUN_STATE_CHANGE_EVENT = "folder-run-state-changed";
 
 interface RunStateRecord {
   folderId: string;
-  runs: SmartFolderRunEntry[];
+  runs: WatchedFolderRunEntry[];
   lastUpdated: number;
 }
 
@@ -52,7 +52,7 @@ class FolderRunStateStorage {
     return this.db;
   }
 
-  async getFolderRunState(folderId: string): Promise<SmartFolderRunEntry[]> {
+  async getFolderRunState(folderId: string): Promise<WatchedFolderRunEntry[]> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
@@ -69,7 +69,7 @@ class FolderRunStateStorage {
 
   async setFolderRunState(
     folderId: string,
-    runs: SmartFolderRunEntry[],
+    runs: WatchedFolderRunEntry[],
   ): Promise<void> {
     const db = await this.ensureDB();
     const record: RunStateRecord = { folderId, runs, lastUpdated: Date.now() };
@@ -101,7 +101,7 @@ class FolderRunStateStorage {
    *  preventing lost-update races when multiple files are processed concurrently. */
   async appendRunEntries(
     folderId: string,
-    entries: SmartFolderRunEntry[],
+    entries: WatchedFolderRunEntry[],
   ): Promise<void> {
     if (entries.length === 0) return;
     const db = await this.ensureDB();

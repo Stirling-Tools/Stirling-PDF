@@ -1,17 +1,20 @@
 /**
- * Default Smart Folder presets — seeded once on first run
+ * Default Watched Folder presets — seeded once on first run
  */
 
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import { AutomationConfig } from "@app/types/automation";
 import { automationStorage } from "@app/services/automationStorage";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 
-const SEEDED_FLAG = "smart_folders_seeded";
+const SEEDED_FLAG = "watched_folders_seeded";
 let seedingInProgress = false;
 
 interface PresetDefinition {
-  folder: Omit<SmartFolder, "id" | "automationId" | "createdAt" | "updatedAt">;
+  folder: Omit<
+    WatchedFolder,
+    "id" | "automationId" | "createdAt" | "updatedAt"
+  >;
   automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">;
 }
 
@@ -103,7 +106,7 @@ export async function seedDefaultFolders(): Promise<void> {
       const savedAutomation = await automationStorage.saveAutomation(
         preset.automation,
       );
-      await smartFolderStorage.createFolder({
+      await watchedFolderStorage.createFolder({
         ...preset.folder,
         automationId: savedAutomation.id,
       });

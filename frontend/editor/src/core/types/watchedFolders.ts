@@ -1,11 +1,11 @@
 /**
- * Types for Smart Folders (a.k.a. Watch Folders) functionality.
+ * Types for Watched Folders (a.k.a. Watched Folders) functionality.
  *
  * Server-backed persistence and server-side processing fields are intentionally
  * not in this type — they land in a follow-up PR.
  */
 
-export interface SmartFolder {
+export interface WatchedFolder {
   id: string;
   name: string;
   description: string;
@@ -51,7 +51,7 @@ export interface FolderRecord {
   lastUpdated: number;
 }
 
-export interface SmartFolderRunEntry {
+export interface WatchedFolderRunEntry {
   inputFileId: string;
   /** First output file id */
   displayFileId: string;

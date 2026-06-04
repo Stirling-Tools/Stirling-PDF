@@ -5,11 +5,11 @@
  * which folders and their processing status.
  */
 
-import { FolderFileMetadata, FolderRecord } from "@app/types/smartFolders";
+import { FolderFileMetadata, FolderRecord } from "@app/types/watchedFolders";
 
 const FOLDER_CHANGE_EVENT = "folder-storage-changed";
 
-class WatchFolderFileStorage {
+class WatchedFolderFileStorage {
   private dbName = "stirling-pdf-folder-files";
   private dbVersion = 3;
   private recordsStore = "folderRecords";
@@ -211,4 +211,4 @@ class WatchFolderFileStorage {
   }
 }
 
-export const watchFolderFileStorage = new WatchFolderFileStorage();
+export const watchedFolderFileStorage = new WatchedFolderFileStorage();

@@ -18,30 +18,30 @@ import CloseIcon from "@mui/icons-material/Close";
 import FolderPlusIcon from "@mui/icons-material/CreateNewFolder";
 import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutlined";
-import { useSmartFolders } from "@app/hooks/useSmartFolders";
+import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
 import { useFolderRunStatuses } from "@app/hooks/useFolderRunStatuses";
 import {
   useFolderAutomation,
   resolveInputFile,
 } from "@app/hooks/useFolderAutomation";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import { type FileId } from "@app/types/file";
 import { AutomationConfig } from "@app/types/automation";
 import { automationStorage } from "@app/services/automationStorage";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
-import { getWatchFolderDraggedFileIds } from "@app/components/smartFolders/watchFolderDragState";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
+import { getWatchedFolderDraggedFileIds } from "@app/components/watchedFolders/watchedFolderDragState";
 import { fileStorage } from "@app/services/fileStorage";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
-import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
-import { DeleteFolderConfirmModal } from "@app/components/smartFolders/DeleteFolderConfirmModal";
+import { WatchedFolderManagementModal } from "@app/components/watchedFolders/WatchedFolderManagementModal";
+import { DeleteFolderConfirmModal } from "@app/components/watchedFolders/DeleteFolderConfirmModal";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import {
-  SMART_FOLDER_VIEW_ID,
-  SMART_FOLDER_WORKBENCH_ID,
-} from "@app/components/smartFolders/SmartFoldersRegistration";
-import { timeAgo } from "@app/components/smartFolders/SmartFolderWorkbenchView";
-import "@app/components/smartFolders/SmartFolders.css";
+  WATCHED_FOLDER_VIEW_ID,
+  WATCHED_FOLDER_WORKBENCH_ID,
+} from "@app/components/watchedFolders/WatchedFoldersRegistration";
+import { timeAgo } from "@app/components/watchedFolders/WatchedFolderWorkbenchView";
+import "@app/components/watchedFolders/WatchedFolders.css";
 
 export function humaniseOp(op: string): string {
   return op
@@ -53,15 +53,15 @@ export function humaniseOp(op: string): string {
 }
 
 interface FolderCardProps {
-  folder: SmartFolder;
+  folder: WatchedFolder;
   status: "idle" | "processing" | "done";
   isProcessing: boolean;
-  onEdit: (folder: SmartFolder) => void;
-  onDelete: (folder: SmartFolder) => void;
+  onEdit: (folder: WatchedFolder) => void;
+  onDelete: (folder: WatchedFolder) => void;
   onOpen: (folderId: string) => void;
-  onDropFiles: (folder: SmartFolder, files: File[]) => void;
-  onDropSidebarFile: (folder: SmartFolder, fileIds: string[]) => void;
-  onTogglePause: (folder: SmartFolder) => void;
+  onDropFiles: (folder: WatchedFolder, files: File[]) => void;
+  onDropSidebarFile: (folder: WatchedFolder, fileIds: string[]) => void;
+  onTogglePause: (folder: WatchedFolder) => void;
 }
 
 function FolderCard({
@@ -90,7 +90,7 @@ function FolderCard({
     automationStorage.getAutomation(folder.automationId).then(setAutomation);
 
     const loadData = () =>
-      watchFolderFileStorage.getFolderData(folder.id).then((record) => {
+      watchedFolderFileStorage.getFolderData(folder.id).then((record) => {
         if (!record) {
           setFileCount(0);
           setLastAdded(null);
@@ -111,7 +111,7 @@ function FolderCard({
       });
     loadData();
 
-    const unsub = watchFolderFileStorage.onFolderChange((changedId) => {
+    const unsub = watchedFolderFileStorage.onFolderChange((changedId) => {
       if (changedId === folder.id) loadData();
     });
     return unsub;
@@ -131,18 +131,18 @@ function FolderCard({
   const statusDotPulse = isActive;
 
   const statusLabel = isPaused
-    ? t("smartFolders.status.paused", "Paused")
+    ? t("watchedFolders.status.paused", "Paused")
     : isActive
-      ? t("smartFolders.status.processing", "Processing")
+      ? t("watchedFolders.status.processing", "Processing")
       : isDone
-        ? t("smartFolders.status.done", "Done")
-        : t("smartFolders.status.active", "Active");
+        ? t("watchedFolders.status.done", "Done")
+        : t("watchedFolders.status.active", "Active");
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
     // Live feedback: are all the files being dragged already in this folder?
-    const dragged = getWatchFolderDraggedFileIds();
+    const dragged = getWatchedFolderDraggedFileIds();
     setDragAlreadyPresent(
       dragged.length > 0 && dragged.every((id) => memberIds.has(id)),
     );
@@ -157,7 +157,7 @@ function FolderCard({
     e.preventDefault();
     setIsDragOver(false);
     setDragAlreadyPresent(false);
-    const multiRaw = e.dataTransfer.getData("watchFolderFileIds");
+    const multiRaw = e.dataTransfer.getData("watchedFolderFileIds");
     if (multiRaw) {
       try {
         const ids: string[] = JSON.parse(multiRaw);
@@ -169,7 +169,7 @@ function FolderCard({
         /* fall through */
       }
     }
-    const sidebarFileId = e.dataTransfer.getData("watchFolderFileId");
+    const sidebarFileId = e.dataTransfer.getData("watchedFolderFileId");
     if (sidebarFileId) {
       onDropSidebarFile(folder, [sidebarFileId]);
     } else if (e.dataTransfer.files.length > 0) {
@@ -198,7 +198,7 @@ function FolderCard({
     >
       {isDragOver && dragAlreadyPresent && (
         <div className="wf-card-drag-message" aria-hidden="true">
-          {t("smartFolders.alreadyInFolder", "Already in this folder")}
+          {t("watchedFolders.alreadyInFolder", "Already in this folder")}
         </div>
       )}
       <div
@@ -222,8 +222,8 @@ function FolderCard({
           <span>
             {fileCount}{" "}
             {fileCount === 1
-              ? t("smartFolders.home.file", "file")
-              : t("smartFolders.home.files", "files")}
+              ? t("watchedFolders.home.file", "file")
+              : t("watchedFolders.home.files", "files")}
           </span>
           {lastAdded && (
             <>
@@ -247,13 +247,13 @@ function FolderCard({
           onClick={() => onTogglePause(folder)}
           aria-label={
             isPaused
-              ? t("smartFolders.home.resume", "Resume")
-              : t("smartFolders.home.pause", "Pause")
+              ? t("watchedFolders.home.resume", "Resume")
+              : t("watchedFolders.home.pause", "Pause")
           }
           title={
             isPaused
-              ? t("smartFolders.home.resume", "Resume")
-              : t("smartFolders.home.pause", "Pause")
+              ? t("watchedFolders.home.resume", "Resume")
+              : t("watchedFolders.home.pause", "Pause")
           }
         >
           {isPaused ? (
@@ -266,7 +266,7 @@ function FolderCard({
           size="md"
           variant="subtle"
           onClick={() => onEdit(folder)}
-          aria-label={t("smartFolders.home.editFolder", "Edit folder")}
+          aria-label={t("watchedFolders.home.editFolder", "Edit folder")}
         >
           <EditIcon style={{ fontSize: "1.125rem" }} />
         </ActionIcon>
@@ -275,7 +275,7 @@ function FolderCard({
           variant="subtle"
           color="red"
           onClick={() => onDelete(folder)}
-          aria-label={t("smartFolders.home.deleteFolder", "Delete folder")}
+          aria-label={t("watchedFolders.home.deleteFolder", "Delete folder")}
         >
           <DeleteOutlineIcon style={{ fontSize: "1.125rem" }} />
         </ActionIcon>
@@ -296,25 +296,25 @@ function HowItWorks() {
   const steps = [
     {
       n: "1",
-      title: t("smartFolders.howItWorks.step1Title", "Drop files"),
+      title: t("watchedFolders.howItWorks.step1Title", "Drop files"),
       desc: t(
-        "smartFolders.howItWorks.step1Desc",
-        "Drag PDFs onto any Watch Folder card — or send them from your file list",
+        "watchedFolders.howItWorks.step1Desc",
+        "Drag PDFs onto any Watched Folder card — or send them from your file list",
       ),
     },
     {
       n: "2",
-      title: t("smartFolders.howItWorks.step2Title", "Pipeline runs"),
+      title: t("watchedFolders.howItWorks.step2Title", "Pipeline runs"),
       desc: t(
-        "smartFolders.howItWorks.step2Desc",
+        "watchedFolders.howItWorks.step2Desc",
         "Your configured tools process each file automatically",
       ),
     },
     {
       n: "3",
-      title: t("smartFolders.howItWorks.step3Title", "Output ready"),
+      title: t("watchedFolders.howItWorks.step3Title", "Output ready"),
       desc: t(
-        "smartFolders.howItWorks.step3Desc",
+        "watchedFolders.howItWorks.step3Desc",
         "Download processed files from inside the folder",
       ),
     },
@@ -339,7 +339,7 @@ function HowItWorks() {
             }}
           />
           <Text fw={600} size="xs">
-            {t("smartFolders.howItWorks.title", "How Watch Folders work")}
+            {t("watchedFolders.howItWorks.title", "How Watched Folders work")}
           </Text>
         </Group>
         <ActionIcon
@@ -350,7 +350,7 @@ function HowItWorks() {
             sessionStorage.setItem("wf_howItWorks_dismissed", "1");
             setDismissed(true);
           }}
-          aria-label={t("smartFolders.actions.dismiss", "Dismiss")}
+          aria-label={t("watchedFolders.actions.dismiss", "Dismiss")}
         >
           <CloseIcon
             style={{ fontSize: "0.75rem", color: "var(--mantine-color-text)" }}
@@ -407,12 +407,12 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         <FolderPlusIcon style={{ fontSize: "2.5rem" }} />
       </span>
       <div className="wf-empty-title">
-        {t("smartFolders.home.emptyTitle", "Automate your PDF workflows")}
+        {t("watchedFolders.home.emptyTitle", "Automate your PDF workflows")}
       </div>
       <div className="wf-empty-hint">
         {t(
-          "smartFolders.home.emptyDesc",
-          "Set up a Watch Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
+          "watchedFolders.home.emptyDesc",
+          "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
         )}
       </div>
 
@@ -422,7 +422,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         onClick={onCreate}
         mt="sm"
       >
-        {t("smartFolders.home.create", "Create your first Watch Folder")}
+        {t("watchedFolders.home.create", "Create your first Watched Folder")}
       </Button>
 
       <HowItWorks />
@@ -430,34 +430,34 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   );
 }
 
-export function SmartFolderHomePage() {
+export function WatchedFolderHomePage() {
   const { t } = useTranslation();
   const { folders, loading, deleteFolder, updateFolder, refreshFolders } =
-    useSmartFolders();
+    useWatchedFolders();
   const statuses = useFolderRunStatuses(folders);
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
   const { processBatch } = useFolderAutomation(toolRegistry);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editFolder, setEditFolder] = useState<SmartFolder | null>(null);
+  const [editFolder, setEditFolder] = useState<WatchedFolder | null>(null);
   const [editAutomation, setEditAutomation] = useState<AutomationConfig | null>(
     null,
   );
   const [processingFolderIds, setProcessingFolderIds] = useState<Set<string>>(
     new Set(),
   );
-  const [deleteTarget, setDeleteTarget] = useState<SmartFolder | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WatchedFolder | null>(null);
 
   const navigateToFolder = useCallback(
     (folderId: string) => {
-      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
-      actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+      setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
+      actions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
     },
     [setCustomWorkbenchViewData, actions],
   );
 
-  const handleEdit = useCallback(async (folder: SmartFolder) => {
+  const handleEdit = useCallback(async (folder: WatchedFolder) => {
     setEditFolder(folder);
     const automation = await automationStorage.getAutomation(
       folder.automationId,
@@ -473,12 +473,12 @@ export function SmartFolderHomePage() {
   };
 
   const processFiles = useCallback(
-    async (folder: SmartFolder, files: File[]) => {
+    async (folder: WatchedFolder, files: File[]) => {
       const pdfs = files.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
       if (pdfs.length === 0) return;
 
       // Load existing folder data once so we can skip files already in the folder.
-      const existingData = await watchFolderFileStorage.getFolderData(
+      const existingData = await watchedFolderFileStorage.getFolderData(
         folder.id,
       );
       // Register files sequentially — addFileToFolder/updateFileMetadata are read-modify-write
@@ -496,7 +496,7 @@ export function SmartFolderHomePage() {
         if (existingData?.files[inputFileId]) {
           continue;
         }
-        await watchFolderFileStorage.addFileToFolder(folder.id, inputFileId, {
+        await watchedFolderFileStorage.addFileToFolder(folder.id, inputFileId, {
           status: "pending",
           name: file.name,
           ownedByFolder: ownedByFolder || undefined,
@@ -524,14 +524,14 @@ export function SmartFolderHomePage() {
   );
 
   const handleTogglePause = useCallback(
-    async (folder: SmartFolder) => {
+    async (folder: WatchedFolder) => {
       const resuming = folder.isPaused;
       const updatedFolder = { ...folder, isPaused: !folder.isPaused };
       await updateFolder(updatedFolder);
       refreshFolders();
 
       if (resuming) {
-        const record = await watchFolderFileStorage.getFolderData(folder.id);
+        const record = await watchedFolderFileStorage.getFolderData(folder.id);
         if (record) {
           const pendingEntries = Object.entries(record.files).filter(
             ([, meta]) => meta.status === "pending",
@@ -563,7 +563,7 @@ export function SmartFolderHomePage() {
   );
 
   const handleDropSidebarFile = useCallback(
-    async (folder: SmartFolder, fileIds: string[]) => {
+    async (folder: WatchedFolder, fileIds: string[]) => {
       const results = await Promise.all(
         fileIds.map((id) => fileStorage.getStirlingFile(id as FileId)),
       );
@@ -644,13 +644,13 @@ export function SmartFolderHomePage() {
                   </span>
                   <Text size="sm" fw={600}>
                     {t(
-                      "smartFolders.home.addAnother",
-                      "Add another Watch Folder",
+                      "watchedFolders.home.addAnother",
+                      "Add another Watched Folder",
                     )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     {t(
-                      "smartFolders.home.addAnotherDesc",
+                      "watchedFolders.home.addAnotherDesc",
                       "Automatically process files with a new pipeline",
                     )}
                   </Text>
@@ -661,7 +661,7 @@ export function SmartFolderHomePage() {
         </Box>
       </ScrollArea>
 
-      <SmartFolderManagementModal
+      <WatchedFolderManagementModal
         opened={createModalOpen}
         editFolder={editFolder}
         existingAutomation={editAutomation}

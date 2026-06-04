@@ -35,7 +35,7 @@ interface AutomationCreationProps {
   onComplete: (automation: AutomationConfig) => void;
   toolRegistry: Partial<ToolRegistry>;
   /** Hide the name/description/icon fields and the action buttons. Used when embedding
-   *  the form (e.g. inside the Watch Folder modal) where the host owns those controls. */
+   *  the form (e.g. inside the Watched Folder modal) where the host owns those controls. */
   hideMetadata?: boolean;
   /** Force the automation name (used with hideMetadata so the host's name drives it). */
   nameOverride?: string;
@@ -174,7 +174,7 @@ export default function AutomationCreation({
     }
   }, [nameOverride, setAutomationName]);
 
-  // Expose an imperative save trigger to the host (e.g. the Watch Folder modal's
+  // Expose an imperative save trigger to the host (e.g. the Watched Folder modal's
   // "Create Folder" button). Surfaces a failure callback when not saveable.
   useEffect(() => {
     if (!saveTriggerRef) return;

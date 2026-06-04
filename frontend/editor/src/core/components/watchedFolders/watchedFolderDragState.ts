@@ -1,5 +1,5 @@
 /**
- * Tracks which file ids are currently being dragged toward a Watch Folder.
+ * Tracks which file ids are currently being dragged toward a Watched Folder.
  *
  * The HTML5 DnD spec hides `dataTransfer` values during `dragover`/`dragenter`
  * (they're only readable on `drop`), so a drop target can't tell *which* file is
@@ -10,14 +10,14 @@
 
 let draggedFileIds: string[] = [];
 
-export function setWatchFolderDraggedFileIds(ids: string[]): void {
+export function setWatchedFolderDraggedFileIds(ids: string[]): void {
   draggedFileIds = ids;
 }
 
-export function getWatchFolderDraggedFileIds(): string[] {
+export function getWatchedFolderDraggedFileIds(): string[] {
   return draggedFileIds;
 }
 
-export function clearWatchFolderDraggedFileIds(): void {
+export function clearWatchedFolderDraggedFileIds(): void {
   draggedFileIds = [];
 }

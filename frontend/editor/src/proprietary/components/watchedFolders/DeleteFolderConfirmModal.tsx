@@ -1,10 +1,10 @@
 import { Modal, Text, Button, Stack, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 
 interface DeleteFolderConfirmModalProps {
   opened: boolean;
-  folder: SmartFolder | null;
+  folder: WatchedFolder | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -23,7 +23,7 @@ export function DeleteFolderConfirmModal({
     <Modal
       opened={opened}
       onClose={onCancel}
-      title={t("smartFolders.deleteConfirmTitle", "Delete folder?")}
+      title={t("watchedFolders.deleteConfirmTitle", "Delete folder?")}
       centered
       size="sm"
     >
@@ -31,14 +31,14 @@ export function DeleteFolderConfirmModal({
         {folder.isDefault && (
           <Text size="sm" c="orange">
             {t(
-              "smartFolders.defaultFolderWarning",
+              "watchedFolders.defaultFolderWarning",
               "This is a default folder and will be recreated on next reload.",
             )}
           </Text>
         )}
         <Text size="sm">
           {t(
-            "smartFolders.deleteConfirmBody",
+            "watchedFolders.deleteConfirmBody",
             "This will remove the folder and its run history. Files already downloaded are not affected.",
           )}
         </Text>

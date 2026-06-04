@@ -1,15 +1,15 @@
 /**
- * Service for managing Smart Folder configurations in IndexedDB
+ * Service for managing Watched Folder configurations in IndexedDB
  */
 
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 
-const STORAGE_CHANGE_EVENT = "smart-folder-storage-changed";
+const STORAGE_CHANGE_EVENT = "watched-folder-storage-changed";
 
-class SmartFolderStorage {
-  private dbName = "stirling-pdf-smart-folders";
+class WatchedFolderStorage {
+  private dbName = "stirling-pdf-watched-folders";
   private dbVersion = 1;
-  private storeName = "smartFolders";
+  private storeName = "watchedFolders";
   private db: IDBDatabase | null = null;
   private initPromise: Promise<void> | null = null;
 
@@ -57,14 +57,14 @@ class SmartFolderStorage {
     window.dispatchEvent(new Event(STORAGE_CHANGE_EVENT));
   }
 
-  async getAllFolders(): Promise<SmartFolder[]> {
+  async getAllFolders(): Promise<WatchedFolder[]> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.getAll();
       request.onsuccess = () => {
-        const folders: SmartFolder[] = request.result || [];
+        const folders: WatchedFolder[] = request.result || [];
         folders.sort((a, b) => {
           const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
           const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
@@ -79,7 +79,7 @@ class SmartFolderStorage {
     });
   }
 
-  async getFolder(id: string): Promise<SmartFolder | null> {
+  async getFolder(id: string): Promise<WatchedFolder | null> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
@@ -91,11 +91,11 @@ class SmartFolderStorage {
   }
 
   async createFolder(
-    data: Omit<SmartFolder, "id" | "createdAt" | "updatedAt">,
-  ): Promise<SmartFolder> {
+    data: Omit<WatchedFolder, "id" | "createdAt" | "updatedAt">,
+  ): Promise<WatchedFolder> {
     const db = await this.ensureDB();
     const timestamp = new Date().toISOString();
-    const folder: SmartFolder = {
+    const folder: WatchedFolder = {
       id: crypto.randomUUID(),
       ...data,
       createdAt: timestamp,
@@ -114,7 +114,7 @@ class SmartFolderStorage {
     });
   }
 
-  async createFolderWithId(folder: SmartFolder): Promise<SmartFolder> {
+  async createFolderWithId(folder: WatchedFolder): Promise<WatchedFolder> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
@@ -129,9 +129,9 @@ class SmartFolderStorage {
     });
   }
 
-  async updateFolder(folder: SmartFolder): Promise<SmartFolder> {
+  async updateFolder(folder: WatchedFolder): Promise<WatchedFolder> {
     const db = await this.ensureDB();
-    const updated: SmartFolder = {
+    const updated: WatchedFolder = {
       ...folder,
       updatedAt: new Date().toISOString(),
     };
@@ -164,5 +164,5 @@ class SmartFolderStorage {
   }
 }
 
-export const smartFolderStorage = new SmartFolderStorage();
-export { STORAGE_CHANGE_EVENT as SMART_FOLDER_STORAGE_CHANGE_EVENT };
+export const watchedFolderStorage = new WatchedFolderStorage();
+export { STORAGE_CHANGE_EVENT as WATCHED_FOLDER_STORAGE_CHANGE_EVENT };

@@ -5,12 +5,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
-import { SmartFolder } from "@app/types/smartFolders";
+import { WatchedFolder } from "@app/types/watchedFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 
-interface SmartFolderCardProps {
-  folder: SmartFolder;
+interface WatchedFolderCardProps {
+  folder: WatchedFolder;
   isActive: boolean;
   status: FolderRunStatus;
   onSelect: () => void;
@@ -19,7 +19,7 @@ interface SmartFolderCardProps {
   onFileDrop?: (fileIds: string[]) => void;
 }
 
-export function SmartFolderCard({
+export function WatchedFolderCard({
   folder,
   isActive,
   status,
@@ -27,7 +27,7 @@ export function SmartFolderCard({
   onEdit,
   onDelete,
   onFileDrop,
-}: SmartFolderCardProps) {
+}: WatchedFolderCardProps) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -37,8 +37,8 @@ export function SmartFolderCard({
   const handleDragOver = (e: React.DragEvent) => {
     const types = e.dataTransfer.types;
     if (
-      !types.includes("watchfolderfileid") &&
-      !types.includes("watchfolderfileids")
+      !types.includes("watchedfolderfileid") &&
+      !types.includes("watchedfolderfileids")
     )
       return;
     e.preventDefault();
@@ -51,7 +51,7 @@ export function SmartFolderCard({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    const multiRaw = e.dataTransfer.getData("watchFolderFileIds");
+    const multiRaw = e.dataTransfer.getData("watchedFolderFileIds");
     if (multiRaw) {
       try {
         const ids: string[] = JSON.parse(multiRaw);
@@ -61,7 +61,7 @@ export function SmartFolderCard({
         /* fall through */
       }
     }
-    const fileId = e.dataTransfer.getData("watchFolderFileId");
+    const fileId = e.dataTransfer.getData("watchedFolderFileId");
     if (fileId && onFileDrop) onFileDrop([fileId]);
   };
 
@@ -113,7 +113,7 @@ export function SmartFolderCard({
                 size="xs"
                 variant="subtle"
                 onClick={onEdit}
-                aria-label={t("smartFolders.card.edit", "Edit folder")}
+                aria-label={t("watchedFolders.card.edit", "Edit folder")}
               >
                 <EditIcon style={{ fontSize: 11 }} />
               </ActionIcon>
@@ -123,7 +123,7 @@ export function SmartFolderCard({
                   variant="subtle"
                   color="red"
                   onClick={onDelete}
-                  aria-label={t("smartFolders.card.delete", "Delete folder")}
+                  aria-label={t("watchedFolders.card.delete", "Delete folder")}
                 >
                   <DeleteIcon style={{ fontSize: 11 }} />
                 </ActionIcon>
