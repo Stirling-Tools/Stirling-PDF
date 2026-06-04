@@ -19,6 +19,9 @@ export default function AuthCallback() {
   const processingRef = useRef(false);
 
   useEffect(() => {
+    const startedAt = performance.now();
+    const elapsed = () => `${(performance.now() - startedAt).toFixed(0)}ms`;
+
     const handleCallback = async () => {
       if (
         typeof window !== "undefined" &&
@@ -41,7 +44,9 @@ export default function AuthCallback() {
         const token = new URLSearchParams(hash).get("access_token");
 
         if (!token) {
-          console.error("[AuthCallback] No access_token in URL fragment");
+          console.error(
+            `[AuthCallback] No access_token in URL fragment (${elapsed()})`,
+          );
           navigate("/login", {
             replace: true,
             state: { error: "OAuth login failed - no token received." },
@@ -54,7 +59,10 @@ export default function AuthCallback() {
 
         const { data, error } = await springAuth.getSession();
         if (error || !data.session) {
-          console.error("[AuthCallback] Failed to validate token:", error);
+          console.error(
+            `[AuthCallback] Failed to validate token (${elapsed()}):`,
+            error,
+          );
           localStorage.removeItem("stirling_jwt");
           navigate("/login", {
             replace: true,
@@ -69,9 +77,16 @@ export default function AuthCallback() {
         // This prevents infinite render loop when coming from cross-domain SAML redirect
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        navigate(consumePostLoginRedirectPath() ?? "/", { replace: true });
+        const target = consumePostLoginRedirectPath() ?? "/";
+        console.info(
+          `[AuthCallback] Authenticated ${data.session.user.username} in ${elapsed()}, navigating to ${target}`,
+        );
+        navigate(target, { replace: true });
       } catch (error) {
-        console.error("[AuthCallback] Authentication failed:", error);
+        console.error(
+          `[AuthCallback] Authentication failed (${elapsed()}):`,
+          error,
+        );
         navigate("/login", {
           replace: true,
           state: { error: "OAuth login failed. Please try again." },
