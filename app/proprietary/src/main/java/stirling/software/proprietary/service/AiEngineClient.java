@@ -43,22 +43,23 @@ public class AiEngineClient {
         this.httpClient = httpClient;
     }
 
-    public String post(String path, String jsonBody) throws IOException {
+    public String post(String path, String jsonBody, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
-        return postWithTimeout(path, jsonBody, Duration.ofSeconds(config.getTimeoutSeconds()));
+        return postWithTimeout(
+                path, jsonBody, Duration.ofSeconds(config.getTimeoutSeconds()), userId);
     }
 
     /**
      * POST with an explicit per-call timeout, for heavy operations (e.g. RAG ingestion of a large
      * document) that legitimately take longer than the default timeout.
      */
-    public String postLongRunning(String path, String jsonBody) throws IOException {
+    public String postLongRunning(String path, String jsonBody, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         return postWithTimeout(
-                path, jsonBody, Duration.ofSeconds(config.getLongRunningTimeoutSeconds()));
+                path, jsonBody, Duration.ofSeconds(config.getLongRunningTimeoutSeconds()), userId);
     }
 
-    private String postWithTimeout(String path, String jsonBody, Duration timeout)
+    private String postWithTimeout(String path, String jsonBody, Duration timeout, String userId)
             throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
@@ -69,20 +70,30 @@ public class AiEngineClient {
         String url = config.getUrl().stripTrailing() + path;
         log.debug("Proxying AI engine request to {} (timeout {}s)", url, timeout.toSeconds());
 
-        HttpRequest request =
+        HttpRequest.Builder builder =
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
                         .timeout(timeout)
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                        .build();
-
-        HttpResponse<String> response = sendRequest(request);
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        addUserHeader(builder, userId);
+        HttpResponse<String> response = sendRequest(builder.build());
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
         return response.body();
+    }
+
+    /**
+     * Attach the X-User-Id header so the engine can scope per-user storage (RAG documents, search
+     * results) to the caller. Skipped when {@code userId} is blank: the engine treats the request
+     * as anonymous and refuses any route that requires tenancy.
+     */
+    private static void addUserHeader(HttpRequest.Builder builder, String userId) {
+        if (userId != null && !userId.isBlank()) {
+            builder.header("X-User-Id", userId);
+        }
     }
 
     /**
@@ -94,7 +105,8 @@ public class AiEngineClient {
      * practice line arrival keeps the connection logically alive: as long as the engine emits
      * events, the work is progressing. Genuine engine hangs still hit the total timeout.
      */
-    public void streamPost(String path, String jsonBody, Consumer<String> lineConsumer)
+    public void streamPost(
+            String path, String jsonBody, String userId, Consumer<String> lineConsumer)
             throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
@@ -109,14 +121,15 @@ public class AiEngineClient {
                 url,
                 timeout.toSeconds());
 
-        HttpRequest request =
+        HttpRequest.Builder builder =
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/x-ndjson")
                         .timeout(timeout)
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                        .build();
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        addUserHeader(builder, userId);
+        HttpRequest request = builder.build();
 
         HttpResponse<Stream<String>> response;
         try {
@@ -149,7 +162,36 @@ public class AiEngineClient {
         }
     }
 
-    public String get(String path) throws IOException {
+    /**
+     * DELETE with no body. Used for purging the caller's RAG content on logout. Wraps the same
+     * error envelope as {@link #post} / {@link #get} so callers see a consistent set of {@code
+     * ResponseStatusException}s.
+     */
+    public String delete(String path, String userId) throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        if (!config.isEnabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+        }
+
+        String url = config.getUrl().stripTrailing() + path;
+        log.debug("Proxying AI engine DELETE request to {}", url);
+
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Accept", "application/json")
+                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                        .DELETE();
+        addUserHeader(builder, userId);
+        HttpResponse<String> response = sendRequest(builder.build());
+
+        log.debug("AI engine responded with status {}", response.statusCode());
+        checkResponseStatus(response);
+        return response.body();
+    }
+
+    public String get(String path, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
             throw new ResponseStatusException(
@@ -159,15 +201,14 @@ public class AiEngineClient {
         String url = config.getUrl().stripTrailing() + path;
         log.debug("Proxying AI engine GET request to {}", url);
 
-        HttpRequest request =
+        HttpRequest.Builder builder =
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
                         .header("Accept", "application/json")
                         .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
-                        .GET()
-                        .build();
-
-        HttpResponse<String> response = sendRequest(request);
+                        .GET();
+        addUserHeader(builder, userId);
+        HttpResponse<String> response = sendRequest(builder.build());
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
