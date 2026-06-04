@@ -17,6 +17,21 @@ import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 import { pdfiumWasmModulePromise, startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
+interface ExtendedPdfiumRuntime {
+  HEAPU8: Uint8Array;
+  HEAPF32: Float32Array;
+}
+
+interface PdfiumModuleOverrides extends Partial<PdfiumModule> {
+  instantiateWasm?: (
+    imports: WebAssembly.Imports,
+    successCallback: (
+      instance: WebAssembly.Instance,
+      module: WebAssembly.Module
+    ) => void
+  ) => void;
+}
+
 // PDF form field type constants (matching PDFium C API FPDF_FORMFIELD_* values)
 const FPDF_FORMFIELD_UNKNOWN = 0;
 const FPDF_FORMFIELD_PUSHBUTTON = 1;
@@ -63,7 +78,7 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
     // Ensure eager compilation has started if PDF service is requested before idle timeout
     startEagerWasmCompilation();
 
-    const overrides: Partial<PdfiumModule> = {
+    const overrides: PdfiumModuleOverrides = {
       locateFile: () => wasmUrl(),
     };
 
@@ -100,7 +115,7 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
         });
     };
 
-    _initPromise = init(overrides).then((m) => {
+    _initPromise = init(overrides as Partial<PdfiumModule>).then((m) => {
       // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
       try {
         m.PDFiumExt_Init();
@@ -265,7 +280,7 @@ function copyToWasmHeap(
   bytes: Uint8Array,
   ptr: number,
 ): void {
-  m.pdfium.HEAPU8.set(bytes, ptr);
+  (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
 }
 
 /**
@@ -1378,7 +1393,8 @@ async function renderWidgetAppearance(
   dpr: number,
 ): Promise<ImageData | null> {
   const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-  const matrixView = new Float32Array(m.pdfium.HEAPF32.buffer, matrixPtr, 6);
+  const pdfiumRuntime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
+  const matrixView = new Float32Array(pdfiumRuntime.HEAPF32.buffer, matrixPtr, 6);
   const sx = wDev / pdfW;
   const sy = hDev / pdfH;
   matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
@@ -1402,7 +1418,7 @@ async function renderWidgetAppearance(
   let imageData: ImageData | null = null;
   if (ok) {
     const rgba = new Uint8ClampedArray(
-      m.pdfium.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+      pdfiumRuntime.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
     );
     let hasVisible = false;
     for (let i = 3; i < rgba.length; i += 4) {
@@ -1455,7 +1471,7 @@ async function renderWidgetAppearance(
     m.FPDFBitmap_Destroy(bmp2);
 
     const rgba2 = new Uint8ClampedArray(
-      m.pdfium.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+      pdfiumRuntime.HEAPU8.buffer.slice(heap2, heap2 + bytes),
     );
     let hasVisible2 = false;
     for (let i = 3; i < rgba2.length; i += 4) {
@@ -1613,8 +1629,9 @@ export async function renderSignatureFieldAppearances(
           const sx = wDev / pdfW;
           const sy = hDev / pdfH;
           const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+          const pdfiumRuntime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
           const matrixView = new Float32Array(
-            m.pdfium.HEAPF32.buffer,
+            pdfiumRuntime.HEAPF32.buffer,
             matrixPtr,
             6,
           );
@@ -1639,7 +1656,7 @@ export async function renderSignatureFieldAppearances(
 
           if (ok) {
             const rgba = new Uint8ClampedArray(
-              m.pdfium.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+              pdfiumRuntime.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
             );
             let hasVisible = false;
             for (let i = 3; i < rgba.length; i += 4) {
@@ -1699,7 +1716,7 @@ export async function renderSignatureFieldAppearances(
             m.FPDFBitmap_Destroy(bmp2);
 
             const rgba2 = new Uint8ClampedArray(
-              m.pdfium.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+              pdfiumRuntime.HEAPU8.buffer.slice(heap2, heap2 + bytes),
             );
             let hasVisible2 = false;
             for (let i = 3; i < rgba2.length; i += 4) {
