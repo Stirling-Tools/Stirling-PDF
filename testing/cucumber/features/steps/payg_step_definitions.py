@@ -236,16 +236,12 @@ def step_clear_shadow_charges(context, team_name):
             )
 
 
-@given("the SaaS stack is restarted with payg.filter.enabled = {value}")
-def step_restart_with_filter_toggle(context, value):
-    # Implementation depends on how the harness manages compose state — see
-    # the TODO at the top of the file. For now mark this scenario as
-    # requiring manual coordination. The harness wrapper in testing/test.sh
-    # (saas variant) flips the env var and restarts the container.
-    raise NotImplementedError(
-        "Filter-restart steps require a harness hook — see testing/test.sh saas variant TODO. "
-        "Tag the scenario @manual until the restart hook lands."
-    )
+# NOTE: The kill-switch scenario (PAYG_FILTER_ENABLED=false) is verified
+# manually — see notes/PAYG_DESIGN.md §7.5 "PAYG cucumber: manual-only
+# scenarios" for the procedure. No automated step def is provided because
+# toggling the env var requires restarting the docker container, and
+# orchestrating that mid-suite would couple test setup to compose state
+# in ways that have historically been fragile.
 
 
 # ---------------------------------------------------------------------------

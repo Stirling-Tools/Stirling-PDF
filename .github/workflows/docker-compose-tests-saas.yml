@@ -1,0 +1,135 @@
+name: Docker Compose Cucumber tests (saas / PAYG)
+
+# Self-contained CI job for the PAYG shadow-mode cucumber scenarios.
+# Triggers only on PAYG-relevant paths so we don't add CI minutes to every PR
+# that doesn't touch the saas flavour.
+#
+# Companion to `docker-compose-tests.yml` (which runs against the
+# proprietary-flavour stack and skips features/payg via behave.ini's
+# exclude_re). Kept as a separate workflow so the saas matrix can fail and
+# succeed independently without touching the main cucumber harness.
+
+on:
+  pull_request:
+    paths:
+      - "app/saas/**"
+      - "testing/cucumber/features/payg/**"
+      - "testing/cucumber/features/steps/payg_step_definitions.py"
+      - "testing/cucumber/requirements.txt"
+      - "testing/compose/docker-compose-saas.yml"
+      - "testing/compose/payg/**"
+      - "testing/test-payg.sh"
+      - ".github/workflows/docker-compose-tests-saas.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/saas/**"
+      - "testing/cucumber/features/payg/**"
+      - "testing/cucumber/features/steps/payg_step_definitions.py"
+      - "testing/cucumber/requirements.txt"
+      - "testing/compose/docker-compose-saas.yml"
+      - "testing/compose/payg/**"
+      - "testing/test-payg.sh"
+      - ".github/workflows/docker-compose-tests-saas.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  docker-compose-tests-saas:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    permissions:
+      actions: write
+      contents: read
+      checks: write
+    env:
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-saas-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Expose GitHub runtime for Buildx cache
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: ./testing/cucumber/requirements.txt
+
+      - name: Pip requirements
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
+
+      - name: Run PAYG Cucumber Tests
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+        run: |
+          chmod +x ./testing/test-payg.sh
+          ./testing/test-payg.sh
+
+      - name: Dump saas container logs on failure
+        if: failure()
+        run: |
+          docker compose -f testing/compose/docker-compose-saas.yml logs --tail 500 stirling-pdf-saas || true
+          docker compose -f testing/compose/docker-compose-saas.yml logs --tail 200 postgres-saas || true
+
+      - name: Upload PAYG Cucumber Report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: payg-cucumber-report
+          path: testing/cucumber/report-payg.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: PAYG Cucumber Test Report
+        if: always()
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: PAYG Cucumber Tests
+          path: testing/cucumber/junit-payg/*.xml
+          reporter: java-junit
+          fail-on-error: false

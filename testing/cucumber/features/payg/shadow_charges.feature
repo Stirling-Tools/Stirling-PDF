@@ -36,24 +36,11 @@ Feature: PAYG shadow-mode charging
     And the latest job has step_count = 2
     And the latest job is OPEN
 
-  @manual
-  Scenario: 5xx first-step failure marks the row REFUNDED and closes the job
-    # No reliably-5xx-ing tool endpoint exists in current Stirling — every
-    # tool handles bad input as 4xx via GlobalExceptionHandler. The only
-    # 5xx triggers I found were Spring 404-as-500 fallbacks (endpoint doesn't
-    # exist), which never hit our interceptor (no HandlerMethod, no
-    # @AutoJobPostMapping). The refund-and-close engine path itself is unit-
-    # tested in PaygChargeInterceptorTest.afterCompletion_5xx_opened_*.
-    # When a tool that genuinely 5xxs on the server side appears (or when
-    # we add a test-only debug endpoint), drop the @manual tag and swap in.
-    Given there are no existing shadow charges for team "payg-cucumber-team"
-    When I POST a single-page PDF to "/api/v1/security/add-password"
-    Then the response status is >= 500
-    And exactly 1 shadow charge row exists for team "payg-cucumber-team"
-    And the latest shadow charge row has status "REFUNDED"
-    And the latest shadow charge row's refunded_at is not null
-    And the latest shadow charge row's refund_reason starts with "first-step-5xx:"
-    And the latest job is CLOSED
+  # ──────────────────────────────────────────────────────────────────────────
+  # NOTE: 5xx-refund + kill-switch scenarios are NOT automated.
+  # Both require manual verification — see notes/PAYG_DESIGN.md §7.5
+  # "PAYG cucumber: manual-only scenarios" for the procedure.
+  # ──────────────────────────────────────────────────────────────────────────
 
   Scenario: 4xx leaves the shadow row CHARGED (customer pays for the attempt)
     # /sanitize-pdf on an encrypted PDF without the password reliably 400s
@@ -98,21 +85,3 @@ Feature: PAYG shadow-mode charging
     Then the response status is 200
     And exactly 1 shadow charge row exists for team "payg-cucumber-team"
     And the latest job's source is "PIPELINE"
-
-  @manual
-  Scenario: Disabling the filter via config produces zero shadow rows
-    # Verifies the kill-switch documented in PAYG_FILTER_DESIGN.md §16 / §19.
-    # Tagged @manual — restart hook isn't implemented in the harness yet. To
-    # run this manually:
-    #   1) docker compose -f testing/compose/docker-compose-saas.yml down
-    #   2) Edit docker-compose-saas.yml: PAYG_FILTER_ENABLED: "false"
-    #   3) docker compose up -d; ./testing/test-payg.sh
-    #   4) Verify SELECT COUNT(*) FROM payg_shadow_charge returns 0
-    # Restoring the flag to "true" for the next manual run is left to the
-    # operator until the harness hook lands.
-    Given there are no existing shadow charges for team "payg-cucumber-team"
-    And the SaaS stack is restarted with payg.filter.enabled = false
-    When I POST a single-page PDF to "/api/v1/security/add-password"
-    Then the response status is 200
-    And exactly 0 shadow charge rows exist for team "payg-cucumber-team"
-    Given the SaaS stack is restarted with payg.filter.enabled = true

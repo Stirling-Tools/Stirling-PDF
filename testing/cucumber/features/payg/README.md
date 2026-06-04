@@ -19,48 +19,29 @@ That script:
 4. Runs `python -m behave features/payg`
 5. Tears the stack down
 
-## What's covered
+## What's covered (automated, run by `docker-compose-tests-saas.yml` on CI)
 
 | Scenario | Validates |
 |---|---|
 | First tool call writes a CHARGED row | Filter + interceptor fire end-to-end; shadow row written |
 | Lineage join — second call on output | `JobService.joinOrOpen` lineage matching; no new shadow row |
-| 5xx first-step failure → REFUNDED + CLOSED | `markFirstStepFailed` shadow + process lifecycle |
 | 4xx leaves the row CHARGED | "customer paid for the attempt" semantics |
 | ZIP-returning tool records per-PDF OUTPUT | `PaygOutputExtractor` unpacks + records signatures |
 | Multi-file input writes a single shadow row | Multi-input group sizing |
 | `X-Stirling-Automation` sets PIPELINE source | Header → `JobSource` detection |
-| `payg.filter.enabled = false` writes 0 rows | Kill-switch |
 
-## What still needs work before this is CI-ready
+## Manual-only scenarios
 
-This PR lands the scaffolding. A few things still need to slot together
-before the saas-cucumber job goes green in CI:
+Two parts of the shadow engine can't reasonably be driven from this suite
+and are verified by hand each time their code paths change. The procedures
+live in `notes/PAYG_DESIGN.md` §7.5 "PAYG cucumber: manual-only scenarios".
 
-1. **The "filter-toggle restart" step is `NotImplementedError`.** The
-   scenario that exercises `payg.filter.enabled = false` needs a harness
-   hook that flips the env var on the running container and waits for
-   re-health. The Postgres seed approach used by every other scenario
-   doesn't apply here — it's a Spring property. Two options for the
-   follow-up: (a) a docker-compose override that the harness `up -d`'s
-   over the base, or (b) two separate compose runs of the same suite.
-2. **Test user seed timing.** `saas-seed.sql` inserts into
-   `stirling_pdf.users` / `team_memberships` after Flyway has run, but
-   the JPA entity for the legacy `User` table may have additional NOT
-   NULL columns the seed doesn't populate. Run once locally and adjust.
-3. **API-key auth path under saas profile.** The compose disables the
-   OAuth2 resource-server auto-config so the Supabase JWT filter no-ops,
-   but the legacy `SECURITY_CUSTOMGLOBALAPIKEY` filter may not be wired
-   under the saas profile by default. May need a small profile-conditional
-   `@Configuration` to ensure API-key auth works in saas-test mode.
-4. **CI job.** `.github/workflows/docker-compose-tests-saas.yml` (new)
-   should be modelled after the existing `docker-compose-tests.yml` but
-   call `test-payg.sh` instead of `test.sh`. Wired in once the local
-   harness is reliably green.
-
-The Gherkin scenarios are the contract. Treat them as the agreed test
-surface; the items above are infrastructure to get those scenarios passing
-in CI rather than scope changes.
+- **5xx first-step → REFUNDED + CLOSED.** No reliably-5xx-ing tool endpoint
+  exists in current Stirling. Engine path is unit-tested in
+  `PaygChargeInterceptorTest.afterCompletion_5xx_opened_*`.
+- **Kill-switch (`PAYG_FILTER_ENABLED=false`).** Needs a docker-container
+  restart mid-suite; orchestrating that in behave is more harness fragility
+  than it's worth for a flag that's only flipped during incident response.
 
 ## Fixtures
 
