@@ -186,10 +186,7 @@ public class AiWorkflowService {
         WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
         initialRequest.setUserMessage(request.getUserMessage().trim());
         initialRequest.setFiles(files);
-        initialRequest.setConversationHistory(
-                request.getConversationHistory() == null
-                        ? new ArrayList<>()
-                        : new ArrayList<>(request.getConversationHistory()));
+        initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
@@ -232,6 +229,12 @@ public class AiWorkflowService {
             WorkflowTurnRequest request,
             ProgressListener listener)
             throws IOException {
+        if (filesById.isEmpty()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "No files were uploaded. Please add a PDF to the workbench first."));
+        }
+
         if (!request.getArtifacts().isEmpty()) {
             return new WorkflowState.Terminal(
                     cannotContinue("AI engine requested content extraction more than once."));
