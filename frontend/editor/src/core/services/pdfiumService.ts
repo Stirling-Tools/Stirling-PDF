@@ -12,9 +12,16 @@
  * `getSignatures`, `saveAsCopy`, …) wrap the `PdfEngine` interface so callers
  * never have to deal with raw pointers or Tasks.
  */
-import { init, type WrappedPdfiumModule, type PdfiumModule } from "@embedpdf/pdfium";
+import {
+  init,
+  type WrappedPdfiumModule,
+  type PdfiumModule,
+} from "@embedpdf/pdfium";
 import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
-import { pdfiumWasmModulePromise, startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
+import {
+  pdfiumWasmModulePromise,
+  startEagerWasmCompilation,
+} from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
 interface ExtendedPdfiumRuntime {
@@ -28,8 +35,8 @@ interface PdfiumModuleOverrides extends Partial<PdfiumModule> {
     imports: WebAssembly.Imports,
     successCallback: (
       instance: WebAssembly.Instance,
-      module: WebAssembly.Module
-    ) => void
+      module: WebAssembly.Module,
+    ) => void,
   ) => void;
 }
 
@@ -88,8 +95,8 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
       imports: WebAssembly.Imports,
       successCallback: (
         instance: WebAssembly.Instance,
-        module: WebAssembly.Module
-      ) => void
+        module: WebAssembly.Module,
+      ) => void,
     ) => {
       pdfiumWasmModulePromise
         .then((wasmModule) => {
@@ -241,9 +248,7 @@ export function readEffectivePageBox(
   let result: PageBox | null = null;
   try {
     // CropBox is the effective visible area
-    if (
-      m.FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
-    ) {
+    if (m.FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)) {
       result = read();
     }
     // Fall back to MediaBox
@@ -1395,7 +1400,11 @@ async function renderWidgetAppearance(
 ): Promise<ImageData | null> {
   const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
   const pdfiumRuntime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
-  const matrixView = new Float32Array(pdfiumRuntime.HEAPF32.buffer, matrixPtr, 6);
+  const matrixView = new Float32Array(
+    pdfiumRuntime.HEAPF32.buffer,
+    matrixPtr,
+    6,
+  );
   const sx = wDev / pdfW;
   const sy = hDev / pdfH;
   matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
@@ -1630,7 +1639,8 @@ export async function renderSignatureFieldAppearances(
           const sx = wDev / pdfW;
           const sy = hDev / pdfH;
           const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-          const pdfiumRuntime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
+          const pdfiumRuntime = m.pdfium as typeof m.pdfium &
+            ExtendedPdfiumRuntime;
           const matrixView = new Float32Array(
             pdfiumRuntime.HEAPF32.buffer,
             matrixPtr,

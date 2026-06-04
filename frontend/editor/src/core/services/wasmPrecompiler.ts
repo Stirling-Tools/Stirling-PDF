@@ -3,9 +3,11 @@ import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 let resolvePromise: (module: WebAssembly.Module | null) => void;
 let compilationStarted = false;
 
-export const pdfiumWasmModulePromise = new Promise<WebAssembly.Module | null>((resolve) => {
-  resolvePromise = resolve;
-});
+export const pdfiumWasmModulePromise = new Promise<WebAssembly.Module | null>(
+  (resolve) => {
+    resolvePromise = resolve;
+  },
+);
 
 export function startEagerWasmCompilation(): void {
   if (compilationStarted) return;
