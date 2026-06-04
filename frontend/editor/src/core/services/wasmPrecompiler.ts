@@ -1,9 +1,16 @@
-import { absoluteWithBasePath } from "@app/constants/app";
+import { BASE_PATH } from "@app/constants/app";
 import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 
-export const pdfiumWasmUrl = import.meta.env.DEV
-  ? absoluteWithBasePath("/pdfium/pdfium.wasm")
-  : pdfiumWasmAssetUrl;
+const getWasmUrl = (): string => {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  if (import.meta.env.DEV) {
+    return `${origin}${BASE_PATH}/pdfium/pdfium.wasm`;
+  }
+  const cleanAssetUrl = pdfiumWasmAssetUrl.replace(/^\.\//, "").replace(/^\//, "");
+  return `${origin}${BASE_PATH}/${cleanAssetUrl}`;
+};
+
+export const pdfiumWasmUrl = getWasmUrl();
 
 let resolvePromise: (module: WebAssembly.Module | null) => void;
 let compilationStarted = false;
