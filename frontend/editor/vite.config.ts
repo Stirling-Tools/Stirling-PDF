@@ -19,11 +19,7 @@ function compressStaticCopyPlugin(): PluginOption {
     apply: "build" as const,
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
-      const targets = [
-        "pdfium",
-        "vendor",
-        "pdfjs",
-      ];
+      const targets = ["pdfium", "vendor", "pdfjs"];
 
       const excludedExtensions = [
         ".gz",
