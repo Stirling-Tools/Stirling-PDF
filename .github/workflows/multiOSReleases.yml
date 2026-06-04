@@ -588,26 +588,37 @@ jobs:
           mkdir -p "$DIST"
           cd ./frontend/editor/src-tauri/target
 
-          # Find and rename artifacts based on platform
+          # Diagnostic: show every installer + signature Tauri produced so the
+          # exact updater artifact names are visible in the build log.
+          echo "=== tauri bundle artifacts ==="
+          find . -path "*/bundle/*" \( -name "*.msi" -o -name "*.deb" \
+            -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.dmg" \
+            -o -name "*.app.tar.gz" -o -name "*.sig" \) 2>/dev/null | sort || true
+          echo "=============================="
+
+          # With bundle.createUpdaterArtifacts = true each NATIVE installer is
+          # also its own updater payload and gets a sibling .sig (the minisign
+          # updater signature). We ship the installer (manual download) plus the
+          # .sig (consumed when building latest.json) for every format.
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
-            # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
-            # are not the user-facing installer - the MSI contains the signed inner exe.
+            # MSI is both the user-facing installer and the updater payload.
             find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
-            find . -name "*.msi.zip" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi.zip" \;
-            find . -name "*.msi.zip.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi.zip.sig" \;
-            find . -name "*.nsis.zip" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.nsis.zip" \;
-            find . -name "*.nsis.zip.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.nsis.zip.sig" \;
+            find . -name "*.msi.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi.sig" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
+            # DMG = manual install; .app.tar.gz (+ .sig) = updater payload.
+            # The raw .app is intentionally not shipped - it is just the
+            # uncompressed input and would bloat the artifact by hundreds of MB.
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
-            # NOTE: we deliberately do NOT copy the raw .app bundle. It is the
-            # uncompressed input to both the .dmg (manual install) and the
-            # .app.tar.gz (updater payload), so shipping it too just bloats the
-            # artifact by hundreds of MB and is never attached to the release.
             find . -name "*.app.tar.gz" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz" \;
             find . -name "*.app.tar.gz.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz.sig" \;
           else
+            # Linux: deb and rpm are each their own (signed) updater payload;
+            # AppImage updates from the .AppImage.tar.gz. Ship the raw .AppImage
+            # as the manual download plus the .tar.gz for the updater.
             find . -name "*.deb" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.deb.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb.sig" \;
             find . -name "*.rpm" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm" \;
+            find . -name "*.rpm.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm.sig" \;
             find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
             find . -name "*.AppImage.tar.gz" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.tar.gz" \;
             find . -name "*.AppImage.tar.gz.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.tar.gz.sig" \;
@@ -682,30 +693,39 @@ jobs:
 
           ART = Path('./artifacts/tauri')
 
-          # Each platform's updater payload, keyed by the renamed bundle
-          # filename. We search RECURSIVELY because actions/download-artifact
-          # changes layout based on how many artifacts match its pattern:
-          #   - multiple (a real all-platform release) -> one subdir per
-          #     artifact: ./artifacts/tauri/<artifact-name>/<file>
-          #   - exactly one (a single-platform test build) -> files land
-          #     straight in ./artifacts/tauri/<file>
-          # Matching by unique filename anywhere under ART handles both.
-          # macOS universal binary maps to BOTH darwin targets.
+          # One manifest entry per (platform, install format). The Tauri updater
+          # looks up "{os}-{arch}-{installer}" (e.g. linux-x86_64-deb) before the
+          # bare "{os}-{arch}", so publishing per-format Linux keys lets deb, rpm
+          # and AppImage installs each self-update from their own matching file.
+          # With bundle.createUpdaterArtifacts = true the native .deb/.rpm/.msi
+          # are signed in place; AppImage and macOS use their .tar.gz payload.
+          #
+          # 'bundles' are the renamed filenames from the Rename step. We search
+          # RECURSIVELY because actions/download-artifact changes layout by match
+          # count: multiple artifacts -> ./artifacts/tauri/<name>/<file>; a lone
+          # artifact -> straight into ./artifacts/tauri/<file>. Matching by unique
+          # filename anywhere under ART handles both.
           PLATFORM_MAP = [
               {
-                  'bundles': ['Stirling-PDF-linux-x86_64.AppImage.tar.gz'],
-                  'targets': ['linux-x86_64'],
+                  'bundles': ['Stirling-PDF-linux-x86_64.deb'],
+                  'targets': ['linux-x86_64-deb'],
               },
               {
-                  # bundle.targets in tauri.conf.json is "msi"; nsis is a
-                  # defensive fallback if that config ever changes.
-                  'bundles': [
-                      'Stirling-PDF-windows-x86_64.msi.zip',
-                      'Stirling-PDF-windows-x86_64.nsis.zip',
-                  ],
+                  'bundles': ['Stirling-PDF-linux-x86_64.rpm'],
+                  'targets': ['linux-x86_64-rpm'],
+              },
+              {
+                  'bundles': ['Stirling-PDF-linux-x86_64.AppImage.tar.gz'],
+                  'targets': ['linux-x86_64-appimage'],
+              },
+              {
+                  # Updater looks up windows-x86_64-msi then falls back to the
+                  # bare windows-x86_64, so this single key serves msi installs.
+                  'bundles': ['Stirling-PDF-windows-x86_64.msi'],
                   'targets': ['windows-x86_64'],
               },
               {
+                  # macOS universal: both arches share the one universal bundle.
                   'bundles': ['Stirling-PDF-macos-universal.app.tar.gz'],
                   'targets': ['darwin-x86_64', 'darwin-aarch64'],
               },
@@ -779,11 +799,13 @@ jobs:
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
+          # Attach installers (manual download) + updater payloads + manifest.
+          # createUpdaterArtifacts:true uses the native .msi/.deb/.rpm directly
+          # as updater payloads (no more .msi.zip/.nsis.zip wrappers). The .sig
+          # files are NOT uploaded - their contents are embedded in latest.json.
           files: |
             ./artifacts/**/*.jar
             ./artifacts/**/*.msi
-            ./artifacts/**/*.msi.zip
-            ./artifacts/**/*.nsis.zip
             ./artifacts/**/*.dmg
             ./artifacts/**/*.app.tar.gz
             ./artifacts/**/*.deb
