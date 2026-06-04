@@ -2,7 +2,7 @@ dist/
 dist-portal/
 editor/dist/
 # Tauri/Cargo build output (binary assets named *.js etc. confuse Prettier).
-# Match nested target/ dirs too — provisioner/ and thumbnail-handler/ each
+# Match nested target/ dirs too - provisioner/ and thumbnail-handler/ each
 # have their own Cargo workspace under src-tauri/.
 editor/src-tauri/**/target/
 editor/src-tauri/gen/
