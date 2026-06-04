@@ -89,7 +89,7 @@ import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
-import { absoluteWithBasePath } from "@app/constants/app";
+import pdfiumWasmUrl from "@embedpdf/pdfium/dist/pdfium.wasm?url";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
@@ -296,7 +296,7 @@ export function LocalEmbedPDF({
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
-    wasmUrl: absoluteWithBasePath("/pdfium/pdfium.wasm"),
+    wasmUrl: pdfiumWasmUrl,
   });
 
   // Early return if no file or URL provided

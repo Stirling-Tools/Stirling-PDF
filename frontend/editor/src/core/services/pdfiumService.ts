@@ -12,7 +12,9 @@
  * `getSignatures`, `saveAsCopy`, …) wrap the `PdfEngine` interface so callers
  * never have to deal with raw pointers or Tasks.
  */
-import { init, type WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { init, type WrappedPdfiumModule, type PdfiumModule } from "@embedpdf/pdfium";
+import pdfiumWasmUrl from "@embedpdf/pdfium/dist/pdfium.wasm?url";
+import { pdfiumWasmModulePromise, startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
 // PDF form field type constants (matching PDFium C API FPDF_FORMFIELD_* values)
@@ -46,8 +48,7 @@ let _module: WrappedPdfiumModule | null = null;
  * Resolve the absolute WASM URL using the same pattern as LocalEmbedPDF.
  */
 function wasmUrl(): string {
-  const base = (import.meta as any).env?.BASE_URL ?? "/";
-  return `${base}pdfium/pdfium.wasm`.replace(/\/\//g, "/");
+  return pdfiumWasmUrl;
 }
 
 /**
@@ -60,45 +61,46 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
   if (_module) return _module;
   if (!_initPromise) {
     // Ensure eager compilation has started if PDF service is requested before idle timeout
-    if (typeof (window as any).startEagerWasmCompilation === "function") {
-      (window as any).startEagerWasmCompilation();
-    }
+    startEagerWasmCompilation();
 
-    const overrides: any = {
+    const overrides: Partial<PdfiumModule> = {
       locateFile: () => wasmUrl(),
     };
 
     // Eagerly reuse pre-compiled WASM module from app boot if available
-    const precompiledPromise = (window as any).__pdfiumWasmModulePromise;
-    if (precompiledPromise) {
-      overrides.instantiateWasm = (imports: any, successCallback: any) => {
-        precompiledPromise
-          .then((wasmModule: any) => {
-            if (wasmModule) {
-              return WebAssembly.instantiate(wasmModule, imports).then(
-                (instance) => {
-                  successCallback(instance, wasmModule);
-                },
-              );
-            } else {
-              throw new Error("No pre-compiled WASM module found");
-            }
-          })
-          .catch((err: any) => {
-            console.warn(
-              "Eager WebAssembly instantiation failed, falling back to streaming compilation:",
-              err,
-            );
-            WebAssembly.instantiateStreaming(fetch(wasmUrl()), imports).then(
-              (result) => {
-                successCallback(result.instance, result.module);
+    overrides.instantiateWasm = (
+      imports: WebAssembly.Imports,
+      successCallback: (
+        instance: WebAssembly.Instance,
+        module: WebAssembly.Module
+      ) => void
+    ) => {
+      pdfiumWasmModulePromise
+        .then((wasmModule) => {
+          if (wasmModule) {
+            return WebAssembly.instantiate(wasmModule, imports).then(
+              (instance) => {
+                successCallback(instance, wasmModule);
               },
             );
-          });
-      };
-    }
+          } else {
+            throw new Error("No pre-compiled WASM module found");
+          }
+        })
+        .catch((err: unknown) => {
+          console.warn(
+            "Eager WebAssembly instantiation failed, falling back to streaming compilation:",
+            err,
+          );
+          WebAssembly.instantiateStreaming(fetch(wasmUrl()), imports).then(
+            (result) => {
+              successCallback(result.instance, result.module);
+            },
+          );
+        });
+    };
 
-    _initPromise = init(overrides as any).then((m) => {
+    _initPromise = init(overrides).then((m) => {
       // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
       try {
         m.PDFiumExt_Init();
@@ -147,9 +149,9 @@ export function readAnnotRectAdjusted(
   annotPtr: number,
   rectBuf: number,
 ): boolean {
-  const ext = (m as any).EPDFAnnot_GetRect;
+  const ext = m.EPDFAnnot_GetRect;
   if (typeof ext === "function") {
-    return ext.call(m, annotPtr, rectBuf);
+    return ext(annotPtr, rectBuf);
   }
   return m.FPDFAnnot_GetRect(annotPtr, rectBuf);
 }
@@ -224,14 +226,14 @@ export function readEffectivePageBox(
   try {
     // CropBox is the effective visible area
     if (
-      (m as any).FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
+      m.FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
     ) {
       result = read();
     }
     // Fall back to MediaBox
     if (
       !result &&
-      (m as any).FPDFPage_GetMediaBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
+      m.FPDFPage_GetMediaBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
     ) {
       result = read();
     }
@@ -263,7 +265,7 @@ function copyToWasmHeap(
   bytes: Uint8Array,
   ptr: number,
 ): void {
-  new Uint8Array((m.pdfium.wasmExports as any).memory.buffer).set(bytes, ptr);
+  m.pdfium.HEAPU8.set(bytes, ptr);
 }
 
 /**
@@ -1375,9 +1377,8 @@ async function renderWidgetAppearance(
   formEnvPtr: number,
   dpr: number,
 ): Promise<ImageData | null> {
-  const pdfiumWasm = m.pdfium as any;
   const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-  const matrixView = new Float32Array(pdfiumWasm.HEAPF32.buffer, matrixPtr, 6);
+  const matrixView = new Float32Array(m.pdfium.HEAPF32.buffer, matrixPtr, 6);
   const sx = wDev / pdfW;
   const sy = hDev / pdfH;
   matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
@@ -1401,7 +1402,7 @@ async function renderWidgetAppearance(
   let imageData: ImageData | null = null;
   if (ok) {
     const rgba = new Uint8ClampedArray(
-      pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+      m.pdfium.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
     );
     let hasVisible = false;
     for (let i = 3; i < rgba.length; i += 4) {
@@ -1454,7 +1455,7 @@ async function renderWidgetAppearance(
     m.FPDFBitmap_Destroy(bmp2);
 
     const rgba2 = new Uint8ClampedArray(
-      pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+      m.pdfium.HEAPU8.buffer.slice(heap2, heap2 + bytes),
     );
     let hasVisible2 = false;
     for (let i = 3; i < rgba2.length; i += 4) {
@@ -1597,8 +1598,6 @@ export async function renderSignatureFieldAppearances(
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
           const bytes = stride * hDev;
-          const pdfiumWasm = m.pdfium as any;
-
           const heapPtr = m.pdfium.wasmExports.malloc(bytes);
           const bitmapPtr = m.FPDFBitmap_CreateEx(
             wDev,
@@ -1615,7 +1614,7 @@ export async function renderSignatureFieldAppearances(
           const sy = hDev / pdfH;
           const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
           const matrixView = new Float32Array(
-            pdfiumWasm.HEAPF32.buffer,
+            m.pdfium.HEAPF32.buffer,
             matrixPtr,
             6,
           );
@@ -1640,7 +1639,7 @@ export async function renderSignatureFieldAppearances(
 
           if (ok) {
             const rgba = new Uint8ClampedArray(
-              pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+              m.pdfium.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
             );
             let hasVisible = false;
             for (let i = 3; i < rgba.length; i += 4) {
@@ -1700,7 +1699,7 @@ export async function renderSignatureFieldAppearances(
             m.FPDFBitmap_Destroy(bmp2);
 
             const rgba2 = new Uint8ClampedArray(
-              pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+              m.pdfium.HEAPU8.buffer.slice(heap2, heap2 + bytes),
             );
             let hasVisible2 = false;
             for (let i = 3; i < rgba2.length; i += 4) {

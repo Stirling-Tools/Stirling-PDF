@@ -17,41 +17,7 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 import { BASE_PATH } from "@app/constants/app";
 
-// Eagerly pre-compile the self-hosted PDFium WASM binary at application boot.
-// This runs in the background, delayed until the main application finishes mounting
-// to avoid network and CPU resource competition with the initial UI render.
-let resolvePromise: any;
-(window as any).__pdfiumWasmModulePromise = new Promise((resolve) => {
-  resolvePromise = resolve;
-});
-
-let compilationStarted = false;
-const startEagerWasmCompilation = () => {
-  if (compilationStarted) return;
-  compilationStarted = true;
-
-  const base = (import.meta as any).env?.BASE_URL ?? "/";
-  const wasmUrl = `${base}pdfium/pdfium.wasm`.replace(/\/\//g, "/");
-
-  if (
-    typeof WebAssembly === "object" &&
-    typeof WebAssembly.compileStreaming === "function"
-  ) {
-    WebAssembly.compileStreaming(fetch(wasmUrl))
-      .then(resolvePromise)
-      .catch((err) => {
-        console.warn(
-          "Eager WASM compilation failed or not supported in this environment:",
-          err,
-        );
-        resolvePromise(null);
-      });
-  } else {
-    resolvePromise(null);
-  }
-};
-
-(window as any).startEagerWasmCompilation = startEagerWasmCompilation;
+import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
 if (typeof window !== "undefined") {
   const scheduleCompilation = () => {
