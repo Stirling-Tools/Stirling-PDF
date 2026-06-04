@@ -1,6 +1,7 @@
 package stirling.software.SPDF;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +30,8 @@ import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
+import app.photofox.vipsffm.Vips;
+
 @Slf4j
 @EnableScheduling
 @SpringBootApplication(
@@ -39,6 +42,22 @@ import stirling.software.common.model.ApplicationProperties;
             "stirling.software.saas"
         })
 public class SPDFApplication {
+
+    static {
+        try {
+            Vips.init();
+            // Disable operation cache to prevent memory bloat in long-running server
+            Vips.disableOperationCache();
+            // allowUntrustedOperations is required for loading from streams/buffers (VSource/VBlob)
+            // which are used throughout the application for efficiency and security.
+            Vips.allowUntrustedOperations();
+
+            log.info("libvips initialized)");
+        } catch (Throwable e) {
+            log.warn(
+                    "Failed to initialize libvips: {}. Rendering may be degraded.", e.getMessage());
+        }
+    }
 
     private static final Pattern PORT_SUFFIX_PATTERN = Pattern.compile(".+:\\d+$");
     private static final Pattern URL_SCHEME_PATTERN =
@@ -266,7 +285,7 @@ public class SPDFApplication {
         Integer parsedPort = parsePort(port);
 
         try {
-            java.net.URI uri = new java.net.URI(baseForParsing);
+            URI uri = new URI(baseForParsing);
             String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
             String host = uri.getHost();
             if (host == null) {
@@ -283,8 +302,8 @@ public class SPDFApplication {
                 effectivePort = parsedPort;
             }
 
-            java.net.URI rebuilt =
-                    new java.net.URI(
+            URI rebuilt =
+                    new URI(
                             scheme,
                             uri.getUserInfo(),
                             host,
@@ -293,7 +312,7 @@ public class SPDFApplication {
                             uri.getQuery(),
                             uri.getFragment());
             return rebuilt.toString();
-        } catch (java.net.URISyntaxException e) {
+        } catch (URISyntaxException e) {
             return appendPortFallback(trimmedBase, parsedPort);
         }
     }

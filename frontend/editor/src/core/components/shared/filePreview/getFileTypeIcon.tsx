@@ -24,6 +24,11 @@ export const IMAGE_EXTS = new Set([
   "bmp",
   "tiff",
   "tif",
+  "heic",
+  "heif",
+  "avif",
+  "jxl",
+  "jp2",
 ]);
 export const ARCHIVE_EXTS = new Set([
   "zip",

@@ -14,7 +14,9 @@ public class ConvertToImageRequest extends PDFWithPageNums {
     @Schema(
             description = "The output image format",
             defaultValue = "png",
-            allowableValues = {"png", "jpeg", "jpg", "gif", "webp"},
+            allowableValues = {
+                "png", "jpeg", "jpg", "gif", "tiff", "webp", "heic", "heif", "avif", "jxl"
+            },
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String imageFormat;
 
