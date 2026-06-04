@@ -7,82 +7,32 @@
  * Run: npx playwright test watch-folders --project=chromium --reporter=list
  */
 
-import { test, expect, Page } from "@playwright/test";
-
-const USER = process.env.STIRLING_USER ?? "admin";
-const PASS = process.env.STIRLING_PASS ?? "stirling";
+import type { Page } from "@playwright/test";
+import { test, expect } from "@app/tests/helpers/test-base";
+import { loginAndSetup } from "@app/tests/helpers/login";
 
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-async function loginViaApi(page: Page): Promise<string> {
-  const result = await page.evaluate(
-    async ({ user, pass }) => {
-      const r = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username: user, password: pass }),
-      });
-      const body = await r.json().catch(() => ({}));
-      const token = body.token ?? body.session?.access_token ?? null;
-      if (token) {
-        localStorage.setItem("stirling_jwt", token);
-        window.dispatchEvent(new CustomEvent("jwt-available"));
-      }
-      return { ok: r.ok, hasToken: !!token, token: token as string | null };
-    },
-    { user: USER, pass: PASS },
+// Watch Folders ships behind the WATCH_FOLDERS_ENABLED flag, which is off in
+// every build today, so its entry points never render. This live suite is
+// therefore skipped unless the app under test is built with the feature enabled
+// and the runner opts in via WATCH_FOLDERS_E2E=1. When re-enabling, also revisit
+// the sidebar entry point (the old QuickAccessBar button no longer exists).
+test.beforeEach(() => {
+  const enabled = ["1", "true"].includes(process.env.WATCH_FOLDERS_E2E ?? "");
+  test.skip(
+    !enabled,
+    "Watch Folders is feature-flagged off; set WATCH_FOLDERS_E2E=1 to run",
   );
-
-  expect(result.ok, "Login failed").toBe(true);
-  expect(result.hasToken, "No JWT").toBe(true);
-  return result.token!;
-}
-
-async function suppressDialogs(page: Page): Promise<void> {
-  // Cookie consent
-  const ccValue = encodeURIComponent(
-    JSON.stringify({
-      categories: ["necessary", "analytics"],
-      revision: 0,
-      data: null,
-      consentTimestamp: new Date().toISOString(),
-      consentId: "test",
-      lastConsentTimestamp: new Date().toISOString(),
-      services: { analytics: {} },
-      languageCode: "en",
-      expirationTime: Date.now() + 365 * 24 * 60 * 60 * 1000,
-    }),
-  );
-  await page.context().addCookies([
-    {
-      name: "cc_cookie",
-      value: ccValue,
-      domain: "localhost",
-      path: "/",
-      expires: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60,
-    },
-  ]);
-}
+});
 
 async function setupApp(page: Page): Promise<void> {
-  await suppressDialogs(page);
-  await page.goto("/login", { waitUntil: "domcontentloaded" });
-  await page.evaluate(() => {
-    localStorage.setItem("onboarding::completed", "true");
-    localStorage.setItem(
-      "upgradeBannerFriendlyLastShownAt",
-      Date.now().toString(),
-    );
-  });
-  await loginViaApi(page);
-  try {
-    await page.waitForURL("/", { timeout: 15000 });
-  } catch {
-    /* already there */
-  }
+  // Use the shared login helper (real UI login with the bootstrapped
+  // `admin / adminadmin` credentials). The previous bespoke /api/v1/auth/login
+  // call used the pre-bootstrap `stirling` password and always 401'd.
+  await loginAndSetup(page);
   await page.waitForSelector('[data-testid="watchFolders-button"]', {
     timeout: 30000,
   });
@@ -173,9 +123,7 @@ test.describe("Watch Folders — Navigation", () => {
     await setupApp(page);
   });
 
-  test("QuickAccessBar button navigates to Watch Folders home", async ({
-    page,
-  }) => {
+  test("sidebar button navigates to Watch Folders home", async ({ page }) => {
     await page.locator('[data-testid="watchFolders-button"]').click();
     // Should see the home page with "New folder" button
     await expect(
