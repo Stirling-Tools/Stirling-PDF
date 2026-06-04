@@ -17,6 +17,58 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 import { BASE_PATH } from "@app/constants/app";
 
+// Eagerly pre-compile the self-hosted PDFium WASM binary at application boot.
+// This runs in the background, delayed until the main application finishes mounting
+// to avoid network and CPU resource competition with the initial UI render.
+let resolvePromise: any;
+(window as any).__pdfiumWasmModulePromise = new Promise((resolve) => {
+  resolvePromise = resolve;
+});
+
+let compilationStarted = false;
+const startEagerWasmCompilation = () => {
+  if (compilationStarted) return;
+  compilationStarted = true;
+
+  const base = (import.meta as any).env?.BASE_URL ?? "/";
+  const wasmUrl = `${base}pdfium/pdfium.wasm`.replace(/\/\//g, "/");
+
+  if (
+    typeof WebAssembly === "object" &&
+    typeof WebAssembly.compileStreaming === "function"
+  ) {
+    WebAssembly.compileStreaming(fetch(wasmUrl))
+      .then(resolvePromise)
+      .catch((err) => {
+        console.warn(
+          "Eager WASM compilation failed or not supported in this environment:",
+          err,
+        );
+        resolvePromise(null);
+      });
+  } else {
+    resolvePromise(null);
+  }
+};
+
+(window as any).startEagerWasmCompilation = startEagerWasmCompilation;
+
+if (typeof window !== "undefined") {
+  const scheduleCompilation = () => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
+    } else {
+      setTimeout(startEagerWasmCompilation, 1000);
+    }
+  };
+
+  if (document.readyState === "complete") {
+    scheduleCompilation();
+  } else {
+    window.addEventListener("load", scheduleCompilation);
+  }
+}
+
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
   defaults: "2025-05-24",

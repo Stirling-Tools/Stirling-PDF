@@ -59,9 +59,46 @@ function wasmUrl(): string {
 export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
   if (_module) return _module;
   if (!_initPromise) {
-    _initPromise = init({
+    // Ensure eager compilation has started if PDF service is requested before idle timeout
+    if (typeof (window as any).startEagerWasmCompilation === "function") {
+      (window as any).startEagerWasmCompilation();
+    }
+
+    const overrides: any = {
       locateFile: () => wasmUrl(),
-    } as any).then((m) => {
+    };
+
+    // Eagerly reuse pre-compiled WASM module from app boot if available
+    const precompiledPromise = (window as any).__pdfiumWasmModulePromise;
+    if (precompiledPromise) {
+      overrides.instantiateWasm = (imports: any, successCallback: any) => {
+        precompiledPromise
+          .then((wasmModule: any) => {
+            if (wasmModule) {
+              return WebAssembly.instantiate(wasmModule, imports).then(
+                (instance) => {
+                  successCallback(instance, wasmModule);
+                },
+              );
+            } else {
+              throw new Error("No pre-compiled WASM module found");
+            }
+          })
+          .catch((err: any) => {
+            console.warn(
+              "Eager WebAssembly instantiation failed, falling back to streaming compilation:",
+              err,
+            );
+            WebAssembly.instantiateStreaming(fetch(wasmUrl()), imports).then(
+              (result) => {
+                successCallback(result.instance, result.module);
+              },
+            );
+          });
+      };
+    }
+
+    _initPromise = init(overrides as any).then((m) => {
       // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
       try {
         m.PDFiumExt_Init();
