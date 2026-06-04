@@ -11,9 +11,7 @@ export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 export const Z_INDEX_OVER_FILE_MANAGER_MODAL = 1300;
 
 export const Z_INDEX_AUTOMATE_MODAL = 1100;
-// Dropdowns/Popovers inside automation modals need to be above the modal but
-// must stay below Z_INDEX_FILE_MANAGER_MODAL (1200) so file-manager scrim wins
-// when an automate dropdown overlaps a file-manager modal.
+// Dropdowns/Popovers inside automation modals need to be above the modal
 export const Z_INDEX_AUTOMATE_DROPDOWN = 1150;
 
 // page editor Zindexes
