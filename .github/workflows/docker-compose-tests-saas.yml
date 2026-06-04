@@ -85,10 +85,11 @@ jobs:
       - name: Expose GitHub runtime for Buildx cache
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
-      - name: Install Docker Compose
-        run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
+      # No "Install Docker Compose" step: Ubuntu runners ship with `docker compose`
+      # v2 (built into the Docker CLI). test-payg.sh uses the v2 form throughout
+      # (`docker compose …`, no hyphen), so the legacy v1 `docker-compose` binary
+      # isn't needed. Avoids a `curl | sudo install` without checksum verification
+      # (Aikido flagged this when copy-pasted from docker-compose-tests.yml).
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
