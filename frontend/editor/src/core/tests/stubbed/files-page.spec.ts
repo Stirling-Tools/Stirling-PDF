@@ -284,6 +284,52 @@ test.describe("Files page", () => {
     });
   });
 
+  test.describe("Save to server gating (storage disabled)", () => {
+    test.beforeEach(async ({ page }) => {
+      // storageEnabled:false -> Save-to-server stays visible for local-only
+      // files but is disabled (with an explanatory tooltip), not hidden, so
+      // users discover the feature and know to ask their admin.
+      await stubStorageApis(page, { storageEnabled: false });
+      await seedFiles(page, [
+        { id: "local-a", name: "local-a.pdf", remoteStorageId: null },
+      ]);
+    });
+    test.use({ autoGoto: false });
+
+    test("bulk Save to server is disabled (not hidden) when storage off", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      await page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "local-a.pdf" })
+        .click();
+      const saveButtons = page.getByRole("button", {
+        name: /^Save to server$/i,
+      });
+      // Present (toolbar + details panel) and every instance disabled.
+      const count = await saveButtons.count();
+      expect(count).toBeGreaterThan(0);
+      for (let i = 0; i < count; i += 1) {
+        await expect(saveButtons.nth(i)).toBeVisible();
+        await expect(saveButtons.nth(i)).toBeDisabled();
+      }
+    });
+
+    test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      const localCard = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "local-a.pdf" });
+      await localCard.getByRole("button", { name: /File actions/i }).click();
+      const item = page.getByRole("menuitem", { name: /^Save to server$/i });
+      await expect(item).toBeVisible();
+      await expect(item).toBeDisabled();
+    });
+  });
+
   test.describe("Upload behaviour", () => {
     test.beforeEach(async ({ page }) => {
       await stubStorageApis(page);
