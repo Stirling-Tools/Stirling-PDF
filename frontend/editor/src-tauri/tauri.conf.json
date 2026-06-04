@@ -25,7 +25,7 @@
     "active": true,
     "createUpdaterArtifacts": "v1Compatible",
     "publisher": "Stirling PDF Inc.",
-    "targets": ["deb", "rpm", "appimage", "dmg", "msi"],
+    "targets": ["deb", "rpm", "appimage", "dmg", "app", "msi"],
     "icon": [
       "icons/icon.png",
       "icons/icon.icns",
