@@ -153,13 +153,14 @@ export function DocumentStylePicker({
   const hasSelection = !!(value.primaryColor || value.backgroundColor);
 
   function selectBackground(preset: ColorPreset) {
+    const newIsDark = DARK_BACKGROUNDS.some((p) => p.color === preset.color);
     onChange({
       ...value,
       backgroundColor: preset.color,
       bodyTextColor: preset.textColor,
       // Clear accent if the dark/light mode changes so we don't end up with
       // a dark accent on a dark background or vice versa.
-      primaryColor: undefined,
+      primaryColor: isDark !== newIsDark ? undefined : value.primaryColor,
     });
     setCustomBg("");
   }
