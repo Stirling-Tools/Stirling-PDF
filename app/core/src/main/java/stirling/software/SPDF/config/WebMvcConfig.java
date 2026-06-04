@@ -137,7 +137,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/**")
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
     }
 
     @Override
