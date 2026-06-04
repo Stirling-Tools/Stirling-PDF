@@ -28,6 +28,15 @@ function fixture(filename: string): string {
     ),
     path.resolve(
       process.cwd(),
+      "editor",
+      "src",
+      "core",
+      "tests",
+      "test-fixtures",
+      filename,
+    ),
+    path.resolve(
+      process.cwd(),
       "frontend",
       "src",
       "core",
