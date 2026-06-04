@@ -646,6 +646,17 @@ jobs:
         with:
           egress-policy: audit
 
+      # Sparse checkout of just the updater public key + verifier script, used by
+      # the "Verify updater signatures" step below. Runs before the artifact
+      # downloads so it cannot clobber ./artifacts.
+      - name: Checkout updater verifier
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          sparse-checkout: |
+            .github/scripts/verify-updater-signatures.py
+            frontend/editor/src-tauri/tauri.conf.json
+          sparse-checkout-cone-mode: false
+
       - name: Download all Tauri artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -797,6 +808,17 @@ jobs:
           name: release-artifacts
           path: ./artifacts/
           retention-days: 7
+
+      # Gate the release on cryptographically valid updater signatures: verify
+      # every <artifact>.sig against the app's configured Ed25519 public key
+      # (the same check the updater client performs before installing). Runs
+      # after the review upload (so artifacts are preserved for debugging) and
+      # before the release publish (so a bad signature can never ship).
+      - name: Verify updater signatures
+        run: |
+          python3 -m pip install --quiet cryptography
+          python3 .github/scripts/verify-updater-signatures.py \
+            ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
 
       - name: Upload binaries to Release
         if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
