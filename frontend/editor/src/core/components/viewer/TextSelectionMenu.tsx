@@ -27,6 +27,8 @@ export function TextSelectionMenu({
     [menuWrapperProps],
   );
 
+  const showAbove = placement?.suggestTop ?? true;
+
   useEffect(() => {
     if (!selected || !wrapperRef.current) {
       setPosition(null);
@@ -36,7 +38,6 @@ export function TextSelectionMenu({
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
       const r = wrapper.getBoundingClientRect();
-      const showAbove = placement?.suggestTop ?? true;
       setPosition({
         top: showAbove ? r.top - 8 : r.bottom + 8,
         left: r.left + r.width / 2,
@@ -49,7 +50,7 @@ export function TextSelectionMenu({
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
     };
-  }, [selected, placement?.suggestTop]);
+  }, [selected, showAbove]);
 
   const handleCopy = useCallback(() => {
     selection?.copyToClipboard();
@@ -63,7 +64,7 @@ export function TextSelectionMenu({
           position: "fixed",
           top: position.top,
           left: position.left,
-          transform: `translate(-50%, ${placement?.suggestTop ? "-100%" : "0"})`,
+          transform: `translate(-50%, ${showAbove ? "-100%" : "0"})`,
           zIndex: 10000,
           pointerEvents: "auto",
         }}
