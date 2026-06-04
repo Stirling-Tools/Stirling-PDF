@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -21,6 +22,11 @@ import stirling.software.common.cluster.FileStore;
 /**
  * Service for storing and retrieving files with unique file IDs. Used by the AutoJobPostMapping
  * system to handle file references. Disk I/O is delegated to the injected {@link FileStore} bean.
+ *
+ * <p>When a {@link JobOwnershipService} is wired (security enabled), the current user is captured
+ * at store time and persisted with the file; every read path enforces that the same user retrieves
+ * it. Files stored without an owner (no current user, anonymous, async without propagated security
+ * context) stay readable by anyone so existing flows are not regressed.
  */
 @Service
 @RequiredArgsConstructor
@@ -32,8 +38,10 @@ public class FileStorage {
 
     private final FileOrUploadService fileOrUploadService;
     private final FileStore fileStore;
+    private final Optional<JobOwnershipService> jobOwnershipService;
 
     public String storeFile(MultipartFile file) throws IOException {
+        String owner = resolveOwner();
         // Fast path: when Spring buffered the multipart to disk (typical for large uploads), the
         // backing Resource exposes a real File. Hand the Path to the FileStore so it can do a
         // file-to-file copy (Linux sendfile, no copy through Java heap) rather than streaming
@@ -48,7 +56,7 @@ public class FileStorage {
         if (res != null && res.isFile()) {
             try {
                 FileStore.Stored stored =
-                        fileStore.store(res.getFile().toPath(), file.getOriginalFilename());
+                        fileStore.store(res.getFile().toPath(), file.getOriginalFilename(), owner);
                 log.debug("Stored file with ID: {} (fast path)", stored.fileId());
                 return stored.fileId();
             } catch (IOException ex) {
@@ -57,40 +65,45 @@ public class FileStorage {
             }
         }
         try (InputStream in = file.getInputStream()) {
-            FileStore.Stored stored = fileStore.store(in, file.getOriginalFilename());
+            FileStore.Stored stored = fileStore.store(in, file.getOriginalFilename(), owner);
             log.debug("Stored file with ID: {}", stored.fileId());
             return stored.fileId();
         }
     }
 
     public String storeBytes(byte[] bytes, String originalName) throws IOException {
-        FileStore.Stored stored = fileStore.store(new ByteArrayInputStream(bytes), originalName);
+        FileStore.Stored stored =
+                fileStore.store(new ByteArrayInputStream(bytes), originalName, resolveOwner());
         log.debug("Stored byte array with ID: {}", stored.fileId());
         return stored.fileId();
     }
 
     public MultipartFile retrieveFile(String fileId) throws IOException {
+        enforceOwnership(fileId);
         byte[] fileData = fileStore.retrieveBytes(fileId);
         return fileOrUploadService.toMockMultipartFile(fileId, fileData);
     }
 
     public byte[] retrieveBytes(String fileId) throws IOException {
+        enforceOwnership(fileId);
         return fileStore.retrieveBytes(fileId);
     }
 
     public InputStream retrieveInputStream(String fileId) throws IOException {
+        enforceOwnership(fileId);
         return fileStore.retrieve(fileId);
     }
 
     public StoredFile storeInputStream(InputStream inputStream, String originalName)
             throws IOException {
-        FileStore.Stored stored = fileStore.store(inputStream, originalName);
+        FileStore.Stored stored = fileStore.store(inputStream, originalName, resolveOwner());
         log.debug("Stored input stream with ID: {}", stored.fileId());
         return new StoredFile(stored.fileId(), stored.size());
     }
 
     public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
             throws IOException {
+        String owner = resolveOwner();
         // Hold Throwable not IOException: an unchecked failure (NPE, IllegalState, OOM, etc.)
         // from the body writer would otherwise close the pipe with EOF and the consumer would
         // return a truncated file with no error surfaced to the caller.
@@ -115,7 +128,7 @@ public class FileStorage {
                                         }
                                     }
                                 });
-                FileStore.Stored stored = fileStore.store(in, originalName);
+                FileStore.Stored stored = fileStore.store(in, originalName, owner);
                 Throwable writerErr = bodyError.get();
                 if (writerErr != null) {
                     // Body failed mid-write: the FileStore persisted a truncated entry.
@@ -159,21 +172,73 @@ public class FileStorage {
 
     public String storeFromResource(Resource resource, String originalName) throws IOException {
         try (InputStream in = resource.getInputStream()) {
-            FileStore.Stored stored = fileStore.store(in, originalName);
+            FileStore.Stored stored = fileStore.store(in, originalName, resolveOwner());
             log.debug("Stored Resource with ID: {}", stored.fileId());
             return stored.fileId();
         }
     }
 
     public boolean deleteFile(String fileId) {
+        enforceOwnership(fileId);
         return fileStore.delete(fileId);
     }
 
     public boolean fileExists(String fileId) {
+        enforceOwnership(fileId);
         return fileStore.exists(fileId);
     }
 
     public long getFileSize(String fileId) throws IOException {
+        enforceOwnership(fileId);
         return fileStore.size(fileId);
+    }
+
+    /**
+     * Returns the user identifier to record as the owner of a newly stored file, or {@code null}
+     * when no authenticated user is in scope (security disabled, anonymous request, or async work
+     * with no propagated security context). A null result causes the file to be stored without an
+     * owner, which the read path treats as "no authoritative owner" and allows.
+     */
+    private String resolveOwner() {
+        return jobOwnershipService.flatMap(JobOwnershipService::getCurrentUserId).orElse(null);
+    }
+
+    /**
+     * Defence-in-depth check before any read of a stored file. When a {@link JobOwnershipService}
+     * is wired and there is an authenticated current user, the file's recorded owner must match.
+     * Files without a recorded owner (legacy or anonymously-stored) are passed through so existing
+     * flows are not regressed. Throws {@link SecurityException} on mismatch so a misconfigured
+     * caller fails loudly rather than silently leaking another user's bytes.
+     */
+    private void enforceOwnership(String fileId) {
+        if (jobOwnershipService.isEmpty()) {
+            return;
+        }
+        Optional<String> currentUser = jobOwnershipService.get().getCurrentUserId();
+        if (currentUser.isEmpty()) {
+            return;
+        }
+        String owner;
+        try {
+            owner = fileStore.getOwner(fileId);
+        } catch (IOException e) {
+            // Owner lookup failed: don't leak the file. Treat as access denied; the caller can
+            // surface the right HTTP status (404/500 at the controller layer).
+            log.warn("Failed to read owner for file {}: {}", fileId, e.getMessage());
+            throw new SecurityException(
+                    "Access denied: could not verify ownership of the requested file");
+        }
+        if (owner == null) {
+            return;
+        }
+        if (!owner.equals(currentUser.get())) {
+            log.warn(
+                    "Access denied: user {} attempted to access file {} owned by {}",
+                    currentUser.get(),
+                    fileId,
+                    owner);
+            throw new SecurityException(
+                    "Access denied: you do not have permission to access this file");
+        }
     }
 }

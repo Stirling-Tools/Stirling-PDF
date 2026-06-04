@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +38,10 @@ class FileStorageTest {
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         fileStorage =
-                new FileStorage(fileOrUploadService, new LocalDiskFileStore(tempDir.toString()));
+                new FileStorage(
+                        fileOrUploadService,
+                        new LocalDiskFileStore(tempDir.toString()),
+                        Optional.empty());
 
         // Create a mock MultipartFile
         mockFile = mock(MultipartFile.class);

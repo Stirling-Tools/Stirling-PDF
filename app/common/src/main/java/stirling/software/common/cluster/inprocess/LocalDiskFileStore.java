@@ -3,6 +3,7 @@ package stirling.software.common.cluster.inprocess;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -15,6 +16,8 @@ import stirling.software.common.cluster.FileStore;
 @Slf4j
 public class LocalDiskFileStore implements FileStore {
 
+    private static final String OWNER_SUFFIX = ".owner";
+
     private final String baseDirPath;
 
     public LocalDiskFileStore(String baseDirPath) {
@@ -22,25 +25,19 @@ public class LocalDiskFileStore implements FileStore {
     }
 
     @Override
-    public Stored store(InputStream in, String originalName) throws IOException {
+    public Stored store(InputStream in, String originalName, String owner) throws IOException {
         String fileId = UUID.randomUUID().toString();
         Path filePath = resolve(fileId);
         Files.createDirectories(filePath.getParent());
         boolean success = false;
         try {
             long size = Files.copy(in, filePath);
+            writeOwner(fileId, owner);
             success = true;
             return new Stored(fileId, size);
         } finally {
             if (!success) {
-                try {
-                    Files.deleteIfExists(filePath);
-                } catch (IOException cleanupEx) {
-                    log.warn(
-                            "Failed to clean up partial file {} after store failure",
-                            filePath,
-                            cleanupEx);
-                }
+                cleanupAfterFailedStore(fileId, filePath);
             }
         }
     }
@@ -52,7 +49,7 @@ public class LocalDiskFileStore implements FileStore {
      * the source size before copying so the post-copy stat is unnecessary.
      */
     @Override
-    public Stored store(Path source, String originalName) throws IOException {
+    public Stored store(Path source, String originalName, String owner) throws IOException {
         String fileId = UUID.randomUUID().toString();
         Path filePath = resolve(fileId);
         Files.createDirectories(filePath.getParent());
@@ -60,19 +57,34 @@ public class LocalDiskFileStore implements FileStore {
         boolean success = false;
         try {
             Files.copy(source, filePath);
+            writeOwner(fileId, owner);
             success = true;
             return new Stored(fileId, size);
         } finally {
             if (!success) {
-                try {
-                    Files.deleteIfExists(filePath);
-                } catch (IOException cleanupEx) {
-                    log.warn(
-                            "Failed to clean up partial file {} after store failure",
-                            filePath,
-                            cleanupEx);
-                }
+                cleanupAfterFailedStore(fileId, filePath);
             }
+        }
+    }
+
+    private void writeOwner(String fileId, String owner) throws IOException {
+        if (owner == null || owner.isBlank()) {
+            return;
+        }
+        Path ownerPath = resolveOwner(fileId);
+        Files.write(ownerPath, owner.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void cleanupAfterFailedStore(String fileId, Path filePath) {
+        try {
+            Files.deleteIfExists(filePath);
+        } catch (IOException cleanupEx) {
+            log.warn("Failed to clean up partial file {} after store failure", filePath, cleanupEx);
+        }
+        try {
+            Files.deleteIfExists(resolveOwner(fileId));
+        } catch (IOException cleanupEx) {
+            log.warn("Failed to clean up owner sidecar for {} after store failure", fileId);
         }
     }
 
@@ -101,17 +113,37 @@ public class LocalDiskFileStore implements FileStore {
 
     @Override
     public boolean delete(String fileId) {
+        boolean removed;
         try {
-            return Files.deleteIfExists(resolve(fileId));
+            removed = Files.deleteIfExists(resolve(fileId));
         } catch (IOException e) {
             log.error("Error deleting file with ID: {}", fileId, e);
             return false;
         }
+        try {
+            Files.deleteIfExists(resolveOwner(fileId));
+        } catch (IOException e) {
+            log.warn("Error deleting owner sidecar for file ID: {}", fileId, e);
+        }
+        return removed;
     }
 
     @Override
     public boolean exists(String fileId) {
         return Files.exists(resolve(fileId));
+    }
+
+    @Override
+    public String getOwner(String fileId) throws IOException {
+        Path ownerPath = resolveOwner(fileId);
+        if (!Files.exists(ownerPath)) {
+            return null;
+        }
+        byte[] bytes = Files.readAllBytes(ownerPath);
+        if (bytes.length == 0) {
+            return null;
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public Path resolve(String fileId) {
@@ -124,5 +156,9 @@ public class LocalDiskFileStore implements FileStore {
             throw new IllegalArgumentException("File ID resolves to an invalid path");
         }
         return resolvedPath;
+    }
+
+    private Path resolveOwner(String fileId) {
+        return resolve(fileId).resolveSibling(fileId + OWNER_SUFFIX);
     }
 }
