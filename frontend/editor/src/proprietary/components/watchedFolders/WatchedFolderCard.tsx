@@ -37,8 +37,8 @@ export function WatchedFolderCard({
   const handleDragOver = (e: React.DragEvent) => {
     const types = e.dataTransfer.types;
     if (
-      !types.includes("watchedfolderfileid") &&
-      !types.includes("watchedfolderfileids")
+      !types.includes("watchedFolderFileId") &&
+      !types.includes("watchedFolderFileIds")
     )
       return;
     e.preventDefault();
