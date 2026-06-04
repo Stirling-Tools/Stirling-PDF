@@ -17,6 +17,7 @@ import AdminLegalSection from "@app/components/shared/config/configSections/Admi
 import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
 import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
 import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
+import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
@@ -137,6 +138,14 @@ export const useConfigNavSections = (
           label: t("settings.configuration.endpoints", "Endpoints"),
           icon: "api-rounded",
           component: <AdminEndpointsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminMcp",
+          label: t("settings.configuration.mcp", "MCP Server"),
+          icon: "smart-toy-rounded",
+          component: <AdminMcpSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
