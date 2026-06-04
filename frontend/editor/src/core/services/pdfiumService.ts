@@ -23,6 +23,7 @@ interface ExtendedPdfiumRuntime {
 }
 
 interface PdfiumModuleOverrides extends Partial<PdfiumModule> {
+  locateFile?: (url: string, scriptDirectory?: string) => string;
   instantiateWasm?: (
     imports: WebAssembly.Imports,
     successCallback: (
@@ -1418,7 +1419,7 @@ async function renderWidgetAppearance(
   let imageData: ImageData | null = null;
   if (ok) {
     const rgba = new Uint8ClampedArray(
-      pdfiumRuntime.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+      pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
     );
     let hasVisible = false;
     for (let i = 3; i < rgba.length; i += 4) {
@@ -1471,7 +1472,7 @@ async function renderWidgetAppearance(
     m.FPDFBitmap_Destroy(bmp2);
 
     const rgba2 = new Uint8ClampedArray(
-      pdfiumRuntime.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+      pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
     );
     let hasVisible2 = false;
     for (let i = 3; i < rgba2.length; i += 4) {
@@ -1656,7 +1657,7 @@ export async function renderSignatureFieldAppearances(
 
           if (ok) {
             const rgba = new Uint8ClampedArray(
-              pdfiumRuntime.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+              pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
             );
             let hasVisible = false;
             for (let i = 3; i < rgba.length; i += 4) {
@@ -1716,7 +1717,7 @@ export async function renderSignatureFieldAppearances(
             m.FPDFBitmap_Destroy(bmp2);
 
             const rgba2 = new Uint8ClampedArray(
-              pdfiumRuntime.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+              pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
             );
             let hasVisible2 = false;
             for (let i = 3; i < rgba2.length; i += 4) {
