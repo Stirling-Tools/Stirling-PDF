@@ -84,24 +84,22 @@ public class AiWorkflowService {
             AiEngineClient aiEngineClient,
             PdfContentExtractor pdfContentExtractor,
             ObjectMapper objectMapper,
-            InternalApiClient internalApiClient,
             FileStorage fileStorage,
-            ToolMetadataService toolMetadataService,
             TempFileManager tempFileManager,
             FileIdStrategy fileIdStrategy,
             AiEngineEndpointResolver endpointResolver,
+            PolicyExecutor policyExecutor,
             @Autowired(required = false) UserServiceInterface userService,
             ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.aiEngineClient = aiEngineClient;
         this.pdfContentExtractor = pdfContentExtractor;
         this.objectMapper = objectMapper;
-        this.internalApiClient = internalApiClient;
         this.fileStorage = fileStorage;
-        this.toolMetadataService = toolMetadataService;
         this.tempFileManager = tempFileManager;
         this.fileIdStrategy = fileIdStrategy;
         this.endpointResolver = endpointResolver;
+        this.policyExecutor = policyExecutor;
         this.userService = userService;
         this.applicationProperties = applicationProperties;
     }
