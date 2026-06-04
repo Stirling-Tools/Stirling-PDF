@@ -599,7 +599,10 @@ jobs:
             find . -name "*.nsis.zip.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.nsis.zip.sig" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
-            find . -name "*.app" -exec cp -r {} "$DIST/Stirling-PDF-${{ matrix.name }}.app" \;
+            # NOTE: we deliberately do NOT copy the raw .app bundle. It is the
+            # uncompressed input to both the .dmg (manual install) and the
+            # .app.tar.gz (updater payload), so shipping it too just bloats the
+            # artifact by hundreds of MB and is never attached to the release.
             find . -name "*.app.tar.gz" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz" \;
             find . -name "*.app.tar.gz.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz.sig" \;
           else
@@ -679,19 +682,23 @@ jobs:
 
           ART = Path('./artifacts/tauri')
 
-          # Map our matrix.name to Tauri updater target identifiers and the
-          # bundle filename(s) to try. First (bundle, .sig) pair that exists wins.
+          # Each platform's updater payload, keyed by the renamed bundle
+          # filename. We search RECURSIVELY because actions/download-artifact
+          # changes layout based on how many artifacts match its pattern:
+          #   - multiple (a real all-platform release) -> one subdir per
+          #     artifact: ./artifacts/tauri/<artifact-name>/<file>
+          #   - exactly one (a single-platform test build) -> files land
+          #     straight in ./artifacts/tauri/<file>
+          # Matching by unique filename anywhere under ART handles both.
           # macOS universal binary maps to BOTH darwin targets.
           PLATFORM_MAP = [
               {
-                  'dir': 'Stirling-PDF-linux-x86_64',
                   'bundles': ['Stirling-PDF-linux-x86_64.AppImage.tar.gz'],
                   'targets': ['linux-x86_64'],
               },
               {
-                  'dir': 'Stirling-PDF-windows-x86_64',
-                  # bundle.targets in tauri.conf.json is "msi"; nsis is a defensive
-                  # fallback if that config ever changes.
+                  # bundle.targets in tauri.conf.json is "msi"; nsis is a
+                  # defensive fallback if that config ever changes.
                   'bundles': [
                       'Stirling-PDF-windows-x86_64.msi.zip',
                       'Stirling-PDF-windows-x86_64.nsis.zip',
@@ -699,38 +706,41 @@ jobs:
                   'targets': ['windows-x86_64'],
               },
               {
-                  'dir': 'Stirling-PDF-macos-universal',
                   'bundles': ['Stirling-PDF-macos-universal.app.tar.gz'],
                   'targets': ['darwin-x86_64', 'darwin-aarch64'],
               },
           ]
 
+          def find_signed(name):
+              # First bundle of this exact name (sorted for determinism) that
+              # has a sibling .sig. Returns (bundle_path, sig_path) or None.
+              for bundle_path in sorted(ART.rglob(name)):
+                  sig_path = bundle_path.with_name(bundle_path.name + '.sig')
+                  if sig_path.exists():
+                      return bundle_path, sig_path
+              return None
+
           platforms = {}
           skipped = []
           for entry in PLATFORM_MAP:
-              dir_path = ART / entry['dir']
-              if not dir_path.exists():
-                  skipped.append(f"{entry['dir']} (artifact directory missing)")
-                  continue
               picked = None
-              for bundle in entry['bundles']:
-                  bundle_path = dir_path / bundle
-                  sig_path = dir_path / (bundle + '.sig')
-                  if bundle_path.exists() and sig_path.exists():
-                      picked = (bundle, sig_path)
+              for name in entry['bundles']:
+                  picked = find_signed(name)
+                  if picked:
                       break
               if not picked:
                   skipped.append(
-                      f"{entry['dir']} (no signed bundle found - "
-                      f"TAURI_SIGNING_PRIVATE_KEY may be unset)"
+                      f"{entry['targets']} (no signed bundle among "
+                      f"{entry['bundles']} - TAURI_SIGNING_PRIVATE_KEY unset "
+                      f"or createUpdaterArtifacts disabled?)"
                   )
                   continue
-              bundle, sig_path = picked
+              bundle_path, sig_path = picked
               signature = sig_path.read_text(encoding='utf-8').strip()
-              url = f"https://github.com/{REPO}/releases/download/{TAG}/{bundle}"
+              url = f"https://github.com/{REPO}/releases/download/{TAG}/{bundle_path.name}"
               for target in entry['targets']:
                   platforms[target] = {'signature': signature, 'url': url}
-              print(f"Added {entry['targets']} from {bundle}")
+              print(f"Added {entry['targets']} from {bundle_path.name}")
 
           if skipped:
               print("Skipped platforms:")
