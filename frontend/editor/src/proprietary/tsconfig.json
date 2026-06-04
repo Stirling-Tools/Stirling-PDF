@@ -4,7 +4,8 @@
     "baseUrl": "../../",
     "paths": {
       "@app/*": ["src/proprietary/*", "src/core/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": [

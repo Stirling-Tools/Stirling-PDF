@@ -5,10 +5,17 @@ from typing import NewType
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-# Stable, opaque identifier for a file supplied by the caller. Owned by the caller's
-# ID strategy (content hash, filesystem path, etc.) and used as the RAG collection key
-# throughout the engine.
+# Stable, opaque identifier for a file supplied by the caller
 FileId = NewType("FileId", str)
+
+# Stable, opaque identifier for the calling user
+UserId = NewType("UserId", str)
+
+# Tenant that owns a document
+OwnerId = NewType("OwnerId", str)
+
+# An entity that can hold permissions on a document
+PrincipalId = NewType("PrincipalId", str)
 
 
 class ApiModel(BaseModel):

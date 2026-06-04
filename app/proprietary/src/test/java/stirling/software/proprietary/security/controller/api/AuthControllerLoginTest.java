@@ -79,7 +79,8 @@ class AuthControllerLoginTest {
                         totpService,
                         refreshRateLimitService,
                         securityProperties,
-                        applicationProperties);
+                        applicationProperties,
+                        new stirling.software.proprietary.service.AiUserDataService(null));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
