@@ -17,10 +17,10 @@ import {
   type WrappedPdfiumModule,
   type PdfiumModule,
 } from "@embedpdf/pdfium";
-import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
+  pdfiumWasmUrl,
 } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 

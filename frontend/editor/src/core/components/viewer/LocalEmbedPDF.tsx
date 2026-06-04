@@ -89,7 +89,7 @@ import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
-import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";

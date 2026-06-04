@@ -1,4 +1,9 @@
-import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
+import { absoluteWithBasePath } from "@app/constants/app";
+import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
+
+export const pdfiumWasmUrl = import.meta.env.DEV
+  ? absoluteWithBasePath("/pdfium/pdfium.wasm")
+  : pdfiumWasmAssetUrl;
 
 let resolvePromise: (module: WebAssembly.Module | null) => void;
 let compilationStarted = false;
