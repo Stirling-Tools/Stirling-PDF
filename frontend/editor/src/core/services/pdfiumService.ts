@@ -13,7 +13,7 @@
  * never have to deal with raw pointers or Tasks.
  */
 import { init, type WrappedPdfiumModule, type PdfiumModule } from "@embedpdf/pdfium";
-import pdfiumWasmUrl from "@embedpdf/pdfium/dist/pdfium.wasm?url";
+import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 import { pdfiumWasmModulePromise, startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 

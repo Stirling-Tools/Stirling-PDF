@@ -1,4 +1,4 @@
-import pdfiumWasmUrl from "@embedpdf/pdfium/dist/pdfium.wasm?url";
+import pdfiumWasmUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 
 let resolvePromise: (module: WebAssembly.Module | null) => void;
 let compilationStarted = false;
