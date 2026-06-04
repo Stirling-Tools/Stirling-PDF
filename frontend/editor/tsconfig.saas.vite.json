@@ -4,7 +4,8 @@
     "paths": {
       "@app/*": ["src/saas/*", "src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "exclude": [
@@ -12,7 +13,6 @@
     "src/core/**/*.spec.ts*",
     "src/proprietary/**/*.test.ts*",
     "src/proprietary/**/*.spec.ts*",
-    "src/desktop",
-    "node_modules"
+    "src/desktop"
   ]
 }

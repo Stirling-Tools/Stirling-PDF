@@ -11,12 +11,16 @@ use commands::{
     clear_opened_files,
     clear_refresh_token,
     clear_user_info,
+    forward_files_to_window,
     is_default_pdf_handler,
     get_auth_token,
     get_backend_port,
     get_connection_config,
     get_opened_files,
+    open_files_in_new_window,
+    open_in_new_window,
     pop_opened_files,
+    pop_window_file_ids,
     get_refresh_token,
     get_user_info,
     is_first_launch,
@@ -28,9 +32,18 @@ use commands::{
     set_connection_mode,
     set_as_default_pdf_handler,
     get_desktop_os,
+    get_update_mode,
     print_pdf_file_native,
+    set_update_mode,
     start_backend,
     start_oauth_login,
+    can_install_updates,
+    check_for_update,
+    download_and_install_update,
+    get_app_version,
+    restart_app,
+    target_window_label,
+    MAIN_WINDOW_LABEL,
 };
 use commands::connection::apply_provisioning_if_present;
 use state::connection_state::AppConnectionState;
@@ -45,6 +58,16 @@ fn dispatch_deep_link(app: &AppHandle, url: &str) {
     let _ = window.set_focus();
     let _ = window.unminimize();
   }
+}
+
+// Extract existing file paths from CLI args (skips the executable name).
+fn parse_launch_files(args: &[String]) -> Vec<String> {
+  args
+    .iter()
+    .skip(1)
+    .filter(|arg| std::path::Path::new(arg).exists())
+    .cloned()
+    .collect()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -63,41 +86,37 @@ pub fn run() {
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_window_state::Builder::default().build())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-      // This callback runs when a second instance tries to start
+      // Runs in the existing instance when a second launch is attempted
+      // (e.g. "open with" / double-click while the app is running).
       add_log(format!("📂 Second instance detected with args: {:?}", args));
 
-      // Scan args for PDF files (skip first arg which is the executable)
-      for arg in args.iter().skip(1) {
-        if std::path::Path::new(arg).exists() {
-          add_log(format!("📂 Forwarding file to existing instance: {}", arg));
+      let files = parse_launch_files(&args);
+      // Route to the window the user is in (focused -> main -> any) so opens
+      // consolidate into one window instead of spawning a new one.
+      let label = target_window_label(app).unwrap_or_else(|| MAIN_WINDOW_LABEL.to_string());
 
-          // Store file for later retrieval (in case frontend isn't ready yet)
-          add_opened_file(arg.clone());
-
-          // Bring the existing window to front
-          if let Some(window) = app.get_webview_window("main") {
-            let _ = window.set_focus();
-            let _ = window.unminimize();
-          }
-        }
+      if !files.is_empty() {
+        add_log(format!("📂 Forwarding {} file(s) to existing window '{}'", files.len(), label));
+        forward_files_to_window(app, &label, files);
+      } else if let Some(window) = app.get_webview_window(&label) {
+        // No files: just bring the app to the front.
+        let _ = window.set_focus();
+        let _ = window.unminimize();
       }
-
-      // Emit a generic notification that files were added (frontend will re-read storage)
-      let _ = app.emit("files-changed", ());
     }))
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
-      // Process command line arguments on first launch
+      // Files passed on the command line at first launch load into the main
+      // window once the frontend mounts.
       let args: Vec<String> = std::env::args().collect();
-      for arg in args.iter().skip(1) {
-        if std::path::Path::new(arg).exists() {
-          add_log(format!("📂 Initial file from command line: {}", arg));
-          add_opened_file(arg.clone());
-        }
+      for path in parse_launch_files(&args) {
+        add_log(format!("📂 Initial file from command line: {}", path));
+        add_opened_file(path);
       }
 
       {
@@ -147,6 +166,9 @@ pub fn run() {
       get_opened_files,
       pop_opened_files,
       clear_opened_files,
+      open_in_new_window,
+      open_files_in_new_window,
+      pop_window_file_ids,
       get_tauri_logs,
       get_connection_config,
       set_connection_mode,
@@ -167,6 +189,13 @@ pub fn run() {
       start_oauth_login,
       get_desktop_os,
       print_pdf_file_native,
+      can_install_updates,
+      check_for_update,
+      download_and_install_update,
+      get_app_version,
+      get_update_mode,
+      set_update_mode,
+      restart_app,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
@@ -183,26 +212,19 @@ pub fn run() {
           // Don't cleanup here - let JavaScript handler prevent close if needed
           // Backend cleanup happens in ExitRequested when window actually closes
         }
-        RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), .. } => {
+        RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), label, .. } => {
           use tauri::DragDropEvent;
-          match drag_drop_event {
-            DragDropEvent::Drop { paths, .. } => {
-              add_log(format!("📂 Files dropped: {:?}", paths));
-              let mut added_files = false;
+          if let DragDropEvent::Drop { paths, .. } = drag_drop_event {
+            add_log(format!("📂 Files dropped on window '{}': {:?}", label, paths));
+            let file_paths: Vec<String> = paths
+              .iter()
+              .filter_map(|p| p.to_str().map(|s| s.to_string()))
+              .collect();
 
-              for path in paths {
-                if let Some(path_str) = path.to_str() {
-                  add_log(format!("📂 Processing dropped file: {}", path_str));
-                  add_opened_file(path_str.to_string());
-                  added_files = true;
-                }
-              }
-
-              if added_files {
-                let _ = app_handle.emit("files-changed", ());
-              }
+            // Route to the window the file was actually dropped on.
+            if !file_paths.is_empty() {
+              forward_files_to_window(app_handle, &label, file_paths);
             }
-            _ => {}
           }
         }
         #[cfg(target_os = "macos")]
@@ -210,30 +232,29 @@ pub fn run() {
           use urlencoding::decode;
 
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
-          let mut added_files = false;
-
-          for url in urls {
-            let url_str = url.as_str();
-            if url_str.starts_with("file://") {
-              let encoded_path = url_str.strip_prefix("file://").unwrap_or(url_str);
-
+          let file_paths: Vec<String> = urls
+            .iter()
+            .filter_map(|url| {
+              let url_str = url.as_str();
+              if !url_str.starts_with("file://") {
+                return None;
+              }
+              let encoded = url_str.strip_prefix("file://").unwrap_or(url_str);
               // Decode URL-encoded characters (%20 -> space, etc.)
-              let file_path = match decode(encoded_path) {
-                Ok(decoded) => decoded.into_owned(),
+              match decode(encoded) {
+                Ok(decoded) => Some(decoded.into_owned()),
                 Err(e) => {
-                  add_log(format!("⚠️ Failed to decode file path: {} - {}", encoded_path, e));
-                  encoded_path.to_string() // Fallback to encoded path
+                  add_log(format!("⚠️ Failed to decode file path: {} - {}", encoded, e));
+                  Some(encoded.to_string())
                 }
-              };
+              }
+            })
+            .collect();
 
-              add_log(format!("📂 Processing opened file: {}", file_path));
-              add_opened_file(file_path);
-              added_files = true;
-            }
-          }
-          // Emit a generic notification that files were added (frontend will re-read storage)
-          if added_files {
-            let _ = app_handle.emit("files-changed", ());
+          if !file_paths.is_empty() {
+            // Route to the window the user is in (focused -> main -> any).
+            let label = target_window_label(app_handle).unwrap_or_else(|| MAIN_WINDOW_LABEL.to_string());
+            forward_files_to_window(app_handle, &label, file_paths);
           }
         }
         _ => {
