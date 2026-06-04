@@ -64,15 +64,16 @@ async function extractPageMeasureScales(
     // Parse a Measure dict into a MeasureScale, or return null if malformed.
     const parseScale = (measureObj: unknown) => {
       if (!(measureObj instanceof PDFDict)) return null;
-      const rObj = measureObj.lookup(PDFName.of("R"));
+      // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
+      const m = measureObj as PDFDict;
+      const rObj = m.lookup(PDFName.of("R"));
       const ratioLabel =
         rObj instanceof PDFString || rObj instanceof PDFHexString
           ? rObj.decodeText()
           : "";
       // D = distance array, X = x-axis fallback
-      let fmtArray = measureObj.lookup(PDFName.of("D"));
-      if (!(fmtArray instanceof PDFArray))
-        fmtArray = measureObj.lookup(PDFName.of("X"));
+      let fmtArray = m.lookup(PDFName.of("D"));
+      if (!(fmtArray instanceof PDFArray)) fmtArray = m.lookup(PDFName.of("X"));
       if (!(fmtArray instanceof PDFArray)) return null;
       const firstFmt = fmtArray.lookup(0);
       if (!(firstFmt instanceof PDFDict)) return null;
@@ -453,6 +454,20 @@ const EmbedPdfViewerContent = ({
                   }
                 }
                 return;
+              case "=":
+              case "+":
+                event.preventDefault();
+                zoomActions.zoomIn();
+                return;
+              case "-":
+              case "_":
+                event.preventDefault();
+                zoomActions.zoomOut();
+                return;
+              case "0":
+                event.preventDefault();
+                zoomActions.requestZoom("fit-width");
+                return;
             }
           }
         }
@@ -466,21 +481,6 @@ const EmbedPdfViewerContent = ({
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
         switch (event.key) {
-          case "=":
-          case "+":
-            event.preventDefault();
-            zoomActions.zoomIn();
-            return;
-          case "-":
-          case "_":
-            event.preventDefault();
-            zoomActions.zoomOut();
-            return;
-          case "0":
-            // Ctrl+0: Reset zoom to fit width
-            event.preventDefault();
-            zoomActions.requestZoom("fit-width");
-            return;
           case "f":
           case "F":
             event.preventDefault();
