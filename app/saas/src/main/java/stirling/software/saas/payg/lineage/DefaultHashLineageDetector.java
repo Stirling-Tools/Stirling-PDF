@@ -58,35 +58,43 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
 
     @Override
     public Optional<LineageMatch> detect(Long userId, Path inputFile) throws IOException {
-        Objects.requireNonNull(userId, "userId");
         Objects.requireNonNull(inputFile, "inputFile");
+        return detect(userId, extractSignatures(inputFile));
+    }
 
-        Set<LineageSignature> signatures = extractAll(inputFile);
+    @Override
+    public Optional<LineageMatch> detect(Long userId, Set<LineageSignature> signatures) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(signatures, "signatures");
         if (signatures.isEmpty()) {
             // No extractor produced anything for this content. Treat as no-match.
-            log.debug("No signatures extracted from {}; lineage check returns empty.", inputFile);
             return Optional.empty();
         }
-
         return store.findOpenJobForSignatures(userId, signatures, workflowWindow);
     }
 
     @Override
     public void record(UUID jobId, Path file, ArtifactKind kind) throws IOException {
-        Objects.requireNonNull(jobId, "jobId");
         Objects.requireNonNull(file, "file");
-        Objects.requireNonNull(kind, "kind");
+        record(jobId, extractSignatures(file), kind);
+    }
 
-        Set<LineageSignature> signatures = extractAll(file);
+    @Override
+    public void record(UUID jobId, Set<LineageSignature> signatures, ArtifactKind kind) {
+        Objects.requireNonNull(jobId, "jobId");
+        Objects.requireNonNull(signatures, "signatures");
+        Objects.requireNonNull(kind, "kind");
         if (signatures.isEmpty()) {
-            log.debug(
-                    "No signatures extracted from {} for job {} ({}); nothing recorded.",
-                    file,
-                    jobId,
-                    kind);
+            log.debug("No signatures to record for job {} ({}); skipping.", jobId, kind);
             return;
         }
         store.record(jobId, signatures, kind);
+    }
+
+    @Override
+    public Set<LineageSignature> extractSignatures(Path file) {
+        Objects.requireNonNull(file, "file");
+        return extractAll(file);
     }
 
     private Set<LineageSignature> extractAll(Path file) {
