@@ -35,6 +35,9 @@ The trip was undertaken for client onsite meetings with Atlantic Energy Solution
 | Client dinner (3 attendees) | $186.20 | January 6th, 2026 | Meals |
 | Parking at JFK Airport | $72.00 | January 5th–8th, 2026 | Parking |
 | Breakfast (per diem not used) | $18.50 | January 7th, 2026 | Meals |
+
+| Description | Amount | Date | Category |
+|---|---|---|---|
 | Uber to client office | $22.10 | January 7th, 2026 | Ground transportation |
 | Printing + presentation materials | $46.90 | January 8th, 2026 | Materials |
 | Lunch with client | $39.75 | January 8th, 2026 | Meals |

@@ -47,6 +47,10 @@ public class PdfMarkdownConverter {
         // structured until after the page loop so a table split across a page break can be stitched
         // back together before rendering.
         List<Object> output = new ArrayList<>();
+        // Header text of a table that ended the previous page, used to spot a continuation whose
+        // header repeats at the top of the current page. Null when the previous page did not end in
+        // a table.
+        String prevPageTrailingTableHeader = null;
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
             List<TextLine> rawLines =
@@ -57,6 +61,7 @@ public class PdfMarkdownConverter {
             List<Line> lines = stitchGlyphs(rawLines);
             if (lines.isEmpty()) {
                 emitImages(doc, pageIndex, output);
+                prevPageTrailingTableHeader = null;
                 continue;
             }
 
@@ -66,7 +71,18 @@ public class PdfMarkdownConverter {
             // Multi-column guard: only genuine two-column prose should be split. A table's column
             // gutters must NOT be mistaken for a page-layout gutter, so this looks at whether row
             // lines span the gutter (table) or stay within one side (two-column prose).
-            boolean twoColumn = detectsTwoColumns(lines);
+            // A table that ran to the bottom of the previous page and repeats its header at the top
+            // of this page is a continuation, not a new two-column layout. Detecting the repeated
+            // header keeps this page out of the two-column path so the continuation is rebuilt as a
+            // table and stitched back onto the previous block.
+            final String continuationHeader = prevPageTrailingTableHeader;
+            boolean tableContinuation =
+                    continuationHeader != null
+                            && lines.stream()
+                                    .anyMatch(
+                                            l -> normaliseSpace(l.text).equals(continuationHeader));
+
+            boolean twoColumn = !tableContinuation && detectsTwoColumns(lines);
 
             // Tables are detected from text/word geometry (the word-grid detector), which handles
             // both ruled and borderless tables and places cells by column alignment. The native
@@ -130,6 +146,7 @@ public class PdfMarkdownConverter {
 
             mergeAcrossPageBoundary(output, pageItems);
             output.addAll(pageItems);
+            prevPageTrailingTableHeader = trailingTableHeader(pageItems);
         }
 
         // Stitch tables split across page breaks, then render every element to Markdown.
@@ -404,14 +421,14 @@ public class PdfMarkdownConverter {
 
             if (isHeading) {
                 flushParagraph(para, out);
-                out.add(prefix + text);
+                out.add(prefix + escapeMarkdown(text));
             } else if (isBullet) {
                 flushParagraph(para, out);
-                out.add(text);
+                out.add(escapeMarkdown(text));
             } else if (HeadingDetector.isBoldLabel(line.source)) {
                 // Bold but not large enough to be a heading → emphasise as bold, don't promote.
                 flushParagraph(para, out);
-                out.add("**" + text + "**");
+                out.add("**" + escapeMarkdown(text) + "**");
             } else if (paragraphBreak) {
                 flushParagraph(para, out);
                 para.append(text);
@@ -585,6 +602,15 @@ public class PdfMarkdownConverter {
     }
 
     /**
+     * Visible for testing: column detection depends only on word geometry, so tests can drive it
+     * from synthetic {@link TextLine}s to exercise degenerate-coordinate handling (the crash path
+     * an extreme text matrix can produce) without needing a binary PDF fixture.
+     */
+    static List<float[]> findColumnRangesFromLines(List<TextLine> rows) {
+        return findColumnRanges(rows.stream().map(Line::new).collect(Collectors.toList()));
+    }
+
+    /**
      * Finds column x-ranges by vertical-whitespace projection. Each row contributes coverage for
      * the x-bands its words occupy; a column is a contiguous band covered by a sufficient fraction
      * of rows, and the gaps between such bands are the gutters.
@@ -598,12 +624,14 @@ public class PdfMarkdownConverter {
                 maxX = Math.max(maxX, w.x() + w.width());
             }
         }
-        if (maxX <= minX) {
+        // Real pages are under ~2000pt wide; anything larger is a malformed/crafted coordinate
+        // that would allocate a multi-GB array or produce a negative span on overflow.
+        if (maxX <= minX || (maxX - minX) > 2000f) {
             return List.of();
         }
 
         int lo = (int) Math.floor(minX);
-        int span = (int) Math.ceil(maxX) - lo + 1;
+        int span = Math.min((int) Math.ceil(maxX) - lo + 1, 2001);
         int[] coverage = new int[span];
         for (Line l : rows) {
             boolean[] covered = new boolean[span];
@@ -760,7 +788,63 @@ public class PdfMarkdownConverter {
     }
 
     private static String escapeCell(String cell) {
-        return cell.replace("|", "\\|");
+        // Cell content is inline context: escape inline markdown (including the column delimiter)
+        // but not leading block markers, which have no meaning inside a table cell.
+        return escapeMarkdownInline(cell);
+    }
+
+    /**
+     * Escapes Markdown control characters in body text extracted from the PDF so that literal
+     * characters (e.g. a line that reads {@code # Heading} or {@code [label](url)}, or an embedded
+     * {@code <tag>}) are emitted as text rather than being reinterpreted as structure or raw HTML.
+     * Applied to all body text — headings, paragraphs, bold labels, bullets — before emission.
+     *
+     * <p>The generated Markdown should still be treated as untrusted content by any downstream
+     * renderer: this hardens fidelity and is defence-in-depth, not a substitute for safe rendering.
+     */
+    private static String escapeMarkdown(String text) {
+        if (text.isEmpty()) {
+            return text;
+        }
+        String inline = escapeMarkdownInline(text);
+        return escapeLeadingBlockMarker(inline, text);
+    }
+
+    /** Escapes inline-significant Markdown characters anywhere in the string. */
+    private static String escapeMarkdownInline(String text) {
+        StringBuilder sb = new StringBuilder(text.length() + 8);
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            switch (c) {
+                case '\\', '`', '*', '_', '[', ']', '<', '>', '|', '~' -> sb.append('\\').append(c);
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Escapes block-level markers that are only significant at the start of a line: ATX headings
+     * ({@code #}), unordered list / thematic break markers ({@code -}, {@code +}), and ordered list
+     * markers ({@code 1.} / {@code 1)}). {@code original} carries the unescaped leading characters,
+     * none of which are altered by inline escaping, so positions line up with {@code escaped}.
+     */
+    private static String escapeLeadingBlockMarker(String escaped, String original) {
+        char c0 = original.charAt(0);
+        if (c0 == '#' || c0 == '-' || c0 == '+') {
+            return "\\" + escaped;
+        }
+        int i = 0;
+        while (i < original.length() && Character.isDigit(original.charAt(i))) {
+            i++;
+        }
+        if (i > 0 && i < original.length()) {
+            char delim = original.charAt(i);
+            if (delim == '.' || delim == ')') {
+                return escaped.substring(0, i) + "\\" + escaped.substring(i);
+            }
+        }
+        return escaped;
     }
 
     private static String padRight(String s, int width) {
@@ -875,6 +959,25 @@ public class PdfMarkdownConverter {
     }
 
     /** Whitespace-normalised text of a row's lines (top to bottom), for header de-duplication. */
+    /**
+     * Header text of a table at the very bottom of a page, or null if the page does not end in one.
+     * Trailing image placeholders are skipped; any other text after a table means it did not run to
+     * the page bottom and so is not a continuation candidate.
+     */
+    private static String trailingTableHeader(List<Object> pageItems) {
+        for (int i = pageItems.size() - 1; i >= 0; i--) {
+            Object e = pageItems.get(i);
+            if (e instanceof String s && s.strip().startsWith("<image redacted")) {
+                continue;
+            }
+            if (e instanceof TableBlock tb && !tb.rows().isEmpty()) {
+                return rowText(tb.rows().get(0));
+            }
+            return null;
+        }
+        return null;
+    }
+
     private static String rowText(List<Line> row) {
         List<Line> ordered = new ArrayList<>(row);
         ordered.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());
@@ -907,7 +1010,7 @@ public class PdfMarkdownConverter {
 
     private static void flushParagraph(StringBuilder para, List<String> out) {
         if (!para.isEmpty()) {
-            out.add(para.toString());
+            out.add(escapeMarkdown(para.toString()));
             para.setLength(0);
         }
     }
