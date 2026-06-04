@@ -6,7 +6,9 @@ const getWasmUrl = (): string => {
   if (import.meta.env.DEV) {
     return `${origin}${BASE_PATH}/pdfium/pdfium.wasm`;
   }
-  const cleanAssetUrl = pdfiumWasmAssetUrl.replace(/^\.\//, "").replace(/^\//, "");
+  const cleanAssetUrl = pdfiumWasmAssetUrl
+    .replace(/^\.\//, "")
+    .replace(/^\//, "");
   return `${origin}${BASE_PATH}/${cleanAssetUrl}`;
 };
 
