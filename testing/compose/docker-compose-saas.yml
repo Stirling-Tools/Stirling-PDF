@@ -55,7 +55,10 @@ services:
       - "8080:8080"
     environment:
       # Activate the saas profile + bring the saas subproject onto the classpath.
-      SPRING_PROFILES_ACTIVE: "saas"
+      # `payg-cucumber` registers the test-only throw-500 controller in
+      # `app/saas/.../payg/test/PaygCucumberThrowController.java` — that bean is
+      # @Profile("payg-cucumber") so it never registers in production.
+      SPRING_PROFILES_ACTIVE: "saas,payg-cucumber"
       STIRLING_FLAVOR: "saas"
       ENABLE_SAAS: "true"
       DISABLE_ADDITIONAL_FEATURES: "false"

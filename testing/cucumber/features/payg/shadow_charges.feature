@@ -36,10 +36,28 @@ Feature: PAYG shadow-mode charging
     And the latest job has step_count = 2
     And the latest job is OPEN
 
+  Scenario: First-step 5xx refunds the shadow row + closes the process
+    # No reliably-5xx-ing real tool endpoint exists (every malformed input is
+    # caught as 4xx by GlobalExceptionHandler), so we drive the refund path
+    # through PaygCucumberThrowController — a @Profile("payg-cucumber") stub
+    # that always throws IllegalStateException → 500. The profile is active
+    # only inside docker-compose-saas.yml, never in production.
+    Given there are no existing shadow charges for team "payg-cucumber-team"
+    When I POST a single-page PDF to "/api/v1/payg-cucumber/throw-500"
+    Then the response status is 500
+    And exactly 1 shadow charge row exists for team "payg-cucumber-team"
+    And the latest shadow charge row has status "REFUNDED"
+    And the latest shadow charge row's refunded_at is not null
+    And the latest shadow charge row's refund_reason starts with "first-step-5xx"
+    And the latest job is CLOSED
+    And the latest job has 1 step recorded with status "FAILED"
+
   # ──────────────────────────────────────────────────────────────────────────
-  # NOTE: 5xx-refund + kill-switch scenarios are NOT automated.
-  # Both require manual verification — see notes/PAYG_DESIGN.md §7.5
-  # "PAYG cucumber: manual-only scenarios" for the procedure.
+  # NOTE: The kill-switch scenario (PAYG_FILTER_ENABLED=false) is NOT
+  # automated — it requires restarting the stirling-pdf-saas container with
+  # a different env var mid-run, which couples test setup to compose state
+  # more than it's worth for a flag that only flips during incident response.
+  # See notes/PAYG_DESIGN.md §7.5.2 "PAYG cucumber: manual-only scenarios".
   # ──────────────────────────────────────────────────────────────────────────
 
   Scenario: 4xx leaves the shadow row CHARGED (customer pays for the attempt)
