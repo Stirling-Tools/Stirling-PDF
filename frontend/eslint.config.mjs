@@ -149,7 +149,6 @@ export default defineConfig(
     ignores: [
       "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
