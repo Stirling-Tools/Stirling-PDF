@@ -29,26 +29,66 @@ export function SelectionAPIBridge() {
   useEffect(() => {
     if (!selection || !documentReady) return;
 
-    // begin/update/end are runtime-public but typed private; matches the
-    // TextSelectionHandler word/line cast.
-    const selectAllOnPage = (documentId: string, pageIndex: number) => {
-      const plugin = selectionPlugin as unknown as {
-        clearSelection: (id: string) => void;
-        beginSelection: (id: string, page: number, glyph: number) => void;
-        updateSelection: (id: string, page: number, glyph: number) => void;
-        endSelection: (id: string) => void;
-      };
-      const state = selection.getState(documentId);
-      const geo = state.geometry[pageIndex];
-      if (!geo || geo.runs.length === 0) return false;
-      let lastGlyph = 0;
+    // begin/update/end + getOrLoadGeometry are runtime-public but typed private;
+    // matches the TextSelectionHandler word/line cast.
+    type SelectionPluginInternals = {
+      clearSelection: (id: string) => void;
+      beginSelection: (id: string, page: number, glyph: number) => void;
+      updateSelection: (id: string, page: number, glyph: number) => void;
+      endSelection: (id: string) => void;
+      getOrLoadGeometry: (
+        id: string,
+        pageIdx: number,
+      ) => { toPromise: () => Promise<unknown> };
+    };
+
+    const lastGlyphOnPage = (geo: {
+      runs: { charStart: number; glyphs: unknown[] }[];
+    }): number => {
+      let last = 0;
       for (const run of geo.runs) {
         const end = run.charStart + run.glyphs.length - 1;
-        if (end > lastGlyph) lastGlyph = end;
+        if (end > last) last = end;
       }
+      return last;
+    };
+
+    const selectAllInDocument = async (
+      documentId: string,
+      totalPages: number,
+    ) => {
+      const plugin = selectionPlugin as unknown as SelectionPluginInternals;
+      if (totalPages <= 0) return false;
+
+      // Pre-load geometry for every page so updateRectsAndSlices has data to
+      // emit rects for, and getSelectedText has slices for, every page.
+      try {
+        await Promise.all(
+          Array.from({ length: totalPages }, (_, p) =>
+            plugin.getOrLoadGeometry(documentId, p).toPromise(),
+          ),
+        );
+      } catch {
+        // Continue with whatever geometry did load
+      }
+
+      const state = selection.getState(documentId);
+      let firstPage = -1;
+      let lastPage = -1;
+      let lastGlyph = 0;
+      for (let p = 0; p < totalPages; p++) {
+        const geo = state.geometry[p];
+        if (!geo || geo.runs.length === 0) continue;
+        if (firstPage === -1) firstPage = p;
+        lastPage = p;
+        lastGlyph = lastGlyphOnPage(geo);
+      }
+
+      if (firstPage === -1 || lastPage === -1) return false;
+
       plugin.clearSelection(documentId);
-      plugin.beginSelection(documentId, pageIndex, 0);
-      plugin.updateSelection(documentId, pageIndex, lastGlyph);
+      plugin.beginSelection(documentId, firstPage, 0);
+      plugin.updateSelection(documentId, lastPage, lastGlyph);
       plugin.endSelection(documentId);
       return true;
     };
@@ -80,10 +120,10 @@ export function SelectionAPIBridge() {
       copyToClipboard: () => selection.copyToClipboard(),
       getSelectedText: () => selection.getSelectedText(),
       getFormattedSelection: () => selection.getFormattedSelection(),
-      selectAllOnPage: (pageIndex: number) => {
+      selectAll: async (totalPages: number) => {
         const docId = activeDocumentId;
         if (!docId || !selectionPlugin) return false;
-        return selectAllOnPage(docId, pageIndex);
+        return selectAllInDocument(docId, totalPages);
       },
       selectWordAt: (pageIndex: number, x: number, y: number) => {
         const docId = activeDocumentId;

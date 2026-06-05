@@ -448,9 +448,9 @@ const EmbedPdfViewerContent = ({
                 // Intercept unconditionally so the browser can't blanket-select the surrounding UI chrome.
                 event.preventDefault();
                 {
-                  const currentPage = getScrollState().currentPage;
-                  if (currentPage > 0) {
-                    selectionActions.selectAllOnPage(currentPage - 1);
+                  const totalPages = getScrollState().totalPages;
+                  if (totalPages > 0) {
+                    void selectionActions.selectAll(totalPages);
                   }
                 }
                 return;
