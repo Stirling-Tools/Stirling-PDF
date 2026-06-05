@@ -99,12 +99,12 @@ Object.defineProperty(globalThis, "crypto", {
     subtle: {
       digest: vi
         .fn()
-        .mockImplementation(async (_algorithm: string, _data: any) => {
+        .mockImplementation(async (_algorithm: string, _data: BufferSource) => {
           // Always return the mock hash buffer regardless of input
           return mockHashBuffer.slice();
         }),
     },
-    getRandomValues: vi.fn().mockImplementation((array: any) => {
+    getRandomValues: vi.fn().mockImplementation((array: Uint8Array) => {
       // Mock getRandomValues if needed
       for (let i = 0; i < array.length; i++) {
         array[i] = Math.floor(Math.random() * 256);

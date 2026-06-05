@@ -184,7 +184,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
 
-    base_dir = Path.cwd() / "frontend" / "public" / "locales"
+    base_dir = Path.cwd() / "frontend" / "editor" / "public" / "locales"
 
     for file_path in file_arr:
         file_path = Path(file_path)
@@ -372,6 +372,7 @@ if __name__ == "__main__":
                 os.path.join(
                     os.getcwd(),
                     "frontend",
+                    "editor",
                     "public",
                     "locales",
                     "*",

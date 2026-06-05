@@ -106,6 +106,17 @@ export default function FileManagerView() {
   const isMobile = useIsMobile();
   const isMobileUploadAvailable =
     Boolean(appConfig?.enableMobileScanner) && !isMobile;
+  // Server storage gate; mirrors ConfigController's storageEnabled
+  // (enableLogin && storage.isEnabled). When off, Save-to-server stays
+  // visible but disabled with an explanatory tooltip (discoverability beats
+  // hiding - mirrors the New folder / Manage sharing gates in this view).
+  const uploadEnabled = appConfig?.storageEnabled === true;
+  const saveToServerDisabledReason: string | null = uploadEnabled
+    ? null
+    : t(
+        "filesPage.saveToServerDisabledHint",
+        "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
+      );
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
@@ -1185,19 +1196,35 @@ export default function FileManagerView() {
                           </Button>
                         </Tooltip>
                       )}
-                      {/* Save to server; hidden when no local-only file selected. */}
+                      {/* Save to server; shown whenever local-only files are
+                          selected. When storage is off it stays visible but
+                          disabled, tooltip pointing at the admin. */}
                       {localOnlySelectedStubs.length > 0 && (
                         <Tooltip
-                          label={t("filesPage.saveToServer", "Save to server")}
+                          label={
+                            saveToServerDisabledReason ??
+                            t("filesPage.saveToServer", "Save to server")
+                          }
                           withinPortal
+                          multiline={Boolean(saveToServerDisabledReason)}
+                          w={saveToServerDisabledReason ? 240 : undefined}
                         >
                           <Button
                             size="sm"
                             variant="default"
                             leftSection={<CloudUploadIcon fontSize="small" />}
+                            disabled={Boolean(saveToServerDisabledReason)}
                             onClick={() =>
                               setSaveToServerTarget(localOnlySelectedStubs)
                             }
+                            styles={{
+                              root: {
+                                // Keep the tooltip hoverable while disabled.
+                                pointerEvents: saveToServerDisabledReason
+                                  ? "auto"
+                                  : undefined,
+                              },
+                            }}
                             aria-label={t(
                               "filesPage.saveToServer",
                               "Save to server",
@@ -1450,6 +1477,7 @@ export default function FileManagerView() {
               onRemoveFiles={handleRemoveFiles}
               onPromptMoveFiles={promptMoveFiles}
               onSaveToServer={(file) => setSaveToServerTarget([file])}
+              saveToServerDisabledReason={saveToServerDisabledReason}
               // Center-of-grid CTAs when the empty state shows - same
               // handlers the corner header buttons use so behaviour
               // (disabled tooltips, native file picker, dialog) is
@@ -1495,6 +1523,7 @@ export default function FileManagerView() {
             onMove={promptMoveFiles}
             onRemove={handleRemoveFiles}
             onSaveToServer={(files) => setSaveToServerTarget(files)}
+            saveToServerDisabledReason={saveToServerDisabledReason}
           />
         )}
       </div>
@@ -1521,6 +1550,7 @@ export default function FileManagerView() {
               onMove={promptMoveFiles}
               onRemove={handleRemoveFiles}
               onSaveToServer={(files) => setSaveToServerTarget(files)}
+              saveToServerDisabledReason={saveToServerDisabledReason}
             />
           )}
         </Drawer>

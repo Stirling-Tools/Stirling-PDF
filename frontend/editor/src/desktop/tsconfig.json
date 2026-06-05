@@ -5,7 +5,8 @@
     "paths": {
       "@app/*": ["src/desktop/*", "src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": [
