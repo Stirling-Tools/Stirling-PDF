@@ -143,23 +143,26 @@ export default defineConfig(
       ],
     },
   },
-  // Folders that have been cleaned up and are now conformant - stricter rules enforced here
+  // Stricter rules that not all sub-folders are conformant to yet
   {
-    files: [
-      "editor/src/core/auth/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/constants/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/extensions/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/i18n/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/responses/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/styles/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/testing/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/workers/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
-      "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
-      "shared/**/*.{js,mjs,jsx,ts,tsx}",
+    files: srcGlobs,
+    ignores: [
+      "editor/src/assets/material-symbols-icons.d.ts",
+      "editor/src/core/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/theme/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/global.d.ts",
+      "editor/src/index.tsx",
+      "editor/src/reportWebVitals.js",
     ],
     languageOptions: {
       parserOptions: {
