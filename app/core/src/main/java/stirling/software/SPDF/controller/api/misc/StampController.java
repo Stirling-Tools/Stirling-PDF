@@ -50,6 +50,7 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -146,6 +147,9 @@ public class StampController {
 
         // Load the input PDF
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
+
+            // Flatten form widgets so the stamp is not hidden behind input fields.
+            PdfUtils.flattenFormFieldsForOverlay(document);
 
             List<Integer> pageNumbers = request.getPageNumbersList(document, true);
 
