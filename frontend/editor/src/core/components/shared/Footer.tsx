@@ -44,13 +44,10 @@ export default function Footer({
   // Default URLs
   const defaultTermsUrl = "https://www.stirling.com/terms";
   const defaultPrivacyUrl = "https://www.stirling.com/privacy";
-  const defaultAccessibilityUrl = "https://www.stirling.com/accessibility";
 
   // Use provided URLs or fall back to defaults
   const finalTermsUrl = finalTermsAndConditions || defaultTermsUrl;
   const finalPrivacyUrl = finalPrivacyPolicy || defaultPrivacyUrl;
-  const finalAccessibilityUrl =
-    finalAccessibilityStatement || defaultAccessibilityUrl;
 
   // Helper to check if a value is valid (not null/undefined/empty string)
   const isValidLink = (link?: string) => link && link.trim().length > 0;
@@ -121,14 +118,16 @@ export default function Footer({
         >
           {t("footer.issues", "GitHub")}
         </a>
-        <a
-          className="footer-link px-3"
-          target="_blank"
-          rel="noopener noreferrer"
-          href={finalAccessibilityUrl}
-        >
-          {t("legal.accessibility", "Accessibility")}
-        </a>
+        {isValidLink(finalAccessibilityStatement) && (
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href={finalAccessibilityStatement}
+          >
+            {t("legal.accessibility", "Accessibility")}
+          </a>
+        )}
         {isValidLink(finalCookiePolicy) && (
           <a
             className="footer-link px-3"
