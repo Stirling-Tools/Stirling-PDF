@@ -1,6 +1,8 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -24,14 +27,15 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -49,6 +53,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
+import stirling.software.proprietary.security.util.DesktopClientUtils;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
@@ -59,7 +64,6 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
@@ -74,6 +78,56 @@ public class AiWorkflowService {
     private final TempFileManager tempFileManager;
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
+    private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
+
+    public AiWorkflowService(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            AiEngineClient aiEngineClient,
+            PdfContentExtractor pdfContentExtractor,
+            ObjectMapper objectMapper,
+            InternalApiClient internalApiClient,
+            FileStorage fileStorage,
+            ToolMetadataService toolMetadataService,
+            TempFileManager tempFileManager,
+            FileIdStrategy fileIdStrategy,
+            AiEngineEndpointResolver endpointResolver,
+            @Autowired(required = false) UserServiceInterface userService,
+            ApplicationProperties applicationProperties) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.aiEngineClient = aiEngineClient;
+        this.pdfContentExtractor = pdfContentExtractor;
+        this.objectMapper = objectMapper;
+        this.internalApiClient = internalApiClient;
+        this.fileStorage = fileStorage;
+        this.toolMetadataService = toolMetadataService;
+        this.tempFileManager = tempFileManager;
+        this.fileIdStrategy = fileIdStrategy;
+        this.endpointResolver = endpointResolver;
+        this.userService = userService;
+        this.applicationProperties = applicationProperties;
+    }
+
+    /**
+     * How long an AI-workflow-ingested personal doc lives on the engine before the reaper deletes
+     * it. Mirrors the configured web JWT lifetime, so a stale cookie can never see data the user
+     * has lost their session to. Org-shared content (when we add it) bypasses this and sends a null
+     * {@code expiresAt} so it's persistent.
+     */
+    private Duration personalDocTtl() {
+        int minutes = DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
+        return Duration.ofMinutes(minutes);
+    }
+
+    /**
+     * Resolve the currently-authenticated user's id for X-User-Id propagation to the AI engine.
+     * Returns null when security is disabled (no UserServiceInterface bean) or no one is logged in.
+     * The engine rejects per-user routes (ingest, search) when this is null; non-tenant routes
+     * (health, orchestrate without RAG) still work.
+     */
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
+    }
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -132,10 +186,7 @@ public class AiWorkflowService {
         WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
         initialRequest.setUserMessage(request.getUserMessage().trim());
         initialRequest.setFiles(files);
-        initialRequest.setConversationHistory(
-                request.getConversationHistory() == null
-                        ? new ArrayList<>()
-                        : new ArrayList<>(request.getConversationHistory()));
+        initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
@@ -178,6 +229,12 @@ public class AiWorkflowService {
             WorkflowTurnRequest request,
             ProgressListener listener)
             throws IOException {
+        if (filesById.isEmpty()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "No files were uploaded. Please add a PDF to the workbench first."));
+        }
+
         if (!request.getArtifacts().isEmpty()) {
             return new WorkflowState.Terminal(
                     cannotContinue("AI engine requested content extraction more than once."));
@@ -298,10 +355,21 @@ public class AiWorkflowService {
                 }
             }
         }
+        // Personal-doc semantics for AI workflows today: caller owns the doc and is its only
+        // grantee, with a session-bounded expiry so the reaper cleans up if logout misses.
+        // When org / shared-doc ingestion lands, the caller chooses owner, grantees, and
+        // expiry (null = persistent) explicitly.
+        String callerId = currentUserId();
         AiDocumentIngestRequest ingestRequest =
-                new AiDocumentIngestRequest(file.getId(), file.getName(), pages);
+                new AiDocumentIngestRequest(
+                        file.getId(),
+                        file.getName(),
+                        pages,
+                        callerId,
+                        callerId == null ? List.of() : List.of(callerId),
+                        Instant.now().plus(personalDocTtl()));
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body);
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
         log.debug(
                 "Ingested document: id={}, name={}, pages={}",
                 file.getId(),
@@ -699,6 +767,7 @@ public class AiWorkflowService {
         aiEngineClient.streamPost(
                 "/api/v1/orchestrator",
                 requestBody,
+                currentUserId(),
                 line -> handleStreamLine(line, listener, resultHolder, errorHolder));
 
         if (errorHolder[0] != null) {
