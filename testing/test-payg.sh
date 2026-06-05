@@ -17,11 +17,32 @@ SEED_FILE="$PROJECT_ROOT/testing/compose/payg/saas-seed.sql"
 
 cd "$PROJECT_ROOT"
 
+# Swap behave.ini for the run. The project-default behave.ini excludes
+# features/payg so the proprietary CI (which boots without the saas profile)
+# can't try to run scenarios that need PAYG tables. behave's exclude_re takes
+# priority over a path argument, so even `behave features/payg` would find
+# zero features against the default config. The PAYG harness needs a config
+# without the payg exclusion — restored on exit.
+BEHAVE_INI="$PROJECT_ROOT/testing/cucumber/behave.ini"
+BEHAVE_INI_BACKUP="$BEHAVE_INI.payg-backup"
+
 cleanup() {
     echo "==> Tearing down saas compose stack"
     docker compose -f "$COMPOSE_FILE" down -v || true
+    if [ -f "$BEHAVE_INI_BACKUP" ]; then
+        mv "$BEHAVE_INI_BACKUP" "$BEHAVE_INI"
+    fi
 }
 trap cleanup EXIT
+
+cp "$BEHAVE_INI" "$BEHAVE_INI_BACKUP"
+cat > "$BEHAVE_INI" <<'EOF'
+# Temporary behave.ini written by testing/test-payg.sh for the PAYG harness
+# run only. Restored on exit. The project default (in git) excludes
+# features/payg so the proprietary-flavor CI doesn't try to run them.
+[behave]
+exclude_re = features/enterprise
+EOF
 
 echo "==> Building + starting saas compose stack"
 docker compose -f "$COMPOSE_FILE" up -d --build
