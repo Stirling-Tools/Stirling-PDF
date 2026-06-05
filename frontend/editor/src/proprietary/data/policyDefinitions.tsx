@@ -19,10 +19,21 @@ import type {
   PolicyCategory,
   PolicyConfigDef,
   PolicySource,
+  PolicyStats,
   PolicyUser,
 } from "@app/types/policies";
 
 const ICON_SX = { fontSize: "1rem" } as const;
+
+/**
+ * All categories ship the same zeroed stats in the prototype (no enforcement has
+ * run yet); the detail view formats these into the three-up summary grid.
+ */
+const ZERO_STATS: PolicyStats = {
+  enforced: 0,
+  dataProcessed: "0",
+  activeFor: "—",
+};
 
 /** The 5 policy categories, in the prototype's narrative order. */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
@@ -65,6 +76,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Classifies documents, extracts structured data, enforces naming, and normalizes pages.",
     rules: ["Classify", "Extract", "Name", "Normalize"],
     scopeLabel: "All PDFs on this device",
+    stats: ZERO_STATS,
     fields: [
       {
         label: "Auto-classify",
@@ -139,6 +151,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Detects PII, encrypts, verifies authenticity, controls access, and certifies documents.",
     rules: ["Detect PII", "Encrypt", "Verify", "Access", "Certify"],
     scopeLabel: "All PDFs on this device",
+    stats: ZERO_STATS,
     fields: [
       { label: "Detect PII", key: "detectPII", type: "toggle", value: true },
       {
@@ -228,6 +241,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Validates documents against regulatory frameworks before they leave the system.",
     rules: ["Framework scan", "Enforce action", "Audit trail"],
     scopeLabel: "All PDFs on this device",
+    stats: ZERO_STATS,
     fields: [
       {
         label: "Frameworks",
@@ -265,6 +279,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Routes documents to the right destination based on type and classification.",
     rules: ["Auto-classify", "Route to folder", "Webhook notify"],
     scopeLabel: "All PDFs on this device",
+    stats: ZERO_STATS,
     fields: [
       {
         label: "Destination",
@@ -282,6 +297,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Enforces how long documents are kept, when to archive, and when to delete.",
     rules: ["Retention hold", "Auto-archive", "Deletion block"],
     scopeLabel: "All PDFs on this device",
+    stats: ZERO_STATS,
     fields: [
       {
         label: "Keep for",

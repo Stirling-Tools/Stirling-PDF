@@ -15,11 +15,7 @@ import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import SmartFoldersRegistration from "@app/components/smartFolders/SmartFoldersRegistration";
-import PoliciesRegistration from "@app/components/policies/PoliciesRegistration";
-import {
-  WATCH_FOLDERS_ENABLED,
-  POLICIES_ENABLED,
-} from "@app/constants/featureFlags";
+import { WATCH_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -87,7 +83,6 @@ export default function App() {
                 </Routes>
                 <Onboarding />
                 {WATCH_FOLDERS_ENABLED && <SmartFoldersRegistration />}
-                {POLICIES_ENABLED && <PoliciesRegistration />}
               </AppLayout>
             </AppProviders>
           }

@@ -69,7 +69,14 @@ export function PolicySetupWizard({
   }
 
   const back = () =>
-    step > 1 ? setStep((step - 1) as PolicySetupStep) : onCancel();
+    step > 1
+      ? setStep((s) => Math.max(1, s - 1) as PolicySetupStep)
+      : onCancel();
+
+  const toggleSource = (id: string) =>
+    setSources((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
+    );
 
   return (
     <div className="pol-detail">
@@ -135,21 +142,11 @@ export function PolicySetupWizard({
                     data-first={i === 0 || undefined}
                     role="button"
                     tabIndex={0}
-                    onClick={() =>
-                      setSources((prev) =>
-                        prev.includes(src.id)
-                          ? prev.filter((s) => s !== src.id)
-                          : [...prev, src.id],
-                      )
-                    }
+                    onClick={() => toggleSource(src.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSources((prev) =>
-                          prev.includes(src.id)
-                            ? prev.filter((s) => s !== src.id)
-                            : [...prev, src.id],
-                        );
+                        toggleSource(src.id);
                       }
                     }}
                   >
@@ -237,6 +234,8 @@ export function PolicySetupWizard({
               <p className="pol-info-sub">Send flagged documents to:</p>
               <input
                 className="pol-text-input"
+                type="email"
+                aria-label="Reviewer email"
                 value={reviewerEmail}
                 onChange={(e) => setReviewerEmail(e.target.value)}
                 placeholder="email@company.com"
@@ -285,7 +284,9 @@ export function PolicySetupWizard({
         {step < 3 ? (
           <button
             className="pol-btn-primary"
-            onClick={() => setStep((step + 1) as PolicySetupStep)}
+            onClick={() =>
+              setStep((s) => Math.min(3, s + 1) as PolicySetupStep)
+            }
           >
             Continue
           </button>

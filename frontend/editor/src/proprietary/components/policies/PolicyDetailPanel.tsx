@@ -1,5 +1,4 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PublicIcon from "@mui/icons-material/Public";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -10,6 +9,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import type {
   PolicyCategory,
   PolicyConfigDef,
+  PolicyRowStatus,
   PolicyState,
 } from "@app/types/policies";
 
@@ -17,10 +17,10 @@ interface PolicyDetailPanelProps {
   category: PolicyCategory;
   config: PolicyConfigDef;
   state: PolicyState;
+  /** Derived display status (treats a spend-limit hit as paused). */
+  status: PolicyRowStatus;
   canConfigure: boolean;
-  isPaused: boolean;
   onBack: () => void;
-  onClose: () => void;
   onEditSettings: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
@@ -31,14 +31,14 @@ export function PolicyDetailPanel({
   category,
   config,
   state,
+  status,
   canConfigure,
-  isPaused,
   onBack,
-  onClose,
   onEditSettings,
   onTogglePause,
   onDelete,
 }: PolicyDetailPanelProps) {
+  const isPaused = status === "paused";
   return (
     <div className="pol-detail">
       {/* Header */}
@@ -57,15 +57,12 @@ export function PolicyDetailPanel({
         </div>
         {isPaused ? (
           <span className="pol-badge pol-badge-paused">Paused</span>
-        ) : state.status === "active" ? (
+        ) : (
           <span className="pol-badge pol-badge-active">
             <span className="pol-badge-dot" />
             Active
           </span>
-        ) : null}
-        <button className="pol-icon-btn" onClick={onClose} aria-label="Close">
-          <CloseIcon sx={{ fontSize: "1.1rem" }} />
-        </button>
+        )}
       </div>
 
       <div className="pol-scroll">
@@ -121,9 +118,15 @@ export function PolicyDetailPanel({
         {/* Stats */}
         <div className="pol-stats">
           {[
-            { value: "0", label: "Docs enforced" },
-            { value: "0", label: "Data processed" },
-            { value: "—", label: "Active" },
+            {
+              value: config.stats.enforced.toLocaleString() || "0",
+              label: "Docs enforced",
+            },
+            {
+              value: config.stats.dataProcessed || "0",
+              label: "Data processed",
+            },
+            { value: config.stats.activeFor || "—", label: "Active" },
           ].map((s) => (
             <div key={s.label} className="pol-stat">
               <p className="pol-stat-value">{s.value}</p>

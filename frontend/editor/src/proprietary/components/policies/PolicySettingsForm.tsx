@@ -1,20 +1,30 @@
 import { useState } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import type { PolicyConfigDef, PolicyState } from "@app/types/policies";
+import type {
+  PolicyCategory,
+  PolicyConfigDef,
+  PolicyRowStatus,
+  PolicyState,
+} from "@app/types/policies";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
 
 interface PolicySettingsFormProps {
+  category: PolicyCategory;
   config: PolicyConfigDef;
   state: PolicyState;
+  /** Derived display status (treats a spend-limit hit as paused). */
+  status: PolicyRowStatus;
   onCancel: () => void;
   onSave: (fieldValues: Record<string, boolean | string | string[]>) => void;
 }
 
 /** Edit-settings sub-view for an already-configured policy. */
 export function PolicySettingsForm({
+  category,
   config,
   state,
+  status,
   onCancel,
   onSave,
 }: PolicySettingsFormProps) {
@@ -28,7 +38,19 @@ export function PolicySettingsForm({
         <button className="pol-icon-btn" onClick={onCancel} aria-label="Back">
           <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
         </button>
-        <span className="pol-header-title">Edit Settings</span>
+        <span className="pol-header-icon">{category.icon}</span>
+        <div className="pol-header-text">
+          <span className="pol-header-title">{category.label}</span>
+          <span className="pol-header-sub">Edit settings</span>
+        </div>
+        {status === "paused" ? (
+          <span className="pol-badge pol-badge-paused">Paused</span>
+        ) : (
+          <span className="pol-badge pol-badge-active">
+            <span className="pol-badge-dot" />
+            Active
+          </span>
+        )}
       </div>
 
       <div className="pol-scroll">

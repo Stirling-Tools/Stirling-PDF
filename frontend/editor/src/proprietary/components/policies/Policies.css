@@ -1,108 +1,152 @@
 /* ============================ Policies ============================ */
-/* Two-pane surface: category rail + detail/wizard/settings pane.      */
+/* The Policies surface is docked in the right tool sidebar: a list section  */
+/* above Tools, a detail takeover that replaces Tools when a policy is open, */
+/* and a collapsed-rail of policy icons.                                     */
 
-.pol-panel {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  background: var(--bg-background, var(--bg-surface));
-}
-
-/* ---- Rail ---- */
-.pol-rail {
+/* ---- List ---- */
+.pol-list {
+  width: 100%;
+  max-width: 22rem;
   display: flex;
   flex-direction: column;
-  width: 17rem;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
 }
-
-.pol-rail-head {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  padding: 0.85rem 1rem 0.5rem;
+.pol-list-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
-
-.pol-rail-list {
+.pol-list-head-label {
   flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0 0.5rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+.pol-list-head-count {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+.pol-list-head-chevron {
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+.pol-list-head-chevron[data-collapsed="true"] {
+  transform: rotate(-90deg);
+}
+.pol-list-rows {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 0.25rem 0.5rem;
 }
 
-.pol-rail-item {
+/* ---- Policy row ---- */
+.pol-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   width: 100%;
-  padding: 0.5rem 0.6rem;
-  border: none;
+  padding: 0.55rem 0.7rem 0.55rem 1rem;
+  border: 1px solid transparent;
   border-radius: 0.5rem;
   background: transparent;
-  color: var(--text-secondary);
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
-.pol-rail-item:hover {
-  background: var(--hover-bg, rgba(99, 102, 241, 0.08));
+.pol-row:hover {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.04));
 }
-.pol-rail-item.is-sel {
-  background: var(--active-bg, rgba(59, 130, 246, 0.12));
-  color: var(--text-primary);
+/* Active (but unselected) rows read as cards. */
+.pol-row[data-status="active"] {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
 }
-.pol-rail-icon {
+.pol-row[data-status="active"]:hover {
+  background: var(--active-bg, rgba(59, 130, 246, 0.08));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.pol-row-accent {
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 2.5px;
+  border-radius: 2px;
+  background: transparent;
+}
+.pol-row[data-status="active"] .pol-row-accent {
+  background: var(--mantine-color-blue-6, #3b82f6);
+}
+.pol-row[data-status="paused"] .pol-row-accent {
+  background: var(--color-yellow-500, #f59e0b);
+}
+.pol-row-icon {
   display: inline-flex;
+  flex-shrink: 0;
   color: var(--text-secondary);
 }
-.pol-rail-item.is-sel .pol-rail-icon {
+.pol-row[data-status="active"] .pol-row-icon {
   color: var(--mantine-color-blue-6, #3b82f6);
 }
-.pol-rail-label {
+.pol-row[data-status="paused"] .pol-row-icon {
+  color: var(--color-yellow-500, #f59e0b);
+}
+.pol-row-label {
   flex: 1;
   font-size: 0.8rem;
   font-weight: 500;
+  color: var(--text-primary);
 }
-.pol-rail-status {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
+.pol-row-status {
+  font-size: 0.7rem;
+  font-weight: 500;
   flex-shrink: 0;
-  background: transparent;
 }
-.pol-rail-status[data-status="active"] {
-  background: var(--color-green-500, #22c55e);
+.pol-row[data-status="active"] .pol-row-status {
+  color: var(--mantine-color-blue-6, #3b82f6);
 }
-.pol-rail-status[data-status="paused"] {
-  background: #f59e0b;
+.pol-row[data-status="paused"] .pol-row-status {
+  color: var(--color-yellow-500, #f59e0b);
 }
-.pol-rail-status[data-status="configured"] {
-  background: var(--text-muted);
+.pol-row[data-status="setup"] .pol-row-status {
+  color: var(--text-muted);
+}
+.pol-row-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
-/* ---- Pane ---- */
-.pol-pane {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+/* ---- Spend-limit warning chip ---- */
+.pol-spend-chip {
+  margin: 0.35rem 0.75rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.45rem;
+  font-size: 0.68rem;
+  background: color-mix(
+    in srgb,
+    var(--color-yellow-500, #f59e0b) 12%,
+    transparent
+  );
+  color: var(--color-yellow-500, #f59e0b);
 }
-.pol-pane-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  text-align: center;
-  padding: 2rem;
+.pol-spend-chip.is-reached {
+  background: color-mix(
+    in srgb,
+    var(--color-red-500, #ef4444) 12%,
+    transparent
+  );
+  color: var(--color-red-500, #ef4444);
 }
 
 /* ---- Detail container (wizard / narrative / settings share this) ---- */
@@ -650,69 +694,58 @@
   opacity: 0.75;
 }
 
-/* ---- Billing ---- */
-.pol-billing {
-  border-top: 1px solid var(--border-subtle);
-  padding: 0.7rem 0.85rem;
+/* ---- Detail takeover (fills the rail when a policy is open) ---- */
+.pol-takeover {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
-.pol-billing-cost {
+
+/* ---- Collapsed rail policy icons ---- */
+.pol-crail {
   display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
-}
-.pol-billing-amount {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.pol-billing-unit {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-.pol-billing-tier {
-  margin-left: auto;
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  padding: 0.1rem 0.4rem;
-  border-radius: 0.35rem;
-  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
-}
-.pol-billing-limit {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  flex-shrink: 0;
 }
-.pol-billing-limit-row {
+.pol-crail-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  font-size: 0.7rem;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
   color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
 }
-.pol-billing-input {
-  width: 3.5rem;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.35rem;
-  border-radius: 0.3rem;
-  border: 1px solid var(--border-subtle);
-  background: var(--hover-bg, rgba(0, 0, 0, 0.03));
-  color: var(--text-primary);
+.pol-crail-btn:hover {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
 }
-.pol-billing-period {
-  color: var(--text-muted);
+.pol-crail-btn[data-status="active"] {
+  color: var(--mantine-color-blue-6, #3b82f6);
 }
-.pol-billing-warn {
-  font-size: 0.65rem;
-  color: #f59e0b;
-  margin: 0;
+.pol-crail-btn[data-status="paused"] {
+  color: var(--color-yellow-500, #f59e0b);
 }
-.pol-billing-warn.is-reached {
-  color: #ef4444;
+.pol-crail-dot {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 2px solid var(--bg-toolbar, var(--bg-surface));
+}
+.pol-crail-dot[data-status="active"] {
+  background: var(--color-green-500, #22c55e);
+}
+.pol-crail-dot[data-status="paused"] {
+  background: var(--color-yellow-500, #f59e0b);
 }

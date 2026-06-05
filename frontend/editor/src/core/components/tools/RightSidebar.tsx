@@ -14,6 +14,13 @@ import {
   AgentsSection,
   useAgentsEnabled,
 } from "@app/components/agents/AgentsPanel";
+import {
+  PoliciesCollapsedButton,
+  PoliciesSection,
+  PolicyDetailTakeover,
+  usePoliciesEnabled,
+  usePolicyDetailActive,
+} from "@app/components/policies/PoliciesSidebar";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
@@ -65,6 +72,8 @@ export default function RightSidebar() {
   } = useToolWorkflow();
 
   const agentsEnabled = useAgentsEnabled();
+  const policiesEnabled = usePoliciesEnabled();
+  const policyDetailActive = usePolicyDetailActive();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
@@ -144,6 +153,11 @@ export default function RightSidebar() {
   //  - a specific tool is being rendered (leftPanelView ≠ "toolPicker").
   const showAgents =
     agentsEnabled && !allToolsView && leftPanelView === "toolPicker";
+
+  // Policies section sits above the tool list in the default tool-picker view,
+  // mirroring the prototype (and hidden inside a specific tool / all-tools view).
+  const showPolicies =
+    policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
 
   const computedWidth = () => {
     if (isMobile) return "100%";
@@ -231,6 +245,7 @@ export default function RightSidebar() {
               </AppTooltip>
             ))}
           </div>
+          <PoliciesCollapsedButton onExpand={handleExpand} />
         </div>
       )}
 
@@ -251,79 +266,89 @@ export default function RightSidebar() {
             flexDirection: "column",
           }}
         >
-          <div className="tool-panel__compact-header">
-            {activeTool ? (
-              <div
-                className="tool-panel__active-tool-pill"
-                aria-label={activeTool.name}
-              >
-                <span className="tool-panel__active-tool-pill-icon">
-                  <ToolIcon
-                    icon={activeTool.icon}
-                    marginRight="0"
-                    color="var(--mantine-color-blue-filled)"
-                  />
-                </span>
-                <span className="tool-panel__active-tool-pill-label">
-                  {activeTool.name}
-                </span>
+          {policyDetailActive ? (
+            <div className="pol-takeover">
+              <PolicyDetailTakeover />
+            </div>
+          ) : (
+            <>
+              <div className="tool-panel__compact-header">
+                {activeTool ? (
+                  <div
+                    className="tool-panel__active-tool-pill"
+                    aria-label={activeTool.name}
+                  >
+                    <span className="tool-panel__active-tool-pill-icon">
+                      <ToolIcon
+                        icon={activeTool.icon}
+                        marginRight="0"
+                        color="var(--mantine-color-blue-filled)"
+                      />
+                    </span>
+                    <span className="tool-panel__active-tool-pill-label">
+                      {activeTool.name}
+                    </span>
+                  </div>
+                ) : showHeaderSearch ? (
+                  <div className="tool-panel__compact-header-search">
+                    <ToolSearch
+                      value={searchQuery}
+                      onChange={handleHeaderSearchChange}
+                      toolRegistry={toolRegistry}
+                      mode="filter"
+                      autoFocus={allToolsView && !inToolView}
+                    />
+                  </div>
+                ) : (
+                  showAgents && (
+                    <span className="tool-panel__section-label">
+                      {t("agents.section_title", "Agents")}
+                    </span>
+                  )
+                )}
+                {showCloseButton ? (
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    radius="xl"
+                    size="md"
+                    onClick={handleHeaderBack}
+                    aria-label={
+                      inToolView
+                        ? t("toolPanel.backToAllTools", "Back to all tools")
+                        : t("toolPanel.goBack", "Go back")
+                    }
+                    className="tool-panel__expand-btn"
+                  >
+                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                  </ActionIcon>
+                ) : (
+                  <ActionIcon
+                    variant="outline"
+                    radius="xl"
+                    size="md"
+                    onClick={handleCollapse}
+                    aria-label={t("toolPanel.collapse", "Collapse panel")}
+                    className="tool-panel__expand-btn"
+                  >
+                    <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                  </ActionIcon>
+                )}
               </div>
-            ) : showHeaderSearch ? (
-              <div className="tool-panel__compact-header-search">
-                <ToolSearch
-                  value={searchQuery}
-                  onChange={handleHeaderSearchChange}
-                  toolRegistry={toolRegistry}
-                  mode="filter"
-                  autoFocus={allToolsView && !inToolView}
-                />
-              </div>
-            ) : (
-              showAgents && (
-                <span className="tool-panel__section-label">
-                  {t("agents.section_title", "Agents")}
-                </span>
-              )
-            )}
-            {showCloseButton ? (
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                radius="xl"
-                size="md"
-                onClick={handleHeaderBack}
-                aria-label={
-                  inToolView
-                    ? t("toolPanel.backToAllTools", "Back to all tools")
-                    : t("toolPanel.goBack", "Go back")
-                }
-                className="tool-panel__expand-btn"
-              >
-                <CloseIcon sx={{ fontSize: "1.1rem" }} />
-              </ActionIcon>
-            ) : (
-              <ActionIcon
-                variant="outline"
-                radius="xl"
-                size="md"
-                onClick={handleCollapse}
-                aria-label={t("toolPanel.collapse", "Collapse panel")}
-                className="tool-panel__expand-btn"
-              >
-                <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-              </ActionIcon>
-            )}
-          </div>
 
-          {showAgents && <AgentsSection />}
+              {showAgents && <AgentsSection />}
 
-          <ToolPanel
-            allToolsView={allToolsView}
-            onShowAllTools={handleShowAllTools}
-            onToolSelect={handleToolSelectWithTransition}
-            compact={agentsEnabled && !allToolsView}
-          />
-          <AgentsChatOverlay />
+              {showPolicies && <PoliciesSection />}
+
+              <ToolPanel
+                allToolsView={allToolsView}
+                onShowAllTools={handleShowAllTools}
+                onToolSelect={handleToolSelectWithTransition}
+                compact={agentsEnabled && !allToolsView}
+              />
+              <AgentsChatOverlay />
+            </>
+          )}
         </div>
       )}
 

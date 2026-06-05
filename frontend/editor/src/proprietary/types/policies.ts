@@ -13,6 +13,9 @@ import type { ReactNode } from "react";
 /** Lifecycle status of a policy category for the current user/org. */
 export type PolicyStatus = "default" | "active" | "paused";
 
+/** Derived display status for a row/detail (treats a spend-limit hit as paused). */
+export type PolicyRowStatus = "active" | "paused" | "setup";
+
 /** A configurable field within a policy's settings. */
 export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
@@ -35,6 +38,16 @@ export interface PolicyCategory {
   desc: string;
 }
 
+/** The three-up summary stats shown at the foot of a configured policy's detail. */
+export interface PolicyStats {
+  /** Documents enforced (rendered with toLocaleString). */
+  enforced: number;
+  /** Human-formatted data-processed figure, e.g. "2.3 GB". */
+  dataProcessed: string;
+  /** Human-formatted active-for figure, e.g. "12d", or "—" when idle. */
+  activeFor: string;
+}
+
 /** The narrative + field configuration backing a category. */
 export interface PolicyConfigDef {
   /** One-line summary of what the policy enforces. */
@@ -43,6 +56,8 @@ export interface PolicyConfigDef {
   rules: string[];
   /** Human label for the scope this policy applies to. */
   scopeLabel: string;
+  /** Three-up summary stats for the detail view. */
+  stats: PolicyStats;
   /** Editable settings fields. */
   fields: PolicyField[];
 }
