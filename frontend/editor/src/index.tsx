@@ -30,8 +30,7 @@ posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
 function updatePosthogConsent() {
   if (!posthog.__loaded) return;
   const optIn =
-    (window.CookieConsent as any)?.acceptedService?.("posthog", "analytics") ||
-    false;
+    window.CookieConsent?.acceptedService?.("posthog", "analytics") || false;
   if (optIn) {
     posthog.set_config({ persistence: "localStorage+cookie" });
     posthog.opt_in_capturing();

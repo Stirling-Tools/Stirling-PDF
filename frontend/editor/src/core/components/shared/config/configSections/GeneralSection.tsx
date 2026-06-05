@@ -451,6 +451,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     },
                   ]}
                   maw={360}
+                  comboboxProps={{
+                    withinPortal: true,
+                    zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                  }}
                 />
               </Stack>
             )}

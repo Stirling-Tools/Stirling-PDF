@@ -116,7 +116,6 @@ from .progress import (
 )
 
 __all__ = [
-    "AiFile",
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
@@ -127,6 +126,7 @@ __all__ = [
     "AgentRevisionWorkflowResponse",
     "AgentSpec",
     "AgentSpecStep",
+    "AiFile",
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
