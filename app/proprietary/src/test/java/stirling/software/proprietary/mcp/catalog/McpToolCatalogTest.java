@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -96,6 +97,82 @@ class McpToolCatalogTest {
                         "ai-only",
                         null));
         assertEquals("ai-only", catalog.findByOperationId("ai-only").orElseThrow().id());
+    }
+
+    @Test
+    void blockedOperations_hidesOp() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setBlockedOperations(List.of("compress-pdf"));
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+        seed(catalog, "pdfOps", "ocr-pdf", miscOp("ocr-pdf"));
+
+        assertTrue(
+                catalog.findByOperationId("compress-pdf").isEmpty(), "blocked op must be hidden");
+        assertEquals("ocr-pdf", catalog.findByOperationId("ocr-pdf").orElseThrow().id());
+        assertFalse(idsOf(catalog).contains("compress-pdf"));
+        assertTrue(idsOf(catalog).contains("ocr-pdf"));
+    }
+
+    @Test
+    void allowedOperations_isWhitelist() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setAllowedOperations(List.of("compress-pdf"));
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+        seed(catalog, "pdfOps", "ocr-pdf", miscOp("ocr-pdf"));
+
+        assertEquals("compress-pdf", catalog.findByOperationId("compress-pdf").orElseThrow().id());
+        assertTrue(
+                catalog.findByOperationId("ocr-pdf").isEmpty(),
+                "op not on the allow-list must be hidden");
+        assertEquals(List.of("compress-pdf"), idsOf(catalog));
+    }
+
+    @Test
+    void blockedOperations_takePrecedenceOverAllowed() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setAllowedOperations(List.of("compress-pdf"));
+        props.getMcp().setBlockedOperations(List.of("compress-pdf"));
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+
+        assertTrue(
+                catalog.findByOperationId("compress-pdf").isEmpty(),
+                "block-list must win over allow-list");
+    }
+
+    @Test
+    void emptyAllowAndBlockLists_exposeAllEnabledOps() throws Exception {
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(new ApplicationProperties());
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+
+        assertEquals("compress-pdf", catalog.findByOperationId("compress-pdf").orElseThrow().id());
+        assertTrue(idsOf(catalog).contains("compress-pdf"));
+    }
+
+    private McpToolCatalog catalogWithEndpointsEnabled(ApplicationProperties props) {
+        ApplicationContext ctx = mock(ApplicationContext.class);
+        when(ctx.getBeansOfType(RequestMappingHandlerMapping.class)).thenReturn(Map.of());
+        EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
+        when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(true);
+        return new McpToolCatalog(ctx, endpoints, props, mapper);
+    }
+
+    private OperationMeta miscOp(String id) {
+        return new OperationMeta(
+                id,
+                OperationCategory.MISC,
+                id,
+                mapper.createObjectNode(),
+                "mcp.tools.write",
+                OperationMeta.Target.JAVA_ENDPOINT,
+                "/api/v1/misc/" + id,
+                null);
+    }
+
+    private static List<String> idsOf(McpToolCatalog catalog) {
+        return catalog.enabledOps(OperationCategory.MISC).stream().map(OperationMeta::id).toList();
     }
 
     @SuppressWarnings("unchecked")
