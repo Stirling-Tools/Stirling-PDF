@@ -8151,6 +8151,12 @@ label = "Select a TSA server"
 [timestampPdf.steps]
 settings = "Settings"
 
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."
 endpointUnavailableClickable = "Not available in this mode. Click to sign in."

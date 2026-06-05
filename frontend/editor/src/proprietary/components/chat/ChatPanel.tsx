@@ -6,6 +6,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
+import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -43,7 +44,7 @@ import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimate
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
-type TranslateFn = ReturnType<typeof useTranslation>["t"];
+type TranslateFn = TFunction;
 
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
@@ -207,7 +208,7 @@ function ChatMessageBubble({
         <ContentCopyIcon sx={{ fontSize: 13 }} />
       </button>
       <span className="chat-message-timestamp">
-        {formatRelativeTime(timestamp)}
+        {formatRelativeTime(timestamp, t)}
       </span>
     </div>
   );
