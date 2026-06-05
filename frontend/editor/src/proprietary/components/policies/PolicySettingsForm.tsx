@@ -40,8 +40,14 @@ export function PolicySettingsForm({
         </button>
         <span className="pol-header-icon">{category.icon}</span>
         <div className="pol-header-text">
-          <span className="pol-header-title">{category.label}</span>
-          <span className="pol-header-sub">Edit settings</span>
+          {/* Prototype titles this sub-view "Edit Settings"; the policy it edits
+              stays identifiable via the icon + the sub-line. */}
+          <span className="pol-header-title">Edit Settings</span>
+          <span className="pol-header-sub">
+            {state.docsEnforced24h > 0
+              ? `${state.docsEnforced24h} enforced today`
+              : category.label}
+          </span>
         </div>
         {status === "paused" ? (
           <span className="pol-badge pol-badge-paused">Paused</span>
