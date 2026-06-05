@@ -58,6 +58,8 @@ export interface PolicyConfigDef {
   scopeLabel: string;
   /** Three-up summary stats for the detail view. */
   stats: PolicyStats;
+  /** Recent enforcement log shown in the detail view (mock). */
+  activity: PolicyActivityItem[];
   /** Editable settings fields. */
   fields: PolicyField[];
 }
@@ -68,6 +70,18 @@ export interface PolicySource {
   label: string;
   desc: string;
   icon: ReactNode;
+}
+
+/** An entry in a policy's recent-activity feed (mock enforcement log). */
+export interface PolicyActivityItem {
+  /** Document the policy acted on. */
+  doc: string;
+  /** What the policy did, e.g. "Classified as Contract • 3 tables extracted". */
+  action: string;
+  /** Relative timestamp, e.g. "2h ago". */
+  time: string;
+  /** "enforced" (clean green) or "flagged" (needs review, amber). */
+  status: "enforced" | "flagged";
 }
 
 /** Per-category runtime state persisted in the mock store. */

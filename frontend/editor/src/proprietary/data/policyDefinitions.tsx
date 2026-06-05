@@ -19,21 +19,10 @@ import type {
   PolicyCategory,
   PolicyConfigDef,
   PolicySource,
-  PolicyStats,
   PolicyUser,
 } from "@app/types/policies";
 
 const ICON_SX = { fontSize: "1rem" } as const;
-
-/**
- * All categories ship the same zeroed stats in the prototype (no enforcement has
- * run yet); the detail view formats these into the three-up summary grid.
- */
-const ZERO_STATS: PolicyStats = {
-  enforced: 0,
-  dataProcessed: "0",
-  activeFor: "—",
-};
 
 /** The 5 policy categories, in the prototype's narrative order. */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
@@ -76,7 +65,27 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Classifies documents, extracts structured data, enforces naming, and normalizes pages.",
     rules: ["Classify", "Extract", "Name", "Normalize"],
     scopeLabel: "All PDFs on this device",
-    stats: ZERO_STATS,
+    stats: { enforced: 1284, dataProcessed: "3.2 GB", activeFor: "18d" },
+    activity: [
+      {
+        doc: "MSA_Acme_2026.pdf",
+        action: "Classified as Contract • 3 tables extracted",
+        time: "2h ago",
+        status: "enforced",
+      },
+      {
+        doc: "Invoice_4471.pdf",
+        action: "Classified as Invoice • renamed to standard",
+        time: "5h ago",
+        status: "enforced",
+      },
+      {
+        doc: "scan_002.pdf",
+        action: "Low confidence (62%) • flagged for review",
+        time: "Yesterday",
+        status: "flagged",
+      },
+    ],
     fields: [
       {
         label: "Auto-classify",
@@ -151,7 +160,21 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Detects PII, encrypts, verifies authenticity, controls access, and certifies documents.",
     rules: ["Detect PII", "Encrypt", "Verify", "Access", "Certify"],
     scopeLabel: "All PDFs on this device",
-    stats: ZERO_STATS,
+    stats: { enforced: 892, dataProcessed: "1.1 GB", activeFor: "12d" },
+    activity: [
+      {
+        doc: "Patient_Record_88.pdf",
+        action: "6 PII fields detected • redacted on export",
+        time: "1h ago",
+        status: "enforced",
+      },
+      {
+        doc: "offer_letter.pdf",
+        action: "SSN found • blocked external share",
+        time: "3h ago",
+        status: "flagged",
+      },
+    ],
     fields: [
       { label: "Detect PII", key: "detectPII", type: "toggle", value: true },
       {
@@ -241,7 +264,21 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Validates documents against regulatory frameworks before they leave the system.",
     rules: ["Framework scan", "Enforce action", "Audit trail"],
     scopeLabel: "All PDFs on this device",
-    stats: ZERO_STATS,
+    stats: { enforced: 437, dataProcessed: "640 MB", activeFor: "9d" },
+    activity: [
+      {
+        doc: "Lab_Results_Q1.pdf",
+        action: "HIPAA scan passed • audit trail recorded",
+        time: "4h ago",
+        status: "enforced",
+      },
+      {
+        doc: "marketing_export.pdf",
+        action: "GDPR violation • quarantined",
+        time: "Yesterday",
+        status: "flagged",
+      },
+    ],
     fields: [
       {
         label: "Frameworks",
@@ -279,7 +316,15 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Routes documents to the right destination based on type and classification.",
     rules: ["Auto-classify", "Route to folder", "Webhook notify"],
     scopeLabel: "All PDFs on this device",
-    stats: ZERO_STATS,
+    stats: { enforced: 256, dataProcessed: "320 MB", activeFor: "6d" },
+    activity: [
+      {
+        doc: "PO_22815.pdf",
+        action: "Routed to Finance · SharePoint",
+        time: "3h ago",
+        status: "enforced",
+      },
+    ],
     fields: [
       {
         label: "Destination",
@@ -297,7 +342,15 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Enforces how long documents are kept, when to archive, and when to delete.",
     rules: ["Retention hold", "Auto-archive", "Deletion block"],
     scopeLabel: "All PDFs on this device",
-    stats: ZERO_STATS,
+    stats: { enforced: 1100, dataProcessed: "2.4 GB", activeFor: "21d" },
+    activity: [
+      {
+        doc: "Tax_2019_batch.pdf",
+        action: "7-year retention hold applied",
+        time: "6h ago",
+        status: "enforced",
+      },
+    ],
     fields: [
       {
         label: "Keep for",

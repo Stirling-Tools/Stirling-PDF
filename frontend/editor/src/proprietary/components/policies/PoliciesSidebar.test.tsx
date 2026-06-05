@@ -59,6 +59,15 @@ describe("Policies right-sidebar surface", () => {
     expect(screen.getByText("Edit Settings")).toBeInTheDocument();
   });
 
+  it("shows the recent-activity feed for a policy that has activity", () => {
+    renderHost();
+    fireEvent.click(screen.getByText("Ingestion"));
+    expect(screen.getByText("Recent Activity")).toBeInTheDocument();
+    // Seeded mock activity rows render (not the empty state).
+    expect(screen.getByText("MSA_Acme_2026.pdf")).toBeInTheDocument();
+    expect(screen.queryByText("No activity yet")).not.toBeInTheDocument();
+  });
+
   it("returns to the list via the back button", () => {
     renderHost();
     fireEvent.click(screen.getByText("Ingestion"));

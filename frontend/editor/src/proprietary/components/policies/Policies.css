@@ -569,6 +569,64 @@
   color: var(--text-muted);
   margin: 0;
 }
+
+/* ---- Recent activity feed ---- */
+.pol-activity {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+.pol-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+}
+.pol-activity-item + .pol-activity-item {
+  border-top: 1px solid var(--border-subtle);
+}
+.pol-activity-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.pol-activity-icon[data-status="enforced"] {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--color-green-500, #22c55e);
+}
+.pol-activity-icon[data-status="flagged"] {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-yellow-500, #f59e0b);
+}
+.pol-activity-text {
+  flex: 1;
+  min-width: 0;
+}
+.pol-activity-doc {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pol-activity-action {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin: 0.125rem 0 0;
+}
+.pol-activity-time {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  margin: 0.125rem 0 0;
+}
 .pol-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

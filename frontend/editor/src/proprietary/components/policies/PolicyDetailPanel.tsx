@@ -4,6 +4,8 @@ import PublicIcon from "@mui/icons-material/Public";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import HistoryIcon from "@mui/icons-material/History";
 import DescriptionIcon from "@mui/icons-material/Description";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import type {
@@ -100,19 +102,40 @@ export function PolicyDetailPanel({
         {/* Recent Activity */}
         <div>
           <p className="pol-section-label">Recent Activity</p>
-          <div className="pol-empty">
-            <DescriptionIcon
-              sx={{
-                fontSize: "1.5rem",
-                color: "var(--text-muted)",
-                opacity: 0.4,
-              }}
-            />
-            <p className="pol-empty-title">No activity yet</p>
-            <p className="pol-empty-sub">
-              Documents will appear here once this policy runs.
-            </p>
-          </div>
+          {config.activity.length > 0 ? (
+            <div className="pol-activity">
+              {config.activity.map((item, i) => (
+                <div key={i} className="pol-activity-item">
+                  <span className="pol-activity-icon" data-status={item.status}>
+                    {item.status === "flagged" ? (
+                      <WarningAmberIcon sx={{ fontSize: "0.8rem" }} />
+                    ) : (
+                      <CheckCircleIcon sx={{ fontSize: "0.8rem" }} />
+                    )}
+                  </span>
+                  <div className="pol-activity-text">
+                    <p className="pol-activity-doc">{item.doc}</p>
+                    <p className="pol-activity-action">{item.action}</p>
+                    <p className="pol-activity-time">{item.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="pol-empty">
+              <DescriptionIcon
+                sx={{
+                  fontSize: "1.5rem",
+                  color: "var(--text-muted)",
+                  opacity: 0.4,
+                }}
+              />
+              <p className="pol-empty-title">No activity yet</p>
+              <p className="pol-empty-sub">
+                Documents will appear here once this policy runs.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Stats */}

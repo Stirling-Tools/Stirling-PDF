@@ -30,8 +30,9 @@ proprietary builds.
 
 5 categories (Ingestion, Security, Compliance, Routing, Retention), their full
 field sets, the 3-step wizard (incl. the doc-type step gated behind the
-Classification/ingestion policy), the configured narrative view + three-up
-stats, settings, the permission model (owner/admin/member + solo), and the
+Classification/ingestion policy), the configured narrative view (Enforces /
+recent-activity feed / three-up stats), settings, the permission model
+(owner/admin/member + solo), and the
 docked right-sidebar placement: a collapsible **Policies** list above Tools, a
 detail view that takes over the rail when a policy is open, and a collapsed-rail
 of policy icons with active/paused status dots.
