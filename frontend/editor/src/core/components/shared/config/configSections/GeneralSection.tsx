@@ -482,6 +482,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div
+            id="setting-theme"
             style={{
               display: "flex",
               alignItems: "center",
@@ -517,6 +518,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             />
           </div>
           <div
+            id="setting-language"
             style={{
               display: "flex",
               alignItems: "center",
@@ -542,6 +544,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div
+            id="setting-tool-picker-mode"
             style={{
               display: "flex",
               alignItems: "center",
@@ -580,6 +583,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             />
           </div>
           <div
+            id="setting-startup-view"
             style={{
               display: "flex",
               alignItems: "center",
@@ -622,6 +626,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             />
           </div>
           <div
+            id="setting-reader-zoom"
             style={{
               display: "flex",
               alignItems: "center",
@@ -677,6 +682,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             />
           </div>
           <div
+            id="setting-hide-unavailable-tools"
             style={{
               display: "flex",
               alignItems: "center",
@@ -708,6 +714,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             />
           </div>
           <div
+            id="setting-hide-unavailable-conversions"
             style={{
               display: "flex",
               alignItems: "center",
@@ -748,6 +755,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             withArrow
           >
             <div
+              id="setting-auto-unzip"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -785,6 +793,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             withArrow
           >
             <div
+              id="setting-auto-unzip-file-limit"
               style={{
                 display: "flex",
                 alignItems: "center",

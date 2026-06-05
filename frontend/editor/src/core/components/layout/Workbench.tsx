@@ -205,7 +205,7 @@ export default function Workbench() {
           ?.hideTopControls && (
           <div
             className={styles.workbenchBarWrapper}
-            data-hidden={String(!hasFiles)}
+            data-hidden="false"
             data-no-transition={String(!barTransitionEnabled)}
           >
             <div className={styles.workbenchBarInner}>

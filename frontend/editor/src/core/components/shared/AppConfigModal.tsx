@@ -74,6 +74,33 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     }
   }, [opened]);
 
+  // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
+  // highlights the matching control (used by the global super search to jump
+  // straight to an individual setting row).
+  useEffect(() => {
+    if (!opened) return;
+    const focus = new URLSearchParams(location.search).get("focus");
+    if (!focus) return;
+    let raf = 0;
+    // Wait for the (possibly just-switched) section to render before scrolling.
+    const timer = window.setTimeout(() => {
+      raf = window.requestAnimationFrame(() => {
+        const el = document.getElementById(focus);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("settings-focus-target");
+        window.setTimeout(
+          () => el.classList.remove("settings-focus-target"),
+          1800,
+        );
+      });
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [opened, active, location.search]);
+
   // Handle custom events for backwards compatibility.
   // Use replace when already on /settings/* so external tab-switches
   // don't pile up history entries that would break close-by-back.

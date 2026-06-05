@@ -77,6 +77,24 @@
   line-height: 1;
 }
 
+/* ---- Super search ---- */
+.workbench-bar-search {
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 48px;
+  padding: 0 8px;
+}
+
+/* When the bar wraps to two rows, keep the search on the top row beside the
+   view switcher; the tool buttons drop to their own full-width row below. */
+.workbench-bar[data-wrapped="true"] .workbench-bar-search {
+  order: 2;
+}
+
 /* ---- Center: tool buttons ---- */
 
 /* Single-row: center sits between views and globals */

@@ -18,7 +18,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
@@ -57,6 +56,7 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -136,7 +136,6 @@ export default function FileManagerView() {
     sortMode,
     setSortMode,
     search,
-    setSearch,
     originFilter,
     setOriginFilter,
     typeFilter,
@@ -687,13 +686,19 @@ export default function FileManagerView() {
   }, [navigate]);
 
   // ─── keyboard shortcuts ─────────────────────────────────────────────────
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  // Focus the super-search input (stable id), used by the "/" shortcut and the
+  // FileSidebar rail Search button.
+  const focusSearch = useCallback(() => {
+    (
+      document.getElementById("super-search-input") as HTMLInputElement | null
+    )?.focus();
+  }, []);
   // External focus trigger (used by the FileSidebar rail Search button).
   useEffect(() => {
-    const onFocus = () => searchInputRef.current?.focus();
-    window.addEventListener("files-page:focus-search", onFocus);
-    return () => window.removeEventListener("files-page:focus-search", onFocus);
-  }, []);
+    window.addEventListener("files-page:focus-search", focusSearch);
+    return () =>
+      window.removeEventListener("files-page:focus-search", focusSearch);
+  }, [focusSearch]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const active = document.activeElement as HTMLElement | null;
@@ -736,13 +741,19 @@ export default function FileManagerView() {
       // "/" focuses the search field.
       if (e.key === "/" && !inInput) {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        focusSearch();
         return;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visibleFiles, selectedFileIds, removeFiles, setSelectedFileIds]);
+  }, [
+    visibleFiles,
+    selectedFileIds,
+    removeFiles,
+    setSelectedFileIds,
+    focusSearch,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -886,11 +897,7 @@ export default function FileManagerView() {
           };
           return (
             <>
-              <SearchField
-                ref={searchInputRef}
-                value={search}
-                onChange={setSearch}
-              />
+              <SuperSearch />
               <div className="files-page-header-actions">
                 <Tooltip
                   label={t("filesPage.refresh", "Refresh from server")}
@@ -1643,39 +1650,6 @@ export default function FileManagerView() {
     </div>
   );
 }
-
-const SearchField = React.forwardRef<
-  HTMLInputElement,
-  { value: string; onChange: (v: string) => void }
->(function SearchField({ value, onChange }, ref) {
-  const { t } = useTranslation();
-  return (
-    <div className="files-page-search">
-      <SearchIcon fontSize="small" style={{ color: "var(--text-muted)" }} />
-      <input
-        ref={ref}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        placeholder={t(
-          "filesPage.searchPlaceholder",
-          "Search this folder & subfolders",
-        )}
-        aria-label={t("filesPage.search", "Search")}
-      />
-      {value && (
-        <ActionIcon
-          variant="subtle"
-          size="xs"
-          onClick={() => onChange("")}
-          aria-label={t("filesPage.clearSearch", "Clear search")}
-        >
-          <CloseIcon fontSize="small" />
-        </ActionIcon>
-      )}
-    </div>
-  );
-});
 
 function Breadcrumbs() {
   const { t } = useTranslation();

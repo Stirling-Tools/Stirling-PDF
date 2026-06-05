@@ -1,4 +1,24 @@
 /* AppConfigModal styles */
+
+/* Deep-link highlight: pulses the control the super search jumped to
+   (navigated via /settings/{section}?focus={anchor}). */
+@keyframes settings-focus-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--mantine-color-blue-5);
+    background: color-mix(in srgb, var(--mantine-color-blue-5) 16%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+    background: transparent;
+  }
+}
+
+.settings-focus-target {
+  animation: settings-focus-pulse 1.8s ease-out;
+  border-radius: 8px;
+  scroll-margin: 1rem;
+}
+
 .modal-container {
   display: flex;
   gap: 0;

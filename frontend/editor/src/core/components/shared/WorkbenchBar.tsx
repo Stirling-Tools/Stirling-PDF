@@ -29,6 +29,7 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { downloadFile } from "@app/services/downloadService";
 import {
   WorkbenchBarButtonConfig,
@@ -426,6 +427,11 @@ export default function WorkbenchBar({
           ))}
       </div>
 
+      {/* Global super search - always present, even on the homepage */}
+      <div className="workbench-bar-search">
+        <SuperSearch />
+      </div>
+
       {/* Tool buttons - second row, only rendered when buttons exist */}
       {sectionsWithButtons.length > 0 && (
         <div className="workbench-bar-center">
@@ -448,7 +454,9 @@ export default function WorkbenchBar({
         </div>
       )}
 
-      {/* Right: Global buttons - export group left, close anchored right */}
+      {/* Right: Global buttons - export group left, close anchored right.
+          File-only; hidden on the homepage so only the search shows. */}
+      {hasFiles && (
       <div className="workbench-bar-globals">
         {/* Print */}
         {currentView === "viewer" &&
@@ -538,6 +546,7 @@ export default function WorkbenchBar({
               : t("workbenchBar.closePdf", "Close PDF"),
           )}
       </div>
+      )}
     </div>
   );
 }
