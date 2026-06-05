@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""Verify Tauri updater signatures against the app's configured public key.
-
-Every signed updater payload (.deb/.rpm/.AppImage/.msi/.app.tar.gz) ships with a
-sibling <artifact>.sig - a base64-wrapped minisign signature. This checks each one
-cryptographically with the SAME Ed25519 public key embedded in the app
-(plugins.updater.pubkey in tauri.conf.json), i.e. exactly what the updater client
-does at runtime before installing. Exits non-zero if any signature fails so a bad
-or mismatched signature can never reach a release.
+"""Verify Tauri updater .sig files against plugins.updater.pubkey in tauri.conf.json.
 
 Usage: verify-updater-signatures.py <dir-to-scan> [tauri.conf.json]
 """
 
+import binascii
 import sys
 import json
 import base64
@@ -26,34 +20,45 @@ CONF = Path(
 
 
 def load_pubkey():
-    raw = json.loads(CONF.read_text())["plugins"]["updater"]["pubkey"]
-    # tauri pubkey = base64 of a minisign .pub file; its last line is base64 of
+    # tauri pubkey = base64 of a minisign .pub file; last line is base64 of
     # [2 algo][8 key-id][32 ed25519 public key].
+    raw = json.loads(CONF.read_text())["plugins"]["updater"]["pubkey"]
     blob = base64.b64decode(base64.b64decode(raw).decode().splitlines()[-1])
     return blob[2:10], Ed25519PublicKey.from_public_bytes(blob[10:])
 
 
+def hash_file(path: Path) -> bytes:
+    h = hashlib.blake2b(digest_size=64)
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 16), b""):
+            h.update(chunk)
+    return h.digest()
+
+
 def verify(artifact: Path, sig_file: Path, keyid_pub, pub) -> str:
-    # tauri .sig = base64 of a minisign signature file.
-    lines = base64.b64decode(sig_file.read_text()).decode().splitlines()
-    sig_blob = base64.b64decode(lines[1])  # [2 algo][8 key-id][64 sig]
+    # tauri .sig = base64 of a minisign signature file (4 lines).
+    try:
+        lines = base64.b64decode(sig_file.read_text()).decode().splitlines()
+        sig_blob = base64.b64decode(lines[1])
+    except (binascii.Error, IndexError, UnicodeDecodeError) as e:
+        return f"FAIL malformed sig ({type(e).__name__})"
     algo, keyid, sig = sig_blob[:2], sig_blob[2:10], sig_blob[10:74]
     if keyid != keyid_pub:
         return f"FAIL key-id mismatch (sig {keyid.hex()} vs pub {keyid_pub.hex()})"
-    data = artifact.read_bytes()
     # 'ED' = prehashed (BLAKE2b-512), 'Ed' = legacy (raw message).
-    msg = hashlib.blake2b(data, digest_size=64).digest() if algo == b"ED" else data
+    msg = hash_file(artifact) if algo == b"ED" else artifact.read_bytes()
     try:
         pub.verify(sig, msg)
     except InvalidSignature:
         return f"FAIL signature invalid (algo={algo.decode()})"
-    # The global signature covers the signature + trusted comment.
-    tc = lines[2].split("trusted comment: ", 1)[1] if len(lines) > 2 else ""
+    # Global signature covers sig + trusted_comment.
+    gc = "global-sig FAIL"
     try:
+        tc = lines[2].split("trusted comment: ", 1)[1]
         pub.verify(base64.b64decode(lines[3]), sig + tc.encode())
         gc = "global-sig OK"
-    except (InvalidSignature, IndexError):
-        gc = "global-sig FAIL"
+    except (InvalidSignature, IndexError, binascii.Error):
+        pass
     return f"VALID (algo={algo.decode()}, keyid={keyid.hex()}, {gc})"
 
 
@@ -65,7 +70,7 @@ if not sigs:
     sys.exit(0)
 bad = 0
 for sig_file in sigs:
-    artifact = sig_file.with_suffix("")  # strip .sig
+    artifact = sig_file.with_suffix("")
     if not artifact.exists():
         print(f"  ? {sig_file.name}: artifact missing")
         bad += 1

@@ -588,41 +588,30 @@ jobs:
           mkdir -p "$DIST"
           cd ./frontend/editor/src-tauri/target
 
-          # Diagnostic: show every installer + signature Tauri produced so the
-          # exact updater artifact names are visible in the build log.
           echo "=== tauri bundle artifacts ==="
           find . -path "*/bundle/*" \( -name "*.msi" -o -name "*.deb" \
             -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.dmg" \
             -o -name "*.app.tar.gz" -o -name "*.sig" \) 2>/dev/null | sort || true
           echo "=============================="
 
-          # With bundle.createUpdaterArtifacts = true each NATIVE installer is
-          # also its own updater payload and gets a sibling .sig (the minisign
-          # updater signature). We ship the installer (manual download) plus the
-          # .sig (consumed when building latest.json) for every format.
+          # createUpdaterArtifacts:true signs the native installers in place;
+          # each <bundle> ships with a sibling <bundle>.sig consumed by latest.json.
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
-            # MSI is both the user-facing installer and the updater payload.
             find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
             find . -name "*.msi.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi.sig" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             # DMG = manual install; .app.tar.gz (+ .sig) = updater payload.
-            # The raw .app is intentionally not shipped - it is just the
-            # uncompressed input and would bloat the artifact by hundreds of MB.
+            # Raw .app is intentionally not shipped (hundreds of MB of uncompressed input).
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app.tar.gz" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz" \;
             find . -name "*.app.tar.gz.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz.sig" \;
           else
-            # Linux: deb and rpm are each their own (signed) updater payload;
-            # AppImage updates from the .AppImage.tar.gz. Ship the raw .AppImage
-            # as the manual download plus the .tar.gz for the updater.
+            # The raw .AppImage IS its updater payload (signed -> .AppImage.sig),
+            # not a .tar.gz wrapper - that's only produced under v1Compatible.
             find . -name "*.deb" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.deb.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb.sig" \;
             find . -name "*.rpm" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.rpm.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm.sig" \;
-            # With createUpdaterArtifacts:true the raw .AppImage IS the updater
-            # payload (signed -> .AppImage.sig); there is no .tar.gz wrapper like
-            # v1Compatible produced. The single .AppImage serves manual download
-            # and the updater both.
             find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
             find . -name "*.AppImage.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.sig" \;
           fi
@@ -646,9 +635,8 @@ jobs:
         with:
           egress-policy: audit
 
-      # Sparse checkout of just the updater public key + verifier script, used by
-      # the "Verify updater signatures" step below. Runs before the artifact
-      # downloads so it cannot clobber ./artifacts.
+      # Sparse-check out the verifier + pubkey before the artifact downloads
+      # so the checkout cannot clobber ./artifacts.
       - name: Checkout updater verifier
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -684,12 +672,9 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R ./artifacts
 
-      # Build the updater manifest (latest.json) directly from the signed bundles
-      # produced by each platform's build. tauri-action only writes its own
-      # latest.json when it also publishes the release (i.e. when tagName/releaseId
-      # is set on the action). This workflow publishes separately via
-      # softprops/action-gh-release, so tauri-action never produces one - we
-      # construct it here from the .sig files instead.
+      # tauri-action only emits latest.json when it also publishes the release
+      # (tagName/releaseId set). We publish separately via action-gh-release,
+      # so build latest.json here from the per-platform .sig files.
       - name: Generate updater latest.json
         env:
           VERSION: ${{ needs.determine-matrix.outputs.version }}
@@ -707,18 +692,10 @@ jobs:
 
           ART = Path('./artifacts/tauri')
 
-          # One manifest entry per (platform, install format). The Tauri updater
-          # looks up "{os}-{arch}-{installer}" (e.g. linux-x86_64-deb) before the
-          # bare "{os}-{arch}", so publishing per-format Linux keys lets deb, rpm
-          # and AppImage installs each self-update from their own matching file.
-          # With bundle.createUpdaterArtifacts = true the native .deb/.rpm/.msi
-          # are signed in place; AppImage and macOS use their .tar.gz payload.
-          #
-          # 'bundles' are the renamed filenames from the Rename step. We search
-          # RECURSIVELY because actions/download-artifact changes layout by match
-          # count: multiple artifacts -> ./artifacts/tauri/<name>/<file>; a lone
-          # artifact -> straight into ./artifacts/tauri/<file>. Matching by unique
-          # filename anywhere under ART handles both.
+          # Tauri updater looks up {os}-{arch}-{installer} (e.g. linux-x86_64-deb)
+          # before bare {os}-{arch}, so per-format Linux keys let deb/rpm/appimage
+          # each self-update from their matching file. macOS universal serves both
+          # arches from the one .app.tar.gz.
           PLATFORM_MAP = [
               {
                   'bundles': ['Stirling-PDF-linux-x86_64.deb'],
@@ -729,27 +706,22 @@ jobs:
                   'targets': ['linux-x86_64-rpm'],
               },
               {
-                  # createUpdaterArtifacts:true signs the raw .AppImage (no
-                  # .tar.gz wrapper); install_appimage accepts raw bytes.
                   'bundles': ['Stirling-PDF-linux-x86_64.AppImage'],
                   'targets': ['linux-x86_64-appimage'],
               },
               {
-                  # Updater looks up windows-x86_64-msi then falls back to the
-                  # bare windows-x86_64, so this single key serves msi installs.
                   'bundles': ['Stirling-PDF-windows-x86_64.msi'],
-                  'targets': ['windows-x86_64'],
+                  'targets': ['windows-x86_64-msi', 'windows-x86_64'],
               },
               {
-                  # macOS universal: both arches share the one universal bundle.
                   'bundles': ['Stirling-PDF-macos-universal.app.tar.gz'],
                   'targets': ['darwin-x86_64', 'darwin-aarch64'],
               },
           ]
 
+          # rglob() because download-artifact varies layout: one artifact -> flat,
+          # many -> nested under <artifact-name>/.
           def find_signed(name):
-              # First bundle of this exact name (sorted for determinism) that
-              # has a sibling .sig. Returns (bundle_path, sig_path) or None.
               for bundle_path in sorted(ART.rglob(name)):
                   sig_path = bundle_path.with_name(bundle_path.name + '.sig')
                   if sig_path.exists():
@@ -809,14 +781,11 @@ jobs:
           path: ./artifacts/
           retention-days: 7
 
-      # Gate the release on cryptographically valid updater signatures: verify
-      # every <artifact>.sig against the app's configured Ed25519 public key
-      # (the same check the updater client performs before installing). Runs
-      # after the review upload (so artifacts are preserved for debugging) and
-      # before the release publish (so a bad signature can never ship).
+      # Gate publish on valid updater sigs. Runs after the review upload (so
+      # artifacts survive for debugging) and before action-gh-release.
       - name: Verify updater signatures
         run: |
-          python3 -m pip install --quiet cryptography
+          python3 -m pip install --quiet 'cryptography==44.0.0'
           python3 .github/scripts/verify-updater-signatures.py \
             ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
 
@@ -826,10 +795,8 @@ jobs:
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
-          # Attach installers (manual download) + updater payloads + manifest.
-          # createUpdaterArtifacts:true uses the native .msi/.deb/.rpm directly
-          # as updater payloads (no more .msi.zip/.nsis.zip wrappers). The .sig
-          # files are NOT uploaded - their contents are embedded in latest.json.
+          # Installers + updater payloads + manifest. .sig contents are embedded
+          # in latest.json so the .sig files themselves are not uploaded.
           files: |
             ./artifacts/**/*.jar
             ./artifacts/**/*.msi
