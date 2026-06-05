@@ -1,5 +1,7 @@
 package stirling.software.proprietary.policy.trigger;
 
+import stirling.software.proprietary.policy.model.TriggerConfig;
+
 /**
  * Activates policies of one trigger type. A trigger owns a {@link #type()} (matching {@code
  * TriggerConfig.type()}); when its condition fires it runs the relevant {@code Policy} through the
@@ -15,6 +17,12 @@ public interface PolicyTrigger {
 
     /** Stable identifier for this trigger kind, matching {@code TriggerConfig.type()}. */
     String type();
+
+    /**
+     * Check that a policy's trigger config is usable, throwing {@link IllegalArgumentException} if
+     * not. Called when a policy is saved so misconfiguration fails fast rather than at fire time.
+     */
+    default void validate(TriggerConfig config) {}
 
     /** Begin activating policies of this type (e.g. start a folder watcher). No-op for manual. */
     default void start() {}

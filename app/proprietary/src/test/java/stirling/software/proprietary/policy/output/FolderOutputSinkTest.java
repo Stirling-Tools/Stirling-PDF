@@ -51,14 +51,12 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void missingDirectoryOptionFails() {
+    void missingDirectoryOptionIsRejected() {
+        OutputSpec noDir = new OutputSpec("folder", Map.of());
+        assertThrows(IllegalArgumentException.class, () -> sink.validate(noDir));
         assertThrows(
-                IOException.class,
-                () ->
-                        sink.deliver(
-                                "run-1",
-                                List.of(named("a.pdf", "x")),
-                                new OutputSpec("folder", Map.of())));
+                IllegalArgumentException.class,
+                () -> sink.deliver("run-1", List.of(named("a.pdf", "x")), noDir));
     }
 
     private static ByteArrayResource named(String filename, String content) {

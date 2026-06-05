@@ -30,6 +30,7 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
+                        policy.input(),
                         policy.steps(),
                         policy.output());
         policies.put(id, stored);

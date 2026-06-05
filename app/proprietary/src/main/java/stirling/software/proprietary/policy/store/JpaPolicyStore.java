@@ -37,6 +37,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
+                        policy.input(),
                         policy.steps(),
                         policy.output());
 

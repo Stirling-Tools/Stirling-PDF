@@ -39,6 +39,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
+import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -74,6 +75,7 @@ public class PolicyController {
     private final ManualTrigger manualTrigger;
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
+    private final PolicyValidator policyValidator;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
@@ -155,7 +157,13 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody String json) {
-        return ResponseEntity.ok(policyStore.save(parsePolicy(json)));
+        Policy policy = parsePolicy(json);
+        try {
+            policyValidator.validate(policy);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+        return ResponseEntity.ok(policyStore.save(policy));
     }
 
     @GetMapping

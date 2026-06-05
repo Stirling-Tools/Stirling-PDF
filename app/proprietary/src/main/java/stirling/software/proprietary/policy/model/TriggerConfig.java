@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * How a {@link Policy} is automatically triggered. {@code type} selects a trigger kind ("manual",
  * "folder", "schedule", "s3"); {@code options} carries type-specific configuration (a folder path,
- * a cron expression, a bucket, ...).
+ * a {@link Schedule}, a bucket, ...).
  *
  * <p>Data-driven and parallel to {@link OutputSpec}: new trigger kinds are new {@code type} values
  * handled by a new trigger bean, with no change to the model. {@code "manual"} means there is no

@@ -46,13 +46,14 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     @Override
+    public void validate(OutputSpec spec) {
+        directoryOf(spec);
+    }
+
+    @Override
     public List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
             throws IOException {
-        Object directory = spec.options().get(DIRECTORY_OPTION);
-        if (directory == null || directory.toString().isBlank()) {
-            throw new IOException("Folder output requires a '" + DIRECTORY_OPTION + "' option");
-        }
-        Path targetDir = Path.of(directory.toString());
+        Path targetDir = directoryOf(spec);
         Files.createDirectories(targetDir);
 
         List<ResultFile> results = new ArrayList<>();
@@ -78,6 +79,15 @@ public class FolderOutputSink implements PolicyOutputSink {
             log.debug("Wrote policy run {} output to {}", runId, target);
         }
         return results;
+    }
+
+    private static Path directoryOf(OutputSpec spec) {
+        Object directory = spec.options().get(DIRECTORY_OPTION);
+        if (directory == null || directory.toString().isBlank()) {
+            throw new IllegalArgumentException(
+                    "folder output requires a '" + DIRECTORY_OPTION + "' option");
+        }
+        return Path.of(directory.toString());
     }
 
     /** Resolve a non-colliding path in {@code dir}, appending " (n)" before the extension. */
