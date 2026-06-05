@@ -147,7 +147,6 @@ export default defineConfig(
   {
     files: srcGlobs,
     ignores: [
-      "editor/src/core/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
