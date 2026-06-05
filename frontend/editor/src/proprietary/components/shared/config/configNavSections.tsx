@@ -23,15 +23,6 @@ import AdminStorageSharingSection from "@app/components/shared/config/configSect
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-// DEMO: Preview the SaaS Pay-as-you-go settings screen inside the proprietary
-// build. PAYG is SaaS-only; this section should NOT ship in proprietary builds.
-// Remove the import + the demo block below once the SaaS dev stack is set up.
-// Toggle via `localStorage.setItem('paygDemo','1')` or the `?payg=1` URL param.
-// Relative path (not @app/*) because the @app alias resolves to the proprietary
-// flavor here, but Payg.tsx lives in the saas flavor. Demo-only, so the
-// cross-flavor import lint rule is suppressed rather than satisfied.
-// eslint-disable-next-line no-restricted-imports
-import { PaygLeader } from "../../../../saas/components/shared/config/configSections/Payg";
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support
@@ -270,40 +261,6 @@ export const useConfigNavSections = (
     // Add Developer section after Preferences (or Workspace if it exists)
     const insertIndex = isAdmin ? 2 : 1;
     sections.splice(insertIndex, 0, developerSection);
-  }
-
-  // DEMO ONLY — preview the SaaS Pay-as-you-go screen in proprietary dev.
-  // Remove this block before merging. Real home is saasConfigNavSections.
-  if (typeof window !== "undefined") {
-    if (new URLSearchParams(window.location.search).get("payg") === "1") {
-      try {
-        localStorage.setItem("paygDemo", "1");
-      } catch {
-        /* ignore */
-      }
-    }
-    const demoEnabled = (() => {
-      try {
-        return localStorage.getItem("paygDemo") === "1";
-      } catch {
-        return false;
-      }
-    })();
-    if (demoEnabled) {
-      // DEMO: always force LEADER variant so the cap editor + sub-caps render.
-      // Real wiring should branch on team-owner role.
-      sections.push({
-        title: t("config.payg.section", "Pay-as-you-go"),
-        items: [
-          {
-            key: "payg",
-            label: t("config.payg.label", "Billing & usage"),
-            icon: "speed-rounded",
-            component: <PaygLeader />,
-          },
-        ],
-      });
-    }
   }
 
   return sections;
