@@ -178,10 +178,14 @@ export default function RightSidebar() {
   // list/takeover reappears on return to the picker (as in the prototype).
   const policyDetailActive = rawPolicyDetailActive && showPolicies;
 
+  // The rail widens when a policy detail takes it over — the tool list is fine
+  // at 18.5rem, but the policy detail/wizard/settings need more breathing room.
+  const expandedWidth = policyDetailActive ? "25rem" : "18.5rem";
+
   const computedWidth = () => {
     if (isMobile) return "100%";
     if (!isPanelVisible) return "3.5rem";
-    return "18.5rem";
+    return expandedWidth;
   };
 
   // Collapsed rail: show favourites + recommended tools as icons.
@@ -279,7 +283,7 @@ export default function RightSidebar() {
             opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             height: "100%",
-            width: isMobile ? "100%" : "18.5rem",
+            width: isMobile ? "100%" : expandedWidth,
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
