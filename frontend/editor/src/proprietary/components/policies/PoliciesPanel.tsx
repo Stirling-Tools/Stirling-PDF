@@ -127,6 +127,8 @@ export function PoliciesPanel(_props: { data?: unknown }) {
                 type="button"
                 className={`pol-rail-item${selectedId === cat.id ? " is-sel" : ""}`}
                 onClick={() => select(cat.id)}
+                aria-pressed={selectedId === cat.id}
+                aria-label={`${cat.label} policy — ${status}`}
               >
                 <span className="pol-rail-icon">{cat.icon}</span>
                 <span className="pol-rail-label">{cat.label}</span>
