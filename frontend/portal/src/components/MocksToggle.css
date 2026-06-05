@@ -1,0 +1,51 @@
+.portal-mocks-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  border: 1px dashed transparent;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.portal-mocks-toggle.is-on {
+  color: var(--color-amber-dark);
+  background: var(--color-amber-light);
+  border-color: var(--color-amber-border);
+}
+
+.portal-mocks-toggle.is-off {
+  color: var(--color-text-4);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border);
+}
+
+.portal-mocks-toggle:hover {
+  filter: brightness(1.04);
+}
+
+.portal-mocks-toggle.is-pending {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.portal-mocks-toggle__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.portal-mocks-toggle.is-off .portal-mocks-toggle__dot {
+  background: var(--color-text-5);
+  box-shadow: none;
+}

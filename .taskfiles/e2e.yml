@@ -34,6 +34,9 @@ tasks:
     ignore_error: true
     vars:
       BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
+    # COVERAGE=1 in the calling environment attaches the JaCoCo agent to
+    # the bootRun JVM and writes to BASE_DIR/jacoco.exec on shutdown.
+    # Off by default to keep local dev runs uninstrumented; CI flips it.
     env:
       STIRLING_BASE_PATH: '{{.BASE_DIR}}'
       # Suppress the analytics opt-in modal that fires on first admin login.
@@ -58,12 +61,19 @@ tasks:
           set -e
           rm -rf "{{.BASE_DIR}}"
           mkdir -p "{{.BASE_DIR}}"
+          GRADLE_ARGS=":stirling-pdf:bootRun"
+          if [ -n "${COVERAGE:-}" ]; then
+            # copyJacocoAgent is wired as a dependency of bootRun when
+            # -PjacocoAgent=true, so we do not need to invoke it separately.
+            GRADLE_ARGS="$GRADLE_ARGS -PjacocoAgent=true -PjacocoExec={{.BASE_DIR}}/jacoco.exec"
+            echo "JaCoCo coverage enabled, writing to {{.BASE_DIR}}/jacoco.exec"
+          fi
           # Background gradle and record its PID so the runner can clean up
           # the exact process tree (wrapper + forked Spring Boot JVM) without
           # resorting to fuzzy `pkill -f` patterns. `wait` keeps this script
           # alive for the lifetime of gradle so Task'"'"'s parallel deps stay
           # synchronised.
-          bash gradlew :stirling-pdf:bootRun > "{{.BASE_DIR}}/backend.log" 2>&1 &
+          bash gradlew $GRADLE_ARGS > "{{.BASE_DIR}}/backend.log" 2>&1 &
           GRADLE_PID=$!
           echo $GRADLE_PID > "{{.BASE_DIR}}/backend.pid"
           wait $GRADLE_PID
