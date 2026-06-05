@@ -2,6 +2,7 @@ package stirling.software.saas.payg.test;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +42,15 @@ import stirling.software.common.enumeration.ResourceWeight;
  *
  * <p>{@code @Hidden} keeps this endpoint out of OpenAPI / Swagger output even when the profile is
  * active, so no docs leak to anyone running the cucumber stack interactively.
+ *
+ * <p><b>Return type matters:</b> the method declares {@link ResponseEntity}{@code <Void>}, not
+ * {@code void}. Spring's {@code InvocableHandlerMethod} picks a return-value handler based on the
+ * <i>declared</i> return type; {@code void} matches the "no body, status 200" handler regardless of
+ * what the {@code @Around} advice on {@link AutoJobPostMapping} actually returns at runtime. The
+ * first version of this stub declared {@code void} and the 500 ResponseEntity from {@code
+ * JobExecutorService}'s catch block was silently discarded — the client saw a 200 with an empty
+ * body. Declaring {@code ResponseEntity<Void>} matches the real runtime type and lets the advice's
+ * 500 reach the wire.
  */
 @Slf4j
 @RestController
@@ -53,7 +63,7 @@ public class PaygCucumberThrowController {
             value = "/throw-500",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
-    public void throw500(
+    public ResponseEntity<Void> throw500(
             @RequestParam(value = "fileInput", required = false) MultipartFile fileInput) {
         // The file is read by the PAYG filter via getMultiFileMap() before we get here; the
         // controller param is just to keep Spring's multipart binding happy. We don't touch it.
@@ -62,5 +72,7 @@ public class PaygCucumberThrowController {
                 fileInput != null ? fileInput.getOriginalFilename() : null,
                 fileInput != null ? fileInput.getSize() : 0);
         throw new IllegalStateException("PAYG cucumber forced 500");
+        // unreachable — kept as a type signature so AutoJobAspect's @Around return value (the
+        // 500 ResponseEntity from JobExecutorService) actually reaches the wire.
     }
 }
