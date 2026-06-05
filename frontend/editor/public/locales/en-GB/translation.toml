@@ -1526,10 +1526,10 @@ section_title = "Agents"
 show_less = "Show less"
 start_chat = "Start chatting"
 stirling_description = "Your general-purpose PDF assistant"
-stirling_running = "Running..."
 stirling_full_name = "Stirling General Agent"
 stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
 stirling_name = "Stirling"
+stirling_running = "Running..."
 stirling_tooltip = "Stirling agent"
 view_all = "View all agents"
 
@@ -8125,6 +8125,12 @@ right = "Right"
 [theme]
 toggle = "Toggle Theme"
 
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
 [timestampPdf]
 completed = "PDF timestamped successfully"
 desc = "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server."
@@ -8150,12 +8156,6 @@ label = "Select a TSA server"
 
 [timestampPdf.steps]
 settings = "Settings"
-
-[time.relative]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
 
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."

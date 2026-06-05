@@ -465,7 +465,7 @@ def step_generate_image_via_api(context, format_type, param):
     c.showPage()
     c.save()
     pdf_bytes = buffer.getvalue()
-    
+
     # 2. Call backend /api/v1/convert/pdf/img to convert the PDF to the target image format
     url = "http://localhost:8080/api/v1/convert/pdf/img"
     form_data = {
@@ -477,16 +477,16 @@ def step_generate_image_via_api(context, format_type, param):
     files = {
         "fileInput": ("temp.pdf", pdf_bytes, "application/pdf")
     }
-    
+
     response = requests.post(url, data=form_data, files=files, headers=API_HEADERS, timeout=60)
     if response.status_code != 200:
         raise AssertionError(f"Failed to generate {format_type} image via API. Status code: {response.status_code}, Response: {response.text}")
-    
+
     # 3. Save the response content to a file
     file_name = f"genericNonCustomisableName_{param}.{format_type.lower()}"
     with open(file_name, "wb") as f:
         f.write(response.content)
-    
+
     if not hasattr(context, "files"):
         context.files = {}
     context.files[param] = open(file_name, "rb")
