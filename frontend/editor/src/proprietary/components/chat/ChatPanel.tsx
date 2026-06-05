@@ -5,6 +5,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -12,7 +13,6 @@ import {
   Collapse,
   Group,
   List,
-  Loader,
   Menu,
   Paper,
   ScrollArea,
@@ -23,6 +23,7 @@ import {
 } from "@mantine/core";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -30,16 +31,19 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   useChat,
   AiWorkflowPhase,
+  ChatRole,
   isKnownEngineProgressDetail,
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
+import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
+import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
-type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+type TranslateFn = ReturnType<typeof useTranslation>["t"];
 
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
@@ -171,21 +175,63 @@ function ToolsUsedBlock({
 function ChatMessageBubble({
   role,
   content,
+  timestamp,
   toolsUsed,
   resolveToolName,
   t,
 }: {
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
+  timestamp: number;
   toolsUsed?: string[];
   resolveToolName: ToolNameResolver;
   t: TranslateFn;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    void navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  const actions = (
+    <div className="chat-message-actions">
+      <button
+        type="button"
+        className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
+        onClick={handleCopy}
+        title={t("chat.actions.copy", "Copy message")}
+      >
+        <ContentCopyIcon sx={{ fontSize: 13 }} />
+      </button>
+      <span className="chat-message-timestamp">
+        {formatRelativeTime(timestamp)}
+      </span>
+    </div>
+  );
+
+  if (role === ChatRole.USER) {
+    return (
+      <div className="chat-message chat-message-user">
+        <div className="chat-message-user__inner">
+          <Paper className="chat-bubble chat-bubble-user" p="xs" radius="md">
+            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {content}
+            </Text>
+          </Paper>
+          {actions}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`chat-message chat-message-${role}`}>
-      <Paper className={`chat-bubble chat-bubble-${role}`} p="xs" radius="md">
-        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-          {content}
+    <div className="chat-message chat-message-assistant">
+      <div className="chat-bubble-assistant">
+        <Text size="sm" component="div">
+          {renderMarkdown(content)}
         </Text>
         {toolsUsed && toolsUsed.length > 0 && (
           <ToolsUsedBlock
@@ -194,7 +240,8 @@ function ChatMessageBubble({
             t={t}
           />
         )}
-      </Paper>
+        {actions}
+      </div>
     </div>
   );
 }
@@ -250,11 +297,12 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           <Menu.Target>
             <button
               type="button"
-              className="chat-panel__agent-pill"
+              className={`chat-panel__agent-pill${isLoading ? " chat-panel__agent-pill--loading" : ""}`}
               aria-label={t("chat.header.agentMenu", "Stirling agent options")}
             >
               <span className="chat-panel__agent-pill-icon">
                 <StirlingLogoOutline size={16} />
+                {isLoading && <span className="agent-status-dot" />}
               </span>
               <span className="chat-panel__agent-pill-label">
                 {t("agents.stirling_name", "Stirling")}
@@ -287,12 +335,13 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       </div>
 
       <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
-        <Stack gap="sm" p="sm">
+        <Stack gap="sm" px="md" py="sm">
           {messages.map((msg) => (
             <ChatMessageBubble
               key={msg.id}
               role={msg.role}
               content={msg.content}
+              timestamp={msg.timestamp}
               toolsUsed={msg.toolsUsed}
               resolveToolName={resolveToolName}
               t={t}
@@ -300,20 +349,14 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           ))}
           {isLoading && (
             <div className="chat-message chat-message-assistant">
-              <Paper
-                className="chat-bubble chat-bubble-assistant"
-                p="xs"
-                radius="md"
-              >
-                <Group gap="xs" wrap="nowrap">
-                  <Loader size="xs" type="dots" />
-                  <Text size="sm" c="dimmed">
-                    {progress
-                      ? formatProgress(progress, t, resolveToolName)
-                      : t("chat.progress.thinking")}
-                  </Text>
-                </Group>
-              </Paper>
+              <div className="chat-thinking">
+                <StirlingLogoAnimated size={20} />
+                <Text size="sm" c="dimmed">
+                  {progress
+                    ? formatProgress(progress, t, resolveToolName)
+                    : t("chat.progress.thinking")}
+                </Text>
+              </div>
             </div>
           )}
         </Stack>

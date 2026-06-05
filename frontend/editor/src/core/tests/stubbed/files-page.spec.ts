@@ -120,12 +120,16 @@ async function stubStorageApis(
   );
 }
 
-/** Navigate to /files and wait for at least one seeded card. */
+/** Navigate to /files and wait for at least one real (non-skeleton) card.
+ *  `.files-page-card` also matches the loading-state skeleton placeholders, and
+ *  their parent grid carries `aria-busy="true"` which intercepts pointer events
+ *  -- so waiting for any `.files-page-card` races the skeleton→real transition
+ *  and causes flaky timeouts on slower CI runners. */
 async function gotoFilesPage(page: Page): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".files-page-card").first()).toBeVisible({
-    timeout: 5_000,
-  });
+  await expect(
+    page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+  ).toBeVisible({ timeout: 10_000 });
 }
 
 test.describe("Files page", () => {
