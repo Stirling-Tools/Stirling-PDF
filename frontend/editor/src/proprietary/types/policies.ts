@@ -70,14 +70,6 @@ export interface PolicySource {
   icon: ReactNode;
 }
 
-/** An entry in a policy's recent-activity feed (mock/enforcement log). */
-export interface PolicyActivityItem {
-  doc: string;
-  action: string;
-  time: string;
-  status: "enforced" | "flagged";
-}
-
 /** Per-category runtime state persisted in the mock store. */
 export interface PolicyState {
   configured: boolean;

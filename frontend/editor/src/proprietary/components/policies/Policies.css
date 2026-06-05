@@ -32,6 +32,11 @@
 .pol-list-head-count {
   font-size: 0.65rem;
   color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.pol-list-head:hover .pol-list-head-count {
+  opacity: 1;
 }
 .pol-list-head-chevron {
   color: var(--text-muted);
@@ -65,7 +70,7 @@
     border-color 0.12s ease;
 }
 .pol-row:hover {
-  background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+  background: var(--bg-surface);
 }
 /* Active (but unselected) rows read as cards. */
 .pol-row[data-status="active"] {
@@ -726,7 +731,7 @@
   transition: background-color 0.12s ease;
 }
 .pol-crail-btn:hover {
-  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
+  background: var(--active-bg, rgba(59, 130, 246, 0.1));
 }
 .pol-crail-btn[data-status="active"] {
   color: var(--mantine-color-blue-6, #3b82f6);

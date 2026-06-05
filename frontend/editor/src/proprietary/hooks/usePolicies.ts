@@ -1,8 +1,7 @@
 /**
  * State + actions for Policies, backed by the mock policyStorage. Exposes the
  * per-category state, lifecycle actions (enable/pause/resume/delete/save), the
- * mock user/billing context for the permission + cost UI, and the derived
- * active-policy count + per-document cost.
+ * permission flag, and the (read-only, mock) spend-limit derivation.
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -13,10 +12,7 @@ import {
   resetPolicy,
 } from "@app/services/policyStorage";
 import {
-  POLICY_CATEGORIES,
-  PER_POLICY_DOC_COST,
   MOCK_POLICY_USER,
-  MOCK_POLICY_BILLING,
   canConfigurePolicies,
 } from "@app/data/policyDefinitions";
 import type {
@@ -33,14 +29,25 @@ export interface PolicyEnableInput {
   fieldValues: Record<string, boolean | string | string[]>;
 }
 
+/**
+ * Spend limit is read-only mock state in the frontend — the real figure comes
+ * from the billing backend. Kept as a module constant so every usePolicies()
+ * instance reads identical state (no setter ⇒ no cross-instance desync). The
+ * spend chip / paused-on-limit derivation stays wired for when it goes live.
+ */
+const SPEND_LIMIT: SpendLimit = {
+  enabled: false,
+  limit: 500,
+  used: 0,
+  period: "monthly",
+};
+const spendLimitReached =
+  SPEND_LIMIT.enabled && SPEND_LIMIT.used >= SPEND_LIMIT.limit;
+const spendLimitWarning =
+  SPEND_LIMIT.enabled && SPEND_LIMIT.used >= SPEND_LIMIT.limit * 0.8;
+
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
-  const [spendLimit, setSpendLimit] = useState<SpendLimit>({
-    enabled: false,
-    limit: 500,
-    used: 0,
-    period: "monthly",
-  });
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
@@ -78,28 +85,6 @@ export function usePolicies() {
     resetPolicy(id);
   }, []);
 
-  const activePolicyCount = useMemo(
-    () =>
-      POLICY_CATEGORIES.filter(
-        (c) =>
-          policies[c.id]?.configured && policies[c.id]?.status === "active",
-      ).length,
-    [policies],
-  );
-
-  const perDocCost = useMemo(
-    () =>
-      activePolicyCount > 0
-        ? PER_POLICY_DOC_COST * activePolicyCount
-        : PER_POLICY_DOC_COST,
-    [activePolicyCount],
-  );
-
-  const spendLimitReached =
-    spendLimit.enabled && spendLimit.used >= spendLimit.limit;
-  const spendLimitWarning =
-    spendLimit.enabled && spendLimit.used >= spendLimit.limit * 0.8;
-
   const canConfigure = useMemo(
     () => canConfigurePolicies(MOCK_POLICY_USER),
     [],
@@ -107,13 +92,8 @@ export function usePolicies() {
 
   return {
     policies,
-    user: MOCK_POLICY_USER,
-    billing: MOCK_POLICY_BILLING,
     canConfigure,
-    activePolicyCount,
-    perDocCost,
-    spendLimit,
-    setSpendLimit,
+    spendLimit: SPEND_LIMIT,
     spendLimitReached,
     spendLimitWarning,
     enablePolicy,

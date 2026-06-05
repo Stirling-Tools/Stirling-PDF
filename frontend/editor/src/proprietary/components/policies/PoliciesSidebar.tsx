@@ -229,7 +229,6 @@ export function PoliciesCollapsedButton({
 
   return (
     <>
-      <div className="tool-panel__collapsed-divider" />
       <div className="pol-crail">
         {POLICY_CATEGORIES.map((cat) => {
           const status = deriveRowStatus(
@@ -269,6 +268,7 @@ export function PoliciesCollapsedButton({
           );
         })}
       </div>
+      <div className="tool-panel__collapsed-divider" />
     </>
   );
 }

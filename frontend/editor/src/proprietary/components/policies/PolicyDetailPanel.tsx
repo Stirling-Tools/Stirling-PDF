@@ -49,11 +49,11 @@ export function PolicyDetailPanel({
         <span className="pol-header-icon">{category.icon}</span>
         <div className="pol-header-text">
           <span className="pol-header-title">{category.label}</span>
-          <span className="pol-header-sub">
-            {state.docsEnforced24h > 0
-              ? `${state.docsEnforced24h} enforced today`
-              : "Policy"}
-          </span>
+          {state.docsEnforced24h > 0 && (
+            <span className="pol-header-sub">
+              {`${state.docsEnforced24h} enforced today`}
+            </span>
+          )}
         </div>
         {isPaused ? (
           <span className="pol-badge pol-badge-paused">Paused</span>

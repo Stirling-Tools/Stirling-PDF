@@ -33,6 +33,15 @@ function getSnapshot(): PolicySelection {
   return state;
 }
 
+/** Deterministic initial snapshot for SSR/hydration (never the mutable store). */
+const SERVER_SNAPSHOT: PolicySelection = {
+  selectedId: null,
+  detailView: "detail",
+};
+function getServerSnapshot(): PolicySelection {
+  return SERVER_SNAPSHOT;
+}
+
 /** Open a policy's detail (resets the sub-view to the narrative). */
 export function selectPolicy(id: string | null) {
   state = { selectedId: id, detailView: "detail" };
@@ -58,5 +67,5 @@ export function resetPolicySelection() {
 }
 
 export function usePolicySelection(): PolicySelection {
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

@@ -41,13 +41,13 @@ export function PolicySettingsForm({
         <span className="pol-header-icon">{category.icon}</span>
         <div className="pol-header-text">
           {/* Prototype titles this sub-view "Edit Settings"; the policy it edits
-              stays identifiable via the icon + the sub-line. */}
+              stays identifiable via the category icon to the left. */}
           <span className="pol-header-title">Edit Settings</span>
-          <span className="pol-header-sub">
-            {state.docsEnforced24h > 0
-              ? `${state.docsEnforced24h} enforced today`
-              : category.label}
-          </span>
+          {state.docsEnforced24h > 0 && (
+            <span className="pol-header-sub">
+              {`${state.docsEnforced24h} enforced today`}
+            </span>
+          )}
         </div>
         {status === "paused" ? (
           <span className="pol-badge pol-badge-paused">Paused</span>

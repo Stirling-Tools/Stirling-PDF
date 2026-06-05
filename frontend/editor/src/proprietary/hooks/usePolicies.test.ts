@@ -5,14 +5,14 @@ import { usePolicies } from "@app/hooks/usePolicies";
 describe("usePolicies", () => {
   beforeEach(() => localStorage.clear());
 
-  it("starts with ingestion active and base per-doc cost", () => {
+  it("seeds ingestion active and the rest unconfigured", () => {
     const { result } = renderHook(() => usePolicies());
-    expect(result.current.activePolicyCount).toBe(1);
-    expect(result.current.perDocCost).toBeCloseTo(0.02);
+    expect(result.current.policies.ingestion.configured).toBe(true);
+    expect(result.current.policies.ingestion.status).toBe("active");
     expect(result.current.policies.security.configured).toBe(false);
   });
 
-  it("enabling a policy raises the active count and scales cost", () => {
+  it("enabling a policy marks it configured + active", () => {
     const { result } = renderHook(() => usePolicies());
     act(() =>
       result.current.enablePolicy("security", {
@@ -24,17 +24,14 @@ describe("usePolicies", () => {
     );
     expect(result.current.policies.security.configured).toBe(true);
     expect(result.current.policies.security.status).toBe("active");
-    expect(result.current.activePolicyCount).toBe(2);
-    expect(result.current.perDocCost).toBeCloseTo(0.04);
   });
 
-  it("pausing excludes a policy from the active count", () => {
+  it("pausing then resuming flips status", () => {
     const { result } = renderHook(() => usePolicies());
     act(() => result.current.pausePolicy("ingestion"));
     expect(result.current.policies.ingestion.status).toBe("paused");
-    expect(result.current.activePolicyCount).toBe(0);
     act(() => result.current.resumePolicy("ingestion"));
-    expect(result.current.activePolicyCount).toBe(1);
+    expect(result.current.policies.ingestion.status).toBe("active");
   });
 
   it("deleting a policy reverts it to unconfigured", () => {
@@ -53,16 +50,9 @@ describe("usePolicies", () => {
     expect(result.current.policies.routing.status).toBe("default");
   });
 
-  it("spend limit reached is derived from the limit + usage", () => {
+  it("spend limit is disabled by default (no warning/reached)", () => {
     const { result } = renderHook(() => usePolicies());
-    act(() =>
-      result.current.setSpendLimit({
-        enabled: true,
-        limit: 100,
-        used: 100,
-        period: "monthly",
-      }),
-    );
-    expect(result.current.spendLimitReached).toBe(true);
+    expect(result.current.spendLimitReached).toBe(false);
+    expect(result.current.spendLimitWarning).toBe(false);
   });
 });

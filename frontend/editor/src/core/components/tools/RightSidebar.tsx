@@ -73,7 +73,7 @@ export default function RightSidebar() {
 
   const agentsEnabled = useAgentsEnabled();
   const policiesEnabled = usePoliciesEnabled();
-  const policyDetailActive = usePolicyDetailActive();
+  const rawPolicyDetailActive = usePolicyDetailActive();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
@@ -101,6 +101,19 @@ export default function RightSidebar() {
 
   const handleBackToDefault = () => {
     withViewTransition(() => {
+      setAllToolsView(false);
+      setSearchQuery("");
+    });
+  };
+
+  // Opening a policy (e.g. from the collapsed rail) lands the rail in the clean
+  // default tool-picker view — the only view the policy takeover renders in — so
+  // it never collides with an open tool or the all-tools/search view.
+  const handleOpenPolicy = () => {
+    withViewTransition(() => {
+      if (readerMode) setReaderMode(false);
+      setLeftPanelView("toolPicker");
+      if (!sidebarsVisible) setSidebarsVisible(true);
       setAllToolsView(false);
       setSearchQuery("");
     });
@@ -158,6 +171,12 @@ export default function RightSidebar() {
   // mirroring the prototype (and hidden inside a specific tool / all-tools view).
   const showPolicies =
     policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
+
+  // The detail takeover replaces the tool list ONLY in the same default view —
+  // never over an open tool or the all-tools view (which must keep priority).
+  // A lingering selection is harmless: it stays hidden behind a tool and the
+  // list/takeover reappears on return to the picker (as in the prototype).
+  const policyDetailActive = rawPolicyDetailActive && showPolicies;
 
   const computedWidth = () => {
     if (isMobile) return "100%";
@@ -221,6 +240,7 @@ export default function RightSidebar() {
             <AgentsCollapsedButton onExpand={handleExpand} />
           </div>
           <div className="tool-panel__collapsed-divider" />
+          <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
           <div className="tool-panel__collapsed-tools">
             {collapsedRailItems.map(({ id, tool }) => (
               <AppTooltip
@@ -245,7 +265,6 @@ export default function RightSidebar() {
               </AppTooltip>
             ))}
           </div>
-          <PoliciesCollapsedButton onExpand={handleExpand} />
         </div>
       )}
 

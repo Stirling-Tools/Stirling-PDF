@@ -5,8 +5,8 @@
 
 import LayersIcon from "@mui/icons-material/Layers";
 import ShieldIcon from "@mui/icons-material/Shield";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import CallSplitIcon from "@mui/icons-material/CallSplit";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import StorageIcon from "@mui/icons-material/Storage";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ComputerIcon from "@mui/icons-material/Computer";
@@ -52,13 +52,13 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "compliance",
     label: "Compliance",
-    icon: <VerifiedUserIcon sx={ICON_SX} />,
+    icon: <CheckCircleIcon sx={ICON_SX} />,
     desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
   },
   {
     id: "routing",
     label: "Routing",
-    icon: <CallSplitIcon sx={ICON_SX} />,
+    icon: <ArrowForwardIcon sx={ICON_SX} />,
     desc: "Auto-route documents to the right team, folder, or system.",
   },
   {

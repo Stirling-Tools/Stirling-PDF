@@ -190,9 +190,10 @@ export function PolicySetupWizard({
                   <button
                     className="pol-link"
                     onClick={() => {
-                      const next = !scopeNarrow;
-                      setScopeNarrow(next);
-                      if (!next) setScopeTypes([]);
+                      // Toggle the list open/closed only; keep any checked
+                      // types so re-opening restores them (onEnable already
+                      // commits scopeTypes only when narrowed).
+                      setScopeNarrow((v) => !v);
                     }}
                   >
                     {scopeNarrow ? "Clear" : "Edit"}
