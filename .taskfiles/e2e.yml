@@ -231,9 +231,9 @@ tasks:
     summary: |
       Brings the stack up and prints copy-paste URLs/commands plus a freshly minted
       access token so you can drive your own MCP client (Inspector, curl, ...).
-        task e2e:mcp:manual LICENSE_KEY=tuttis
+        task e2e:mcp:manual LICENSE_KEY=<your-license-key>
       Add --nobuild if the images are already built:
-        task e2e:mcp:manual LICENSE_KEY=tuttis -- --nobuild
+        task e2e:mcp:manual LICENSE_KEY=<your-license-key> -- --nobuild
     ignore_error: true
     cmds:
       - bash testing/compose/start-mcp-test.sh --manual {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
@@ -243,9 +243,9 @@ tasks:
     summary: |
       Brings Stirling up in apikey auth mode and prints copy-paste client settings with a freshly
       minted X-API-KEY - ideal for clients whose OAuth layer can't reach localhost.
-        task e2e:mcp:apikey LICENSE_KEY=tuttis
+        task e2e:mcp:apikey LICENSE_KEY=<your-license-key>
       Add --nobuild if images are already built:
-        task e2e:mcp:apikey LICENSE_KEY=tuttis -- --nobuild
+        task e2e:mcp:apikey LICENSE_KEY=<your-license-key> -- --nobuild
     ignore_error: true
     cmds:
       - bash testing/compose/start-mcp-test.sh --apikey {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}

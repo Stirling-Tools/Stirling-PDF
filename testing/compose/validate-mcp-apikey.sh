@@ -33,7 +33,7 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 echo -e "${YELLOW}▶ Recreating Stirling in apikey mode...${NC}"
-MCP_AUTH_MODE=apikey PREMIUM_KEY="${PREMIUM_KEY:-tuttis}" \
+MCP_AUTH_MODE=apikey PREMIUM_KEY="${PREMIUM_KEY:-}" \
     docker compose -f "$COMPOSE" up -d --no-build --force-recreate stirling-pdf-mcp >/dev/null 2>&1
 if ! wait_up; then
     fail "Stirling did not become healthy in apikey mode"
@@ -122,7 +122,7 @@ fi
 echo ""
 
 echo -e "${YELLOW}▶ Restoring oauth mode...${NC}"
-PREMIUM_KEY="${PREMIUM_KEY:-tuttis}" docker compose -f "$COMPOSE" up -d --no-build --force-recreate stirling-pdf-mcp >/dev/null 2>&1
+PREMIUM_KEY="${PREMIUM_KEY:-}" docker compose -f "$COMPOSE" up -d --no-build --force-recreate stirling-pdf-mcp >/dev/null 2>&1
 wait_up && pass "restored oauth mode" || fail "Stirling not healthy after restoring oauth"
 echo ""
 
