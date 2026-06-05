@@ -146,10 +146,18 @@ export default defineConfig(
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {
     files: [
+      "editor/src/core/auth/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/constants/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/extensions/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/i18n/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/responses/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/styles/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/testing/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/workers/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
       "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
       "shared/**/*.{js,mjs,jsx,ts,tsx}",
     ],
