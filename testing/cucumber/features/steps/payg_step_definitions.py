@@ -340,8 +340,28 @@ def _post_pdf(context, endpoint, fixture_path, extra_headers=None, form_data=Non
 
 @then("the response status is {status:d}")
 def step_assert_status(context, status):
-    assert context.response.status_code == status, (
-        f"Expected {status}, got {context.response.status_code}: {context.response.text[:300]}"
+    assert context.response.status_code == status, _status_mismatch_message(
+        context.response, status
+    )
+
+
+def _status_mismatch_message(response, expected_status):
+    """Verbose diagnostic for unexpected statuses — dumps URL, headers, body
+    so we don't have to round-trip via container logs to figure out what came
+    back. Kept as a helper so future status-range / status-min steps can call
+    it too."""
+    body_preview = response.text[:1000] if response.text else "<empty body>"
+    headers_brief = {
+        k: v
+        for k, v in response.headers.items()
+        if k.lower()
+        in ("content-type", "content-length", "x-content-type-options", "location")
+    }
+    return (
+        f"Expected {expected_status}, got {response.status_code}\n"
+        f"  URL:     {response.request.method} {response.request.url}\n"
+        f"  Headers: {headers_brief}\n"
+        f"  Body:    {body_preview}"
     )
 
 

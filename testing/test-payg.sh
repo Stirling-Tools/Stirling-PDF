@@ -27,12 +27,24 @@ BEHAVE_INI="$PROJECT_ROOT/testing/cucumber/behave.ini"
 BEHAVE_INI_BACKUP="$BEHAVE_INI.payg-backup"
 
 cleanup() {
+    # Dump the backend container logs BEFORE tearing the stack down so they're
+    # captured in CI output. The workflow has a "Dump saas container logs on
+    # failure" step but it runs AFTER this cleanup, by which point the
+    # containers are gone — so its `docker compose logs` returns nothing.
+    if [ "${PAYG_HARNESS_FAILED:-0}" = "1" ]; then
+        echo "==> Dumping stirling-pdf-saas container logs (last 500)"
+        docker compose -f "$COMPOSE_FILE" logs --tail 500 stirling-pdf-saas || true
+        echo "==> Dumping postgres-saas container logs (last 100)"
+        docker compose -f "$COMPOSE_FILE" logs --tail 100 postgres-saas || true
+    fi
     echo "==> Tearing down saas compose stack"
     docker compose -f "$COMPOSE_FILE" down -v || true
     if [ -f "$BEHAVE_INI_BACKUP" ]; then
         mv "$BEHAVE_INI_BACKUP" "$BEHAVE_INI"
     fi
 }
+# Mark failure so the cleanup hook knows to dump logs.
+trap 'PAYG_HARNESS_FAILED=1' ERR
 trap cleanup EXIT
 
 cp "$BEHAVE_INI" "$BEHAVE_INI_BACKUP"
