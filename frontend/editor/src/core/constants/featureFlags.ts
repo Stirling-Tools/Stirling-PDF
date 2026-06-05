@@ -12,3 +12,11 @@
 // Annotated as `boolean` (not the literal `false`) so call sites aren't treated
 // as constant/unreachable conditions by the type checker and linter.
 export const WATCH_FOLDERS_ENABLED: boolean = false;
+
+/**
+ * Policies — a proprietary, automation-backed feature (like Watch Folders but
+ * backend-driven, with non-folder triggers). The implementation lives under
+ * `proprietary/`; this core value stays `false` so the shared sidebar entry
+ * never appears in the open-source build.
+ */
+export const POLICIES_ENABLED: boolean = false;

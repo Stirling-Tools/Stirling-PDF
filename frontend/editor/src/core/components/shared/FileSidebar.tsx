@@ -32,6 +32,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import PolicyIcon from "@mui/icons-material/Policy";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
@@ -45,7 +46,10 @@ import {
   setWatchFolderDraggedFileIds,
   clearWatchFolderDraggedFileIds,
 } from "@app/components/smartFolders/watchFolderDragState";
-import { WATCH_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import {
+  WATCH_FOLDERS_ENABLED,
+  POLICIES_ENABLED,
+} from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
@@ -55,6 +59,9 @@ const EXPANDED_WIDTH = "16.25rem"; // ~260px
 // Inlined to avoid a circular import with SmartFoldersRegistration.
 const SMART_FOLDER_VIEW_ID = "smartFolder";
 const SMART_FOLDER_WORKBENCH_ID = "custom:smartFolder";
+// Inlined to avoid a circular import with PoliciesRegistration.
+const POLICY_VIEW_ID = "policies";
+const POLICY_WORKBENCH_ID = "custom:policies";
 
 export interface FileSidebarProps {
   collapsed?: boolean;
@@ -119,6 +126,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
     const isWatchFoldersActive = currentWorkbench === SMART_FOLDER_WORKBENCH_ID;
+    const isPoliciesActive = currentWorkbench === POLICY_WORKBENCH_ID;
+    const openPolicies = useCallback(() => {
+      if (collapsed && onToggleCollapse) onToggleCollapse();
+      setCustomWorkbenchViewData(POLICY_VIEW_ID, {});
+      navActions.setWorkbench(POLICY_WORKBENCH_ID as any);
+    }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
     // The folder currently open in the Watch Folders view (null = folder list/home).
     const activeWatchFolderId = (customWorkbenchViews.find(
       (v) => v.id === SMART_FOLDER_VIEW_ID,
@@ -779,6 +792,32 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("smartFolders.sidebarTitle", "Watch Folders")}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Policies entry */}
+            {POLICIES_ENABLED && (
+              <div
+                className="file-sidebar-action-row"
+                data-testid="policies-button"
+                data-active={isPoliciesActive}
+                onClick={openPolicies}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && openPolicies()}
+                aria-label={t("policies.sidebarTitle", "Policies")}
+                style={
+                  isPoliciesActive
+                    ? { backgroundColor: "var(--active-bg)" }
+                    : undefined
+                }
+              >
+                <PolicyIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("policies.sidebarTitle", "Policies")}
                   </span>
                 )}
               </div>

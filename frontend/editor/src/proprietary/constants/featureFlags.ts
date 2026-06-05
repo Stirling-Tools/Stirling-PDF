@@ -13,3 +13,10 @@
  * build (which has no Watch Folders implementation to navigate to).
  */
 export const WATCH_FOLDERS_ENABLED: boolean = false;
+
+/**
+ * Policies — proprietary, automation-backed policy enforcement. Enabled in the
+ * proprietary build so it's reachable while in active development (frontend is
+ * mock/stub-backed; no real server yet). Core stays `false`.
+ */
+export const POLICIES_ENABLED: boolean = true;
