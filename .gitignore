@@ -279,4 +279,4 @@ docs/type3/signatures/
 *.playwright-mcp.png
 
 # Local screenshot artifacts from *-screenshots.spec.ts
-frontend/screenshots/
+frontend/editor/screenshots/
