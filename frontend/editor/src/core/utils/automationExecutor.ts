@@ -4,54 +4,48 @@ import { ToolId } from "@app/types/toolId";
 import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
 import { AutomationFileProcessor } from "@app/utils/automationFileProcessor";
 import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import { zipFileService } from "@app/services/zipFileService";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 
-/**
- * Process multi-file tool response (handles ZIP or single PDF responses)
- */
-const processMultiFileResponse = async (
+export const processMultiFileResponse = async (
   responseData: Blob,
   responseHeaders: any,
   files: File[],
   filePrefix: string,
   preserveBackendFilename?: boolean,
 ): Promise<File[]> => {
-  // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
-  if (
-    responseData.type === "application/pdf" ||
-    (responseHeaders && responseHeaders["content-type"] === "application/pdf")
-  ) {
-    // Single PDF response - use processResponse to respect preserveBackendFilename
-    const processedFiles = await processResponse(
+  const contentTypeHeader = responseHeaders?.["content-type"];
+  const looksLikeZip = await zipFileService.isZipResponse(
+    responseData,
+    typeof contentTypeHeader === "string" ? contentTypeHeader : undefined,
+  );
+
+  if (!looksLikeZip) {
+    return processResponse(
       responseData,
       files,
       filePrefix,
       undefined,
       preserveBackendFilename ? responseHeaders : undefined,
     );
-    return processedFiles;
-  } else {
-    // ZIP response
-    const result =
-      await AutomationFileProcessor.extractAutomationZipFiles(responseData);
-
-    if (result.errors.length > 0) {
-      console.warn(`⚠️ File processing warnings:`, result.errors);
-    }
-
-    // Apply prefix to files, replacing any existing prefix
-    const processedFiles =
-      filePrefix && !preserveBackendFilename
-        ? result.files.map((file) => {
-            const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
-            return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
-              type: file.type,
-            });
-          })
-        : result.files;
-
-    return processedFiles;
   }
+
+  const result =
+    await AutomationFileProcessor.extractAutomationZipFiles(responseData);
+
+  if (result.errors.length > 0) {
+    console.warn(`⚠️ File processing warnings:`, result.errors);
+  }
+
+  if (!filePrefix || preserveBackendFilename) {
+    return result.files;
+  }
+  return result.files.map((file) => {
+    const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
+    return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
+      type: file.type,
+    });
+  });
 };
 
 /**
