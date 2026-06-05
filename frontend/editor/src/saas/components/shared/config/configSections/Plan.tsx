@@ -1,11 +1,15 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { lazy, Suspense, useState, useCallback, useEffect } from "react";
 import { Divider, Loader, Alert, Select, Group, Text } from "@mantine/core";
 import { usePlans, PlanTier } from "@app/hooks/usePlans";
-import StripeCheckout, {
+import type {
   PurchaseType,
   CreditsPack,
   PlanID,
 } from "@app/components/shared/StripeCheckoutSaas";
+
+const StripeCheckout = lazy(
+  () => import("@app/components/shared/StripeCheckoutSaas"),
+);
 import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
 import ApiPackagesSection from "@app/components/shared/config/configSections/plan/ApiPackagesSection";
 import ActivePlanSection from "@app/components/shared/config/configSections/plan/ActivePlanSection";
@@ -204,29 +208,36 @@ const Plan: React.FC = () => {
       />
 
       {/* Stripe Checkout Modal */}
-      <StripeCheckout
-        opened={
-          checkoutOpen &&
-          (selectedPlan !== null || selectedCreditsPack !== null)
-        }
-        onClose={handleCheckoutClose}
-        purchaseType={purchaseType}
-        planId={
-          purchaseType === "subscription" ? (selectedPlan?.id as PlanID) : null
-        }
-        creditsPack={purchaseType === "credits" ? selectedCreditsPack : null}
-        planName={
-          purchaseType === "subscription"
-            ? selectedPlan?.name || ""
-            : data?.apiPackages.find((pkg) => pkg.id === selectedCreditsPack)
-                ?.name || ""
-        }
-        onSuccess={handlePaymentSuccess}
-        onError={handlePaymentError}
-        isTrialConversion={
-          trialStatus?.isTrialing && purchaseType === "subscription"
-        }
-      />
+      {checkoutOpen &&
+        (selectedPlan !== null || selectedCreditsPack !== null) && (
+          <Suspense fallback={null}>
+            <StripeCheckout
+              opened={true}
+              onClose={handleCheckoutClose}
+              purchaseType={purchaseType}
+              planId={
+                purchaseType === "subscription"
+                  ? (selectedPlan?.id as PlanID)
+                  : null
+              }
+              creditsPack={
+                purchaseType === "credits" ? selectedCreditsPack : null
+              }
+              planName={
+                purchaseType === "subscription"
+                  ? selectedPlan?.name || ""
+                  : data?.apiPackages.find(
+                      (pkg) => pkg.id === selectedCreditsPack,
+                    )?.name || ""
+              }
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              isTrialConversion={
+                trialStatus?.isTrialing && purchaseType === "subscription"
+              }
+            />
+          </Suspense>
+        )}
     </div>
   );
 };

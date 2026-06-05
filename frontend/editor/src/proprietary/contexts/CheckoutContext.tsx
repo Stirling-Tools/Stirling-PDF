@@ -4,6 +4,8 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  lazy,
+  Suspense,
   ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +15,12 @@ import licenseService, {
   mapLicenseToTier,
   PlanTier,
 } from "@app/services/licenseService";
-import { StripeCheckout } from "@app/components/shared/stripeCheckout";
+
+const StripeCheckout = lazy(() =>
+  import("@app/components/shared/stripeCheckout").then((m) => ({
+    default: m.StripeCheckout,
+  })),
+);
 import { userManagementService } from "@app/services/userManagementService";
 import { alert } from "@app/components/toast";
 import {
@@ -423,16 +430,18 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
       {/* Global Checkout Modal */}
       {selectedPlanGroup && (
-        <StripeCheckout
-          opened={isOpen}
-          onClose={closeCheckout}
-          planGroup={selectedPlanGroup}
-          minimumSeats={minimumSeats}
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
-          onLicenseActivated={handleLicenseActivated}
-          hostedCheckoutSuccess={hostedCheckoutSuccess}
-        />
+        <Suspense fallback={null}>
+          <StripeCheckout
+            opened={isOpen}
+            onClose={closeCheckout}
+            planGroup={selectedPlanGroup}
+            minimumSeats={minimumSeats}
+            onSuccess={handlePaymentSuccess}
+            onError={handlePaymentError}
+            onLicenseActivated={handleLicenseActivated}
+            hostedCheckoutSuccess={hostedCheckoutSuccess}
+          />
+        </Suspense>
       )}
     </CheckoutContext.Provider>
   );
