@@ -832,7 +832,12 @@ class ImageFormat(StrEnum):
     jpeg = "jpeg"
     jpg = "jpg"
     gif = "gif"
+    tiff = "tiff"
     webp = "webp"
+    heic = "heic"
+    heif = "heif"
+    avif = "avif"
+    jxl = "jxl"
 
 
 class SingleOrMultiple(StrEnum):
