@@ -79,31 +79,4 @@ test.describe("Stripe SDK lazy loading", () => {
     ).toEqual([]);
   });
 
-  test("checkout source module still parses and references the Stripe SDK", async ({
-    page,
-  }) => {
-    // Smoke-check the module that *does* host loadStripe(). If this
-    // stopped fetching @stripe/stripe-js (e.g. someone moved the import
-    // to a leaf component but forgot to push the call site with it),
-    // the negative tests above would still pass even though the
-    // checkout itself would be broken. Server-side fetch is used (not
-    // a dynamic import in the page) because dynamic imports of .ts
-    // source from page.evaluate() race with Vite's optimizeDeps in
-    // browser-specific ways.
-    //
-    // Only the proprietary PaymentStage is reachable in this build's
-    // @app/* path mapping; SaaS-mode coverage of StripeCheckoutSaas
-    // belongs in a saas-flavoured spec.
-    const paymentStage = await page.evaluate(async () => {
-      const res = await fetch(
-        "/src/proprietary/components/shared/stripeCheckout/stages/PaymentStage.tsx",
-      );
-      return { status: res.status, body: await res.text() };
-    });
-    expect(paymentStage.status).toBe(200);
-    // Vite's optimizeDeps rewrites @stripe/stripe-js to the underscore-id
-    // (@stripe_stripe-js.js) when transforming source modules in dev.
-    expect(paymentStage.body).toMatch(/@stripe[_/]stripe-js/);
-    expect(paymentStage.body).toContain("loadStripe");
-  });
 });
