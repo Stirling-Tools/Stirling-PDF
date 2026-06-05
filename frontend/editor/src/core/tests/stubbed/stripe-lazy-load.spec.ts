@@ -78,5 +78,4 @@ test.describe("Stripe SDK lazy loading", () => {
       `Expected no Stripe-related network activity after opening settings, but observed:\n${stripeRequests.join("\n")}`,
     ).toEqual([]);
   });
-
 });
