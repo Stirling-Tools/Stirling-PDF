@@ -19,9 +19,7 @@ import LockIcon from "@mui/icons-material/LockOutlined";
 import CheckIcon from "@mui/icons-material/CheckRounded";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import LocalIcon from "@app/components/shared/LocalIcon";
-// Relative (not @app/*) so the co-located CSS resolves in any build flavor —
-// @app would point at proprietary/core, but this file is imported into the
-// proprietary demo build where Payg.css only exists under saas.
+// Relative (not @app/*) so the co-located CSS resolves directly.
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
 import { useTranslation } from "react-i18next";

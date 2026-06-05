@@ -109,20 +109,12 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
 
   // Left navigation structure and icons
   const { config: appConfig } = useAppConfig();
+  // PAYG settings screen is gated on the backend `appConfig.paygEnabled` flag,
+  // which is currently unset everywhere — the screen is mock-only and hidden
+  // from users until the wallet endpoint (PR-C3.2) lands.
   // Until team-role lookup lands, proxy LEADER from the tenant-admin flag.
-  // DEMO: `?payg=1` query param (sticks in localStorage) force-enables the new
-  // section locally so the screen can be previewed before the backend
-  // ApplicationProperties.Payg wiring is in place. Remove once the real config
-  // flag flows from ConfigController.java.
-  let paygOverride = false;
-  if (typeof window !== "undefined") {
-    if (new URLSearchParams(window.location.search).get("payg") === "1") {
-      localStorage.setItem("paygDemo", "1");
-    }
-    paygOverride = localStorage.getItem("paygDemo") === "1";
-  }
-  const paygEnabled = Boolean(appConfig?.paygEnabled) || paygOverride;
-  const isLeader = Boolean(appConfig?.isAdmin) || paygOverride;
+  const paygEnabled = Boolean(appConfig?.paygEnabled);
+  const isLeader = Boolean(appConfig?.isAdmin);
 
   const configNavSections = useMemo(
     () =>
