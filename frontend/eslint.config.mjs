@@ -147,7 +147,6 @@ export default defineConfig(
   {
     files: srcGlobs,
     ignores: [
-      "editor/src/assets/material-symbols-icons.d.ts",
       "editor/src/core/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
@@ -160,9 +159,6 @@ export default defineConfig(
       "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/global.d.ts",
-      "editor/src/index.tsx",
-      "editor/src/reportWebVitals.js",
     ],
     languageOptions: {
       parserOptions: {
