@@ -789,12 +789,19 @@ jobs:
           python3 .github/scripts/verify-updater-signatures.py \
             ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
 
+      # workflow_dispatch path requires platform=='all' so a single-platform
+      # dispatch can't overwrite an existing release's full latest.json with a
+      # partial one (action-gh-release defaults overwrite_files:true).
+      # release / V2-master always build the full matrix so no extra guard needed.
+      # fail_on_unmatched_files makes a missing latest.json or installer fail loudly
+      # instead of silently shipping a broken auto-update.
       - name: Upload binaries to Release
-        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true' && github.event.inputs.platform == 'all') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
+          fail_on_unmatched_files: true
           # Installers + updater payloads + manifest. .sig contents are embedded
           # in latest.json so the .sig files themselves are not uploaded.
           files: |
