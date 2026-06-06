@@ -89,6 +89,7 @@ export const BookmarkSidebar = ({
     scrollActions,
     hasBookmarkSupport,
     activeFileId,
+    activeFileIndex,
     setActiveFileId,
     getScrollState,
     toggleBookmarkSidebar,
@@ -219,10 +220,24 @@ export const BookmarkSidebar = ({
     );
 
     const fetchWithRetry = async () => {
-      const maxAttempts = 10;
+      // 30 × 50ms = 1.5s window. After consumeFiles swaps the file the
+      // embedpdf bookmark plugin tears down for the old document and
+      // re-registers for the new one; until the bridge is back the
+      // action returns null. Without retrying on null we'd cache an
+      // empty "success" and the just-added bookmark would never show
+      // up in the sidebar.
+      const maxAttempts = 30;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const result = await bookmarkActions.fetchBookmarks();
+          if (result === null) {
+            // Bridge not registered yet (document still loading). Wait
+            // and retry instead of caching this as a successful empty
+            // list.
+            if (attempt === maxAttempts - 1) return [];
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            continue;
+          }
           return Array.isArray(result) ? result : [];
         } catch (error: any) {
           const message =
@@ -318,12 +333,25 @@ export const BookmarkSidebar = ({
       );
       return;
     }
-    if (!activeFileId) {
-      // No managed active file - fall back to the full tool.
+    // Resolve the file the viewer is currently displaying. activeFileId
+    // is only set explicitly (user clicked a thumbnail / a tool ran);
+    // on a fresh /read upload it stays null and the viewer falls back
+    // to activeFileIndex - so we mirror that here. Without this, Save
+    // would silently route to the full editor every time on a fresh
+    // upload.
+    const allFiles = selectors.getFiles();
+    const resolvedFile = activeFileId
+      ? allFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId)
+      : allFiles[activeFileIndex] ?? allFiles[0];
+    const resolvedFileId =
+      resolvedFile && isStirlingFile(resolvedFile)
+        ? (resolvedFile.fileId as FileId)
+        : null;
+    if (!resolvedFileId) {
       handleFallbackToTool();
       return;
     }
-    const fileId = activeFileId as FileId;
+    const fileId = resolvedFileId;
     const file = selectors.getFile(fileId);
     const parentStub = selectors.getStirlingFileStub(fileId);
     if (!file || !parentStub) {
@@ -403,6 +431,7 @@ export const BookmarkSidebar = ({
     newBookmarkTitle,
     newBookmarkPage,
     activeFileId,
+    activeFileIndex,
     selectors,
     fileActions,
     setActiveFileId,
@@ -446,34 +475,6 @@ export const BookmarkSidebar = ({
       [nodeId]: !(prev[nodeId] ?? true),
     }));
   };
-
-  const expandAll = useCallback(() => {
-    const allExpanded: Record<string, boolean> = {};
-    const expandRecursive = (nodes: BookmarkNode[]) => {
-      nodes.forEach((node) => {
-        if (node.children && node.children.length > 0) {
-          allExpanded[node.id] = true;
-          expandRecursive(node.children as BookmarkNode[]);
-        }
-      });
-    };
-    expandRecursive(bookmarksWithIds);
-    setExpanded(allExpanded);
-  }, [bookmarksWithIds]);
-
-  const collapseAll = useCallback(() => {
-    const allCollapsed: Record<string, boolean> = {};
-    const collapseRecursive = (nodes: BookmarkNode[]) => {
-      nodes.forEach((node) => {
-        if (node.children && node.children.length > 0) {
-          allCollapsed[node.id] = false;
-          collapseRecursive(node.children as BookmarkNode[]);
-        }
-      });
-    };
-    collapseRecursive(bookmarksWithIds);
-    setExpanded(allCollapsed);
-  }, [bookmarksWithIds]);
 
   const handleBookmarkClick = (
     bookmark: PdfBookmarkObject,
@@ -654,50 +655,6 @@ export const BookmarkSidebar = ({
           </Text>
         </div>
         <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {bookmarkSupport && bookmarksWithIds.length > 0 && (
-            <>
-              {Object.values(expanded).some((val) => val === false) ? (
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  onClick={expandAll}
-                  aria-label="Expand all bookmarks"
-                  title="Expand all"
-                >
-                  <LocalIcon
-                    icon="unfold-more"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                </ActionIcon>
-              ) : (
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  onClick={collapseAll}
-                  aria-label="Collapse all bookmarks"
-                  title="Collapse all"
-                >
-                  <LocalIcon
-                    icon="unfold-less"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                </ActionIcon>
-              )}
-              <Tooltip label="Add bookmark">
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  color="gray"
-                  onClick={handleOpenAddBookmark}
-                  aria-label="Add bookmark"
-                >
-                  <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
-                </ActionIcon>
-              </Tooltip>
-            </>
-          )}
           <ActionIcon
             variant="subtle"
             size="sm"
@@ -865,9 +822,31 @@ export const BookmarkSidebar = ({
           )}
 
           {showBookmarkList && (
-            <div className="bookmark-list">
-              {renderBookmarks(filteredBookmarks)}
-            </div>
+            <>
+              {!isAddingBookmark && (
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  fullWidth
+                  onClick={handleOpenAddBookmark}
+                  leftSection={
+                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                  }
+                  mb="xs"
+                  styles={{
+                    root: {
+                      justifyContent: "flex-start",
+                      paddingInline: 6,
+                    },
+                  }}
+                >
+                  Add bookmark
+                </Button>
+              )}
+              <div className="bookmark-list">
+                {renderBookmarks(filteredBookmarks)}
+              </div>
+            </>
           )}
 
           {showSearchEmpty && (

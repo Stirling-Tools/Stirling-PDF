@@ -180,10 +180,20 @@ export const AttachmentSidebar = ({
     );
 
     const fetchWithRetry = async () => {
-      const maxAttempts = 10;
+      // See BookmarkSidebar - matching change. After a file swap the
+      // attachment bridge briefly unregisters and the action returns
+      // null until the new document is loaded; without retrying on
+      // null we'd cache an empty success and miss freshly-added
+      // attachments.
+      const maxAttempts = 30;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const result = await attachmentActions.getAttachments();
+          if (result === null) {
+            if (attempt === maxAttempts - 1) return [];
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            continue;
+          }
           return Array.isArray(result) ? result : [];
         } catch (error: any) {
           const message =
@@ -378,20 +388,6 @@ export const AttachmentSidebar = ({
           </Text>
         </div>
         <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {attachmentSupport && hasAttachments && (
-            <Tooltip
-              label={t("viewer.attachments.addAttachment", "Add attachment")}
-            >
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                color="gray"
-                onClick={handleAddAttachment}
-              >
-                <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
-              </ActionIcon>
-            </Tooltip>
-          )}
           <ActionIcon
             variant="subtle"
             size="sm"
@@ -509,9 +505,29 @@ export const AttachmentSidebar = ({
           )}
 
           {showAttachmentList && (
-            <div className="attachment-list">
-              {renderAttachments(filteredAttachments)}
-            </div>
+            <>
+              <Button
+                variant="subtle"
+                size="compact-xs"
+                fullWidth
+                onClick={handleAddAttachment}
+                leftSection={
+                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                }
+                mb="xs"
+                styles={{
+                  root: {
+                    justifyContent: "flex-start",
+                    paddingInline: 6,
+                  },
+                }}
+              >
+                {t("viewer.attachments.addAttachment", "Add attachment")}
+              </Button>
+              <div className="attachment-list">
+                {renderAttachments(filteredAttachments)}
+              </div>
+            </>
           )}
 
           {showSearchEmpty && (

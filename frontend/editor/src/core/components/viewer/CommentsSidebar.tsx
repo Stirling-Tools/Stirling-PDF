@@ -252,7 +252,12 @@ export function CommentsSidebar({
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
   const { handleToolSelectForced } = useToolWorkflow();
-  const { activateAnnotationToolRef } = useAnnotationContext();
+  const {
+    activateAnnotationToolRef,
+    activeAnnotationToolId,
+    setActiveAnnotationToolId,
+  } = useAnnotationContext();
+  const isPlacingComment = activeAnnotationToolId === TEXT_COMMENT_TOOL_ID;
   const [draftContents, setDraftContents] = useState<Record<string, string>>(
     {},
   );
@@ -523,16 +528,33 @@ export function CommentsSidebar({
   );
 
   const handleAddComment = useCallback(() => {
-    // Close the comments sidebar before activating the annotation tool so
-    // the user doesn't end up looking at two stacked side panels (the
-    // comments list on the right + the annotation tool's controls on
-    // the left). Matches the attachment-sidebar pattern.
-    toggleCommentsSidebar?.();
+    // Keep the sidebar open this time - the button morphs into a
+    // "Click on a page... cancel" hint so the user can see exactly
+    // what state the viewer is in.
     handleToolSelectForced(ANNOTATE_PANEL_ID);
     requestAnimationFrame(() => {
       activateAnnotationToolRef.current?.(TEXT_COMMENT_TOOL_ID);
     });
-  }, [handleToolSelectForced, activateAnnotationToolRef, toggleCommentsSidebar]);
+  }, [handleToolSelectForced, activateAnnotationToolRef]);
+
+  const handleCancelPlacingComment = useCallback(() => {
+    // De-arm the textComment tool. The panel's activateAnnotationTool
+    // takes the AnnotationToolId "select" to reset to no-tool state.
+    activateAnnotationToolRef.current?.("select" as never);
+    setActiveAnnotationToolId(null);
+  }, [activateAnnotationToolRef, setActiveAnnotationToolId]);
+
+  // ESC cancels placement mode while the sidebar is open.
+  useEffect(() => {
+    if (!visible || !isPlacingComment) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCancelPlacingComment();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [visible, isPlacingComment, handleCancelPlacingComment]);
 
   if (!visible) return null;
 
@@ -571,18 +593,6 @@ export function CommentsSidebar({
         <Text fw={600} size="sm" tt="uppercase" lts={0.5} style={{ flex: 1 }}>
           {t("viewer.comments.title", "Comments")}
         </Text>
-        {totalCount > 0 && (
-          <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              color="gray"
-              onClick={handleAddComment}
-            >
-              <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
-            </ActionIcon>
-          </Tooltip>
-        )}
         {toggleCommentsSidebar && (
           <ActionIcon
             variant="subtle"
@@ -616,19 +626,86 @@ export function CommentsSidebar({
                   "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
                 )}
               </Text>
-              <Button
-                variant="light"
-                size="xs"
-                onClick={handleAddComment}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
-              >
-                {t("viewer.comments.addComment", "Add comment")}
-              </Button>
+              {isPlacingComment ? (
+                <Button
+                  variant="light"
+                  color="orange"
+                  size="xs"
+                  onClick={handleCancelPlacingComment}
+                  leftSection={
+                    <LocalIcon
+                      icon="touch-app-rounded"
+                      width="1rem"
+                      height="1rem"
+                    />
+                  }
+                >
+                  {t(
+                    "viewer.comments.placingHint",
+                    "Click a page to place… (cancel)",
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="light"
+                  size="xs"
+                  onClick={handleAddComment}
+                  leftSection={
+                    <LocalIcon icon="add" width="1rem" height="1rem" />
+                  }
+                >
+                  {t("viewer.comments.addComment", "Add comment")}
+                </Button>
+              )}
             </Stack>
           ) : (
-            pageNumbers.map((pageIndex) => {
+            <>
+              {isPlacingComment ? (
+                <Button
+                  variant="light"
+                  color="orange"
+                  size="compact-xs"
+                  fullWidth
+                  onClick={handleCancelPlacingComment}
+                  leftSection={
+                    <LocalIcon
+                      icon="touch-app-rounded"
+                      width="0.9rem"
+                      height="0.9rem"
+                    />
+                  }
+                  styles={{
+                    root: {
+                      justifyContent: "flex-start",
+                      paddingInline: 6,
+                    },
+                  }}
+                >
+                  {t(
+                    "viewer.comments.placingHint",
+                    "Click a page to place… (cancel)",
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  fullWidth
+                  onClick={handleAddComment}
+                  leftSection={
+                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                  }
+                  styles={{
+                    root: {
+                      justifyContent: "flex-start",
+                      paddingInline: 6,
+                    },
+                  }}
+                >
+                  {t("viewer.comments.addComment", "Add comment")}
+                </Button>
+              )}
+              {pageNumbers.map((pageIndex) => {
               const entries = byPage[pageIndex] ?? [];
               const pageNum = pageIndex + 1;
               return (
@@ -1045,7 +1122,8 @@ export function CommentsSidebar({
                   </Stack>
                 </Box>
               );
-            })
+              })}
+            </>
           )}
         </Stack>
       </ScrollArea>
