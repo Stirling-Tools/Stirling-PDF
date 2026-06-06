@@ -1,4 +1,6 @@
-import { Switch, Select, TextInput } from "@mantine/core";
+import { ToggleSwitch } from "@shared/components/ToggleSwitch";
+import { Select } from "@shared/components/Select";
+import { Input } from "@shared/components/Input";
 import { Chip } from "@shared/components/Chip";
 import type { PolicyField } from "@app/types/policies";
 
@@ -13,7 +15,8 @@ interface PolicyFieldRowProps {
 
 /**
  * Renders one policy setting: toggle, select, multi-select chips, or text.
- * Controlled — the parent owns the value.
+ * Controlled — the parent owns the value. Uses SUI controls (ToggleSwitch /
+ * Select / Input / Chip) so it matches the rest of the policy surface.
  */
 export function PolicyFieldRow({
   field,
@@ -55,29 +58,24 @@ export function PolicyFieldRow({
     <div className="pol-field pol-field-row" data-first={first || undefined}>
       <span className="pol-field-label">{field.label}</span>
       {field.type === "toggle" ? (
-        <Switch
+        <ToggleSwitch
           size="sm"
           checked={Boolean(value)}
-          onChange={(e) => onChange(e.currentTarget.checked)}
-          aria-label={field.label}
+          onChange={(checked) => onChange(checked)}
         />
       ) : field.type === "select" ? (
         <Select
-          size="xs"
-          data={field.options ?? []}
+          inputSize="sm"
+          options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
           value={typeof value === "string" ? value : ""}
-          onChange={(v) => onChange(v ?? "")}
-          allowDeselect={false}
-          comboboxProps={{ withinPortal: true }}
-          styles={{ root: { width: 150 } }}
+          onChange={(e) => onChange(e.target.value)}
           aria-label={field.label}
         />
       ) : (
-        <TextInput
-          size="xs"
+        <Input
+          inputSize="sm"
           value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.currentTarget.value)}
-          styles={{ root: { width: 160 } }}
+          onChange={(e) => onChange(e.target.value)}
           aria-label={field.label}
         />
       )}
