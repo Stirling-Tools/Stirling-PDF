@@ -128,7 +128,7 @@ export function PoliciesSection() {
                       <StatusBadge
                         tone={
                           status === "active"
-                            ? "info"
+                            ? "success"
                             : status === "paused"
                               ? "warning"
                               : "neutral"

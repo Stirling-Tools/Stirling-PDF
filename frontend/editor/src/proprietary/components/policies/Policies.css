@@ -195,10 +195,10 @@
 .pol-note {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.625rem;
-  padding: 0.55rem 0.6rem;
-  border-radius: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
   background: var(--color-bg-hover);
   font-size: 0.75rem;
   color: var(--color-text-4);
@@ -256,11 +256,11 @@
   height: 2.25rem;
   padding: 0;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-3);
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  transition: background var(--motion-fast);
 }
 .pol-crail-btn:hover {
   background: var(--color-blue-light);
