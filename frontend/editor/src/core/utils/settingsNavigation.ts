@@ -1,4 +1,5 @@
 import { NavKey } from "@app/components/shared/config/types";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 /**
  * Navigate to a specific settings section
@@ -13,8 +14,7 @@ import { NavKey } from "@app/components/shared/config/types";
  * navigateToSettings('adminPremium');
  */
 export function navigateToSettings(section: NavKey) {
-  const basePath = window.location.pathname.split("/settings")[0] || "";
-  const newPath = `${basePath}/settings/${section}`;
+  const newPath = withBasePath(`/settings/${section}`);
   window.history.pushState({}, "", newPath);
 
   // Trigger a popstate event to notify components
@@ -30,10 +30,10 @@ export function navigateToSettings(section: NavKey) {
  *
  * @example
  * <a href={getSettingsUrl('people')}>Go to People Settings</a>
- * // Returns: "/settings/people"
+ * // Returns: "/settings/people" (or "/bpp/settings/people" under subpath)
  */
 export function getSettingsUrl(section: NavKey): string {
-  return `/settings/${section}`;
+  return withBasePath(`/settings/${section}`);
 }
 
 /**
@@ -43,7 +43,7 @@ export function getSettingsUrl(section: NavKey): string {
  * @returns True if in settings (and matching specific section if provided)
  */
 export function isInSettings(section?: NavKey): boolean {
-  const pathname = window.location.pathname;
+  const pathname = stripBasePath(window.location.pathname);
 
   if (!section) {
     return pathname.startsWith("/settings");

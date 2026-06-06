@@ -11,6 +11,7 @@ import {
   clampText,
   extractAxiosErrorMessage,
 } from "@app/services/httpErrorUtils";
+import { withBasePath } from "@app/constants/app";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -82,7 +83,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
         // ignore storage access failures
       }
       const expiredPrefix = hadStoredJwt ? "expired=true&" : "";
-      window.location.href = `/login?${expiredPrefix}from=${encodeURIComponent(currentLocation)}`;
+      window.location.href = `${withBasePath("/login")}?${expiredPrefix}from=${encodeURIComponent(currentLocation)}`;
       return true; // Suppress toast since we're redirecting
     }
 

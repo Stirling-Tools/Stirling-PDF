@@ -3,6 +3,7 @@ import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import { alert } from "@app/components/toast";
 import { openPlanSettings } from "@app/utils/appSettings";
+import { withBasePath } from "@app/constants/app";
 
 // Global credit update callback - will be set by the AuthProvider
 let globalCreditUpdateCallback: ((credits: number) => void) | null = null;
@@ -189,7 +190,7 @@ apiClient.interceptors.response.use(
 
             if (!isPublicEndpoint) {
               // Redirect to login only for protected endpoints
-              window.location.href = "/login";
+              window.location.href = withBasePath("/login");
             }
 
             return Promise.reject(error);
@@ -209,8 +210,9 @@ apiClient.interceptors.response.use(
           console.debug(
             "[API Client] No session to refresh, 401 on protected endpoint",
           );
-          if (window.location.pathname !== "/login") {
-            window.location.href = "/login";
+          const loginPath = withBasePath("/login");
+          if (window.location.pathname !== loginPath) {
+            window.location.href = loginPath;
           }
         }
       } catch (refreshError) {

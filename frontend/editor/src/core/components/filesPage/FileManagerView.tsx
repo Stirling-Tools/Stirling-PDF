@@ -34,6 +34,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
+import { stripBasePath } from "@app/constants/app";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
@@ -190,10 +191,11 @@ export default function FileManagerView() {
 
   // Push folder selection into the URL while still on /files.
   useEffect(() => {
-    if (!window.location.pathname.startsWith("/files")) return;
+    const stripped = stripBasePath(window.location.pathname);
+    if (!stripped.startsWith("/files")) return;
     const target =
       currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-    if (window.location.pathname !== target) {
+    if (stripped !== target) {
       navigate(target, { replace: true });
     }
   }, [currentFolderId, navigate]);

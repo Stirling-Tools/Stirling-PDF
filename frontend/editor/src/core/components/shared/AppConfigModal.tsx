@@ -23,6 +23,7 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
+import { stripBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -82,7 +83,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       const detail = (ev as CustomEvent).detail as { key?: NavKey } | undefined;
       if (detail?.key) {
         const alreadyInSettings =
-          window.location.pathname.startsWith("/settings");
+          stripBasePath(window.location.pathname).startsWith("/settings");
         navigate(`/settings/${detail.key}`, {
           replace: alreadyInSettings,
         });
