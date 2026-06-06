@@ -994,34 +994,12 @@ public class GlobalExceptionHandler {
                 .body(problemDetail);
     }
 
-    /**
-     * Handle {@link NoResourceFoundException} - Spring 6.1+ throws this when the {@link
-     * org.springframework.web.servlet.DispatcherServlet} routes a request to its static-resource
-     * handler and no matching resource exists. The classic catch-all in this advice would otherwise
-     * downgrade it to a generic 500, which fires noisy "An unexpected error occurred" banners on
-     * the frontend whenever a UI build is paired with a backend that doesn't map a route (e.g. an
-     * older backend missing a controller the new editor calls). A clean 404 lets the client treat
-     * the route as "endpoint not deployed" and degrade gracefully.
-     *
-     * <p>Note: this is distinct from {@link NoHandlerFoundException}, which only fires when {@code
-     * spring.mvc.throw-exception-if-no-handler-found=true} and the default servlet handling is off.
-     * In a typical Spring Boot config the static-resource fallthrough triggers {@link
-     * NoResourceFoundException} instead, so without this handler an unmapped REST URL becomes a
-     * 500.
-     *
-     * @param ex the NoResourceFoundException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 404 NOT_FOUND
-     */
+    /** Unmapped path → clean 404 instead of falling through to the generic 500 catch-all. */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ProblemDetail> handleNoResourceFound(
             NoResourceFoundException ex, HttpServletRequest request) {
-        // Log level depends on the path. This handler catches every fall-through to the static
-        // resource layer - including favicon.ico, /robots.txt, /.well-known/*, and every URL a
-        // scanner probes (/wp-login.php, /.env, etc). Logging all of those at WARN floods prod
-        // logs with non-actionable noise. A miss under /api/* is different: it almost always
-        // means a controller is missing from this build (the case that prompted this handler),
-        // which IS operator-relevant, so /api paths stay at WARN.
+        // /api/* miss = likely missing controller (operator-relevant); other paths = favicons,
+        // robots.txt, scanner noise. Demote the latter so prod logs aren't flooded.
         String uri = request.getRequestURI();
         if (uri != null && uri.startsWith("/api/")) {
             log.warn("No resource at {}: {}", uri, ex.getMessage());

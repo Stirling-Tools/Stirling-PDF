@@ -37,11 +37,8 @@ vi.mock("@app/services/folderSyncService", () => ({
   },
 }));
 
-// Stateful IDB mock - the FolderContext's revision-driven refresh effect
-// re-reads `getAllFolders()` after every state change, so a stateless mock
-// returning `[]` would clobber the in-memory folders set by pullFromServer.
-// Hoisted so the vi.mock factory below can see it; mutated via the standard
-// `replaceAll`/`upsertFolder`/`removeFolders` API.
+// Stateful IDB mock - the revision-driven refresh re-reads getAllFolders
+// after every state change, so a stateless [] mock would clobber pull results.
 const { mockIdb } = vi.hoisted(() => ({
   mockIdb: { folders: [] as { id: string }[] },
 }));
@@ -181,17 +178,7 @@ describe("FolderContext sync-banner gating", () => {
   });
 });
 
-/**
- * Regression coverage for the stale-folder 404 cleanup.
- *
- * When a per-folder mutation (rename/move/appearance/delete) returns 404, the
- * server is telling us the folder no longer exists - almost always because
- * another client session deleted it. The context should drop the folder + its
- * local descendants from in-memory state, suppress the error banner, and
- * fire a fresh pullFromServer to converge. The user perceives the folder
- * silently disappearing rather than a confusing "Folder operation failed"
- * alert for a folder they can't even see anymore.
- */
+/** Per-folder mutation 404 = silent cleanup (drop subtree, no banner, pull). */
 describe("FolderContext stale-folder 404 cleanup", () => {
   beforeEach(() => {
     mockList.mockReset();
@@ -245,15 +232,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
   async function setupWithFolders(
     initial: FolderRecord[],
   ): Promise<{ current: ProbeApi }> {
-    // First pull returns the seeded folders; second pull (triggered by the
-    // stale-folder handler) returns the same minus the stale id so the test
-    // can observe convergence.
-    //
-    // We hand back a `{ current }` ref rather than a plain ProbeApi so the
-    // test always sees the LATEST f-bound api. The probe re-issues onReady
-    // on every render of FolderContext state changes (setCurrentFolderId,
-    // mutation returns, etc.), and tests that interact with the api after
-    // navigation need the post-navigation closures.
+    // Ref (not plain object) so tests see the latest f-bound api after re-renders.
     mockList.mockResolvedValueOnce(initial);
     const apiRef: { current: ProbeApi | null } = { current: null };
     render(
@@ -276,21 +255,16 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     const sibling = makeFolder("sibling");
     const api = await setupWithFolders([parent, child, sibling]);
 
-    // Second list (the convergence pull) - confirm parent + child are gone
-    // server-side; sibling remains.
+    // Convergence pull returns just sibling after the local drop.
     mockList.mockResolvedValueOnce([sibling]);
     mockUpdate.mockRejectedValueOnce(axiosError(404, "Folder not found"));
 
     await act(async () => {
       const result = await api.current.rename(parent.id, "newname");
-      // 404 resolves with null (silent cleanup) rather than throwing.
       expect(result).toBeNull();
     });
 
-    // Banner stays clean.
     expect(screen.getByTestId("error").textContent).toBe("<null>");
-    // Local state dropped parent + child immediately (before the pull lands).
-    // After the pull, only `sibling` should be visible.
     await waitFor(() =>
       expect(screen.getByTestId("count").textContent).toBe("1"),
     );
@@ -319,16 +293,12 @@ describe("FolderContext stale-folder 404 cleanup", () => {
   });
 
   test("stale 404 strand-resets currentFolderId when user is inside the dropped subtree", async () => {
-    // The user is browsing /parent/child when another session deletes
-    // /parent. The 404 on a mutation against /parent (or anywhere in the
-    // subtree) must navigate the user out, otherwise the breadcrumb points
-    // at a folder id no longer in the local map.
+    // User is parked inside the about-to-be-deleted subtree → must navigate out.
     const parent = makeFolder("parent");
     const child = makeFolder("child", parent.id);
     const sibling = makeFolder("sibling");
     const api = await setupWithFolders([parent, child, sibling]);
 
-    // Navigate the user into the child folder before the mutation fires.
     act(() => {
       api.current.setCurrentFolderId(child.id);
     });
@@ -336,7 +306,6 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       expect(screen.getByTestId("current").textContent).toBe(child.id),
     );
 
-    // Convergence pull will return just the sibling (parent + child gone).
     mockList.mockResolvedValueOnce([sibling]);
     mockUpdate.mockRejectedValueOnce(axiosError(404, "Folder not found"));
 
@@ -344,15 +313,12 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       await api.current.rename(parent.id, "doomed-rename");
     });
 
-    // currentFolderId must reset to root - ROOT_FOLDER_ID is null so the
-    // probe renders the sentinel "<null>" rather than the child uuid.
+    // ROOT_FOLDER_ID is null → probe renders "<null>".
     expect(screen.getByTestId("current").textContent).toBe("<null>");
     expect(screen.getByTestId("error").textContent).toBe("<null>");
   });
 
   test("non-404 mutation errors still surface (regression guard)", async () => {
-    // Make sure the silent-cleanup branch only triggers on 404 - a 500 must
-    // still throw and surface the banner so the user knows the op failed.
     const target = makeFolder("target");
     const api = await setupWithFolders([target]);
 
@@ -367,9 +333,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       }
     });
     expect(threw).toBe(true);
-    // Folder still present (we didn't drop it - this wasn't a stale signal).
     expect(screen.getByTestId("count").textContent).toBe("1");
-    // Error banner DID surface (formatServerError result).
     expect(screen.getByTestId("error").textContent).not.toBe("<null>");
   });
 });

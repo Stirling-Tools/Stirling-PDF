@@ -211,11 +211,7 @@ class GlobalExceptionHandlerTest {
     }
 
     // ---- NoResourceFoundException ----
-    // Regression guard: pre-fix this fell through to the generic Exception catch-all and became a
-    // 500, which fired noisy "Folder sync failed" banners on the frontend whenever a controller
-    // was missing from the backend build (e.g. running the editor against an older app jar). The
-    // handler must keep returning 404 so the frontend's existing endpoint-missing path can
-    // gracefully degrade.
+    // Regression guard: was falling through to the 500 catch-all.
 
     @Test
     void handleNoResourceFound_returns_404_not_500() {

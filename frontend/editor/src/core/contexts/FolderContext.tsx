@@ -178,17 +178,7 @@ function reachabilityFromError(err: unknown): boolean {
   return status !== undefined && status >= 400 && status < 500;
 }
 
-/**
- * Collect `rootId` plus every local descendant reachable via `parentFolderId`.
- *
- * Used when the server reports a folder no longer exists (404 on a mutation):
- * we assume the cascade also took its children locally, so we can drop the
- * whole subtree immediately for snappy UX. The follow-up pullFromServer
- * re-adds anything we dropped in error (e.g. a child that was reparented
- * out of this subtree before the deletion).
- *
- * Bounded so a corrupted parent chain can't run away here.
- */
+/** Root + every local descendant via parentFolderId. Bounded for corrupted chains. */
 function collectLocalSubtreeIds(
   rootId: FolderId,
   folders: FolderRecord[],
@@ -434,31 +424,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
 
   // ─── mutations: server-first, cache update on success ──────────────
 
-  // Lifted above `runFolderMutation` so the stale-folder handler below can
-  // use it (file/folder cleanup on 404 reuses the same primitive as delete).
+  // Lifted up so handleStaleFolder below can reuse the file-detach primitive.
   const { clearFolderForFiles } = useIndexedDB();
 
-  /**
-   * Silently reconcile a per-folder 404 from the server.
-   *
-   * A 404 on a mutation targeting an existing-looking folder id means the
-   * server no longer knows about it - almost always because another client
-   * session (or the same user in another tab) deleted it. Rather than
-   * surfacing a "Folder operation failed" banner for a folder the user can't
-   * see anyway, we treat the 404 as a delete signal:
-   *
-   *   1. Drop the folder + every local descendant from in-memory state.
-   *   2. Strand-reset `currentFolderId` if the user was browsing inside.
-   *   3. Best-effort cleanup of the IDB cache and any local files'
-   *      folder-id pointers (file rows stay; their folder pointer clears).
-   *   4. Fire {@link pullFromServer} to reconverge - if we dropped too much
-   *      (e.g. a child reparented out of this subtree before the delete),
-   *      the pull re-adds it; if we missed something (deeper cascade), the
-   *      pull's `replaceAll` drops it too.
-   *
-   * Server-reachable flips true because the server DID answer - it just
-   * doesn't have this folder.
-   */
+  /** Treat a per-folder 404 as "deleted elsewhere": drop subtree, strand-reset, pull. */
   const handleStaleFolder = useCallback(
     (staleId: FolderId, foldersSnapshot: FolderRecord[]) => {
       const subtree = collectLocalSubtreeIds(staleId, foldersSnapshot);
@@ -474,20 +443,12 @@ export function FolderProvider({ children }: FolderProviderProps) {
         }
       }
       const subtreeIds = [...subtree];
-      // Best-effort - pullFromServer will fix anything these miss.
+      // Best-effort - pullFromServer is authoritative if these miss.
       void folderStorage
         .removeFolders(subtreeIds)
-        .catch((e) =>
-          console.warn(
-            "[FolderContext] cache cleanup after stale 404 failed",
-            e,
-          ),
-        );
+        .catch((e) => console.warn("[FolderContext] stale cache cleanup", e));
       void clearFolderForFiles(subtreeIds).catch((e) =>
-        console.warn(
-          "[FolderContext] file folder cleanup after stale 404 failed",
-          e,
-        ),
+        console.warn("[FolderContext] stale file-folder cleanup", e),
       );
       bumpFolderRevision();
       void pullFromServer();
@@ -496,20 +457,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
   );
 
   /**
-   * Centralised mutation wrapper:
-   *   1. Calls the server op.
-   *   2. On success: flips `serverReachable=true`, updates in-memory state
-   *      from the server response, then best-effort writes the cache (cache
-   *      failure does NOT roll back; the in-memory truth came from the server).
-   *   3. On 404 against a known folder: hands off to {@link handleStaleFolder}
-   *      and resolves with `null` (caller treats the op as a no-op; the
-   *      folder is now gone from local state too). The `staleFolderId` arg
-   *      tells the wrapper which id to clean up on 404; pass null for ops
-   *      that create new ids (where 404 wouldn't reference an existing local
-   *      folder).
-   *   4. On other failures: updates `serverReachable` per the error class,
-   *      surfaces via {@link setError}, re-throws so the caller's dialog can
-   *      stay open.
+   * Server-first mutation wrapper. On 404 with `staleFolderId`, hands off to
+   * handleStaleFolder and resolves `null`; other errors surface + re-throw.
    */
   const runFolderMutation = useCallback(
     async <T,>(
@@ -522,13 +471,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
         result = await serverOp();
       } catch (err) {
         if (errorStatus(err) === 404 && staleFolderId !== null) {
-          // `folders` here is the snapshot captured when the mutation was
-          // kicked off. If a concurrent mutation has shifted state between
-          // start and rejection the subtree we compute may be slightly stale,
-          // but the actual in-memory drop runs via `setFolders((prev) =>
-          // prev.filter(...))` (functional update) and the follow-up
-          // pullFromServer is authoritative either way - so the worst case
-          // is one extra round-trip, not corrupt state.
+          // `folders` is a closure snapshot; functional setFolders + the pull
+          // keep this race-safe even if a concurrent mutation shifted state.
           handleStaleFolder(staleFolderId, folders);
           return null;
         }
@@ -545,13 +489,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
       try {
         await onSuccess(result);
       } catch (cacheErr) {
-        // The server is authoritative - a cache write failure must not be
-        // surfaced as if the operation failed. Log + leave the in-memory
-        // state authoritative; next pullFromServer will re-seed the cache.
-        console.warn(
-          "[FolderContext] cache update failed after successful mutation",
-          cacheErr,
-        );
+        // Cache write failure is non-fatal; next pull re-seeds.
+        console.warn("[FolderContext] cache update after mutation", cacheErr);
       }
       bumpFolderRevision();
       return result;
@@ -565,13 +504,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
       parentFolderId: FolderId | null = currentFolderId,
     ): Promise<FolderRecord> => {
       const color = pickFolderColor(name);
-      // Generate id client-side so the server's idempotency check makes
-      // retries safe (network blip → second POST returns the same row).
+      // Client-side id makes server idempotency check safe on retry.
       const id = createFolderId();
-      // runFolderMutation returns `T | null` to cover the stale-folder 404
-      // branch, but create never passes a staleFolderId so the branch can't
-      // fire here - the result is always a folder. Throws still propagate
-      // for genuine create failures (400 parent missing, 409 conflict).
       const result = await runFolderMutation(
         () =>
           folderSyncService.create({
@@ -588,9 +522,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
           await folderStorage.upsertFolder(record);
         },
       );
+      // No staleFolderId passed → null branch can't fire; defensive throw.
       if (result === null) {
-        // Defensive - matches the type-level claim that create can't go
-        // stale. If this ever fires the contract has drifted.
         throw new Error("createFolder unexpectedly returned null");
       }
       return result;
@@ -668,13 +601,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         removed = await folderSyncService.delete(id);
       } catch (err) {
         if (errorStatus(err) === 404) {
-          // Already gone (deleted by another session). Treat the same as a
-          // successful delete - silently drop the local subtree and reconverge
-          // via pullFromServer. We can't know the server's exact cascade so
-          // we return just `id`; the pull updates state authoritatively.
-          // Same closure-snapshot caveat as runFolderMutation's 404 branch:
-          // `folders` is captured at callback creation; concurrent mutations
-          // could leave it slightly stale, but the pull reconverges.
+          // Already gone; treat as success. Return [id]; pull is authoritative.
           handleStaleFolder(id, folders);
           return [id];
         }
