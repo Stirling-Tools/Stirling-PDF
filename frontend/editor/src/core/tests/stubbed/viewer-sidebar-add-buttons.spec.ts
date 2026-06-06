@@ -132,9 +132,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
       .getByRole("button", { name: /Toggle Bookmarks/i })
       .first()
       .click();
-    await page
-      .getByRole("button", { name: /^Add bookmark$/i })
-      .click();
+    await page.getByRole("button", { name: /^Add bookmark$/i }).click();
 
     const form = page.locator('[data-testid="bookmark-add-form"]');
     await expect(form).toBeVisible({ timeout: 10_000 });
@@ -147,9 +145,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
     // The POST must actually have fired. The earlier silent-fallback
     // bug would have routed to /edit-table-of-contents without ever
     // calling the API.
-    await expect
-      .poll(() => postSeen, { timeout: 15_000 })
-      .toBe(true);
+    await expect.poll(() => postSeen, { timeout: 15_000 }).toBe(true);
 
     // Form closes on success, viewer URL unchanged (no tool nav).
     await expect(form).not.toBeVisible({ timeout: 10_000 });

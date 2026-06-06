@@ -9,7 +9,6 @@ import {
   TextInput,
   NumberInput,
   Button,
-  Tooltip,
   Group,
   UnstyledButton,
 } from "@mantine/core";
@@ -328,9 +327,7 @@ export const BookmarkSidebar = ({
   const handleSubmitAddBookmark = useCallback(async () => {
     const title = newBookmarkTitle.trim();
     if (!title) {
-      setAddBookmarkError(
-        "Bookmark title is required",
-      );
+      setAddBookmarkError("Bookmark title is required");
       return;
     }
     // Resolve the file the viewer is currently displaying. activeFileId
@@ -342,7 +339,7 @@ export const BookmarkSidebar = ({
     const allFiles = selectors.getFiles();
     const resolvedFile = activeFileId
       ? allFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId)
-      : allFiles[activeFileIndex] ?? allFiles[0];
+      : (allFiles[activeFileIndex] ?? allFiles[0]);
     const resolvedFileId =
       resolvedFile && isStirlingFile(resolvedFile)
         ? (resolvedFile.fileId as FileId)
@@ -364,7 +361,9 @@ export const BookmarkSidebar = ({
     try {
       // Convert existing PDF bookmarks (from embedpdf) to the backend's
       // payload shape, then append the new one.
-      const toPayload = (b: PdfBookmarkObject): {
+      const toPayload = (
+        b: PdfBookmarkObject,
+      ): {
         title: string;
         pageNumber: number;
         children: any[];
@@ -663,11 +662,7 @@ export const BookmarkSidebar = ({
             aria-label="Close bookmarks sidebar"
             title="Close bookmarks"
           >
-            <LocalIcon
-              icon="close-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Box>
       </div>
@@ -776,9 +771,7 @@ export const BookmarkSidebar = ({
                   placeholder="Bookmark title"
                   aria-label="Bookmark title"
                   value={newBookmarkTitle}
-                  onChange={(e) =>
-                    setNewBookmarkTitle(e.currentTarget.value)
-                  }
+                  onChange={(e) => setNewBookmarkTitle(e.currentTarget.value)}
                   autoFocus
                   disabled={isSavingBookmark}
                 />

@@ -8,7 +8,6 @@ import {
   Loader,
   Stack,
   TextInput,
-  Tooltip,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -396,11 +395,7 @@ export const AttachmentSidebar = ({
             aria-label="Close attachments sidebar"
             title={t("viewer.attachments.close", "Close attachments")}
           >
-            <LocalIcon
-              icon="close-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Box>
       </div>

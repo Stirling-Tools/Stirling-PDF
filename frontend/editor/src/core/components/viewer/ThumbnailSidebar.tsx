@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, ScrollArea, Text, ActionIcon, Tooltip } from "@mantine/core";
+import { Box, ScrollArea, Text, ActionIcon } from "@mantine/core";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -189,11 +189,7 @@ export function ThumbnailSidebar({
               aria-label="Close thumbnails sidebar"
               title="Close thumbnails"
             >
-              <LocalIcon
-                icon="close-rounded"
-                width="1.1rem"
-                height="1.1rem"
-              />
+              <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
             </ActionIcon>
           </div>
           {/* Thumbnails Container */}

@@ -373,11 +373,7 @@ export function LayerSidebar({
             aria-label="Close layers sidebar"
             title="Close layers"
           >
-            <LocalIcon
-              icon="close-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </div>
       </div>
