@@ -149,8 +149,8 @@
 .pol-doctypes {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) 0.875rem var(--space-2);
+  gap: var(--space-2);
+  padding: var(--space-2) 0.875rem var(--space-3);
   border-top: 1px solid var(--color-border);
 }
 
@@ -204,6 +204,7 @@
 }
 
 /* ---- Stats: three SUI MetricCards, constrained for the narrow rail ---- */
+/* Three compact MetricCards (size="sm") in an equal-height 3-up grid. */
 .pol-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -211,17 +212,7 @@
   align-items: stretch;
 }
 .pol-stats .sui-metric {
-  min-width: 0;
   min-height: 100%;
-  padding: var(--space-2) var(--space-3);
-}
-.pol-stats .sui-metric__value {
-  font-size: 1.125rem;
-}
-/* Single-word labels in the narrow rail — keep them on one line so the three
-   value baselines stay aligned. */
-.pol-stats .sui-metric__label {
-  white-space: nowrap;
 }
 
 /* ---- Footer (hosts SUI Buttons) ---- */

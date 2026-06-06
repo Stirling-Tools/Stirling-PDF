@@ -135,11 +135,16 @@ export function PolicyDetailPanel({
         {/* Stats */}
         <div className="pol-stats">
           <MetricCard
+            size="sm"
             label="Enforced"
             value={config.stats.enforced.toLocaleString()}
           />
-          <MetricCard label="Processed" value={config.stats.dataProcessed} />
-          <MetricCard label="Active" value={config.stats.activeFor} />
+          <MetricCard
+            size="sm"
+            label="Processed"
+            value={config.stats.dataProcessed}
+          />
+          <MetricCard size="sm" label="Active" value={config.stats.activeFor} />
         </div>
 
         {!canConfigure && (
