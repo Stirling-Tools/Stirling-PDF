@@ -20,6 +20,7 @@ import { usePolicies } from "@app/hooks/usePolicies";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
+import { Banner } from "@shared/components/Banner";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
@@ -94,12 +95,15 @@ export function PoliciesSection() {
       {expanded && (
         <>
           {pol.spendLimitWarning && (
-            <div
-              className={`pol-spend-chip${pol.spendLimitReached ? " is-reached" : ""}`}
-            >
-              {pol.spendLimitReached
-                ? "Policies paused — spend limit reached."
-                : `$${pol.spendLimit.used.toFixed(2)} / $${pol.spendLimit.limit} limit`}
+            <div className="pol-spend-wrap">
+              <Banner
+                tone={pol.spendLimitReached ? "danger" : "warning"}
+                description={
+                  pol.spendLimitReached
+                    ? "Policies paused — spend limit reached."
+                    : `$${pol.spendLimit.used.toFixed(2)} / $${pol.spendLimit.limit} limit`
+                }
+              />
             </div>
           )}
 
@@ -183,6 +187,7 @@ export function PolicyDetailTakeover() {
         state={state}
         status={status}
         onCancel={() => setPolicyDetailView("detail")}
+        onClose={() => closePolicy()}
         onSave={(fv) => {
           pol.updateConfig(selectedId, fv);
           setPolicyDetailView("detail");

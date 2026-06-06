@@ -1,12 +1,13 @@
 import { useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CheckIcon from "@mui/icons-material/Check";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { Chip } from "@shared/components/Chip";
 import { Input } from "@shared/components/Input";
+import { Checkbox } from "@shared/components/Checkbox";
+import { Banner } from "@shared/components/Banner";
 import { EmptyState } from "@shared/components/EmptyState";
 import { POLICY_SOURCES, POLICY_DOC_TYPES } from "@app/data/policyDefinitions";
 import type {
@@ -134,52 +135,44 @@ export function PolicySetupWizard({
             </p>
             <p className="pol-section-label">Sources</p>
             <Card padding="none">
-              {POLICY_SOURCES.map((src, i) => {
-                const on = sources.includes(src.id);
-                return (
-                  <div
-                    key={src.id}
-                    className="pol-source"
-                    data-first={i === 0 || undefined}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => toggleSource(src.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggleSource(src.id);
-                      }
-                    }}
-                  >
-                    <span className={`pol-check${on ? " is-on" : ""}`}>
-                      {on && <CheckIcon sx={{ fontSize: "0.7rem" }} />}
-                    </span>
-                    <span className="pol-source-icon">{src.icon}</span>
-                    <div className="pol-source-text">
-                      <span className="pol-source-label">{src.label}</span>
-                      <span className="pol-source-desc">{src.desc}</span>
-                    </div>
-                  </div>
-                );
-              })}
+              {POLICY_SOURCES.map((src, i) => (
+                <div
+                  key={src.id}
+                  className="pol-source"
+                  data-first={i === 0 || undefined}
+                >
+                  <Checkbox
+                    checked={sources.includes(src.id)}
+                    onChange={() => toggleSource(src.id)}
+                    label={
+                      <span className="pol-source-lbl">
+                        <span className="pol-source-icon">{src.icon}</span>
+                        {src.label}
+                      </span>
+                    }
+                    description={src.desc}
+                  />
+                </div>
+              ))}
             </Card>
 
             <p className="pol-section-label">Document types</p>
             {!classificationEnabled ? (
-              <div className="pol-info">
-                <InfoOutlinedIcon
-                  sx={{ fontSize: "0.9rem", color: "var(--color-amber)" }}
-                />
-                <div>
-                  <p className="pol-info-title">All document types</p>
-                  <p className="pol-info-sub">
-                    Enable the Classification policy to filter by document type.
-                  </p>
-                  <button className="pol-link" onClick={onSetupClassification}>
-                    Set up Classification →
-                  </button>
-                </div>
-              </div>
+              <Banner
+                tone="warning"
+                icon={<InfoOutlinedIcon sx={{ fontSize: "1rem" }} />}
+                title="All document types"
+                description="Enable the Classification policy to filter by document type."
+                action={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onSetupClassification}
+                  >
+                    Set up Classification
+                  </Button>
+                }
+              />
             ) : (
               <Card padding="none">
                 <div className="pol-doctypes-head">
@@ -198,20 +191,18 @@ export function PolicySetupWizard({
                 {scopeNarrow && (
                   <div className="pol-doctypes">
                     {POLICY_DOC_TYPES.map((dt) => (
-                      <label key={dt} className="pol-doctype">
-                        <input
-                          type="checkbox"
-                          checked={scopeTypes.includes(dt)}
-                          onChange={() =>
-                            setScopeTypes((prev) =>
-                              prev.includes(dt)
-                                ? prev.filter((d) => d !== dt)
-                                : [...prev, dt],
-                            )
-                          }
-                        />
-                        <span>{dt}</span>
-                      </label>
+                      <Checkbox
+                        key={dt}
+                        checked={scopeTypes.includes(dt)}
+                        onChange={() =>
+                          setScopeTypes((prev) =>
+                            prev.includes(dt)
+                              ? prev.filter((d) => d !== dt)
+                              : [...prev, dt],
+                          )
+                        }
+                        label={dt}
+                      />
                     ))}
                   </div>
                 )}

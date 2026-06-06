@@ -14,6 +14,7 @@ import { StatusBadge } from "@shared/components/StatusBadge";
 import { EmptyState } from "@shared/components/EmptyState";
 import { MetricCard } from "@shared/components/MetricCard";
 import { Button } from "@shared/components/Button";
+import { Banner } from "@shared/components/Banner";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -152,10 +153,11 @@ export function PolicyDetailPanel({
         </div>
 
         {!canConfigure && (
-          <div className="pol-managed-inline">
-            <LockIcon sx={{ fontSize: "0.9rem" }} />
-            Managed by your organization. Contact an admin to change settings.
-          </div>
+          <Banner
+            tone="neutral"
+            icon={<LockIcon sx={{ fontSize: "1rem" }} />}
+            description="Managed by your organization. Contact an admin to change settings."
+          />
         )}
       </div>
 

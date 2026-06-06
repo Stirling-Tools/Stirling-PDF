@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
@@ -18,7 +19,10 @@ interface PolicySettingsFormProps {
   state: PolicyState;
   /** Derived display status (treats a spend-limit hit as paused). */
   status: PolicyRowStatus;
+  /** Back to the policy's detail view. */
   onCancel: () => void;
+  /** Close the policy entirely (returns to the list). */
+  onClose: () => void;
   onSave: (fieldValues: Record<string, boolean | string | string[]>) => void;
 }
 
@@ -29,6 +33,7 @@ export function PolicySettingsForm({
   state,
   status,
   onCancel,
+  onClose,
   onSave,
 }: PolicySettingsFormProps) {
   const [fieldValues, setFieldValues] = useState(() =>
@@ -44,9 +49,18 @@ export function PolicySettingsForm({
         subtitle={category.label}
         onBack={onCancel}
         actions={
-          <StatusBadge tone={isPaused ? "warning" : "success"} showDot>
-            {isPaused ? "Paused" : "Active"}
-          </StatusBadge>
+          <>
+            <StatusBadge tone={isPaused ? "warning" : "success"} showDot>
+              {isPaused ? "Paused" : "Active"}
+            </StatusBadge>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Close"
+              onClick={onClose}
+              leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+            />
+          </>
         }
       />
 

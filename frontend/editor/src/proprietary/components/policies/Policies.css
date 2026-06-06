@@ -131,18 +131,9 @@
   flex-shrink: 0;
 }
 
-/* ---- Spend-limit warning chip ---- */
-.pol-spend-chip {
-  margin: 0.35rem 0.75rem 0;
-  padding: 0.45rem 0.6rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
-  background: var(--color-amber-light);
-  color: var(--color-amber-dark, var(--color-amber));
-}
-.pol-spend-chip.is-reached {
-  background: var(--color-red-light);
-  color: var(--color-red-dark, var(--color-red));
+/* ---- Spend-limit warning (wraps a SUI Banner) ---- */
+.pol-spend-wrap {
+  padding: 0.35rem 0.75rem 0;
 }
 
 /* ---- Detail container (wizard / narrative / settings share this) ---- */
@@ -254,57 +245,19 @@
 .pol-source:hover {
   background: var(--hover-bg, rgba(0, 0, 0, 0.03));
 }
-.pol-check {
+/* Leading source glyph rendered inline inside the SUI Checkbox label. */
+.pol-source-lbl {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.05rem;
-  height: 1.05rem;
-  border-radius: 0.3rem;
-  border: 1.5px solid var(--color-border);
-  flex-shrink: 0;
-  color: #fff;
-}
-.pol-check.is-on {
-  background: var(--color-blue);
-  border-color: var(--color-blue);
+  gap: 0.4rem;
 }
 .pol-source-icon {
   display: inline-flex;
   color: var(--text-muted);
   flex-shrink: 0;
 }
-.pol-source-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.pol-source-label {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-.pol-source-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
 
-/* ---- Info box / doc types ---- */
-.pol-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 1px solid var(--color-amber-border);
-  border-radius: 0.75rem;
-  background: var(--color-amber-light);
-}
-.pol-info-title {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin: 0;
-}
+/* ---- Doc types ---- */
 .pol-info-sub {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -328,17 +281,9 @@
 .pol-doctypes {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.4rem 0.875rem 0.6rem;
+  gap: 0.25rem;
+  padding: 0.5rem 0.875rem 0.6rem;
   border-top: 1px solid var(--border-subtle);
-}
-.pol-doctype {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  color: var(--text-primary);
-  cursor: pointer;
 }
 
 /* ---- Summary ---- */
@@ -497,19 +442,6 @@
 }
 .pol-stats .sui-metric__value {
   font-size: 1.125rem;
-}
-
-/* ---- Managed (read-only) inline notice ---- */
-.pol-managed-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 0.75rem;
-  background: var(--bg-surface);
-  font-size: 0.75rem;
-  color: var(--text-muted);
 }
 
 /* ---- Footer (hosts SUI Buttons) ---- */
