@@ -9,6 +9,7 @@ import { Input } from "@shared/components/Input";
 import { Checkbox } from "@shared/components/Checkbox";
 import { Banner } from "@shared/components/Banner";
 import { EmptyState } from "@shared/components/EmptyState";
+import { StepIndicator } from "@shared/components/StepIndicator";
 import { POLICY_SOURCES, POLICY_DOC_TYPES } from "@app/data/policyDefinitions";
 import type {
   PolicyCategory,
@@ -101,9 +102,7 @@ export function PolicySetupWizard({
 
       {/* Step indicator */}
       <div className="pol-steps">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className={`pol-step-bar${s <= step ? " is-on" : ""}`} />
-        ))}
+        <StepIndicator total={3} current={step} />
       </div>
 
       {/* Step content */}

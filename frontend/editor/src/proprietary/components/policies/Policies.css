@@ -47,86 +47,8 @@
 .pol-list-rows {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0.25rem 0.5rem;
-}
-
-/* ---- Policy row ---- */
-.pol-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.5rem 0.625rem 0.5rem 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition:
-    background-color 0.12s ease,
-    border-color 0.12s ease;
-}
-/* Uniform, subtle hover for every status (blue is reserved for brand/selection,
-   green/amber carry the active/paused status via the accent + icon + label). */
-.pol-row:hover {
-  background: var(--color-bg-hover);
-}
-/* Active (but unselected) rows read as cards. */
-.pol-row[data-status="active"] {
-  background: var(--color-surface);
-  border-color: var(--color-border);
-}
-.pol-row-accent {
-  position: absolute;
-  left: 2px;
-  top: 0.3125rem;
-  bottom: 0.3125rem;
-  width: 3px;
-  border-radius: 3px;
-  background: transparent;
-}
-.pol-row[data-status="active"] .pol-row-accent {
-  background: var(--color-green);
-}
-.pol-row[data-status="paused"] .pol-row-accent {
-  background: var(--color-amber);
-}
-.pol-row-icon {
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--color-text-3);
-}
-.pol-row[data-status="active"] .pol-row-icon {
-  color: var(--color-green);
-}
-.pol-row[data-status="paused"] .pol-row-icon {
-  color: var(--color-amber);
-}
-.pol-row-label {
-  flex: 1;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-1);
-}
-.pol-row-status {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-.pol-row[data-status="active"] .pol-row-status {
-  color: var(--color-green);
-}
-.pol-row[data-status="paused"] .pol-row-status {
-  color: var(--color-amber);
-}
-.pol-row[data-status="setup"] .pol-row-status {
-  color: var(--color-text-4);
-}
-.pol-row-chevron {
-  color: var(--color-text-4);
-  flex-shrink: 0;
+  /* NavItem carries its own side margins; just a little vertical breathing room. */
+  padding: 0.25rem 0;
 }
 
 /* ---- Spend-limit warning (wraps a SUI Banner) ---- */
@@ -144,21 +66,10 @@
   width: 100%;
 }
 
-/* ---- Step indicator ---- */
+/* ---- Step indicator (wraps a SUI StepIndicator) ---- */
 .pol-steps {
-  display: flex;
-  gap: 0.3rem;
-  padding: 0.6rem 1.25rem;
+  padding: 0.7rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
-}
-.pol-step-bar {
-  flex: 1;
-  height: 0.3rem;
-  border-radius: 999px;
-  background: var(--color-border);
-}
-.pol-step-bar.is-on {
-  background: var(--color-blue);
 }
 
 /* ---- Scroll body ---- */

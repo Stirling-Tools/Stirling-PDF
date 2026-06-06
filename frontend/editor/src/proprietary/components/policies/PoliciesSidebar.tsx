@@ -13,7 +13,6 @@
  */
 
 import { useState } from "react";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { POLICY_CATEGORIES, POLICY_CONFIG } from "@app/data/policyDefinitions";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -21,6 +20,8 @@ import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Banner } from "@shared/components/Banner";
+import { NavItem } from "@shared/components/NavItem";
+import { StatusBadge } from "@shared/components/StatusBadge";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
@@ -114,23 +115,34 @@ export function PoliciesSection() {
                 pol.spendLimitReached,
               );
               return (
-                <button
+                <NavItem
                   key={cat.id}
-                  type="button"
-                  className="pol-row"
-                  data-status={status}
-                  onClick={() => selectPolicy(cat.id)}
-                  aria-label={`${cat.label} policy — ${STATUS_LABEL[status]}`}
-                >
-                  <span className="pol-row-accent" />
-                  <span className="pol-row-icon">{cat.icon}</span>
-                  <span className="pol-row-label">{cat.label}</span>
-                  <span className="pol-row-status">{STATUS_LABEL[status]}</span>
-                  <ChevronRightIcon
-                    className="pol-row-chevron"
-                    sx={{ fontSize: "1rem" }}
-                  />
-                </button>
+                  id={cat.id}
+                  icon={cat.icon}
+                  label={cat.label}
+                  accent={
+                    status === "active"
+                      ? "green"
+                      : status === "paused"
+                        ? "amber"
+                        : undefined
+                  }
+                  trailing={
+                    <StatusBadge
+                      tone={
+                        status === "active"
+                          ? "success"
+                          : status === "paused"
+                            ? "warning"
+                            : "neutral"
+                      }
+                      size="sm"
+                    >
+                      {STATUS_LABEL[status]}
+                    </StatusBadge>
+                  }
+                  onClick={selectPolicy}
+                />
               );
             })}
           </div>
