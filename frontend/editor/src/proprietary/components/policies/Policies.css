@@ -31,14 +31,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--color-text-4);
 }
 .pol-list-head-count {
   font-size: 0.6875rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
 }
 .pol-list-head-chevron {
-  color: var(--text-muted);
+  color: var(--color-text-4);
   transition: transform 0.15s ease;
 }
 .pol-list-head-chevron[data-collapsed="true"] {
@@ -68,17 +68,15 @@
     background-color 0.12s ease,
     border-color 0.12s ease;
 }
+/* Uniform, subtle hover for every status (blue is reserved for brand/selection,
+   green/amber carry the active/paused status via the accent + icon + label). */
 .pol-row:hover {
-  background: var(--bg-surface);
+  background: var(--color-bg-hover);
 }
 /* Active (but unselected) rows read as cards. */
 .pol-row[data-status="active"] {
-  background: var(--bg-surface);
-  border-color: var(--border-subtle);
-}
-.pol-row[data-status="active"]:hover {
-  background: var(--color-blue-light);
-  border-color: var(--color-blue-border);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .pol-row-accent {
   position: absolute;
@@ -90,7 +88,7 @@
   background: transparent;
 }
 .pol-row[data-status="active"] .pol-row-accent {
-  background: var(--color-blue);
+  background: var(--color-green);
 }
 .pol-row[data-status="paused"] .pol-row-accent {
   background: var(--color-amber);
@@ -98,10 +96,10 @@
 .pol-row-icon {
   display: inline-flex;
   flex-shrink: 0;
-  color: var(--text-secondary);
+  color: var(--color-text-3);
 }
 .pol-row[data-status="active"] .pol-row-icon {
-  color: var(--color-blue);
+  color: var(--color-green);
 }
 .pol-row[data-status="paused"] .pol-row-icon {
   color: var(--color-amber);
@@ -110,7 +108,7 @@
   flex: 1;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--color-text-1);
 }
 .pol-row-status {
   font-size: 0.6875rem;
@@ -118,16 +116,16 @@
   flex-shrink: 0;
 }
 .pol-row[data-status="active"] .pol-row-status {
-  color: var(--color-blue);
+  color: var(--color-green);
 }
 .pol-row[data-status="paused"] .pol-row-status {
   color: var(--color-amber);
 }
 .pol-row[data-status="setup"] .pol-row-status {
-  color: var(--text-muted);
+  color: var(--color-text-4);
 }
 .pol-row-chevron {
-  color: var(--text-muted);
+  color: var(--color-text-4);
   flex-shrink: 0;
 }
 
@@ -151,7 +149,7 @@
   display: flex;
   gap: 0.3rem;
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--color-border);
 }
 .pol-step-bar {
   flex: 1;
@@ -176,7 +174,7 @@
 .pol-desc {
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   margin: 0;
 }
 .pol-section-label {
@@ -184,7 +182,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   /* Bottom gap so the label doesn't hug its card/chips (prototype mb-2.5). */
   margin: 0 0 0.5rem;
 }
@@ -192,10 +190,10 @@
 /* ---- Fields (PolicyFieldRow) ---- */
 .pol-field {
   padding: 0.625rem 0.875rem;
-  background: var(--bg-surface);
+  background: var(--color-surface);
 }
 .pol-field:not([data-first]) {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-border);
 }
 .pol-field-row {
   display: flex;
@@ -212,11 +210,11 @@
 .pol-field-label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--color-text-1);
 }
 .pol-field-count {
   font-size: 0.6875rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
 }
 .pol-field-chips-head {
   display: flex;
@@ -237,13 +235,13 @@
   gap: 0.6rem;
   padding: 0.6rem 0.875rem;
   cursor: pointer;
-  background: var(--bg-surface);
+  background: var(--color-surface);
 }
 .pol-source:not([data-first]) {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-border);
 }
 .pol-source:hover {
-  background: var(--hover-bg, rgba(0, 0, 0, 0.03));
+  background: var(--color-bg-hover);
 }
 /* Leading source glyph rendered inline inside the SUI Checkbox label. */
 .pol-source-lbl {
@@ -253,14 +251,14 @@
 }
 .pol-source-icon {
   display: inline-flex;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   flex-shrink: 0;
 }
 
 /* ---- Doc types ---- */
 .pol-info-sub {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   margin: 0.15rem 0;
 }
 .pol-link {
@@ -283,7 +281,7 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.5rem 0.875rem 0.6rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-border);
 }
 
 /* ---- Summary ---- */
@@ -307,7 +305,7 @@
 .pol-summary-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-text-1);
 }
 .pol-summary-row {
   display: flex;
@@ -318,13 +316,13 @@
 .pol-summary-key {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   width: 4rem;
   flex-shrink: 0;
 }
 .pol-summary-val {
   font-size: 0.75rem;
-  color: var(--text-primary);
+  color: var(--color-text-1);
   word-break: break-all;
 }
 
@@ -347,7 +345,7 @@
   gap: 0.375rem;
 }
 .pol-rule-arrow {
-  color: var(--text-muted);
+  color: var(--color-text-4);
   flex-shrink: 0;
 }
 
@@ -356,14 +354,14 @@
   display: flex;
   gap: 0.85rem;
   padding-top: 0.625rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-border);
 }
 .pol-meta-item {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
 }
 .pol-note {
   display: flex;
@@ -372,9 +370,9 @@
   margin-top: 0.625rem;
   padding: 0.55rem 0.6rem;
   border-radius: 0.5rem;
-  background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+  background: var(--color-bg-hover);
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
 }
 
 /* ---- Recent activity feed (rows inside a SUI Card padding=none) ---- */
@@ -385,7 +383,7 @@
   padding: 0.7rem 0.875rem;
 }
 .pol-activity-item + .pol-activity-item {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-border);
 }
 .pol-activity-icon {
   display: inline-flex;
@@ -412,7 +410,7 @@
 .pol-activity-doc {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--color-text-1);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -420,12 +418,12 @@
 }
 .pol-activity-action {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   margin: 0.125rem 0 0;
 }
 .pol-activity-time {
   font-size: 0.6875rem;
-  color: var(--text-muted);
+  color: var(--color-text-4);
   margin: 0.125rem 0 0;
 }
 
@@ -450,7 +448,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .pol-footer-end {
@@ -484,7 +482,7 @@
   border: none;
   border-radius: 0.5rem;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--color-text-3);
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
@@ -492,7 +490,7 @@
   background: var(--color-blue-light);
 }
 .pol-crail-btn[data-status="active"] {
-  color: var(--color-blue);
+  color: var(--color-green);
 }
 .pol-crail-btn[data-status="paused"] {
   color: var(--color-amber);
@@ -504,7 +502,7 @@
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
-  border: 2px solid var(--bg-toolbar, var(--bg-surface));
+  border: 2px solid var(--bg-toolbar, var(--color-surface));
 }
 .pol-crail-dot[data-status="active"] {
   background: var(--color-green);
