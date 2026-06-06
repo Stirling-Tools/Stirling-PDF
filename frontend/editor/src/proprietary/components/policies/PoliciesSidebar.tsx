@@ -13,6 +13,7 @@
  */
 
 import { useState } from "react";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { POLICY_CATEGORIES, POLICY_CONFIG } from "@app/data/policyDefinitions";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -122,24 +123,30 @@ export function PoliciesSection() {
                   label={cat.label}
                   accent={
                     status === "active"
-                      ? "green"
+                      ? "blue"
                       : status === "paused"
                         ? "amber"
                         : undefined
                   }
                   trailing={
-                    <StatusBadge
-                      tone={
-                        status === "active"
-                          ? "success"
-                          : status === "paused"
-                            ? "warning"
-                            : "neutral"
-                      }
-                      size="sm"
-                    >
-                      {STATUS_LABEL[status]}
-                    </StatusBadge>
+                    <>
+                      <StatusBadge
+                        tone={
+                          status === "active"
+                            ? "info"
+                            : status === "paused"
+                              ? "warning"
+                              : "neutral"
+                        }
+                        size="sm"
+                      >
+                        {STATUS_LABEL[status]}
+                      </StatusBadge>
+                      <ChevronRightIcon
+                        className="pol-row-chevron"
+                        sx={{ fontSize: "1rem" }}
+                      />
+                    </>
                   }
                   onClick={selectPolicy}
                 />

@@ -50,6 +50,12 @@
   /* NavItem carries its own side margins; just a little vertical breathing room. */
   padding: 0.25rem 0;
 }
+/* Trailing drill-in chevron on each policy row (after the StatusBadge). */
+.pol-row-chevron {
+  color: var(--color-text-4);
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
 
 /* ---- Spend-limit warning (wraps a SUI Banner) ---- */
 .pol-spend-wrap {
@@ -151,9 +157,6 @@
 .pol-source:not([data-first]) {
   border-top: 1px solid var(--color-border);
 }
-.pol-source:hover {
-  background: var(--color-bg-hover);
-}
 /* Leading source glyph rendered inline inside the SUI Checkbox label. */
 .pol-source-lbl {
   display: inline-flex;
@@ -167,11 +170,6 @@
 }
 
 /* ---- Doc types ---- */
-.pol-info-sub {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-  margin: 0.15rem 0;
-}
 .pol-link {
   font-size: 0.75rem;
   font-weight: 500;
@@ -348,7 +346,7 @@
   background: var(--color-blue-light);
 }
 .pol-crail-btn[data-status="active"] {
-  color: var(--color-green);
+  color: var(--color-blue);
 }
 .pol-crail-btn[data-status="paused"] {
   color: var(--color-amber);

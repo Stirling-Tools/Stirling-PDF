@@ -6,7 +6,6 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import LockIcon from "@mui/icons-material/Lock";
-import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Card } from "@shared/components/Card";
@@ -62,22 +61,13 @@ export function PolicyDetailPanel({
         }
         onBack={onBack}
         actions={
-          <>
-            <StatusBadge
-              tone={isPaused ? "warning" : "success"}
-              showDot
-              pulse={!isPaused}
-            >
-              {isPaused ? "Paused" : "Active"}
-            </StatusBadge>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Close"
-              onClick={onBack}
-              leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
-            />
-          </>
+          <StatusBadge
+            tone={isPaused ? "warning" : "success"}
+            showDot
+            pulse={!isPaused}
+          >
+            {isPaused ? "Paused" : "Active"}
+          </StatusBadge>
         }
       />
 
@@ -85,7 +75,7 @@ export function PolicyDetailPanel({
         {/* Enforces */}
         <div>
           <p className="pol-section-label">Enforces</p>
-          <Card padding="default" accent={isPaused ? "amber" : "green"}>
+          <Card padding="default" accent={isPaused ? "amber" : "blue"}>
             <div className="pol-rule-flow">
               {config.rules.map((rule, i) => (
                 <span key={rule} className="pol-rule-flow-item">

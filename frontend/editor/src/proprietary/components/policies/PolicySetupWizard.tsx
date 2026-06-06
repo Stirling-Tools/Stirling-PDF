@@ -6,6 +6,7 @@ import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { Chip } from "@shared/components/Chip";
 import { Input } from "@shared/components/Input";
+import { FormField } from "@shared/components/FormField";
 import { Checkbox } from "@shared/components/Checkbox";
 import { Banner } from "@shared/components/Banner";
 import { EmptyState } from "@shared/components/EmptyState";
@@ -218,19 +219,18 @@ export function PolicySetupWizard({
             </p>
             <p className="pol-section-label">Reviewer</p>
             <Card padding="default">
-              <p className="pol-info-sub">Send flagged documents to:</p>
-              <Input
-                type="email"
-                inputSize="sm"
-                aria-label="Reviewer email"
-                value={reviewerEmail}
-                onChange={(e) => setReviewerEmail(e.target.value)}
-                placeholder="email@company.com"
-                style={{ margin: "0.4rem 0" }}
-              />
-              <p className="pol-info-sub">
-                They'll open flagged documents directly in the Stirling editor.
-              </p>
+              <FormField
+                label="Send flagged documents to:"
+                helperText="They'll open flagged documents directly in the Stirling editor."
+              >
+                <Input
+                  type="email"
+                  inputSize="sm"
+                  value={reviewerEmail}
+                  onChange={(e) => setReviewerEmail(e.target.value)}
+                  placeholder="email@company.com"
+                />
+              </FormField>
             </Card>
 
             <p className="pol-section-label">Summary</p>
@@ -253,7 +253,9 @@ export function PolicySetupWizard({
               </div>
               <div className="pol-summary-row">
                 <span className="pol-summary-key">Sources</span>
-                <span>{sources.length} selected</span>
+                <span className="pol-summary-val">
+                  {sources.length} selected
+                </span>
               </div>
               <div className="pol-summary-row">
                 <span className="pol-summary-key">Reviewer</span>
