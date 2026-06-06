@@ -522,6 +522,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
         result = await serverOp();
       } catch (err) {
         if (errorStatus(err) === 404 && staleFolderId !== null) {
+          // `folders` here is the snapshot captured when the mutation was
+          // kicked off. If a concurrent mutation has shifted state between
+          // start and rejection the subtree we compute may be slightly stale,
+          // but the actual in-memory drop runs via `setFolders((prev) =>
+          // prev.filter(...))` (functional update) and the follow-up
+          // pullFromServer is authoritative either way - so the worst case
+          // is one extra round-trip, not corrupt state.
           handleStaleFolder(staleFolderId, folders);
           return null;
         }
@@ -665,6 +672,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
           // successful delete - silently drop the local subtree and reconverge
           // via pullFromServer. We can't know the server's exact cascade so
           // we return just `id`; the pull updates state authoritatively.
+          // Same closure-snapshot caveat as runFolderMutation's 404 branch:
+          // `folders` is captured at callback creation; concurrent mutations
+          // could leave it slightly stale, but the pull reconverges.
           handleStaleFolder(id, folders);
           return [id];
         }

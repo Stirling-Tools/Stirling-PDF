@@ -3,7 +3,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
 import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
-import { createFolderId, FolderRecord } from "@app/types/folder";
+import { createFolderId, FolderId, FolderRecord } from "@app/types/folder";
 
 /**
  * Regression test for the sync-banner 4xx gating fix in commit c38b646c5.
@@ -201,7 +201,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockIdb.folders = [];
   });
 
-  function makeFolder(name: string, parentFolderId: string | null = null) {
+  function makeFolder(name: string, parentFolderId: FolderId | null = null) {
     return {
       id: createFolderId(),
       name,
@@ -214,8 +214,10 @@ describe("FolderContext stale-folder 404 cleanup", () => {
   type ProbeApi = {
     error: string | null;
     folderCount: number;
-    rename: (id: string, name: string) => Promise<unknown>;
-    delete: (id: string) => Promise<unknown>;
+    currentFolderId: FolderId | null;
+    setCurrentFolderId: (id: FolderId | null) => void;
+    rename: (id: FolderId, name: string) => Promise<unknown>;
+    delete: (id: FolderId) => Promise<unknown>;
   };
 
   function ApiProbe(props: { onReady: (api: ProbeApi) => void }) {
@@ -224,8 +226,10 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       props.onReady({
         error: f.error,
         folderCount: f.folders.length,
-        rename: (id, name) => f.renameFolder(id as never, name),
-        delete: (id) => f.deleteFolder(id as never),
+        currentFolderId: f.currentFolderId,
+        setCurrentFolderId: f.setCurrentFolderId,
+        rename: (id, name) => f.renameFolder(id, name),
+        delete: (id) => f.deleteFolder(id),
       });
     }, [f, props]);
     return (
@@ -233,19 +237,28 @@ describe("FolderContext stale-folder 404 cleanup", () => {
         <div data-testid="error">{f.error ?? "<null>"}</div>
         <div data-testid="reachable">{String(f.serverReachable)}</div>
         <div data-testid="count">{f.folders.length}</div>
+        <div data-testid="current">{f.currentFolderId ?? "<null>"}</div>
       </>
     );
   }
 
-  async function setupWithFolders(initial: FolderRecord[]): Promise<ProbeApi> {
+  async function setupWithFolders(
+    initial: FolderRecord[],
+  ): Promise<{ current: ProbeApi }> {
     // First pull returns the seeded folders; second pull (triggered by the
     // stale-folder handler) returns the same minus the stale id so the test
     // can observe convergence.
+    //
+    // We hand back a `{ current }` ref rather than a plain ProbeApi so the
+    // test always sees the LATEST f-bound api. The probe re-issues onReady
+    // on every render of FolderContext state changes (setCurrentFolderId,
+    // mutation returns, etc.), and tests that interact with the api after
+    // navigation need the post-navigation closures.
     mockList.mockResolvedValueOnce(initial);
-    let captured: ProbeApi | null = null;
+    const apiRef: { current: ProbeApi | null } = { current: null };
     render(
       <FolderProvider>
-        <ApiProbe onReady={(api) => (captured = api)} />
+        <ApiProbe onReady={(api) => (apiRef.current = api)} />
       </FolderProvider>,
     );
     await waitFor(() =>
@@ -253,8 +266,8 @@ describe("FolderContext stale-folder 404 cleanup", () => {
         String(initial.length),
       ),
     );
-    if (!captured) throw new Error("ApiProbe never reported ready");
-    return captured;
+    if (!apiRef.current) throw new Error("ApiProbe never reported ready");
+    return apiRef as { current: ProbeApi };
   }
 
   test("renameFolder 404 silently drops folder + descendants, no banner", async () => {
@@ -269,7 +282,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockUpdate.mockRejectedValueOnce(axiosError(404, "Folder not found"));
 
     await act(async () => {
-      const result = await api.rename(parent.id, "newname");
+      const result = await api.current.rename(parent.id, "newname");
       // 404 resolves with null (silent cleanup) rather than throwing.
       expect(result).toBeNull();
     });
@@ -294,7 +307,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
 
     let result: unknown;
     await act(async () => {
-      result = await api.delete(target.id);
+      result = await api.current.delete(target.id);
     });
     expect(result).toEqual([target.id]);
 
@@ -303,6 +316,38 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       expect(screen.getByTestId("count").textContent).toBe("1"),
     );
     expect(screen.getByTestId("reachable").textContent).toBe("true");
+  });
+
+  test("stale 404 strand-resets currentFolderId when user is inside the dropped subtree", async () => {
+    // The user is browsing /parent/child when another session deletes
+    // /parent. The 404 on a mutation against /parent (or anywhere in the
+    // subtree) must navigate the user out, otherwise the breadcrumb points
+    // at a folder id no longer in the local map.
+    const parent = makeFolder("parent");
+    const child = makeFolder("child", parent.id);
+    const sibling = makeFolder("sibling");
+    const api = await setupWithFolders([parent, child, sibling]);
+
+    // Navigate the user into the child folder before the mutation fires.
+    act(() => {
+      api.current.setCurrentFolderId(child.id);
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("current").textContent).toBe(child.id),
+    );
+
+    // Convergence pull will return just the sibling (parent + child gone).
+    mockList.mockResolvedValueOnce([sibling]);
+    mockUpdate.mockRejectedValueOnce(axiosError(404, "Folder not found"));
+
+    await act(async () => {
+      await api.current.rename(parent.id, "doomed-rename");
+    });
+
+    // currentFolderId must reset to root - ROOT_FOLDER_ID is null so the
+    // probe renders the sentinel "<null>" rather than the child uuid.
+    expect(screen.getByTestId("current").textContent).toBe("<null>");
+    expect(screen.getByTestId("error").textContent).toBe("<null>");
   });
 
   test("non-404 mutation errors still surface (regression guard)", async () => {
@@ -316,7 +361,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     let threw = false;
     await act(async () => {
       try {
-        await api.rename(target.id, "newname");
+        await api.current.rename(target.id, "newname");
       } catch {
         threw = true;
       }

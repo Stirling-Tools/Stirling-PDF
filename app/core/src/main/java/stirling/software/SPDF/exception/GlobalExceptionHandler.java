@@ -1016,7 +1016,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ProblemDetail> handleNoResourceFound(
             NoResourceFoundException ex, HttpServletRequest request) {
-        log.warn("No resource at {}: {}", request.getRequestURI(), ex.getMessage());
+        // Log level depends on the path. This handler catches every fall-through to the static
+        // resource layer - including favicon.ico, /robots.txt, /.well-known/*, and every URL a
+        // scanner probes (/wp-login.php, /.env, etc). Logging all of those at WARN floods prod
+        // logs with non-actionable noise. A miss under /api/* is different: it almost always
+        // means a controller is missing from this build (the case that prompted this handler),
+        // which IS operator-relevant, so /api paths stay at WARN.
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/api/")) {
+            log.warn("No resource at {}: {}", uri, ex.getMessage());
+        } else {
+            log.debug("No resource at {}: {}", uri, ex.getMessage());
+        }
 
         String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
         String detail =
