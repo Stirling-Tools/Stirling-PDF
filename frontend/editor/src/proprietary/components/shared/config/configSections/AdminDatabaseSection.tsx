@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -52,6 +53,7 @@ interface DatabaseSettingsData {
 
 export default function AdminDatabaseSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
     useLoginRequired();
   const {
@@ -462,7 +464,16 @@ export default function AdminDatabaseSection() {
                 )}
               </Text>
             </div>
-            <Badge color="grape" size="lg">
+            <Badge
+              color="grape"
+              size="lg"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/settings/adminPlan")}
+              title={t(
+                "admin.settings.badge.clickToUpgrade",
+                "Click to view plan details",
+              )}
+            >
               ENTERPRISE
             </Badge>
           </Group>
