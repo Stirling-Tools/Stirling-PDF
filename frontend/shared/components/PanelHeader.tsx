@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import "@shared/components/PanelHeader.css";
+import { IconBadge } from "@shared/components/IconBadge";
 
 export interface PanelHeaderProps {
   title: ReactNode;
@@ -57,12 +58,9 @@ export function PanelHeader({
           </button>
         )}
         {icon && (
-          <span
-            className={`sui-panelhdr__icon sui-panelhdr__icon--${iconAccent}`}
-            aria-hidden
-          >
+          <IconBadge accent={iconAccent} size="md">
             {icon}
-          </span>
+          </IconBadge>
         )}
         <div className="sui-panelhdr__text">
           <div className="sui-panelhdr__title">{title}</div>

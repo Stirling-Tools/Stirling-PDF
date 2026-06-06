@@ -2,6 +2,7 @@ import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import { Select } from "@shared/components/Select";
 import { Input } from "@shared/components/Input";
 import { Chip } from "@shared/components/Chip";
+import { SettingsRow } from "@shared/components/SettingsRow";
 import type { PolicyField } from "@app/types/policies";
 
 interface PolicyFieldRowProps {
@@ -54,31 +55,33 @@ export function PolicyFieldRow({
     );
   }
 
+  const control =
+    field.type === "toggle" ? (
+      <ToggleSwitch
+        size="sm"
+        checked={Boolean(value)}
+        onChange={(checked) => onChange(checked)}
+      />
+    ) : field.type === "select" ? (
+      <Select
+        inputSize="sm"
+        options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
+        value={typeof value === "string" ? value : ""}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={field.label}
+      />
+    ) : (
+      <Input
+        inputSize="sm"
+        value={typeof value === "string" ? value : ""}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={field.label}
+      />
+    );
+
   return (
-    <div className="pol-field pol-field-row" data-first={first || undefined}>
-      <span className="pol-field-label">{field.label}</span>
-      {field.type === "toggle" ? (
-        <ToggleSwitch
-          size="sm"
-          checked={Boolean(value)}
-          onChange={(checked) => onChange(checked)}
-        />
-      ) : field.type === "select" ? (
-        <Select
-          inputSize="sm"
-          options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
-          aria-label={field.label}
-        />
-      ) : (
-        <Input
-          inputSize="sm"
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
-          aria-label={field.label}
-        />
-      )}
+    <div className="pol-field" data-first={first || undefined}>
+      <SettingsRow label={field.label} control={control} />
     </div>
   );
 }

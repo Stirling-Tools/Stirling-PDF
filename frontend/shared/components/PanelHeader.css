@@ -28,35 +28,6 @@
   background: var(--color-bg-hover);
   color: var(--color-text-1);
 }
-.sui-panelhdr__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-}
-.sui-panelhdr__icon--blue {
-  background: color-mix(in srgb, var(--color-blue) 14%, transparent);
-  color: var(--color-blue);
-}
-.sui-panelhdr__icon--purple {
-  background: color-mix(in srgb, var(--color-purple) 14%, transparent);
-  color: var(--color-purple);
-}
-.sui-panelhdr__icon--green {
-  background: color-mix(in srgb, var(--color-green) 14%, transparent);
-  color: var(--color-green);
-}
-.sui-panelhdr__icon--amber {
-  background: color-mix(in srgb, var(--color-amber) 14%, transparent);
-  color: var(--color-amber);
-}
-.sui-panelhdr__icon--red {
-  background: color-mix(in srgb, var(--color-red) 14%, transparent);
-  color: var(--color-red);
-}
 .sui-panelhdr__text {
   min-width: 0;
 }

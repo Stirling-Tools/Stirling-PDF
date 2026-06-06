@@ -11,6 +11,7 @@ import { Checkbox } from "@shared/components/Checkbox";
 import { Banner } from "@shared/components/Banner";
 import { EmptyState } from "@shared/components/EmptyState";
 import { StepIndicator } from "@shared/components/StepIndicator";
+import { IconBadge } from "@shared/components/IconBadge";
 import { POLICY_SOURCES, POLICY_DOC_TYPES } from "@app/data/policyDefinitions";
 import type {
   PolicyCategory,
@@ -236,7 +237,9 @@ export function PolicySetupWizard({
             <p className="pol-section-label">Summary</p>
             <Card padding="default">
               <div className="pol-summary-head">
-                <span className="pol-summary-icon">{category.icon}</span>
+                <IconBadge accent="blue" size="sm">
+                  {category.icon}
+                </IconBadge>
                 <span className="pol-summary-title">
                   {category.label} Policy
                 </span>
