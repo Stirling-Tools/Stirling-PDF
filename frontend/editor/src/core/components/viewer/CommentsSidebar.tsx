@@ -247,6 +247,7 @@ export function CommentsSidebar({
     clearHighlightCommentRequest,
     scrollActions,
     getZoomState,
+    toggleCommentsSidebar,
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
@@ -522,11 +523,16 @@ export function CommentsSidebar({
   );
 
   const handleAddComment = useCallback(() => {
+    // Close the comments sidebar before activating the annotation tool so
+    // the user doesn't end up looking at two stacked side panels (the
+    // comments list on the right + the annotation tool's controls on
+    // the left). Matches the attachment-sidebar pattern.
+    toggleCommentsSidebar?.();
     handleToolSelectForced(ANNOTATE_PANEL_ID);
     requestAnimationFrame(() => {
       activateAnnotationToolRef.current?.(TEXT_COMMENT_TOOL_ID);
     });
-  }, [handleToolSelectForced, activateAnnotationToolRef]);
+  }, [handleToolSelectForced, activateAnnotationToolRef, toggleCommentsSidebar]);
 
   if (!visible) return null;
 
@@ -576,6 +582,22 @@ export function CommentsSidebar({
               <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
             </ActionIcon>
           </Tooltip>
+        )}
+        {toggleCommentsSidebar && (
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="gray"
+            onClick={toggleCommentsSidebar}
+            aria-label="Close comments sidebar"
+            title={t("viewer.comments.close", "Close comments")}
+          >
+            <LocalIcon
+              icon="close-rounded"
+              width="1.1rem"
+              height="1.1rem"
+            />
+          </ActionIcon>
         )}
       </div>
       <ScrollArea style={{ flex: 1 }}>

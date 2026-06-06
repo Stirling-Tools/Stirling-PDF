@@ -4,12 +4,15 @@ import {
   ScrollArea,
   Text,
   ActionIcon,
+  Button,
   Loader,
   Stack,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
 import DownloadIcon from "@mui/icons-material/DownloadRounded";
@@ -52,7 +55,9 @@ export const AttachmentSidebar = ({
   preloadCacheKeys = [],
 }: AttachmentSidebarProps) => {
   const { t } = useTranslation();
-  const { attachmentActions, hasAttachmentSupport } = useViewer();
+  const { attachmentActions, hasAttachmentSupport, toggleAttachmentSidebar } =
+    useViewer();
+  const { handleToolSelectForced } = useToolWorkflow();
   const [searchTerm, setSearchTerm] = useState("");
   const [attachmentSupport, setAttachmentSupport] = useState(() =>
     hasAttachmentSupport(),
@@ -139,16 +144,28 @@ export const AttachmentSidebar = ({
 
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
-    if (
-      cached &&
-      (cached.status === "loading" || cached.status === "success")
-    ) {
+    // Only short-circuit on a finalised success cache. Skipping when
+    // cached.status === "loading" caused the sidebar to get stuck: if
+    // the previous fetch was cancelled (by a parent re-render that
+    // changed the attachmentActions reference - createViewerActions
+    // builds a new object every viewer render), the cache still says
+    // "loading" but no live fetch is in flight. On the re-run we'd
+    // early-return and never refetch, so the UI would sit on the
+    // "Loading attachments..." state forever. Same change applied in
+    // BookmarkSidebar.
+    if (cached && cached.status === "success") {
       return;
     }
 
     let cancelled = false;
+    // Don't write "loading" into the cache - keep the cache for
+    // terminal states (success/error) only, so a cancelled run can
+    // never leave a stale "loading" entry behind. The visible
+    // sidebar state still goes through setActiveEntry below.
     const updateEntry = (entry: AttachmentCacheEntry) => {
-      cacheRef.current.set(key, entry);
+      if (entry.status === "success" || entry.status === "error") {
+        cacheRef.current.set(key, entry);
+      }
       if (!cancelled && currentKeyRef.current === key) {
         setActiveEntry(entry);
       }
@@ -238,6 +255,14 @@ export const AttachmentSidebar = ({
     event.stopPropagation();
     attachmentActions.downloadAttachment(attachment);
   };
+
+  const handleAddAttachment = useCallback(() => {
+    // Close the attachment sidebar before opening the tool so the user
+    // doesn't end up looking at two stacked side panels (the sidebar on
+    // the right + the tool's settings on the left).
+    toggleAttachmentSidebar();
+    handleToolSelectForced("addAttachments");
+  }, [handleToolSelectForced, toggleAttachmentSidebar]);
 
   const filteredAttachments = useMemo(() => {
     const attachments = Array.isArray(activeEntry.attachments)
@@ -352,6 +377,36 @@ export const AttachmentSidebar = ({
             {t("viewer.attachments.title", "Attachments")}
           </Text>
         </div>
+        <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {attachmentSupport && hasAttachments && (
+            <Tooltip
+              label={t("viewer.attachments.addAttachment", "Add attachment")}
+            >
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                color="gray"
+                onClick={handleAddAttachment}
+              >
+                <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="gray"
+            onClick={toggleAttachmentSidebar}
+            aria-label="Close attachments sidebar"
+            title={t("viewer.attachments.close", "Close attachments")}
+          >
+            <LocalIcon
+              icon="close-rounded"
+              width="1.1rem"
+              height="1.1rem"
+            />
+          </ActionIcon>
+        </Box>
       </div>
 
       <Box
@@ -427,14 +482,30 @@ export const AttachmentSidebar = ({
           )}
 
           {showEmptyState && (
-            <div className="sidebar-base__empty-state">
+            <Stack align="center" gap="sm" py="lg">
+              <LocalIcon
+                icon="attachment-rounded"
+                width="2rem"
+                height="2rem"
+                style={{ color: "var(--mantine-color-dimmed)" }}
+              />
               <Text size="sm" c="dimmed" ta="center">
                 {t(
                   "viewer.attachments.empty",
                   "No attachments in this document",
                 )}
               </Text>
-            </div>
+              <Button
+                variant="light"
+                size="xs"
+                onClick={handleAddAttachment}
+                leftSection={
+                  <LocalIcon icon="add" width="1rem" height="1rem" />
+                }
+              >
+                {t("viewer.attachments.addAttachment", "Add attachment")}
+              </Button>
+            </Stack>
           )}
 
           {showAttachmentList && (
