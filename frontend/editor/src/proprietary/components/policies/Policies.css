@@ -375,58 +375,6 @@
   color: var(--color-text-4);
 }
 
-/* ---- Recent activity feed (rows inside a SUI Card padding=none) ---- */
-.pol-activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  padding: 0.7rem 0.875rem;
-}
-.pol-activity-item + .pol-activity-item {
-  border-top: 1px solid var(--color-border);
-}
-.pol-activity-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 0.5rem;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-}
-.pol-activity-icon[data-status="enforced"] {
-  background: var(--color-green-light);
-  color: var(--color-green);
-}
-.pol-activity-icon[data-status="flagged"] {
-  background: var(--color-amber-light);
-  color: var(--color-amber);
-}
-.pol-activity-text {
-  flex: 1;
-  min-width: 0;
-}
-.pol-activity-doc {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-1);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pol-activity-action {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-  margin: 0.125rem 0 0;
-}
-.pol-activity-time {
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-  margin: 0.125rem 0 0;
-}
-
 /* ---- Stats: three SUI MetricCards, constrained for the narrow rail ---- */
 .pol-stats {
   display: grid;

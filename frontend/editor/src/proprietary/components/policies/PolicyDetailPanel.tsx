@@ -16,6 +16,7 @@ import { EmptyState } from "@shared/components/EmptyState";
 import { MetricCard } from "@shared/components/MetricCard";
 import { Button } from "@shared/components/Button";
 import { Banner } from "@shared/components/Banner";
+import { ListRow } from "@shared/components/ListRow";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -123,20 +124,23 @@ export function PolicyDetailPanel({
           {config.activity.length > 0 ? (
             <Card padding="none">
               {config.activity.map((item, i) => (
-                <div key={i} className="pol-activity-item">
-                  <span className="pol-activity-icon" data-status={item.status}>
-                    {item.status === "flagged" ? (
+                <ListRow
+                  key={i}
+                  divider={i > 0}
+                  leadingTone={
+                    item.status === "flagged" ? "warning" : "success"
+                  }
+                  leading={
+                    item.status === "flagged" ? (
                       <WarningAmberIcon sx={{ fontSize: "0.85rem" }} />
                     ) : (
                       <CheckCircleIcon sx={{ fontSize: "0.85rem" }} />
-                    )}
-                  </span>
-                  <div className="pol-activity-text">
-                    <p className="pol-activity-doc">{item.doc}</p>
-                    <p className="pol-activity-action">{item.action}</p>
-                    <p className="pol-activity-time">{item.time}</p>
-                  </div>
-                </div>
+                    )
+                  }
+                  title={item.doc}
+                  description={item.action}
+                  meta={item.time}
+                />
               ))}
             </Card>
           ) : (
