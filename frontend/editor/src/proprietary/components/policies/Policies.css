@@ -148,7 +148,7 @@
 .pol-steps {
   display: flex;
   gap: 0.3rem;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
 }
 .pol-step-bar {
@@ -166,7 +166,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0.875rem;
+  padding: 0.875rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
@@ -189,7 +189,7 @@
 
 /* ---- Fields (PolicyFieldRow) ---- */
 .pol-field {
-  padding: 0.625rem 0.875rem;
+  padding: 0.7rem 0.875rem;
   background: var(--color-surface);
 }
 .pol-field:not([data-first]) {
@@ -233,7 +233,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.6rem 0.875rem;
+  padding: 0.7rem 0.875rem;
   cursor: pointer;
   background: var(--color-surface);
 }
@@ -274,7 +274,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.625rem 0.875rem;
+  padding: 0.7rem 0.875rem;
 }
 .pol-doctypes {
   display: flex;
@@ -384,7 +384,6 @@
 .pol-stats .sui-metric {
   min-width: 0;
   padding: 0.625rem 0.7rem;
-  box-shadow: none;
 }
 .pol-stats .sui-metric__value {
   font-size: 1.125rem;
@@ -395,7 +394,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.75rem 1.25rem;
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }

@@ -50,7 +50,11 @@ export function PolicySettingsForm({
         onBack={onCancel}
         actions={
           <>
-            <StatusBadge tone={isPaused ? "warning" : "success"} showDot>
+            <StatusBadge
+              tone={isPaused ? "warning" : "success"}
+              showDot
+              pulse={!isPaused}
+            >
               {isPaused ? "Paused" : "Active"}
             </StatusBadge>
             <Button

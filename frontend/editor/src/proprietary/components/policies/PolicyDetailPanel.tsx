@@ -85,7 +85,7 @@ export function PolicyDetailPanel({
         {/* Enforces */}
         <div>
           <p className="pol-section-label">Enforces</p>
-          <Card padding="default">
+          <Card padding="default" accent={isPaused ? "amber" : "green"}>
             <div className="pol-rule-flow">
               {config.rules.map((rule, i) => (
                 <span key={rule} className="pol-rule-flow-item">
