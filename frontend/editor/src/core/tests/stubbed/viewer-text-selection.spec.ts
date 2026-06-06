@@ -269,9 +269,8 @@ test("Ctrl+A selects text on every page of a multi-page document", async ({
           );
           return wrappers.filter(
             (w) =>
-              w.querySelectorAll(
-                ".pdf-selection-layer > div:first-child > div",
-              ).length > 0,
+              w.querySelectorAll(".pdf-selection-layer > div:first-child > div")
+                .length > 0,
           ).length;
         }),
       { timeout: 10_000 },
