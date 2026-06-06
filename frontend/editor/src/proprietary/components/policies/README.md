@@ -20,11 +20,40 @@ core build = off).
 | `components/policies/PolicySetupWizard.tsx` | 3-step setup (operations → sources/types → reviewer/confirm). |
 | `components/policies/PolicyDetailPanel.tsx` | Configured "narrative" view (Enforces / Activity / Stats). |
 | `components/policies/PolicySettingsForm.tsx` | Edit-settings sub-view. |
-| `components/policies/PolicyFieldRow.tsx` | toggle / select / chips / text field renderer. |
+| `components/policies/PolicyFieldRow.tsx` | toggle / select / chips / text field renderer (SUI `SettingsRow` + `ToggleSwitch`/`Select`/`Input`/`Chip`). |
 
 The core build gets a no-op stub at `core/components/policies/PoliciesSidebar.tsx`;
 `RightSidebar` (core) consumes the seam, so the section appears only in
 proprietary builds.
+
+## Design system (SUI + Mantine)
+
+The surface is composed almost entirely from the shared SUI design system
+(`@shared/components`), mixed with Mantine only where SUI has no equivalent.
+SUI components used here: `PanelHeader` (+ leading `IconBadge`), `Card`,
+`Button`, `Chip`, `ChipFlow`, `StatusBadge`, `Banner`, `EmptyState`,
+`MetricCard`, `Input`, `Select`, `ToggleSwitch`, `Checkbox`, `FormField`,
+`NavItem` (status `accent`), `ListRow`, `DataRow`, `SectionHeader`,
+`StepIndicator`. Several of those (`IconBadge`, `ListRow`, `DataRow`,
+`SectionHeader`, `StepIndicator`, `ChipFlow`, `SettingsRow`, plus the `NavItem`
+accent / `PanelHeader` icon slot / `Checkbox` leadingIcon / `MetricCard size`)
+were **built up in SUI** as part of this work — each has a Storybook story.
+
+Bootstrapping: the editor loads `@shared/tokens/tokens.css` globally via
+`RainbowThemeProvider`, which also mirrors the Mantine colour scheme onto
+`<html data-theme>` (SUI's dark palette keys on `data-theme`). A global
+`@shared` alias in `editor/vite.config.ts` + `vitest.config.ts` resolves the
+shared components' own `@shared/*.css` self-imports.
+
+The bespoke `.pol-*` CSS in `Policies.css` is now only thin layout scaffolding
+(detail/scroll/footer wrappers, the collapsed rail, row insets that match SUI
+`ListRow`); spacing snaps to the SUI `--space-*` scale and colour to the SUI
+token set.
+
+**Status-colour convention (locked):** blue = accent/identity (NavItem accent
+bar, rail icon, detail Card accent — the prototype's blue); green `success`
+StatusBadge = the "Active" pill/dot everywhere (list + detail + rail dot);
+amber = paused. Configured rows render as raised cards (surface + border).
 
 ## Faithful to the prototype
 
