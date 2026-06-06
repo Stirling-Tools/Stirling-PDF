@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { NavKey } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
@@ -39,40 +39,45 @@ export const useConfigNavSections = (
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
-  const sections: ConfigNavSection[] = [
-    {
-      title: t("settings.preferences.title", "Preferences"),
-      items: [
-        {
-          key: "general",
-          label: t("settings.general.title", "General"),
-          icon: "settings-rounded",
-          component: <GeneralSection />,
-        },
-        {
-          key: "hotkeys",
-          label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
-        },
-      ],
-    },
-    {
-      title: t("settings.help.title", "Help"),
-      items: [
-        {
-          key: "help",
-          label: t("settings.help.label", "Tours"),
-          icon: "help-rounded",
-          component: (
-            <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
-          ),
-        },
-      ],
-    },
-  ];
-
-  return sections;
+  // Memoize so the array identity is stable across re-renders driven by
+  // unrelated state (URL changes, etc.). Without this every settings tab click
+  // produces a fresh sections array with fresh JSX, causing every consumer to
+  // re-render the entire section tree.
+  return useMemo<ConfigNavSection[]>(
+    () => [
+      {
+        title: t("settings.preferences.title", "Preferences"),
+        items: [
+          {
+            key: "general",
+            label: t("settings.general.title", "General"),
+            icon: "settings-rounded",
+            component: <GeneralSection />,
+          },
+          {
+            key: "hotkeys",
+            label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
+            icon: "keyboard-rounded",
+            component: <HotkeysSection />,
+          },
+        ],
+      },
+      {
+        title: t("settings.help.title", "Help"),
+        items: [
+          {
+            key: "help",
+            label: t("settings.help.label", "Tours"),
+            icon: "help-rounded",
+            component: (
+              <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
+            ),
+          },
+        ],
+      },
+    ],
+    [t, _isAdmin, onRequestClose],
+  );
 };
 
 // Deprecated: Use useConfigNavSections hook instead
