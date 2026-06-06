@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -979,6 +980,60 @@ public class GlobalExceptionHandler {
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
         problemDetail.setProperty("method", ex.getHttpMethod());
+        addStandardHints(
+                problemDetail,
+                "error.notFound.hints",
+                List.of(
+                        "Verify the URL path and HTTP method are correct.",
+                        "Check the API base path and version if applicable.",
+                        "Ensure there are no typos in the endpoint path."));
+        problemDetail.setProperty("actionRequired", "Use a valid endpoint URL and method.");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
+    /**
+     * Handle {@link NoResourceFoundException} - Spring 6.1+ throws this when the {@link
+     * org.springframework.web.servlet.DispatcherServlet} routes a request to its static-resource
+     * handler and no matching resource exists. The classic catch-all in this advice would otherwise
+     * downgrade it to a generic 500, which fires noisy "An unexpected error occurred" banners on
+     * the frontend whenever a UI build is paired with a backend that doesn't map a route (e.g. an
+     * older backend missing a controller the new editor calls). A clean 404 lets the client treat
+     * the route as "endpoint not deployed" and degrade gracefully.
+     *
+     * <p>Note: this is distinct from {@link NoHandlerFoundException}, which only fires when {@code
+     * spring.mvc.throw-exception-if-no-handler-found=true} and the default servlet handling is off.
+     * In a typical Spring Boot config the static-resource fallthrough triggers {@link
+     * NoResourceFoundException} instead, so without this handler an unmapped REST URL becomes a
+     * 500.
+     *
+     * @param ex the NoResourceFoundException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 404 NOT_FOUND
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResourceFound(
+            NoResourceFoundException ex, HttpServletRequest request) {
+        log.warn("No resource at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
+        String detail =
+                getLocalizedMessage(
+                        "error.notFound.detail",
+                        String.format(
+                                "No endpoint found for %s %s",
+                                request.getMethod(), request.getRequestURI()),
+                        request.getMethod(),
+                        request.getRequestURI());
+
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(HttpStatus.NOT_FOUND, detail, request);
+        problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title);
+        problemDetail.setProperty("method", request.getMethod());
         addStandardHints(
                 problemDetail,
                 "error.notFound.hints",

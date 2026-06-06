@@ -3,6 +3,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
 import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
+import { createFolderId, FolderRecord } from "@app/types/folder";
 
 /**
  * Regression test for the sync-banner 4xx gating fix in commit c38b646c5.
@@ -25,21 +26,46 @@ import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
 // require a running backend (folderSyncService) and a populated IDB
 // (folderStorage). Both are out of scope for testing the error gate.
 const mockList = vi.fn();
+const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
 vi.mock("@app/services/folderSyncService", () => ({
   folderSyncService: {
     list: () => mockList(),
     create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
+    update: (...args: unknown[]) => mockUpdate(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
   },
 }));
 
+// Stateful IDB mock - the FolderContext's revision-driven refresh effect
+// re-reads `getAllFolders()` after every state change, so a stateless mock
+// returning `[]` would clobber the in-memory folders set by pullFromServer.
+// Hoisted so the vi.mock factory below can see it; mutated via the standard
+// `replaceAll`/`upsertFolder`/`removeFolders` API.
+const { mockIdb } = vi.hoisted(() => ({
+  mockIdb: { folders: [] as { id: string }[] },
+}));
 vi.mock("@app/services/folderStorage", () => ({
   folderStorage: {
-    getAllFolders: vi.fn().mockResolvedValue([]),
-    replaceAll: vi.fn().mockResolvedValue(undefined),
-    upsert: vi.fn().mockResolvedValue(undefined),
+    getAllFolders: vi.fn(() => Promise.resolve([...mockIdb.folders])),
+    replaceAll: vi.fn((next: { id: string }[]) => {
+      mockIdb.folders = [...next];
+      return Promise.resolve();
+    }),
+    upsert: vi.fn(),
+    upsertFolder: vi.fn((next: { id: string }) => {
+      mockIdb.folders = [
+        ...mockIdb.folders.filter((f) => f.id !== next.id),
+        next,
+      ];
+      return Promise.resolve();
+    }),
     delete: vi.fn().mockResolvedValue(undefined),
+    removeFolders: vi.fn((ids: string[]) => {
+      const drop = new Set(ids);
+      mockIdb.folders = mockIdb.folders.filter((f) => !drop.has(f.id));
+      return Promise.resolve();
+    }),
   },
 }));
 
@@ -104,6 +130,8 @@ async function renderAndWaitForPull(): Promise<void> {
 describe("FolderContext sync-banner gating", () => {
   beforeEach(() => {
     mockList.mockReset();
+    mockUpdate.mockReset();
+    mockDelete.mockReset();
   });
 
   test("401 (unauthorized) does NOT surface a banner", async () => {
@@ -150,5 +178,153 @@ describe("FolderContext sync-banner gating", () => {
     await renderAndWaitForPull();
     expect(screen.getByTestId("error").textContent).toBe("<null>");
     expect(screen.getByTestId("reachable").textContent).toBe("false");
+  });
+});
+
+/**
+ * Regression coverage for the stale-folder 404 cleanup.
+ *
+ * When a per-folder mutation (rename/move/appearance/delete) returns 404, the
+ * server is telling us the folder no longer exists - almost always because
+ * another client session deleted it. The context should drop the folder + its
+ * local descendants from in-memory state, suppress the error banner, and
+ * fire a fresh pullFromServer to converge. The user perceives the folder
+ * silently disappearing rather than a confusing "Folder operation failed"
+ * alert for a folder they can't even see anymore.
+ */
+describe("FolderContext stale-folder 404 cleanup", () => {
+  beforeEach(() => {
+    mockList.mockReset();
+    mockUpdate.mockReset();
+    mockDelete.mockReset();
+    // Reset the stateful IDB mock so each test starts with an empty cache.
+    mockIdb.folders = [];
+  });
+
+  function makeFolder(name: string, parentFolderId: string | null = null) {
+    return {
+      id: createFolderId(),
+      name,
+      parentFolderId,
+      createdAt: 0,
+      updatedAt: 0,
+    } as FolderRecord;
+  }
+
+  type ProbeApi = {
+    error: string | null;
+    folderCount: number;
+    rename: (id: string, name: string) => Promise<unknown>;
+    delete: (id: string) => Promise<unknown>;
+  };
+
+  function ApiProbe(props: { onReady: (api: ProbeApi) => void }) {
+    const f = useFolders();
+    React.useEffect(() => {
+      props.onReady({
+        error: f.error,
+        folderCount: f.folders.length,
+        rename: (id, name) => f.renameFolder(id as never, name),
+        delete: (id) => f.deleteFolder(id as never),
+      });
+    }, [f, props]);
+    return (
+      <>
+        <div data-testid="error">{f.error ?? "<null>"}</div>
+        <div data-testid="reachable">{String(f.serverReachable)}</div>
+        <div data-testid="count">{f.folders.length}</div>
+      </>
+    );
+  }
+
+  async function setupWithFolders(initial: FolderRecord[]): Promise<ProbeApi> {
+    // First pull returns the seeded folders; second pull (triggered by the
+    // stale-folder handler) returns the same minus the stale id so the test
+    // can observe convergence.
+    mockList.mockResolvedValueOnce(initial);
+    let captured: ProbeApi | null = null;
+    render(
+      <FolderProvider>
+        <ApiProbe onReady={(api) => (captured = api)} />
+      </FolderProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("count").textContent).toBe(
+        String(initial.length),
+      ),
+    );
+    if (!captured) throw new Error("ApiProbe never reported ready");
+    return captured;
+  }
+
+  test("renameFolder 404 silently drops folder + descendants, no banner", async () => {
+    const parent = makeFolder("parent");
+    const child = makeFolder("child", parent.id);
+    const sibling = makeFolder("sibling");
+    const api = await setupWithFolders([parent, child, sibling]);
+
+    // Second list (the convergence pull) - confirm parent + child are gone
+    // server-side; sibling remains.
+    mockList.mockResolvedValueOnce([sibling]);
+    mockUpdate.mockRejectedValueOnce(axiosError(404, "Folder not found"));
+
+    await act(async () => {
+      const result = await api.rename(parent.id, "newname");
+      // 404 resolves with null (silent cleanup) rather than throwing.
+      expect(result).toBeNull();
+    });
+
+    // Banner stays clean.
+    expect(screen.getByTestId("error").textContent).toBe("<null>");
+    // Local state dropped parent + child immediately (before the pull lands).
+    // After the pull, only `sibling` should be visible.
+    await waitFor(() =>
+      expect(screen.getByTestId("count").textContent).toBe("1"),
+    );
+    expect(screen.getByTestId("reachable").textContent).toBe("true");
+  });
+
+  test("deleteFolder 404 is treated as already-deleted, returns [id], no banner", async () => {
+    const target = makeFolder("target");
+    const other = makeFolder("other");
+    const api = await setupWithFolders([target, other]);
+
+    mockList.mockResolvedValueOnce([other]);
+    mockDelete.mockRejectedValueOnce(axiosError(404, "Folder not found"));
+
+    let result: unknown;
+    await act(async () => {
+      result = await api.delete(target.id);
+    });
+    expect(result).toEqual([target.id]);
+
+    expect(screen.getByTestId("error").textContent).toBe("<null>");
+    await waitFor(() =>
+      expect(screen.getByTestId("count").textContent).toBe("1"),
+    );
+    expect(screen.getByTestId("reachable").textContent).toBe("true");
+  });
+
+  test("non-404 mutation errors still surface (regression guard)", async () => {
+    // Make sure the silent-cleanup branch only triggers on 404 - a 500 must
+    // still throw and surface the banner so the user knows the op failed.
+    const target = makeFolder("target");
+    const api = await setupWithFolders([target]);
+
+    mockUpdate.mockRejectedValueOnce(axiosError(500, "boom"));
+
+    let threw = false;
+    await act(async () => {
+      try {
+        await api.rename(target.id, "newname");
+      } catch {
+        threw = true;
+      }
+    });
+    expect(threw).toBe(true);
+    // Folder still present (we didn't drop it - this wasn't a stale signal).
+    expect(screen.getByTestId("count").textContent).toBe("1");
+    // Error banner DID surface (formatServerError result).
+    expect(screen.getByTestId("error").textContent).not.toBe("<null>");
   });
 });
