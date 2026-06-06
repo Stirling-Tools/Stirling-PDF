@@ -119,18 +119,6 @@
 .pol-source:not([data-first]) {
   border-top: 1px solid var(--color-border);
 }
-/* Leading source glyph rendered inline inside the SUI Checkbox label. */
-.pol-source-lbl {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.pol-source-icon {
-  display: inline-flex;
-  color: var(--color-text-4);
-  flex-shrink: 0;
-}
-
 /* ---- Doc types ---- */
 .pol-link {
   font-size: 0.75rem;

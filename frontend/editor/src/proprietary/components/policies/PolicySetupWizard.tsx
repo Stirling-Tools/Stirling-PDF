@@ -146,12 +146,8 @@ export function PolicySetupWizard({
                   <Checkbox
                     checked={sources.includes(src.id)}
                     onChange={() => toggleSource(src.id)}
-                    label={
-                      <span className="pol-source-lbl">
-                        <span className="pol-source-icon">{src.icon}</span>
-                        {src.label}
-                      </span>
-                    }
+                    leadingIcon={src.icon}
+                    label={src.label}
                     description={src.desc}
                   />
                 </div>
