@@ -4,7 +4,8 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
-import { Chip } from "@shared/components/Chip";
+import { ChipFlow } from "@shared/components/ChipFlow";
+import { DataRow } from "@shared/components/DataRow";
 import { Input } from "@shared/components/Input";
 import { FormField } from "@shared/components/FormField";
 import { Checkbox } from "@shared/components/Checkbox";
@@ -244,25 +245,12 @@ export function PolicySetupWizard({
                   {category.label} Policy
                 </span>
               </div>
-              <div className="pol-summary-row">
-                <span className="pol-summary-key">Enforces</span>
-                <div className="pol-rule-chips">
-                  {config.rules.map((r) => (
-                    <Chip key={r} tone="neutral" size="sm">
-                      {r}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-              <div className="pol-summary-row">
-                <span className="pol-summary-key">Sources</span>
-                <span className="pol-summary-val">
-                  {sources.length} selected
-                </span>
-              </div>
-              <div className="pol-summary-row">
-                <span className="pol-summary-key">Reviewer</span>
-                <span className="pol-summary-val">{reviewerEmail}</span>
+              <div className="pol-summary-rows">
+                <DataRow label="Enforces" align="top">
+                  <ChipFlow items={config.rules} />
+                </DataRow>
+                <DataRow label="Sources">{sources.length} selected</DataRow>
+                <DataRow label="Reviewer">{reviewerEmail}</DataRow>
               </div>
             </Card>
           </>

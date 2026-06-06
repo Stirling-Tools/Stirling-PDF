@@ -14,35 +14,9 @@
   display: flex;
   flex-direction: column;
 }
+/* Side gutter for the SUI SectionHeader inside the list. */
 .pol-list-head {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  width: 100%;
-  padding: 0.4rem 0.75rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-.pol-list-head-label {
-  flex: 1;
-  text-align: left;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-4);
-}
-.pol-list-head-count {
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-}
-.pol-list-head-chevron {
-  color: var(--color-text-4);
-  transition: transform 0.15s ease;
-}
-.pol-list-head-chevron[data-collapsed="true"] {
-  transform: rotate(-90deg);
+  padding: 0 0.75rem;
 }
 .pol-list-rows {
   display: flex;
@@ -193,46 +167,15 @@
   font-weight: 600;
   color: var(--color-text-1);
 }
-.pol-summary-row {
+.pol-summary-rows {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
-}
-.pol-summary-key {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-4);
-  width: 4rem;
-  flex-shrink: 0;
-}
-.pol-summary-val {
-  font-size: 0.75rem;
-  color: var(--color-text-1);
-  word-break: break-all;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-/* ---- Rule chips / flow ---- */
-.pol-rule-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
+/* ---- Enforces rule flow (wraps a SUI ChipFlow) ---- */
 .pol-rule-flow {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.375rem;
   margin-bottom: 0.625rem;
-}
-.pol-rule-flow-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-.pol-rule-arrow {
-  color: var(--color-text-4);
-  flex-shrink: 0;
 }
 
 /* ---- Meta / note ---- */

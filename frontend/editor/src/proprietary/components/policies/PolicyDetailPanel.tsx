@@ -1,4 +1,3 @@
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PublicIcon from "@mui/icons-material/Public";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import HistoryIcon from "@mui/icons-material/History";
@@ -9,7 +8,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Card } from "@shared/components/Card";
-import { Chip } from "@shared/components/Chip";
+import { ChipFlow } from "@shared/components/ChipFlow";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { EmptyState } from "@shared/components/EmptyState";
 import { MetricCard } from "@shared/components/MetricCard";
@@ -77,19 +76,7 @@ export function PolicyDetailPanel({
           <p className="pol-section-label">Enforces</p>
           <Card padding="default" accent={isPaused ? "amber" : "blue"}>
             <div className="pol-rule-flow">
-              {config.rules.map((rule, i) => (
-                <span key={rule} className="pol-rule-flow-item">
-                  {i > 0 && (
-                    <ArrowForwardIcon
-                      className="pol-rule-arrow"
-                      sx={{ fontSize: "0.7rem" }}
-                    />
-                  )}
-                  <Chip tone="neutral" size="sm">
-                    {rule}
-                  </Chip>
-                </span>
-              ))}
+              <ChipFlow items={config.rules} separator="arrow" />
             </div>
             <div className="pol-meta-row">
               <span className="pol-meta-item">

@@ -14,7 +14,6 @@
 
 import { useState } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { POLICY_CATEGORIES, POLICY_CONFIG } from "@app/data/policyDefinitions";
 import { usePolicies } from "@app/hooks/usePolicies";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
@@ -23,6 +22,7 @@ import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Banner } from "@shared/components/Banner";
 import { NavItem } from "@shared/components/NavItem";
 import { StatusBadge } from "@shared/components/StatusBadge";
+import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
@@ -79,20 +79,15 @@ export function PoliciesSection() {
 
   return (
     <div className="pol-list">
-      <button
-        type="button"
-        className="pol-list-head"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <span className="pol-list-head-label">Policies</span>
-        <span className="pol-list-head-count">{configuredCount} active</span>
-        <ExpandMoreIcon
-          className="pol-list-head-chevron"
-          data-collapsed={!expanded}
-          sx={{ fontSize: "1.1rem" }}
+      <div className="pol-list-head">
+        <SectionHeader
+          title="Policies"
+          count={`${configuredCount} active`}
+          collapsible
+          expanded={expanded}
+          onToggle={() => setExpanded((v) => !v)}
         />
-      </button>
+      </div>
 
       {expanded && (
         <>
