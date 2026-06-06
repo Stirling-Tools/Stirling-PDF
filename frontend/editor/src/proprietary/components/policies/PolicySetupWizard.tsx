@@ -1,8 +1,13 @@
 import { useState } from "react";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CheckIcon from "@mui/icons-material/Check";
+import { PanelHeader } from "@shared/components/PanelHeader";
+import { Card } from "@shared/components/Card";
+import { Button } from "@shared/components/Button";
+import { Chip } from "@shared/components/Chip";
+import { Input } from "@shared/components/Input";
+import { EmptyState } from "@shared/components/EmptyState";
 import { POLICY_SOURCES, POLICY_DOC_TYPES } from "@app/data/policyDefinitions";
 import type {
   PolicyCategory,
@@ -50,19 +55,16 @@ export function PolicySetupWizard({
   if (!canConfigure) {
     return (
       <div className="pol-detail">
-        <div className="pol-header">
-          <button className="pol-icon-btn" onClick={onCancel} aria-label="Back">
-            <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
-          </button>
-          <span className="pol-header-title">
-            Set up {category.label} Policy
-          </span>
-        </div>
-        <div className="pol-managed">
-          <p className="pol-managed-title">Managed by your organization</p>
-          <p className="pol-managed-sub">
-            Contact an admin to enable this policy.
-          </p>
+        <PanelHeader
+          icon={category.icon}
+          title={`Set up ${category.label} Policy`}
+          onBack={onCancel}
+        />
+        <div className="pol-scroll">
+          <EmptyState
+            title="Managed by your organization"
+            description="Contact an admin to enable this policy."
+          />
         </div>
       </div>
     );
@@ -80,22 +82,21 @@ export function PolicySetupWizard({
 
   return (
     <div className="pol-detail">
-      {/* Header */}
-      <div className="pol-header">
-        <button className="pol-icon-btn" onClick={back} aria-label="Back">
-          <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
-        </button>
-        <span className="pol-header-icon">{category.icon}</span>
-        <div className="pol-header-text">
-          <span className="pol-header-title">
-            Set up {category.label} Policy
-          </span>
-          <span className="pol-header-sub">Step {step} of 3</span>
-        </div>
-        <button className="pol-icon-btn" onClick={onCancel} aria-label="Cancel">
-          <CloseIcon sx={{ fontSize: "1.1rem" }} />
-        </button>
-      </div>
+      <PanelHeader
+        icon={category.icon}
+        title={`Set up ${category.label} Policy`}
+        subtitle={`Step ${step} of 3`}
+        onBack={back}
+        actions={
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Cancel"
+            onClick={onCancel}
+            leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+          />
+        }
+      />
 
       {/* Step indicator */}
       <div className="pol-steps">
@@ -109,7 +110,7 @@ export function PolicySetupWizard({
         {step === 1 && (
           <>
             <p className="pol-desc">{category.desc}</p>
-            <div className="pol-card">
+            <Card padding="none">
               {config.fields.map((f, i) => (
                 <PolicyFieldRow
                   key={f.key}
@@ -121,7 +122,7 @@ export function PolicySetupWizard({
                   }
                 />
               ))}
-            </div>
+            </Card>
           </>
         )}
 
@@ -132,7 +133,7 @@ export function PolicySetupWizard({
               to.
             </p>
             <p className="pol-section-label">Sources</p>
-            <div className="pol-card">
+            <Card padding="none">
               {POLICY_SOURCES.map((src, i) => {
                 const on = sources.includes(src.id);
                 return (
@@ -161,13 +162,13 @@ export function PolicySetupWizard({
                   </div>
                 );
               })}
-            </div>
+            </Card>
 
             <p className="pol-section-label">Document types</p>
             {!classificationEnabled ? (
               <div className="pol-info">
                 <InfoOutlinedIcon
-                  sx={{ fontSize: "0.9rem", color: "#F59E0B" }}
+                  sx={{ fontSize: "0.9rem", color: "var(--color-amber)" }}
                 />
                 <div>
                   <p className="pol-info-title">All document types</p>
@@ -180,7 +181,7 @@ export function PolicySetupWizard({
                 </div>
               </div>
             ) : (
-              <div className="pol-card">
+              <Card padding="none">
                 <div className="pol-doctypes-head">
                   <span className="pol-field-label">
                     {scopeTypes.length === 0
@@ -189,12 +190,7 @@ export function PolicySetupWizard({
                   </span>
                   <button
                     className="pol-link"
-                    onClick={() => {
-                      // Toggle the list open/closed only; keep any checked
-                      // types so re-opening restores them (onEnable already
-                      // commits scopeTypes only when narrowed).
-                      setScopeNarrow((v) => !v);
-                    }}
+                    onClick={() => setScopeNarrow((v) => !v)}
                   >
                     {scopeNarrow ? "Clear" : "Edit"}
                   </button>
@@ -219,7 +215,7 @@ export function PolicySetupWizard({
                     ))}
                   </div>
                 )}
-              </div>
+              </Card>
             )}
           </>
         )}
@@ -231,25 +227,26 @@ export function PolicySetupWizard({
               send the document for human review.
             </p>
             <p className="pol-section-label">Reviewer</p>
-            <div className="pol-card pol-card-pad">
+            <Card padding="default">
               <p className="pol-info-sub">Send flagged documents to:</p>
-              <input
-                className="pol-text-input"
+              <Input
                 type="email"
+                inputSize="sm"
                 aria-label="Reviewer email"
                 value={reviewerEmail}
                 onChange={(e) => setReviewerEmail(e.target.value)}
                 placeholder="email@company.com"
+                style={{ margin: "0.4rem 0" }}
               />
               <p className="pol-info-sub">
                 They'll open flagged documents directly in the Stirling editor.
               </p>
-            </div>
+            </Card>
 
             <p className="pol-section-label">Summary</p>
-            <div className="pol-card pol-card-pad">
+            <Card padding="default">
               <div className="pol-summary-head">
-                <span className="pol-header-icon">{category.icon}</span>
+                <span className="pol-summary-icon">{category.icon}</span>
                 <span className="pol-summary-title">
                   {category.label} Policy
                 </span>
@@ -258,9 +255,9 @@ export function PolicySetupWizard({
                 <span className="pol-summary-key">Enforces</span>
                 <div className="pol-rule-chips">
                   {config.rules.map((r) => (
-                    <span key={r} className="pol-rule-chip">
+                    <Chip key={r} tone="neutral" size="sm">
                       {r}
-                    </span>
+                    </Chip>
                   ))}
                 </div>
               </div>
@@ -272,28 +269,32 @@ export function PolicySetupWizard({
                 <span className="pol-summary-key">Reviewer</span>
                 <span className="pol-summary-val">{reviewerEmail}</span>
               </div>
-            </div>
+            </Card>
           </>
         )}
       </div>
 
       {/* Footer */}
       <div className="pol-footer">
-        <button className="pol-btn-text" onClick={back}>
+        <Button variant="ghost" size="sm" onClick={back}>
           {step > 1 ? "Back" : "Cancel"}
-        </button>
+        </Button>
         {step < 3 ? (
-          <button
-            className="pol-btn-primary"
+          <Button
+            variant="gradient"
+            size="sm"
+            style={{ marginLeft: "auto" }}
             onClick={() =>
               setStep((s) => Math.min(3, s + 1) as PolicySetupStep)
             }
           >
             Continue
-          </button>
+          </Button>
         ) : (
-          <button
-            className="pol-btn-primary"
+          <Button
+            variant="gradient"
+            size="sm"
+            style={{ marginLeft: "auto" }}
             onClick={() =>
               onEnable({
                 sources,
@@ -304,7 +305,7 @@ export function PolicySetupWizard({
             }
           >
             Enable Policy
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -1,4 +1,3 @@
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PublicIcon from "@mui/icons-material/Public";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -8,6 +7,13 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import { PanelHeader } from "@shared/components/PanelHeader";
+import { Card } from "@shared/components/Card";
+import { Chip } from "@shared/components/Chip";
+import { StatusBadge } from "@shared/components/StatusBadge";
+import { EmptyState } from "@shared/components/EmptyState";
+import { MetricCard } from "@shared/components/MetricCard";
+import { Button } from "@shared/components/Button";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -43,74 +49,75 @@ export function PolicyDetailPanel({
   const isPaused = status === "paused";
   return (
     <div className="pol-detail">
-      {/* Header */}
-      <div className="pol-header">
-        <button className="pol-icon-btn" onClick={onBack} aria-label="Back">
-          <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
-        </button>
-        <span className="pol-header-icon">{category.icon}</span>
-        <div className="pol-header-text">
-          <span className="pol-header-title">{category.label}</span>
-          {state.docsEnforced24h > 0 && (
-            <span className="pol-header-sub">
-              {`${state.docsEnforced24h} enforced today`}
-            </span>
-          )}
-        </div>
-        {isPaused ? (
-          <span className="pol-badge pol-badge-paused">Paused</span>
-        ) : (
-          <span className="pol-badge pol-badge-active">
-            <span className="pol-badge-dot" />
-            Active
-          </span>
-        )}
-      </div>
+      <PanelHeader
+        icon={category.icon}
+        title={category.label}
+        subtitle={
+          state.docsEnforced24h > 0
+            ? `${state.docsEnforced24h} enforced today`
+            : undefined
+        }
+        onBack={onBack}
+        actions={
+          <StatusBadge
+            tone={isPaused ? "warning" : "success"}
+            showDot
+            pulse={!isPaused}
+          >
+            {isPaused ? "Paused" : "Active"}
+          </StatusBadge>
+        }
+      />
 
       <div className="pol-scroll">
         {/* Enforces */}
-        <div className="pol-card pol-card-pad">
+        <div>
           <p className="pol-section-label">Enforces</p>
-          <div className="pol-rule-flow">
-            {config.rules.map((rule, i) => (
-              <span key={rule} className="pol-rule-flow-item">
-                {i > 0 && (
-                  <ArrowForwardIcon
-                    sx={{ fontSize: "0.7rem", color: "var(--text-muted)" }}
-                  />
-                )}
-                <span className="pol-rule-chip">{rule}</span>
+          <Card padding="default">
+            <div className="pol-rule-flow">
+              {config.rules.map((rule, i) => (
+                <span key={rule} className="pol-rule-flow-item">
+                  {i > 0 && (
+                    <ArrowForwardIcon
+                      className="pol-rule-arrow"
+                      sx={{ fontSize: "0.7rem" }}
+                    />
+                  )}
+                  <Chip tone="neutral" size="sm">
+                    {rule}
+                  </Chip>
+                </span>
+              ))}
+            </div>
+            <div className="pol-meta-row">
+              <span className="pol-meta-item">
+                <PublicIcon sx={{ fontSize: "0.8rem" }} />
+                {config.scopeLabel}
               </span>
-            ))}
-          </div>
-          <div className="pol-meta-row">
-            <span className="pol-meta-item">
-              <PublicIcon sx={{ fontSize: "0.75rem" }} />
-              {config.scopeLabel}
-            </span>
-            <span className="pol-meta-item">
-              <ScheduleIcon sx={{ fontSize: "0.75rem" }} />
-              On save &amp; export
-            </span>
-          </div>
-          <div className="pol-note">
-            <HistoryIcon sx={{ fontSize: "0.75rem" }} />
-            Originals stay untouched • Enforced version saved alongside
-          </div>
+              <span className="pol-meta-item">
+                <ScheduleIcon sx={{ fontSize: "0.8rem" }} />
+                On save &amp; export
+              </span>
+            </div>
+            <div className="pol-note">
+              <HistoryIcon sx={{ fontSize: "0.8rem" }} />
+              Originals stay untouched • Enforced version saved alongside
+            </div>
+          </Card>
         </div>
 
         {/* Recent Activity */}
         <div>
           <p className="pol-section-label">Recent Activity</p>
           {config.activity.length > 0 ? (
-            <div className="pol-activity">
+            <Card padding="none">
               {config.activity.map((item, i) => (
                 <div key={i} className="pol-activity-item">
                   <span className="pol-activity-icon" data-status={item.status}>
                     {item.status === "flagged" ? (
-                      <WarningAmberIcon sx={{ fontSize: "0.8rem" }} />
+                      <WarningAmberIcon sx={{ fontSize: "0.85rem" }} />
                     ) : (
-                      <CheckCircleIcon sx={{ fontSize: "0.8rem" }} />
+                      <CheckCircleIcon sx={{ fontSize: "0.85rem" }} />
                     )}
                   </span>
                   <div className="pol-activity-text">
@@ -120,65 +127,56 @@ export function PolicyDetailPanel({
                   </div>
                 </div>
               ))}
-            </div>
+            </Card>
           ) : (
-            <div className="pol-empty">
-              <DescriptionIcon
-                sx={{
-                  fontSize: "1.5rem",
-                  color: "var(--text-muted)",
-                  opacity: 0.4,
-                }}
-              />
-              <p className="pol-empty-title">No activity yet</p>
-              <p className="pol-empty-sub">
-                Documents will appear here once this policy runs.
-              </p>
-            </div>
+            <EmptyState
+              size="compact"
+              icon={<DescriptionIcon sx={{ fontSize: "1.5rem" }} />}
+              title="No activity yet"
+              description="Documents will appear here once this policy runs."
+            />
           )}
         </div>
 
         {/* Stats */}
         <div className="pol-stats">
-          {[
-            {
-              value: config.stats.enforced.toLocaleString() || "0",
-              label: "Docs enforced",
-            },
-            {
-              value: config.stats.dataProcessed || "0",
-              label: "Data processed",
-            },
-            { value: config.stats.activeFor || "—", label: "Active" },
-          ].map((s) => (
-            <div key={s.label} className="pol-stat">
-              <p className="pol-stat-value">{s.value}</p>
-              <p className="pol-stat-label">{s.label}</p>
-            </div>
-          ))}
+          <MetricCard
+            label="Docs enforced"
+            value={config.stats.enforced.toLocaleString()}
+          />
+          <MetricCard
+            label="Data processed"
+            value={config.stats.dataProcessed}
+          />
+          <MetricCard label="Active" value={config.stats.activeFor} />
         </div>
 
         {!canConfigure && (
           <div className="pol-managed-inline">
-            <LockIcon sx={{ fontSize: "0.85rem" }} />
+            <LockIcon sx={{ fontSize: "0.9rem" }} />
             Managed by your organization. Contact an admin to change settings.
           </div>
         )}
       </div>
 
-      {/* Footer */}
       {canConfigure && (
         <div className="pol-footer">
-          <button className="pol-btn-danger" onClick={onDelete}>
-            <DeleteOutlineIcon sx={{ fontSize: "0.8rem" }} />
+          <Button
+            variant="ghost"
+            accent="red"
+            size="sm"
+            leadingIcon={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
+            onClick={onDelete}
+            style={{ marginRight: "auto" }}
+          >
             Delete
-          </button>
-          <button className="pol-btn-ghost" onClick={onTogglePause}>
+          </Button>
+          <Button variant="outline" size="sm" onClick={onTogglePause}>
             {isPaused ? "Resume" : "Pause"}
-          </button>
-          <button className="pol-btn-primary" onClick={onEditSettings}>
+          </Button>
+          <Button variant="gradient" size="sm" onClick={onEditSettings}>
             Edit Settings
-          </button>
+          </Button>
         </div>
       )}
     </div>

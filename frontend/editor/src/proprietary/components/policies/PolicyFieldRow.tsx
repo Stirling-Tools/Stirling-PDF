@@ -1,4 +1,5 @@
 import { Switch, Select, TextInput } from "@mantine/core";
+import { Chip } from "@shared/components/Chip";
 import type { PolicyField } from "@app/types/policies";
 
 interface PolicyFieldRowProps {
@@ -36,15 +37,14 @@ export function PolicyFieldRow({
         </div>
         <div className="pol-field-chips">
           {(field.options ?? []).map((opt) => (
-            <button
+            <Chip
               key={opt}
-              type="button"
-              className={`pol-chip${selected.includes(opt) ? " is-on" : ""}`}
+              tone={selected.includes(opt) ? "blue" : "neutral"}
+              size="sm"
               onClick={() => toggle(opt)}
-              aria-pressed={selected.includes(opt)}
             >
               {opt}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>

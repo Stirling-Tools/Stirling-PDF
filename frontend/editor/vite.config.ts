@@ -203,6 +203,15 @@ export default defineConfig(async ({ mode }) => {
       }),
       compressStaticCopyPlugin(),
     ],
+    resolve: {
+      // Global alias so @shared resolves for ALL importers — including the
+      // shared components' own `@shared/components/X.css` self-imports, which
+      // live outside the editor tsconfig scope and so aren't rewritten by
+      // vite-tsconfig-paths. Required for the editor to consume SUI components.
+      alias: {
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
     server: {
       host: true,
       // make sure this port matches the devUrl port in tauri.conf.json file

@@ -1,5 +1,8 @@
 import { useState } from "react";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { PanelHeader } from "@shared/components/PanelHeader";
+import { Card } from "@shared/components/Card";
+import { Button } from "@shared/components/Button";
+import { StatusBadge } from "@shared/components/StatusBadge";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -31,36 +34,24 @@ export function PolicySettingsForm({
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(config, state),
   );
+  const isPaused = status === "paused";
 
   return (
     <div className="pol-detail">
-      <div className="pol-header">
-        <button className="pol-icon-btn" onClick={onCancel} aria-label="Back">
-          <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
-        </button>
-        <span className="pol-header-icon">{category.icon}</span>
-        <div className="pol-header-text">
-          {/* Prototype titles this sub-view "Edit Settings"; the policy it edits
-              stays identifiable via the category icon to the left. */}
-          <span className="pol-header-title">Edit Settings</span>
-          {state.docsEnforced24h > 0 && (
-            <span className="pol-header-sub">
-              {`${state.docsEnforced24h} enforced today`}
-            </span>
-          )}
-        </div>
-        {status === "paused" ? (
-          <span className="pol-badge pol-badge-paused">Paused</span>
-        ) : (
-          <span className="pol-badge pol-badge-active">
-            <span className="pol-badge-dot" />
-            Active
-          </span>
-        )}
-      </div>
+      <PanelHeader
+        icon={category.icon}
+        title="Edit Settings"
+        subtitle={category.label}
+        onBack={onCancel}
+        actions={
+          <StatusBadge tone={isPaused ? "warning" : "success"} showDot>
+            {isPaused ? "Paused" : "Active"}
+          </StatusBadge>
+        }
+      />
 
       <div className="pol-scroll">
-        <div className="pol-card">
+        <Card padding="none">
           {config.fields.map((f, i) => (
             <PolicyFieldRow
               key={f.key}
@@ -72,16 +63,20 @@ export function PolicySettingsForm({
               }
             />
           ))}
-        </div>
+        </Card>
       </div>
 
       <div className="pol-footer pol-footer-end">
-        <button className="pol-btn-text" onClick={onCancel}>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
-        </button>
-        <button className="pol-btn-primary" onClick={() => onSave(fieldValues)}>
+        </Button>
+        <Button
+          variant="gradient"
+          size="sm"
+          onClick={() => onSave(fieldValues)}
+        >
           Save Changes
-        </button>
+        </Button>
       </div>
     </div>
   );
