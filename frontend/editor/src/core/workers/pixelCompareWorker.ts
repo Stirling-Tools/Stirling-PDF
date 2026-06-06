@@ -395,7 +395,11 @@ self.addEventListener(
       // the default DOMFilterFactory crashes in a worker calling document.createElementNS.
       // Resolve CMap/standard-font URLs against the worker's own origin. Vite copies these
       // directories from pdfjs-dist at build time via viteStaticCopy (see vite.config.ts).
-      const assetsBase = new URL("/pdfjs/", self.location.origin).toString();
+      // import.meta.env.BASE_URL ends with a slash and includes any subpath prefix.
+      const assetsBase = new URL(
+        `${import.meta.env.BASE_URL}pdfjs/`,
+        self.location.origin,
+      ).toString();
       const loaderOpts = (data: ArrayBuffer) =>
         ({
           data,

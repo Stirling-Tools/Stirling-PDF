@@ -1,6 +1,9 @@
 import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
+import { BASE_PATH } from "@app/constants/app";
 
-const SUBPATH = import.meta.env.VITE_RUN_SUBPATH.replace(/^\/|\/$/g, ""); // "app" or ""
+// BASE_PATH is "/bpp" or "" (no trailing slash). Strip the leading slash
+// to match the legacy SUBPATH shape used below ("bpp" or "").
+const SUBPATH = BASE_PATH.replace(/^\//, "");
 
 /**
  * Normalize pathname by stripping subpath prefix and trailing slashes
