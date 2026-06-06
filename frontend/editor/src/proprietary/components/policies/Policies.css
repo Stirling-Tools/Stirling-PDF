@@ -24,6 +24,16 @@
   /* NavItem carries its own side margins; just a little vertical breathing room. */
   padding: var(--space-1) 0;
 }
+/* Configured (active/paused) rows read as raised cards at rest, like the
+   prototype — NavItem's accent only draws the edge bar + icon tint. */
+.pol-list-rows .sui-navitem[data-accent] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.pol-list-rows .sui-navitem[data-accent]:hover {
+  background: var(--color-blue-light);
+  border-color: var(--color-blue-border);
+}
 /* Trailing drill-in chevron on each policy row (after the StatusBadge). */
 .pol-row-chevron {
   color: var(--color-text-4);
@@ -188,7 +198,7 @@
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-lg);
-  background: var(--color-bg-hover);
+  background: var(--color-bg-muted);
   font-size: 0.75rem;
   color: var(--color-text-4);
 }
@@ -198,13 +208,20 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
+  align-items: stretch;
 }
 .pol-stats .sui-metric {
   min-width: 0;
+  min-height: 100%;
   padding: var(--space-2) var(--space-3);
 }
 .pol-stats .sui-metric__value {
   font-size: 1.125rem;
+}
+/* Single-word labels in the narrow rail — keep them on one line so the three
+   value baselines stay aligned. */
+.pol-stats .sui-metric__label {
+  white-space: nowrap;
 }
 
 /* ---- Footer (hosts SUI Buttons) ---- */

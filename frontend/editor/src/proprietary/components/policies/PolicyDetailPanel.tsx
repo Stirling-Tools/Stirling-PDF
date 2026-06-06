@@ -121,25 +121,24 @@ export function PolicyDetailPanel({
               ))}
             </Card>
           ) : (
-            <EmptyState
-              size="compact"
-              icon={<DescriptionIcon sx={{ fontSize: "1.5rem" }} />}
-              title="No activity yet"
-              description="Documents will appear here once this policy runs."
-            />
+            <Card padding="default">
+              <EmptyState
+                size="compact"
+                icon={<DescriptionIcon sx={{ fontSize: "1.5rem" }} />}
+                title="No activity yet"
+                description="Documents will appear here once this policy runs."
+              />
+            </Card>
           )}
         </div>
 
         {/* Stats */}
         <div className="pol-stats">
           <MetricCard
-            label="Docs enforced"
+            label="Enforced"
             value={config.stats.enforced.toLocaleString()}
           />
-          <MetricCard
-            label="Data processed"
-            value={config.stats.dataProcessed}
-          />
+          <MetricCard label="Processed" value={config.stats.dataProcessed} />
           <MetricCard label="Active" value={config.stats.activeFor} />
         </div>
 
