@@ -40,6 +40,7 @@ from stirling.contracts.pdf_create import (
     DocumentPlan,
     DocumentSection,
     DocumentSections,
+    DocumentStyle,
     GeneratedDocument,
     PdfCreateOrchestrateResponse,
     PlannedSection,
@@ -160,6 +161,12 @@ Analyse the user's request and produce a DocumentMeta with:
 
 - document_context: a single sentence anchoring the temporal or versioning context of the
   document, if the user provides one. Leave empty if the user provides no such context.
+
+- style_primary_color: accent and heading colour. Set ONLY when the user explicitly names a
+  colour or colour scheme (e.g. "make it red", "use navy blue"). Use CSS named colours
+  (e.g. "magenta", "navy", "crimson") or hex values. Leave null if no colour is stated.
+- style_background_color: page background colour. Set only if explicitly requested.
+- style_body_text_color: body text colour. Set only if explicitly requested.
 
 - cannot_do_reason: set this ONLY when the request is not asking to create a document at all
   (e.g. a question, a greeting, an edit request to an existing document). Never set it
@@ -289,6 +296,15 @@ def _build_writer_prompt(plan: DocumentPlan, chunk: _Chunk) -> str:
 # ── Helpers ───────────────────────────────────────────────────────────────────────────────────────
 
 
+def _merge_styles(ui: DocumentStyle, inferred: DocumentStyle | None) -> DocumentStyle:
+    """Merge UI and planner-inferred styles. UI fields win where non-None; planner fills gaps."""
+    return DocumentStyle(
+        primary_color=ui.primary_color or (inferred.primary_color if inferred else None),
+        background_color=ui.background_color or (inferred.background_color if inferred else None),
+        body_text_color=ui.body_text_color or (inferred.body_text_color if inferred else None),
+    )
+
+
 def _build_jinja_env() -> Environment:
     return Environment(
         loader=FileSystemLoader(str(_TEMPLATES_DIR)),
@@ -360,9 +376,11 @@ class PdfCreateAgent:
 
         plan = DocumentPlan.assemble(meta, planned_sections)
 
-        # Apply explicit UI style override after assembly — bypasses planner inference.
-        if request.document_style is not None:
-            plan = plan.model_copy(update={"style": request.document_style})
+        # Resolve style: UI style takes priority where explicitly set; planner inference fills gaps.
+        # An all-None UI DocumentStyle (e.g. no picker selection) is treated the same as absent.
+        ui_style = request.document_style
+        if ui_style is not None and any([ui_style.primary_color, ui_style.background_color, ui_style.body_text_color]):
+            plan = plan.model_copy(update={"style": _merge_styles(ui_style, plan.style)})
 
         # ── Phase 3: chunk ─────────────────────────────────────────────────────
         chunks = _make_chunks(plan.sections)

@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -49,6 +50,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
+import stirling.software.proprietary.model.api.ai.DocumentStyle;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
@@ -137,7 +139,7 @@ public class AiWorkflowService {
                         ? new ArrayList<>()
                         : new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-        initialRequest.setDocumentStyle(buildDocumentStyle(request));
+        initialRequest.setDocumentStyle(request.getDocumentStyle());
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -234,6 +236,7 @@ public class AiWorkflowService {
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
             nextRequest.setEnabledEndpoints(request.getEnabledEndpoints());
+            nextRequest.setDocumentStyle(request.getDocumentStyle());
             return new WorkflowState.Pending(nextRequest);
         } finally {
             for (LoadedFile lf : loadedFiles) {
@@ -285,6 +288,7 @@ public class AiWorkflowService {
         nextRequest.setFiles(request.getFiles());
         nextRequest.setConversationHistory(request.getConversationHistory());
         nextRequest.setResumeWith(response.getResumeWith());
+        nextRequest.setDocumentStyle(request.getDocumentStyle());
         return new WorkflowState.Pending(nextRequest);
     }
 
@@ -445,6 +449,7 @@ public class AiWorkflowService {
                                 new PdfContentExtractor.ToolReportArtifact(
                                         lastReportTool, lastReport));
                 resumeRequest.setResumeWith(resumeWith);
+                resumeRequest.setDocumentStyle(previousRequest.getDocumentStyle());
                 return new WorkflowState.Pending(resumeRequest);
             }
 
@@ -455,6 +460,10 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
+        } catch (HttpServerErrorException e) {
+            String reason = extractDetailFromHttpError(e);
+            log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
+            return new WorkflowState.Terminal(cannotContinue(reason));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -478,6 +487,27 @@ public class AiWorkflowService {
         String reason =
                 cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
         return String.format("The %s tool failed: %s", endpointPath, reason);
+    }
+
+    /**
+     * Extracts the {@code detail} field from an HTTP error response body if it is valid JSON,
+     * otherwise falls back to the exception message. This lets controller-level error messages
+     * (e.g. missing system dependency) surface cleanly in the chat response.
+     */
+    private String extractDetailFromHttpError(HttpServerErrorException e) {
+        try {
+            String body = e.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode detail = node.get("detail");
+                if (detail != null && detail.isTextual() && !detail.asText().isBlank()) {
+                    return detail.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to generic message
+        }
+        return "The request could not be completed. Please try again or contact your system administrator.";
     }
 
     /**
@@ -672,20 +702,6 @@ public class AiWorkflowService {
         return completed;
     }
 
-    private Map<String, String> buildDocumentStyle(AiWorkflowRequest request) {
-        Map<String, String> style = new LinkedHashMap<>();
-        if (request.getDocumentStylePrimaryColor() != null) {
-            style.put("primaryColor", request.getDocumentStylePrimaryColor());
-        }
-        if (request.getDocumentStyleBackgroundColor() != null) {
-            style.put("backgroundColor", request.getDocumentStyleBackgroundColor());
-        }
-        if (request.getDocumentStyleBodyTextColor() != null) {
-            style.put("bodyTextColor", request.getDocumentStyleBodyTextColor());
-        }
-        return style.isEmpty() ? null : style;
-    }
-
     private void validateRequest(AiWorkflowRequest request) {
         for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
             if (fileInput.getFileInput().isEmpty()) {
@@ -764,6 +780,6 @@ public class AiWorkflowService {
         private List<String> enabledEndpoints = new ArrayList<>();
 
         /** Explicit document style override from the UI. Null if no style was selected. */
-        private Map<String, String> documentStyle;
+        private DocumentStyle documentStyle;
     }
 }

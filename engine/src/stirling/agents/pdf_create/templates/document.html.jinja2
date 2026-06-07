@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <style>
   :root {
-    --page-margin: 20mm;
     --color-bg: #ffffff;
     --color-primary: #1e3a5f;
     --color-subtitle: #475569;
@@ -19,7 +18,7 @@
 
   @page {
     size: A4;
-    margin: var(--page-margin);
+    margin: 20mm;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -188,12 +187,6 @@
     {%- if doc.style.body_text_color %}
     --color-body: {{ doc.style.body_text_color }};
     --color-label: {{ doc.style.body_text_color }};
-    {%- endif %}
-    {%- if doc.style.font_family %}
-    --font-body: {{ doc.style.font_family }};
-    {%- endif %}
-    {%- if doc.style.page_margin %}
-    --page-margin: {{ doc.style.page_margin }};
     {%- endif %}
   }
 </style>

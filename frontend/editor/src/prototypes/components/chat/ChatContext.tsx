@@ -445,19 +445,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         });
         if (documentStyle?.primaryColor) {
           formData.append(
-            "documentStylePrimaryColor",
+            "documentStyle.primaryColor",
             documentStyle.primaryColor,
           );
         }
         if (documentStyle?.backgroundColor) {
           formData.append(
-            "documentStyleBackgroundColor",
+            "documentStyle.backgroundColor",
             documentStyle.backgroundColor,
           );
         }
         if (documentStyle?.bodyTextColor) {
           formData.append(
-            "documentStyleBodyTextColor",
+            "documentStyle.bodyTextColor",
             documentStyle.bodyTextColor,
           );
         }

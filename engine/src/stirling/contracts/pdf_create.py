@@ -16,7 +16,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from stirling.models import ApiModel
 
@@ -32,7 +32,7 @@ class SectionType(StrEnum):
     SIGNATURE = "signature"
 
 
-class TextSection(BaseModel):
+class TextSection(ApiModel):
     """One or more prose paragraphs. Use for introductions, summaries, and narrative content."""
 
     type: Literal[SectionType.TEXT] = SectionType.TEXT
@@ -40,7 +40,7 @@ class TextSection(BaseModel):
     body: str = Field(description="Paragraph text. Use \\n\\n to separate paragraphs.")
 
 
-class KeyValueSection(BaseModel):
+class KeyValueSection(ApiModel):
     """Labelled fields. Use for contact info, dates, invoice details, and metadata."""
 
     type: Literal[SectionType.KEY_VALUE] = SectionType.KEY_VALUE
@@ -48,7 +48,7 @@ class KeyValueSection(BaseModel):
     pairs: list[tuple[str, str]] = Field(description="List of (label, value) pairs.")
 
 
-class LineItemsSection(BaseModel):
+class LineItemsSection(ApiModel):
     """A table with column headers and data rows. Use for invoices, expenses, schedules."""
 
     type: Literal[SectionType.LINE_ITEMS] = SectionType.LINE_ITEMS
@@ -58,7 +58,7 @@ class LineItemsSection(BaseModel):
     total_row: list[str] | None = None
 
 
-class BulletListSection(BaseModel):
+class BulletListSection(ApiModel):
     """An unordered list. Use for requirements, responsibilities, or any enumerated items."""
 
     type: Literal[SectionType.BULLET_LIST] = SectionType.BULLET_LIST
@@ -66,7 +66,7 @@ class BulletListSection(BaseModel):
     items: list[str]
 
 
-class SignatureSection(BaseModel):
+class SignatureSection(ApiModel):
     """Signature blocks. Use when the document requires sign-off from named parties."""
 
     type: Literal[SectionType.SIGNATURE] = SectionType.SIGNATURE
@@ -84,18 +84,17 @@ class DocumentStyle(ApiModel):
     """Visual style that crosses the Java↔Python boundary.
 
     Uses camelCase aliases so it round-trips correctly between the Java service layer
-    and the Python engine without transformation. Set by the UI via DocumentStylePicker;
-    the meta planner does not infer style (keeps its schema small enough for Haiku).
+    and the Python engine without transformation. The UI picker sets this explicitly;
+    the meta planner infers it from the user's message when no UI style is provided.
+    UI fields take priority where set; planner-inferred values fill any gaps.
     """
 
     primary_color: str | None = Field(default=None)
     background_color: str | None = Field(default=None)
     body_text_color: str | None = Field(default=None)
-    font_family: str | None = Field(default=None)
-    page_margin: str | None = Field(default=None)
 
 
-class GeneratedDocument(BaseModel):
+class GeneratedDocument(ApiModel):
     """The full document model passed to Jinja for HTML rendering."""
 
     title: str
@@ -114,7 +113,7 @@ class SectionDepth(StrEnum):
     DETAILED = "detailed"
 
 
-class PlannedSection(BaseModel):
+class PlannedSection(ApiModel):
     """One section in the document plan. Contains structure and intent — no body text."""
 
     heading: str
@@ -123,12 +122,13 @@ class PlannedSection(BaseModel):
     key_points: list[str]
 
 
-class DocumentMeta(BaseModel):
+class DocumentMeta(ApiModel):
     """Document header fields produced by the first planner call.
 
     Contains everything except the section list. Kept deliberately flat so the
     JSON schema stays small enough for grammar compilation on all model tiers.
-    Style is not inferred here — it is set by the UI and applied after assembly.
+    Style is expressed as three flat optional strings rather than a nested object
+    for the same reason; assemble() reconstructs DocumentStyle from them.
     """
 
     cannot_do_reason: str | None = None
@@ -138,15 +138,18 @@ class DocumentMeta(BaseModel):
     tone_brief: str = ""
     shared_terms: dict[str, str] = Field(default_factory=dict)
     document_context: str = ""
+    style_primary_color: str | None = None
+    style_background_color: str | None = None
+    style_body_text_color: str | None = None
 
 
-class DocumentSections(BaseModel):
+class DocumentSections(ApiModel):
     """Section list produced by the second planner call."""
 
     sections: list[PlannedSection] = Field(default_factory=list)
 
 
-class DocumentPlan(BaseModel):
+class DocumentPlan(ApiModel):
     """Assembled plan: meta + sections. Not used as a direct LLM output schema."""
 
     cannot_do_reason: str | None = None
@@ -161,6 +164,12 @@ class DocumentPlan(BaseModel):
 
     @classmethod
     def assemble(cls, meta: DocumentMeta, sections: DocumentSections) -> DocumentPlan:
+        style_fields = {
+            "primary_color": meta.style_primary_color,
+            "background_color": meta.style_background_color,
+            "body_text_color": meta.style_body_text_color,
+        }
+        inferred_style = DocumentStyle(**style_fields) if any(style_fields.values()) else None
         return cls(
             cannot_do_reason=meta.cannot_do_reason,
             title=meta.title,
@@ -169,18 +178,18 @@ class DocumentPlan(BaseModel):
             tone_brief=meta.tone_brief,
             shared_terms=meta.shared_terms,
             document_context=meta.document_context,
-            style=None,
+            style=inferred_style,
             sections=sections.sections,
         )
 
 
-class WrittenSections(BaseModel):
+class WrittenSections(ApiModel):
     """Sections produced by one section-writer agent for one chunk."""
 
     sections: list[DocumentSection]
 
 
-# ── Legacy request/response contracts (kept for backward compatibility) ───────────────────────────
+# ── Request/response contracts ───────────────────────────────────────────────────────────────────
 
 
 class PdfCreateRequest(ApiModel):
