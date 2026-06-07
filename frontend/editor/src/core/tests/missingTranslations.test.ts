@@ -22,6 +22,7 @@ const IGNORED_KEYS = new Set<string>([
   // If the script has found a false-positive that shouldn't be in the translations, include it here
 ]);
 const LIKELY_TRANSLATION_USAGE_RE = /(?:^|[^\w$])t\s*\(|\.t\s*\(|\bi18nKey\b/;
+const PLURAL_SUFFIX_RE = /_(zero|one|two|few|many|other)$/;
 
 type FoundKey = {
   key: string;
@@ -52,6 +53,12 @@ const flattenKeys = (
 
   return acc;
 };
+
+const hasPluralCoverage = (key: string, availableKeys: Set<string>): boolean =>
+  [...availableKeys].some(
+    (availableKey) =>
+      availableKey.startsWith(`${key}_`) && PLURAL_SUFFIX_RE.test(availableKey),
+  );
 
 const listSourceFiles = (): string[] => {
   const files = ts.sys.readDirectory(
@@ -188,7 +195,9 @@ describe("Missing translation coverage", () => {
         .filter(({ key }) => !IGNORED_KEYS.has(key));
       expect(usedKeys.length).toBeGreaterThan(100); // Sanity check
 
-      const missingKeys = usedKeys.filter(({ key }) => !availableKeys.has(key));
+      const missingKeys = usedKeys.filter(
+        ({ key }) => !availableKeys.has(key) && !hasPluralCoverage(key, availableKeys),
+      );
 
       const annotations = missingKeys.map(
         ({ key, fallback, file, line, column }) => {
