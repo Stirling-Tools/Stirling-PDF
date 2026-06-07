@@ -92,14 +92,27 @@
   overflow: hidden;
 }
 
-/* Two-row: center drops below views+globals */
+/*
+ * Two-row: center drops below views+globals. On narrow viewports the icon
+ * row is wider than the viewport and used to silently clip on the left
+ * edge because `justify-content: center` pushed overflow off-screen. Allow
+ * horizontal scrolling instead so every icon stays reachable on mobile,
+ * and start the scroll position at the left so the first icon is visible.
+ */
 .workbench-bar[data-wrapped="true"] .workbench-bar-center {
   order: 3;
   flex: 0 0 100%;
   height: auto;
-  overflow: visible;
   padding: 4px 0;
   border-top: 1px solid var(--border-subtle);
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
+  flex-shrink: 0;
 }
 
 /* ---- Right: global buttons (theme / language / download) ---- */
