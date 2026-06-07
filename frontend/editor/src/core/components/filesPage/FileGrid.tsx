@@ -512,7 +512,7 @@ function FolderCard({
         <div className="files-page-card-meta">
           {fileCount === 0
             ? t("filesPage.folder", "Folder")
-            : t("filesPage.folderItems", "{{count}} items", {
+            : t("filesPage.folderItems", "{{count}} item(s)", {
                 count: fileCount,
               })}
         </div>
@@ -1103,7 +1103,9 @@ function FolderRow({
       <span>
         {fileCount === 0
           ? "-"
-          : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
+          : t("filesPage.folderItems", "{{count}} item(s)", {
+              count: fileCount,
+            })}
       </span>
       <span>{getFileDate({ lastModified: folder.updatedAt })}</span>
       <Menu shadow="md" position="bottom-end" withinPortal>

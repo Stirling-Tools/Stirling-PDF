@@ -207,7 +207,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
               )}
             </Text>
             <Text size="sm" c="dimmed">
-              {t("storageShare.fileCount", "{{count}} files", {
+              {t("storageShare.fileCount", "{{count}} file(s)", {
                 count: files.length,
               })}
             </Text>

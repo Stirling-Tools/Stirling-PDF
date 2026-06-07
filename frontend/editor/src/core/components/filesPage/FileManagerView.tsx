@@ -1103,7 +1103,7 @@ export default function FileManagerView() {
             <span className="files-page-toolbar-info">
               {loading
                 ? t("filesPage.loading", "Loading…")
-                : t("filesPage.summary", "{{count}} items", {
+                : t("filesPage.summary", "{{count}} item(s)", {
                     count: totalCount,
                   })}
               {selectedFiles.length > 0 && (

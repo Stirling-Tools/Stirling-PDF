@@ -127,7 +127,7 @@ export function FileDetailsPanel({
         <strong>
           {single
             ? t("filesPage.details", "Details")
-            : t("filesPage.detailsCount", "{{count}} files selected", {
+            : t("filesPage.detailsCount", "{{count}} file(s) selected", {
                 count: files.length,
               })}
         </strong>
