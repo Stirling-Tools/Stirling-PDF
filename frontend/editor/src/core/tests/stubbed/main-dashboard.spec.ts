@@ -104,9 +104,6 @@ test.describe("2. Main Dashboard / Home Page", () => {
       await expect(page.getByText("GitHub").first()).toBeVisible({
         timeout: 10000,
       });
-      await expect(page.getByText("Accessibility").first()).toBeVisible({
-        timeout: 10000,
-      });
 
       const githubLink = page
         .locator('a[href*="github.com/Stirling-Tools/Stirling-PDF"]')

@@ -13,10 +13,8 @@ export function useAgentsEnabled(): boolean {
 }
 
 /**
- * Whether the agent chat overlay is currently open. Core builds have no chat,
+ * Whether the agent chat panel is currently open. Core builds have no chat,
  * so this always returns false. Proprietary builds bridge to the ChatContext.
- * Used by {@code RightSidebar} so the fullscreen tool picker can yield to the
- * chat overlay just like it yields to a selected tool.
  */
 export function useAgentChatOpen(): boolean {
   return false;
@@ -32,14 +30,6 @@ export function AgentsSection() {
  * Returns null in core; proprietary renders the Stirling agent shortcut.
  */
 export function AgentsCollapsedButton(_props: { onExpand: () => void }) {
-  return null;
-}
-
-/**
- * Full-rail chat overlay rendered inside {@code ToolPanel}. Covers the panel
- * (including the search bar) when an agent conversation is active.
- */
-export function AgentsChatOverlay() {
   return null;
 }
 
