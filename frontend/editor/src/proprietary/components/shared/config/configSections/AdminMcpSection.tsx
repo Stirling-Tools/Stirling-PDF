@@ -97,7 +97,8 @@ export default function AdminMcpSection() {
         "mcp.auth.jwksUri": s.auth?.jwksUri ?? "",
         "mcp.auth.resourceId": s.auth?.resourceId ?? "",
         "mcp.auth.usernameClaim": s.auth?.usernameClaim ?? "sub",
-        "mcp.auth.requireExistingAccount": s.auth?.requireExistingAccount ?? true,
+        "mcp.auth.requireExistingAccount":
+          s.auth?.requireExistingAccount ?? true,
       },
     }),
   });
@@ -113,8 +114,8 @@ export default function AdminMcpSection() {
 
   const handleSave = async () => {
     try {
-      markSaved();
       await saveSettings();
+      markSaved();
       showRestartModal();
     } catch (_error) {
       alert({
@@ -141,7 +142,9 @@ export default function AdminMcpSection() {
   }
 
   const baseUrl =
-    typeof window !== "undefined" ? window.location.origin : "https://your-host";
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://your-host";
   const mcpUrl = `${baseUrl}/mcp`;
   const metadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
   const authMode = settings.auth?.mode || "oauth";
@@ -244,124 +247,135 @@ export default function AdminMcpSection() {
                   disabled={!settings.enabled}
                 />
 
-            <TextInput
-              label={
-                <Group gap="xs">
-                  <span>
-                    {t("admin.settings.mcp.resourceId.label", "Resource ID")}
-                  </span>
-                  <PendingBadge show={isFieldPending("auth.resourceId")} />
-                </Group>
-              }
-              description={t(
-                "admin.settings.mcp.resourceId.description",
-                "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected.",
-              )}
-              value={settings.auth?.resourceId || ""}
-              onChange={(e) => setAuth({ resourceId: e.target.value })}
-              placeholder={mcpUrl}
-              disabled={!settings.enabled}
-            />
-
-            <TextInput
-              label={
-                <Group gap="xs">
-                  <span>
-                    {t(
-                      "admin.settings.mcp.jwksUri.label",
-                      "JWKS URL (optional)",
-                    )}
-                  </span>
-                  <PendingBadge show={isFieldPending("auth.jwksUri")} />
-                </Group>
-              }
-              description={t(
-                "admin.settings.mcp.jwksUri.description",
-                "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL.",
-              )}
-              value={settings.auth?.jwksUri || ""}
-              onChange={(e) => setAuth({ jwksUri: e.target.value })}
-              placeholder={t(
-                "admin.settings.mcp.jwksUri.placeholder",
-                "Auto-discovered from issuer",
-              )}
-              disabled={!settings.enabled}
-            />
-
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <div>
-                <Text fw={500} size="sm">
-                  {t("admin.settings.mcp.scopes.label", "Enforce OAuth scopes")}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.mcp.scopes.description",
-                    "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops.",
-                  )}
-                </Text>
-              </div>
-              <Group gap="xs">
-                <Switch
-                  checked={settings.scopesEnabled ?? true}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      scopesEnabled: e.target.checked,
-                    })
+                <TextInput
+                  label={
+                    <Group gap="xs">
+                      <span>
+                        {t(
+                          "admin.settings.mcp.resourceId.label",
+                          "Resource ID",
+                        )}
+                      </span>
+                      <PendingBadge show={isFieldPending("auth.resourceId")} />
+                    </Group>
                   }
+                  description={t(
+                    "admin.settings.mcp.resourceId.description",
+                    "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected.",
+                  )}
+                  value={settings.auth?.resourceId || ""}
+                  onChange={(e) => setAuth({ resourceId: e.target.value })}
+                  placeholder={mcpUrl}
                   disabled={!settings.enabled}
                 />
-                <PendingBadge show={isFieldPending("scopesEnabled")} />
-              </Group>
-            </Group>
 
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <div>
-                <Text fw={500} size="sm">
-                  {t(
-                    "admin.settings.mcp.requireAccount.label",
-                    "Require an existing Stirling account",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.mcp.requireAccount.description",
-                    "Only let tokens through if their subject maps to a provisioned, enabled Stirling user.",
-                  )}
-                </Text>
-              </div>
-              <Group gap="xs">
-                <Switch
-                  checked={settings.auth?.requireExistingAccount ?? true}
-                  onChange={(e) =>
-                    setAuth({ requireExistingAccount: e.target.checked })
+                <TextInput
+                  label={
+                    <Group gap="xs">
+                      <span>
+                        {t(
+                          "admin.settings.mcp.jwksUri.label",
+                          "JWKS URL (optional)",
+                        )}
+                      </span>
+                      <PendingBadge show={isFieldPending("auth.jwksUri")} />
+                    </Group>
                   }
+                  description={t(
+                    "admin.settings.mcp.jwksUri.description",
+                    "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL.",
+                  )}
+                  value={settings.auth?.jwksUri || ""}
+                  onChange={(e) => setAuth({ jwksUri: e.target.value })}
+                  placeholder={t(
+                    "admin.settings.mcp.jwksUri.placeholder",
+                    "Auto-discovered from issuer",
+                  )}
                   disabled={!settings.enabled}
                 />
-                <PendingBadge
-                  show={isFieldPending("auth.requireExistingAccount")}
-                />
-              </Group>
-            </Group>
 
-            <TextInput
-              label={
-                <Group gap="xs">
-                  <span>
-                    {t("admin.settings.mcp.usernameClaim.label", "Username claim")}
-                  </span>
-                  <PendingBadge show={isFieldPending("auth.usernameClaim")} />
+                <Group justify="space-between" align="flex-start" wrap="nowrap">
+                  <div>
+                    <Text fw={500} size="sm">
+                      {t(
+                        "admin.settings.mcp.scopes.label",
+                        "Enforce OAuth scopes",
+                      )}
+                    </Text>
+                    <Text size="xs" c="dimmed" mt={4}>
+                      {t(
+                        "admin.settings.mcp.scopes.description",
+                        "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops.",
+                      )}
+                    </Text>
+                  </div>
+                  <Group gap="xs">
+                    <Switch
+                      checked={settings.scopesEnabled ?? true}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          scopesEnabled: e.target.checked,
+                        })
+                      }
+                      disabled={!settings.enabled}
+                    />
+                    <PendingBadge show={isFieldPending("scopesEnabled")} />
+                  </Group>
                 </Group>
-              }
-              description={t(
-                "admin.settings.mcp.usernameClaim.description",
-                "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username).",
-              )}
-              value={settings.auth?.usernameClaim || ""}
-              onChange={(e) => setAuth({ usernameClaim: e.target.value })}
-              placeholder="sub"
-              disabled={!settings.enabled}
-            />
+
+                <Group justify="space-between" align="flex-start" wrap="nowrap">
+                  <div>
+                    <Text fw={500} size="sm">
+                      {t(
+                        "admin.settings.mcp.requireAccount.label",
+                        "Require an existing Stirling account",
+                      )}
+                    </Text>
+                    <Text size="xs" c="dimmed" mt={4}>
+                      {t(
+                        "admin.settings.mcp.requireAccount.description",
+                        "Only let tokens through if their subject maps to a provisioned, enabled Stirling user.",
+                      )}
+                    </Text>
+                  </div>
+                  <Group gap="xs">
+                    <Switch
+                      checked={settings.auth?.requireExistingAccount ?? true}
+                      onChange={(e) =>
+                        setAuth({ requireExistingAccount: e.target.checked })
+                      }
+                      disabled={!settings.enabled}
+                    />
+                    <PendingBadge
+                      show={isFieldPending("auth.requireExistingAccount")}
+                    />
+                  </Group>
+                </Group>
+
+                <TextInput
+                  label={
+                    <Group gap="xs">
+                      <span>
+                        {t(
+                          "admin.settings.mcp.usernameClaim.label",
+                          "Username claim",
+                        )}
+                      </span>
+                      <PendingBadge
+                        show={isFieldPending("auth.usernameClaim")}
+                      />
+                    </Group>
+                  }
+                  description={t(
+                    "admin.settings.mcp.usernameClaim.description",
+                    "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username).",
+                  )}
+                  value={settings.auth?.usernameClaim || ""}
+                  onChange={(e) => setAuth({ usernameClaim: e.target.value })}
+                  placeholder="sub"
+                  disabled={!settings.enabled}
+                />
               </>
             )}
 
@@ -396,10 +410,7 @@ export default function AdminMcpSection() {
               label={
                 <Group gap="xs">
                   <span>
-                    {t(
-                      "admin.settings.mcp.blockedOps.label",
-                      "Blocked tools",
-                    )}
+                    {t("admin.settings.mcp.blockedOps.label", "Blocked tools")}
                   </span>
                   <PendingBadge show={isFieldPending("blockedOperations")} />
                 </Group>
@@ -442,9 +453,15 @@ export default function AdminMcpSection() {
                     )}
                   </List.Item>
                   <List.Item>
-                    {t("admin.settings.mcp.guide.step2", "In your MCP client add a")}{" "}
+                    {t(
+                      "admin.settings.mcp.guide.step2",
+                      "In your MCP client add a",
+                    )}{" "}
                     <b>streamable-HTTP</b>{" "}
-                    {t("admin.settings.mcp.guide.step2b", "server pointing at:")}{" "}
+                    {t(
+                      "admin.settings.mcp.guide.step2b",
+                      "server pointing at:",
+                    )}{" "}
                     <Code>{mcpUrl}</Code>
                   </List.Item>
                   <List.Item>
@@ -470,13 +487,22 @@ export default function AdminMcpSection() {
                     )}
                   </List.Item>
                   <List.Item>
-                    {t("admin.settings.mcp.guide.step2", "In your MCP client add a")}{" "}
+                    {t(
+                      "admin.settings.mcp.guide.step2",
+                      "In your MCP client add a",
+                    )}{" "}
                     <b>streamable-HTTP</b>{" "}
-                    {t("admin.settings.mcp.guide.step2b", "server pointing at:")}{" "}
+                    {t(
+                      "admin.settings.mcp.guide.step2b",
+                      "server pointing at:",
+                    )}{" "}
                     <Code>{mcpUrl}</Code>
                   </List.Item>
                   <List.Item>
-                    {t("admin.settings.mcp.guide.step3ApiKey", "Send the key in an")}{" "}
+                    {t(
+                      "admin.settings.mcp.guide.step3ApiKey",
+                      "Send the key in an",
+                    )}{" "}
                     <Code>X-API-KEY</Code>{" "}
                     {t(
                       "admin.settings.mcp.guide.step3ApiKeyb",

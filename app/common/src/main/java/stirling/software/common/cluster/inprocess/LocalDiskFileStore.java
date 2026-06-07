@@ -159,6 +159,7 @@ public class LocalDiskFileStore implements FileStore {
     }
 
     private Path resolveOwner(String fileId) {
-        return resolve(fileId).resolveSibling(fileId + OWNER_SUFFIX);
+        Path data = resolve(fileId);
+        return data.resolveSibling(data.getFileName().toString() + OWNER_SUFFIX);
     }
 }

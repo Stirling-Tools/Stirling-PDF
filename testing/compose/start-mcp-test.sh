@@ -273,7 +273,11 @@ echo ""
 if [ "$RUN_VALIDATE" = true ]; then
     echo -e "${YELLOW}▶ Running validation...${NC}"
     echo ""
-    bash "$SCRIPT_DIR/validate-mcp-test.sh"
+    if [ "$APIKEY_MODE" = true ]; then
+        bash "$SCRIPT_DIR/validate-mcp-apikey.sh"
+    else
+        bash "$SCRIPT_DIR/validate-mcp-test.sh"
+    fi
 fi
 
 if [ "$APIKEY_MODE" = true ]; then

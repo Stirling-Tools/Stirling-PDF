@@ -206,8 +206,8 @@ public class McpToolCatalog {
 
     /** Replace the AI capabilities snapshot. Called by the engine refresh task. */
     public void replaceAiCapabilities(Map<String, OperationMeta> updated) {
-        aiOps.clear();
         aiOps.putAll(updated);
+        aiOps.keySet().retainAll(updated.keySet());
         log.info("MCP tool catalog AI capabilities replaced: {} entries", aiOps.size());
     }
 
