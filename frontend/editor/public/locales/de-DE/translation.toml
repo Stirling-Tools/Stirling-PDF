@@ -1538,10 +1538,10 @@ section_title = "Agents"
 show_less = "Show less"
 start_chat = "Start chatting"
 stirling_description = "Your general-purpose PDF assistant"
-stirling_running = "Running..."
 stirling_full_name = "Stirling General Agent"
 stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
 stirling_name = "Stirling"
+stirling_running = "Running..."
 stirling_tooltip = "Stirling agent"
 view_all = "View all agents"
 
@@ -7291,9 +7291,9 @@ trial = "Testphase"
 
 [settings.planBilling.team]
 managedByTeam = "Vom Team verwaltet"
-memberCount_zero = "no team members"
 memberCount_one = "{{count}} Teammitglied"
 memberCount_other = "{{count}} Teammitglieder"
+memberCount_zero = "keine Teammitglieder"
 
 [settings.planBilling.tier]
 enterprise = "Enterprise"
@@ -8114,9 +8114,9 @@ leaveButton = "Team verlassen"
 leaveError = "Team konnte nicht verlassen werden"
 leaveSuccess = "Erfolgreich aus dem Team ausgetreten"
 loading = "Teaminformationen werden geladen..."
-memberCount_zero = "no team members"
 memberCount_one = "{{count}} Mitglied"
 memberCount_other = "{{count}} Mitglieder"
+memberCount_zero = "keine Mitglieder"
 memberRemoved = "Mitglied erfolgreich entfernt"
 namePlaceholder = "Teamnamen eingeben"
 personal = "Persönlich"
@@ -8180,6 +8180,12 @@ right = "Rechts"
 [theme]
 toggle = "Design umschalten"
 
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
 [timestampPdf]
 completed = "PDF erfolgreich mit Zeitstempel versehen"
 desc = "Fügen Sie Ihrem PDF einen RFC 3161-Dokumentzeitstempel über einen vertrauenswürdigen Time Stamp Authority (TSA)-Server hinzu."
@@ -8205,12 +8211,6 @@ label = "TSA-Server auswählen"
 
 [timestampPdf.steps]
 settings = "Einstellungen"
-
-[time.relative]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
 
 [tool]
 endpointUnavailable = "Dieses Tool ist auf Ihrem Server nicht verfügbar."
@@ -9043,9 +9043,9 @@ description = "Teams verwalten und Mitglieder des Arbeitsbereichs organisieren"
 loadError = "Teamdetails konnten nicht geladen werden"
 loading = "Teams werden geladen..."
 loadingDetails = "Teamdetails werden geladen..."
-memberCount_zero = "no team members"
 memberCount_one = "{{count}} Mitglied"
 memberCount_other = "{{count}} Mitglieder"
+memberCount_zero = "keine Mitglieder"
 noMembers = "Keine Mitglieder in diesem Team"
 noTeamsFound = "Keine Teams gefunden"
 removeMember = "Aus Team entfernen"
