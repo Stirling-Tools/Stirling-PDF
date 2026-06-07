@@ -280,8 +280,8 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
         createPluginRegistration(RenderPluginPackage, {
           withForms: true,
           withAnnotations: true,
-          defaultImageType: "image/webp",
-          defaultImageQuality: 0.80,
+          defaultImageType: "image/jpeg",
+          defaultImageQuality: 0.85,
         }),
 
         // Register interaction manager (required for annotations)
@@ -317,10 +317,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
 
         // Register tiling plugin
         createPluginRegistration(TilingPluginPackage, {
-          tileSize: 1024,
-          overlapPx: 5,
+          tileSize: 512,
+          overlapPx: 2,
           extraRings: 0,
-          defaultImageType: "image/webp",
+          defaultImageType: "image/jpeg",
         }),
 
         // Register spread plugin
@@ -345,7 +345,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
     const { engine, isLoading, error } = usePdfiumEngine({
       wasmUrl: pdfiumWasmUrl,
       worker: true,
-      encoderPoolSize: 4,
+      encoderPoolSize: 2,
       fontFallback: { fonts: {} },
     });
 

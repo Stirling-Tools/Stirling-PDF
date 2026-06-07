@@ -474,12 +474,12 @@ export function LocalEmbedPDF({
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
-    if (file) {
+    if (url) {
+      setPdfUrl(url);
+    } else if (file) {
       const objectUrl = URL.createObjectURL(file);
       setPdfUrl(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
-    } else if (url) {
-      setPdfUrl(url);
     }
     // When file is present, use the stable key to avoid blob URL churn from FileContext
     // re-renders. When only url is provided, depend on url directly so changes are picked up.
@@ -510,12 +510,14 @@ export function LocalEmbedPDF({
         viewportGap: VIEWPORT_GAP,
         scrollEndDelay: 150,
       }),
-      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(ScrollPluginPackage, {
+        defaultBufferSize: 2,
+      }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
         withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
-        defaultImageType: "image/webp",
-        defaultImageQuality: 0.80,
+        defaultImageType: "image/jpeg",
+        defaultImageQuality: 0.85,
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -525,6 +527,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(SelectionPluginPackage, {
         marquee: { enabled: false },
         toleranceFactor: 3,
+        maxCachedGeometries: 15,
       }),
 
       // Register history plugin for undo/redo (recommended for annotations)
@@ -561,10 +564,10 @@ export function LocalEmbedPDF({
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
       createPluginRegistration(TilingPluginPackage, {
-        tileSize: 1024,
-        overlapPx: 5,
+        tileSize: 512,
+        overlapPx: 2,
         extraRings: 0,
-        defaultImageType: "image/webp",
+        defaultImageType: "image/jpeg",
       }),
 
       // Register spread plugin for dual page layout
@@ -600,7 +603,8 @@ export function LocalEmbedPDF({
   // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
-    encoderPoolSize: 4,
+    worker: true,
+    encoderPoolSize: 2,
     fontFallback: { fonts: {} },
   });
 
