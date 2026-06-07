@@ -702,7 +702,7 @@ export default function PeopleSection() {
                   >
                     {(user.rolesAsString || "").includes("ROLE_ADMIN")
                       ? t("workspace.people.admin", "Admin")
-                      : t("workspace.people.member", "Member")}
+                      : t("workspace.people.user", "User")}
                   </Badge>
                 </Table.Td>
                 <Table.Td>

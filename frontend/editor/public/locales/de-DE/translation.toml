@@ -90,6 +90,7 @@ nothingToUndo = "Nichts zum Rückgängig machen"
 noticeTopUpOrPlan = "Nicht genug Credits, bitte aufladen oder auf einen Tarif upgraden"
 noValidFiles = "Keine gültigen Dateien zum Verarbeiten"
 oops = "Hoppla!"
+openInNewWindow = "Open in new window"
 openInViewer = "Im Viewer öffnen"
 operationCancelled = "Vorgang abgebrochen"
 page = "Seite"
@@ -493,6 +494,11 @@ title = "Seitengröße anpassen"
 
 [adjustPageScale.error]
 failed = "Ein Fehler ist beim Anpassen der Seitenskalierung aufgetreten."
+
+[adjustPageScale.orientation]
+label = "Page orientation"
+landscape = "Landscape"
+portrait = "Portrait"
 
 [adjustPageScale.pageSize]
 keep = "Ursprüngliche Größe beibehalten"
@@ -1512,6 +1518,33 @@ user = "Benutzer"
 usernameInfo = "Der Benutzername darf nur Buchstaben, Zahlen und die folgenden Sonderzeichen @._+- enthalten oder muss eine gültige E-Mail-Adresse sein."
 webOnlyUser = "Nur Web-Benutzer"
 
+[agents]
+auto_redaction_description = "Redact PII automatically"
+auto_redaction_name = "Auto Redaction"
+back_to_tools = "Back to tools"
+coming_soon = "Coming soon"
+compliance_description = "Audit documents for compliance"
+compliance_name = "Compliance Check"
+data_extraction_description = "Extract tables & structured data"
+data_extraction_name = "Data Extraction"
+doc_summary_description = "Summarise long documents"
+doc_summary_name = "Summariser"
+form_filler_description = "Fill PDF forms intelligently"
+form_filler_name = "Form Filler"
+fullscreen_title = "Stirling Agents"
+pdf_to_markdown_description = "Convert PDFs to clean Markdown"
+pdf_to_markdown_name = "PDF to Markdown"
+section_title = "Agents"
+show_less = "Show less"
+start_chat = "Start chatting"
+stirling_description = "Your general-purpose PDF assistant"
+stirling_running = "Running..."
+stirling_full_name = "Stirling General Agent"
+stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
+stirling_name = "Stirling"
+stirling_tooltip = "Stirling agent"
+view_all = "View all agents"
+
 [analytics]
 disable = "Analytics deaktivieren"
 enable = "Analytics aktivieren"
@@ -1771,6 +1804,10 @@ insufficientPermissions = "Sie haben keine Berechtigung, diese Aktion auszuführ
 pleaseLoginAgain = "Bitte melden Sie sich erneut an."
 sessionExpired = "Sitzung abgelaufen"
 
+[auth.displayName]
+guest = "Guest"
+user = "User"
+
 [auto-rename]
 description = "Findet automatisch den Titel aus Ihrem PDF-Inhalt und verwendet ihn als Dateinamen."
 header = "PDF automatisch umbenennen"
@@ -1862,6 +1899,13 @@ label = "Menü für {{title}} öffnen"
 
 [automate.files]
 placeholder = "Wählen Sie Dateien aus, die mit dieser Automatisierung verarbeitet werden sollen"
+
+[automate.folderScanWarning]
+advice = "You can still download the file (e.g. to inspect or hand-edit it), but the unsupported steps will need to be removed before the backend can run it."
+cancel = "Cancel"
+confirm = "Export anyway"
+intro = "Folder scanning runs on the backend, so it can only execute tools that have a backend endpoint. The following step(s) in this automation do not, and will fail when the pipeline runs:"
+title = "Some steps cannot run in folder scanning"
 
 [automate.importModal]
 cancel = "Abbrechen"
@@ -2684,6 +2728,22 @@ title = "Berechtigungen ändern"
 [changePermissions.tooltip.warning]
 text = "Um diese Berechtigungen unveränderlich zu machen, verwenden Sie das Passwort hinzufügen-Tool, um ein Besitzer-Passwort zu setzen."
 
+[chat]
+resize = "Resize chat panel"
+
+[chat.actions]
+copy = "Copy message"
+
+[chat.header]
+agentMenu = "Stirling agent options"
+clearChat = "Clear chat"
+settings = "Agent settings"
+
+[chat.input]
+attach = "Attach files"
+placeholder = "What do you want to do?"
+send = "Send message"
+
 [chat.progress]
 analyzing = "Ihre Anfrage wird analysiert..."
 calling_engine = "KI denkt nach..."
@@ -2698,6 +2758,32 @@ whole_doc_compression_round = "Notizen werden zusammengeführt..."
 whole_doc_read_done = "Dokument wurde eingelesen..."
 whole_doc_read_started = "Dokument wird eingelesen..."
 whole_doc_slice_done = "Dokument wird eingelesen... ({{percent}}% abgeschlossen)"
+
+[chat.quickActions]
+browseYourFiles = "Browse your files"
+compressMany = "Compress these documents"
+compressOne = "Compress this document"
+convertMany = "Convert these documents to PDF"
+convertOne = "Convert this document to PDF"
+fileSummary_one = "1 file in workbench ({{types}})"
+fileSummary_other = "{{count}} files in workbench ({{types}})"
+heading = "Get started"
+mergeMany = "Merge these {{count}} documents into 1"
+moreFiles = "+{{count}} more"
+openFromComputer = "Open from computer"
+removeFile = "Remove {{name}}"
+rotateMany = "Rotate these documents"
+rotateOne = "Rotate this document"
+splitOne = "Split this document"
+
+[chat.responses]
+cannot_continue = "Something went wrong and I can't continue."
+cannot_do = "I'm unable to do that."
+done = "Done."
+need_clarification = "Could you clarify your request?"
+not_found = "I couldn't find the requested information."
+processing = "Processing ({{outcome}})..."
+unsupported_capability = "Unsupported capability: {{capability}}"
 
 [chat.toolsUsed]
 summary = "{{count}} Tools ausgeführt"
@@ -2799,6 +2885,7 @@ selectBaseFirst = "Zuerst die Original-PDF auswählen"
 filesMissing = "Die ausgewählten Dateien konnten nicht gefunden werden. Bitte wählen Sie sie erneut aus."
 generic = "Diese Dateien können nicht verglichen werden."
 selectRequired = "Wählen Sie ein Original- und ein bearbeitetes Dokument aus."
+title = "Comparison failed"
 
 [compare.large.file]
 message = "Eines oder beide Dokumente sind zu groß, um verarbeitet zu werden"
@@ -2864,6 +2951,7 @@ title = "Es wird noch gearbeitet…"
 
 [compare.status]
 complete = "Vergleich bereit"
+error = "Comparison failed"
 extracting = "Text wird extrahiert..."
 processing = "Unterschiede werden analysiert..."
 
@@ -3404,6 +3492,22 @@ title = "Einstellungen geöffnet"
 message = "Stirling PDF ist nun Ihr Standard-PDF-Editor"
 title = "Standard-App festgelegt"
 
+[desktopUpdate]
+downloading = "Downloading update..."
+installing = "Installing update..."
+installingWarning = "The app will close automatically to complete the installation."
+installNow = "Install Now"
+readyToRestart = "Update Ready"
+restartMessage = "The update has been installed. Restart the app to finish."
+restartNow = "Restart Now"
+updateFailed = "Update Failed"
+updateFailedMessage = "Failed to download or install the update."
+
+[desktopUpdate.blocked]
+docsLink = "View installation documentation"
+message = "Stirling-PDF does not have permission to update itself on this machine."
+title = "Administrator permissions required"
+
 [editTableOfContents]
 submit = "Inhaltsverzeichnis anwenden"
 
@@ -3771,12 +3875,247 @@ expand = "Seitenleiste ausklappen"
 files = "Dateien"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive ist nicht konfiguriert"
+leaveMyFiles = "Leave My Files"
+myFiles = "My Files"
 noFiles = "Noch keine Dateien"
 openFileManager = "Dateimanager öffnen"
 openFromComputer = "Vom Computer öffnen"
 openSettings = "Einstellungen öffnen"
 search = "Suchen"
 searchPlaceholder = "Dateien suchen..."
+
+[filesPage]
+addToWorkspace = "Add to workspace"
+addToWorkspaceCount = "Add {{count}} to workspace"
+allFiles = "All files"
+back = "Back"
+backToFolder = "Back to {{folder}}"
+backToMyFiles = "Back to My Files"
+breadcrumbs = "Folder path"
+cancel = "Cancel"
+clearSearch = "Clear search"
+clearSelection = "Clear selection"
+closeDetails = "Close details"
+create = "Create"
+cycleBlocked = "Can't move a folder into one of its own subfolders."
+delete = "Delete"
+deleteFolder = "Delete folder"
+deleteFolderBody = "Delete folder \"{{name}}\"?"
+deleteFolderConfirm = "Delete folder \"{{name}}\"? Files inside will be moved to All files. {{count}} file(s) affected."
+deleteFolderContents = "Also delete {{count}} file(s) inside the folder"
+deleteFolderContentsWarning = "Files will be permanently removed and cannot be recovered."
+deleteFolderError = "Could not delete the folder. Try again."
+deleteFolderKeepHint = "Files inside will be moved to All files."
+deleteFolderTitle = "Delete folder?"
+deselectAll = "Clear selection"
+details = "Details"
+detailsCount = "{{count}} files selected"
+dismissError = "Dismiss"
+download = "Download"
+downloadAll = "Download all"
+downloadVersion = "Download this version"
+dropOverlay = "Drop files to upload"
+dropOverlaySub = "Files start in Local. Use 'Move to' or 'Save to cloud' to organise them into a folder."
+file = "File"
+fileMenu = "File actions"
+folder = "Folder"
+folderItems = "{{count}} items"
+folderMenu = "Folder actions"
+inPath = "in {{path}}"
+inWorkspace = "Open"
+inWorkspaceAria = "Already in workspace"
+loading = "Loading…"
+localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organise it."
+moreActions = "More folder actions"
+moveLocalToCloudBlocked = "Local-only files can't be moved into cloud folders. Save them to the cloud first."
+moveSkippedRemote = "{{count}} file(s) couldn't be moved on the server (no permission or already deleted)."
+moveTo = "Move to…"
+myFiles = "My Files"
+newFolder = "New folder"
+newFolderStorageDisabled = "Server folder storage isn't enabled. Ask your admin to turn it on."
+newFolderTabUnavailable = "Switch to All or Cloud to create folders."
+newRootFolder = "New folder at root"
+offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disabled. Check sign-in and storage configuration."
+open = "Open"
+openInWorkbench = "Open in workbench"
+openVersionInWorkspace = "Open in workspace"
+originFilter = "Filter by source"
+quickView = "Quick view"
+refresh = "Refresh from server"
+remove = "Delete"
+removeConfirm_one = "Delete {{count}} file? This cannot be undone."
+removeConfirm_other = "Delete {{count}} files? This cannot be undone."
+removeVersion = "Remove this version"
+rename = "Rename"
+renameFolder = "Rename folder"
+resizeFolderTree = "Resize folder tree (arrow keys, Shift for bigger steps; double-click to auto-fit)"
+save = "Save"
+saveToServer = "Save to server"
+saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
+search = "Search"
+searchPlaceholder = "Search this folder & subfolders"
+selectAll = "Select all"
+selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
+selectedCount = "{{count}} selected"
+selectFile = "Select file {{name}}"
+shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
+shareManage = "Manage sharing"
+showDetails = "Show details"
+summary = "{{count}} items"
+syncFailed = "Folder sync failed: {{message}}"
+syncPartial = "Folder sync partial: {{failed}} of {{total}} folders could not be merged."
+tree = "Folders"
+upload = "Upload"
+uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
+uploadFromMobile = "Upload from Mobile"
+versionActions = "Version actions"
+versionCollapse = "Collapse middle versions"
+versionOrigin = "Original upload"
+versionsCount = "{{count}} versions"
+versionShowHidden = "Show {{count}} earlier versions"
+viewVersion = "View this version"
+
+[filesPage.appearance]
+colour = "Colour"
+icon = "Icon"
+title = "Appearance"
+useColour = "Use colour {{c}}"
+
+[filesPage.column]
+modified = "Modified"
+name = "Name"
+size = "Size"
+type = "Type"
+
+[filesPage.empty]
+hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organise your files."
+newFolderCta = "Create folder"
+title = "This folder is empty"
+uploadCta = "Upload files"
+
+[filesPage.empty.cloud]
+hint = "Upload a file to start, or create a folder to organise."
+offlineHint = "Reconnect to load your cloud library."
+offlineTitle = "No cached cloud files"
+title = "No cloud files yet"
+
+[filesPage.empty.local]
+hint = "Files saved without uploading stay here. Drop a file to add one."
+title = "No local-only files"
+
+[filesPage.empty.recent]
+hint = "Files you open or edit will appear here."
+title = "Nothing modified yet"
+
+[filesPage.empty.shared]
+hint = "When someone shares a file via link, it appears here."
+title = "Nothing shared with you"
+
+[filesPage.empty.sharedByMe]
+hint = "Create a share link or invite a teammate from any of your files to see it here."
+title = "You haven't shared any files yet"
+
+[filesPage.error]
+actionFailed = "Could not {{action}}."
+actionFailedDetail = "Could not {{action}}: {{message}}"
+deleteFolderFailed = "Could not delete folder."
+deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+folderAppearanceFailed = "Could not update folder appearance."
+folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
+moveFilesFailed = "Could not move files."
+moveFilesFailedDetail = "Could not move files: {{message}}"
+moveFolderFailed = "Could not move folder."
+moveFolderFailedDetail = "Could not move folder: {{message}}"
+removeFilesFailed = "Could not remove files."
+removeFilesFailedDetail = "Could not remove files: {{message}}"
+uploadFilesFailed = "Could not upload files."
+uploadFilesFailedDetail = "Could not upload files: {{message}}"
+
+[filesPage.field]
+added = "Added"
+count = "Files"
+folder = "Folder"
+modified = "Modified"
+name = "Name"
+size = "Size"
+toolHistory = "Tool history"
+toolHistoryAtVersion = "Cumulative tool chain"
+totalSize = "Total size"
+type = "Type"
+versionHistory = "Version journey"
+
+[filesPage.folderName]
+cancel = "Cancel"
+error = "Could not save folder. Try again."
+label = "Folder name"
+placeholder = "Folder name"
+
+[filesPage.moveDialog]
+cancel = "Cancel"
+confirm = "Move here"
+error = "Could not move. Try again."
+hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
+newFolderCancel = "Discard"
+newFolderCreate = "Create"
+newFolderError = "Could not create folder. Try again."
+newFolderLabel = "New folder name"
+newFolderPlaceholder = "Folder name"
+newFolderToggle = "Create new folder…"
+title = "Move to folder"
+
+[filesPage.origin]
+all = "All sources"
+cloud = "Cloud"
+cloudHint = "Stored on the Stirling server"
+local = "Local"
+localHint = "Only stored in this browser"
+shared = "Shared"
+sharedHint = "Shared with you via link"
+
+[filesPage.sort]
+modifiedAsc = "Oldest first"
+modifiedDesc = "Recent first"
+nameAsc = "Name A→Z"
+nameDesc = "Name Z→A"
+sizeAsc = "Smallest first"
+sizeDesc = "Largest first"
+
+[filesPage.syncError]
+client = "Folder sync failed."
+network = "Could not reach the server."
+server = "Server error during folder sync."
+
+[filesPage.tabName]
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.tabs]
+all = "All"
+ariaLabel = "File views"
+cloud = "Cloud"
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.treeMenu]
+actions = "Folder actions for {{name}}"
+collapse = "Collapse folder"
+delete = "Delete folder"
+expand = "Expand folder"
+newSubfolder = "New subfolder"
+rename = "Rename"
+
+[filesPage.typeFilter]
+allTypes = "All types"
+label = "Filter by type"
+
+[filesPage.viewMode]
+grid = "Grid view"
+label = "View mode"
+list = "List view"
 
 [fileToPDF]
 credit = "Dieser Dienst verwendet LibreOffice und Unoconv für die Dateikonvertierung."
@@ -6856,8 +7195,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Nach Updates suchen und Versionsinformationen anzeigen"
 latestVersion = "Neueste Version"
+managedByAdmin = "Managed by administrator"
+modeAuto = "Install updates automatically"
+modeDisabled = "Don't check for updates"
+modePrompt = "Ask me before installing updates"
 serverNeedsUpdate = "Server muss vom Administrator aktualisiert werden"
 title = "Software-Updates"
+updateBehavior = "Update behavior"
+updateBehaviorDescription = "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely."
+updateBehaviorError = "Could not change update behavior"
+updateBehaviorErrorLocked = "This setting is locked by your administrator."
+updateBehaviorLockedDescription = "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this."
+updateBehaviorSaved = "Update behavior saved."
 versionMismatch = "Warnung: Eine Nichtübereinstimmung wurde zwischen der Client-Version und der AppConfig-Version erkannt. Die Verwendung verschiedener Versionen kann zu Kompatibilitätsproblemen, Fehlern und Sicherheitsrisiken führen. Bitte stellen Sie sicher, dass Server und Client dieselbe Version verwenden."
 viewDetails = "Details anzeigen"
 
@@ -6942,7 +7291,9 @@ trial = "Testphase"
 
 [settings.planBilling.team]
 managedByTeam = "Vom Team verwaltet"
-memberCount = "{{count}} Teammitglieder"
+memberCount_zero = "no team members"
+memberCount_one = "{{count}} Teammitglied"
+memberCount_other = "{{count}} Teammitglieder"
 
 [settings.planBilling.tier]
 enterprise = "Enterprise"
@@ -7695,6 +8046,7 @@ bulkTitle = "Ausgewählte Dateien hochladen"
 description = "Dadurch wird die aktuelle Datei in den Serverspeicher hochgeladen, damit Sie selbst darauf zugreifen können."
 errorTitle = "Hochladen fehlgeschlagen"
 failure = "Hochladen fehlgeschlagen. Bitte überprüfen Sie Ihre Anmelde- und Speichereinstellungen."
+featureDisabled = "Saving to the server isn't enabled on this server."
 fileCount = "{{count}} Dateien ausgewählt"
 fileLabel = "Datei"
 hint = "Öffentliche Links und Zugriffsmodi werden durch Ihre Servereinstellungen gesteuert."
@@ -7762,7 +8114,9 @@ leaveButton = "Team verlassen"
 leaveError = "Team konnte nicht verlassen werden"
 leaveSuccess = "Erfolgreich aus dem Team ausgetreten"
 loading = "Teaminformationen werden geladen..."
-memberCount = "{{count}} Mitglieder"
+memberCount_zero = "no team members"
+memberCount_one = "{{count}} Mitglied"
+memberCount_other = "{{count}} Mitglieder"
 memberRemoved = "Mitglied erfolgreich entfernt"
 namePlaceholder = "Teamnamen eingeben"
 personal = "Persönlich"
@@ -7852,6 +8206,12 @@ label = "TSA-Server auswählen"
 [timestampPdf.steps]
 settings = "Einstellungen"
 
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
 [tool]
 endpointUnavailable = "Dieses Tool ist auf Ihrem Server nicht verfügbar."
 endpointUnavailableClickable = "In diesem Modus nicht verfügbar. Klicken Sie, um sich anzumelden."
@@ -7868,13 +8228,18 @@ viewerMode = "Zum Datei-Editor wechseln, um mehrere Dateien auszuwählen."
 [toolPanel]
 allTools = "Alle Tools"
 alpha = "Alpha"
+backToAllTools = "Back to all tools"
+backToDefault = "Back"
 backToTools = "Zurück zu den Tools"
 collapse = "Bereich einklappen"
 comingSoon = "Demnächst verfügbar:"
 expand = "Bereich ausklappen"
+goBack = "Go back"
 placeholder = "Wählen Sie ein Tool, um zu starten"
 premiumFeature = "Premium-Funktion:"
 search = "Tools durchsuchen"
+toolsHeader = "Tools"
+viewAllTools = "View all tools"
 
 [toolPanel.fullscreen]
 comingSoon = "Demnächst:"
@@ -7951,29 +8316,41 @@ placeholder = "Wählen Sie eine PDF-Datei in der Hauptansicht aus, um zu beginne
 title = "Entsperrte Formulare - Ergebnisse"
 
 [update]
+allReleases = "All Releases"
 availableUpdates = "Verfügbare Updates"
+breaking = "Breaking"
 breakingChanges = "Inkompatible Änderungen"
 breakingChangesDefault = "Diese Version enthält inkompatible Änderungen."
 breakingChangesDetected = "Inkompatible Änderungen erkannt"
 breakingChangesMessage = "Einige Versionen enthalten inkompatible Änderungen. Bitte prüfen Sie vor dem Update die folgenden Migrationshinweise."
 close = "Schließen"
 current = "Aktuelle Version"
+defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Neueste herunterladen"
+later = "Later"
 latest = "Neueste Version"
 latestStable = "Neueste stabile Version"
 loadingDetailedInfo = "Detaillierte Informationen werden geladen..."
 migrationGuide = "Migrationshinweis"
 migrationGuides = "Migrationshinweise"
+migrationGuidesDesc = "Review important changes before updating."
+modalSubtitle = "A new version of Stirling PDF is ready to install."
 modalTitle = "Update verfügbar"
+notes = "Notes"
 priorityLabel = "Priorität"
 recommendedAction = "Empfohlene Aktion"
 releaseNotes = "Versionshinweise"
+showLess = "Show fewer versions"
+showMore = "Show all {{count}} versions"
+stable = "STABLE"
 unableToLoadDetails = "Detaillierte Informationen konnten nicht geladen werden."
 updateAvailable = "Update verfügbar"
 urgentUpdateAvailable = "Dringendes Update"
 version = "Version"
+versionHistory = "Version History"
 viewAllReleases = "Alle Releases anzeigen"
 viewGuide = "Leitfaden anzeigen"
+whatsNewIn = "What's new in"
 
 [update.priority]
 low = "Niedrig"
@@ -8666,7 +9043,9 @@ description = "Teams verwalten und Mitglieder des Arbeitsbereichs organisieren"
 loadError = "Teamdetails konnten nicht geladen werden"
 loading = "Teams werden geladen..."
 loadingDetails = "Teamdetails werden geladen..."
-memberCount = "{{count}} Mitglieder"
+memberCount_zero = "no team members"
+memberCount_one = "{{count}} Mitglied"
+memberCount_other = "{{count}} Mitglieder"
 noMembers = "Keine Mitglieder in diesem Team"
 noTeamsFound = "Keine Teams gefunden"
 removeMember = "Aus Team entfernen"

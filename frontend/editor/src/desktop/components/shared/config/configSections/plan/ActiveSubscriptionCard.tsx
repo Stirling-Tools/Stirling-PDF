@@ -180,7 +180,9 @@ export function ActiveSubscriptionCard({
                   {t(
                     "settings.planBilling.team.memberCount",
                     "{{count}} team members",
-                    { count: currentTeam.seatsUsed },
+                    {
+                      count: currentTeam.seatsUsed,
+                    },
                   )}
                 </Text>
               )}
