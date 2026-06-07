@@ -84,8 +84,11 @@ export default function PeopleSection() {
     ? t("workspace.people.loginRequired", "Enable login mode first")
     : hasNoSlots
       ? t(
-          "workspace.people.license.noSlotsAvailable",
+          "workspace.people.license.slotsAvailable",
           "No user slots available",
+          {
+            count: 0,
+          },
         )
       : null;
 
@@ -479,8 +482,11 @@ export default function PeopleSection() {
             <Group gap="xs" wrap="nowrap" align="center">
               <Badge color="red" variant="light" size="sm">
                 {t(
-                  "workspace.people.license.noSlotsAvailable",
-                  "No slots available",
+                  "workspace.people.license.slotsAvailable",
+                  "No user slots available",
+                  {
+                    count: 0,
+                  },
                 )}
               </Badge>
               <Button
