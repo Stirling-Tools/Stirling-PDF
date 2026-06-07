@@ -13,7 +13,7 @@ ENV_SECRET = "STIRLING_ENGINE_SHARED_SECRET"
 ENV_REQUIRE = "STIRLING_ENGINE_REQUIRE_AUTH"
 
 
-def _client(monkeypatch, *, secret: str | None = None, require: str | None = None) -> TestClient:
+def _client(monkeypatch: pytest.MonkeyPatch, *, secret: str | None = None, require: str | None = None) -> TestClient:
     monkeypatch.delenv(ENV_SECRET, raising=False)
     monkeypatch.delenv(ENV_REQUIRE, raising=False)
     if secret is not None:
@@ -26,45 +26,45 @@ def _client(monkeypatch, *, secret: str | None = None, require: str | None = Non
     app.add_middleware(EngineSharedSecretMiddleware)
 
     @app.get("/health")
-    def health() -> dict:
+    def health() -> dict[str, bool]:
         return {"ok": True}
 
     @app.post("/v1/agents/invoke")
-    def invoke() -> dict:
+    def invoke() -> dict[str, bool]:
         return {"ran": True}
 
     return TestClient(app)
 
 
-def test_dev_mode_open_when_unset(monkeypatch):
+def test_dev_mode_open_when_unset(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch)
     assert c.post("/v1/agents/invoke").status_code == 200
 
 
-def test_health_is_public_even_with_secret(monkeypatch):
+def test_health_is_public_even_with_secret(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch, secret=SECRET)
     assert c.get("/health").status_code == 200  # no header required
 
 
-def test_missing_header_rejected(monkeypatch):
+def test_missing_header_rejected(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch, secret=SECRET)
     assert c.post("/v1/agents/invoke").status_code == 401
 
 
-def test_wrong_secret_rejected(monkeypatch):
+def test_wrong_secret_rejected(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch, secret=SECRET)
     r = c.post("/v1/agents/invoke", headers={"X-Engine-Auth": "not-the-secret"})
     assert r.status_code == 401
 
 
-def test_valid_secret_allowed(monkeypatch):
+def test_valid_secret_allowed(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch, secret=SECRET)
     r = c.post("/v1/agents/invoke", headers={"X-Engine-Auth": SECRET})
     assert r.status_code == 200
     assert r.json() == {"ran": True}
 
 
-def test_require_auth_fails_closed_without_secret(monkeypatch):
+def test_require_auth_fails_closed_without_secret(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch, require="true")
     # Require flag, no secret -> protected routes refused.
     assert c.post("/v1/agents/invoke").status_code == 503
@@ -72,21 +72,19 @@ def test_require_auth_fails_closed_without_secret(monkeypatch):
     assert c.get("/health").status_code == 200
 
 
-def test_require_auth_with_secret_enforces_normally(monkeypatch):
+def test_require_auth_with_secret_enforces_normally(monkeypatch: pytest.MonkeyPatch):
     c = _client(monkeypatch, secret=SECRET, require="true")
     assert c.post("/v1/agents/invoke").status_code == 401
-    assert (
-        c.post("/v1/agents/invoke", headers={"X-Engine-Auth": SECRET}).status_code == 200
-    )
+    assert c.post("/v1/agents/invoke", headers={"X-Engine-Auth": SECRET}).status_code == 200
 
 
 @pytest.mark.parametrize("flag", ["true", "1", "YES", "On"])
-def test_require_flag_truthy_variants(monkeypatch, flag):
+def test_require_flag_truthy_variants(monkeypatch: pytest.MonkeyPatch, flag: str):
     c = _client(monkeypatch, require=flag)
     assert c.post("/v1/agents/invoke").status_code == 503
 
 
 @pytest.mark.parametrize("flag", ["false", "0", "no", ""])
-def test_require_flag_falsey_variants_stay_open(monkeypatch, flag):
+def test_require_flag_falsey_variants_stay_open(monkeypatch: pytest.MonkeyPatch, flag: str):
     c = _client(monkeypatch, require=flag)
     assert c.post("/v1/agents/invoke").status_code == 200

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from stirling.api.agent_capabilities import manifest_payload
@@ -10,7 +12,7 @@ router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
 @router.get("/capabilities")
-def get_capabilities() -> dict:
+def get_capabilities() -> dict[str, Any]:
     """Return the curated agent capabilities manifest.
 
     Gated by ``EngineSharedSecretMiddleware`` when the ``STIRLING_ENGINE_SHARED_SECRET`` env var

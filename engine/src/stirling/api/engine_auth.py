@@ -15,6 +15,7 @@ from collections.abc import Iterable
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class EngineSharedSecretMiddleware(BaseHTTPMiddleware):
     truthy -> 503 (fail-closed); else allow through.
     """
 
-    def __init__(self, app, public_prefixes: Iterable[str] = _PUBLIC_PREFIXES) -> None:
+    def __init__(self, app: ASGIApp, public_prefixes: Iterable[str] = _PUBLIC_PREFIXES) -> None:
         super().__init__(app)
         self._public_prefixes = tuple(public_prefixes)
         self._secret = os.getenv(_ENV_VAR)
@@ -74,25 +75,17 @@ class EngineSharedSecretMiddleware(BaseHTTPMiddleware):
     def _is_public(self, path: str) -> bool:
         return any(path == p or path.startswith(p + "/") for p in self._public_prefixes)
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if not self._is_public(request.url.path):
             if self._secret:
                 offered = request.headers.get(_HEADER) or ""
                 # Constant-time compare to avoid timing leaks.
                 if not hmac.compare_digest(offered, self._secret):
-                    return JSONResponse(
-                        {"detail": "Missing or invalid X-Engine-Auth header."}, status_code=401
-                    )
+                    return JSONResponse({"detail": "Missing or invalid X-Engine-Auth header."}, status_code=401)
             elif self._require:
                 # Fail closed: require flag set but no secret configured.
                 return JSONResponse(
-                    {
-                        "detail": (
-                            "Engine authentication is required but no shared secret is configured."
-                        )
-                    },
+                    {"detail": ("Engine authentication is required but no shared secret is configured.")},
                     status_code=503,
                 )
         return await call_next(request)

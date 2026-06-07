@@ -80,8 +80,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
     AgentCapability(
         id="agent-draft",
         description=(
-            "Draft a structured agent specification from a free-text description of the"
-            " task the user wants automated."
+            "Draft a structured agent specification from a free-text description of the task the user wants automated."
         ),
         input_model=AgentDraftRequest,
         mode="sync",
@@ -90,10 +89,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
     ),
     AgentCapability(
         id="agent-revise",
-        description=(
-            "Revise an existing draft agent specification based on user feedback or"
-            " constraint changes."
-        ),
+        description=("Revise an existing draft agent specification based on user feedback or constraint changes."),
         input_model=AgentRevisionRequest,
         mode="sync",
         required_scope="mcp.tools.read",
