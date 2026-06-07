@@ -52,8 +52,6 @@ import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 // Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
 const VIEWPORT_GAP = 56;
 
-// ── Annotation tool type & definitions ──────────────────────────────────────
-
 /**
  * LooseAnnotationTool bypasses strict Partial<T> defaults typing from the
  * library — EmbedPDF accepts extra runtime properties (borderWidth, textColor,
@@ -482,12 +480,12 @@ export function LocalEmbedPDF({
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
-    if (url) {
-      setPdfUrl(url);
-    } else if (file) {
+    if (file) {
       const objectUrl = URL.createObjectURL(file);
       setPdfUrl(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
+    } else if (url) {
+      setPdfUrl(url);
     }
     // When file is present, use the stable key to avoid blob URL churn from FileContext
     // re-renders. When only url is provided, depend on url directly so changes are picked up.
@@ -518,9 +516,7 @@ export function LocalEmbedPDF({
         viewportGap: VIEWPORT_GAP,
         scrollEndDelay: 150,
       }),
-      createPluginRegistration(ScrollPluginPackage, {
-        defaultBufferSize: 2,
-      }),
+      createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
         withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
@@ -535,7 +531,6 @@ export function LocalEmbedPDF({
       createPluginRegistration(SelectionPluginPackage, {
         marquee: { enabled: false },
         toleranceFactor: 3,
-        maxCachedGeometries: 15,
       }),
 
       // Register history plugin for undo/redo (recommended for annotations)
@@ -611,7 +606,6 @@ export function LocalEmbedPDF({
   // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
-    worker: true,
     encoderPoolSize: 4,
     fontFallback: { fonts: {} },
   });
