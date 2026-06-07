@@ -3,6 +3,8 @@ package stirling.software.proprietary.workflow.controller;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,9 +33,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
@@ -55,9 +61,54 @@ public class SigningSessionController {
 
     private final WorkflowSessionService workflowSessionService;
     private final UserService userService;
+    private final UserRepository userRepository;
     private final SigningFinalizationService signingFinalizationService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Operation(
+            summary = "List users the caller can invite as cert-sign participants",
+            description =
+                    "Returns enabled users in the caller's team, excluding the caller and the"
+                            + " Internal team. Scoped to the caller's team to avoid leaking the"
+                            + " user directory (GHSA-h2rx-xrhc-5q72).")
+    @Transactional(readOnly = true)
+    @GetMapping(value = "/cert-sign/eligible-participants")
+    public ResponseEntity<List<UserSummaryDTO>> listEligibleParticipants(Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<User> callerOpt = userService.findByUsernameIgnoreCase(principal.getName());
+        if (callerOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User caller = callerOpt.get();
+        Team callerTeam = caller.getTeam();
+        if (callerTeam == null
+                || TeamService.INTERNAL_TEAM_NAME.equalsIgnoreCase(callerTeam.getName())) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<UserSummaryDTO> users =
+                userRepository.findAllByTeam(callerTeam).stream()
+                        .filter(User::isEnabled)
+                        .filter(u -> !u.getId().equals(caller.getId()))
+                        .map(this::toUserSummaryDTO)
+                        .collect(Collectors.toList());
+
+        return ResponseEntity.ok(users);
+    }
+
+    private UserSummaryDTO toUserSummaryDTO(User user) {
+        return new UserSummaryDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getUsername(),
+                user.getTeam() != null ? user.getTeam().getName() : null,
+                user.isEnabled());
+    }
 
     @Operation(summary = "List all signing sessions for current user")
     @Transactional(readOnly = true)

@@ -36,7 +36,9 @@ const UserSelector = ({
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get("/api/v1/user/users");
+        const response = await apiClient.get(
+          "/api/v1/security/cert-sign/eligible-participants",
+        );
         console.log("Users API response:", response.data);
         const fetchedUsers = response.data || [];
 
