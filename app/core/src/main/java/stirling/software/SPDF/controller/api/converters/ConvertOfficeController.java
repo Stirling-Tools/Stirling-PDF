@@ -35,6 +35,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
@@ -50,6 +51,7 @@ public class ConvertOfficeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final CustomHtmlSanitizer customHtmlSanitizer;
+    private final OfficeDocumentSanitizer officeDocumentSanitizer;
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
 
@@ -83,14 +85,19 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Check if the file is HTML and apply sanitization if needed
+        // Sanitize uploaded input before handing it to LibreOffice/unoconvert. HTML is sanitized
+        // via the OWASP policy. Office/OpenDocument ZIPs are stripped of external relationships
+        // (OOXML *.rels TargetMode="External" and ODF external xlink:href) to block SSRF via
+        // LibreOffice resolving externally-linked resources (GHSA-6g53-73hq-c4j6).
         if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            // Read and sanitize HTML content
             String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+            byte[] sanitized =
+                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+            Files.write(inputPath, sanitized);
         } else {
-            // copy file content
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
