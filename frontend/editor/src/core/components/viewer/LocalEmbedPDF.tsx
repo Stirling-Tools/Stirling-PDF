@@ -6,7 +6,6 @@ import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
-// Import the essential plugins
 import {
   Viewport,
   ViewportPluginPackage,
@@ -52,11 +51,6 @@ import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 // Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
 const VIEWPORT_GAP = 56;
 
-/**
- * LooseAnnotationTool bypasses strict Partial<T> defaults typing from the
- * library — EmbedPDF accepts extra runtime properties (borderWidth, textColor,
- * finishOnDoubleClick, etc.) that aren't reflected in the TypeScript model types.
- */
 type LooseAnnotationTool = {
   id: string;
   name: string;
