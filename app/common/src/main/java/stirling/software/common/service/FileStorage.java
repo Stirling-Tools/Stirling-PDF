@@ -18,15 +18,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.FileStore;
+import stirling.software.common.util.JobContext;
 
 /**
  * Service for storing and retrieving files with unique file IDs. Used by the AutoJobPostMapping
  * system to handle file references. Disk I/O is delegated to the injected {@link FileStore} bean.
- *
- * <p>When a {@link JobOwnershipService} is wired (security enabled), the current user is captured
- * at store time and persisted with the file; every read path enforces that the same user retrieves
- * it. Files stored without an owner (no current user, anonymous, async without propagated security
- * context) stay readable by anyone so existing flows are not regressed.
  */
 @Service
 @RequiredArgsConstructor
@@ -193,23 +189,14 @@ public class FileStorage {
         return fileStore.size(fileId);
     }
 
-    /**
-     * Returns the user identifier to record as the owner of a newly stored file, or {@code null}
-     * when no authenticated user is in scope (security disabled, anonymous request, or async work
-     * with no propagated security context). A null result causes the file to be stored without an
-     * owner, which the read path treats as "no authoritative owner" and allows.
-     */
     private String resolveOwner() {
+        String propagated = JobContext.getOwner();
+        if (propagated != null) {
+            return propagated;
+        }
         return jobOwnershipService.flatMap(JobOwnershipService::getCurrentUserId).orElse(null);
     }
 
-    /**
-     * Defence-in-depth check before any read of a stored file. When a {@link JobOwnershipService}
-     * is wired and there is an authenticated current user, the file's recorded owner must match.
-     * Files without a recorded owner (legacy or anonymously-stored) are passed through so existing
-     * flows are not regressed. Throws {@link SecurityException} on mismatch so a misconfigured
-     * caller fails loudly rather than silently leaking another user's bytes.
-     */
     private void enforceOwnership(String fileId) {
         if (jobOwnershipService.isEmpty()) {
             return;
@@ -222,8 +209,6 @@ public class FileStorage {
         try {
             owner = fileStore.getOwner(fileId);
         } catch (IOException e) {
-            // Owner lookup failed: don't leak the file. Treat as access denied; the caller can
-            // surface the right HTTP status (404/500 at the controller layer).
             log.warn("Failed to read owner for file {}: {}", fileId, e.getMessage());
             throw new SecurityException(
                     "Access denied: could not verify ownership of the requested file");

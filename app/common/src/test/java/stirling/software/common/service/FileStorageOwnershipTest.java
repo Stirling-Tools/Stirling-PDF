@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
+import stirling.software.common.util.JobContext;
 
 class FileStorageOwnershipTest {
 
@@ -84,5 +85,23 @@ class FileStorageOwnershipTest {
         String id = fs.storeBytes(payload, "x.bin");
         user.set("alice");
         assertArrayEquals(payload, fs.retrieveBytes(id));
+    }
+
+    @Test
+    void propagatedOwner_scopesAsyncWriteWithNoLiveUser(@TempDir Path tempDir) throws IOException {
+        AtomicReference<String> user = new AtomicReference<>(null);
+        FileStorage fs = newStorageWithCurrentUser(tempDir, user);
+        byte[] payload = "alice's async result".getBytes();
+        String id;
+        try {
+            JobContext.setOwner("alice");
+            id = fs.storeBytes(payload, "x.bin");
+        } finally {
+            JobContext.clear();
+        }
+        user.set("alice");
+        assertArrayEquals(payload, fs.retrieveBytes(id));
+        user.set("bob");
+        assertThrows(SecurityException.class, () -> fs.retrieveBytes(id));
     }
 }
