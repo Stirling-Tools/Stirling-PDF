@@ -37,21 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
-/**
- * Strips external resource references from Office (OOXML) and OpenDocument (ODF) files before they
- * are handed to LibreOffice/unoconvert for PDF conversion. Defends against out-of-band SSRF
- * (GHSA-6g53-73hq-c4j6) caused by LibreOffice resolving externally-linked relationships embedded
- * inside uploaded documents.
- *
- * <p>OOXML: removes {@code <Relationship>} entries whose {@code TargetMode="External"} from any
- * {@code *.rels} part. ODF: removes external {@code xlink:href} attributes from {@code
- * content.xml}, {@code styles.xml}, {@code meta.xml}, and {@code settings.xml}.
- *
- * <p>Honored escape hatch: {@code system.disableSanitize=true} disables this step entirely, the
- * same flag {@link CustomHtmlSanitizer} and {@link SvgSanitizer} respect. If an administrator has
- * explicitly whitelisted a domain via {@link SsrfProtectionService}, references to that domain are
- * preserved.
- */
+// Strips external refs from OOXML/ODF uploads so LibreOffice can't be made to fetch them.
 @Component
 @Slf4j
 public class OfficeDocumentSanitizer {
@@ -153,7 +139,6 @@ public class OfficeDocumentSanitizer {
     }
 
     private boolean isOdfXmlPart(String lowerName) {
-        // Strip any directory prefix in case future ODF packages nest these parts
         int slash = lowerName.lastIndexOf('/');
         String base = slash >= 0 ? lowerName.substring(slash + 1) : lowerName;
         return ODF_XML_PARTS.contains(base);
@@ -274,12 +259,7 @@ public class OfficeDocumentSanitizer {
                 || trimmed.startsWith("//");
     }
 
-    /**
-     * An external URL is preserved only when the administrator has explicitly added its host to
-     * {@code allowedDomains} (MAX level, or MEDIUM with a non-empty allowedDomains list). The
-     * default MEDIUM config has no allowedDomains and an empty allow-list still admits public URLs,
-     * which is the original bug; so we require an explicit allow-listing to keep a reference.
-     */
+    // Preserved only with an explicit allowedDomains entry; MEDIUM default would admit public URLs.
     private boolean isAdminAllowed(String url) {
         if (ssrfProtectionService == null || url == null || url.isBlank()) {
             return false;

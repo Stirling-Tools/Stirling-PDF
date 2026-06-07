@@ -85,10 +85,7 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize uploaded input before handing it to LibreOffice/unoconvert. HTML is sanitized
-        // via the OWASP policy. Office/OpenDocument ZIPs are stripped of external relationships
-        // (OOXML *.rels TargetMode="External" and ODF external xlink:href) to block SSRF via
-        // LibreOffice resolving externally-linked resources (GHSA-6g53-73hq-c4j6).
+        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
         if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
             String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
