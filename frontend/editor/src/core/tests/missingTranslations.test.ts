@@ -196,7 +196,8 @@ describe("Missing translation coverage", () => {
       expect(usedKeys.length).toBeGreaterThan(100); // Sanity check
 
       const missingKeys = usedKeys.filter(
-        ({ key }) => !availableKeys.has(key) && !hasPluralCoverage(key, availableKeys),
+        ({ key }) =>
+          !availableKeys.has(key) && !hasPluralCoverage(key, availableKeys),
       );
 
       const annotations = missingKeys.map(
