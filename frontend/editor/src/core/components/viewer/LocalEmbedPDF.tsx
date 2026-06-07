@@ -48,6 +48,321 @@ import type {
 } from "@embedpdf/plugin-annotation";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
+
+// Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
+const VIEWPORT_GAP = 56;
+
+// ── Annotation tool type & definitions ──────────────────────────────────────
+
+/**
+ * LooseAnnotationTool bypasses strict Partial<T> defaults typing from the
+ * library — EmbedPDF accepts extra runtime properties (borderWidth, textColor,
+ * finishOnDoubleClick, etc.) that aren't reflected in the TypeScript model types.
+ */
+type LooseAnnotationTool = {
+  id: string;
+  name: string;
+  interaction?: {
+    exclusive: boolean;
+    cursor: string;
+    textSelection?: boolean;
+    isRotatable?: boolean;
+  };
+  matchScore?: (annotation: PdfAnnotationObject) => number;
+  defaults?: Record<string, unknown>;
+  clickBehavior?: Record<string, unknown>;
+  behavior?: {
+    deactivateToolAfterCreate?: boolean;
+    selectAfterCreate?: boolean;
+  };
+};
+
+/**
+ * Static annotation tool definitions. Extracted to module scope so they are
+ * allocated once rather than recreated on every EmbedPDF mount.
+ */
+const ANNOTATION_TOOLS: LooseAnnotationTool[] = [
+  {
+    id: "highlight",
+    name: "Highlight",
+    interaction: { exclusive: true, cursor: "text", textSelection: true },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.HIGHLIGHT,
+      strokeColor: "#ffd54f",
+      color: "#ffd54f",
+      opacity: 0.6,
+    },
+    behavior: { deactivateToolAfterCreate: false, selectAfterCreate: true },
+  },
+  {
+    id: "underline",
+    name: "Underline",
+    interaction: { exclusive: true, cursor: "text", textSelection: true },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.UNDERLINE,
+      strokeColor: "#ffb300",
+      color: "#ffb300",
+      opacity: 1,
+    },
+    behavior: { deactivateToolAfterCreate: false, selectAfterCreate: true },
+  },
+  {
+    id: "strikeout",
+    name: "Strikeout",
+    interaction: { exclusive: true, cursor: "text", textSelection: true },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.STRIKEOUT,
+      strokeColor: "#e53935",
+      color: "#e53935",
+      opacity: 1,
+    },
+    behavior: { deactivateToolAfterCreate: false, selectAfterCreate: true },
+  },
+  {
+    id: "squiggly",
+    name: "Squiggly",
+    interaction: { exclusive: true, cursor: "text", textSelection: true },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.SQUIGGLY,
+      strokeColor: "#00acc1",
+      color: "#00acc1",
+      opacity: 1,
+    },
+    behavior: { deactivateToolAfterCreate: false, selectAfterCreate: true },
+  },
+  {
+    id: "ink",
+    name: "Pen",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.INK ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.INK,
+      strokeColor: "#1f2933",
+      color: "#1f2933",
+      opacity: 1,
+      borderWidth: 2,
+      lineWidth: 2,
+      strokeWidth: 2,
+    },
+    behavior: { deactivateToolAfterCreate: false, selectAfterCreate: true },
+  },
+  {
+    id: "inkHighlighter",
+    name: "Ink Highlighter",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.INK &&
+      (annotation.strokeColor === "#ffd54f" ||
+        annotation.color === "#ffd54f")
+        ? 8
+        : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.INK,
+      strokeColor: "#ffd54f",
+      color: "#ffd54f",
+      opacity: 0.5,
+      borderWidth: 6,
+      lineWidth: 6,
+      strokeWidth: 6,
+    },
+    behavior: { deactivateToolAfterCreate: false, selectAfterCreate: true },
+  },
+  {
+    id: "square",
+    name: "Square",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.SQUARE,
+      color: "#0000ff",
+      strokeColor: "#cf5b5b",
+      opacity: 0.5,
+      borderWidth: 1,
+      strokeWidth: 1,
+      lineWidth: 1,
+    },
+    clickBehavior: { enabled: true, defaultSize: { width: 120, height: 90 } },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "circle",
+    name: "Circle",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.CIRCLE,
+      color: "#0000ff",
+      strokeColor: "#cf5b5b",
+      opacity: 0.5,
+      borderWidth: 1,
+      strokeWidth: 1,
+      lineWidth: 1,
+    },
+    clickBehavior: {
+      enabled: true,
+      defaultSize: { width: 100, height: 100 },
+    },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "line",
+    name: "Line",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.LINE,
+      color: "#1565c0",
+      opacity: 1,
+      borderWidth: 2,
+      strokeWidth: 2,
+      lineWidth: 2,
+    },
+    clickBehavior: { enabled: true, defaultLength: 120, defaultAngle: 0 },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "lineArrow",
+    name: "Arrow",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) => {
+      if (annotation.type !== PdfAnnotationSubtype.LINE) return 0;
+      // EmbedPDF stores endStyle/lineEndingStyles at runtime; library types use lineEndings
+      const ann = annotation as PdfAnnotationObject & {
+        endStyle?: string;
+        lineEndingStyles?: { end?: string };
+      };
+      return ann.endStyle === "ClosedArrow" ||
+        ann.lineEndingStyles?.end === "ClosedArrow"
+        ? 9
+        : 0;
+    },
+    defaults: {
+      type: PdfAnnotationSubtype.LINE,
+      color: "#1565c0",
+      opacity: 1,
+      borderWidth: 2,
+      startStyle: "None",
+      endStyle: "ClosedArrow",
+      lineEndingStyles: { start: "None", end: "ClosedArrow" },
+    },
+    clickBehavior: { enabled: true, defaultLength: 120, defaultAngle: 0 },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "polyline",
+    name: "Polyline",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.POLYLINE,
+      color: "#1565c0",
+      opacity: 1,
+      borderWidth: 2,
+    },
+    clickBehavior: { enabled: true, finishOnDoubleClick: true },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "polygon",
+    name: "Polygon",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.POLYGON,
+      color: "#0000ff",
+      strokeColor: "#cf5b5b",
+      opacity: 0.5,
+      borderWidth: 1,
+    },
+    clickBehavior: {
+      enabled: true,
+      finishOnDoubleClick: true,
+      defaultSize: { width: 140, height: 100 },
+    },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "text",
+    name: "Text",
+    interaction: { exclusive: true, cursor: "text", isRotatable: false },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.FREETEXT,
+      textColor: "#111111",
+      fontSize: 14,
+      fontFamily: "Helvetica",
+      opacity: 1,
+      interiorColor: "#fffef7",
+      contents: "Text",
+    },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "note",
+    name: "Note",
+    interaction: { exclusive: true, cursor: "pointer", isRotatable: false },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0,
+    defaults: {
+      type: PdfAnnotationSubtype.FREETEXT,
+      textColor: "#1b1b1b",
+      color: "#ffa000",
+      interiorColor: "#fff8e1",
+      opacity: 1,
+      contents: "Note",
+      fontSize: 12,
+    },
+    clickBehavior: {
+      enabled: true,
+      defaultSize: { width: 160, height: 100 },
+    },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "stamp",
+    name: "Image Stamp",
+    interaction: { exclusive: false, cursor: "copy" },
+    matchScore: (annotation: PdfAnnotationObject) =>
+      annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0,
+    defaults: { type: PdfAnnotationSubtype.STAMP },
+    behavior: { deactivateToolAfterCreate: true, selectAfterCreate: true },
+  },
+  {
+    id: "signatureStamp",
+    name: "Digital Signature",
+    interaction: { exclusive: false, cursor: "copy" },
+    matchScore: () => 0,
+    defaults: { type: PdfAnnotationSubtype.STAMP },
+  },
+  {
+    id: "signatureInk",
+    name: "Signature Draw",
+    interaction: { exclusive: true, cursor: "crosshair" },
+    matchScore: () => 0,
+    defaults: {
+      type: PdfAnnotationSubtype.INK,
+      strokeColor: "#000000",
+      color: "#000000",
+      opacity: 1.0,
+      borderWidth: 2,
+    },
+  },
+];
 import {
   RedactionPluginPackage,
   RedactionLayer,
@@ -167,12 +482,12 @@ export function LocalEmbedPDF({
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
-    if (file) {
+    if (url) {
+      setPdfUrl(url);
+    } else if (file) {
       const objectUrl = URL.createObjectURL(file);
       setPdfUrl(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
-    } else if (url) {
-      setPdfUrl(url);
     }
     // When file is present, use the stable key to avoid blob URL churn from FileContext
     // re-renders. When only url is provided, depend on url directly so changes are picked up.
@@ -190,12 +505,6 @@ export function LocalEmbedPDF({
   const plugins = useMemo(() => {
     if (!pdfUrl) return [];
 
-    // Calculate 3.5rem in pixels dynamically based on root font size
-    const rootFontSize = parseFloat(
-      getComputedStyle(document.documentElement).fontSize,
-    );
-    const viewportGap = rootFontSize * 3.5;
-
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [
@@ -206,12 +515,17 @@ export function LocalEmbedPDF({
         ],
       }),
       createPluginRegistration(ViewportPluginPackage, {
-        viewportGap,
+        viewportGap: VIEWPORT_GAP,
+        scrollEndDelay: 150,
       }),
-      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(ScrollPluginPackage, {
+        defaultBufferSize: 2,
+      }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
         withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
+        defaultImageType: "image/webp",
+        defaultImageQuality: 0.80,
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -221,6 +535,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(SelectionPluginPackage, {
         marquee: { enabled: false },
         toleranceFactor: 3,
+        maxCachedGeometries: 15,
       }),
 
       // Register history plugin for undo/redo (recommended for annotations)
@@ -245,10 +560,8 @@ export function LocalEmbedPDF({
 
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
-        defaultMode: "mobile", // Try mobile mode which might be more permissive
+        defaultMode: "mobile",
       }),
-      // Register pan plugin (depends on Viewport, InteractionManager) - keep disabled to prevent drag panning
-      createPluginRegistration(PanPluginPackage, {}),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -259,9 +572,10 @@ export function LocalEmbedPDF({
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
       createPluginRegistration(TilingPluginPackage, {
-        tileSize: 768,
+        tileSize: 1024,
         overlapPx: 5,
-        extraRings: 1,
+        extraRings: 0,
+        defaultImageType: "image/webp",
       }),
 
       // Register spread plugin for dual page layout
@@ -294,9 +608,12 @@ export function LocalEmbedPDF({
     ];
   }, [pdfUrl, enableAnnotations, exportFileName]);
 
-  // Initialize the engine with the React hook - use local WASM for offline support
+  // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
+    worker: true,
+    encoderPoolSize: 4,
+    fontFallback: { fonts: {} },
   });
 
   // Early return if no file or URL provided
@@ -382,26 +699,6 @@ export function LocalEmbedPDF({
             if (!annotationApi) return;
 
             if (enableAnnotations) {
-              // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library —
-              // EmbedPDF accepts extra runtime properties (borderWidth, textColor, finishOnDoubleClick,
-              // etc.) that aren't reflected in the TypeScript model types.
-              type LooseAnnotationTool = {
-                id: string;
-                name: string;
-                interaction?: {
-                  exclusive: boolean;
-                  cursor: string;
-                  textSelection?: boolean;
-                  isRotatable?: boolean;
-                };
-                matchScore?: (annotation: PdfAnnotationObject) => number;
-                defaults?: Record<string, unknown>;
-                clickBehavior?: Record<string, unknown>;
-                behavior?: {
-                  deactivateToolAfterCreate?: boolean;
-                  selectAfterCreate?: boolean;
-                };
-              };
               const ensureTool = (tool: LooseAnnotationTool) => {
                 const existing = annotationApi.getTool?.(tool.id);
                 if (!existing) {
@@ -409,389 +706,7 @@ export function LocalEmbedPDF({
                 }
               };
 
-              ensureTool({
-                id: "highlight",
-                name: "Highlight",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.HIGHLIGHT,
-                  strokeColor: "#ffd54f",
-                  color: "#ffd54f",
-                  opacity: 0.6,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "underline",
-                name: "Underline",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.UNDERLINE,
-                  strokeColor: "#ffb300",
-                  color: "#ffb300",
-                  opacity: 1,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "strikeout",
-                name: "Strikeout",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.STRIKEOUT,
-                  strokeColor: "#e53935",
-                  color: "#e53935",
-                  opacity: 1,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "squiggly",
-                name: "Squiggly",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.SQUIGGLY,
-                  strokeColor: "#00acc1",
-                  color: "#00acc1",
-                  opacity: 1,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "ink",
-                name: "Pen",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.INK ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.INK,
-                  strokeColor: "#1f2933",
-                  color: "#1f2933",
-                  opacity: 1,
-                  borderWidth: 2,
-                  lineWidth: 2,
-                  strokeWidth: 2,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "inkHighlighter",
-                name: "Ink Highlighter",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.INK &&
-                  (annotation.strokeColor === "#ffd54f" ||
-                    annotation.color === "#ffd54f")
-                    ? 8
-                    : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.INK,
-                  strokeColor: "#ffd54f",
-                  color: "#ffd54f",
-                  opacity: 0.5,
-                  borderWidth: 6,
-                  lineWidth: 6,
-                  strokeWidth: 6,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "square",
-                name: "Square",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.SQUARE,
-                  color: "#0000ff", // fill color (blue)
-                  strokeColor: "#cf5b5b", // border color (reddish pink)
-                  opacity: 0.5,
-                  borderWidth: 1,
-                  strokeWidth: 1,
-                  lineWidth: 1,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultSize: { width: 120, height: 90 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "circle",
-                name: "Circle",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.CIRCLE,
-                  color: "#0000ff", // fill color (blue)
-                  strokeColor: "#cf5b5b", // border color (reddish pink)
-                  opacity: 0.5,
-                  borderWidth: 1,
-                  strokeWidth: 1,
-                  lineWidth: 1,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultSize: { width: 100, height: 100 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "line",
-                name: "Line",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.LINE,
-                  color: "#1565c0",
-                  opacity: 1,
-                  borderWidth: 2,
-                  strokeWidth: 2,
-                  lineWidth: 2,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultLength: 120,
-                  defaultAngle: 0,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "lineArrow",
-                name: "Arrow",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => {
-                  if (annotation.type !== PdfAnnotationSubtype.LINE) return 0;
-                  // EmbedPDF stores endStyle/lineEndingStyles at runtime; library types use lineEndings
-                  const ann = annotation as PdfAnnotationObject & {
-                    endStyle?: string;
-                    lineEndingStyles?: { end?: string };
-                  };
-                  return ann.endStyle === "ClosedArrow" ||
-                    ann.lineEndingStyles?.end === "ClosedArrow"
-                    ? 9
-                    : 0;
-                },
-                defaults: {
-                  type: PdfAnnotationSubtype.LINE,
-                  color: "#1565c0",
-                  opacity: 1,
-                  borderWidth: 2,
-                  startStyle: "None",
-                  endStyle: "ClosedArrow",
-                  lineEndingStyles: { start: "None", end: "ClosedArrow" },
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultLength: 120,
-                  defaultAngle: 0,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "polyline",
-                name: "Polyline",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.POLYLINE,
-                  color: "#1565c0",
-                  opacity: 1,
-                  borderWidth: 2,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  finishOnDoubleClick: true,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "polygon",
-                name: "Polygon",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.POLYGON,
-                  color: "#0000ff", // fill color (blue)
-                  strokeColor: "#cf5b5b", // border color (reddish pink)
-                  opacity: 0.5,
-                  borderWidth: 1,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  finishOnDoubleClick: true,
-                  defaultSize: { width: 140, height: 100 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "text",
-                name: "Text",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  isRotatable: false,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.FREETEXT,
-                  textColor: "#111111",
-                  fontSize: 14,
-                  fontFamily: "Helvetica",
-                  opacity: 1,
-                  interiorColor: "#fffef7",
-                  contents: "Text",
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "note",
-                name: "Note",
-                interaction: {
-                  exclusive: true,
-                  cursor: "pointer",
-                  isRotatable: false,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.FREETEXT,
-                  textColor: "#1b1b1b",
-                  color: "#ffa000",
-                  interiorColor: "#fff8e1",
-                  opacity: 1,
-                  contents: "Note",
-                  fontSize: 12,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultSize: { width: 160, height: 100 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "stamp",
-                name: "Image Stamp",
-                interaction: { exclusive: false, cursor: "copy" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.STAMP,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "signatureStamp",
-                name: "Digital Signature",
-                interaction: { exclusive: false, cursor: "copy" },
-                matchScore: () => 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.STAMP,
-                },
-              });
-
-              ensureTool({
-                id: "signatureInk",
-                name: "Signature Draw",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: () => 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.INK,
-                  strokeColor: "#000000",
-                  color: "#000000",
-                  opacity: 1.0,
-                  borderWidth: 2,
-                },
-              });
+              ANNOTATION_TOOLS.forEach(ensureTool);
 
               annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
                 if (event.type === "create" && event.committed) {

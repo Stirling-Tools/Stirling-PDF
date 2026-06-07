@@ -10,6 +10,7 @@ import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
 // Import the essential plugins
 import {
@@ -91,6 +92,9 @@ function InteractionPauseBridge({
 }
 
 const DOCUMENT_NAME = "stirling-pdf-signing-viewer";
+
+// Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
+const VIEWPORT_GAP = 56;
 
 export interface SignaturePreview {
   id: string;
@@ -232,14 +236,14 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       [signaturePreviews],
     );
 
-    // Convert File to URL if needed
+     // Convert File to URL if needed
     useEffect(() => {
-      if (file) {
+      if (url) {
+        setPdfUrl(url);
+      } else if (file) {
         const objectUrl = URL.createObjectURL(file);
         setPdfUrl(objectUrl);
         return () => URL.revokeObjectURL(objectUrl);
-      } else if (url) {
-        setPdfUrl(url);
       }
     }, [file, url]);
 
@@ -257,12 +261,6 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
     const plugins = useMemo(() => {
       if (!pdfUrl) return [];
 
-      // Calculate 3.5rem in pixels dynamically based on root font size
-      const rootFontSize = parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-      );
-      const viewportGap = rootFontSize * 3.5;
-
       return [
         createPluginRegistration(DocumentManagerPluginPackage, {
           initialDocuments: [
@@ -273,19 +271,26 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           ],
         }),
         createPluginRegistration(ViewportPluginPackage, {
-          viewportGap,
+          viewportGap: VIEWPORT_GAP,
+          scrollEndDelay: 150,
         }),
-        createPluginRegistration(ScrollPluginPackage),
+        createPluginRegistration(ScrollPluginPackage, {
+          defaultBufferSize: 2,
+        }),
         createPluginRegistration(RenderPluginPackage, {
           withForms: true,
           withAnnotations: true,
+          defaultImageType: "image/webp",
+          defaultImageQuality: 0.80,
         }),
 
         // Register interaction manager (required for annotations)
         createPluginRegistration(InteractionManagerPluginPackage),
 
         // Register selection plugin (depends on InteractionManager)
-        createPluginRegistration(SelectionPluginPackage),
+        createPluginRegistration(SelectionPluginPackage, {
+          maxCachedGeometries: 15,
+        }),
 
         // Register history plugin for undo/redo (recommended for annotations)
         createPluginRegistration(HistoryPluginPackage),
@@ -312,9 +317,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
 
         // Register tiling plugin
         createPluginRegistration(TilingPluginPackage, {
-          tileSize: 768,
+          tileSize: 1024,
           overlapPx: 5,
-          extraRings: 1,
+          extraRings: 0,
+          defaultImageType: "image/webp",
         }),
 
         // Register spread plugin
@@ -335,8 +341,13 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       ];
     }, [pdfUrl]);
 
-    // Initialize the engine
-    const { engine, isLoading, error } = usePdfiumEngine();
+    // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
+    const { engine, isLoading, error } = usePdfiumEngine({
+      wasmUrl: pdfiumWasmUrl,
+      worker: true,
+      encoderPoolSize: 4,
+      fontFallback: { fonts: {} },
+    });
 
     // Early return if no file or URL provided
     if (!file && !url) {
