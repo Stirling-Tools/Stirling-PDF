@@ -71,11 +71,12 @@ public class StirlingDownloadTool implements McpTool {
         if (fileId == null) {
             return McpResponses.error(mapper, "Missing required argument: fileId.");
         }
-        if (!fileStorage.fileExists(fileId)) {
-            return McpResponses.error(mapper, "Unknown or expired fileId '" + fileId + "'.");
-        }
         long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
+            if (!fileStorage.fileExists(fileId)) {
+                return McpResponses.error(
+                        mapper, "Unknown or inaccessible fileId '" + fileId + "'.");
+            }
             long size = fileStorage.getFileSize(fileId);
             if (size > maxInline) {
                 return McpResponses.error(
@@ -103,6 +104,8 @@ public class StirlingDownloadTool implements McpTool {
                             "stirling://file/" + fileId,
                             MediaType.APPLICATION_OCTET_STREAM_VALUE,
                             Base64.getEncoder().encodeToString(bytes)));
+        } catch (SecurityException e) {
+            return McpResponses.error(mapper, "Unknown or inaccessible fileId '" + fileId + "'.");
         } catch (IOException e) {
             return McpResponses.error(mapper, "Failed to read fileId '" + fileId + "'.");
         }

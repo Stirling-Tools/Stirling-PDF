@@ -74,14 +74,18 @@ public class McpServerController {
                                             "Body is not a valid JSON-RPC 2.0 request")));
         }
         if (request.isNotification()) {
-            log.debug("Notification received: {}", request.method());
+            log.debug("Notification received: {}", sanitizeForLog(request.method()));
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
         JsonRpcResponse response;
         try {
             response = dispatch(request);
         } catch (RuntimeException e) {
-            log.warn("MCP dispatch failed for method {}: {}", request.method(), e.getMessage(), e);
+            log.warn(
+                    "MCP dispatch failed for method {}: {}",
+                    sanitizeForLog(request.method()),
+                    e.getMessage(),
+                    e);
             response =
                     JsonRpcResponse.failure(
                             request.id(),
@@ -99,6 +103,10 @@ public class McpServerController {
                 .body(
                         JsonRpcResponse.failure(
                                 null, JsonRpcError.parseError("Request body is not valid JSON")));
+    }
+
+    private static String sanitizeForLog(String value) {
+        return value == null ? null : value.replace('\r', ' ').replace('\n', ' ');
     }
 
     private JsonRpcRequest decode(JsonNode body) {

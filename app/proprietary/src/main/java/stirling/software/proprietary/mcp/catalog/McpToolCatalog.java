@@ -49,6 +49,7 @@ public class McpToolCatalog {
     private final EndpointConfiguration endpointConfiguration;
     private final ApplicationProperties applicationProperties;
     private final SimpleSchemaGenerator schemaGenerator;
+    private final ObjectMapper objectMapper;
 
     // Concurrent: written on the boot thread, read on request threads, AI map replaced at runtime.
     private final Map<String, OperationMeta> pdfOps = new ConcurrentHashMap<>();
@@ -63,6 +64,7 @@ public class McpToolCatalog {
         this.endpointConfiguration = endpointConfiguration;
         this.applicationProperties = applicationProperties;
         this.schemaGenerator = new SimpleSchemaGenerator(objectMapper);
+        this.objectMapper = objectMapper;
     }
 
     /** Admin tool filter: non-empty allow list is a whitelist; block list always removes. */
@@ -143,7 +145,7 @@ public class McpToolCatalog {
     }
 
     private ObjectNode emptyObjectSchema() {
-        ObjectNode out = new ObjectMapper().createObjectNode();
+        ObjectNode out = objectMapper.createObjectNode();
         out.put("type", "object");
         out.put("additionalProperties", true);
         return out;

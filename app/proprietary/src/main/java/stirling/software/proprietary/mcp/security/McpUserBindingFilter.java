@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
+
 /**
  * Binds an MCP-validated JWT to a provisioned Stirling user: optionally rejects subjects with no
  * enabled account, then rebinds the principal to the canonical Stirling username (scope authorities
@@ -28,6 +31,8 @@ import stirling.software.proprietary.security.service.UserService;
  */
 @Slf4j
 public class McpUserBindingFilter extends OncePerRequestFilter {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final UserService userService;
     private final String usernameClaim;
@@ -102,7 +107,9 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
         SecurityContextHolder.clearContext();
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
-        response.getWriter()
-                .write("{\"error\":\"insufficient_account\",\"message\":\"" + message + "\"}");
+        ObjectNode body = MAPPER.createObjectNode();
+        body.put("error", "insufficient_account");
+        body.put("message", message);
+        response.getWriter().write(MAPPER.writeValueAsString(body));
     }
 }

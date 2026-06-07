@@ -61,15 +61,21 @@ public class McpOperationExecutor {
         byte[] inputBytes;
         String inputName;
         if (fileId != null) {
-            if (!fileStorage.fileExists(fileId)) {
+            try {
+                if (!fileStorage.fileExists(fileId)) {
+                    return McpResponses.error(
+                            mapper,
+                            "Unknown or inaccessible fileId '"
+                                    + fileId
+                                    + "'. Re-upload with stirling_upload.");
+                }
+                inputBytes = fileStorage.retrieveBytes(fileId);
+            } catch (SecurityException e) {
                 return McpResponses.error(
                         mapper,
-                        "Unknown or expired fileId '"
+                        "Unknown or inaccessible fileId '"
                                 + fileId
                                 + "'. Re-upload with stirling_upload.");
-            }
-            try {
-                inputBytes = fileStorage.retrieveBytes(fileId);
             } catch (IOException e) {
                 return McpResponses.error(mapper, "Could not read fileId '" + fileId + "'.");
             }
@@ -104,13 +110,13 @@ public class McpOperationExecutor {
                             + e.getReadTimeout().toSeconds()
                             + "s. Try a smaller file or a different approach.");
         } catch (RestClientResponseException e) {
+            log.warn(
+                    "MCP {} upstream error: HTTP {} - {}",
+                    meta.id(),
+                    e.getStatusCode().value(),
+                    snippet(e.getResponseBodyAsString()));
             return McpResponses.error(
-                    mapper,
-                    meta.id()
-                            + " failed: HTTP "
-                            + e.getStatusCode().value()
-                            + " - "
-                            + snippet(e.getResponseBodyAsString()));
+                    mapper, meta.id() + " failed: HTTP " + e.getStatusCode().value() + ".");
         } catch (SecurityException e) {
             return McpResponses.error(
                     mapper, meta.id() + " endpoint is not permitted for MCP dispatch.");

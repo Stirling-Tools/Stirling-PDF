@@ -147,7 +147,7 @@ public class LocalDiskFileStore implements FileStore {
     }
 
     public Path resolve(String fileId) {
-        if (fileId.contains("..") || fileId.contains("/") || fileId.contains("\\")) {
+        if (fileId.contains(".") || fileId.contains("/") || fileId.contains("\\")) {
             throw new IllegalArgumentException("Invalid file ID");
         }
         Path basePath = Path.of(baseDirPath).normalize().toAbsolutePath();

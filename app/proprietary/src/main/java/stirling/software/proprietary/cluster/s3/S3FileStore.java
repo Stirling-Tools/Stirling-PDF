@@ -241,7 +241,7 @@ public class S3FileStore implements FileStore, AutoCloseable {
         if (fileId == null || fileId.isBlank()) {
             throw new IllegalArgumentException("File ID must not be blank");
         }
-        if (fileId.contains("..") || fileId.contains("/") || fileId.contains("\\")) {
+        if (fileId.contains(".") || fileId.contains("/") || fileId.contains("\\")) {
             throw new IllegalArgumentException("Invalid file ID");
         }
     }

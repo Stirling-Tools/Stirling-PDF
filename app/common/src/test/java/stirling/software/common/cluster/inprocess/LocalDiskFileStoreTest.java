@@ -43,6 +43,16 @@ class LocalDiskFileStoreTest {
     }
 
     @Test
+    void ownerSidecarCannotBeReadAsFileId(@TempDir Path dir) throws IOException {
+        LocalDiskFileStore store = new LocalDiskFileStore(dir.toString());
+        FileStore.Stored stored =
+                store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
+        String sidecarId = stored.fileId() + ".owner";
+        assertThrows(IllegalArgumentException.class, () -> store.resolve(sidecarId));
+        assertThrows(IllegalArgumentException.class, () -> store.retrieveBytes(sidecarId));
+    }
+
+    @Test
     void ownerIsPersistedAndReturnedByGetOwner(@TempDir Path dir) throws IOException {
         LocalDiskFileStore store = new LocalDiskFileStore(dir.toString());
         FileStore.Stored stored =
