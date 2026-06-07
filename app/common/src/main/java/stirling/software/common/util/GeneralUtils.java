@@ -402,6 +402,19 @@ public class GeneralUtils {
                         Arrays.copyOfRange(rawAddress, rawAddress.length - 4, rawAddress.length);
                 return isPrivateOrReservedIPv4(ipv4);
             }
+            // NAT64 well-known prefix 64:ff9b::/96 (RFC 6052) - global-unicast IPv6 that wraps an
+            // IPv4 destination; re-check the embedded IPv4 against the private/reserved table so
+            // 64:ff9b::a9fe:a9fe (169.254.169.254) and friends are blocked.
+            if (isNat64Address(rawAddress)) {
+                byte[] ipv4 =
+                        Arrays.copyOfRange(rawAddress, rawAddress.length - 4, rawAddress.length);
+                return isPrivateOrReservedIPv4(ipv4);
+            }
+            // 6to4 prefix 2002::/16 (RFC 3056) - the next 32 bits embed the IPv4.
+            if (isSixToFourAddress(rawAddress)) {
+                byte[] ipv4 = Arrays.copyOfRange(rawAddress, 2, 6);
+                return isPrivateOrReservedIPv4(ipv4);
+            }
         }
 
         return false;
@@ -495,6 +508,43 @@ public class GeneralUtils {
             }
         }
         return address[10] == (byte) 0xFF && address[11] == (byte) 0xFF;
+    }
+
+    /**
+     * Checks whether an IPv6 address sits in the NAT64 well-known prefix 64:ff9b::/96 (RFC 6052).
+     * No JDK classifier flags this prefix as private, so the embedded IPv4 in bytes[12..15] must be
+     * re-checked against the private/reserved IPv4 table.
+     *
+     * @param address 16-byte IPv6 address
+     * @return {@code true} if the address is in 64:ff9b::/96
+     */
+    private boolean isNat64Address(byte[] address) {
+        if (address == null || address.length != 16) {
+            return false;
+        }
+        if (address[0] != 0x00
+                || address[1] != 0x64
+                || address[2] != (byte) 0xFF
+                || address[3] != (byte) 0x9B) {
+            return false;
+        }
+        for (int i = 4; i < 12; i++) {
+            if (address[i] != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether an IPv6 address sits in the 6to4 prefix 2002::/16 (RFC 3056). The embedded
+     * IPv4 lives in bytes[2..5] and must be re-checked against the private/reserved IPv4 table.
+     *
+     * @param address 16-byte IPv6 address
+     * @return {@code true} if the address is in 2002::/16
+     */
+    private boolean isSixToFourAddress(byte[] address) {
+        return address != null && address.length == 16 && address[0] == 0x20 && address[1] == 0x02;
     }
 
     /*

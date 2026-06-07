@@ -155,8 +155,7 @@ public class SsrfProtectionService {
                     return false;
                 }
 
-                if (config.isBlockCloudMetadata()
-                        && isCloudMetadataAddress(address.getHostAddress())) {
+                if (config.isBlockCloudMetadata() && isCloudMetadataAddress(address)) {
                     log.debug("URL blocked - cloud metadata endpoint: {}", url);
                     return false;
                 }
@@ -189,16 +188,9 @@ public class SsrfProtectionService {
             }
 
             byte[] bytes = addr6.getAddress();
-            if (isIpv4MappedAddress(bytes)) {
-                String ipv4 =
-                        (bytes[12] & 0xff)
-                                + "."
-                                + (bytes[13] & 0xff)
-                                + "."
-                                + (bytes[14] & 0xff)
-                                + "."
-                                + (bytes[15] & 0xff);
-                return isPrivateIPv4Range(ipv4);
+            String embeddedIpv4 = extractEmbeddedIpv4(bytes);
+            if (embeddedIpv4 != null) {
+                return isPrivateIPv4Range(embeddedIpv4);
             }
 
             int firstByte = bytes[0] & 0xff;
@@ -209,6 +201,30 @@ public class SsrfProtectionService {
         }
 
         return false;
+    }
+
+    /**
+     * Returns the dotted-quad IPv4 embedded in an IPv6 address that wraps an IPv4 destination, or
+     * null if the address is not an embedded-IPv4 form. Covers IPv4-mapped (::ffff:0:0/96),
+     * IPv4-compatible (::/96, deprecated), NAT64 well-known prefix (64:ff9b::/96, RFC 6052), and
+     * 6to4 (2002::/16, RFC 3056). NAT64 and 6to4 are global-unicast prefixes that no JDK classifier
+     * flags as private, so the embedded IPv4 must be re-checked against the private/reserved IPv4
+     * ranges to keep the SSRF guard sound.
+     */
+    private String extractEmbeddedIpv4(byte[] bytes) {
+        if (bytes == null || bytes.length != 16) {
+            return null;
+        }
+        if (isIpv4MappedAddress(bytes) || isIpv4CompatibleAddress(bytes)) {
+            return formatIpv4(bytes, 12);
+        }
+        if (isNat64Address(bytes)) {
+            return formatIpv4(bytes, 12);
+        }
+        if (isSixToFourAddress(bytes)) {
+            return formatIpv4(bytes, 2);
+        }
+        return null;
     }
 
     private boolean isIpv4MappedAddress(byte[] addr) {
@@ -223,6 +239,56 @@ public class SsrfProtectionService {
         // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is
         // ::ffff:w.x.y.z)
         return addr[10] == (byte) 0xff && addr[11] == (byte) 0xff;
+    }
+
+    private boolean isIpv4CompatibleAddress(byte[] addr) {
+        // ::/96 deprecated IPv4-compatible IPv6 (e.g., ::169.254.169.254). All-zero first 12 bytes
+        // and a non-zero embedded IPv4 (an all-zero address would be the unspecified address, not
+        // an embedded IPv4 and already caught by isAnyLocalAddress).
+        if (addr.length != 16) {
+            return false;
+        }
+        for (int i = 0; i < 12; i++) {
+            if (addr[i] != 0) {
+                return false;
+            }
+        }
+        return addr[12] != 0 || addr[13] != 0 || addr[14] != 0 || addr[15] != 0;
+    }
+
+    private boolean isNat64Address(byte[] addr) {
+        // NAT64 well-known prefix 64:ff9b::/96 (RFC 6052) - first 12 bytes are 00 64 ff 9b 00 00
+        // ...
+        if (addr.length != 16) {
+            return false;
+        }
+        if (addr[0] != 0x00
+                || addr[1] != 0x64
+                || addr[2] != (byte) 0xff
+                || addr[3] != (byte) 0x9b) {
+            return false;
+        }
+        for (int i = 4; i < 12; i++) {
+            if (addr[i] != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isSixToFourAddress(byte[] addr) {
+        // 6to4 prefix 2002::/16 (RFC 3056) - embedded IPv4 is in bytes[2..5]
+        return addr.length == 16 && addr[0] == 0x20 && addr[1] == 0x02;
+    }
+
+    private String formatIpv4(byte[] addr, int offset) {
+        return (addr[offset] & 0xff)
+                + "."
+                + (addr[offset + 1] & 0xff)
+                + "."
+                + (addr[offset + 2] & 0xff)
+                + "."
+                + (addr[offset + 3] & 0xff);
     }
 
     private boolean isPrivateIPv4Range(String ip) {
@@ -255,6 +321,21 @@ public class SsrfProtectionService {
                 int secondOctet = Integer.parseInt(parts[1]);
                 return secondOctet >= 64 && secondOctet <= 127;
             } catch (NumberFormatException e) {
+            }
+        }
+        return false;
+    }
+
+    private boolean isCloudMetadataAddress(InetAddress address) {
+        if (isCloudMetadataAddress(address.getHostAddress())) {
+            return true;
+        }
+        // Also unwrap NAT64/6to4/IPv4-compat embedded IPv4 so cloud metadata IPs reached via an
+        // IPv6 prefix are matched even when blockPrivateNetworks is disabled.
+        if (address instanceof Inet6Address) {
+            String embedded = extractEmbeddedIpv4(address.getAddress());
+            if (embedded != null && isCloudMetadataAddress(embedded)) {
+                return true;
             }
         }
         return false;
