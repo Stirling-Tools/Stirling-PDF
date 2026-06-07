@@ -378,10 +378,9 @@ export default function TeamDetailsSection({
       {/* Add Member Button */}
       <Group justify="flex-end">
         <Tooltip
-          label={t(
-            "workspace.people.license.noSlotsAvailable",
-            "No user slots available",
-          )}
+          label={t("workspace.people.license.slotsAvailable", {
+            count: licenseInfo ? licenseInfo.availableSlots : 0,
+          })}
           disabled={!licenseInfo || licenseInfo.availableSlots > 0}
           position="bottom"
           withArrow

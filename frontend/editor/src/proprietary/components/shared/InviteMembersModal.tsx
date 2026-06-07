@@ -414,15 +414,10 @@ export default function InviteMembersModal({
                       height="1rem"
                     />
                     <Text size="sm" fw={500}>
-                      {licenseInfo.availableSlots > 0
-                        ? t("workspace.people.license.slotsAvailable", {
-                            count: licenseInfo.availableSlots,
-                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`,
-                          })
-                        : t(
-                            "workspace.people.license.noSlotsAvailable",
-                            "No user slots available",
-                          )}
+                      {t("workspace.people.license.slotsAvailable", {
+                        count: licenseInfo.availableSlots,
+                        defaultValue: `${licenseInfo.availableSlots} user slot(s) available`,
+                      })}
                     </Text>
                   </Group>
                   {licenseInfo.availableSlots === 0 && (
