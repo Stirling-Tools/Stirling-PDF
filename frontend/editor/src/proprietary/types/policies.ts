@@ -9,6 +9,7 @@
  */
 
 import type { ReactNode } from "react";
+import type { AutomationOperation } from "@app/types/automation";
 
 /** Lifecycle status of a policy category for the current user/org. */
 export type PolicyStatus = "default" | "active" | "paused";
@@ -73,6 +74,13 @@ export interface PolicyConfigDef {
   activity: PolicyActivityItem[];
   /** Editable settings fields. */
   fields: PolicyField[];
+  /**
+   * The preset pipeline this category seeds a new policy with — the real,
+   * editable tool steps (same shape as the backend's `PipelineStep` and the
+   * Watch Folders automation `operations`). Configuring a policy starts from
+   * these and the user can edit them.
+   */
+  defaultOperations: AutomationOperation[];
 }
 
 /** A document a source can ingest, used in the wizard's "Sources" step. */
@@ -107,6 +115,14 @@ export interface PolicyState {
   reviewerEmail: string;
   /** Saved field values, keyed by field key (overrides the definition default). */
   fieldValues: Record<string, boolean | string | string[]>;
+  /**
+   * The backing folder-trigger record (a Watch Folders `SmartFolder`) that holds
+   * this policy's editable steps (its automation), output config and run state.
+   * Present once the policy is configured. The folder trigger reuses the Watch
+   * Folders engine; this is the link to it. Maps to the backend's
+   * `Policy.trigger` (folder) + `steps` + `output`.
+   */
+  folderId?: string;
   /** Mock telemetry surfaced in the detail view. */
   docsEnforced24h: number;
   alerts24h: number;

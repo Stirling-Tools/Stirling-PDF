@@ -39,6 +39,11 @@ describe("policy definitions integrity", () => {
       expect(POLICY_CONFIG[cat.id], `config for ${cat.id}`).toBeDefined();
       expect(POLICY_CONFIG[cat.id].fields.length).toBeGreaterThan(0);
       expect(POLICY_CONFIG[cat.id].rules.length).toBeGreaterThan(0);
+      // Every preset seeds a real, non-empty pipeline (the category→steps map).
+      expect(
+        POLICY_CONFIG[cat.id].defaultOperations.length,
+        `defaultOperations for ${cat.id}`,
+      ).toBeGreaterThan(0);
     }
   });
   it("field keys are unique within each category", () => {

@@ -68,6 +68,10 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     summary:
       "Classifies documents, extracts structured data, enforces naming, and normalizes pages.",
     rules: ["Classify", "Extract", "Name", "Normalize"],
+    defaultOperations: [
+      { operation: "ocr", parameters: {} },
+      { operation: "flatten", parameters: {} },
+    ],
     scopeLabel: "All PDFs on this device",
     stats: { enforced: 1284, dataProcessed: "3.2 GB", activeFor: "18d" },
     activity: [
@@ -163,6 +167,10 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     summary:
       "Detects PII, encrypts, verifies authenticity, controls access, and certifies documents.",
     rules: ["Detect PII", "Encrypt", "Verify", "Access", "Certify"],
+    defaultOperations: [
+      { operation: "sanitize", parameters: {} },
+      { operation: "addPassword", parameters: {} },
+    ],
     scopeLabel: "All PDFs on this device",
     stats: { enforced: 892, dataProcessed: "1.1 GB", activeFor: "12d" },
     activity: [
@@ -267,6 +275,10 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     summary:
       "Validates documents against regulatory frameworks before they leave the system.",
     rules: ["Framework scan", "Enforce action", "Audit trail"],
+    defaultOperations: [
+      { operation: "sanitize", parameters: {} },
+      { operation: "flatten", parameters: {} },
+    ],
     scopeLabel: "All PDFs on this device",
     stats: { enforced: 437, dataProcessed: "640 MB", activeFor: "9d" },
     activity: [
@@ -319,6 +331,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     summary:
       "Routes documents to the right destination based on type and classification.",
     rules: ["Auto-classify", "Route to folder", "Webhook notify"],
+    defaultOperations: [{ operation: "compress", parameters: {} }],
     scopeLabel: "All PDFs on this device",
     stats: { enforced: 256, dataProcessed: "320 MB", activeFor: "6d" },
     activity: [
@@ -345,6 +358,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     summary:
       "Enforces how long documents are kept, when to archive, and when to delete.",
     rules: ["Retention hold", "Auto-archive", "Deletion block"],
+    defaultOperations: [{ operation: "compress", parameters: {} }],
     scopeLabel: "All PDFs on this device",
     stats: { enforced: 1100, dataProcessed: "2.4 GB", activeFor: "21d" },
     activity: [
