@@ -30,6 +30,7 @@ import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import AppConfigLoader from "@app/components/shared/AppConfigLoader";
+import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
@@ -122,6 +123,9 @@ export function AppProviders({
               <ScarfTrackingInitializer />
               <AppConfigLoader />
               <ServerDefaultsSync />
+              {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+                  No-ops inside Tauri — the desktop popup handles that flow. */}
+              <UpdateStartupPopup />
               <FileContextProvider
                 enableUrlSync={true}
                 enablePersistence={true}

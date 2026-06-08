@@ -1,0 +1,182 @@
+.portal-header {
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  background: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-header-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.portal-header__left {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 12.5rem;
+}
+
+.portal-header__breadcrumb {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-header-text);
+}
+
+/* Search trigger */
+.portal-header__search {
+  flex: 0 1 20rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  background: var(--color-search-bg);
+  border: 1px solid var(--color-search-border);
+  border-radius: var(--radius-md);
+  color: var(--color-search-text);
+  font-size: 0.75rem;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+.portal-header__search:hover {
+  border-color: var(--color-search-border-hover);
+}
+
+.portal-header__search-placeholder {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.portal-header__search-kbd {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  padding: 0.0625rem 0.25rem;
+  border-radius: var(--radius-xs);
+  background: var(--color-bg-muted);
+  color: var(--color-text-4);
+}
+
+/* Right cluster */
+.portal-header__right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.portal-header__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  color: var(--color-bell-stroke, var(--color-text-3));
+  position: relative;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.portal-header__icon-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+
+.portal-header__bell-dot {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.4375rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--color-red);
+  border: 2px solid var(--color-header-bg);
+  box-sizing: content-box;
+}
+
+/* Tier switcher */
+.portal-header__tier {
+  position: relative;
+}
+
+.portal-header__tier-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+.portal-header__tier-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-hover);
+}
+
+.portal-header__tier-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+}
+
+.portal-header__tier-label {
+  font-weight: 500;
+}
+
+.portal-header__tier-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background: var(--color-dropdown-bg);
+  border: 1px solid var(--color-dropdown-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  animation: fadeInUp var(--motion-enter) both;
+}
+
+.portal-header__tier-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+.portal-header__tier-option:hover {
+  background: var(--color-dropdown-hover);
+}
+.portal-header__tier-option.is-active {
+  background: var(--color-nav-active);
+  color: var(--color-nav-active-text);
+}
+
+/* Avatar */
+.portal-header__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--grad-blue-btn);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}

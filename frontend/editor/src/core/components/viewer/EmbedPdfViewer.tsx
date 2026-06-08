@@ -350,6 +350,20 @@ const EmbedPdfViewerContent = ({
                 event.preventDefault();
                 printActions.print();
                 return;
+              case "=":
+              case "+":
+                event.preventDefault();
+                zoomActions.zoomIn();
+                return;
+              case "-":
+              case "_":
+                event.preventDefault();
+                zoomActions.zoomOut();
+                return;
+              case "0":
+                event.preventDefault();
+                zoomActions.requestZoom("fit-width");
+                return;
             }
           }
         }
@@ -363,21 +377,6 @@ const EmbedPdfViewerContent = ({
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
         switch (event.key) {
-          case "=":
-          case "+":
-            event.preventDefault();
-            zoomActions.zoomIn();
-            return;
-          case "-":
-          case "_":
-            event.preventDefault();
-            zoomActions.zoomOut();
-            return;
-          case "0":
-            // Ctrl+0: Reset zoom to fit width
-            event.preventDefault();
-            zoomActions.requestZoom("fit-width");
-            return;
           case "a":
           case "A":
             // Ctrl+A: Prevent browser from selecting all UI text
@@ -1089,7 +1088,12 @@ const EmbedPdfViewerContent = ({
 
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
-          <Text c="red">Error: No file provided to viewer</Text>
+          <Text c="red">
+            {t(
+              "viewer.error.noFileProvided",
+              "Error: No file provided to viewer",
+            )}
+          </Text>
         </Center>
       ) : isCurrentFileEncrypted ? (
         <Center style={{ flex: 1 }}>
