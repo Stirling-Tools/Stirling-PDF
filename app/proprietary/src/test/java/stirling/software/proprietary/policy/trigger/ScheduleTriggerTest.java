@@ -104,7 +104,7 @@ class ScheduleTriggerTest {
     void validateRejectsMissingSchedule() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> trigger.validate(new TriggerConfig("schedule", Map.of())));
+                () -> trigger.validate(scheduledWithRawOptions("p1", Map.of())));
     }
 
     @Test
@@ -113,7 +113,7 @@ class ScheduleTriggerTest {
                 Map.of("schedule", Map.of("type", "every", "count", -5, "unit", "MINUTES"));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> trigger.validate(new TriggerConfig("schedule", options)));
+                () -> trigger.validate(scheduledWithRawOptions("p1", options)));
     }
 
     @Test
@@ -121,7 +121,7 @@ class ScheduleTriggerTest {
         Map<String, Object> options = new LinkedHashMap<>();
         options.put("schedule", new Schedule.Daily(LocalTime.of(2, 0)));
         options.put("zone", "Europe/London");
-        trigger.validate(new TriggerConfig("schedule", options));
+        trigger.validate(scheduledWithRawOptions("p1", options));
     }
 
     private static Policy scheduled(String id, Schedule schedule) {

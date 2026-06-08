@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.input;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -34,4 +35,15 @@ public interface InputSource {
      * completion hook. Returning an empty list means there is nothing to run right now.
      */
     List<ResolvedInput> resolve(InputSpec spec) throws IOException;
+
+    /**
+     * The local filesystem directories this source draws from, if any, for triggers that want to
+     * react to changes there (the folder-watch trigger) rather than poll. Advisory only: it merely
+     * tells a trigger <em>where</em> to watch; resolving the spec into files is still this source's
+     * job via {@link #resolve}. Non-filesystem sources (S3, ...) return an empty list and so are
+     * simply not watchable. Default: nothing to watch.
+     */
+    default List<Path> watchTargets(InputSpec spec) {
+        return List.of();
+    }
 }

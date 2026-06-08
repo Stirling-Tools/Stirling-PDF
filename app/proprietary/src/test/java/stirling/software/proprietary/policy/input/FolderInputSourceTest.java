@@ -107,4 +107,10 @@ class FolderInputSourceTest {
                 IllegalArgumentException.class,
                 () -> source.validate(new InputSpec("folder", Map.of())));
     }
+
+    @Test
+    void watchTargetsIsTheConfiguredDirectory() {
+        Path inputDir = tempDir.resolve("in");
+        assertEquals(List.of(inputDir), source.watchTargets(InputSpec.folder(inputDir.toString())));
+    }
 }

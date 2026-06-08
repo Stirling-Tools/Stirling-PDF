@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.Schedule;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.ObjectMapper;
@@ -59,8 +58,8 @@ public class ScheduleTrigger implements PolicyTrigger {
     }
 
     @Override
-    public void validate(TriggerConfig config) {
-        ScheduleConfig.from(objectMapper, config.options());
+    public void validate(Policy policy) {
+        ScheduleConfig.from(objectMapper, policy.trigger().options());
     }
 
     @Override

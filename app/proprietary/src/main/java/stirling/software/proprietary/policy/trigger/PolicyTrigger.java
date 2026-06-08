@@ -1,6 +1,6 @@
 package stirling.software.proprietary.policy.trigger;
 
-import stirling.software.proprietary.policy.model.TriggerConfig;
+import stirling.software.proprietary.policy.model.Policy;
 
 /**
  * An automatic trigger: the thing that decides <em>when</em> a policy runs without a person asking.
@@ -22,10 +22,13 @@ public interface PolicyTrigger {
     String type();
 
     /**
-     * Check that a policy's trigger config is usable, throwing {@link IllegalArgumentException} if
-     * not. Called when a policy is saved so misconfiguration fails fast rather than at fire time.
+     * Check that this trigger is usable for the given policy, throwing {@link
+     * IllegalArgumentException} if not. Called when a policy is saved so misconfiguration fails
+     * fast rather than at fire time. Receives the whole {@link Policy} (not just its {@code
+     * TriggerConfig}) so a trigger whose firing depends on the policy's sources (folder-watch) can
+     * assert that relationship; most triggers only inspect {@code policy.trigger()}.
      */
-    default void validate(TriggerConfig config) {}
+    default void validate(Policy policy) {}
 
     /** Begin activating policies of this type (e.g. start the schedule sweep). */
     default void start() {}

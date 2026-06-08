@@ -64,6 +64,11 @@ public class FolderInputSource implements InputSource {
     }
 
     @Override
+    public List<Path> watchTargets(InputSpec spec) {
+        return List.of(FolderConfig.from(spec.options()).directory());
+    }
+
+    @Override
     public List<ResolvedInput> resolve(InputSpec spec) throws IOException {
         FolderConfig config = FolderConfig.from(spec.options());
         Path inputDir = config.directory();

@@ -36,7 +36,7 @@ public class PolicyValidator {
      */
     public void validate(Policy policy) {
         if (policy.trigger() != null) {
-            triggerFor(policy.trigger()).validate(policy.trigger());
+            triggerFor(policy.trigger()).validate(policy);
         }
         for (InputSpec source : policy.sources()) {
             inputSourceFor(source).validate(source);

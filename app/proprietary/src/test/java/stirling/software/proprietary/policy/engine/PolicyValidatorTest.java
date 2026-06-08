@@ -50,7 +50,7 @@ class PolicyValidatorTest {
 
         validator.validate(policy);
 
-        verify(trigger).validate(policy.trigger());
+        verify(trigger).validate(policy);
         verify(inputSource).validate(policy.sources().get(0));
         verify(outputSink).validate(policy.output());
     }
