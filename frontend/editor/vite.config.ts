@@ -13,34 +13,6 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// TEMP DEBUG — writes a build-info.txt into dist/ on every build so we can
-// curl https://<host>/<base>/build-info.txt to confirm a fresh deploy landed
-// and which env vars the build host actually received. Values are masked to
-// (set)/(unset) so nothing real is exposed via the publicly-served file; the
-// build log (vite-config-debug below) shows actual values for the project
-// owner. Timestamp guarantees the file differs every build, forcing upload.
-function buildInfoPlugin(): PluginOption {
-  const mask = (v: string | undefined) => (v ? "(set)" : "(unset)");
-  return {
-    name: "debug-build-info",
-    apply: "build" as const,
-    async closeBundle() {
-      const distDir = path.resolve(__dirname, "dist");
-      const contents = [
-        `BuildTime=${new Date().toISOString()}`,
-        `VITE_API_BASE_URL=${mask(process.env.VITE_API_BASE_URL)}`,
-        `RUN_SUBPATH=${mask(process.env.RUN_SUBPATH)}`,
-        `VITE_SUPABASE_URL=${mask(process.env.VITE_SUPABASE_URL)}`,
-        `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${mask(process.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY)}`,
-        `STIRLING_FLAVOR=${mask(process.env.STIRLING_FLAVOR)}`,
-        "",
-      ].join("\n");
-      await fs.mkdir(distDir, { recursive: true });
-      await fs.writeFile(path.join(distDir, "build-info.txt"), contents);
-    },
-  };
-}
-
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -124,51 +96,6 @@ export default defineConfig(async ({ mode }) => {
   // this file lived at frontend/, but after the editor was moved under
   // frontend/editor/ the cwd-based lookup would miss editor/.env*.
   const env = loadEnv(mode, import.meta.dirname, "");
-
-  // TEMP DEBUG — surface build-time env values so we can confirm what the
-  // build host (Cloudflare / CI) is actually passing through. Safe to remove
-  // once we've stopped chasing env-var routing bugs.
-  const viteAndRunNames = Object.keys(process.env)
-    .filter((k) => k.startsWith("VITE_") || k.startsWith("RUN_"))
-    .sort();
-
-  // Fuzzy-match anything that looks like it might be a misnamed
-  // VITE_API_BASE_URL — typos, extra spaces, wrong case, missing
-  // underscores, etc. Catches names like "VITE_API_BASEURL", "vite_api_base_url",
-  // "VITE_API_BASE_URL " (trailing whitespace), and so on.
-  // Names only, no values — printed JSON-encoded so we can SEE any
-  // invisible characters as escape sequences.
-  const suspectNamesEncoded = Object.keys(process.env)
-    .filter((k) => /API|BASE|URL|VITE|STIRLING|BPI/i.test(k))
-    .sort()
-    .map((k) => JSON.stringify(k));
-  // eslint-disable-next-line no-console
-  console.log(
-    "[vite-config-debug]",
-    JSON.stringify(
-      {
-        mode,
-        VITE_API_BASE_URL_processEnv: process.env.VITE_API_BASE_URL ?? "(unset)",
-        VITE_API_BASE_URL_loadEnv: env.VITE_API_BASE_URL ?? "(unset)",
-        RUN_SUBPATH: process.env.RUN_SUBPATH ?? env.RUN_SUBPATH ?? "(unset)",
-        VITE_SUPABASE_URL: env.VITE_SUPABASE_URL ? "(set)" : "(unset)",
-        VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
-          ? "(set)"
-          : "(unset)",
-        // Comprehensive list of every VITE_/RUN_ name actually present in
-        // process.env. Names only — values are deliberately omitted so this
-        // remains safe to print in the build log even if Cloudflare ever
-        // exposes secrets via this prefix in future.
-        viteAndRunEnvVarNames: viteAndRunNames,
-        // Anything that looks like it might be a misnamed VITE_API_BASE_URL.
-        // JSON-encoded so trailing whitespace / unicode appears as escapes.
-        suspectEnvVarNamesEncoded: suspectNamesEncoded,
-        totalEnvVarCount: Object.keys(process.env).length,
-      },
-      null,
-      2,
-    ),
-  );
 
   // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
   const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
@@ -275,7 +202,6 @@ export default defineConfig(async ({ mode }) => {
         ],
       }),
       compressStaticCopyPlugin(),
-      buildInfoPlugin(),
     ],
     server: {
       host: true,
