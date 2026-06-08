@@ -105,7 +105,7 @@ export function PolicyDetailPanel({
         {/* Enforces */}
         <div>
           <p className="pol-section-label">Enforces</p>
-          <Card padding="default" accent={isPaused ? "amber" : "blue"}>
+          <Card padding="default">
             <div className="pol-rule-flow">
               <ChipFlow items={enforceItems} separator="arrow" />
             </div>
