@@ -1,0 +1,249 @@
+/* Editor → Processor plan promo. Shown to free users in place of the PAYG
+   dashboard. Uses the same theme tokens as Payg.css. */
+
+.epp {
+  --epp-accent: #0a8bff;
+  --epp-accent-2: #6c5ce7;
+  --epp-accent-soft: rgba(10, 139, 255, 0.08);
+  --epp-success: #10b981;
+  --epp-radius: 18px;
+  --epp-card-bg: var(--bg-surface);
+  --epp-card-border: var(--border-default);
+  --epp-divider: var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 4px 4px 24px;
+}
+
+[data-mantine-color-scheme="dark"] .epp {
+  --epp-card-bg: #313842;
+  --epp-card-border: #3d444e;
+  --epp-accent-soft: rgba(10, 139, 255, 0.12);
+  --epp-divider: #3d444e;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.epp-hero {
+  text-align: center;
+  padding: 12px 0 0;
+}
+.epp-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  margin-bottom: 14px;
+  background: var(--epp-accent-soft);
+  color: var(--epp-accent);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.epp-hero__title {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+.epp-hero__title .epp-hero__accent {
+  background: linear-gradient(135deg, var(--epp-accent) 0%, var(--epp-accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.epp-hero__subtitle {
+  margin: 14px auto 0;
+  max-width: 540px;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* ── Cards row ────────────────────────────────────────────────────────── */
+.epp-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+@media (max-width: 720px) {
+  .epp-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.epp-card {
+  background: var(--epp-card-bg);
+  border: 1px solid var(--epp-card-border);
+  border-radius: var(--epp-radius);
+  padding: 26px 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+.epp-card[data-emphasis="true"] {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--epp-card-bg), var(--epp-card-bg)) padding-box,
+    linear-gradient(135deg, var(--epp-accent) 0%, var(--epp-accent-2) 100%) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 10px 28px -16px rgba(10, 139, 255, 0.35);
+}
+.epp-card[data-emphasis="true"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -16px rgba(10, 139, 255, 0.45);
+}
+
+/* Card header — name + inline status pill on the same row, no orphan badges */
+.epp-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+.epp-card__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
+.epp-card__pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.epp-card__pill[data-tone="current"] {
+  background: var(--epp-divider);
+  color: var(--text-muted);
+}
+.epp-card__pill[data-tone="upgrade"] {
+  background: linear-gradient(135deg, var(--epp-accent) 0%, var(--epp-accent-2) 100%);
+  color: white;
+}
+
+.epp-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 -2px;
+}
+.epp-card__price-amount {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.epp-card__price-period {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.epp-card__price-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.epp-card__tagline {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.epp-card__features {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex-grow: 1;
+  border-top: 1px solid var(--epp-divider);
+}
+.epp-card__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+.epp-card__feature-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--epp-success);
+  font-size: 1rem;
+}
+.epp-card[data-emphasis="true"] .epp-card__feature-icon {
+  color: var(--epp-accent);
+}
+
+.epp-card__cta {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 11px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  margin-top: 10px;
+}
+.epp-card__cta[data-variant="primary"] {
+  background: linear-gradient(135deg, var(--epp-accent) 0%, var(--epp-accent-2) 100%);
+  color: white;
+}
+.epp-card__cta[data-variant="primary"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px -6px rgba(10, 139, 255, 0.55);
+}
+.epp-card__cta[data-variant="neutral"] {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px dashed var(--epp-divider);
+  cursor: default;
+}
+
+.epp-card__footnote {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ── Reassurance strip ────────────────────────────────────────────────── */
+.epp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 20px;
+  background: var(--epp-accent-soft);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  text-align: center;
+  flex-wrap: wrap;
+}
+.epp-footer__highlight {
+  font-weight: 700;
+}
+.epp-footer__divider {
+  color: var(--text-muted);
+  opacity: 0.5;
+  margin: 0 4px;
+}
