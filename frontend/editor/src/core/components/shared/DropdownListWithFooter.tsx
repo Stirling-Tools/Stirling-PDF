@@ -8,6 +8,7 @@ import {
   Group,
   TextInput,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import SearchIcon from "@mui/icons-material/Search";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -71,6 +72,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   withinPortal = true,
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
 
   const isMultiValue = Array.isArray(value);
@@ -184,7 +186,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 }}
               >
                 <TextInput
-                  placeholder="Search..."
+                  placeholder={t("dropdownList.searchPlaceholder", "Search...")}
                   value={searchTerm}
                   onChange={handleSearchChange}
                   leftSection={<SearchIcon style={{ fontSize: "1rem" }} />}

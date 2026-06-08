@@ -139,7 +139,7 @@ function RedactionSelectionMenuInner({
       }}
     >
       <Group gap="sm" wrap="nowrap" justify="center">
-        <Tooltip label="Remove this mark">
+        <Tooltip label={t("viewer.redaction.removeMark", "Remove this mark")}>
           <ActionIcon
             variant="subtle"
             color="gray"
