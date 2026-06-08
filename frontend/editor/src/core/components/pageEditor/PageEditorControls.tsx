@@ -6,6 +6,7 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
+import { useTranslation } from "react-i18next";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -51,6 +52,7 @@ const PageEditorControls = ({
   displayDocument,
   splitPositions,
 }: PageEditorControlsProps) => {
+  const { t } = useTranslation();
   // Calculate split tooltip text using smart toggle logic
   const getSplitTooltip = () => {
     if (!splitPositions || !displayDocument || selectedPageIds.length === 0) {
@@ -131,7 +133,7 @@ const PageEditorControls = ({
         }}
       >
         {/* Undo/Redo */}
-        <Tooltip label="Undo">
+        <Tooltip label={t("pageEditor.toolbar.undo", "Undo")}>
           <ActionIcon
             onClick={onUndo}
             disabled={!canUndo}
@@ -145,7 +147,7 @@ const PageEditorControls = ({
             <UndoIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Redo">
+        <Tooltip label={t("pageEditor.toolbar.redo", "Redo")}>
           <ActionIcon
             onClick={onRedo}
             disabled={!canRedo}
@@ -170,7 +172,9 @@ const PageEditorControls = ({
         />
 
         {/* Page Operations */}
-        <Tooltip label="Rotate Selected Left">
+        <Tooltip
+          label={t("pageEditor.toolbar.rotateLeft", "Rotate Selected Left")}
+        >
           <ActionIcon
             onClick={() => onRotate("left")}
             disabled={selectedPageIds.length === 0}
@@ -187,7 +191,9 @@ const PageEditorControls = ({
             <RotateLeftIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Rotate Selected Right">
+        <Tooltip
+          label={t("pageEditor.toolbar.rotateRight", "Rotate Selected Right")}
+        >
           <ActionIcon
             onClick={() => onRotate("right")}
             disabled={selectedPageIds.length === 0}
@@ -204,7 +210,7 @@ const PageEditorControls = ({
             <RotateRightIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Delete Selected">
+        <Tooltip label={t("pageEditor.toolbar.delete", "Delete Selected")}>
           <ActionIcon
             onClick={onDelete}
             disabled={selectedPageIds.length === 0}

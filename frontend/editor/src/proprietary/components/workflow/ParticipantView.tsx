@@ -185,14 +185,20 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
     return (
       <Stack align="center" justify="center" p="xl">
         <Loader size="lg" />
-        <Text c="dimmed">Loading session...</Text>
+        <Text c="dimmed">
+          {t("workflow.participant.loadingSession", "Loading session...")}
+        </Text>
       </Stack>
     );
   }
 
   if (error) {
     return (
-      <Alert icon={<InfoIcon fontSize="small" />} color="red" title="Error">
+      <Alert
+        icon={<InfoIcon fontSize="small" />}
+        color="red"
+        title={t("workflow.participant.errorTitle", "Error")}
+      >
         {error}
       </Alert>
     );
@@ -201,7 +207,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   if (!session || !participant) {
     return (
       <Alert icon={<InfoIcon fontSize="small" />} color="orange">
-        Session not found or access denied.
+        {t(
+          "workflow.participant.sessionNotFound",
+          "Session not found or access denied.",
+        )}
       </Alert>
     );
   }
@@ -209,15 +218,35 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "SIGNED":
-        return <Badge color="green">Signed</Badge>;
+        return (
+          <Badge color="green">
+            {t("workflow.participant.statusSigned", "Signed")}
+          </Badge>
+        );
       case "DECLINED":
-        return <Badge color="red">Declined</Badge>;
+        return (
+          <Badge color="red">
+            {t("workflow.participant.statusDeclined", "Declined")}
+          </Badge>
+        );
       case "VIEWED":
-        return <Badge color="blue">Viewed</Badge>;
+        return (
+          <Badge color="blue">
+            {t("workflow.participant.statusViewed", "Viewed")}
+          </Badge>
+        );
       case "NOTIFIED":
-        return <Badge color="yellow">Notified</Badge>;
+        return (
+          <Badge color="yellow">
+            {t("workflow.participant.statusNotified", "Notified")}
+          </Badge>
+        );
       case "PENDING":
-        return <Badge color="gray">Pending</Badge>;
+        return (
+          <Badge color="gray">
+            {t("workflow.participant.statusPending", "Pending")}
+          </Badge>
+        );
       default:
         return <Badge>{status}</Badge>;
     }
@@ -254,7 +283,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 {session.documentName}
               </Text>
               <Text size="sm" c="dimmed">
-                From: {session.ownerUsername}
+                {t("workflow.participant.from", "From: {{name}}", {
+                  name: session.ownerUsername,
+                })}
               </Text>
             </div>
             {getStatusBadge(participant.status)}
@@ -272,7 +303,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
           {session.dueDate && (
             <Text size="sm" c="dimmed">
-              Due Date: {session.dueDate}
+              {t("workflow.participant.dueDate", "Due Date: {{date}}", {
+                date: session.dueDate,
+              })}
             </Text>
           )}
 
@@ -283,7 +316,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               onClick={() => downloadDocument(token)}
               variant="light"
             >
-              Download Document
+              {t("workflow.participant.downloadDocument", "Download Document")}
             </Button>
           </Group>
         </Stack>
@@ -293,17 +326,35 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         <Card shadow="sm" padding="md" radius="md" withBorder>
           <Stack gap="md">
             <Text fw={500} size="lg">
-              Sign Document
+              {t("workflow.participant.signDocument", "Sign Document")}
             </Text>
 
             <Select
-              label="Certificate Type"
+              label={t(
+                "workflow.participant.certificateType",
+                "Certificate Type",
+              )}
               value={certType}
               onChange={(value) => setCertType(value || "P12")}
               data={[
-                { value: "P12", label: "P12/PKCS12 Certificate" },
-                { value: "JKS", label: "JKS Keystore" },
-                { value: "SERVER", label: "Server Certificate (if available)" },
+                {
+                  value: "P12",
+                  label: t(
+                    "workflow.participant.certTypeP12",
+                    "P12/PKCS12 Certificate",
+                  ),
+                },
+                {
+                  value: "JKS",
+                  label: t("workflow.participant.certTypeJks", "JKS Keystore"),
+                },
+                {
+                  value: "SERVER",
+                  label: t(
+                    "workflow.participant.certTypeServer",
+                    "Server Certificate (if available)",
+                  ),
+                },
               ]}
               size="sm"
               data-testid="cert-type-select"
@@ -312,8 +363,14 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
             {certType !== "SERVER" && (
               <>
                 <FileInput
-                  label="Certificate File"
-                  placeholder="Select certificate file"
+                  label={t(
+                    "workflow.participant.certificateFile",
+                    "Certificate File",
+                  )}
+                  placeholder={t(
+                    "workflow.participant.certificateFilePlaceholder",
+                    "Select certificate file",
+                  )}
                   value={certFile}
                   onChange={setCertFile}
                   accept=".p12,.pfx,.jks"
@@ -322,7 +379,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 />
 
                 <TextInput
-                  label="Certificate Password"
+                  label={t(
+                    "workflow.participant.certificatePassword",
+                    "Certificate Password",
+                  )}
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
@@ -386,23 +446,32 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
             )}
 
             <TextInput
-              label="Location"
-              placeholder="e.g., San Francisco, CA"
+              label={t("workflow.participant.location", "Location")}
+              placeholder={t(
+                "workflow.participant.locationPlaceholder",
+                "e.g., San Francisco, CA",
+              )}
               value={location}
               onChange={(e) => setLocation(e.currentTarget.value)}
               size="sm"
             />
 
             <TextInput
-              label="Reason"
-              placeholder="e.g., Document approval"
+              label={t("workflow.participant.reason", "Reason")}
+              placeholder={t(
+                "workflow.participant.reasonPlaceholder",
+                "e.g., Document approval",
+              )}
               value={reason}
               onChange={(e) => setReason(e.currentTarget.value)}
               size="sm"
             />
 
             <TextInput
-              label="Page Number (optional)"
+              label={t(
+                "workflow.participant.pageNumber",
+                "Page Number (optional)",
+              )}
               type="number"
               value={pageNumber}
               onChange={(e) =>
@@ -423,7 +492,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 color="green"
                 data-testid="submit-signature-button"
               >
-                Submit Signature
+                {t("workflow.participant.submitSignature", "Submit Signature")}
               </Button>
 
               <Button
@@ -433,7 +502,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 variant="light"
                 data-testid="decline-button"
               >
-                Decline
+                {t("workflow.participant.decline", "Decline")}
               </Button>
             </Group>
           </Stack>
@@ -442,14 +511,24 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
       {participant.hasCompleted && (
         <Alert icon={<CheckCircleIcon fontSize="small" />} color="green">
-          You have {participant.status === "SIGNED" ? "signed" : "declined"}{" "}
-          this document.
+          {participant.status === "SIGNED"
+            ? t(
+                "workflow.participant.completedSigned",
+                "You have signed this document.",
+              )
+            : t(
+                "workflow.participant.completedDeclined",
+                "You have declined this document.",
+              )}
         </Alert>
       )}
 
       {participant.isExpired && (
         <Alert icon={<InfoIcon fontSize="small" />} color="orange">
-          Your access to this document has expired.
+          {t(
+            "workflow.participant.accessExpired",
+            "Your access to this document has expired.",
+          )}
         </Alert>
       )}
     </Stack>

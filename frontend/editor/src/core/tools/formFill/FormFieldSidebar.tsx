@@ -34,7 +34,7 @@ interface FormFieldSidebarProps {
 }
 
 export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
-  useTranslation();
+  const { t } = useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
@@ -119,7 +119,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           variant="subtle"
           size="sm"
           onClick={onToggle}
-          aria-label="Close sidebar"
+          aria-label={t("formFill.sidebar.close", "Close sidebar")}
         >
           <CloseIcon sx={{ fontSize: 16 }} />
         </ActionIcon>

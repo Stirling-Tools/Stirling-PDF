@@ -57,6 +57,8 @@ app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/pdfium/
 app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
+app/core/src/main/resources/static/**/*.gz
+app/core/src/main/resources/static/**/*.br
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
@@ -279,4 +281,4 @@ docs/type3/signatures/
 *.playwright-mcp.png
 
 # Local screenshot artifacts from *-screenshots.spec.ts
-frontend/screenshots/
+frontend/editor/screenshots/

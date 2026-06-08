@@ -188,11 +188,22 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
+      - task: lint:eslint
+      - task: lint:dpdm
+
+  lint:eslint:
+    desc: "Run ESLint linting"
+    deps: [install]
+    cmds:
       - npx eslint --max-warnings=0
-      # Globs (not a bare dir) so dpdm walks the whole tree — `editor/src`
-      # alone matched only 2 files. dpdm expands the braces itself, so this is
+
+  lint:dpdm:
+    desc: "Run circular import linting"
+    deps: [install]
+    cmds:
+      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
       # shell-agnostic. Covers editor, portal, and the shared design system.
-      - 'npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1'
+      - npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"

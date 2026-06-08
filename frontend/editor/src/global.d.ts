@@ -5,7 +5,7 @@ declare module "*.module.css";
 declare module "assets/material-symbols-icons.json" {
   const value: {
     prefix: string;
-    icons: Record<string, any>;
+    icons: Record<string, unknown>;
     width?: number;
     height?: number;
   };
