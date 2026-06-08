@@ -205,16 +205,19 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
       <div className="upm-promise">
         <ShieldIcon className="upm-promise__icon" fontSize="small" />
         <div>
-          <span className="upm-promise__highlight">Editing stays free.</span>{" "}
-          You only pay when our servers process documents — OCR, conversions,
-          AI tools, automation. Browsing and editing in your browser never
-          count toward your spend.
+          <span className="upm-promise__highlight">
+            Everything in the Stirling UI stays free.
+          </span>{" "}
+          You only pay for what comes from automation pipelines, AI tools, and
+          API calls — the things that don't need a person clicking through the
+          UI. Use the editor as much as you want, no charge.
         </div>
       </div>
 
       <h3 className="upm-section-title">Set your monthly spend ceiling</h3>
       <p className="upm-section-help">
-        We'll never charge above this. Free-tier documents don't count.
+        We'll never charge above this. Your first 500 automation / AI / API
+        operations every month are free.
       </p>
 
       <div className="upm-cap-presets" role="radiogroup" aria-label="Monthly cap preset">
@@ -275,12 +278,25 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
       </label>
 
       <div className="upm-help-card">
-        <span className="upm-help-card__title">
-          Documents we count toward billing
-        </span>
-        Server-side jobs: OCR, format conversion, compression, AI tools,
-        automation pipelines, batch processing. Anything where Stirling's
-        servers do real work on your file.
+        <span className="upm-help-card__title">What we count toward billing</span>
+        <ul style={{ margin: "4px 0 0", paddingLeft: 18, lineHeight: 1.55 }}>
+          <li>
+            <strong>Automation pipelines</strong> — chained tools or scheduled
+            runs that don't need clicks
+          </li>
+          <li>
+            <strong>AI tools</strong> — summarise, classify, redact, AI-OCR
+          </li>
+          <li>
+            <strong>API calls</strong> — programmatic access to any Stirling
+            endpoint
+          </li>
+        </ul>
+        <div style={{ marginTop: 8, fontStyle: "italic" }}>
+          Anything you click directly in the Stirling UI — viewing, editing,
+          merging, splitting, signing, watermarking, compressing, OCR via the
+          UI — is always free, even past 500.
+        </div>
       </div>
     </>
   );

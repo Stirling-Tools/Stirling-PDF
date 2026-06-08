@@ -2,31 +2,39 @@
  * DEV-ONLY preview route for the new PAYG plan + upgrade flow UI. NOT shipped
  * to production — gated by {@code import.meta.env.DEV} in {@code App.tsx}.
  *
- * Purpose: lets me iterate on the visual design of EditorPlanPromo +
- * UpgradeModal + the wired-up Payg dashboard without going through auth + the
- * config-modal nav. Each preview slot just renders one of the new components
- * with mock data and a state toggle.
+ * Purpose: lets me iterate on the visual design of PaygFreeLeader,
+ * PaygFreeMember, and the upgrade modal without going through auth + the
+ * config-modal nav. Each preview slot just renders one component with mock
+ * data; the slot toggle at the top is the only chrome.
  *
  * Delete this file (and its route registration in App.tsx) before the bundle
  * PR is marked ready-for-review.
  */
 import React, { useState } from "react";
-import EditorPlanPromo from "@app/components/shared/config/configSections/EditorPlanPromo";
-import UpgradeModal from "@app/components/shared/config/configSections/UpgradeModal";
-import { PaygLeader, PaygMember } from "@app/components/shared/config/configSections/Payg";
+import {
+  PaygLeader,
+  PaygMember,
+} from "@app/components/shared/config/configSections/Payg";
+import {
+  PaygFreeLeader,
+  PaygFreeMember,
+} from "@app/components/shared/config/configSections/PaygFree";
 
-type PreviewSlot = "free" | "upgrade-modal" | "active-leader" | "active-member";
+type PreviewSlot =
+  | "free-leader"
+  | "free-member"
+  | "subscribed-leader"
+  | "subscribed-member";
 
 const SLOT_LABELS: Record<PreviewSlot, string> = {
-  free: "Free user — Editor plan promo",
-  "upgrade-modal": "Upgrade modal (cap → Stripe)",
-  "active-leader": "Subscribed — LEADER dashboard",
-  "active-member": "Subscribed — MEMBER dashboard",
+  "free-leader": "Free · LEADER",
+  "free-member": "Free · MEMBER",
+  "subscribed-leader": "Subscribed · LEADER",
+  "subscribed-member": "Subscribed · MEMBER",
 };
 
 export default function DevPaygPreview() {
-  const [slot, setSlot] = useState<PreviewSlot>("free");
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [slot, setSlot] = useState<PreviewSlot>("free-leader");
 
   return (
     <div
@@ -55,7 +63,7 @@ export default function DevPaygPreview() {
             type="button"
             onClick={() => setSlot(s)}
             style={{
-              padding: "6px 12px",
+              padding: "6px 14px",
               borderRadius: 6,
               border: "1px solid #d8dce1",
               background: slot === s ? "#2563eb" : "white",
@@ -72,51 +80,12 @@ export default function DevPaygPreview() {
           Not shipped to production. Removed before PR merge.
         </span>
       </header>
-      <main
-        style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}
-      >
-        {slot === "free" && (
-          <EditorPlanPromo onUpgradeClick={() => setUpgradeOpen(true)} />
-        )}
-        {slot === "upgrade-modal" && (
-          <div>
-            <p style={{ color: "#666", marginBottom: 16 }}>
-              The modal opens over whatever is behind it. Click below to
-              re-open if you've closed it.
-            </p>
-            <button
-              type="button"
-              onClick={() => setUpgradeOpen(true)}
-              style={{
-                padding: "10px 18px",
-                background: "#2563eb",
-                color: "white",
-                border: "none",
-                borderRadius: 8,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Open upgrade modal
-            </button>
-          </div>
-        )}
-        {slot === "active-leader" && <PaygLeader />}
-        {slot === "active-member" && <PaygMember />}
+      <main style={{ maxWidth: 920, margin: "0 auto", padding: "32px 24px" }}>
+        {slot === "free-leader" && <PaygFreeLeader />}
+        {slot === "free-member" && <PaygFreeMember />}
+        {slot === "subscribed-leader" && <PaygLeader />}
+        {slot === "subscribed-member" && <PaygMember />}
       </main>
-      <UpgradeModal
-        open={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        onComplete={({ capUsd }) => {
-          setUpgradeOpen(false);
-          // eslint-disable-next-line no-alert
-          alert(
-            `Demo: subscription complete. Cap = ${
-              capUsd === null ? "no cap" : `$${capUsd}/mo`
-            }. Real flow would refresh the wallet snapshot here.`,
-          );
-        }}
-      />
     </div>
   );
 }
