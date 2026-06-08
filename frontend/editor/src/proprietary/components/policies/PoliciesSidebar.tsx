@@ -34,7 +34,7 @@ import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Banner } from "@shared/components/Banner";
-import { NavItem } from "@shared/components/NavItem";
+import { IconBadge, type IconBadgeAccent } from "@shared/components/IconBadge";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
@@ -61,6 +61,15 @@ const STATUS_LABEL: Record<PolicyRowStatus, string> = {
   active: "Active",
   paused: "Paused",
   setup: "Set up",
+};
+
+/** A soft tinted icon tile per category — gives each policy a calm identity colour. */
+const ROW_ACCENT: Record<string, IconBadgeAccent> = {
+  ingestion: "blue",
+  security: "purple",
+  compliance: "green",
+  routing: "amber",
+  retention: "red",
 };
 
 /** Whether the right rail should host the Policies section. True in proprietary. */
@@ -141,31 +150,33 @@ export function PoliciesSection() {
                 pol.spendLimitReached,
               );
               return (
-                <NavItem
+                <button
                   key={cat.id}
-                  id={cat.id}
-                  icon={cat.icon}
-                  label={cat.label}
-                  trailing={
-                    <>
-                      {status === "setup" ? (
-                        <span className="pol-row-setup">Set up</span>
-                      ) : (
-                        <StatusBadge
-                          tone={status === "active" ? "success" : "warning"}
-                          size="sm"
-                        >
-                          {STATUS_LABEL[status]}
-                        </StatusBadge>
-                      )}
-                      <ChevronRightIcon
-                        className="pol-row-chevron"
-                        sx={{ fontSize: "1rem" }}
-                      />
-                    </>
-                  }
-                  onClick={selectPolicy}
-                />
+                  type="button"
+                  className="pol-row"
+                  onClick={() => selectPolicy(cat.id)}
+                >
+                  <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
+                    {cat.icon}
+                  </IconBadge>
+                  <span className="pol-row-label">{cat.label}</span>
+                  <span className="pol-row-trail">
+                    {status === "setup" ? (
+                      <span className="pol-row-setup">Set up</span>
+                    ) : (
+                      <StatusBadge
+                        tone={status === "active" ? "success" : "warning"}
+                        size="sm"
+                      >
+                        {STATUS_LABEL[status]}
+                      </StatusBadge>
+                    )}
+                    <ChevronRightIcon
+                      className="pol-row-chevron"
+                      sx={{ fontSize: "1rem" }}
+                    />
+                  </span>
+                </button>
               );
             })}
           </div>

@@ -21,8 +21,42 @@
 .pol-list-rows {
   display: flex;
   flex-direction: column;
-  /* NavItem carries its own side margins; just a little vertical breathing room. */
-  padding: var(--space-1) 0;
+  padding: var(--space-1) var(--space-1_5);
+  gap: 0.0625rem;
+}
+/* A policy row: tinted icon tile + label + trailing status/CTA. */
+.pol-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1_5) var(--space-2);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--motion-fast);
+}
+.pol-row:hover {
+  background: var(--color-bg-hover);
+}
+.pol-row:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+}
+.pol-row-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+.pol-row-trail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
 }
 /* Unconfigured rows: a quiet blue "Set up" call-to-action instead of a status pill. */
 .pol-row-setup {
@@ -34,7 +68,6 @@
 .pol-row-chevron {
   color: var(--color-text-4);
   flex-shrink: 0;
-  margin-left: var(--space-1);
 }
 
 /* ---- Data-source toggle (mock vs live) under the section header ---- */
