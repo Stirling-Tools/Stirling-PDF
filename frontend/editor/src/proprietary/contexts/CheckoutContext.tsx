@@ -24,6 +24,10 @@ import {
 import { useLicense } from "@app/contexts/LicenseContext";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getPreferredCurrency } from "@app/utils/currencyDetection";
+import {
+  usePlanFeatures,
+  usePlanHighlights,
+} from "@app/constants/planConstants";
 
 export interface CheckoutOptions {
   minimumSeats?: number; // Override calculated seats for enterprise
@@ -57,6 +61,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const { refetchLicense } = useLicense();
+  const planFeatures = usePlanFeatures();
+  const planHighlights = usePlanHighlights();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlanGroup, setSelectedPlanGroup] =
@@ -85,7 +91,11 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
       try {
         setPlansLoading(true);
-        const response = await licenseService.getPlans(currency);
+        const response = await licenseService.getPlans(
+          planFeatures,
+          planHighlights,
+          currency,
+        );
         setPlans(response.plans);
         setPlansLoaded(true);
       } catch (error) {
@@ -95,7 +105,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         setPlansLoading(false);
       }
     },
-    [plansLoading],
+    [plansLoading, planFeatures, planHighlights],
   );
 
   const refetchPlans = useCallback(() => {
