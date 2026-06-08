@@ -187,9 +187,10 @@ export function PolicyDetailTakeover() {
         // is no standalone classification policy that would flip this on.
         classificationEnabled={false}
         onCancel={() => closePolicy()}
-        onEnable={(input) => {
-          pol.enablePolicy(selectedId, input);
-          setPolicyDetailView("detail");
+        onEnable={() => {
+          void pol
+            .enablePolicy(selectedId)
+            .then(() => setPolicyDetailView("detail"));
         }}
         onSetupClassification={() => {
           const classifier = categories.find((c) => c.providesClassification);

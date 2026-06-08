@@ -22,7 +22,6 @@ import type {
 } from "@app/types/policies";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
-import type { PolicyEnableInput } from "@app/hooks/usePolicies";
 
 interface PolicySetupWizardProps {
   category: PolicyCategory;
@@ -36,7 +35,7 @@ interface PolicySetupWizardProps {
   /** Whether the Classification (ingestion) policy is active — gates doc-type narrowing. */
   classificationEnabled: boolean;
   onCancel: () => void;
-  onEnable: (input: PolicyEnableInput) => void;
+  onEnable: () => void;
   onSetupClassification: () => void;
 }
 
@@ -284,14 +283,7 @@ export function PolicySetupWizard({
             variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
-            onClick={() =>
-              onEnable({
-                sources,
-                scopeTypes: scopeNarrow ? scopeTypes : [],
-                reviewerEmail,
-                fieldValues,
-              })
-            }
+            onClick={() => onEnable()}
           >
             Enable Policy
           </Button>

@@ -11,23 +11,17 @@ import {
   updatePolicy,
   resetPolicy,
 } from "@app/services/policyStorage";
+import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import {
+  createPolicyFolder,
+  deletePolicyFolder,
+  setPolicyFolderPaused,
+} from "@app/services/policyFolders";
 import {
   MOCK_POLICY_USER,
   canConfigurePolicies,
 } from "@app/data/policyDefinitions";
-import type {
-  PoliciesByCategory,
-  PolicyState,
-  SpendLimit,
-} from "@app/types/policies";
-
-/** Fields captured by the setup wizard when a policy is enabled. */
-export interface PolicyEnableInput {
-  sources: string[];
-  scopeTypes: string[];
-  reviewerEmail: string;
-  fieldValues: Record<string, boolean | string | string[]>;
-}
+import type { PoliciesByCategory, SpendLimit } from "@app/types/policies";
 
 /**
  * Spend limit is read-only mock state in the frontend — the real figure comes
@@ -51,14 +45,21 @@ export function usePolicies() {
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
-  const enablePolicy = useCallback((id: string, input: PolicyEnableInput) => {
+  /**
+   * Enable a policy: create its backing folder trigger (a Watch Folders
+   * SmartFolder + automation seeded from the category preset) and record the
+   * link. Reuses the Watch Folders engine for execution.
+   */
+  const enablePolicy = useCallback(async (id: string) => {
+    const catalog = loadPolicyCatalog();
+    const category = catalog.categories.find((c) => c.id === id);
+    const config = catalog.configs[id];
+    if (!category || !config) return;
+    const folder = await createPolicyFolder(category, config.defaultOperations);
     updatePolicy(id, {
       configured: true,
       status: "active",
-      sources: input.sources,
-      scopeTypes: input.scopeTypes,
-      reviewerEmail: input.reviewerEmail,
-      fieldValues: input.fieldValues,
+      folderId: folder.id,
     });
   }, []);
 
@@ -69,19 +70,21 @@ export function usePolicies() {
     [],
   );
 
-  const setStatus = useCallback((id: string, status: PolicyState["status"]) => {
-    updatePolicy(id, { status });
+  const pausePolicy = useCallback(async (id: string) => {
+    const folderId = loadPolicies()[id]?.folderId;
+    if (folderId) await setPolicyFolderPaused(folderId, true);
+    updatePolicy(id, { status: "paused" });
   }, []);
 
-  const pausePolicy = useCallback(
-    (id: string) => setStatus(id, "paused"),
-    [setStatus],
-  );
-  const resumePolicy = useCallback(
-    (id: string) => setStatus(id, "active"),
-    [setStatus],
-  );
-  const deletePolicy = useCallback((id: string) => {
+  const resumePolicy = useCallback(async (id: string) => {
+    const folderId = loadPolicies()[id]?.folderId;
+    if (folderId) await setPolicyFolderPaused(folderId, false);
+    updatePolicy(id, { status: "active" });
+  }, []);
+
+  const deletePolicy = useCallback(async (id: string) => {
+    const folderId = loadPolicies()[id]?.folderId;
+    if (folderId) await deletePolicyFolder(folderId);
     resetPolicy(id);
   }, []);
 

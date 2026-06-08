@@ -91,6 +91,8 @@ export function resetPolicy(categoryId: string): PoliciesByCategory {
     ...defaultState(categoryId),
     configured: false,
     status: "default",
+    // Drop the backing-folder link (the caller deletes the folder itself).
+    folderId: undefined,
   });
 }
 

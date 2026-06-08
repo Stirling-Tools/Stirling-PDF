@@ -1,6 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import "fake-indexeddb/auto";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+
+// Enabling a policy creates its backing Watch Folders SmartFolder (IndexedDB);
+// jsdom's crypto lacks randomUUID, which smartFolderStorage uses for folder ids.
+if (typeof globalThis.crypto?.randomUUID !== "function") {
+  const orig = globalThis.crypto;
+  vi.stubGlobal("crypto", {
+    getRandomValues: orig?.getRandomValues?.bind(orig),
+    randomUUID: () =>
+      `p-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`,
+  });
+}
 import {
   PoliciesSection,
   PolicyDetailTakeover,
@@ -83,7 +95,7 @@ describe("Policies right-sidebar surface", () => {
     expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
   });
 
-  it("advances through the wizard and enables the policy", () => {
+  it("advances through the wizard and enables the policy", async () => {
     renderHost();
     fireEvent.click(screen.getByText("Security"));
     fireEvent.click(screen.getByText("Continue")); // → step 2
@@ -91,7 +103,8 @@ describe("Policies right-sidebar surface", () => {
     fireEvent.click(screen.getByText("Continue")); // → step 3
     expect(screen.getByText("Summary")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Enable Policy"));
-    // Now configured → narrative footer is shown.
-    expect(screen.getByText("Edit Settings")).toBeInTheDocument();
+    // Enable is async (creates the backing folder); the detail footer with
+    // "Edit Settings" appears once the policy is configured.
+    expect(await screen.findByText("Edit Settings")).toBeInTheDocument();
   });
 });
