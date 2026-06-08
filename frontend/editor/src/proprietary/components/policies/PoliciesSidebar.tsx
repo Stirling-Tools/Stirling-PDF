@@ -234,20 +234,20 @@ export function PolicyDetailTakeover() {
   const [liveData, setLiveData] = useState<PolicyLiveData | null>(null);
   useEffect(() => {
     // Mock mode → null so the panel uses the preset's mock data. Live mode →
-    // always derive (even with no backing folder, which yields empty live data),
-    // so live never silently falls back to the mock feed.
+    // derive from the app's real uploaded files (the "all uploaded files"
+    // trigger), so live shows the user's actual files, never the mock feed.
     if (dataMode !== "live") {
       setLiveData(null);
       return;
     }
     let cancelled = false;
-    getPolicyLiveData(folderId).then((d) => {
+    getPolicyLiveData().then((d) => {
       if (!cancelled) setLiveData(d);
     });
     return () => {
       cancelled = true;
     };
-  }, [dataMode, folderId]);
+  }, [dataMode, selectedId]);
 
   if (!POLICIES_ENABLED || selectedId == null) return null;
 

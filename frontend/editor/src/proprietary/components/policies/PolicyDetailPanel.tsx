@@ -116,7 +116,7 @@ export function PolicyDetailPanel({
               </span>
               <span className="pol-meta-item">
                 <ScheduleIcon sx={{ fontSize: "0.8rem" }} />
-                On save &amp; export
+                On every upload
               </span>
             </div>
             <div className="pol-note">
