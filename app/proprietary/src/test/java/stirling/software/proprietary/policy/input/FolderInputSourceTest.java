@@ -51,11 +51,15 @@ class FolderInputSourceTest {
         assertEquals(1, work.get(0).inputs().primary().size());
         // Claimed out of the input dir.
         assertFalse(Files.exists(inputDir.resolve("doc.pdf")));
-        assertTrue(Files.exists(inputDir.resolve(".processing").resolve("doc.pdf")));
+        assertTrue(
+                Files.exists(
+                        inputDir.resolve(".stirling").resolve("processing").resolve("doc.pdf")));
 
         work.get(0).onComplete().accept(true);
-        assertTrue(Files.exists(inputDir.resolve(".done").resolve("doc.pdf")));
-        assertFalse(Files.exists(inputDir.resolve(".processing").resolve("doc.pdf")));
+        assertTrue(Files.exists(inputDir.resolve(".stirling").resolve("done").resolve("doc.pdf")));
+        assertFalse(
+                Files.exists(
+                        inputDir.resolve(".stirling").resolve("processing").resolve("doc.pdf")));
     }
 
     @Test
@@ -66,7 +70,7 @@ class FolderInputSourceTest {
         List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()));
         work.get(0).onComplete().accept(false);
 
-        assertTrue(Files.exists(inputDir.resolve(".error").resolve("doc.pdf")));
+        assertTrue(Files.exists(inputDir.resolve(".stirling").resolve("error").resolve("doc.pdf")));
     }
 
     @Test

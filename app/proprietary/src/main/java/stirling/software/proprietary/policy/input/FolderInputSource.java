@@ -27,9 +27,10 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * <p>Two modes via the {@code mode} option:
  *
  * <ul>
- *   <li>{@code "consume"} (default) - claim each file by moving it into {@code .processing}, then
- *       route it to {@code .done} or {@code .error} when its run finishes. Each file is processed
- *       once; right for "process new arrivals" (and the basis of watched folders).
+ *   <li>{@code "consume"} (default) - claim each file by moving it into {@code
+ *       .stirling/processing}, then route it to {@code .stirling/done} or {@code .stirling/error}
+ *       when its run finishes. Each file is processed once; right for "process new arrivals" (and
+ *       the basis of watched folders).
  *   <li>{@code "snapshot"} - read the directory's current files without moving them; every run sees
  *       the full set again. Right for "always regenerate from a fixed input set".
  * </ul>
@@ -42,9 +43,11 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 public class FolderInputSource implements InputSource {
 
     private static final String TYPE = "folder";
-    private static final String PROCESSING_SUBDIR = ".processing";
-    private static final String DONE_SUBDIR = ".done";
-    private static final String ERROR_SUBDIR = ".error";
+    // Bookkeeping lives under one hidden namespace dir so the watched folder stays tidy.
+    private static final String WORK_SUBDIR = ".stirling";
+    private static final String PROCESSING_SUBDIR = "processing";
+    private static final String DONE_SUBDIR = "done";
+    private static final String ERROR_SUBDIR = "error";
 
     private final FileReadinessChecker readinessChecker;
 
@@ -104,7 +107,7 @@ public class FolderInputSource implements InputSource {
 
     private Path claim(Path inputDir, Path file) {
         try {
-            Path processingDir = inputDir.resolve(PROCESSING_SUBDIR);
+            Path processingDir = workDir(inputDir, PROCESSING_SUBDIR);
             Files.createDirectories(processingDir);
             Path claimed = uniqueTarget(processingDir, file.getFileName().toString());
             Files.move(file, claimed, StandardCopyOption.ATOMIC_MOVE);
@@ -118,7 +121,7 @@ public class FolderInputSource implements InputSource {
     private void route(Path inputDir, Path claimed, boolean success) {
         String subdir = success ? DONE_SUBDIR : ERROR_SUBDIR;
         try {
-            Path destDir = inputDir.resolve(subdir);
+            Path destDir = workDir(inputDir, subdir);
             Files.createDirectories(destDir);
             Files.move(
                     claimed,
@@ -128,6 +131,11 @@ public class FolderInputSource implements InputSource {
             log.warn(
                     "Could not move processed input {} to {}: {}", claimed, subdir, e.getMessage());
         }
+    }
+
+    /** A bookkeeping subdirectory under the watched folder's {@code .stirling} namespace. */
+    private static Path workDir(Path inputDir, String subdir) {
+        return inputDir.resolve(WORK_SUBDIR).resolve(subdir);
     }
 
     private static Resource fileResource(Path path) {
