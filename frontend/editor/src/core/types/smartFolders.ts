@@ -25,6 +25,13 @@ export interface SmartFolder {
   hasOutputDirectory?: boolean; // true when a local FS output folder is configured
   /** Where input files come from. Default: 'idb' (dropped/sidebar files stay in browser). */
   inputSource?: "idb" | "local-folder";
+  /**
+   * Set when this folder backs a Policy (the policy's folder trigger), tagged
+   * with the policy's category id. Such folders reuse the Watch Folders engine
+   * for execution but are owned by the Policies feature — they're filtered out
+   * of the Watch Folders UI lists (but still processed by the poller).
+   */
+  policyCategoryId?: string;
 }
 
 export interface FolderFileMetadata {

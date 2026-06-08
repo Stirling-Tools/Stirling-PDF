@@ -34,7 +34,9 @@ export function useSmartFolders(): UseSmartFoldersReturn {
   const refreshFolders = useCallback(async () => {
     try {
       const all = await smartFolderStorage.getAllFolders();
-      setFolders(all);
+      // Policy-backed folders reuse this store + engine but belong to the
+      // Policies feature — keep them out of the Watch Folders UI.
+      setFolders(all.filter((f) => !f.policyCategoryId));
     } catch (error) {
       console.error("Failed to load smart folders:", error);
     } finally {

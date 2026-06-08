@@ -17,7 +17,9 @@ export function useAllSmartFolders(): SmartFolder[] {
   useEffect(() => {
     const load = async () => {
       try {
-        setFolders(await smartFolderStorage.getAllFolders());
+        // Exclude policy-backed folders — they're owned by the Policies feature.
+        const all = await smartFolderStorage.getAllFolders();
+        setFolders(all.filter((f) => !f.policyCategoryId));
       } catch (err) {
         console.error("Failed to load smart folders:", err);
       }
