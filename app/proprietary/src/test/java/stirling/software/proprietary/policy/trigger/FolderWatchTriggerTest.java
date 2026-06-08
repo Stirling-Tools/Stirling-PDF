@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.trigger;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -8,7 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +20,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -41,6 +46,8 @@ class FolderWatchTriggerTest {
     @Mock private PolicyStore policyStore;
     @Mock private PolicyRunner policyRunner;
     @Mock private InputSource folderSource;
+
+    @TempDir Path tempDir;
 
     private FolderWatchTrigger trigger;
 
@@ -115,6 +122,36 @@ class FolderWatchTriggerTest {
 
         verify(policyRunner).run(a);
         verify(policyRunner).run(b);
+    }
+
+    @Test
+    void syncRegistrationsWatchesExistingDirsAndCancelsRemovedOnes() throws Exception {
+        Path dirA = Files.createDirectories(tempDir.resolve("a"));
+        Path dirB = Files.createDirectories(tempDir.resolve("b"));
+        Path missing = tempDir.resolve("missing"); // never created on disk
+
+        Policy a = folderWatch("a", List.of(InputSpec.folder(dirA.toString())));
+        Policy b = folderWatch("b", List.of(InputSpec.folder(dirB.toString())));
+        Policy m = folderWatch("m", List.of(InputSpec.folder(missing.toString())));
+
+        WatchService service = FileSystems.getDefault().newWatchService();
+        try {
+            trigger.watchService = service;
+
+            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(a, b, m));
+            trigger.syncRegistrations();
+            // Existing dirs are watched; the non-existent one is skipped.
+            assertEquals(
+                    Set.of(normalized(dirA.toString()), normalized(dirB.toString())),
+                    trigger.watchedDirs());
+
+            // b's policy is removed: its registration is cancelled, a remains.
+            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(a));
+            trigger.syncRegistrations();
+            assertEquals(Set.of(normalized(dirA.toString())), trigger.watchedDirs());
+        } finally {
+            service.close();
+        }
     }
 
     private static Path normalized(String dir) {

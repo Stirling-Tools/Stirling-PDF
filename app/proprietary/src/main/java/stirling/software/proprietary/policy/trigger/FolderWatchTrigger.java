@@ -73,7 +73,10 @@ public class FolderWatchTrigger implements PolicyTrigger {
     private final Map<WatchKey, Path> dirByKey = new ConcurrentHashMap<>();
 
     private volatile boolean running;
-    private volatile WatchService watchService;
+
+    // Package-visible (not private) so tests can drive syncRegistrations() against a real service.
+    volatile WatchService watchService;
+
     private volatile ScheduledExecutorService reconciler;
 
     @Override
@@ -130,17 +133,23 @@ public class FolderWatchTrigger implements PolicyTrigger {
     }
 
     private void watchLoop() {
+        // Capture the service once: stop() may null the field, and a local avoids racing that to an
+        // NPE (close() still wakes take()/poll() on this same instance).
+        WatchService watcher = watchService;
+        if (watcher == null) {
+            return;
+        }
         while (running) {
             WatchKey first;
             try {
-                first = watchService.take();
+                first = watcher.take();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
             } catch (ClosedWatchServiceException e) {
                 return;
             }
-            runForChangedDirs(drainBurst(first));
+            runForChangedDirs(drainBurst(watcher, first));
         }
     }
 
@@ -149,7 +158,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
      * the quiet period, so a burst of file-system events becomes a single set of affected
      * directories. The event kinds are irrelevant: any event on a watched dir just means "go look".
      */
-    private Set<Path> drainBurst(WatchKey first) {
+    private Set<Path> drainBurst(WatchService watcher, WatchKey first) {
         Set<Path> changed = new HashSet<>();
         WatchKey key = first;
         while (key != null) {
@@ -160,7 +169,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
             }
             key.reset();
             try {
-                key = watchService.poll(quietPeriodMs, TimeUnit.MILLISECONDS);
+                key = watcher.poll(quietPeriodMs, TimeUnit.MILLISECONDS);
             } catch (ClosedWatchServiceException | InterruptedException e) {
                 break;
             }
@@ -247,6 +256,11 @@ public class FolderWatchTrigger implements PolicyTrigger {
                 log.warn("Could not watch {}: {}", dir, e.getMessage());
             }
         }
+    }
+
+    /** The directories currently registered with the watch service. Visible for tests. */
+    Set<Path> watchedDirs() {
+        return Set.copyOf(keysByDir.keySet());
     }
 
     /** Every existing directory any current folder-watch policy wants watched. */

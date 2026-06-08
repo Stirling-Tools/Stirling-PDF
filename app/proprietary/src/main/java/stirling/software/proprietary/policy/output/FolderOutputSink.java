@@ -59,7 +59,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name = resource.getFilename() != null ? resource.getFilename() : "output-" + i;
+            String name = safeName(resource.getFilename(), i);
             Path target = uniqueTarget(targetDir, name);
             try (InputStream is = resource.getInputStream()) {
                 Files.copy(is, target);
@@ -88,6 +88,22 @@ public class FolderOutputSink implements PolicyOutputSink {
                     "folder output requires a '" + DIRECTORY_OPTION + "' option");
         }
         return Path.of(directory.toString());
+    }
+
+    /**
+     * The resource's filename reduced to a bare, traversal-free name: any directory component or
+     * "../" is stripped so a crafted output name cannot escape {@code targetDir}. Falls back to a
+     * synthetic name when the filename is absent or reduces to nothing usable.
+     */
+    private static String safeName(String filename, int index) {
+        if (filename == null || filename.isBlank()) {
+            return "output-" + index;
+        }
+        String name = FilenameUtils.getName(filename);
+        if (name.isBlank() || ".".equals(name) || "..".equals(name)) {
+            return "output-" + index;
+        }
+        return name;
     }
 
     /** Resolve a non-colliding path in {@code dir}, appending " (n)" before the extension. */

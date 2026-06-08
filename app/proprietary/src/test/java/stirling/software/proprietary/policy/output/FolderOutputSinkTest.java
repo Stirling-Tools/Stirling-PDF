@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.output;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,6 +58,20 @@ class FolderOutputSinkTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> sink.deliver("run-1", List.of(named("a.pdf", "x")), noDir));
+    }
+
+    @Test
+    void filenamesWithPathTraversalAreConfinedToTheDirectory() throws IOException {
+        Path out = tempDir.resolve("out");
+        List<Resource> outputs =
+                List.of(named("../escape.pdf", "x"), named("nested/deep.pdf", "y"));
+
+        sink.deliver("run-1", outputs, OutputSpec.folder(out.toString()));
+
+        // Each name is reduced to its bare form inside the target dir; nothing escapes.
+        assertTrue(Files.exists(out.resolve("escape.pdf")));
+        assertTrue(Files.exists(out.resolve("deep.pdf")));
+        assertFalse(Files.exists(tempDir.resolve("escape.pdf")));
     }
 
     private static ByteArrayResource named(String filename, String content) {
