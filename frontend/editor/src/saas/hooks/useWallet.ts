@@ -18,16 +18,29 @@
  *       to {@code UpgradeModal} without forcing a remount.
  *   <li>{@code refetch / markSubscribed / updateCap} bump an internal counter
  *       that the {@code useEffect} watches — no global state plumbing.
+ *   <li>A monotonic {@code requestId} ref drops stale responses so a slow
+ *       refetch from tick=N can't overwrite a faster one from tick=N+1
+ *       (out-of-order resolution would otherwise show old data).
  * </ul>
+ *
+ * <h2>Mutation semantics</h2>
+ *
+ * Both {@code markSubscribed} and {@code updateCap} resolve only after the
+ * post-mutation wallet refetch completes. So callers like the cap-editor
+ * "Update cap" button that gate a {@code loading} state on the returned
+ * promise see the UI flip exactly once the new state is visible — no
+ * intermediate flash of the old value.
  *
  * <h2>Dev preview fallback</h2>
  *
  * When the hook is rendered outside the saas app (e.g. on {@code
- * /dev/payg-preview}) the {@code AppConfigContext} provider is not mounted,
- * so the principal lookup throws. The hook detects that and silently
- * falls back to a synthesized snapshot with subscription state read from
- * {@code localStorage} (key {@code stirling.payg.devSubscription}). That
- * preserves the design-iteration workflow without a backend round-trip.
+ * /dev/payg-preview} during local design work) the {@code AppConfigContext}
+ * provider is not mounted and no backend is available. The hook detects that
+ * via {@code import.meta.env.DEV} + the {@code /dev/} path and falls back to
+ * a synthesised snapshot whose subscription state is read from
+ * {@code localStorage} (key {@code stirling.payg.devSubscription}). Both
+ * conditions are required so a production tenant whose URL happens to start
+ * with {@code /dev/} can't trigger the fallback.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import apiClient from "@app/services/apiClient";
@@ -63,15 +76,20 @@ export interface UseWalletResult {
   loading: boolean;
   error: string | null;
   /** Force a refetch — e.g. after Stripe redirects back into the app. */
-  refetch: () => void;
+  refetch: () => Promise<void>;
   /**
    * Dev-only side-channel that simulates the Stripe webhook flipping the
    * team to subscribed. Used by {@code UpgradeModal} when the backend is
    * running the mock checkout — the real flow waits for the webhook
-   * instead and the next {@code refetch} picks up the change.
+   * instead and the next {@code refetch} picks up the change. Resolves
+   * once the post-mutation refetch completes.
    */
   markSubscribed: (capUsd: number | null) => Promise<void>;
-  /** Update the team's monthly cap. {@code null} means "no cap". */
+  /**
+   * Update the team's monthly cap. {@code null} means "no cap". Resolves
+   * once the post-mutation refetch completes so a save-button
+   * {@code loading} state can be safely cleared on resolution.
+   */
   updateCap: (capUsd: number | null) => Promise<void>;
 }
 
@@ -105,7 +123,7 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
 }
 
 /**
- * Synthesize a wallet snapshot for the dev preview route. Mirrors the same
+ * Synthesise a wallet snapshot for the dev preview route. Mirrors the same
  * shape the backend returns. Subscription state comes from localStorage so
  * the modal's "mark subscribed" action survives a reload.
  */
@@ -141,6 +159,10 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
 
 /** True when we're rendered outside the real saas app (e.g. dev preview route). */
 function isDevPreviewContext(): boolean {
+  // Both checks required: production builds drop the path check, so a real
+  // tenant whose URL begins with /dev/ can't accidentally hit the synthesised
+  // fallback.
+  if (!import.meta.env.DEV) return false;
   if (typeof window === "undefined") return false;
   return window.location.pathname.startsWith("/dev/");
 }
@@ -160,59 +182,80 @@ export function useWallet(): UseWalletResult {
   const [error, setError] = useState<string | null>(null);
   const [refetchTick, setRefetchTick] = useState(0);
 
+  // Monotonic request id — used to discard stale responses if a faster
+  // refetch lands first. Only the latest issued id is permitted to commit
+  // its result.
+  const latestReqId = useRef(0);
+
+  // Promise tracking the most recent in-flight load. Mutations await this
+  // so their resolution semantics are "the new state is visible," not
+  // "the request fired." Cleared when no load is pending.
+  const inFlight = useRef<Promise<void> | null>(null);
+
   useEffect(() => {
+    const reqId = ++latestReqId.current;
     let cancelled = false;
 
-    async function load() {
+    const promise = (async () => {
       setLoading(true);
       setError(null);
 
       if (devPreview) {
-        // Synthesize a snapshot so the dev preview route still works without auth.
         const synth = buildDevPreviewWallet(devPreviewRole());
-        if (!cancelled) {
-          setWallet((prev) => reuseIfEqual(prev, synth));
-          setLoading(false);
-        }
+        if (cancelled || reqId !== latestReqId.current) return;
+        setWallet((prev) => reuseIfEqual(prev, synth));
+        setLoading(false);
         return;
       }
 
       try {
         const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
-        if (!cancelled) {
-          setWallet((prev) => reuseIfEqual(prev, res.data));
-        }
+        if (cancelled || reqId !== latestReqId.current) return;
+        setWallet((prev) => reuseIfEqual(prev, res.data));
       } catch (e: unknown) {
+        if (cancelled || reqId !== latestReqId.current) return;
         // eslint-disable-next-line no-console
         console.warn("[useWallet] fetch failed", e);
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load wallet");
-        }
+        setError(e instanceof Error ? e.message : "Failed to load wallet");
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && reqId === latestReqId.current) {
+          setLoading(false);
+        }
       }
-    }
+    })();
 
-    load();
+    inFlight.current = promise;
+
     return () => {
       cancelled = true;
+      // Don't clear inFlight here — let it resolve so mutations awaiting it
+      // still see a definitive "load completed" point. The reqId guard
+      // upstream ensures stale results don't commit.
     };
   }, [devPreview, refetchTick]);
 
-  const refetch = useCallback(() => {
+  const refetch = useCallback(async () => {
     setRefetchTick((t) => t + 1);
+    // Snapshot the next-tick promise so the caller awaits this refetch
+    // specifically — the in-flight ref will be updated to it on the next
+    // effect run, but we can't reference that synchronously, so settle for
+    // a microtask handoff: await the *current* effect to flush, then await
+    // the new in-flight promise.
+    await Promise.resolve();
+    if (inFlight.current) {
+      await inFlight.current;
+    }
   }, []);
 
   const markSubscribed = useCallback(
     async (capUsd: number | null) => {
       if (devPreview) {
-        // Flip the localStorage flag and refetch the synthesized snapshot.
         try {
           window.localStorage.setItem(STORAGE_KEY, "subscribed");
         } catch {
           /* storage unavailable */
         }
-        refetch();
+        await refetch();
         return;
       }
       const noCap = capUsd === null;
@@ -220,7 +263,7 @@ export function useWallet(): UseWalletResult {
         capUsd: capUsd ?? 0,
         noCap,
       });
-      refetch();
+      await refetch();
     },
     [devPreview, refetch],
   );
@@ -229,15 +272,14 @@ export function useWallet(): UseWalletResult {
     async (capUsd: number | null) => {
       const noCap = capUsd === null;
       if (devPreview) {
-        // Cap edits in dev preview are no-ops on synthesized state.
-        refetch();
+        await refetch();
         return;
       }
       await apiClient.patch("/api/v1/payg/cap", {
         capUsd: capUsd ?? 0,
         noCap,
       });
-      refetch();
+      await refetch();
     },
     [devPreview, refetch],
   );

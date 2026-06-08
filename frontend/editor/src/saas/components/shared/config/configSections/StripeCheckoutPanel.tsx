@@ -91,15 +91,26 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
 
   // Strict-Mode-safe single-flight: React 18 dev mounts effects twice; we use
   // a ref-guarded fetch so we don't burn two Stripe Checkout Sessions per
-  // mount in dev.
+  // mount in dev. (Cap changes are handled via key= in the parent, so each
+  // distinct cap gets a fresh mount — fetchedRef only protects within a
+  // single logical mount.)
   const fetchedRef = useRef<boolean>(false);
+
+  // Stable ref for the error callback so we don't have to include it in the
+  // effect deps — keeps the single-flight semantics intact for callers that
+  // pass an inline onError.
+  const onErrorRef = useRef<typeof onError>(onError);
+  onErrorRef.current = onError;
 
   const publishableKey =
     import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
 
   // Dev preview route has no backend — skip the API call and go straight
   // to the mock placeholder so the design + completion path stay testable.
+  // Both checks required so a production tenant with a /dev/ URL prefix
+  // can't accidentally trigger the placeholder.
   const devPreview =
+    import.meta.env.DEV &&
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/dev/");
 
@@ -134,7 +145,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
           e instanceof Error ? e.message : "Couldn't start checkout session";
         if (!cancelled) {
           setError(msg);
-          onError?.(msg);
+          onErrorRef.current?.(msg);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -144,7 +155,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [capUsd, devPreview, onError]);
+  }, [capUsd, devPreview]);
 
   if (loading) {
     return (

@@ -2,8 +2,10 @@ package stirling.software.saas.payg.api;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -42,6 +45,16 @@ import stirling.software.saas.payg.api.PaygApiService.WalletSnapshot;
 public class PaygApiController {
 
     private final PaygApiService paygApi;
+
+    /**
+     * Whether the dev-only side-channel subscribe endpoint is exposed. Defaults to OFF so we don't
+     * ship a "any authenticated user can flip their team to subscribed" endpoint by accident; flip
+     * to {@code true} via {@code payg.dev-endpoints.enabled=true} in {@code application-saas.yml}
+     * for the dev loop, and ensure it's not set in any staging/prod overlay. Even when enabled, the
+     * endpoint also requires {@code ROLE_ADMIN}.
+     */
+    @Value("${payg.dev-endpoints.enabled:false}")
+    private boolean devEndpointsEnabled;
 
     // ─── Wallet snapshot ────────────────────────────────────────────────
 
@@ -121,13 +134,21 @@ public class PaygApiController {
      * setting up Stripe test mode for every UI change.
      */
     @PostMapping("/dev/mark-subscribed")
+    @Hidden
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "DEV-ONLY: simulate Stripe webhook success",
             description =
-                    "Marks the team as subscribed without going through Stripe. Delete once the"
-                            + " real customer.subscription.created webhook handler is wired up.")
+                    "Marks the team as subscribed without going through Stripe. Requires both"
+                            + " ROLE_ADMIN and payg.dev-endpoints.enabled=true; defaults to disabled."
+                            + " Delete once the real customer.subscription.created webhook handler is"
+                            + " wired up.")
     public ResponseEntity<Map<String, Object>> devMarkSubscribed(
             Authentication authentication, @Valid @RequestBody UpdateCapRequest req) {
+        if (!devEndpointsEnabled) {
+            // Mirror the "not found" surface so probes don't reveal that the endpoint exists.
+            return ResponseEntity.status(404).body(Map.of("error", "Not found"));
+        }
         String teamKey = paygApi.resolveTeamKey(authentication);
         paygApi.markSubscribed(teamKey, req.capUsd(), req.noCap());
         return ResponseEntity.ok(Map.of("success", true));

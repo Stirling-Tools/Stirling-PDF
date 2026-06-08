@@ -138,7 +138,13 @@ export default function UpgradeModal({
               />
             )}
             {step === "checkout" && (
+              // Keyed on the cap value so editing the cap → returning to
+              // step 2 unmounts + remounts the panel, triggering a fresh
+              // POST /checkout for the new cap. Without the key, the
+              // StripeCheckoutPanel's fetchedRef short-circuits and the
+              // session keeps the stale cap.
               <CheckoutStep
+                key={`co:${effectiveCap ?? "nocap"}`}
                 effectiveCap={effectiveCap}
                 currency={currency}
                 onEditCap={goBackToCap}

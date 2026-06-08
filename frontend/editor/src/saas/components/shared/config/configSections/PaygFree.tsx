@@ -174,7 +174,7 @@ export interface PaygFreeLeaderProps {
   onUpgraded?: (result: { capUsd: number | null }) => void;
 }
 
-export function PaygFreeLeader({ onUpgraded }: PaygFreeLeaderProps = {}) {
+function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   useRenderCount("PaygFreeLeader");
   const snap = useFreeMock();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -293,7 +293,7 @@ export function PaygFreeLeader({ onUpgraded }: PaygFreeLeaderProps = {}) {
 
 // ─── Free MEMBER: hero + ask-owner note (no CTA) ─────────────────────────
 
-export function PaygFreeMember() {
+function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");
   const snap = useFreeMock();
 
@@ -353,3 +353,10 @@ export function PaygFreeMember() {
     </div>
   );
 }
+
+
+// React.memo so Plan re-rendering on loading/error toggles doesn't cascade
+// down to these leaves. Plan passes a stable onUpgraded callback (hoisted in
+// Plan.tsx) so the prop identity stays stable across wallet refetches.
+export const PaygFreeLeader = React.memo(PaygFreeLeaderInner);
+export const PaygFreeMember = React.memo(PaygFreeMemberInner);

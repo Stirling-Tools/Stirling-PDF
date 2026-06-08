@@ -189,13 +189,22 @@ public class PaygApiService {
         if (ref == null) {
             return false;
         }
-        SubscriptionState current = ref.get();
-        if (current == null) {
+        // Atomic CAS via updateAndGet so a concurrent markSubscribed (or another updateCap on the
+        // same team) can't lose the subscription id between read and write. Returns null when the
+        // ref is empty (team has never subscribed) so the caller can 404.
+        SubscriptionState updated =
+                ref.updateAndGet(
+                        current ->
+                                current == null
+                                        ? null
+                                        : new SubscriptionState(
+                                                current.subscriptionId(),
+                                                capUsd,
+                                                noCap,
+                                                current.subscribedOn()));
+        if (updated == null) {
             return false;
         }
-        ref.set(
-                new SubscriptionState(
-                        current.subscriptionId(), capUsd, noCap, current.subscribedOn()));
         log.info("Cap updated for team={} → cap={} noCap={}", teamKey, capUsd, noCap);
         return true;
     }

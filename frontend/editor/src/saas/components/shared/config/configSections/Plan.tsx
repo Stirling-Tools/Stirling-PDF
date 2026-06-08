@@ -14,7 +14,7 @@
  * a top-level error toast, a subscription confirmation card, etc — have
  * obvious places to land.
  */
-import React from "react";
+import React, { useCallback } from "react";
 import { Alert, Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useWallet } from "@app/hooks/useWallet";
@@ -32,6 +32,21 @@ const Plan: React.FC = () => {
   useRenderCount("Plan");
   const { t } = useTranslation();
   const { wallet, loading, error, markSubscribed, updateCap } = useWallet();
+
+  // Stable callback so PaygFreeLeader's React.memo doesn't see a new prop
+  // identity on every Plan render (e.g. loading flips false→true→false on
+  // a refetch). Closing over the stable markSubscribed from useWallet
+  // means we don't need to add wallet state to deps.
+  const onUpgraded = useCallback(
+    ({ capUsd }: { capUsd: number | null }) => {
+      // Bridges the modal's local success → backend mock → refetch loop.
+      // Real Stripe flow: the customer.subscription.created webhook is
+      // what flips status; we still call markSubscribed locally so the
+      // optimistic refetch hits immediately.
+      void markSubscribed(capUsd);
+    },
+    [markSubscribed],
+  );
 
   if (loading && !wallet) {
     return (
@@ -63,17 +78,7 @@ const Plan: React.FC = () => {
 
   // Free tier — only the leader sees the upgrade CTA.
   if (wallet.role === "leader") {
-    return (
-      <PaygFreeLeader
-        onUpgraded={({ capUsd }) => {
-          // Bridges the modal's local success → backend mock → refetch loop.
-          // Real Stripe flow: the customer.subscription.created webhook is
-          // what flips status; we still call markSubscribed locally so the
-          // optimistic refetch hits immediately. The next refetch wins.
-          void markSubscribed(capUsd);
-        }}
-      />
-    );
+    return <PaygFreeLeader onUpgraded={onUpgraded} />;
   }
   return <PaygFreeMember />;
 };
