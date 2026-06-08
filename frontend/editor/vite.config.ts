@@ -131,6 +131,17 @@ export default defineConfig(async ({ mode }) => {
   const viteAndRunNames = Object.keys(process.env)
     .filter((k) => k.startsWith("VITE_") || k.startsWith("RUN_"))
     .sort();
+
+  // Fuzzy-match anything that looks like it might be a misnamed
+  // VITE_API_BASE_URL — typos, extra spaces, wrong case, missing
+  // underscores, etc. Catches names like "VITE_API_BASEURL", "vite_api_base_url",
+  // "VITE_API_BASE_URL " (trailing whitespace), and so on.
+  // Names only, no values — printed JSON-encoded so we can SEE any
+  // invisible characters as escape sequences.
+  const suspectNamesEncoded = Object.keys(process.env)
+    .filter((k) => /API|BASE|URL|VITE|STIRLING|BPI/i.test(k))
+    .sort()
+    .map((k) => JSON.stringify(k));
   // eslint-disable-next-line no-console
   console.log(
     "[vite-config-debug]",
@@ -149,6 +160,10 @@ export default defineConfig(async ({ mode }) => {
         // remains safe to print in the build log even if Cloudflare ever
         // exposes secrets via this prefix in future.
         viteAndRunEnvVarNames: viteAndRunNames,
+        // Anything that looks like it might be a misnamed VITE_API_BASE_URL.
+        // JSON-encoded so trailing whitespace / unicode appears as escapes.
+        suspectEnvVarNamesEncoded: suspectNamesEncoded,
+        totalEnvVarCount: Object.keys(process.env).length,
       },
       null,
       2,
