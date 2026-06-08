@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import type { DocumentStyleSelection } from "@app/components/chat/DocumentStylePicker";
 import { generateId } from "@app/utils/generateId";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
@@ -327,10 +326,7 @@ interface ChatContextValue {
   progress: AiWorkflowProgress | null;
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
-  sendMessage: (
-    content: string,
-    documentStyle?: DocumentStyleSelection,
-  ) => Promise<void>;
+  sendMessage: (content: string) => Promise<void>;
   cancelMessage: () => void;
   /** Abort any in-flight request and reset the chat to an empty conversation. */
   clearChat: () => void;
@@ -441,7 +437,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendMessage = useCallback(
-    async (content: string, documentStyle?: DocumentStyleSelection) => {
+    async (content: string) => {
       // Abort any in-flight request
       abortRef.current?.abort();
       const controller = new AbortController();
