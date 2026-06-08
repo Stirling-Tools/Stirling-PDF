@@ -26,13 +26,6 @@ interface Point {
 let rulerMeasurementIdCounter = 0;
 
 function createRulerMeasurementId(): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return `ruler-${crypto.randomUUID()}`;
-  }
-
   rulerMeasurementIdCounter += 1;
   return `ruler-${Date.now().toString(36)}-${rulerMeasurementIdCounter.toString(36)}`;
 }

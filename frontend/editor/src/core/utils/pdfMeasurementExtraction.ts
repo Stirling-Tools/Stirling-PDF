@@ -1,4 +1,12 @@
 import type {
+  PDFArray,
+  PDFDict,
+  PDFHexString,
+  PDFName,
+  PDFNumber,
+  PDFString,
+} from "@cantoo/pdf-lib";
+import type {
   MeasureScale,
   PageMeasureScales,
   PageScaleInfo,
@@ -6,96 +14,139 @@ import type {
 } from "@app/utils/measurementTypes";
 import { getUnitFactor } from "@app/utils/measurementUtils";
 
-type PdfLookupable = {
-  lookup: (key: unknown) => unknown;
-};
+type PdfMeasurementObjects = Pick<
+  typeof import("@cantoo/pdf-lib"),
+  | "PDFArray"
+  | "PDFDict"
+  | "PDFHexString"
+  | "PDFName"
+  | "PDFNumber"
+  | "PDFString"
+>;
 
-type PdfArrayLike = {
-  size: () => number;
-  lookup: (index: number) => unknown;
-};
+function asPdfArray(
+  value: unknown,
+  { PDFArray }: PdfMeasurementObjects,
+): PDFArray | null {
+  return value instanceof PDFArray ? value : null;
+}
 
-type PdfNumberLike = {
-  asNumber: () => number;
-};
+function asPdfDict(
+  value: unknown,
+  { PDFDict }: PdfMeasurementObjects,
+): PDFDict | null {
+  return value instanceof PDFDict ? value : null;
+}
 
-type PdfTextLike = {
-  decodeText: () => string;
-};
+function asPdfNumber(
+  value: unknown,
+  { PDFNumber }: PdfMeasurementObjects,
+): PDFNumber | null {
+  return value instanceof PDFNumber ? value : null;
+}
 
-function isLookupable(value: unknown): value is PdfLookupable {
+function asPdfText(
+  value: unknown,
+  { PDFHexString, PDFName, PDFString }: PdfMeasurementObjects,
+): PDFHexString | PDFName | PDFString | null {
+  if (
+    value instanceof PDFString ||
+    value instanceof PDFHexString ||
+    value instanceof PDFName
+  ) {
+    return value;
+  }
+  return null;
+}
+
+function lookupArray(
+  dict: PDFDict,
+  key: string,
+  pdfObjects: PdfMeasurementObjects,
+): PDFArray | null {
+  return asPdfArray(dict.lookup(pdfObjects.PDFName.of(key)), pdfObjects);
+}
+
+function lookupDict(
+  dict: PDFDict,
+  key: string,
+  pdfObjects: PdfMeasurementObjects,
+): PDFDict | null {
+  return asPdfDict(dict.lookup(pdfObjects.PDFName.of(key)), pdfObjects);
+}
+
+function lookupNumber(
+  dict: PDFDict,
+  key: string,
+  pdfObjects: PdfMeasurementObjects,
+): number | null {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "lookup" in value &&
-    typeof (value as PdfLookupable).lookup === "function"
+    asPdfNumber(
+      dict.lookup(pdfObjects.PDFName.of(key)),
+      pdfObjects,
+    )?.asNumber() ?? null
   );
 }
 
-function isArrayLike(value: unknown): value is PdfArrayLike {
+function lookupText(
+  dict: PDFDict,
+  key: string,
+  pdfObjects: PdfMeasurementObjects,
+): string | null {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "size" in value &&
-    "lookup" in value &&
-    typeof (value as PdfArrayLike).size === "function" &&
-    typeof (value as PdfArrayLike).lookup === "function"
+    asPdfText(
+      dict.lookup(pdfObjects.PDFName.of(key)),
+      pdfObjects,
+    )?.decodeText() ?? null
   );
 }
 
-function isNumberLike(value: unknown): value is PdfNumberLike {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "asNumber" in value &&
-    typeof (value as PdfNumberLike).asNumber === "function"
-  );
+function readArrayNumber(
+  array: PDFArray,
+  index: number,
+  pdfObjects: PdfMeasurementObjects,
+): number | null {
+  return asPdfNumber(array.lookup(index), pdfObjects)?.asNumber() ?? null;
 }
 
-function isTextLike(value: unknown): value is PdfTextLike {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "decodeText" in value &&
-    typeof (value as PdfTextLike).decodeText === "function"
-  );
-}
-
-function readNumber(value: unknown): number | null {
-  return isNumberLike(value) ? value.asNumber() : null;
-}
-
-function readBBox(value: unknown): ViewportScale["bbox"] {
-  if (!isArrayLike(value) || value.size() < 4) {
+function readBBox(
+  bboxArray: PDFArray | null,
+  pdfObjects: PdfMeasurementObjects,
+): ViewportScale["bbox"] {
+  if (!bboxArray || bboxArray.size() < 4) {
     return null;
   }
 
-  const points = [0, 1, 2, 3].map((index) => readNumber(value.lookup(index)));
-  if (points.some((point) => point === null)) {
+  const x0 = readArrayNumber(bboxArray, 0, pdfObjects);
+  const y0 = readArrayNumber(bboxArray, 1, pdfObjects);
+  const x1 = readArrayNumber(bboxArray, 2, pdfObjects);
+  const y1 = readArrayNumber(bboxArray, 3, pdfObjects);
+
+  if (x0 === null || y0 === null || x1 === null || y1 === null) {
     return null;
   }
 
-  return points as [number, number, number, number];
+  return [x0, y0, x1, y1];
 }
 
-function parseScale(measureObj: unknown, PDFName: any): MeasureScale | null {
-  if (!isLookupable(measureObj)) return null;
+function parseScale(
+  measureDict: PDFDict | null,
+  pdfObjects: PdfMeasurementObjects,
+): MeasureScale | null {
+  if (!measureDict) return null;
 
-  let fmtArray = measureObj.lookup(PDFName.of("D"));
-  if (!isArrayLike(fmtArray)) {
-    fmtArray = measureObj.lookup(PDFName.of("X"));
-  }
-  if (!isArrayLike(fmtArray) || fmtArray.size() === 0) return null;
+  const fmtArray =
+    lookupArray(measureDict, "D", pdfObjects) ??
+    lookupArray(measureDict, "X", pdfObjects);
+  if (!fmtArray || fmtArray.size() === 0) return null;
 
-  const firstFmt = fmtArray.lookup(0);
-  if (!isLookupable(firstFmt)) return null;
+  const firstFmt = asPdfDict(fmtArray.lookup(0), pdfObjects);
+  if (!firstFmt) return null;
 
-  const cObj = firstFmt.lookup(PDFName.of("C"));
-  const uObj = firstFmt.lookup(PDFName.of("U"));
-  const factor = readNumber(cObj);
+  const factor = lookupNumber(firstFmt, "C", pdfObjects);
   if (factor === null || factor <= 0) return null;
 
-  const unit = isTextLike(uObj) ? uObj.decodeText() : "units";
+  const unit = lookupText(firstFmt, "U", pdfObjects) ?? "units";
   const baseFactor = getUnitFactor(unit);
   const ratio =
     typeof baseFactor === "number" && baseFactor > 0
@@ -109,8 +160,8 @@ export async function extractPageMeasureScales(
   file: Blob,
 ): Promise<PageMeasureScales | null> {
   try {
-    const { PDFDocument, PDFArray, PDFDict, PDFName } =
-      await import("@cantoo/pdf-lib");
+    const pdfLib = await import("@cantoo/pdf-lib");
+    const { PDFDocument, PDFArray, PDFDict, PDFName } = pdfLib;
     const pdfDoc = await PDFDocument.load(await file.arrayBuffer(), {
       ignoreEncryption: true,
     });
@@ -120,23 +171,22 @@ export async function extractPageMeasureScales(
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
       const page = pdfDoc.getPage(i);
       const pageHeight = page.getHeight();
-      const pageNode = page.node as unknown as PdfLookupable;
       const viewports: ViewportScale[] = [];
 
-      const vpObj = pageNode.lookup(PDFName.of("VP"));
+      const vpObj = page.node.lookup(PDFName.of("VP"));
       if (vpObj instanceof PDFArray) {
         for (let j = 0; j < vpObj.size(); j++) {
           const vpEntry = vpObj.lookup(j);
           if (!(vpEntry instanceof PDFDict)) continue;
 
           const scale = parseScale(
-            vpEntry.lookup(PDFName.of("Measure")),
-            PDFName,
+            lookupDict(vpEntry, "Measure", pdfLib),
+            pdfLib,
           );
           if (!scale) continue;
 
           viewports.push({
-            bbox: readBBox(vpEntry.lookup(PDFName.of("BBox"))),
+            bbox: readBBox(lookupArray(vpEntry, "BBox", pdfLib), pdfLib),
             scale,
           });
         }
@@ -144,8 +194,8 @@ export async function extractPageMeasureScales(
 
       if (viewports.length === 0) {
         const scale = parseScale(
-          pageNode.lookup(PDFName.of("Measure")),
-          PDFName,
+          lookupDict(page.node, "Measure", pdfLib),
+          pdfLib,
         );
         if (scale) {
           viewports.push({ bbox: null, scale });

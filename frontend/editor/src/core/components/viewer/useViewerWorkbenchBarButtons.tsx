@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { ActionIcon, Slider, Popover, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
@@ -27,7 +27,7 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
-import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
+import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@app/utils/measurementTypes";
 
 export function useViewerWorkbenchBarButtons(
@@ -112,8 +112,6 @@ export function useViewerWorkbenchBarButtons(
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isAnnotationsPath]);
 
-  const scalePopoverRef = useRef<HTMLButtonElement>(null);
-
   const searchLabel = t("workbenchBar.search", "Search PDF");
   const panLabel = t("workbenchBar.panMode", "Pan Mode");
   const applyRedactionsLabel = t(
@@ -133,6 +131,7 @@ export function useViewerWorkbenchBarButtons(
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
   const formFillLabel = t("workbenchBar.formFill", "Fill Form");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
+  const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
@@ -146,6 +145,17 @@ export function useViewerWorkbenchBarButtons(
       setIsPanning(false);
     }
   }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
+
+  const handleApplyRulerScale = useCallback(
+    (scale: MeasureScale) => {
+      setCustomScale?.(scale);
+    },
+    [setCustomScale],
+  );
+
+  const handleResetRulerScale = useCallback(() => {
+    setCustomScale?.(null);
+  }, [setCustomScale]);
 
   // Filter languages based on available voices
   const filteredLanguages = useMemo(
@@ -267,65 +277,21 @@ export function useViewerWorkbenchBarButtons(
             {
               id: "viewer-ruler-settings",
               icon: <SettingsIcon sx={{ fontSize: "1.5rem" }} />,
-              tooltip: t("workbenchBar.rulerSettings", "Scale Settings"),
-              ariaLabel: t("workbenchBar.rulerSettings", "Scale Settings"),
+              tooltip: rulerSettingsLabel,
+              ariaLabel: rulerSettingsLabel,
               section: "top" as const,
               order: 25.5,
               render: ({ disabled }: { disabled?: boolean }) => (
-                <Popover
-                  position={tooltipPosition}
-                  withArrow
-                  shadow="md"
-                  offset={8}
-                  withinPortal
-                >
-                  <Popover.Target>
-                    <div style={{ display: "inline-flex" }}>
-                      <Tooltip
-                        content={t(
-                          "workbenchBar.rulerSettings",
-                          "Scale Settings",
-                        )}
-                        position={tooltipPosition}
-                        offset={12}
-                        arrow
-                        portalTarget={document.body}
-                      >
-                        <ActionIcon
-                          ref={scalePopoverRef}
-                          variant="filled"
-                          color="blue"
-                          radius="md"
-                          className="right-rail-icon"
-                          disabled={disabled}
-                          aria-label={t(
-                            "workbenchBar.rulerSettings",
-                            "Scale Settings",
-                          )}
-                        >
-                          <SettingsIcon sx={{ fontSize: "1.5rem" }} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </div>
-                  </Popover.Target>
-                  <Popover.Dropdown>
-                    <ScaleSettingsPanel
-                      currentScale={customScale}
-                      onApplyScale={(scale) => {
-                        setCustomScale?.(scale);
-                      }}
-                      onResetScale={() => {
-                        setCustomScale?.(null);
-                      }}
-                      onStartCalibration={handleStartScaleCalibration}
-                      isCalibrationActive={isScaleCalibrationActive}
-                      onClose={() => {
-                        // Click the ActionIcon to toggle popover closed
-                        scalePopoverRef.current?.click();
-                      }}
-                    />
-                  </Popover.Dropdown>
-                </Popover>
+                <RulerScaleSettingsButton
+                  disabled={disabled}
+                  label={rulerSettingsLabel}
+                  tooltipPosition={tooltipPosition}
+                  currentScale={customScale}
+                  onApplyScale={handleApplyRulerScale}
+                  onResetScale={handleResetRulerScale}
+                  onStartCalibration={handleStartScaleCalibration}
+                  isCalibrationActive={isScaleCalibrationActive}
+                />
               ),
             },
           ]
@@ -655,11 +621,13 @@ export function useViewerWorkbenchBarButtons(
     formFillLabel,
     isFormFillActive,
     rulerLabel,
+    rulerSettingsLabel,
     isRulerActive,
     setIsRulerActive,
     handleStartScaleCalibration,
+    handleApplyRulerScale,
+    handleResetRulerScale,
     customScale,
-    setCustomScale,
     isScaleCalibrationActive,
     readAloudLabel,
     readAloudSpeedLabel,
