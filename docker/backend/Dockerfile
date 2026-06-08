@@ -1,14 +1,4 @@
-# Stirling-PDF - Backend-only version (no embedded frontend)
-#
-# Identical to docker/embedded/Dockerfile except the JAR is built with
-# -PbuildWithFrontend=false, so the React UI is NOT baked in. The gradle build
-# then swaps in the lightweight API landing page (see app/core/build.gradle
-# copyApiLandingPage). Use this for the split frontend/backend deployments
-# (e.g. SaaS) where the UI ships as its own image (docker/frontend/Dockerfile).
-#
-# Because no frontend is built, the Node.js + go-task tooling that the embedded
-# image installs is intentionally omitted here — the only frontend gradle tasks
-# (npmInstall / npmBuild) are gated on buildWithFrontend and stay disabled.
+# Stirling-PDF backend-only image — JAR built with -PbuildWithFrontend=false, UI ships separately.
 
 ARG BASE_VERSION=1.0.2
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
@@ -89,8 +79,7 @@ RUN set -eux; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
 
-# Write version to a file so it is readable by scripts without env-var inheritance.
-# init-without-ocr.sh reads /etc/stirling_version for the AOT cache fingerprint.
+# Version file for scripts (init-without-ocr.sh reads /etc/stirling_version).
 RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 
 # Environment variables

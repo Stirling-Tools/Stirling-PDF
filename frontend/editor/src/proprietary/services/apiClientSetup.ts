@@ -100,10 +100,7 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
   }
 }
 
-/**
- * Auth headers for raw fetch() calls (SSE streams, etc.).
- * Async to match the SaaS override, which has to await the Supabase session.
- */
+/** Auth headers for raw fetch() calls (SSE streams). Async to match SaaS override. */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {};
   const jwt = getJwtTokenFromStorage();

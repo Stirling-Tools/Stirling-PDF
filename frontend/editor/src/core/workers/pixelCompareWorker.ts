@@ -390,12 +390,7 @@ self.addEventListener(
     let compDoc: PDFDocumentProxy | null = null;
 
     try {
-      // `CanvasFactory`/`FilterFactory` are supported at runtime but not declared on legacy types.
-      // pdfjs-dist 5.x renamed the option to `CanvasFactory` (capital C); without a FilterFactory
-      // the default DOMFilterFactory crashes in a worker calling document.createElementNS.
-      // Resolve CMap/standard-font URLs against the worker's own origin. Vite copies these
-      // directories from pdfjs-dist at build time via viteStaticCopy (see vite.config.ts).
-      // import.meta.env.BASE_URL ends with a slash and includes any subpath prefix.
+      // Resolve pdfjs CMap/standard-font URLs against the worker's origin + subpath.
       const assetsBase = new URL(
         `${import.meta.env.BASE_URL}pdfjs/`,
         self.location.origin,

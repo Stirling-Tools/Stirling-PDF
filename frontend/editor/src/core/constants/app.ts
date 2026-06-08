@@ -39,10 +39,7 @@ export const absoluteWithBasePath = (path: string): string => {
   return `${window.location.origin}${BASE_PATH}${clean}`;
 };
 
-/**
- * Remove the BASE_PATH prefix from a pathname so comparisons against
- * bare app routes ("/login", "/files", …) work under any subpath deploy.
- */
+/** Strip BASE_PATH prefix so route comparisons work under any subpath deploy. */
 export const stripBasePath = (pathname: string): string => {
   if (!BASE_PATH) return pathname;
   if (pathname === BASE_PATH) return "/";

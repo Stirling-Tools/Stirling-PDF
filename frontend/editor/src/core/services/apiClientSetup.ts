@@ -13,11 +13,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   );
 }
 
-/**
- * Auth headers for raw fetch() calls (SSE streams, etc.).
- * Proprietary overrides with stored JWT + XSRF; SaaS overrides with the live
- * Supabase access token. Async because SaaS has to consult the auth client.
- */
+/** Auth headers for raw fetch() calls — empty in core; proprietary/SaaS override. */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   return {};
 }

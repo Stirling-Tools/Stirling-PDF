@@ -1,8 +1,7 @@
 import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
 import { BASE_PATH } from "@app/constants/app";
 
-// BASE_PATH is "/bpp" or "" (no trailing slash). Strip the leading slash
-// to match the legacy SUBPATH shape used below ("bpp" or "").
+// "bpp" or "" — BASE_PATH without leading slash.
 const SUBPATH = BASE_PATH.replace(/^\//, "");
 
 /**
