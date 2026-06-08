@@ -16,12 +16,15 @@ import { useState, useEffect } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
-import { getPolicyOperations } from "@app/services/policyFolders";
+import { getPolicyAutomation } from "@app/services/policyFolders";
+import { smartFolderStorage } from "@app/services/smartFolderStorage";
 import {
   getPolicyLiveData,
   type PolicyLiveData,
 } from "@app/services/policyLiveData";
-import type { AutomationOperation } from "@app/types/automation";
+import type { AutomationConfig, AutomationOperation } from "@app/types/automation";
+import type { SmartFolder } from "@app/types/smartFolders";
+import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import {
   usePolicyDataMode,
@@ -36,7 +39,6 @@ import { StatusBadge } from "@shared/components/StatusBadge";
 import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
-import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
 import {
   usePolicySelection,
   selectPolicy,
@@ -189,26 +191,41 @@ export function PoliciesSection() {
 export function PolicyDetailTakeover() {
   const pol = usePolicies();
   const { categories, configs, sources, docTypes } = usePolicyCatalog();
-  const { selectedId, detailView } = usePolicySelection();
+  const { selectedId } = usePolicySelection();
   const dataMode = usePolicyDataMode();
 
-  // The configured policy's real steps, loaded from its backing folder's
-  // automation. Falls back to the preset's decorative rules when not configured.
+  // The configured policy's backing folder + automation (its real, editable
+  // pipeline). `reloadKey` bumps after the edit modal saves so the detail
+  // reflects the new steps. Falls back to the preset's rules when unconfigured.
   const folderId = selectedId ? pol.policies[selectedId]?.folderId : undefined;
   const [steps, setSteps] = useState<AutomationOperation[]>([]);
+  const [backingFolder, setBackingFolder] = useState<SmartFolder | null>(null);
+  const [backingAutomation, setBackingAutomation] =
+    useState<AutomationConfig | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!folderId) {
       setSteps([]);
+      setBackingFolder(null);
+      setBackingAutomation(null);
       return;
     }
     let cancelled = false;
-    getPolicyOperations(folderId).then((ops) => {
-      if (!cancelled) setSteps(ops);
-    });
+    void (async () => {
+      const [folder, automation] = await Promise.all([
+        smartFolderStorage.getFolder(folderId),
+        getPolicyAutomation(folderId),
+      ]);
+      if (cancelled) return;
+      setBackingFolder(folder);
+      setBackingAutomation(automation);
+      setSteps(automation?.operations ?? []);
+    })();
     return () => {
       cancelled = true;
     };
-  }, [folderId]);
+  }, [folderId, reloadKey]);
 
   // Live activity/stats from the backing folder's run state, when the data-mode
   // toggle is "live"; otherwise the panel uses the preset's mock data.
@@ -263,46 +280,45 @@ export function PolicyDetailTakeover() {
     );
   }
 
-  if (detailView === "settings" && pol.canConfigure) {
-    return (
-      <PolicySettingsForm
-        key={selectedId}
+  return (
+    <>
+      <PolicyDetailPanel
         category={category}
         config={config}
         state={state}
         status={status}
-        onCancel={() => setPolicyDetailView("detail")}
-        onClose={() => closePolicy()}
-        onSave={(fv) => {
-          pol.updateConfig(selectedId, fv);
-          setPolicyDetailView("detail");
+        steps={steps}
+        activity={liveData?.activity}
+        stats={liveData?.stats}
+        canConfigure={pol.canConfigure}
+        onBack={() => closePolicy()}
+        onEditSettings={() => setEditing(true)}
+        onTogglePause={() =>
+          status === "paused"
+            ? pol.resumePolicy(selectedId)
+            : pol.pausePolicy(selectedId)
+        }
+        onDelete={() => {
+          closePolicy();
+          pol.deletePolicy(selectedId);
         }}
       />
-    );
-  }
-
-  return (
-    <PolicyDetailPanel
-      category={category}
-      config={config}
-      state={state}
-      status={status}
-      steps={steps}
-      activity={liveData?.activity}
-      stats={liveData?.stats}
-      canConfigure={pol.canConfigure}
-      onBack={() => closePolicy()}
-      onEditSettings={() => setPolicyDetailView("settings")}
-      onTogglePause={() =>
-        status === "paused"
-          ? pol.resumePolicy(selectedId)
-          : pol.pausePolicy(selectedId)
-      }
-      onDelete={() => {
-        closePolicy();
-        pol.deletePolicy(selectedId);
-      }}
-    />
+      {/* Edit the policy's pipeline by reusing the Watch Folder builder on its
+          backing folder/automation (rendered only while open, so its
+          useToolWorkflow dependency never runs in the rail tests). */}
+      {editing && backingFolder && (
+        <SmartFolderManagementModal
+          opened
+          editFolder={backingFolder}
+          existingAutomation={backingAutomation}
+          onClose={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            setReloadKey((k) => k + 1);
+          }}
+        />
+      )}
+    </>
   );
 }
 

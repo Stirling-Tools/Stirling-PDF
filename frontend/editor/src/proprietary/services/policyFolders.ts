@@ -13,7 +13,10 @@
 
 import { automationStorage } from "@app/services/automationStorage";
 import { smartFolderStorage } from "@app/services/smartFolderStorage";
-import type { AutomationOperation } from "@app/types/automation";
+import type {
+  AutomationConfig,
+  AutomationOperation,
+} from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
 import type { PolicyCategory } from "@app/types/policies";
 
@@ -61,6 +64,15 @@ export async function getPolicyOperations(
   if (!folder) return [];
   const automation = await automationStorage.getAutomation(folder.automationId);
   return automation?.operations ?? [];
+}
+
+/** The policy's backing automation (its editable pipeline), via its folder. */
+export async function getPolicyAutomation(
+  folderId: string,
+): Promise<AutomationConfig | null> {
+  const folder = await smartFolderStorage.getFolder(folderId);
+  if (!folder) return null;
+  return automationStorage.getAutomation(folder.automationId);
 }
 
 /** Replace the policy's steps by updating its backing automation. */
