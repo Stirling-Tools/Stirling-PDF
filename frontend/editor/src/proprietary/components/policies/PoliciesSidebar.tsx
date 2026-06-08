@@ -146,27 +146,18 @@ export function PoliciesSection() {
                   id={cat.id}
                   icon={cat.icon}
                   label={cat.label}
-                  accent={
-                    status === "active"
-                      ? "blue"
-                      : status === "paused"
-                        ? "amber"
-                        : undefined
-                  }
                   trailing={
                     <>
-                      <StatusBadge
-                        tone={
-                          status === "active"
-                            ? "success"
-                            : status === "paused"
-                              ? "warning"
-                              : "neutral"
-                        }
-                        size="sm"
-                      >
-                        {STATUS_LABEL[status]}
-                      </StatusBadge>
+                      {status === "setup" ? (
+                        <span className="pol-row-setup">Set up</span>
+                      ) : (
+                        <StatusBadge
+                          tone={status === "active" ? "success" : "warning"}
+                          size="sm"
+                        >
+                          {STATUS_LABEL[status]}
+                        </StatusBadge>
+                      )}
                       <ChevronRightIcon
                         className="pol-row-chevron"
                         sx={{ fontSize: "1rem" }}

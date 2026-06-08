@@ -24,17 +24,13 @@
   /* NavItem carries its own side margins; just a little vertical breathing room. */
   padding: var(--space-1) 0;
 }
-/* Configured (active/paused) rows read as raised cards at rest, like the
-   prototype — NavItem's accent only draws the edge bar + icon tint. */
-.pol-list-rows .sui-navitem[data-accent] {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+/* Unconfigured rows: a quiet blue "Set up" call-to-action instead of a status pill. */
+.pol-row-setup {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-blue);
 }
-.pol-list-rows .sui-navitem[data-accent]:hover {
-  background: var(--color-blue-light);
-  border-color: var(--color-blue-border);
-}
-/* Trailing drill-in chevron on each policy row (after the StatusBadge). */
+/* Trailing drill-in chevron on each policy row (after the status / CTA). */
 .pol-row-chevron {
   color: var(--color-text-4);
   flex-shrink: 0;
