@@ -1,4 +1,5 @@
 import React, { useCallback, useState, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useDocumentState } from "@embedpdf/core/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
@@ -143,6 +144,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
     onMouseEnter,
     onMouseLeave,
   }) => {
+    const { t } = useTranslation();
     const centerX =
       (annotationLink.rect.origin.x + annotationLink.rect.size.width / 2) *
       scale;
@@ -170,8 +172,8 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
             e.stopPropagation();
             onDelete(annotationLink);
           }}
-          aria-label="Delete link"
-          title="Delete link"
+          aria-label={t("viewer.link.delete", "Delete link")}
+          title={t("viewer.link.delete", "Delete link")}
         >
           <TrashIcon />
         </button>
