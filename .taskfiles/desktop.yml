@@ -62,21 +62,21 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles app
+      - npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles nsis
+      - npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles appimage
+      - npx tauri build --bundles appimage --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   test:
     desc: "Run Tauri/Cargo tests"
