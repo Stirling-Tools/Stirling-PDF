@@ -42,13 +42,15 @@ export function OverviewHeader() {
           </Text>
           {user?.email && (
             <Text size="xs" c="dimmed" mt="0.25rem">
-              Signed in as: {user.email}
+              {t("account.overview.signedInAs", "Signed in as: {{email}}", {
+                email: user.email,
+              })}
             </Text>
           )}
         </div>
         {user && (
           <Button color="red" variant="filled" onClick={handleLogout}>
-            Log out
+            {t("account.overview.logOut", "Log out")}
           </Button>
         )}
       </div>

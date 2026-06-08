@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   TextInput,
   Switch,
@@ -132,17 +132,29 @@ export default function AdminPremiumSection() {
             </List.Item>
             <List.Item>
               <Text size="sm" component="span">
-                <strong>Custom Metadata</strong> (PRO) - General
+                <Trans
+                  i18nKey="admin.settings.premium.movedFeatures.customMetadata"
+                  defaults="<0>Custom Metadata</0> (PRO) - General"
+                  components={[<strong />]}
+                />
               </Text>
             </List.Item>
             <List.Item>
               <Text size="sm" component="span">
-                <strong>Audit Logging</strong> (ENTERPRISE) - Security
+                <Trans
+                  i18nKey="admin.settings.premium.movedFeatures.auditLogging"
+                  defaults="<0>Audit Logging</0> (ENTERPRISE) - Security"
+                  components={[<strong />]}
+                />
               </Text>
             </List.Item>
             <List.Item>
               <Text size="sm" component="span">
-                <strong>Database Configuration</strong> (ENTERPRISE) - Database
+                <Trans
+                  i18nKey="admin.settings.premium.movedFeatures.databaseConfiguration"
+                  defaults="<0>Database Configuration</0> (ENTERPRISE) - Database"
+                  components={[<strong />]}
+                />
               </Text>
             </List.Item>
           </List>
