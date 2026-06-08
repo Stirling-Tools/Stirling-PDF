@@ -70,6 +70,11 @@
             height: 2rem;
         }
 
+        .login-logo-modern {
+            height: 3rem;
+            width: auto;
+        }
+
         .login-title {
             font-size: 2rem;
             font-weight: 800;
@@ -155,6 +160,16 @@
             background-color: #9a2e2e;
         }
 
+        .cta-button.secondary {
+            background-color: #ffffff;
+            color: #AF3434;
+            border: 1px solid #AF3434;
+        }
+
+        .cta-button.secondary:hover {
+            background-color: #fdf2f2;
+        }
+
         .divider {
             margin: 1.5rem 0;
             border: 0;
@@ -197,65 +212,140 @@
         .footer a:hover {
             text-decoration: underline;
         }
+
+        /* Mode-switching: hide both variants until JS resolves deployment mode,
+           then reveal the matching one. Falls back to self-hosted if JS fails. */
+        [data-mode] {
+            display: none;
+        }
+
+        body.mode-saas [data-mode="saas"] {
+            display: block;
+        }
+
+        body.mode-selfhosted [data-mode="selfhosted"] {
+            display: block;
+        }
     </style>
 </head>
 
 <body>
     <div class="auth-card">
         <div class="auth-content">
-            <div class="login-header">
-                <div class="login-header-logos">
-                    <img src="favicon.svg" alt="Stirling PDF" class="login-logo-icon">
-                    <img src="api-wordmark.svg" alt="Stirling PDF" class="login-logo-text">
+            <!-- ============ SELF-HOSTED VARIANT ============ -->
+            <div data-mode="selfhosted">
+                <div class="login-header">
+                    <div class="login-header-logos">
+                        <img src="favicon.svg" alt="Stirling PDF" class="login-logo-icon">
+                        <img src="api-wordmark.svg" alt="Stirling PDF" class="login-logo-text">
+                    </div>
+                    <h1 class="login-title">API Server</h1>
+                    <p class="login-subtitle">Backend-only mode without web UI</p>
                 </div>
-                <h1 class="login-title">API Server</h1>
-                <p class="login-subtitle">Backend-only mode without web UI</p>
+
+                <div class="section">
+                    <p class="section-text">
+                        This Stirling-PDF instance is running in <strong>API-only mode</strong>. The web interface has not been included in this build.
+                    </p>
+                </div>
+
+                <a href="swagger-ui/index.html" class="cta-button">Open API Documentation</a>
+
+                <hr class="divider">
+
+                <div class="section">
+                    <h2 class="section-title">Looking for the Web UI?</h2>
+
+                    <p class="section-text"><strong>If you're using Docker:</strong></p>
+                    <ul class="section-list">
+                        <li>You may have pulled an <strong>API-only image</strong> or there was a build configuration issue</li>
+                        <li>Use the standard Docker image: <code class="code-inline">stirlingtools/stirling-pdf:latest</code></li>
+                    </ul>
+
+                    <p class="section-text"><strong>If you're using a JAR file:</strong></p>
+                    <ul class="section-list">
+                        <li>You downloaded <code class="code-inline">Stirling-PDF-server.jar</code> which is the <strong>API-only version without UI</strong></li>
+                        <li>Download the full version from <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank">GitHub Releases</a>:</li>
+                        <li style="margin-left: 1.5rem;"><code class="code-inline">Stirling-PDF.jar</code> - Standard version with UI</li>
+                        <li style="margin-left: 1.5rem;"><code class="code-inline">Stirling-PDF-with-login.jar</code> - Version with authentication features</li>
+                    </ul>
+
+                    <p class="section-text"><strong>If you built from source:</strong></p>
+                    <ul class="section-list">
+                        <li>Rebuild with: <code class="code-inline">./gradlew build -PbuildWithFrontend=true</code></li>
+                        <li>Or deploy the frontend separately from the <code class="code-inline">/frontend</code> directory</li>
+                    </ul>
+                </div>
+
+                <hr class="divider">
+
+                <div class="section">
+                    <h2 class="section-title">Need Help?</h2>
+                    <p class="section-text">Join our community for support:</p>
+                    <ul class="section-list">
+                        <li><a href="https://discord.gg/Cn8pWhQRxZ" target="_blank">Discord Community</a> - Get help from the community</li>
+                        <li><a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" target="_blank">GitHub Issues</a> - Report bugs or request features</li>
+                        <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank">GitHub Repository</a> - View documentation and source code</li>
+                    </ul>
+                </div>
             </div>
 
-            <div class="section">
-                <p class="section-text">
-                    This Stirling-PDF instance is running in <strong>API-only mode</strong>. The web interface has not been included in this build.
-                </p>
-            </div>
+            <!-- ============ SAAS VARIANT ============ -->
+            <div data-mode="saas">
+                <div class="login-header">
+                    <div class="login-header-logos">
+                        <img src="modern-logo.svg" alt="Stirling PDF" class="login-logo-modern">
+                    </div>
+                    <h1 class="login-title">Stirling PDF API</h1>
+                    <p class="login-subtitle">REST API for PDF manipulation, in the cloud</p>
+                </div>
 
-            <a href="swagger-ui/index.html" class="cta-button">Open API Documentation</a>
+                <div class="section">
+                    <p class="section-text">
+                        You've reached the <strong>Stirling PDF Cloud API</strong>. This endpoint serves the REST API that powers our apps and your integrations.
+                    </p>
+                </div>
 
-            <hr class="divider">
+                <a href="swagger-ui/index.html" class="cta-button">Open API Documentation</a>
+                <a href="https://docs.stirlingpdf.com" target="_blank" class="cta-button secondary">Read the Developer Docs</a>
 
-            <div class="section">
-                <h2 class="section-title">Looking for the Web UI?</h2>
+                <hr class="divider">
 
-                <p class="section-text"><strong>If you're using Docker:</strong></p>
-                <ul class="section-list">
-                    <li>You may have pulled an <strong>API-only image</strong> or there was a build configuration issue</li>
-                    <li>Use the standard Docker image: <code class="code-inline">stirlingtools/stirling-pdf:latest</code></li>
-                </ul>
+                <div class="section">
+                    <h2 class="section-title">Just looking to edit a PDF?</h2>
+                    <p class="section-text">
+                        This page is the API endpoint - it doesn't have an editor. If you want the full interface:
+                    </p>
+                    <ul class="section-list">
+                        <li><a href="https://stirling.com/app" target="_blank">Open Stirling PDF in your browser</a> - the hosted web app</li>
+                        <li><a href="https://stirling.com/download" target="_blank">Download the desktop app</a> - macOS, Windows, and Linux</li>
+                        <li><a href="https://stirling.com/pricing" target="_blank">Pricing &amp; plans</a> - free tier, paid plans, and enterprise</li>
+                    </ul>
+                </div>
 
-                <p class="section-text"><strong>If you're using a JAR file:</strong></p>
-                <ul class="section-list">
-                    <li>You downloaded <code class="code-inline">Stirling-PDF-server.jar</code> which is the <strong>API-only version without UI</strong></li>
-                    <li>Download the full version from <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank">GitHub Releases</a>:</li>
-                    <li style="margin-left: 1.5rem;"><code class="code-inline">Stirling-PDF.jar</code> - Standard version with UI</li>
-                    <li style="margin-left: 1.5rem;"><code class="code-inline">Stirling-PDF-with-login.jar</code> - Version with authentication features</li>
-                </ul>
+                <hr class="divider">
 
-                <p class="section-text"><strong>If you built from source:</strong></p>
-                <ul class="section-list">
-                    <li>Rebuild with: <code class="code-inline">./gradlew build -PbuildWithFrontend=true</code></li>
-                    <li>Or deploy the frontend separately from the <code class="code-inline">/frontend</code> directory</li>
-                </ul>
-            </div>
+                <div class="section">
+                    <h2 class="section-title">Want to run your own?</h2>
+                    <p class="section-text">
+                        Stirling PDF is open source. You can self-host the same toolkit on your own hardware or run it inside your network:
+                    </p>
+                    <ul class="section-list">
+                        <li><a href="https://docs.stirlingpdf.com/Installation/Versions" target="_blank">Installation guide</a> - Docker, JAR, Windows, Mac, and Linux</li>
+                        <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank">GitHub repository</a> - source code and releases</li>
+                    </ul>
+                </div>
 
-            <hr class="divider">
+                <hr class="divider">
 
-            <div class="section">
-                <h2 class="section-title">Need Help?</h2>
-                <p class="section-text">Join our community for support:</p>
-                <ul class="section-list">
-                    <li><a href="https://discord.gg/Cn8pWhQRxZ" target="_blank">Discord Community</a> - Get help from the community</li>
-                    <li><a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" target="_blank">GitHub Issues</a> - Report bugs or request features</li>
-                    <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank">GitHub Repository</a> - View documentation and source code</li>
-                </ul>
+                <div class="section">
+                    <h2 class="section-title">Support</h2>
+                    <ul class="section-list">
+                        <li><a href="https://docs.stirlingpdf.com" target="_blank">Documentation</a> - guides, API reference, integration tutorials</li>
+                        <li><a href="https://discord.gg/Cn8pWhQRxZ" target="_blank">Discord community</a> - chat with other developers and users</li>
+                        <li><a href="https://stirling.com" target="_blank">stirling.com</a> - company website</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -264,5 +354,33 @@
         <span>Powered by </span>
         <a href="https://stirlingpdf.com">Stirling PDF</a>
     </div>
+
+    <script>
+        (function () {
+            var FALLBACK_MS = 1500;
+            var resolved = false;
+
+            function applyMode(mode) {
+                if (resolved) return;
+                resolved = true;
+                document.body.classList.add(mode === 'saas' ? 'mode-saas' : 'mode-selfhosted');
+            }
+
+            // Fallback so users on broken/blocked networks still see *something*.
+            var fallback = setTimeout(function () { applyMode('selfhosted'); }, FALLBACK_MS);
+
+            fetch('api/v1/config/app-config', { headers: { 'Accept': 'application/json' } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (data) {
+                    clearTimeout(fallback);
+                    var mode = data && data.deploymentMode === 'saas' ? 'saas' : 'selfhosted';
+                    applyMode(mode);
+                })
+                .catch(function () {
+                    clearTimeout(fallback);
+                    applyMode('selfhosted');
+                });
+        })();
+    </script>
 </body>
 </html>
