@@ -1,30 +1,32 @@
 /**
- * Upgrade-to-Processor modal. Two steps inside one frame:
+ * Upgrade-to-Processor modal. Three sequential panels inside one frame:
  *
- *   Step 1: Set a monthly spend ceiling (with strong reassurance copy about
- *           what is and isn't billable).
- *   Step 2: Stripe Embedded Checkout for card collection.
+ *   Step 1: Cap selection         — local state only, no side effects
+ *   Step 2: Stripe Checkout       — POSTs to /api/v1/payg/checkout, mounts the
+ *                                   Stripe Embedded Checkout iframe (lazy-loaded)
+ *   Step 3: Confirmation          — brief "Welcome to Processor" beat before
+ *                                   the modal closes and the parent's
+ *                                   {@code onComplete} triggers a wallet refetch
  *
- * The frame stays put between steps — only the inner panel changes — so the
- * user perceives this as one form, not two pages.
+ * <p>The Stripe SDK ({@code @stripe/stripe-js} + {@code @stripe/react-stripe-js})
+ * is loaded via {@code React.lazy} on a dedicated module so the chunk only
+ * downloads when the user actually advances to step 2. The main bundle pays
+ * nothing for users who never open the modal.
  *
- * <p><b>Step 2 is currently a placeholder.</b> Real wiring requires:
- *   - VITE_STRIPE_PUBLISHABLE_KEY in .env
- *   - The {@code POST /api/v1/payg/checkout} backend endpoint (lands later in
- *     this same PR) returning a {@code client_secret} for Stripe.
- *   - {@code @stripe/stripe-js} + {@code @stripe/react-stripe-js} installed.
- * The placeholder renders a dashed box explaining what would appear; the modal
- * shape, animations, and step transitions all work without it so the UX can
- * be reviewed standalone.
- *
- * <p>Cap selection is held in modal state only — it's not posted to the backend
- * until Checkout completes. A user who cancels mid-modal leaves no side-effects.
+ * <p>Cap state is held locally — nothing reaches the backend until the user
+ * commits in step 2. A user who cancels mid-modal leaves no side effects.
  */
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
+import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 // eslint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
+
+// Lazy-loaded so the @stripe/stripe-js bundle only downloads when the user
+// reaches step 2. See StripeCheckoutPanel.tsx for the full pattern + the
+// chunk-graph reasoning.
+const StripeCheckoutPanel = React.lazy(() => import("./StripeCheckoutPanel"));
 
 interface UpgradeModalProps {
   open: boolean;
@@ -40,7 +42,7 @@ interface UpgradeModalProps {
   currency?: "USD" | "EUR" | "GBP";
 }
 
-type Step = "cap" | "checkout";
+type Step = "cap" | "checkout" | "confirm";
 
 const CAP_PRESETS_USD = [10, 25, 50, 100] as const;
 
@@ -73,50 +75,60 @@ export default function UpgradeModal({
 
   const goToCheckout = () => setStep("checkout");
   const goBackToCap = () => setStep("cap");
-  const completeCheckout = () => {
-    // In real wiring this fires only after the Stripe Embedded Checkout
-    // emits its `complete` event. For now we treat the "Complete" button as
-    // the signal so the parent can demo the post-upgrade state.
-    onComplete({ capUsd: effectiveCap });
+  const goToConfirm = () => setStep("confirm");
+
+  // Modal close → reset internal step so reopening starts at step 1.
+  const closeAndReset = () => {
+    setStep("cap");
+    onClose();
   };
 
   return (
     <div className="upm" role="dialog" aria-modal="true">
-      <div className="upm-backdrop" onClick={onClose}>
+      <div className="upm-backdrop" onClick={closeAndReset}>
         <div className="upm-frame" onClick={(e) => e.stopPropagation()}>
           {/* Header — title + close. Title stays constant; the step indicator
               below tells the user where they are. */}
           <header className="upm-header">
-            <h2 className="upm-header__title">Upgrade to Processor plan</h2>
+            <h2 className="upm-header__title">
+              {step === "confirm"
+                ? "You're subscribed"
+                : "Upgrade to Processor plan"}
+            </h2>
             <button
               type="button"
               className="upm-header__close"
               aria-label="Close"
-              onClick={onClose}
+              onClick={closeAndReset}
             >
               <CloseIcon fontSize="small" />
             </button>
           </header>
 
-          {/* Step indicator. Two dots + connector; transitions colour as we
-              advance. Same shape both steps so users get an instant "I'm 1 of 2". */}
-          <div className="upm-steps">
-            <div className="upm-step" data-state={step === "cap" ? "active" : "done"}>
-              <span className="upm-step__dot">1</span>
-              <span>Set monthly ceiling</span>
+          {/* Step indicator. Hidden on the confirmation panel since the
+              modal is winding down at that point. */}
+          {step !== "confirm" && (
+            <div className="upm-steps">
+              <div
+                className="upm-step"
+                data-state={step === "cap" ? "active" : "done"}
+              >
+                <span className="upm-step__dot">1</span>
+                <span>Set monthly ceiling</span>
+              </div>
+              <div className="upm-step__connector" />
+              <div
+                className="upm-step"
+                data-state={step === "checkout" ? "active" : "idle"}
+              >
+                <span className="upm-step__dot">2</span>
+                <span>Add payment method</span>
+              </div>
             </div>
-            <div className="upm-step__connector" />
-            <div
-              className="upm-step"
-              data-state={step === "checkout" ? "active" : "idle"}
-            >
-              <span className="upm-step__dot">2</span>
-              <span>Add payment method</span>
-            </div>
-          </div>
+          )}
 
           <div className="upm-body">
-            {step === "cap" ? (
+            {step === "cap" && (
               <CapStep
                 capUsd={capUsd}
                 setCapUsd={setCapUsd}
@@ -124,23 +136,33 @@ export default function UpgradeModal({
                 setNoCap={setNoCap}
                 currency={currency}
               />
-            ) : (
+            )}
+            {step === "checkout" && (
               <CheckoutStep
                 effectiveCap={effectiveCap}
                 currency={currency}
                 onEditCap={goBackToCap}
+                onComplete={goToConfirm}
+              />
+            )}
+            {step === "confirm" && (
+              <ConfirmationStep
+                effectiveCap={effectiveCap}
+                currency={currency}
               />
             )}
           </div>
 
           <footer className="upm-footer">
             <span className="upm-footer__hint">
-              {step === "cap"
-                ? "You can change your cap any time later."
-                : "Card details handled by Stripe — never touched by Stirling."}
+              {step === "cap" && "You can change your cap any time later."}
+              {step === "checkout" &&
+                "Card details handled by Stripe — never touched by Stirling."}
+              {step === "confirm" &&
+                "Your wallet will refresh automatically in a moment."}
             </span>
             <div className="upm-footer__actions">
-              {step === "checkout" ? (
+              {step === "checkout" && (
                 <>
                   <button
                     type="button"
@@ -150,22 +172,15 @@ export default function UpgradeModal({
                   >
                     ← Back
                   </button>
-                  <button
-                    type="button"
-                    className="upm-btn"
-                    data-variant="primary"
-                    onClick={completeCheckout}
-                  >
-                    Complete subscription
-                  </button>
                 </>
-              ) : (
+              )}
+              {step === "cap" && (
                 <>
                   <button
                     type="button"
                     className="upm-btn"
                     data-variant="ghost"
-                    onClick={onClose}
+                    onClick={closeAndReset}
                   >
                     Cancel
                   </button>
@@ -178,6 +193,19 @@ export default function UpgradeModal({
                     Continue →
                   </button>
                 </>
+              )}
+              {step === "confirm" && (
+                <button
+                  type="button"
+                  className="upm-btn"
+                  data-variant="primary"
+                  onClick={() => {
+                    setStep("cap");
+                    onComplete({ capUsd: effectiveCap });
+                  }}
+                >
+                  Finish
+                </button>
               )}
             </div>
           </footer>
@@ -304,15 +332,21 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
   );
 }
 
-// ─── Step 2: Stripe Embedded Checkout (placeholder for now) ───────────
+// ─── Step 2: Stripe Embedded Checkout (lazy-loaded) ────────────────────
 
 interface CheckoutStepProps {
   effectiveCap: number | null;
   currency: UpgradeModalProps["currency"];
   onEditCap: () => void;
+  onComplete: () => void;
 }
 
-function CheckoutStep({ effectiveCap, currency, onEditCap }: CheckoutStepProps) {
+function CheckoutStep({
+  effectiveCap,
+  currency,
+  onEditCap,
+  onComplete,
+}: CheckoutStepProps) {
   const sym = currencySymbol(currency);
   return (
     <>
@@ -335,25 +369,49 @@ function CheckoutStep({ effectiveCap, currency, onEditCap }: CheckoutStepProps) 
         Stripe handles your card details. Stirling never sees them.
       </p>
 
-      <div className="upm-stripe-mount">
-        <div className="upm-stripe-mount__title">
-          Stripe Embedded Checkout
-        </div>
-        <div>
-          The card-collection iframe mounts here in production.
-        </div>
-        <div style={{ marginTop: 4 }}>
-          Set{" "}
-          <span className="upm-stripe-mount__code">
-            VITE_STRIPE_PUBLISHABLE_KEY
-          </span>{" "}
-          and wire{" "}
-          <span className="upm-stripe-mount__code">
-            POST /api/v1/payg/checkout
-          </span>{" "}
-          to activate.
-        </div>
-      </div>
+      <Suspense
+        fallback={
+          <div className="upm-stripe-mount" data-state="loading">
+            <div className="upm-stripe-mount__title">Loading checkout…</div>
+          </div>
+        }
+      >
+        <StripeCheckoutPanel
+          capUsd={effectiveCap}
+          onComplete={onComplete}
+        />
+      </Suspense>
     </>
+  );
+}
+
+// ─── Step 3: confirmation ──────────────────────────────────────────────
+
+interface ConfirmationStepProps {
+  effectiveCap: number | null;
+  currency: UpgradeModalProps["currency"];
+}
+
+function ConfirmationStep({ effectiveCap, currency }: ConfirmationStepProps) {
+  const sym = currencySymbol(currency);
+  return (
+    <div className="upm-confirm">
+      <CheckCircleIcon className="upm-confirm__icon" />
+      <h3 className="upm-confirm__title">Welcome to the Processor plan</h3>
+      <p className="upm-confirm__body">
+        Your team can now run automation, AI, and API operations beyond the
+        500/month free allowance.
+      </p>
+      <div className="upm-confirm__summary">
+        <span>Monthly ceiling</span>
+        <strong>
+          {effectiveCap === null ? "No cap" : `${sym}${effectiveCap} / month`}
+        </strong>
+      </div>
+      <p className="upm-confirm__note">
+        You can change your cap, cancel, or open the Stripe customer portal
+        any time from this page.
+      </p>
+    </div>
   );
 }

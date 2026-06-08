@@ -81,7 +81,23 @@ export default function DevPaygPreview() {
         </span>
       </header>
       <main style={{ maxWidth: 920, margin: "0 auto", padding: "32px 24px" }}>
-        {slot === "free-leader" && <PaygFreeLeader />}
+        {slot === "free-leader" && (
+          <PaygFreeLeader
+            onUpgraded={() => {
+              // Wire to the same localStorage flag useWallet reads so the
+              // dev-preview slot toggle reflects the post-subscribe state.
+              try {
+                window.localStorage.setItem(
+                  "stirling.payg.devSubscription",
+                  "subscribed",
+                );
+              } catch {
+                /* storage unavailable */
+              }
+              setSlot("subscribed-leader");
+            }}
+          />
+        )}
         {slot === "free-member" && <PaygFreeMember />}
         {slot === "subscribed-leader" && <PaygLeader />}
         {slot === "subscribed-member" && <PaygMember />}

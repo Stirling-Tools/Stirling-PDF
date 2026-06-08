@@ -1,8 +1,6 @@
 /**
  * SaaS "Plan" page — the single entry point for billing, plan state, and
- * usage. Replaces the old multi-tier (Pro / Business / Enterprise + credit
- * pack) layout: PAYG is the only plan model now. The page branches on the
- * team's wallet state and the viewer's role:
+ * usage. Branches on the team's wallet state and the viewer's role:
  *
  *   - free + leader → {@link PaygFreeLeader} (upgrade CTA + manual-tools
  *     framing)
@@ -10,12 +8,17 @@
  *   - subscribed + leader → {@link PaygLeader} (full dashboard, editable cap)
  *   - subscribed + member → {@link PaygMember} (member dashboard)
  *
- * <p>Subscription state and role come from {@link useWallet}. When the
- * UpgradeModal completes, we call {@code markSubscribed()} to flip the view
- * immediately — real wiring later swaps this for a wallet refetch.
+ * <p>The hook handles loading + error states locally so the four view
+ * components stay focused on rendering the data they own. {@code Plan} is
+ * intentionally tiny (under 60 lines) so future "Plan-level" affordances —
+ * a top-level error toast, a subscription confirmation card, etc — have
+ * obvious places to land.
  */
 import React from "react";
+import { Alert, Center, Loader } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useWallet } from "@app/hooks/useWallet";
+import { useRenderCount } from "@app/hooks/useRenderCount";
 import {
   PaygLeader,
   PaygMember,
@@ -26,21 +29,48 @@ import {
 } from "@app/components/shared/config/configSections/PaygFree";
 
 const Plan: React.FC = () => {
-  const { wallet, markSubscribed } = useWallet();
+  useRenderCount("Plan");
+  const { t } = useTranslation();
+  const { wallet, loading, error, markSubscribed, updateCap } = useWallet();
 
-  if (wallet.status === "subscribed") {
-    return wallet.role === "leader" ? <PaygLeader /> : <PaygMember />;
+  if (loading && !wallet) {
+    return (
+      <Center mih={200}>
+        <Loader />
+      </Center>
+    );
   }
 
-  // Free tier
+  if (error || !wallet) {
+    return (
+      <Alert color="red" title={t("payg.error.title", "Couldn't load your plan")}>
+        {error ??
+          t(
+            "payg.error.body",
+            "We couldn't reach the billing service. Refresh the page to try again.",
+          )}
+      </Alert>
+    );
+  }
+
+  if (wallet.status === "subscribed") {
+    return wallet.role === "leader" ? (
+      <PaygLeader onSaveCap={updateCap} />
+    ) : (
+      <PaygMember />
+    );
+  }
+
+  // Free tier — only the leader sees the upgrade CTA.
   if (wallet.role === "leader") {
     return (
       <PaygFreeLeader
-        onUpgraded={() => {
-          // Real wiring: refetch wallet from /api/v1/payg/wallet. Until then,
-          // optimistically flip the local cache so the view rerenders into
-          // the subscribed dashboard.
-          markSubscribed();
+        onUpgraded={({ capUsd }) => {
+          // Bridges the modal's local success → backend mock → refetch loop.
+          // Real Stripe flow: the customer.subscription.created webhook is
+          // what flips status; we still call markSubscribed locally so the
+          // optimistic refetch hits immediately. The next refetch wins.
+          void markSubscribed(capUsd);
         }}
       />
     );

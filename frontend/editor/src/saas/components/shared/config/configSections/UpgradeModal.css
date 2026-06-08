@@ -420,3 +420,57 @@
   transform: none !important;
   box-shadow: none !important;
 }
+
+/* ── Step 3: confirmation ─────────────────────────────────────────────── */
+
+.upm-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px 4px;
+  gap: 12px;
+}
+.upm-confirm__icon {
+  font-size: 64px !important;
+  color: #10b981;
+  filter: drop-shadow(0 6px 18px rgba(16, 185, 129, 0.35));
+}
+.upm-confirm__title {
+  margin: 6px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--upm-text);
+}
+.upm-confirm__body {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--upm-text-muted);
+  max-width: 380px;
+  line-height: 1.55;
+}
+.upm-confirm__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+  padding: 14px 18px;
+  background: var(--upm-inset-bg, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--upm-divider);
+  border-radius: 12px;
+  margin-top: 6px;
+  font-size: 0.92rem;
+}
+.upm-confirm__summary > strong {
+  color: var(--upm-text);
+  font-size: 1.05rem;
+}
+.upm-confirm__note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--upm-text-muted);
+  max-width: 380px;
+  line-height: 1.5;
+}

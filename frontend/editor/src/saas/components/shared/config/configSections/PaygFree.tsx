@@ -25,6 +25,7 @@ import { Group, Stack } from "@mantine/core";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import CheckIcon from "@mui/icons-material/CheckRounded";
 import LockIcon from "@mui/icons-material/LockOutlined";
+import { useRenderCount } from "@app/hooks/useRenderCount";
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
@@ -174,6 +175,7 @@ export interface PaygFreeLeaderProps {
 }
 
 export function PaygFreeLeader({ onUpgraded }: PaygFreeLeaderProps = {}) {
+  useRenderCount("PaygFreeLeader");
   const snap = useFreeMock();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
@@ -292,6 +294,7 @@ export function PaygFreeLeader({ onUpgraded }: PaygFreeLeaderProps = {}) {
 // ─── Free MEMBER: hero + ask-owner note (no CTA) ─────────────────────────
 
 export function PaygFreeMember() {
+  useRenderCount("PaygFreeMember");
   const snap = useFreeMock();
 
   return (

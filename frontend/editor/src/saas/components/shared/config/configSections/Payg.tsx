@@ -14,6 +14,7 @@
  */
 import React, { useMemo, useState } from "react";
 import { Button, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
+import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import CheckIcon from "@mui/icons-material/CheckRounded";
@@ -70,6 +71,12 @@ interface PaygSnapshot {
 
 interface PaygProps {
   role: "LEADER" | "MEMBER";
+  /**
+   * Persist a cap change. Provided by {@code Plan} → {@code useWallet} for the
+   * leader view; absent on the member view (read-only) and for the standalone
+   * dev preview route (where it falls back to a no-op).
+   */
+  onSaveCap?: (capUsd: number | null) => Promise<void> | void;
 }
 
 // ─── Mock data hook (replace with real API later) ─────────────────────────
@@ -300,13 +307,25 @@ function UsageHero({ snap }: { snap: PaygSnapshot }) {
 
 // ─── Cap editor ─────────────────────────────────────────────────────────────
 
-function CapEditor({ snap }: { snap: PaygSnapshot }) {
+interface CapEditorProps {
+  snap: PaygSnapshot;
+  /**
+   * Persist the cap change. Receives the value in USD whole dollars (matches
+   * the backend's {@code PATCH /api/v1/payg/cap} body). Currency conversion
+   * for non-USD V1 currencies is a TODO — the cap selection backend is USD-
+   * scoped today so the FE rounds to USD before send.
+   */
+  onSaveCap?: (capUsd: number | null) => Promise<void> | void;
+}
+
+function CapEditor({ snap, onSaveCap }: CapEditorProps) {
   const { t } = useTranslation();
   // Local edit state — real impl would call POST /api/v1/payg/cap-preview on change
   const [money, setMoney] = useState<number>(snap.capSourceMoney / 100);
   const [currency, setCurrency] = useState<string>(snap.capSourceCurrency);
   const [warnAt, setWarnAt] = useState<number>(snap.warnAtPct);
   const [degradeAt, setDegradeAt] = useState<number>(snap.degradeAtPct);
+  const [saving, setSaving] = useState<boolean>(false);
 
   // Mock preview — real impl reads stripe.prices.tiers via Sync Engine
   const previewUnits = Math.round(
@@ -433,8 +452,20 @@ function CapEditor({ snap }: { snap: PaygSnapshot }) {
           <Button
             variant="default"
             size="xs"
-            disabled={!dirty}
+            disabled={!dirty || saving}
+            loading={saving}
             leftSection={<LocalIcon icon="check-rounded" />}
+            onClick={async () => {
+              if (!onSaveCap) return;
+              setSaving(true);
+              try {
+                // For V1 the backend stores USD. Non-USD currencies are a
+                // follow-up — round-trip the dollar value as-is for now.
+                await onSaveCap(Math.round(money));
+              } finally {
+                setSaving(false);
+              }
+            }}
           >
             {t("payg.cap.save", "Update cap")}
           </Button>
@@ -681,7 +712,8 @@ function StripePortalLink({ snap }: { snap: PaygSnapshot }) {
 
 // ─── Main component ───────────────────────────────────────────────────────
 
-const Payg: React.FC<PaygProps> = ({ role }) => {
+const Payg: React.FC<PaygProps> = ({ role, onSaveCap }) => {
+  useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const snap = usePaygMock(role);
   const isLeader = role === "LEADER";
@@ -717,7 +749,11 @@ const Payg: React.FC<PaygProps> = ({ role }) => {
 
         <UsageHero snap={snap} />
 
-        {isLeader ? <CapEditor snap={snap} /> : <CapReadOnly snap={snap} />}
+        {isLeader ? (
+          <CapEditor snap={snap} onSaveCap={onSaveCap} />
+        ) : (
+          <CapReadOnly snap={snap} />
+        )}
 
         <GatesCard />
 
@@ -734,5 +770,11 @@ const Payg: React.FC<PaygProps> = ({ role }) => {
 export default Payg;
 
 // Convenience exports for the config nav to render either variant directly.
-export const PaygLeader: React.FC = () => <Payg role="LEADER" />;
+export interface PaygLeaderProps {
+  /** See {@link PaygProps#onSaveCap}. */
+  onSaveCap?: (capUsd: number | null) => Promise<void> | void;
+}
+export const PaygLeader: React.FC<PaygLeaderProps> = ({ onSaveCap } = {}) => (
+  <Payg role="LEADER" onSaveCap={onSaveCap} />
+);
 export const PaygMember: React.FC = () => <Payg role="MEMBER" />;
