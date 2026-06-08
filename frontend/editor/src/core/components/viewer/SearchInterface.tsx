@@ -203,7 +203,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           variant="subtle"
           size="sm"
           onClick={handleCloseClick}
-          aria-label="Close search"
+          aria-label={t("viewer.search.close", "Close search")}
         >
           <LocalIcon icon="close" width="1rem" height="1rem" />
         </ActionIcon>
@@ -227,7 +227,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
               <ActionIcon
                 variant="subtle"
                 onClick={handleClearSearch}
-                aria-label="Clear search"
+                aria-label={t("viewer.search.clear", "Clear search")}
               >
                 <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
               </ActionIcon>
@@ -267,7 +267,9 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             disabled={!resultInfo || resultInfo.totalResults === 0}
           />
           <Text size="sm" c="dimmed">
-            of {resultInfo?.totalResults || 0}
+            {t("viewer.search.resultsOf", "of {{total}}", {
+              total: resultInfo?.totalResults || 0,
+            })}
           </Text>
         </Group>
 
@@ -277,7 +279,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             size="sm"
             onClick={handlePrevious}
             disabled={!resultInfo || resultInfo.currentIndex <= 1}
-            aria-label="Previous result"
+            aria-label={t("viewer.search.previous", "Previous result")}
           >
             <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
           </ActionIcon>
@@ -288,7 +290,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             disabled={
               !resultInfo || resultInfo.currentIndex >= resultInfo.totalResults
             }
-            aria-label="Next result"
+            aria-label={t("viewer.search.next", "Next result")}
           >
             <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
           </ActionIcon>
