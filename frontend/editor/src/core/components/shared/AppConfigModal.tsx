@@ -84,8 +84,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail as { key?: NavKey } | undefined;
       if (detail?.key) {
-        const alreadyInSettings =
-          stripBasePath(window.location.pathname).startsWith("/settings");
+        const alreadyInSettings = stripBasePath(
+          window.location.pathname,
+        ).startsWith("/settings");
         navigate(`/settings/${detail.key}`, {
           replace: alreadyInSettings,
         });
