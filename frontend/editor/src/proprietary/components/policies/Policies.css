@@ -207,16 +207,32 @@
   color: var(--color-text-4);
 }
 
-/* ---- Stats: three SUI MetricCards, constrained for the narrow rail ---- */
-/* Three compact MetricCards (size="sm") in an equal-height 3-up grid. */
+/* ---- Stats: one grouped card with three divided columns, matching the
+        prototype's quiet summary footer (grid-cols-3 divide-x). ---- */
 .pol-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
-  align-items: stretch;
 }
-.pol-stats .sui-metric {
-  min-height: 100%;
+.pol-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-0_5);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+.pol-stat:not(:first-child) {
+  border-left: 1px solid var(--color-border);
+}
+.pol-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-text-1);
+}
+.pol-stat-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
 }
 
 /* ---- Footer (hosts SUI Buttons) ---- */

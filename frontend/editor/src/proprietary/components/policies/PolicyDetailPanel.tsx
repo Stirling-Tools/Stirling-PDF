@@ -11,7 +11,6 @@ import { Card } from "@shared/components/Card";
 import { ChipFlow } from "@shared/components/ChipFlow";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { EmptyState } from "@shared/components/EmptyState";
-import { MetricCard } from "@shared/components/MetricCard";
 import { Button } from "@shared/components/Button";
 import { Banner } from "@shared/components/Banner";
 import { ListRow } from "@shared/components/ListRow";
@@ -132,20 +131,28 @@ export function PolicyDetailPanel({
           )}
         </div>
 
-        {/* Stats */}
-        <div className="pol-stats">
-          <MetricCard
-            size="sm"
-            label="Enforced"
-            value={config.stats.enforced.toLocaleString()}
-          />
-          <MetricCard
-            size="sm"
-            label="Processed"
-            value={config.stats.dataProcessed}
-          />
-          <MetricCard size="sm" label="Active" value={config.stats.activeFor} />
-        </div>
+        {/* Stats — one grouped card with divided columns, matching the
+            prototype's quiet summary footer (intentionally unlabelled). */}
+        <Card padding="none">
+          <div className="pol-stats">
+            <div className="pol-stat">
+              <span className="pol-stat-value">
+                {config.stats.enforced.toLocaleString()}
+              </span>
+              <span className="pol-stat-label">Docs enforced</span>
+            </div>
+            <div className="pol-stat">
+              <span className="pol-stat-value">
+                {config.stats.dataProcessed}
+              </span>
+              <span className="pol-stat-label">Data processed</span>
+            </div>
+            <div className="pol-stat">
+              <span className="pol-stat-value">{config.stats.activeFor}</span>
+              <span className="pol-stat-label">Active</span>
+            </div>
+          </div>
+        </Card>
 
         {!canConfigure && (
           <Banner
