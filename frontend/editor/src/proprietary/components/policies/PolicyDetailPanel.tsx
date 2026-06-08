@@ -20,6 +20,7 @@ import type {
   PolicyRowStatus,
   PolicyState,
 } from "@app/types/policies";
+import type { AutomationOperation } from "@app/types/automation";
 
 interface PolicyDetailPanelProps {
   category: PolicyCategory;
@@ -27,6 +28,12 @@ interface PolicyDetailPanelProps {
   state: PolicyState;
   /** Derived display status (treats a spend-limit hit as paused). */
   status: PolicyRowStatus;
+  /**
+   * The policy's real configured steps (from its backing automation). When
+   * present these drive the Enforces flow; otherwise the preset's decorative
+   * `rules` are shown (e.g. before configuration).
+   */
+  steps?: AutomationOperation[];
   canConfigure: boolean;
   onBack: () => void;
   onEditSettings: () => void;
@@ -35,11 +42,20 @@ interface PolicyDetailPanelProps {
 }
 
 /** Narrative view for a configured policy (Enforces / Activity / Stats). */
+/** "addPassword" → "Add Password", "ocr" → "Ocr" — a light humanisation of op ids. */
+function humanizeOperation(op: string): string {
+  return op
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim();
+}
+
 export function PolicyDetailPanel({
   category,
   config,
   state,
   status,
+  steps,
   canConfigure,
   onBack,
   onEditSettings,
@@ -47,6 +63,11 @@ export function PolicyDetailPanel({
   onDelete,
 }: PolicyDetailPanelProps) {
   const isPaused = status === "paused";
+  // Real configured steps drive the flow; fall back to the preset's rule labels.
+  const enforceItems =
+    steps && steps.length > 0
+      ? steps.map((s) => humanizeOperation(s.operation))
+      : config.rules;
   return (
     <div className="pol-detail">
       <PanelHeader
@@ -75,7 +96,7 @@ export function PolicyDetailPanel({
           <p className="pol-section-label">Enforces</p>
           <Card padding="default" accent={isPaused ? "amber" : "blue"}>
             <div className="pol-rule-flow">
-              <ChipFlow items={config.rules} separator="arrow" />
+              <ChipFlow items={enforceItems} separator="arrow" />
             </div>
             <div className="pol-meta-row">
               <span className="pol-meta-item">

@@ -12,10 +12,12 @@
  *     collapsed; clicking an icon selects the policy and expands the rail.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
+import { getPolicyOperations } from "@app/services/policyFolders";
+import type { AutomationOperation } from "@app/types/automation";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
@@ -164,6 +166,24 @@ export function PolicyDetailTakeover() {
   const { categories, configs, sources, docTypes } = usePolicyCatalog();
   const { selectedId, detailView } = usePolicySelection();
 
+  // The configured policy's real steps, loaded from its backing folder's
+  // automation. Falls back to the preset's decorative rules when not configured.
+  const folderId = selectedId ? pol.policies[selectedId]?.folderId : undefined;
+  const [steps, setSteps] = useState<AutomationOperation[]>([]);
+  useEffect(() => {
+    if (!folderId) {
+      setSteps([]);
+      return;
+    }
+    let cancelled = false;
+    getPolicyOperations(folderId).then((ops) => {
+      if (!cancelled) setSteps(ops);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [folderId]);
+
   if (!POLICIES_ENABLED || selectedId == null) return null;
 
   const category = categories.find((c) => c.id === selectedId);
@@ -224,6 +244,7 @@ export function PolicyDetailTakeover() {
       config={config}
       state={state}
       status={status}
+      steps={steps}
       canConfigure={pol.canConfigure}
       onBack={() => closePolicy()}
       onEditSettings={() => setPolicyDetailView("settings")}

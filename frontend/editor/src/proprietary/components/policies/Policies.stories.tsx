@@ -89,6 +89,7 @@ export const DetailActive: Story = {
         config={POLICY_CONFIG.ingestion}
         state={activeState}
         status="active"
+        steps={POLICY_CONFIG.ingestion.defaultOperations}
         canConfigure
         onBack={noop}
         onEditSettings={noop}
