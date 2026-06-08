@@ -39,7 +39,6 @@ import { StatusBadge } from "@shared/components/StatusBadge";
 import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
-import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
 import {
   usePolicySelection,
   selectPolicy,
@@ -264,6 +263,14 @@ export function PolicyDetailTakeover() {
 
   const status = deriveRowStatus(state, pol.spendLimitReached);
 
+  const onSetupClassification = () => {
+    const classifier = categories.find((c) => c.providesClassification);
+    if (classifier) selectPolicy(classifier.id);
+  };
+
+  // Setup: the shared wizard in create mode (workflow → settings → sources →
+  // review). The workflow step embeds the builder, so the wizard is only
+  // rendered here, not in the rail tests (which mock it).
   if (!state.configured) {
     return (
       <PolicySetupWizard
@@ -277,36 +284,50 @@ export function PolicyDetailTakeover() {
         // The prototype always offers "Set up Classification" in step 2 — there
         // is no standalone classification policy that would flip this on.
         classificationEnabled={false}
+        mode="create"
         onCancel={() => closePolicy()}
-        onEnable={() => {
+        onComplete={(result) => {
           void pol
-            .enablePolicy(selectedId)
+            .enablePolicy(selectedId, result)
             .then(() => setPolicyDetailView("detail"));
         }}
-        onSetupClassification={() => {
-          const classifier = categories.find((c) => c.providesClassification);
-          if (classifier) selectPolicy(classifier.id);
-        }}
+        onSetupClassification={onSetupClassification}
       />
     );
   }
 
-  // Inline edit-settings page: edit the real workflow via the Watch Folders
-  // automation builder. Rendered only here (so its useToolWorkflow dependency
-  // never runs in the rail tests, which don't open settings).
+  // Edit: the same wizard in edit mode, pre-filled — so editing has the settings
+  // steps (not just the workflow). Wait for the backing automation to load so
+  // the workflow step edits the real pipeline.
   if (detailView === "settings" && pol.canConfigure) {
+    if (!backingAutomation) {
+      return (
+        <div className="pol-detail">
+          <div className="pol-scroll">
+            <p className="pol-desc">Loading…</p>
+          </div>
+        </div>
+      );
+    }
     return (
-      <PolicySettingsForm
-        key={selectedId}
+      <PolicySetupWizard
+        key={`edit-${selectedId}`}
         category={category}
-        status={status}
-        automation={backingAutomation}
+        config={config}
+        initial={state}
+        sources={sources}
+        docTypes={docTypes}
+        canConfigure={pol.canConfigure}
+        classificationEnabled={false}
+        mode="edit"
+        existingAutomation={backingAutomation}
         onCancel={() => setPolicyDetailView("detail")}
-        onClose={() => closePolicy()}
-        onSaved={() => {
+        onComplete={(result) => {
+          pol.savePolicyConfig(selectedId, result);
           setReloadKey((k) => k + 1);
           setPolicyDetailView("detail");
         }}
+        onSetupClassification={onSetupClassification}
       />
     );
   }

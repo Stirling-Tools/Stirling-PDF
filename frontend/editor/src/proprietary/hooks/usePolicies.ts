@@ -14,6 +14,7 @@ import {
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import {
   createPolicyFolder,
+  createPolicyFolderForAutomation,
   deletePolicyFolder,
   setPolicyFolderPaused,
 } from "@app/services/policyFolders";
@@ -21,7 +22,11 @@ import {
   MOCK_POLICY_USER,
   canConfigurePolicies,
 } from "@app/data/policyDefinitions";
-import type { PoliciesByCategory, SpendLimit } from "@app/types/policies";
+import type {
+  PoliciesByCategory,
+  PolicyWizardResult,
+  SpendLimit,
+} from "@app/types/policies";
 
 /**
  * Spend limit is read-only mock state in the frontend — the real figure comes
@@ -50,22 +55,43 @@ export function usePolicies() {
    * SmartFolder + automation seeded from the category preset) and record the
    * link. Reuses the Watch Folders engine for execution.
    */
-  const enablePolicy = useCallback(async (id: string) => {
-    const catalog = loadPolicyCatalog();
-    const category = catalog.categories.find((c) => c.id === id);
-    const config = catalog.configs[id];
-    if (!category || !config) return;
-    const folder = await createPolicyFolder(category, config.defaultOperations);
-    updatePolicy(id, {
-      configured: true,
-      status: "active",
-      folderId: folder.id,
-    });
-  }, []);
+  /**
+   * Enable a new policy from the wizard result: link the saved workflow
+   * automation to a backing folder and persist the collected settings.
+   */
+  const enablePolicy = useCallback(
+    async (id: string, result: PolicyWizardResult) => {
+      const category = loadPolicyCatalog().categories.find((c) => c.id === id);
+      if (!category) return;
+      const folder = await createPolicyFolderForAutomation(
+        category,
+        result.automation.id,
+      );
+      updatePolicy(id, {
+        configured: true,
+        status: "active",
+        folderId: folder.id,
+        fieldValues: result.fieldValues,
+        sources: result.sources,
+        scopeTypes: result.scopeTypes,
+        reviewerEmail: result.reviewerEmail,
+      });
+    },
+    [],
+  );
 
-  const updateConfig = useCallback(
-    (id: string, fieldValues: Record<string, boolean | string | string[]>) => {
-      updatePolicy(id, { fieldValues });
+  /**
+   * Save edits from the wizard. The workflow automation is updated in place by
+   * the builder; persist the rest of the policy's settings here.
+   */
+  const savePolicyConfig = useCallback(
+    (id: string, result: PolicyWizardResult) => {
+      updatePolicy(id, {
+        fieldValues: result.fieldValues,
+        sources: result.sources,
+        scopeTypes: result.scopeTypes,
+        reviewerEmail: result.reviewerEmail,
+      });
     },
     [],
   );
@@ -117,7 +143,7 @@ export function usePolicies() {
     spendLimitReached,
     spendLimitWarning,
     enablePolicy,
-    updateConfig,
+    savePolicyConfig,
     pausePolicy,
     resumePolicy,
     deletePolicy,

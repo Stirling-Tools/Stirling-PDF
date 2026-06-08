@@ -56,6 +56,26 @@ export async function createPolicyFolder(
   });
 }
 
+/**
+ * Create the backing folder for a policy from an *already-saved* automation
+ * (e.g. one the workflow builder just created). Pairs with the wizard, where
+ * AutomationCreation persists the automation and we link a folder to it.
+ */
+export async function createPolicyFolderForAutomation(
+  category: PolicyCategory,
+  automationId: string,
+): Promise<SmartFolder> {
+  return smartFolderStorage.createFolder({
+    name: `${category.label} Policy`,
+    description: category.desc,
+    automationId,
+    icon: CATEGORY_FOLDER_ICON[category.id] ?? "WorkIcon",
+    accentColor: POLICY_FOLDER_ACCENT,
+    policyCategoryId: category.id,
+    inputSource: "idb",
+  });
+}
+
 /** The policy's current steps, resolved through its backing folder's automation. */
 export async function getPolicyOperations(
   folderId: string,

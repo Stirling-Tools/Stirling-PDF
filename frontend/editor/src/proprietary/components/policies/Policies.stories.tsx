@@ -1,12 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
-import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PoliciesSection } from "@app/components/policies/PoliciesSidebar";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
-  POLICY_SOURCES,
-  POLICY_DOC_TYPES,
 } from "@app/data/policyDefinitions";
 import type { PolicyState } from "@app/types/policies";
 import "@app/components/policies/Policies.css";
@@ -42,7 +39,6 @@ function RailFrame({ children }: { children: React.ReactNode }) {
 
 const ingestion = POLICY_CATEGORIES.find((c) => c.id === "ingestion")!;
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
-const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 
 /** A configured, running policy. */
 const activeState: PolicyState = {
@@ -55,19 +51,6 @@ const activeState: PolicyState = {
   docsEnforced24h: 42,
   alerts24h: 1,
   lastEnforced: "2h ago",
-};
-
-/** A fresh, unconfigured policy (wizard entry state). */
-const freshState: PolicyState = {
-  configured: false,
-  status: "default",
-  sources: [],
-  scopeTypes: [],
-  reviewerEmail: "",
-  fieldValues: {},
-  docsEnforced24h: 0,
-  alerts24h: 0,
-  lastEnforced: null,
 };
 
 const noop = () => {};
@@ -175,26 +158,6 @@ export const ListSection: Story = {
   ),
 };
 
-/** Three-step setup wizard (operations → sources/types → reviewer/confirm). */
-export const Wizard: Story = {
-  render: () => (
-    <RailFrame>
-      <PolicySetupWizard
-        category={compliance}
-        config={POLICY_CONFIG.compliance}
-        initial={freshState}
-        sources={POLICY_SOURCES}
-        docTypes={POLICY_DOC_TYPES}
-        canConfigure
-        classificationEnabled={false}
-        onCancel={noop}
-        onEnable={noop}
-        onSetupClassification={noop}
-      />
-    </RailFrame>
-  ),
-};
-
-// Note: the edit-settings page embeds the Watch Folders automation builder,
-// which needs the ToolWorkflow context — so it's exercised in-app, not via an
-// isolated story here.
+// Note: the setup + edit wizard now embeds the Watch Folders automation builder
+// (its Workflow step), which needs the ToolWorkflow context — so the wizard is
+// exercised in-app, not via an isolated story here.

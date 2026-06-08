@@ -9,7 +9,10 @@
  */
 
 import type { ReactNode } from "react";
-import type { AutomationOperation } from "@app/types/automation";
+import type {
+  AutomationConfig,
+  AutomationOperation,
+} from "@app/types/automation";
 
 /** Lifecycle status of a policy category for the current user/org. */
 export type PolicyStatus = "default" | "active" | "paused";
@@ -163,6 +166,16 @@ export interface SpendLimit {
 
 /** The three steps of the unconfigured-policy setup wizard. */
 export type PolicySetupStep = 1 | 2 | 3;
+
+/** Everything the shared policy wizard collects, handed back on submit. */
+export interface PolicyWizardResult {
+  /** The saved workflow automation (created on setup, updated in place on edit). */
+  automation: AutomationConfig;
+  fieldValues: Record<string, boolean | string | string[]>;
+  sources: string[];
+  scopeTypes: string[];
+  reviewerEmail: string;
+}
 
 /** Which sub-view of a configured policy's detail panel is showing. */
 export type PolicyDetailView = "detail" | "settings";

@@ -3,6 +3,21 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
+// The wizard's Workflow step embeds the Watch Folders automation builder, which
+// needs the ToolWorkflow context. Mock it: a stub that wires the save trigger to
+// hand back the seed automation, so the wizard's submit still completes.
+vi.mock("@app/components/policies/PolicyWorkflowStep", () => ({
+  AutomationMode: { CREATE: "create", EDIT: "edit", SUGGESTED: "suggested" },
+  PolicyWorkflowStep: (props: {
+    automation: unknown;
+    saveTriggerRef: { current: (() => void) | null };
+    onComplete: (automation: unknown) => void;
+  }) => {
+    props.saveTriggerRef.current = () => props.onComplete(props.automation);
+    return null;
+  },
+}));
+
 // Enabling a policy creates its backing Watch Folders SmartFolder (IndexedDB);
 // jsdom's crypto lacks randomUUID, which smartFolderStorage uses for folder ids.
 if (typeof globalThis.crypto?.randomUUID !== "function") {
@@ -90,23 +105,24 @@ describe("Policies right-sidebar surface", () => {
     expect(screen.getByText("Policies")).toBeInTheDocument();
   });
 
-  it("opens the 3-step setup wizard for an unconfigured policy", () => {
+  it("opens the setup wizard (workflow first) for an unconfigured policy", () => {
     renderHost();
     fireEvent.click(screen.getByText("Security"));
     expect(screen.getByText("Set up Security Policy")).toBeInTheDocument();
-    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
   });
 
   it("advances through the wizard and enables the policy", async () => {
     renderHost();
     fireEvent.click(screen.getByText("Security"));
-    fireEvent.click(screen.getByText("Continue")); // → step 2
+    fireEvent.click(screen.getByText("Continue")); // workflow → settings
+    fireEvent.click(screen.getByText("Continue")); // settings → sources
     expect(screen.getByText("Sources")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("Continue")); // → step 3
+    fireEvent.click(screen.getByText("Continue")); // sources → review
     expect(screen.getByText("Summary")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Enable Policy"));
-    // Enable is async (creates the backing folder); the detail footer with
-    // "Edit Settings" appears once the policy is configured.
+    // Enable is async (links the workflow + creates the backing folder); the
+    // detail footer with "Edit Settings" appears once the policy is configured.
     expect(await screen.findByText("Edit Settings")).toBeInTheDocument();
   });
 });

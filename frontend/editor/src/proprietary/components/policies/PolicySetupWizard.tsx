@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
@@ -18,10 +18,17 @@ import type {
   PolicyConfigDef,
   PolicySource,
   PolicyState,
-  PolicySetupStep,
+  PolicyWizardResult,
 } from "@app/types/policies";
+import type { AutomationConfig } from "@app/types/automation";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
+import {
+  PolicyWorkflowStep,
+  AutomationMode,
+} from "@app/components/policies/PolicyWorkflowStep";
+
+const TOTAL_STEPS = 4;
 
 interface PolicySetupWizardProps {
   category: PolicyCategory;
@@ -34,11 +41,22 @@ interface PolicySetupWizardProps {
   canConfigure: boolean;
   /** Whether the Classification (ingestion) policy is active — gates doc-type narrowing. */
   classificationEnabled: boolean;
+  /** "create" seeds the workflow from the preset; "edit" loads the backing automation. */
+  mode?: "create" | "edit";
+  /** The backing automation to edit (edit mode). */
+  existingAutomation?: AutomationConfig;
   onCancel: () => void;
-  onEnable: () => void;
+  /** Fires on submit with the saved workflow + collected settings. */
+  onComplete: (result: PolicyWizardResult) => void;
   onSetupClassification: () => void;
 }
 
+/**
+ * The shared policy wizard, used for both setup and edit. Four steps:
+ * Workflow (the tool pipeline, reusing the Watch Folders builder) → Settings
+ * (the policy fields) → Sources → Review. The workflow builder is kept mounted
+ * across steps so the final action can trigger its save.
+ */
 export function PolicySetupWizard({
   category,
   config,
@@ -47,11 +65,14 @@ export function PolicySetupWizard({
   docTypes,
   canConfigure,
   classificationEnabled,
+  mode = "create",
+  existingAutomation,
   onCancel,
-  onEnable,
+  onComplete,
   onSetupClassification,
 }: PolicySetupWizardProps) {
-  const [step, setStep] = useState<PolicySetupStep>(1);
+  const isEdit = mode === "edit";
+  const [step, setStep] = useState(1);
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(config, initial),
   );
@@ -61,41 +82,66 @@ export function PolicySetupWizard({
   const [scopeNarrow, setScopeNarrow] = useState(initial.scopeTypes.length > 0);
   const [scopeTypes, setScopeTypes] = useState<string[]>(initial.scopeTypes);
   const [reviewerEmail, setReviewerEmail] = useState(initial.reviewerEmail);
+  const workflowSave = useRef<(() => void) | null>(null);
+
+  // Seed the workflow builder: the backing automation in edit, else a synthetic
+  // config carrying the category preset's operations (created on save).
+  const seedAutomation = useMemo<AutomationConfig>(
+    () =>
+      existingAutomation ?? {
+        id: "",
+        name: `${category.label} Policy`,
+        description: `${category.label} policy workflow`,
+        icon: "WorkIcon",
+        operations: config.defaultOperations,
+        createdAt: "",
+        updatedAt: "",
+      },
+    [existingAutomation, category.label, config.defaultOperations],
+  );
 
   if (!canConfigure) {
     return (
       <div className="pol-detail">
         <PanelHeader
           icon={category.icon}
-          title={`Set up ${category.label} Policy`}
+          title={`${isEdit ? "Edit" : "Set up"} ${category.label} Policy`}
           onBack={onCancel}
         />
         <div className="pol-scroll">
           <EmptyState
             title="Managed by your organization"
-            description="Contact an admin to enable this policy."
+            description="Contact an admin to change this policy."
           />
         </div>
       </div>
     );
   }
 
-  const back = () =>
-    step > 1
-      ? setStep((s) => Math.max(1, s - 1) as PolicySetupStep)
-      : onCancel();
+  const back = () => (step > 1 ? setStep((s) => Math.max(1, s - 1)) : onCancel());
 
   const toggleSource = (id: string) =>
     setSources((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
 
+  // The submit (final step) triggers the workflow builder's save; once it
+  // persists, we hand the saved automation + settings back to the host.
+  const handleWorkflowSaved = (automation: AutomationConfig) =>
+    onComplete({
+      automation,
+      fieldValues,
+      sources,
+      scopeTypes: scopeNarrow ? scopeTypes : [],
+      reviewerEmail,
+    });
+
   return (
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
-        title={`Set up ${category.label} Policy`}
-        subtitle={`Step ${step} of 3`}
+        title={`${isEdit ? "Edit" : "Set up"} ${category.label} Policy`}
+        subtitle={`Step ${step} of ${TOTAL_STEPS}`}
         onBack={back}
         actions={
           <Button
@@ -108,14 +154,27 @@ export function PolicySetupWizard({
         }
       />
 
-      {/* Step indicator */}
       <div className="pol-steps">
-        <StepIndicator total={3} current={step} />
+        <StepIndicator total={TOTAL_STEPS} current={step} />
       </div>
 
-      {/* Step content */}
       <div className="pol-scroll">
-        {step === 1 && (
+        {/* Step 1 — Workflow. Kept mounted (hidden on other steps) so the final
+            submit can trigger its save. */}
+        <div style={{ display: step === 1 ? undefined : "none" }}>
+          <p className="pol-desc">
+            Build the sequence of tools this policy runs on each document.
+          </p>
+          <PolicyWorkflowStep
+            automation={seedAutomation}
+            mode={isEdit ? AutomationMode.EDIT : AutomationMode.SUGGESTED}
+            saveTriggerRef={workflowSave}
+            onComplete={handleWorkflowSaved}
+            onSaveFailed={() => setStep(1)}
+          />
+        </div>
+
+        {step === 2 && (
           <>
             <p className="pol-desc">{category.desc}</p>
             <Card padding="none">
@@ -134,7 +193,7 @@ export function PolicySetupWizard({
           </>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <>
             <p className="pol-desc">
               Choose where this policy runs and which document types it applies
@@ -214,7 +273,7 @@ export function PolicySetupWizard({
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <p className="pol-desc">
               When Stirling has low confidence in an enforcement action, it will
@@ -252,9 +311,7 @@ export function PolicySetupWizard({
                 </DataRow>
                 <DataRow label="Sources">{sources.length} selected</DataRow>
                 <DataRow label="Reviewer">
-                  {reviewerEmail || (
-                    <span className="pol-muted">Not set</span>
-                  )}
+                  {reviewerEmail || <span className="pol-muted">Not set</span>}
                 </DataRow>
               </div>
             </Card>
@@ -262,19 +319,16 @@ export function PolicySetupWizard({
         )}
       </div>
 
-      {/* Footer */}
       <div className="pol-footer">
         <Button variant="ghost" size="sm" onClick={back}>
           {step > 1 ? "Back" : "Cancel"}
         </Button>
-        {step < 3 ? (
+        {step < TOTAL_STEPS ? (
           <Button
             variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
-            onClick={() =>
-              setStep((s) => Math.min(3, s + 1) as PolicySetupStep)
-            }
+            onClick={() => setStep((s) => Math.min(TOTAL_STEPS, s + 1))}
           >
             Continue
           </Button>
@@ -283,9 +337,9 @@ export function PolicySetupWizard({
             variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
-            onClick={() => onEnable()}
+            onClick={() => workflowSave.current?.()}
           >
-            Enable Policy
+            {isEdit ? "Save Changes" : "Enable Policy"}
           </Button>
         )}
       </div>

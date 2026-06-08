@@ -14,6 +14,21 @@ if (typeof globalThis.crypto?.randomUUID !== "function") {
   });
 }
 
+// A minimal wizard result (workflow already saved by the builder).
+const wizardResult = {
+  automation: {
+    id: "auto-1",
+    name: "Test",
+    operations: [{ operation: "compress", parameters: {} }],
+    createdAt: "",
+    updatedAt: "",
+  },
+  fieldValues: {},
+  sources: ["editor"],
+  scopeTypes: [],
+  reviewerEmail: "reviewer@x.com",
+};
+
 describe("usePolicies", () => {
   beforeEach(() => localStorage.clear());
 
@@ -27,11 +42,14 @@ describe("usePolicies", () => {
   it("enabling a policy marks it configured + active with a backing folder", async () => {
     const { result } = renderHook(() => usePolicies());
     await act(async () => {
-      await result.current.enablePolicy("security");
+      await result.current.enablePolicy("security", wizardResult);
     });
     expect(result.current.policies.security.configured).toBe(true);
     expect(result.current.policies.security.status).toBe("active");
     expect(result.current.policies.security.folderId).toBeTruthy();
+    expect(result.current.policies.security.reviewerEmail).toBe(
+      "reviewer@x.com",
+    );
   });
 
   it("pausing then resuming flips status", async () => {
@@ -49,7 +67,7 @@ describe("usePolicies", () => {
   it("deleting a policy reverts it to unconfigured and drops the folder link", async () => {
     const { result } = renderHook(() => usePolicies());
     await act(async () => {
-      await result.current.enablePolicy("routing");
+      await result.current.enablePolicy("routing", wizardResult);
     });
     expect(result.current.policies.routing.configured).toBe(true);
     await act(async () => {
