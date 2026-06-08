@@ -48,8 +48,11 @@ const EMPTY: PolicyLiveData = {
  * live" state).
  */
 export async function getPolicyLiveData(
-  folderId: string,
+  folderId: string | undefined,
 ): Promise<PolicyLiveData> {
+  // No backing folder yet (e.g. the seeded demo policy) → empty live data, so
+  // live mode never falls back to the mock feed.
+  if (!folderId) return EMPTY;
   const record = await watchFolderFileStorage.getFolderData(folderId);
   const folder = await smartFolderStorage.getFolder(folderId);
   if (!record) {

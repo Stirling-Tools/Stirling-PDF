@@ -35,4 +35,10 @@ describe("getPolicyLiveData", () => {
     expect(data.activity).toEqual([]);
     expect(data.stats.enforced).toBe(0);
   });
+
+  it("returns empty live data when there is no backing folder (seeded policy)", async () => {
+    const data = await getPolicyLiveData(undefined);
+    expect(data.activity).toEqual([]);
+    expect(data.stats.enforced).toBe(0);
+  });
 });

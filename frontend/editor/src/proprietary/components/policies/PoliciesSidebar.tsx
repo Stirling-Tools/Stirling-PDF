@@ -233,7 +233,10 @@ export function PolicyDetailTakeover() {
   // toggle is "live"; otherwise the panel uses the preset's mock data.
   const [liveData, setLiveData] = useState<PolicyLiveData | null>(null);
   useEffect(() => {
-    if (dataMode !== "live" || !folderId) {
+    // Mock mode → null so the panel uses the preset's mock data. Live mode →
+    // always derive (even with no backing folder, which yields empty live data),
+    // so live never silently falls back to the mock feed.
+    if (dataMode !== "live") {
       setLiveData(null);
       return;
     }
