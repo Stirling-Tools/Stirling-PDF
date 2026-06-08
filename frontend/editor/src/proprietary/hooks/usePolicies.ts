@@ -4,7 +4,7 @@
  * permission flag, and the (read-only, mock) spend-limit derivation.
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   loadPolicies,
   onPoliciesChange,
@@ -19,10 +19,6 @@ import {
   setPolicyFolderPaused,
   updatePolicyFolderSettings,
 } from "@app/services/policyFolders";
-import {
-  MOCK_POLICY_USER,
-  canConfigurePolicies,
-} from "@app/data/policyDefinitions";
 import type {
   PoliciesByCategory,
   PolicyWizardResult,
@@ -136,10 +132,9 @@ export function usePolicies() {
     return folder.id;
   }, []);
 
-  const canConfigure = useMemo(
-    () => canConfigurePolicies(MOCK_POLICY_USER),
-    [],
-  );
+  // Configuration is open to signed-in users; real per-org gating is a backend
+  // concern (the mock owner/admin/member permission model has been removed).
+  const canConfigure = true;
 
   return {
     policies,

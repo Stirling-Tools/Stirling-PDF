@@ -24,7 +24,7 @@ import type {
 } from "@app/types/policies";
 import type { AutomationConfig } from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
-import { MOCK_POLICY_USER } from "@app/data/policyDefinitions";
+import { useAuth } from "@app/auth/UseSession";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
 import {
@@ -79,6 +79,7 @@ export function PolicySetupWizard({
   onSetupClassification,
 }: PolicySetupWizardProps) {
   const isEdit = mode === "edit";
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(config, initial),
@@ -88,9 +89,9 @@ export function PolicySetupWizard({
   );
   const [scopeNarrow, setScopeNarrow] = useState(initial.scopeTypes.length > 0);
   const [scopeTypes, setScopeTypes] = useState<string[]>(initial.scopeTypes);
-  // Default flagged-document reviewer to the current user.
+  // Default flagged-document reviewer to the signed-in user.
   const [reviewerEmail, setReviewerEmail] = useState(
-    initial.reviewerEmail || MOCK_POLICY_USER.email,
+    initial.reviewerEmail || user?.email || "",
   );
   // Output + retry settings — the real, working folder settings (the engine
   // applies them). Pre-filled from the backing folder in edit mode.

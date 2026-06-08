@@ -19,7 +19,6 @@ import type {
   PolicyCategory,
   PolicyConfigDef,
   PolicySource,
-  PolicyUser,
 } from "@app/types/policies";
 
 const ICON_SX = { fontSize: "1rem" } as const;
@@ -351,29 +350,9 @@ export const POLICY_DOC_TYPES: string[] = [
 /** Base per-document cost; total scales with the active-policy count. */
 export const PER_POLICY_DOC_COST = 0.02;
 
-/** Mock current user/org for the permission model. */
-export const MOCK_POLICY_USER: PolicyUser = {
-  name: "Matt Joseph",
-  email: "matt@stirlingpdf.com",
-  initials: "MJ",
-  role: "owner",
-  hasOrg: true,
-  policyPermission: true,
-};
-
 /** Mock billing context. */
 export const MOCK_POLICY_BILLING: PolicyBilling = {
   used: 247,
   monthlyQuota: 500,
   tier: "free",
 };
-
-/** Whether the given user may configure (vs. read-only view) policies. */
-export function canConfigurePolicies(user: PolicyUser): boolean {
-  return (
-    !user.hasOrg ||
-    user.role === "owner" ||
-    user.role === "admin" ||
-    user.policyPermission === true
-  );
-}

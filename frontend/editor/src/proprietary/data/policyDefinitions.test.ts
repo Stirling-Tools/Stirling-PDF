@@ -1,37 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
-  canConfigurePolicies,
   POLICY_CATEGORIES,
   POLICY_CONFIG,
 } from "@app/data/policyDefinitions";
-import type { PolicyUser } from "@app/types/policies";
-
-const base: PolicyUser = {
-  name: "X",
-  email: "x@y.com",
-  initials: "X",
-  role: "member",
-  hasOrg: true,
-  policyPermission: false,
-};
-
-describe("canConfigurePolicies", () => {
-  it("solo users (no org) always have access", () => {
-    expect(canConfigurePolicies({ ...base, hasOrg: false })).toBe(true);
-  });
-  it("owners and admins have access", () => {
-    expect(canConfigurePolicies({ ...base, role: "owner" })).toBe(true);
-    expect(canConfigurePolicies({ ...base, role: "admin" })).toBe(true);
-  });
-  it("members are gated on explicit permission", () => {
-    expect(canConfigurePolicies({ ...base, policyPermission: false })).toBe(
-      false,
-    );
-    expect(canConfigurePolicies({ ...base, policyPermission: true })).toBe(
-      true,
-    );
-  });
-});
 
 describe("policy definitions integrity", () => {
   it("every category has a matching config entry", () => {

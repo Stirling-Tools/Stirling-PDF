@@ -5,7 +5,6 @@
  * Mirrors the change-event pattern of the automation/folder stores.
  */
 
-import { MOCK_POLICY_USER } from "@app/data/policyDefinitions";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
 
@@ -24,7 +23,8 @@ function defaultState(categoryId: string): PolicyState {
     status: active ? "active" : "default",
     sources: ["editor"],
     scopeTypes: [],
-    reviewerEmail: MOCK_POLICY_USER.email,
+    // Empty by default; the wizard defaults the reviewer to the signed-in user.
+    reviewerEmail: "",
     fieldValues: {},
     docsEnforced24h: 0,
     alerts24h: 0,
