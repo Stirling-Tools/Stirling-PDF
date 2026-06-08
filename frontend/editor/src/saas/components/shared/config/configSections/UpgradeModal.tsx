@@ -206,18 +206,19 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
         <ShieldIcon className="upm-promise__icon" fontSize="small" />
         <div>
           <span className="upm-promise__highlight">
-            Everything in the Stirling UI stays free.
+            Manual tools stay free, always.
           </span>{" "}
-          You only pay for what comes from automation pipelines, AI tools, and
-          API calls — the things that don't need a person clicking through the
-          UI. Use the editor as much as you want, no charge.
+          You only pay for automation pipelines, AI tools, and API calls —
+          the work that goes beyond a single click. Edit, merge, split,
+          sign, compress as much as you want, no charge.
         </div>
       </div>
 
       <h3 className="upm-section-title">Set your monthly spend ceiling</h3>
       <p className="upm-section-help">
         We'll never charge above this. Your first 500 automation / AI / API
-        operations every month are free.
+        operations every month are free. Set $0 if you want to keep
+        everything free while testing.
       </p>
 
       <div className="upm-cap-presets" role="radiogroup" aria-label="Monthly cap preset">
@@ -246,14 +247,14 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
           id="upm-cap-amount"
           type="number"
           inputMode="numeric"
-          min={1}
+          min={0}
           max={10000}
           value={noCap ? "" : capUsd}
           disabled={noCap}
-          placeholder="Or enter your own amount"
+          placeholder="Or enter your own amount ($0 keeps it free)"
           onChange={(e) => {
             const v = parseInt(e.target.value, 10);
-            if (!Number.isNaN(v)) {
+            if (!Number.isNaN(v) && v >= 0) {
               setCapUsd(v);
               setNoCap(false);
             }
@@ -293,9 +294,10 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
           </li>
         </ul>
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
-          Anything you click directly in the Stirling UI — viewing, editing,
-          merging, splitting, signing, watermarking, compressing, OCR via the
-          UI — is always free, even past 500.
+          Manual tools — viewing, editing, merging, splitting, signing,
+          watermarking, compressing, manual OCR — are always free, even
+          past 500. The distinction is the type of work, not where you
+          click.
         </div>
       </div>
     </>

@@ -4,12 +4,15 @@
  * feels like enabling a switch, not visiting a new product.
  *
  * <p><b>Free tier model (set 2026-06):</b> users only pay for
- * <em>automation</em>, <em>AI</em>, and <em>API</em> operations. Anything done
- * directly via the Stirling UI — viewing, editing, signing, merging, splitting,
- * conversion, OCR, compression when used as an interactive click — is
- * unmetered. The 500/month free allowance applies <em>only</em> to those three
- * billable categories. Backend design doc + pricing schema will catch up to
- * this in a follow-up; this is the FE source of truth in the meantime.
+ * <em>automation</em>, <em>AI</em>, and <em>API</em> operations. Manual tools
+ * — viewing, editing, signing, merging, splitting, conversion, manual OCR,
+ * watermarks, compression — are unmetered, no matter where they're triggered
+ * from. The distinction is the <em>type of work</em> (manual tool vs
+ * automation / AI / API), not where the click happens, because automation and
+ * AI also have UI surfaces. The 500/month free allowance applies <em>only</em>
+ * to the three billable categories. Backend design doc + pricing schema will
+ * catch up to this in a follow-up; this is the FE source of truth in the
+ * meantime.
  *
  * <p>Two variants:
  *   - {@link PaygFreeLeader} — visible to the team owner; includes the "Turn
@@ -147,8 +150,8 @@ function SectionHeader({ snap, pill, leader }: SectionHeaderProps) {
   return (
     <Group justify="space-between" align="center" wrap="nowrap">
       <div className="payg-header__subtitle">
-        Editor plan — everything in the Stirling UI is free. Pay only for
-        automation, AI &amp; API. Billing period{" "}
+        Editor plan — manual tools are always free. Pay only for automation,
+        AI &amp; API. Billing period{" "}
         {formatPeriod(snap.billingPeriodStart, snap.billingPeriodEnd)}.
       </div>
       <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
@@ -216,7 +219,7 @@ export function PaygFreeLeader() {
               Turn on Processor →
             </button>
             <span className="paygf-cta__reassurance">
-              From $5/month · Cancel anytime · Set your own cap first
+              No minimum · Set a $0 cap to test · Cancel anytime
             </span>
           </div>
         </div>
@@ -231,9 +234,9 @@ export function PaygFreeLeader() {
               Always free
             </div>
             <p className="paygf-explainer__text">
-              Anything you click in the Stirling UI: viewing, editing, merging,
-              splitting, signing, watermarks, compression, conversion, OCR via
-              the interactive UI — never counted, never capped.
+              Manual tools — viewing, editing, merging, splitting, signing,
+              watermarks, compression, conversion, manual OCR. Use them as
+              much as you want, no matter where you trigger them from.
             </p>
           </div>
           <div className="paygf-explainer__col">
@@ -245,7 +248,7 @@ export function PaygFreeLeader() {
               Counts toward 500/month
             </div>
             <p className="paygf-explainer__text">
-              Automation pipelines (running tools without UI clicks), AI tools
+              Automation pipelines (chained tools, scheduled runs), AI tools
               (summaries, classification, AI-OCR), and API calls (programmatic
               access). Above 500 you'll need Processor.
             </p>
@@ -290,9 +293,9 @@ export function PaygFreeMember() {
             </h3>
             <p className="paygf-member-note__body">
               Your team owner can enable the Processor plan and set a monthly
-              ceiling. Until then, everything you can do in the Stirling UI is
-              free — automation, AI, and API access are limited to the team's
-              500/month free allowance.
+              ceiling. Until then, manual tools are free for you to use as
+              much as you like — automation, AI, and API access are limited
+              to the team's 500/month free allowance.
             </p>
           </div>
         </div>
@@ -307,9 +310,9 @@ export function PaygFreeMember() {
               Always free for you
             </div>
             <p className="paygf-explainer__text">
-              Anything you click in the Stirling UI: viewing, editing, merging,
-              splitting, signing, watermarks, compression, conversion, OCR via
-              the interactive UI — never counted.
+              Manual tools — viewing, editing, merging, splitting, signing,
+              watermarks, compression, conversion, manual OCR. Use them as
+              much as you want, never counted.
             </p>
           </div>
           <div className="paygf-explainer__col">
