@@ -446,7 +446,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           {
             method: "POST",
             body: formData,
-            headers: getAuthHeaders(),
+            headers: await getAuthHeaders(),
             credentials: "include",
             signal: controller.signal,
           },

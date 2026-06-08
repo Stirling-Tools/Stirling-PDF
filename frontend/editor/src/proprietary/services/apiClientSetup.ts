@@ -100,8 +100,11 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
   }
 }
 
-/** Auth headers for raw fetch() calls (SSE streams, etc.). */
-export function getAuthHeaders(): Record<string, string> {
+/**
+ * Auth headers for raw fetch() calls (SSE streams, etc.).
+ * Async to match the SaaS override, which has to await the Supabase session.
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {};
   const jwt = getJwtTokenFromStorage();
   if (jwt) {
@@ -117,8 +120,8 @@ export function getAuthHeaders(): Record<string, string> {
 export function setupApiInterceptors(client: AxiosInstance): void {
   // Install request interceptor to add JWT token
   client.interceptors.request.use(
-    (config) => {
-      const authHeaders = getAuthHeaders();
+    async (config) => {
+      const authHeaders = await getAuthHeaders();
       for (const [key, value] of Object.entries(authHeaders)) {
         if (!config.headers[key]) {
           config.headers[key] = value;
