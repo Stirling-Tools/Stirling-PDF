@@ -128,6 +128,9 @@ export default defineConfig(async ({ mode }) => {
   // TEMP DEBUG — surface build-time env values so we can confirm what the
   // build host (Cloudflare / CI) is actually passing through. Safe to remove
   // once we've stopped chasing env-var routing bugs.
+  const viteAndRunNames = Object.keys(process.env)
+    .filter((k) => k.startsWith("VITE_") || k.startsWith("RUN_"))
+    .sort();
   // eslint-disable-next-line no-console
   console.log(
     "[vite-config-debug]",
@@ -141,6 +144,11 @@ export default defineConfig(async ({ mode }) => {
         VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
           ? "(set)"
           : "(unset)",
+        // Comprehensive list of every VITE_/RUN_ name actually present in
+        // process.env. Names only — values are deliberately omitted so this
+        // remains safe to print in the build log even if Cloudflare ever
+        // exposes secrets via this prefix in future.
+        viteAndRunEnvVarNames: viteAndRunNames,
       },
       null,
       2,
