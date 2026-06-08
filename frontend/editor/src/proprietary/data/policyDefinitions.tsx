@@ -94,13 +94,9 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         status: "flagged",
       },
     ],
+    // Policy-level controls only — the per-tool params (OCR level, extract
+    // tables, naming, normalize, rotate…) now live in the Workflow step.
     fields: [
-      {
-        label: "Auto-classify",
-        key: "autoClassify",
-        type: "toggle",
-        value: true,
-      },
       {
         label: "Min confidence",
         key: "minConfidence",
@@ -114,52 +110,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         type: "select",
         value: "Flag for review",
         options: ["Flag for review", "Route to bucket", "Hold"],
-      },
-      {
-        label: "Extract tables",
-        key: "extractTables",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "OCR level",
-        key: "ocrLevel",
-        type: "select",
-        value: "High",
-        options: ["Standard", "High", "Maximum"],
-      },
-      {
-        label: "Push extracted data to",
-        key: "pushTo",
-        type: "select",
-        value: "None",
-        options: ["None", "Salesforce", "HubSpot", "Webhook", "S3"],
-      },
-      {
-        label: "Naming pattern",
-        key: "pattern",
-        type: "text",
-        value: "{type}_{date}_{counterparty}_{id}.pdf",
-      },
-      { label: "Auto-tag", key: "autoTag", type: "toggle", value: true },
-      {
-        label: "Auto-rotate pages",
-        key: "autoRotate",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "Strip blank pages",
-        key: "stripBlank",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "Normalize page size",
-        key: "normalize",
-        type: "select",
-        value: "Keep original",
-        options: ["Letter", "A4", "Keep original"],
       },
     ],
   },
@@ -187,35 +137,9 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         status: "flagged",
       },
     ],
+    // Policy-level controls only — detection/encryption/signing/watermark are
+    // per-tool and now live in the Workflow step.
     fields: [
-      { label: "Detect PII", key: "detectPII", type: "toggle", value: true },
-      {
-        label: "PII classes to detect",
-        key: "piiClasses",
-        type: "chips",
-        value: [
-          "SSN",
-          "Date of birth",
-          "Names",
-          "Addresses",
-          "Account numbers",
-          "Phone numbers",
-        ],
-        options: [
-          "SSN",
-          "Date of birth",
-          "Names",
-          "Addresses",
-          "Account numbers",
-          "Phone numbers",
-          "Email addresses",
-          "Passport numbers",
-          "Driver license",
-          "Credit card numbers",
-          "IP addresses",
-          "Medical record numbers",
-        ],
-      },
       {
         label: "Default PII response",
         key: "defaultResponse",
@@ -234,26 +158,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         type: "toggle",
         value: true,
       },
-      { label: "Encrypt at rest", key: "encrypt", type: "toggle", value: true },
-      {
-        label: "Key handling",
-        key: "keyHandling",
-        type: "select",
-        value: "Stirling-managed",
-        options: ["Stirling-managed", "BYOK", "HYOK"],
-      },
-      {
-        label: "Tamper detection",
-        key: "tamperDetect",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "Verify signatures",
-        key: "verifySig",
-        type: "toggle",
-        value: true,
-      },
       {
         label: "Default access level",
         key: "defaultAccess",
@@ -267,8 +171,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         type: "toggle",
         value: false,
       },
-      { label: "Policy seal", key: "policySeal", type: "toggle", value: true },
-      { label: "Watermark", key: "watermark", type: "toggle", value: false },
     ],
   },
   compliance: {
