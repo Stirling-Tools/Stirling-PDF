@@ -185,9 +185,14 @@ subprojects {
                 allowInsecureProtocol = true
             }
         }
+        // Maven Central first: it hosts the vast majority of artifacts, so Gradle
+        // never has to consult the slower/less-reliable mirrors below for them.
+        // shibboleth + jboss remain as fallbacks for the few artifacts only they
+        // serve (Gradle falls through on a 404). Keeping them ahead of Central
+        // meant a jboss outage (503) aborted resolution of common deps.
+        mavenCentral()
         maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
-        mavenCentral()
     }
 
     configurations.configureEach {
@@ -583,8 +588,9 @@ repositories {
             allowInsecureProtocol = true
         }
     }
-    maven { url = "https://build.shibboleth.net/maven/releases" }
+    // Maven Central first (see note in the subprojects repositories block above).
     mavenCentral()
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 dependencies {
