@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
@@ -43,6 +44,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   opened,
   onClose,
 }) => {
+  const { t } = useTranslation();
   // Initialize from the URL so a deep link (`/settings/people`) lands on the
   // right tab without a one-frame "general" flicker.
   const [active, setActive] = useState<NavKey>(
@@ -348,7 +350,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                   ref={closeButtonRef}
                   variant="subtle"
                   onClick={handleClose}
-                  aria-label="Close"
+                  aria-label={t("settings.close", "Close")}
                   data-autofocus
                 >
                   <LocalIcon icon="close-rounded" width={18} height={18} />

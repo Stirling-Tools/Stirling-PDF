@@ -353,7 +353,7 @@ export const SavedSignaturesSection = ({
                       <ActionIcon
                         variant="subtle"
                         color="blue"
-                        aria-label="Use signature"
+                        aria-label={t("sign.saved.use", "Use signature")}
                         onClick={() => onUseSignature(activePersonalSignature)}
                         disabled={disabled}
                       >
@@ -480,7 +480,7 @@ export const SavedSignaturesSection = ({
                       <ActionIcon
                         variant="subtle"
                         color="blue"
-                        aria-label="Use signature"
+                        aria-label={t("sign.saved.use", "Use signature")}
                         onClick={() => onUseSignature(activeSharedSignature)}
                         disabled={disabled}
                       >
@@ -618,7 +618,7 @@ export const SavedSignaturesSection = ({
                         <ActionIcon
                           variant="subtle"
                           color="blue"
-                          aria-label="Use signature"
+                          aria-label={t("sign.saved.use", "Use signature")}
                           onClick={() =>
                             onUseSignature(activeLocalStorageSignature)
                           }
