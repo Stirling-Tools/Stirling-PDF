@@ -242,11 +242,17 @@ export function PolicyDetailTakeover() {
       return;
     }
     let cancelled = false;
-    getPolicyLiveData().then((d) => {
-      if (!cancelled) setLiveData(d);
-    });
+    const load = () =>
+      getPolicyLiveData().then((d) => {
+        if (!cancelled) setLiveData(d);
+      });
+    load();
+    // Poll so the feed stays current — new uploads appear and "Enforcing…"
+    // settles to "enforced" without a manual reopen.
+    const interval = setInterval(load, 5000);
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, [dataMode, selectedId]);
 
