@@ -92,13 +92,7 @@
   overflow: hidden;
 }
 
-/*
- * Two-row: center drops below views+globals. On narrow viewports the icon
- * row is wider than the viewport and used to silently clip on the left
- * edge because `justify-content: center` pushed overflow off-screen. Allow
- * horizontal scrolling instead so every icon stays reachable on mobile,
- * and start the scroll position at the left so the first icon is visible.
- */
+/* Two-row: center drops below views+globals */
 .workbench-bar[data-wrapped="true"] .workbench-bar-center {
   order: 3;
   flex: 0 0 100%;

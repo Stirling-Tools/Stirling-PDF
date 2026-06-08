@@ -104,16 +104,6 @@ const AddFileCard = ({
             }}
             onMouseLeave={() => setIsUploadHover(false)}
           >
-            {/*
-              When the user hovers the Upload button we collapse "Add Files"
-              entirely instead of shrinking it to an icon-only stub. That
-              releases the full row width to the Upload button so localized
-              labels like "Загрузить с компьютера" (Russian) or
-              "Vom Computer hochladen" (German) actually fit instead of
-              getting clipped by the card's `overflow: hidden`. As a
-              belt-and-braces fallback the inline label still truncates with
-              an ellipsis if a translation is unusually long.
-            */}
             {!isUploadHover && (
               <Button
                 style={{

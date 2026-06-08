@@ -703,9 +703,6 @@ export default function PeopleSection() {
                         : "cyan"
                     }
                     styles={{
-                      // Allow the badge to grow to fit long localized role
-                      // names (e.g. Russian "АДМИНИСТРАТОР") instead of
-                      // clipping to the column's old fixed 100px width.
                       root: { maxWidth: "none" },
                       label: { overflow: "visible" },
                     }}

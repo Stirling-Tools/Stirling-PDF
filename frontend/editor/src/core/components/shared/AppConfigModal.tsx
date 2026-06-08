@@ -263,11 +263,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                             gap={4}
                             align="center"
                             wrap="nowrap"
-                            // Constrain the row so the truncating Text below
-                            // shrinks (instead of overflowing the badge into
-                            // its own wrap line) when the localized label is
-                            // long. Without min-width 0, the flex child
-                            // refuses to shrink below its content width.
                             style={{ minWidth: 0, flex: 1 }}
                           >
                             <Text

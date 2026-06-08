@@ -12,10 +12,6 @@ export function OverviewHeader() {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Hard-navigate rather than react-router push so the AuthProvider and
-      // every cached context re-bootstrap from a clean state. A SPA navigate
-      // can race the SIGNED_OUT state update and leave the workspace UI
-      // visible until the next user action.
       window.location.assign("/login");
     }
   };

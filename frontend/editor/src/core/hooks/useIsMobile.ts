@@ -17,10 +17,8 @@ export const useIsPhone = (): boolean => {
 };
 
 /**
- * Custom hook to detect a coarse pointer (touch device).
- * Use this in combination with `useIsMobile` to gate touch-only UI hints
- * (e.g. "Swipe left or right to switch views") so a desktop user with a
- * narrowed browser window doesn't see an unactionable swipe prompt.
+ * Custom hook to detect a coarse pointer (touch device)
+ * Use to gate touch-only UI hints when combined with useIsMobile
  */
 export const useIsTouch = (): boolean => {
   return useMediaQuery("(pointer: coarse)") ?? false;

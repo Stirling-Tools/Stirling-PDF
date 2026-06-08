@@ -38,9 +38,6 @@ export function PdfViewerToolbar({
   onPageChange,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
-  // Use a more compact, touch-friendly layout below ~768px - drop nice-to-have
-  // controls (dual-page, dark/sepia filter, first/last) and bump touch
-  // targets so the bar doesn't feel cramped on real phones.
   const isPhone = useIsPhone();
   const buttonMinWidth = isPhone ? "3rem" : "2.5rem";
   const buttonSize = isPhone ? "lg" : "md";
@@ -150,8 +147,6 @@ export function PdfViewerToolbar({
       style={{
         display: "flex",
         alignItems: "center",
-        // Wrap onto a second row when the viewport can't fit the controls,
-        // so the zoom slider doesn't get squeezed to a stub at ~1100px.
         flexWrap: "wrap",
         rowGap: 8,
         gap: 10,
@@ -164,7 +159,7 @@ export function PdfViewerToolbar({
         pointerEvents: "auto",
       }}
     >
-      {/* First Page Button - on phone moved into the More menu below */}
+      {/* First Page Button */}
       {!isPhone && (
         <Button
           variant="subtle"
@@ -238,7 +233,7 @@ export function PdfViewerToolbar({
         <ArrowForwardIosIcon fontSize="small" />
       </Button>
 
-      {/* Last Page Button - on phone moved into the More menu below */}
+      {/* Last Page Button */}
       {!isPhone && (
         <Button
           variant="subtle"
@@ -255,7 +250,7 @@ export function PdfViewerToolbar({
         </Button>
       )}
 
-      {/* Dual Page Toggle - on phone moved into the More menu below */}
+      {/* Dual Page Toggle */}
       {!isPhone && (
         <Tooltip
           content={
@@ -284,7 +279,7 @@ export function PdfViewerToolbar({
         </Tooltip>
       )}
 
-      {/* PDF Render Mode Toggle - on phone moved into the More menu below */}
+      {/* PDF Render Mode Toggle */}
       {!isPhone && (
         <Tooltip
           content={
@@ -372,15 +367,6 @@ export function PdfViewerToolbar({
         </Group>
       )}
 
-      {/*
-        On phone we collapse every secondary action behind a single "more"
-        menu so the inline bar is just prev / page-input / next / more.
-        The menu tucks away the less-common First / Last page, Dual Page
-        toggle, Dark / Sepia filter, and the zoom controls + current
-        percentage. Tapping the zoom items in the menu keeps the menu
-        open so the user can step through zoom levels without re-opening
-        it each time.
-      */}
       {isPhone && (
         <Menu
           shadow="md"

@@ -93,9 +93,6 @@ const OperationButton = ({
       data-tour={dataTour}
       style={{ minHeight: "2.5rem", height: "auto", position: "relative" }}
       styles={{
-        // Allow the label to wrap onto a second line when the localized text
-        // doesn't fit the fixed-width right-rail container, instead of being
-        // silently clipped without an ellipsis.
         label: {
           whiteSpace: "normal",
           textAlign: "center",

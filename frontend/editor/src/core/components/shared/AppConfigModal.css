@@ -106,13 +106,6 @@
   margin-bottom: 0.25rem; /* 4px */
 }
 
-/*
- * Hide tag-style badges (e.g. ALPHA) on nav items by default so the localized
- * label gets the full row width. Reveal them on hover/focus and for the
- * currently-active row, where the user is parked and can read the extra
- * context. Truncation on the label still kicks in for genuinely long
- * locale strings.
- */
 .modal-nav-item-badge {
   display: none;
 }
