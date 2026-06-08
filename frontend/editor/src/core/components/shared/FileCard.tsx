@@ -111,7 +111,7 @@ const FileCard = ({
               onClick={(e) => e.stopPropagation()}
             >
               {onView && (
-                <Tooltip label="View in Viewer">
+                <Tooltip label={t("fileCard.viewInViewer", "View in Viewer")}>
                   <ActionIcon
                     size="sm"
                     variant="subtle"
@@ -126,7 +126,9 @@ const FileCard = ({
                 </Tooltip>
               )}
               {onEdit && (
-                <Tooltip label="Open in File Editor">
+                <Tooltip
+                  label={t("fileCard.openInFileEditor", "Open in File Editor")}
+                >
                   <ActionIcon
                     size="sm"
                     variant="subtle"
