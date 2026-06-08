@@ -14,8 +14,8 @@
 
 import { useState } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { POLICY_CATEGORIES, POLICY_CONFIG } from "@app/data/policyDefinitions";
 import { usePolicies } from "@app/hooks/usePolicies";
+import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
@@ -67,13 +67,14 @@ export function usePolicyDetailActive(): boolean {
 /** The collapsible policy list, rendered above the Tools section. */
 export function PoliciesSection() {
   const pol = usePolicies();
+  const { categories } = usePolicyCatalog();
   const [expanded, setExpanded] = useState(true);
 
   if (!POLICIES_ENABLED) return null;
 
   // Match the prototype: the header tally counts every CONFIGURED policy
   // (active + paused), not just the active ones.
-  const configuredCount = POLICY_CATEGORIES.filter(
+  const configuredCount = categories.filter(
     (c) => pol.policies[c.id]?.configured,
   ).length;
 
@@ -105,7 +106,7 @@ export function PoliciesSection() {
           )}
 
           <div className="pol-list-rows">
-            {POLICY_CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const status = deriveRowStatus(
                 pol.policies[cat.id],
                 pol.spendLimitReached,
@@ -160,13 +161,14 @@ export function PoliciesSection() {
  */
 export function PolicyDetailTakeover() {
   const pol = usePolicies();
+  const { categories, configs, sources, docTypes } = usePolicyCatalog();
   const { selectedId, detailView } = usePolicySelection();
 
   if (!POLICIES_ENABLED || selectedId == null) return null;
 
-  const category = POLICY_CATEGORIES.find((c) => c.id === selectedId);
+  const category = categories.find((c) => c.id === selectedId);
   const state = pol.policies[selectedId];
-  const config = POLICY_CONFIG[selectedId];
+  const config = configs[selectedId];
   if (!category || !state || !config) return null;
 
   const status = deriveRowStatus(state, pol.spendLimitReached);
@@ -178,6 +180,8 @@ export function PolicyDetailTakeover() {
         category={category}
         config={config}
         initial={state}
+        sources={sources}
+        docTypes={docTypes}
         canConfigure={pol.canConfigure}
         // The prototype always offers "Set up Classification" in step 2 — there
         // is no standalone classification policy that would flip this on.
@@ -187,7 +191,10 @@ export function PolicyDetailTakeover() {
           pol.enablePolicy(selectedId, input);
           setPolicyDetailView("detail");
         }}
-        onSetupClassification={() => selectPolicy("ingestion")}
+        onSetupClassification={() => {
+          const classifier = categories.find((c) => c.providesClassification);
+          if (classifier) selectPolicy(classifier.id);
+        }}
       />
     );
   }
@@ -243,13 +250,14 @@ export function PoliciesCollapsedButton({
   onExpand: () => void;
 }) {
   const pol = usePolicies();
+  const { categories } = usePolicyCatalog();
 
   if (!POLICIES_ENABLED) return null;
 
   return (
     <>
       <div className="pol-crail">
-        {POLICY_CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const status = deriveRowStatus(
             pol.policies[cat.id],
             pol.spendLimitReached,

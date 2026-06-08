@@ -5,21 +5,23 @@
  * Mirrors the change-event pattern of the automation/folder stores.
  */
 
-import {
-  POLICY_CATEGORIES,
-  MOCK_POLICY_USER,
-} from "@app/data/policyDefinitions";
+import { MOCK_POLICY_USER } from "@app/data/policyDefinitions";
+import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
 
 const STORAGE_KEY = "stirling-policies-state";
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
 function defaultState(categoryId: string): PolicyState {
-  // Ingestion ships pre-configured + active (immediate value, non-threatening).
-  const isIngestion = categoryId === "ingestion";
+  // The catalog flags which policy ships pre-configured + active (immediate
+  // value, non-threatening) — data-driven, no hardcoded category id.
+  const category = loadPolicyCatalog().categories.find(
+    (c) => c.id === categoryId,
+  );
+  const active = category?.defaultActive ?? false;
   return {
-    configured: isIngestion,
-    status: isIngestion ? "active" : "default",
+    configured: active,
+    status: active ? "active" : "default",
     sources: ["editor"],
     scopeTypes: [],
     reviewerEmail: MOCK_POLICY_USER.email,
@@ -45,7 +47,7 @@ export function loadPolicies(): PoliciesByCategory {
   // Always reconcile against the current category list so a newly-added
   // category gets a default rather than being undefined.
   const out: PoliciesByCategory = {};
-  for (const cat of POLICY_CATEGORIES) {
+  for (const cat of loadPolicyCatalog().categories) {
     out[cat.id] = { ...defaultState(cat.id), ...(parsed[cat.id] ?? {}) };
   }
   return out;

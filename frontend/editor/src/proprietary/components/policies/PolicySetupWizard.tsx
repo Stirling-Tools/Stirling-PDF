@@ -13,10 +13,10 @@ import { Banner } from "@shared/components/Banner";
 import { EmptyState } from "@shared/components/EmptyState";
 import { StepIndicator } from "@shared/components/StepIndicator";
 import { IconBadge } from "@shared/components/IconBadge";
-import { POLICY_SOURCES, POLICY_DOC_TYPES } from "@app/data/policyDefinitions";
 import type {
   PolicyCategory,
   PolicyConfigDef,
+  PolicySource,
   PolicyState,
   PolicySetupStep,
 } from "@app/types/policies";
@@ -28,6 +28,10 @@ interface PolicySetupWizardProps {
   category: PolicyCategory;
   config: PolicyConfigDef;
   initial: PolicyState;
+  /** Sources a policy can run over (catalog-supplied). */
+  sources: PolicySource[];
+  /** Document types scope can be narrowed to (catalog-supplied). */
+  docTypes: string[];
   canConfigure: boolean;
   /** Whether the Classification (ingestion) policy is active — gates doc-type narrowing. */
   classificationEnabled: boolean;
@@ -40,6 +44,8 @@ export function PolicySetupWizard({
   category,
   config,
   initial,
+  sources: sourceDefs,
+  docTypes,
   canConfigure,
   classificationEnabled,
   onCancel,
@@ -137,7 +143,7 @@ export function PolicySetupWizard({
             </p>
             <p className="pol-section-label">Sources</p>
             <Card padding="none">
-              {POLICY_SOURCES.map((src, i) => (
+              {sourceDefs.map((src, i) => (
                 <div
                   key={src.id}
                   className="pol-source"
@@ -188,7 +194,7 @@ export function PolicySetupWizard({
                 </div>
                 {scopeNarrow && (
                   <div className="pol-doctypes">
-                    {POLICY_DOC_TYPES.map((dt) => (
+                    {docTypes.map((dt) => (
                       <Checkbox
                         key={dt}
                         checked={scopeTypes.includes(dt)}

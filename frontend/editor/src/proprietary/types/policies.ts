@@ -36,6 +36,17 @@ export interface PolicyCategory {
   icon: ReactNode;
   /** Long description shown in the setup wizard. */
   desc: string;
+  /**
+   * Seeded as configured + active on first load — the mock's "ships on" policy.
+   * Replaces the former hardcoded `id === "ingestion"` check in the store.
+   */
+  defaultActive?: boolean;
+  /**
+   * This category provides document classification, so it's the target of the
+   * setup wizard's "Set up Classification" action. Data-driven replacement for
+   * the hardcoded `selectPolicy("ingestion")` call site.
+   */
+  providesClassification?: boolean;
 }
 
 /** The three-up summary stats shown at the foot of a configured policy's detail. */

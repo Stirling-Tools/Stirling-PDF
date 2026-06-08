@@ -5,6 +5,8 @@ import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm"
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
+  POLICY_SOURCES,
+  POLICY_DOC_TYPES,
 } from "@app/data/policyDefinitions";
 import type { PolicyState } from "@app/types/policies";
 import "@app/components/policies/Policies.css";
@@ -143,6 +145,8 @@ export const Wizard: Story = {
         category={compliance}
         config={POLICY_CONFIG.compliance}
         initial={freshState}
+        sources={POLICY_SOURCES}
+        docTypes={POLICY_DOC_TYPES}
         canConfigure
         classificationEnabled={false}
         onCancel={noop}
