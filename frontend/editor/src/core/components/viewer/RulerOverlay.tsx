@@ -390,7 +390,11 @@ function MeasurementLine({
 
   return (
     <g
-      onClick={() => onSelect(isSelected ? null : id)}
+      data-ruler-interactive="true"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(isSelected ? null : id);
+      }}
       style={{ pointerEvents: "all", cursor: "pointer" }}
     >
       <rect
@@ -690,11 +694,11 @@ export const RulerOverlay = React.forwardRef<
   const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Callbacks for measurements change notifications (only for user-drawn changes, not restores)
+  // Callbacks for explicit measurement changes; restores stay silent.
   const measurementsListenersRef = useRef<
     Set<(measurements: Measurement[]) => void>
   >(new Set());
-  const skipNextNotificationRef = useRef(false);
+  const measurementsRef = useRef<Measurement[]>(measurements);
 
   /**
    * Incremented on scroll to trigger re-renders.
@@ -711,6 +715,36 @@ export const RulerOverlay = React.forwardRef<
   }, [firstPt]);
 
   const cursorDocRef = useRef<PagePoint | null>(null);
+
+  const notifyMeasurementsChange = useCallback(
+    (nextMeasurements: Measurement[]) => {
+      measurementsListenersRef.current.forEach((listener) =>
+        listener(nextMeasurements),
+      );
+    },
+    [],
+  );
+
+  const replaceMeasurements = useCallback(
+    (nextMeasurements: Measurement[], notify = false) => {
+      measurementsRef.current = nextMeasurements;
+      setMeasurements(nextMeasurements);
+      if (notify) {
+        notifyMeasurementsChange(nextMeasurements);
+      }
+    },
+    [notifyMeasurementsChange],
+  );
+
+  const updateMeasurements = useCallback(
+    (
+      updater: (currentMeasurements: Measurement[]) => Measurement[],
+      notify = false,
+    ) => {
+      replaceMeasurements(updater(measurementsRef.current), notify);
+    },
+    [replaceMeasurements],
+  );
 
   // ── Zoom ──────────────────────────────────────────────────────────────────
   const viewer = useViewer();
@@ -809,27 +843,24 @@ export const RulerOverlay = React.forwardRef<
   // ── Imperative handle ──────────────────────────────────────────────────────
   React.useImperativeHandle(ref, () => ({
     clearAll: (silent = false) => {
-      if (silent) {
-        skipNextNotificationRef.current = true;
-      }
-      setMeasurements([]);
+      replaceMeasurements([], !silent);
       setFirstPt(null);
       setCursorS(null);
       setCursorDoc(null);
       setSelectedId(null);
     },
-    getMeasurements: () => measurements,
+    getMeasurements: () => measurementsRef.current,
     setMeasurements: (newMeasurements: Measurement[]) => {
       // Validate all measurements before setting state
       const validated = newMeasurements.filter((m) => validateMeasurement(m));
-      setMeasurements(validated);
+      replaceMeasurements(validated, true);
     },
     restoreMeasurements: (newMeasurements: Measurement[]) => {
-      skipNextNotificationRef.current = true;
-      setMeasurements(
+      replaceMeasurements(
         newMeasurements.filter((measurement) =>
           validateMeasurement(measurement),
         ),
+        false,
       );
     },
     onMeasurementsChange: (callback: (measurements: Measurement[]) => void) => {
@@ -840,23 +871,6 @@ export const RulerOverlay = React.forwardRef<
       };
     },
   }));
-
-  // Notify listeners when measurements change from user actions (deleteMeasurement)
-  const notifyMeasurementsChange = useCallback(() => {
-    if (skipNextNotificationRef.current) {
-      skipNextNotificationRef.current = false;
-      return;
-    }
-
-    measurementsListenersRef.current.forEach((listener) =>
-      listener(measurements),
-    );
-  }, [measurements]);
-
-  // Trigger notification when measurements change (but not during restore)
-  useEffect(() => {
-    notifyMeasurementsChange();
-  }, [measurements, notifyMeasurementsChange]);
 
   // ── Reset when deactivated ─────────────────────────────────────────────────
   useEffect(() => {
@@ -976,7 +990,7 @@ export const RulerOverlay = React.forwardRef<
       }
 
       const id = createRulerMeasurementId();
-      setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
+      updateMeasurements((m) => [...m, { id, start: prev, end: dp }], true);
     };
 
     const onLeave = () => {
@@ -1002,17 +1016,23 @@ export const RulerOverlay = React.forwardRef<
       document.removeEventListener("keydown", onKey);
       el.style.cursor = "";
     };
-  }, [containerRef, isActive, isCalibrationActive, onCalibrationMeasure]);
+  }, [
+    containerRef,
+    isActive,
+    isCalibrationActive,
+    onCalibrationMeasure,
+    updateMeasurements,
+  ]);
 
   const deleteMeasurement = useCallback(
     (id: string) => {
-      setMeasurements((prev) => prev.filter((m) => m.id !== id));
+      updateMeasurements((prev) => prev.filter((m) => m.id !== id), true);
       // Close expanded label if the deleted measurement was selected
       if (selectedId === id) {
         setSelectedId(null);
       }
     },
-    [selectedId],
+    [selectedId, updateMeasurements],
   );
 
   if (!isActive && measurements.length === 0) return null;
@@ -1059,7 +1079,7 @@ export const RulerOverlay = React.forwardRef<
       }}
       onClick={(e) => {
         // Close expanded label if clicking on empty SVG area
-        if ((e.target as SVGElement).tagName === "svg") {
+        if (e.target === e.currentTarget) {
           setSelectedId(null);
         }
       }}
@@ -1158,7 +1178,7 @@ export const RulerOverlay = React.forwardRef<
           style={{ pointerEvents: "all", cursor: "pointer" }}
           onClick={(e) => {
             e.stopPropagation();
-            setMeasurements([]);
+            replaceMeasurements([], true);
           }}
         >
           <rect

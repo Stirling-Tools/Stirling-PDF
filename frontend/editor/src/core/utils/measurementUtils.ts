@@ -95,16 +95,16 @@ export function convertUnit(
   return value * (targetFactor / sourceFactor);
 }
 
-export function parsePresetRatio(preset: string): number {
+export function parsePresetRatio(preset: string): number | null {
   const parts = preset.split(":");
 
   // Must have exactly 2 parts and first part must be "1"
   if (parts.length !== 2 || parts[0].trim() !== "1") {
-    return 0;
+    return null;
   }
 
   const value = Number(parts[1]);
-  return Number.isFinite(value) && value > 0 ? value : 0;
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 // UI dropdown options - shared across components

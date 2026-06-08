@@ -246,18 +246,11 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileId]);
 
-  // Stable identifier for the current file, used by form-fill and sidebar state.
-  const currentFileId = React.useMemo(() => {
-    if (!currentFile) {
-      return null;
-    }
-
-    if (isStirlingFile(currentFile)) {
-      return currentFile.fileId;
-    }
-
-    return getFormFillFileId(currentFile);
-  }, [currentFile]);
+  // Namespaced identifier for form-fill state; keep this aligned with FormFill.
+  const currentFileId = React.useMemo(
+    () => getFormFillFileId(currentFile),
+    [currentFile],
+  );
 
   // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
   const currentFileStableId =

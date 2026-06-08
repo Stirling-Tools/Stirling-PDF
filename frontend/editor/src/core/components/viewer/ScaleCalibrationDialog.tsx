@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Group,
@@ -49,6 +49,7 @@ export function ScaleCalibrationDialog({
   const [realDistance, setRealDistance] = useState<number | null>(null);
   const [unit, setUnit] = useState(() => getLastCalibrationUnit(defaultUnit));
   const [error, setError] = useState<string | null>(null);
+  const wasOpenedRef = useRef(opened);
 
   const previewScale = useMemo(() => {
     if (measurement == null || realDistance == null) {
@@ -67,7 +68,10 @@ export function ScaleCalibrationDialog({
   }, [measurement, realDistance, unit]);
 
   useEffect(() => {
-    if (opened) {
+    const isOpening = opened && !wasOpenedRef.current;
+    wasOpenedRef.current = opened;
+
+    if (isOpening) {
       setRealDistance(null);
       setUnit(getLastCalibrationUnit(defaultUnit));
       setError(null);

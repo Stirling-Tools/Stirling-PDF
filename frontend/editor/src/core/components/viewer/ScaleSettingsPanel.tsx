@@ -71,11 +71,12 @@ export function ScaleSettingsPanel({
       clearErrors();
 
       // Check if current scale matches any preset
-      const matchedPreset = currentScale.ratio
-        ? PRESET_SCALES.find(
-            (preset) => parsePresetRatio(preset) === currentScale.ratio,
-          )
-        : null;
+      const matchedPreset =
+        currentScale.ratio !== null
+          ? PRESET_SCALES.find(
+              (preset) => parsePresetRatio(preset) === currentScale.ratio,
+            )
+          : null;
       setPresetSelected(matchedPreset ?? null);
     } else {
       // Reset to defaults when no active scale
@@ -87,8 +88,10 @@ export function ScaleSettingsPanel({
   }, [currentScale, clearErrors]);
 
   const handlePresetClick = (preset: string) => {
-    setPresetSelected(preset);
     const presetRatio = parsePresetRatio(preset);
+    if (presetRatio === null) return;
+
+    setPresetSelected(preset);
     setRatio(presetRatio);
     clearRatioError();
     // Live update: apply immediately for presets
@@ -297,7 +300,7 @@ export function ScaleSettingsPanel({
         )}
       >
         {isCalibrationActive
-          ? t("scaleSettings.calibrating", "Calibrating...")
+          ? t("scaleSettings.calibrating", "Calibrating")
           : t("scaleSettings.calibrate", "Calibrate")}
       </Button>
 
