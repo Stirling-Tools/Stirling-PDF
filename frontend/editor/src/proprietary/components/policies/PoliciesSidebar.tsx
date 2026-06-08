@@ -20,6 +20,7 @@ import { getPolicyAutomation } from "@app/services/policyFolders";
 import { smartFolderStorage } from "@app/services/smartFolderStorage";
 import {
   getPolicyLiveData,
+  policyActiveFor,
   type PolicyLiveData,
 } from "@app/services/policyLiveData";
 import type { AutomationConfig, AutomationOperation } from "@app/types/automation";
@@ -294,7 +295,14 @@ export function PolicyDetailTakeover() {
         status={status}
         steps={steps}
         activity={liveData?.activity}
-        stats={liveData?.stats}
+        stats={
+          liveData
+            ? {
+                ...liveData.stats,
+                activeFor: policyActiveFor(backingFolder?.createdAt),
+              }
+            : undefined
+        }
         canConfigure={pol.canConfigure}
         onBack={() => closePolicy()}
         onEditSettings={() => setEditing(true)}

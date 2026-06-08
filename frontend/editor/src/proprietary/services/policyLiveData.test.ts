@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 
 import { fileStorage } from "@app/services/fileStorage";
-import { getPolicyLiveData } from "@app/services/policyLiveData";
+import {
+  getPolicyLiveData,
+  policyActiveFor,
+} from "@app/services/policyLiveData";
 
 function stub(over: Record<string, unknown>) {
   // Minimal StirlingFileStub shape for the fields getPolicyLiveData reads.
@@ -34,5 +37,18 @@ describe("getPolicyLiveData (all uploaded files)", () => {
     const data = await getPolicyLiveData();
     expect(data.activity).toEqual([]);
     expect(data.stats.enforced).toBe(0);
+  });
+});
+
+describe("policyActiveFor", () => {
+  it("returns 'Today' for a just-activated policy", () => {
+    expect(policyActiveFor(new Date().toISOString())).toBe("Today");
+  });
+  it("returns 'Today' when there's no backing folder (seeded policy)", () => {
+    expect(policyActiveFor(undefined)).toBe("Today");
+  });
+  it("reports whole-day duration since activation", () => {
+    const fiveDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
+    expect(policyActiveFor(fiveDaysAgo)).toBe("5d");
   });
 });

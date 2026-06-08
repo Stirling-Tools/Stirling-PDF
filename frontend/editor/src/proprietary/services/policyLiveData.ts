@@ -76,16 +76,23 @@ export async function getPolicyLiveData(): Promise<PolicyLiveData> {
   }));
 
   const totalBytes = files.reduce((sum, f) => sum + (f.size ?? 0), 0);
-  const oldest = files.reduce(
-    (min, f) => Math.min(min, f.createdAt ?? Date.now()),
-    Date.now(),
-  );
   return {
     activity,
     stats: {
       enforced: files.length,
       dataProcessed: formatBytes(totalBytes),
-      activeFor: durationSince(oldest),
+      // "Active for" is about when the policy went live, not file age — the
+      // caller overrides this via policyActiveFor(folder.createdAt).
+      activeFor: "—",
     },
   };
+}
+
+/**
+ * How long a policy has been active — from its backing folder's creation time
+ * (when it was enabled), or "Today" for the seeded demo policy with no folder.
+ */
+export function policyActiveFor(folderCreatedAt: string | undefined): string {
+  if (!folderCreatedAt) return "Today";
+  return durationSince(new Date(folderCreatedAt).getTime());
 }
