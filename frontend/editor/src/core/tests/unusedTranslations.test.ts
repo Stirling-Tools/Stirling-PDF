@@ -1,0 +1,206 @@
+import fs from "fs";
+import path from "path";
+import ts from "typescript";
+import { describe, expect, test } from "vitest";
+import { parse } from "smol-toml";
+
+const REPO_ROOT = path.join(__dirname, "../../../..");
+const SRC_ROOT = path.join(__dirname, "../..");
+const EN_GB_FILE = path.join(
+  __dirname,
+  "../../../public/locales/en-GB/translation.toml",
+);
+
+const IGNORED_DIRS = new Set(["tests", "__mocks__"]);
+const IGNORED_FILE_PATTERNS = [
+  /\.d\.ts$/,
+  /\.test\./,
+  /\.spec\./,
+  /\.stories\./,
+];
+
+/**
+ * Keys that look unused to the heuristic but are genuinely used: keep them.
+ * Prefer fixing the usage to be detectable; only add here as a last resort.
+ */
+const IGNORED_KEYS = new Set<string>([]);
+
+/**
+ * Whole key subtrees to skip. Useful when a feature builds keys entirely from
+ * runtime data (e.g. enum values) such that no static fragment ever appears
+ * in source code. Match is by literal prefix: include the trailing dot to
+ * restrict to children only, or omit it to also match the prefix itself.
+ */
+const IGNORED_KEY_PREFIXES: string[] = [];
+
+const flattenKeys = (
+  node: unknown,
+  prefix = "",
+  acc = new Set<string>(),
+): Set<string> => {
+  if (!node || typeof node !== "object" || Array.isArray(node)) {
+    if (prefix) {
+      acc.add(prefix);
+    }
+    return acc;
+  }
+
+  for (const [childKey, value] of Object.entries(
+    node as Record<string, unknown>,
+  )) {
+    const next = prefix ? `${prefix}.${childKey}` : childKey;
+    flattenKeys(value, next, acc);
+  }
+
+  return acc;
+};
+
+const listSourceFiles = (): string[] => {
+  const files = ts.sys.readDirectory(
+    SRC_ROOT,
+    [".ts", ".tsx", ".js", ".jsx"],
+    undefined,
+    ["**/*"],
+  );
+
+  return files
+    .filter(
+      (file) =>
+        !file.split(path.sep).some((segment) => IGNORED_DIRS.has(segment)),
+    )
+    .filter((file) => !IGNORED_FILE_PATTERNS.some((re) => re.test(file)));
+};
+
+const getScriptKind = (file: string): ts.ScriptKind => {
+  if (file.endsWith(".tsx")) return ts.ScriptKind.TSX;
+  if (file.endsWith(".ts")) return ts.ScriptKind.TS;
+  if (file.endsWith(".jsx")) return ts.ScriptKind.JSX;
+  return ts.ScriptKind.JS;
+};
+
+/**
+ * Walk each file's AST and collect every template literal whose static parts
+ * could plausibly form a dotted translation key. Each shape replaces ${...}
+ * interpolations with `*`, e.g. `tools.${id}.title` becomes `tools.*.title`.
+ *
+ * We deliberately collect *all* template literals (not just those at t()
+ * call sites), because keys are often built up in helpers, constants or
+ * config objects and only passed to t() somewhere far away. A shape only
+ * counts if it carries at least one identifier-like static fragment though,
+ * so generic templates like `${name}.${ext}` (shape `*.*`) are discarded.
+ *
+ * Using the AST (rather than a backtick-pair regex) is important: source
+ * files contain large multi-line templates with embedded CSS/HTML and
+ * nested interpolations that confuse regex-based pairing.
+ */
+const extractTemplateShapesFromFile = (
+  file: string,
+  acc: Set<string>,
+): void => {
+  const code = fs.readFileSync(file, "utf8");
+  if (!code.includes("${")) return;
+
+  const sourceFile = ts.createSourceFile(
+    file,
+    code,
+    ts.ScriptTarget.Latest,
+    false,
+    getScriptKind(file),
+  );
+
+  const visit = (node: ts.Node): void => {
+    if (ts.isTemplateExpression(node)) {
+      let shape = node.head.text;
+      for (const span of node.templateSpans) {
+        shape += "*";
+        shape += span.literal.text;
+      }
+      if (
+        shape.includes(".") &&
+        /[A-Za-z0-9_-]/.test(shape.replace(/\*/g, ""))
+      ) {
+        acc.add(shape);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  ts.forEachChild(sourceFile, visit);
+};
+
+const shapeToMatcher = (shape: string): RegExp => {
+  // Each * stands in for one runtime-supplied path segment. We use `[^.]+`
+  // (not `.+`) so a one-variable interpolation doesn't accidentally span
+  // multiple key levels. If a real interpolation does carry a multi-segment
+  // string, the IGNORED_KEYS / IGNORED_KEY_PREFIXES lists are the escape
+  // hatch.
+  const escaped = shape
+    .split("*")
+    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
+    .join("[^.]+");
+  return new RegExp(`^${escaped}$`);
+};
+
+const isIgnored = (key: string): boolean => {
+  if (IGNORED_KEYS.has(key)) return true;
+  return IGNORED_KEY_PREFIXES.some(
+    (p) => key === p.replace(/\.$/, "") || key.startsWith(p),
+  );
+};
+
+describe("Unused translation coverage", () => {
+  test(
+    "fails if any en-GB translation key has no source references",
+    { timeout: 30_000 },
+    () => {
+      expect(fs.existsSync(EN_GB_FILE)).toBe(true);
+
+      const enGb = parse(fs.readFileSync(EN_GB_FILE, "utf8"));
+      const availableKeys = Array.from(flattenKeys(enGb));
+      expect(availableKeys.length).toBeGreaterThan(100); // sanity check
+
+      const sourceFiles = listSourceFiles();
+      expect(sourceFiles.length).toBeGreaterThan(0);
+
+      const source = sourceFiles
+        .map((file) => fs.readFileSync(file, "utf8"))
+        .join("\n");
+
+      const shapes = new Set<string>();
+      for (const file of sourceFiles) {
+        extractTemplateShapesFromFile(file, shapes);
+      }
+      const shapeMatchers = Array.from(shapes).map(shapeToMatcher);
+
+      const unused = availableKeys.filter((key) => {
+        if (isIgnored(key)) return false;
+        // Direct: the full key text appears anywhere in source (catches
+        // static t() calls, i18nKey props, constants, and any other place
+        // the literal string sits in code or comments).
+        if (source.includes(key)) return false;
+        // Dynamic: the key matches a template-literal shape from source.
+        return !shapeMatchers.some((re) => re.test(key));
+      });
+
+      const localeRelative = path
+        .relative(REPO_ROOT, EN_GB_FILE)
+        .replace(/\\/g, "/");
+
+      // GitHub Annotations format so unused keys show up tagged on the
+      // translation file in CI.
+      for (const key of unused) {
+        process.stderr.write(
+          `::error file=${localeRelative}::Unused en-GB translation: ${key}\n`,
+        );
+      }
+
+      expect(
+        unused,
+        `Found ${unused.length} unused en-GB translation key(s). ` +
+          `Remove them from ${localeRelative}, or (if the usage is too ` +
+          `dynamic for the heuristic to spot) add to IGNORED_KEYS / ` +
+          `IGNORED_KEY_PREFIXES in this test.`,
+      ).toEqual([]);
+    },
+  );
+});
