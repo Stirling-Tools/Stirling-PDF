@@ -3,7 +3,6 @@ import { Modal, Button, Text, ActionIcon } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
@@ -107,25 +106,17 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
 
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
 
-  // Left navigation structure and icons
-  const { config: appConfig } = useAppConfig();
-  // PAYG settings screen is gated on the backend `appConfig.paygEnabled` flag,
-  // which is currently unset everywhere — the screen is mock-only and hidden
-  // from users until the wallet endpoint (PR-C3.2) lands.
-  // Until team-role lookup lands, proxy LEADER from the tenant-admin flag.
-  const paygEnabled = Boolean(appConfig?.paygEnabled);
-  const isLeader = Boolean(appConfig?.isAdmin);
-
+  // Left navigation structure and icons. The Plan tab now internally branches
+  // free vs subscribed × leader vs member via useWallet(), so the modal no
+  // longer plumbs paygEnabled / isLeader through to the nav builder.
   const configNavSections = useMemo(
     () =>
       createSaasConfigNavSections(Overview, openLogoutConfirm, {
         isDev,
         isAnonymous,
-        paygEnabled,
-        isLeader,
         t,
       }),
-    [openLogoutConfirm, isDev, isAnonymous, paygEnabled, isLeader, t],
+    [openLogoutConfirm, isDev, isAnonymous, t],
   );
 
   const activeLabel = useMemo(() => {

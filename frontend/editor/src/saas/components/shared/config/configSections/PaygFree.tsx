@@ -163,7 +163,17 @@ function SectionHeader({ snap, pill, leader }: SectionHeaderProps) {
 
 // ─── Free LEADER: hero + upgrade CTA + what's free explainer ─────────────
 
-export function PaygFreeLeader() {
+export interface PaygFreeLeaderProps {
+  /**
+   * Called when the user finishes the {@link UpgradeModal} checkout flow.
+   * Plumbed up to {@code PlanSection} so the page can flip to the subscribed
+   * view immediately. When undefined we fall back to a demo {@code alert} so
+   * the dev preview route still works in isolation.
+   */
+  onUpgraded?: (result: { capUsd: number | null }) => void;
+}
+
+export function PaygFreeLeader({ onUpgraded }: PaygFreeLeaderProps = {}) {
   const snap = useFreeMock();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
@@ -261,12 +271,18 @@ export function PaygFreeLeader() {
         onClose={() => setUpgradeOpen(false)}
         onComplete={({ capUsd }) => {
           setUpgradeOpen(false);
-          // eslint-disable-next-line no-alert
-          alert(
-            `Demo: subscription complete. Cap = ${
-              capUsd === null ? "no cap" : `$${capUsd}/mo`
-            }. Real flow refreshes the wallet snapshot here.`,
-          );
+          if (onUpgraded) {
+            onUpgraded({ capUsd });
+          } else {
+            // Standalone fallback (dev preview route renders without a parent
+            // handler). Real flow always passes onUpgraded via PlanSection.
+            // eslint-disable-next-line no-alert
+            alert(
+              `Demo: subscription complete. Cap = ${
+                capUsd === null ? "no cap" : `$${capUsd}/mo`
+              }.`,
+            );
+          }
         }}
       />
     </div>
