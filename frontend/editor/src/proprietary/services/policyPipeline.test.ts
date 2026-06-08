@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { buildPipelineDefinition } from "@app/services/policyPipeline";
+import {
+  buildPipelineDefinition,
+  buildBackendPolicy,
+} from "@app/services/policyPipeline";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
 // Minimal registry: a static-endpoint tool and a function-endpoint tool.
@@ -51,5 +54,30 @@ describe("buildPipelineDefinition", () => {
     );
     expect(unresolved).toEqual(["notARealTool"]);
     expect(definition.steps).toHaveLength(1);
+  });
+});
+
+describe("buildBackendPolicy", () => {
+  it("maps a frontend policy to the backend Policy shape (manual trigger)", () => {
+    const { policy } = buildBackendPolicy(
+      {
+        name: "Security",
+        enabled: true,
+        automation: {
+          name: "Security",
+          operations: [{ operation: "compress", parameters: {} }],
+        },
+      },
+      registry,
+    );
+
+    expect(policy.id).toBe(""); // blank → backend assigns
+    expect(policy.name).toBe("Security");
+    expect(policy.enabled).toBe(true);
+    expect(policy.trigger).toEqual({ type: "manual", options: {} });
+    expect(policy.output).toEqual({ type: "inline", options: {} });
+    expect(policy.steps).toEqual([
+      { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+    ]);
   });
 });

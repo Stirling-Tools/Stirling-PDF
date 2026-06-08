@@ -34,6 +34,25 @@ export interface BackendPipelineDefinition {
   output: BackendOutputSpec;
 }
 
+/** How a stored policy is triggered ("manual" | "folder" | "schedule" | "s3"). */
+export interface BackendTriggerConfig {
+  type: string;
+  options: Record<string, unknown>;
+}
+
+/** A stored, owned policy on the backend (mirrors the Java `Policy` record). */
+export interface BackendPolicy {
+  /** Blank on create — the backend assigns an id and returns it. */
+  id: string;
+  name: string;
+  owner: string;
+  /** Gates automatic triggering; an explicit run ignores it. */
+  enabled: boolean;
+  trigger: BackendTriggerConfig;
+  steps: BackendPipelineStep[];
+  output: BackendOutputSpec;
+}
+
 /** Lifecycle states of a backend run (mirrors PolicyRunStatus). */
 export type PolicyRunStatus =
   | "PENDING"
@@ -97,6 +116,44 @@ export function buildPipelineDefinition(
       name: automation.name,
       steps,
       output: { type: "inline", options: {} },
+    },
+    unresolved,
+  };
+}
+
+/** A frontend policy ready to persist on the backend. */
+export interface PolicyToStore {
+  /** Existing backend id (blank/omitted → create). */
+  id?: string;
+  name: string;
+  /** Active (enabled) vs paused/off. */
+  enabled: boolean;
+  automation: Pick<AutomationConfig, "name" | "operations">;
+}
+
+/**
+ * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
+ * Trigger is "manual" for now (the backend only implements manual triggering;
+ * the "all uploaded files" trigger is a frontend concept until a backend
+ * trigger type exists). Returns any unresolved step ops alongside.
+ */
+export function buildBackendPolicy(
+  input: PolicyToStore,
+  toolRegistry: Partial<ToolRegistry>,
+): { policy: BackendPolicy; unresolved: string[] } {
+  const { definition, unresolved } = buildPipelineDefinition(
+    input.automation,
+    toolRegistry,
+  );
+  return {
+    policy: {
+      id: input.id ?? "",
+      name: input.name,
+      owner: "",
+      enabled: input.enabled,
+      trigger: { type: "manual", options: {} },
+      steps: definition.steps,
+      output: definition.output,
     },
     unresolved,
   };

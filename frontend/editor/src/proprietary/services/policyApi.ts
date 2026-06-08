@@ -8,6 +8,7 @@
 import apiClient from "@app/services/apiClient";
 import type {
   BackendPipelineDefinition,
+  BackendPolicy,
   PolicyRunView,
 } from "@app/services/policyPipeline";
 
@@ -16,6 +17,50 @@ interface JobResponse {
   jobId: string;
   result: unknown;
 }
+
+// --- Policy config persistence (server-side store, JPA-backed) ---
+
+/** Create or update a policy; the backend assigns a blank id and returns it. */
+export async function savePolicy(policy: BackendPolicy): Promise<BackendPolicy> {
+  const res = await apiClient.post<BackendPolicy>("/api/v1/policies", policy);
+  return res.data;
+}
+
+/** List all stored policies. */
+export async function listPolicies(): Promise<BackendPolicy[]> {
+  const res = await apiClient.get<BackendPolicy[]>("/api/v1/policies");
+  return res.data;
+}
+
+/** Fetch a stored policy by id. */
+export async function getPolicy(id: string): Promise<BackendPolicy> {
+  const res = await apiClient.get<BackendPolicy>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+  );
+  return res.data;
+}
+
+/** Delete a stored policy by id. */
+export async function deletePolicy(id: string): Promise<void> {
+  await apiClient.delete(`/api/v1/policies/${encodeURIComponent(id)}`);
+}
+
+/** Run a stored policy by id on the supplied files; returns the run id. */
+export async function runStoredPolicy(
+  id: string,
+  files: File[],
+): Promise<string> {
+  const form = new FormData();
+  for (const file of files) form.append("fileInput", file);
+  const res = await apiClient.post<JobResponse>(
+    `/api/v1/policies/${encodeURIComponent(id)}/run`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return res.data.jobId;
+}
+
+// --- Ad-hoc pipeline runs (no stored policy) ---
 
 /**
  * Run an ad-hoc pipeline on the backend over the given documents. Returns the
