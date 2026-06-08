@@ -99,8 +99,11 @@ export interface PolicyActivityItem {
   action: string;
   /** Relative timestamp, e.g. "2h ago". */
   time: string;
-  /** "enforced" (clean green) or "flagged" (needs review, amber). */
-  status: "enforced" | "flagged";
+  /**
+   * "enforced" (clean green), "flagged" (needs review, amber), or "processing"
+   * (in progress — enforcement currently running, blue).
+   */
+  status: "enforced" | "flagged" | "processing";
 }
 
 /** Per-category runtime state persisted in the mock store. */

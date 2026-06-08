@@ -4,6 +4,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import DescriptionIcon from "@mui/icons-material/Description";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
@@ -136,11 +137,20 @@ export function PolicyDetailPanel({
                   key={i}
                   divider={i > 0}
                   leadingTone={
-                    item.status === "flagged" ? "warning" : "success"
+                    item.status === "flagged"
+                      ? "warning"
+                      : item.status === "processing"
+                        ? "info"
+                        : "success"
                   }
                   leading={
                     item.status === "flagged" ? (
                       <WarningAmberIcon sx={{ fontSize: "0.85rem" }} />
+                    ) : item.status === "processing" ? (
+                      <AutorenewIcon
+                        className="pol-spin"
+                        sx={{ fontSize: "0.85rem" }}
+                      />
                     ) : (
                       <CheckCircleIcon sx={{ fontSize: "0.85rem" }} />
                     )

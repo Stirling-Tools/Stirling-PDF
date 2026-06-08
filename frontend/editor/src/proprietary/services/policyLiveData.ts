@@ -52,6 +52,9 @@ function formatBytes(bytes: number): string {
   return `${i > 0 && v < 10 ? v.toFixed(1) : Math.round(v)} ${units[i]}`;
 }
 
+/** A file uploaded within this window is shown as still being enforced. */
+const IN_PROGRESS_MS = 2 * 60 * 1000;
+
 const EMPTY: PolicyLiveData = {
   activity: [],
   stats: { enforced: 0, dataProcessed: "0 B", activeFor: "—" },
@@ -68,12 +71,20 @@ export async function getPolicyLiveData(): Promise<PolicyLiveData> {
   const sorted = [...files].sort(
     (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0),
   );
-  const activity: PolicyActivityItem[] = sorted.slice(0, 8).map((f) => ({
-    doc: f.name,
-    action: `${formatBytes(f.size)} • enforced on upload`,
-    time: relativeTime(f.createdAt),
-    status: "enforced",
-  }));
+  // A just-uploaded file is still being enforced ("in progress"); it settles to
+  // "enforced" once it ages past the window.
+  const now = Date.now();
+  const activity: PolicyActivityItem[] = sorted.slice(0, 8).map((f) => {
+    const inProgress = f.createdAt != null && now - f.createdAt < IN_PROGRESS_MS;
+    return {
+      doc: f.name,
+      action: inProgress
+        ? "Enforcing…"
+        : `${formatBytes(f.size)} • enforced on upload`,
+      time: relativeTime(f.createdAt),
+      status: inProgress ? "processing" : "enforced",
+    };
+  });
 
   const totalBytes = files.reduce((sum, f) => sum + (f.size ?? 0), 0);
   return {

@@ -70,6 +70,16 @@
   flex-shrink: 0;
 }
 
+/* In-progress activity icon spins gently. */
+.pol-spin {
+  animation: pol-spin 1.2s linear infinite;
+}
+@keyframes pol-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ---- Data-source toggle (mock vs live) under the section header ---- */
 .pol-data-toggle {
   display: flex;

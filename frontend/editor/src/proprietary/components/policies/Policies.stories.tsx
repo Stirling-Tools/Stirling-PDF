@@ -91,6 +91,26 @@ export const DetailActive: Story = {
         state={activeState}
         status="active"
         steps={POLICY_CONFIG.ingestion.defaultOperations}
+        activity={[
+          {
+            doc: "Q4_Report.pdf",
+            action: "Enforcing…",
+            time: "Just now",
+            status: "processing",
+          },
+          {
+            doc: "MSA_Acme_2026.pdf",
+            action: "1.2 MB • enforced on upload",
+            time: "2h ago",
+            status: "enforced",
+          },
+          {
+            doc: "scan_002.pdf",
+            action: "Low confidence • flagged for review",
+            time: "Yesterday",
+            status: "flagged",
+          },
+        ]}
         canConfigure
         onBack={noop}
         onEditSettings={noop}
