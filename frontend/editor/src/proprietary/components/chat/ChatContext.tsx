@@ -36,6 +36,14 @@ export interface ChatMessage {
    * turns that answered without running any tool.
    */
   toolsUsed?: string[];
+  /**
+   * Full ordered progress log captured during the AI turn that produced this message.
+   * Only set on assistant messages; used to render the "Ran for X seconds" collapsed
+   * history dropdown above the response.
+   */
+  progressLog?: AiWorkflowProgress[];
+  /** Wall-clock duration of the AI turn in milliseconds. Only set on assistant messages. */
+  durationMs?: number;
 }
 
 export enum AiWorkflowPhase {
@@ -177,12 +185,15 @@ interface ChatState {
   isOpen: boolean;
   isLoading: boolean;
   progress: AiWorkflowProgress | null;
+  /** Ordered log of every progress event in the current request. UI shows the last N entries. */
+  progressLog: AiWorkflowProgress[];
 }
 
 type ChatAction =
   | { type: "ADD_MESSAGE"; message: ChatMessage }
   | { type: "SET_LOADING"; loading: boolean }
   | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
+  | { type: "APPEND_PROGRESS"; progress: AiWorkflowProgress }
   | { type: "TOGGLE_OPEN" }
   | { type: "SET_OPEN"; open: boolean }
   | { type: "CLEAR" };
@@ -192,15 +203,33 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "ADD_MESSAGE":
       return { ...state, messages: [...state.messages, action.message] };
     case "SET_LOADING":
-      return { ...state, isLoading: action.loading };
+      // Reset the log on both start (true) and end (false) of a request.
+      return {
+        ...state,
+        isLoading: action.loading,
+        progress: action.loading ? state.progress : null,
+        progressLog: [],
+      };
     case "SET_PROGRESS":
       return { ...state, progress: action.progress };
+    case "APPEND_PROGRESS":
+      return {
+        ...state,
+        progress: action.progress,
+        progressLog: [...state.progressLog, action.progress],
+      };
     case "TOGGLE_OPEN":
       return { ...state, isOpen: !state.isOpen };
     case "SET_OPEN":
       return { ...state, isOpen: action.open };
     case "CLEAR":
-      return { ...state, messages: [], isLoading: false, progress: null };
+      return {
+        ...state,
+        messages: [],
+        isLoading: false,
+        progress: null,
+        progressLog: [],
+      };
   }
 }
 
@@ -324,6 +353,8 @@ interface ChatContextValue {
   isOpen: boolean;
   isLoading: boolean;
   progress: AiWorkflowProgress | null;
+  /** Ordered log of every progress event for the current in-flight request. */
+  progressLog: AiWorkflowProgress[];
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
@@ -338,6 +369,7 @@ const initialState: ChatState = {
   isOpen: false,
   isLoading: false,
   progress: null,
+  progressLog: [],
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -439,6 +471,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       abortRef.current = controller;
 
       const priorMessages = messagesRef.current;
+      const startTime = Date.now();
+      // Mirror every progress event locally so we can attach the full log to
+      // the assistant message when the result arrives — without needing a ref
+      // into the reducer state.
+      const progressLogLocal: AiWorkflowProgress[] = [];
 
       const userMessage: ChatMessage = {
         id: generateId(),
@@ -499,16 +536,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             ) {
               toolsUsed.push(data.tool);
             }
-            dispatch({
-              type: "SET_PROGRESS",
-              progress: {
-                phase: data.phase as AiWorkflowPhase,
-                tool: data.tool,
-                stepIndex: data.stepIndex,
-                stepCount: data.stepCount,
-                engineDetail: data.engineDetail,
-              },
-            });
+            const progressItem: AiWorkflowProgress = {
+              phase: data.phase as AiWorkflowPhase,
+              tool: data.tool,
+              stepIndex: data.stepIndex,
+              stepCount: data.stepCount,
+              engineDetail: data.engineDetail,
+            };
+            progressLogLocal.push(progressItem);
+            dispatch({ type: "APPEND_PROGRESS", progress: progressItem });
           },
           onResult: (data) => {
             receivedResult = true;
@@ -522,6 +558,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 content: replyContent,
                 timestamp: Date.now(),
                 toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+                progressLog:
+                  progressLogLocal.length > 0
+                    ? [...progressLogLocal]
+                    : undefined,
+                durationMs: Date.now() - startTime,
               },
             });
             if (data.fileId || data.resultFiles?.length) {
@@ -595,6 +636,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         isOpen: state.isOpen,
         isLoading: state.isLoading,
         progress: state.progress,
+        progressLog: state.progressLog,
         toggleOpen,
         setOpen,
         sendMessage,

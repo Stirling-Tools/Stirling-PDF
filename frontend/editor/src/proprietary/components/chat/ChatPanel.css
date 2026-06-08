@@ -396,13 +396,188 @@
   margin-bottom: 0;
 }
 
-/* Thinking indicator */
+/* ─── Progress step log ─────────────────────────────────────────────────── */
+
+/*
+ * Shown while the AI is working. Each step slides in from below as events
+ * arrive; the active (last) step is full-opacity with a pulsing icon, and
+ * earlier completed steps are dimmed. Only the most-recent N steps are
+ * rendered — there is no scrollable list.
+ */
+
+.chat-progress-log {
+  display: flex;
+  flex-direction: column;
+  padding: 0.15rem 0.5rem 0.35rem;
+  /* No gap — the connector line div provides the inter-step spacing. */
+}
+
+.chat-progress-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  /*
+   * Use color rather than opacity for past-step dimming so the connector
+   * line (a sibling element inside __left, not a text node) is NOT affected
+   * and stays clearly visible. currentColor flows into SVG icon fills;
+   * color inherits into the label span automatically.
+   */
+  color: var(--text-muted);
+  transition: color 250ms ease-out;
+  animation: chat-step-enter 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/*
+ * Active step: white text on dark mode so currentColor feeds directly into
+ * the StirlingLogoAnimated SVG paths and the label at the same time.
+ * Light-mode falls back to the default text colour so it's not invisible.
+ */
+/* Active step: icon and label are coloured independently so the logo can be
+   blue while the text uses the normal text colour. */
+.chat-progress-step--active .chat-progress-step__icon {
+  color: var(--mantine-color-blue-filled);
+}
+
+.chat-progress-step--active .chat-progress-step__label {
+  color: var(--mantine-color-text);
+}
+
+[data-mantine-color-scheme="dark"] .chat-progress-step--active .chat-progress-step__label {
+  color: #ffffff;
+}
+
+.chat-progress-step__left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 20px;
+}
+
+/* Icon cell — fixed height so the connector line aligns cleanly. */
+.chat-progress-step__icon {
+  width: 20px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  /* Inherits color from .chat-progress-step so currentColor flows into icons. */
+}
+
+/*
+ * Connector line between steps. Not a child of the label so it is unaffected
+ * by the step's color; it sits on its own and reads clearly against the
+ * toolbar background.
+ */
+.chat-progress-step__line {
+  width: 1px;
+  height: 18px;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Active step label — slightly larger, inherits the active color. */
+.chat-progress-step__label {
+  font-size: 0.875rem;
+  padding-top: 3px;
+  line-height: 1.35;
+}
+
+/* Past step labels — a touch smaller so the active row reads as the primary. */
+.chat-progress-step:not(.chat-progress-step--active) .chat-progress-step__label {
+  font-size: 0.8rem;
+  padding-top: 4px;
+}
+
+/*
+ * Wrapper that scales a registry tool icon (LocalIcon, typically 1.5rem/24px)
+ * down to fit the 20px icon column. Transform does not affect layout, so the
+ * parent overflow:hidden clips the un-scaled footprint cleanly.
+ */
+.chat-step-icon-scaled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.75);
+  transform-origin: center;
+  flex-shrink: 0;
+}
+
+/* Entry: steps slide up from a few pixels below their final position. */
+@keyframes chat-step-enter {
+  from { transform: translateY(7px); }
+  to   { transform: translateY(0); }
+}
+
+/* ─── Completed progress log dropdown ──────────────────────────────────── */
+
+/*
+ * Shown above each completed assistant turn. The toggle displays a small
+ * "Ran for X seconds" label; expanding reveals the full ordered step list
+ * for that turn in a compact, read-only format.
+ */
+
+.chat-completed-log {
+  margin-bottom: 0.55rem;
+}
+
+.chat-completed-log__toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.25rem 0.1rem 0.1rem;
+  border-radius: 0.35rem;
+  color: var(--text-muted);
+  transition: background 120ms ease-out;
+}
+
+.chat-completed-log__toggle:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.chat-completed-log__steps {
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem 0.4rem 0.2rem 0.25rem;
+  margin-top: 0.2rem;
+}
+
+/* In the completed log every step is a past step — no active highlighting,
+   no entry animation (the content is static once opened). */
+.chat-completed-log__steps .chat-progress-step {
+  animation: none;
+}
+
+/* Tighten the icon and connector dimensions for the denser historical view. */
+.chat-completed-log__steps .chat-progress-step__icon {
+  height: 20px;
+}
+
+.chat-completed-log__steps .chat-progress-step__line {
+  height: 14px;
+}
+
+.chat-completed-log__steps .chat-progress-step__label {
+  font-size: 0.775rem;
+  padding-top: 2px;
+}
+
+/* Legacy thinking indicator (kept in case any other code references it). */
 .chat-thinking {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.125rem 0.5rem;
   color: var(--mantine-color-blue-filled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-progress-step {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* ─── Stirling logo thinking animation ─────────────────────────────────── */
