@@ -47,6 +47,8 @@ describe("Policies right-sidebar surface", () => {
   it("renders the policy list with every category", () => {
     renderHost();
     expect(screen.getByText("Policies")).toBeInTheDocument();
+    // The mock/live data-source toggle is present in the list header.
+    expect(screen.getByText("Demo data")).toBeInTheDocument();
     for (const label of [
       "Ingestion",
       "Security",

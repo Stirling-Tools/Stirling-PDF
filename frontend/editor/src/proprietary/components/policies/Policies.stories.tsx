@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
+import { PoliciesSection } from "@app/components/policies/PoliciesSidebar";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
@@ -135,6 +136,23 @@ export const DetailManaged: Story = {
         onDelete={noop}
       />
     </RailFrame>
+  ),
+};
+
+/** The policy list section (above Tools), including the mock/live data toggle. */
+export const ListSection: Story = {
+  render: () => (
+    <div
+      style={{
+        width: RAIL_WIDTH,
+        background: "var(--color-surface)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        padding: "var(--space-2) 0",
+      }}
+    >
+      <PoliciesSection />
+    </div>
   ),
 };
 

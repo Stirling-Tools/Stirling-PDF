@@ -15,10 +15,12 @@ import { Button } from "@shared/components/Button";
 import { Banner } from "@shared/components/Banner";
 import { ListRow } from "@shared/components/ListRow";
 import type {
+  PolicyActivityItem,
   PolicyCategory,
   PolicyConfigDef,
   PolicyRowStatus,
   PolicyState,
+  PolicyStats,
 } from "@app/types/policies";
 import type { AutomationOperation } from "@app/types/automation";
 
@@ -34,6 +36,10 @@ interface PolicyDetailPanelProps {
    * `rules` are shown (e.g. before configuration).
    */
   steps?: AutomationOperation[];
+  /** Live-mode activity feed; defaults to the preset's mock activity. */
+  activity?: PolicyActivityItem[];
+  /** Live-mode stats; defaults to the preset's mock stats. */
+  stats?: PolicyStats;
   canConfigure: boolean;
   onBack: () => void;
   onEditSettings: () => void;
@@ -56,6 +62,8 @@ export function PolicyDetailPanel({
   state,
   status,
   steps,
+  activity,
+  stats,
   canConfigure,
   onBack,
   onEditSettings,
@@ -68,6 +76,9 @@ export function PolicyDetailPanel({
     steps && steps.length > 0
       ? steps.map((s) => humanizeOperation(s.operation))
       : config.rules;
+  // Live-mode overrides for activity + stats; default to the preset's mock data.
+  const activityItems = activity ?? config.activity;
+  const statValues = stats ?? config.stats;
   return (
     <div className="pol-detail">
       <PanelHeader
@@ -118,9 +129,9 @@ export function PolicyDetailPanel({
         {/* Recent Activity */}
         <div>
           <p className="pol-section-label">Recent Activity</p>
-          {config.activity.length > 0 ? (
+          {activityItems.length > 0 ? (
             <Card padding="none">
-              {config.activity.map((item, i) => (
+              {activityItems.map((item, i) => (
                 <ListRow
                   key={i}
                   divider={i > 0}
@@ -158,18 +169,16 @@ export function PolicyDetailPanel({
           <div className="pol-stats">
             <div className="pol-stat">
               <span className="pol-stat-value">
-                {config.stats.enforced.toLocaleString()}
+                {statValues.enforced.toLocaleString()}
               </span>
               <span className="pol-stat-label">Docs enforced</span>
             </div>
             <div className="pol-stat">
-              <span className="pol-stat-value">
-                {config.stats.dataProcessed}
-              </span>
+              <span className="pol-stat-value">{statValues.dataProcessed}</span>
               <span className="pol-stat-label">Data processed</span>
             </div>
             <div className="pol-stat">
-              <span className="pol-stat-value">{config.stats.activeFor}</span>
+              <span className="pol-stat-value">{statValues.activeFor}</span>
               <span className="pol-stat-label">Active</span>
             </div>
           </div>

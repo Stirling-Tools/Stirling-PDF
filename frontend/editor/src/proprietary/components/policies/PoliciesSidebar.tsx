@@ -17,7 +17,16 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
 import { getPolicyOperations } from "@app/services/policyFolders";
+import {
+  getPolicyLiveData,
+  type PolicyLiveData,
+} from "@app/services/policyLiveData";
 import type { AutomationOperation } from "@app/types/automation";
+import { ToggleSwitch } from "@shared/components/ToggleSwitch";
+import {
+  usePolicyDataMode,
+  setPolicyDataMode,
+} from "@app/components/policies/policyDataModeStore";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
@@ -70,6 +79,7 @@ export function usePolicyDetailActive(): boolean {
 export function PoliciesSection() {
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
+  const dataMode = usePolicyDataMode();
   const [expanded, setExpanded] = useState(true);
 
   if (!POLICIES_ENABLED) return null;
@@ -90,6 +100,21 @@ export function PoliciesSection() {
           expanded={expanded}
           onToggle={() => setExpanded((v) => !v)}
         />
+        {expanded && (
+          <div className="pol-data-toggle">
+            <span className="pol-data-toggle__label">
+              {dataMode === "live" ? "Live data" : "Demo data"}
+            </span>
+            <ToggleSwitch
+              size="sm"
+              checked={dataMode === "live"}
+              onChange={(checked) =>
+                setPolicyDataMode(checked ? "live" : "mock")
+              }
+              aria-label="Toggle live data"
+            />
+          </div>
+        )}
       </div>
 
       {expanded && (
@@ -165,6 +190,7 @@ export function PolicyDetailTakeover() {
   const pol = usePolicies();
   const { categories, configs, sources, docTypes } = usePolicyCatalog();
   const { selectedId, detailView } = usePolicySelection();
+  const dataMode = usePolicyDataMode();
 
   // The configured policy's real steps, loaded from its backing folder's
   // automation. Falls back to the preset's decorative rules when not configured.
@@ -183,6 +209,23 @@ export function PolicyDetailTakeover() {
       cancelled = true;
     };
   }, [folderId]);
+
+  // Live activity/stats from the backing folder's run state, when the data-mode
+  // toggle is "live"; otherwise the panel uses the preset's mock data.
+  const [liveData, setLiveData] = useState<PolicyLiveData | null>(null);
+  useEffect(() => {
+    if (dataMode !== "live" || !folderId) {
+      setLiveData(null);
+      return;
+    }
+    let cancelled = false;
+    getPolicyLiveData(folderId).then((d) => {
+      if (!cancelled) setLiveData(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dataMode, folderId]);
 
   if (!POLICIES_ENABLED || selectedId == null) return null;
 
@@ -245,6 +288,8 @@ export function PolicyDetailTakeover() {
       state={state}
       status={status}
       steps={steps}
+      activity={liveData?.activity}
+      stats={liveData?.stats}
       canConfigure={pol.canConfigure}
       onBack={() => closePolicy()}
       onEditSettings={() => setPolicyDetailView("settings")}
