@@ -1,11 +1,9 @@
 package stirling.software.proprietary.policy.trigger;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -18,17 +16,10 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.policy.engine.PolicyEngine;
-import stirling.software.proprietary.policy.engine.PolicyRunHandle;
-import stirling.software.proprietary.policy.input.InputSource;
-import stirling.software.proprietary.policy.input.ResolvedInput;
-import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.model.PolicyRun;
-import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.Schedule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
-import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.ObjectMapper;
@@ -38,11 +29,9 @@ import tools.jackson.databind.ObjectMapper;
  * sweep finds the enabled "schedule" policies and runs any whose next firing has come due since it
  * last fired.
  *
- * <p>Inputs come from the policy's configured input source ({@code Policy.input()}): {@code none}
- * runs the pipeline with no files (a generator), while a {@code folder} source batches the files it
- * finds. Each unit of work the source yields becomes its own run, and the source's completion hook
- * is invoked with that run's success (e.g. to route a consumed file to {@code .done}/{@code
- * .error}).
+ * <p>The trigger only decides <em>when</em>: once a policy is due it hands it to the {@link
+ * PolicyRunner}, which pulls from the policy's configured sources and starts the runs. The trigger
+ * knows nothing about folders, buckets, or how many runs a sweep produces.
  *
  * <p>Caveat: last-fire times are tracked <b>in memory</b>, so this assumes a single node and resets
  * on restart; cluster-wide coordination (leader election) is a follow-up.
@@ -55,8 +44,7 @@ public class ScheduleTrigger implements PolicyTrigger {
     private static final String TYPE = "schedule";
 
     private final PolicyStore policyStore;
-    private final PolicyEngine policyEngine;
-    private final List<InputSource> inputSources;
+    private final PolicyRunner policyRunner;
     private final ObjectMapper objectMapper;
 
     @Value("${stirling.policies.scheduleSweepSeconds:60}")
@@ -121,55 +109,10 @@ public class ScheduleTrigger implements PolicyTrigger {
             ZonedDateTime next = config.schedule().nextAfter(last.atZone(config.zone()));
             if (!next.toInstant().isAfter(now)) {
                 lastFiredByPolicy.put(policy.id(), now);
-                fire(policy);
+                log.info("Scheduled policy {} ({}) is due", policy.id(), policy.name());
+                policyRunner.run(policy);
             }
         }
-    }
-
-    private void fire(Policy policy) {
-        InputSpec input = policy.input();
-        InputSource source = resolveSource(input);
-        if (source == null) {
-            log.warn(
-                    "No input source for type '{}' (policy {}); skipping",
-                    input.type(),
-                    policy.id());
-            return;
-        }
-        List<ResolvedInput> work;
-        try {
-            work = source.resolve(input);
-        } catch (IOException | RuntimeException e) {
-            log.warn(
-                    "Failed to resolve inputs for scheduled policy {}: {}",
-                    policy.id(),
-                    e.getMessage());
-            return;
-        }
-        if (work.isEmpty()) {
-            log.debug("Scheduled policy {} has no inputs to process this run", policy.id());
-            return;
-        }
-        for (ResolvedInput unit : work) {
-            log.info("Scheduled run for policy {} ({})", policy.id(), policy.name());
-            PolicyRunHandle handle =
-                    policyEngine.runPolicy(policy, unit.inputs(), PolicyProgressListener.NOOP);
-            handle.completion()
-                    .whenComplete(
-                            (run, throwable) ->
-                                    unit.onComplete().accept(succeeded(run, throwable)));
-        }
-    }
-
-    private static boolean succeeded(PolicyRun run, Throwable throwable) {
-        return throwable == null && run != null && run.getStatus() == PolicyRunStatus.COMPLETED;
-    }
-
-    private InputSource resolveSource(InputSpec spec) {
-        return inputSources.stream()
-                .filter(source -> source.supports(spec))
-                .findFirst()
-                .orElse(null);
     }
 
     /**

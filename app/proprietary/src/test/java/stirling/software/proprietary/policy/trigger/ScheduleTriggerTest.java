@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,9 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.proprietary.policy.engine.PolicyEngine;
-import stirling.software.proprietary.policy.engine.PolicyRunHandle;
-import stirling.software.proprietary.policy.input.NoneInputSource;
+import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -37,40 +34,34 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Tests for {@link ScheduleTrigger}'s due-firing logic via the package-visible {@code
- * sweep(Instant)}. Schedules default to UTC, so explicit UTC instants make these deterministic.
+ * sweep(Instant)}. The trigger only decides when a policy is due; pulling sources and starting runs
+ * is the {@link PolicyRunner}'s job, so these assert it delegates to the runner. Schedules default
+ * to UTC, so explicit UTC instants make these deterministic.
  */
 @ExtendWith(MockitoExtension.class)
 class ScheduleTriggerTest {
 
     @Mock private PolicyStore policyStore;
-    @Mock private PolicyEngine policyEngine;
+    @Mock private PolicyRunner policyRunner;
 
     private ScheduleTrigger trigger;
 
     @BeforeEach
     void setUp() {
-        // Test policies use the default "none" input source, so each due policy yields one run.
-        trigger =
-                new ScheduleTrigger(
-                        policyStore,
-                        policyEngine,
-                        List.of(new NoneInputSource()),
-                        JsonMapper.builder().build());
+        trigger = new ScheduleTrigger(policyStore, policyRunner, JsonMapper.builder().build());
     }
 
     @Test
     void firesOncePerScheduleWhenItComesDue() {
         Policy policy = scheduled("p1", new Schedule.Every(1, Schedule.Unit.MINUTES));
         when(policyStore.findByTriggerType("schedule")).thenReturn(List.of(policy));
-        when(policyEngine.runPolicy(any(), any(), any()))
-                .thenReturn(new PolicyRunHandle("r1", new CompletableFuture<>()));
 
         Instant t0 = Instant.parse("2026-06-05T10:00:30Z");
         trigger.sweep(t0); // first sight: baseline, must not fire immediately
-        verify(policyEngine, never()).runPolicy(any(), any(), any());
+        verify(policyRunner, never()).run(any());
 
         trigger.sweep(t0.plusSeconds(120)); // the one-minute mark has passed
-        verify(policyEngine, times(1)).runPolicy(eq(policy), any(), any());
+        verify(policyRunner, times(1)).run(eq(policy));
     }
 
     @Test
@@ -82,7 +73,7 @@ class ScheduleTriggerTest {
         trigger.sweep(t0);
         trigger.sweep(t0.plusSeconds(60)); // next 03:00 is far away
 
-        verify(policyEngine, never()).runPolicy(any(), any(), any());
+        verify(policyRunner, never()).run(any());
     }
 
     @Test
@@ -91,14 +82,12 @@ class ScheduleTriggerTest {
         Policy policy =
                 scheduled("p1", new Schedule.Weekly(Set.of(DayOfWeek.MONDAY), LocalTime.of(9, 0)));
         when(policyStore.findByTriggerType("schedule")).thenReturn(List.of(policy));
-        when(policyEngine.runPolicy(any(), any(), any()))
-                .thenReturn(new PolicyRunHandle("r1", new CompletableFuture<>()));
 
         Instant friday = Instant.parse("2026-06-05T10:00:00Z");
         trigger.sweep(friday); // baseline
         trigger.sweep(Instant.parse("2026-06-08T09:00:00Z")); // Monday 09:00
 
-        verify(policyEngine, times(1)).runPolicy(eq(policy), any(), any());
+        verify(policyRunner, times(1)).run(eq(policy));
     }
 
     @Test
@@ -108,7 +97,7 @@ class ScheduleTriggerTest {
 
         trigger.sweep(Instant.parse("2026-06-05T10:00:00Z"));
 
-        verify(policyEngine, never()).runPolicy(any(), any(), any());
+        verify(policyRunner, never()).run(any());
     }
 
     @Test

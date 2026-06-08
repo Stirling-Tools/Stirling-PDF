@@ -39,6 +39,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
+import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -48,7 +49,6 @@ import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.store.PolicyStore;
-import stirling.software.proprietary.policy.trigger.ManualTrigger;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 
 import tools.jackson.core.JacksonException;
@@ -72,7 +72,7 @@ import tools.jackson.databind.ObjectMapper;
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
 public class PolicyController {
 
-    private final ManualTrigger manualTrigger;
+    private final PolicyRunner policyRunner;
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
     private final PolicyValidator policyValidator;
@@ -97,7 +97,8 @@ public class PolicyController {
             throws IOException {
         PipelineDefinition definition = parseDefinition(json);
         PolicyInputs inputs = collectInputs(request);
-        String runId = manualTrigger.fire(definition, inputs, PolicyProgressListener.NOOP).runId();
+        String runId =
+                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
@@ -117,7 +118,7 @@ public class PolicyController {
         SseEmitter emitter = new SseEmitter(streamTimeoutMs);
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
-        PolicyRunHandle handle = manualTrigger.fire(definition, inputs, streamListener(emitter));
+        PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));
         // Close the stream with a terminal event once the run finishes. whenComplete runs on the
         // engine's worker thread after the run is done, so this never races the step events.
         handle.completion()
@@ -207,7 +208,7 @@ public class PolicyController {
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
         PolicyInputs inputs = collectInputs(request);
-        String runId = manualTrigger.run(policy, inputs, PolicyProgressListener.NOOP).runId();
+        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 

@@ -30,7 +30,7 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
-                        policy.input(),
+                        policy.sources(),
                         policy.steps(),
                         policy.output());
         policies.put(id, stored);
@@ -51,6 +51,7 @@ public class InProcessPolicyStore implements PolicyStore {
     public List<Policy> findByTriggerType(String triggerType) {
         return policies.values().stream()
                 .filter(Policy::enabled)
+                .filter(policy -> policy.trigger() != null)
                 .filter(policy -> triggerType.equals(policy.trigger().type()))
                 .toList();
     }

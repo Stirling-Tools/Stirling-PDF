@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,8 +51,18 @@ class PolicyValidatorTest {
         validator.validate(policy);
 
         verify(trigger).validate(policy.trigger());
-        verify(inputSource).validate(policy.input());
+        verify(inputSource).validate(policy.sources().get(0));
         verify(outputSink).validate(policy.output());
+    }
+
+    @Test
+    void skipsTriggerValidationForAManualOnlyPolicy() {
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+
+        validator.validate(manualOnly());
+
+        verify(trigger, never()).validate(any());
     }
 
     @Test
@@ -84,7 +95,19 @@ class PolicyValidatorTest {
                 "owner",
                 true,
                 new TriggerConfig(triggerType, Map.of()),
-                InputSpec.none(),
+                List.of(InputSpec.folder("/in")),
+                List.of(),
+                OutputSpec.inline());
+    }
+
+    private static Policy manualOnly() {
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                null,
+                List.of(InputSpec.folder("/in")),
                 List.of(),
                 OutputSpec.inline());
     }

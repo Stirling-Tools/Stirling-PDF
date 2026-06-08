@@ -6,12 +6,14 @@ import java.util.List;
 import stirling.software.proprietary.policy.model.InputSpec;
 
 /**
- * Resolves a policy's {@link InputSpec} into the files to run on. The counterpart of {@code
- * PolicyOutputSink}: implementations are beans selected by {@link #supports(InputSpec)}, so a new
- * source kind (folder, S3) is just a new bean.
+ * Resolves one of a policy's {@link InputSpec sources} into the files to run on - answering
+ * <em>where</em> a run's files come from, independent of <em>when</em> it runs. The counterpart of
+ * {@code PolicyOutputSink}: implementations are beans selected by {@link #supports(InputSpec)}, so
+ * a new source kind (folder, S3) is just a new bean.
  *
- * <p>Used by time-based triggers (schedule) that must go fetch files; manual and event-driven
- * triggers supply files directly and bypass this.
+ * <p>Driven by the {@code PolicyRunner}, which a trigger calls when a policy is due; a source is
+ * passive and knows nothing about what triggered the run. A manual run may instead supply files
+ * directly and bypass sources entirely.
  */
 public interface InputSource {
 
