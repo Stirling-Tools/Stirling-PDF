@@ -167,6 +167,18 @@ export interface SpendLimit {
 /** The three steps of the unconfigured-policy setup wizard. */
 export type PolicySetupStep = 1 | 2 | 3;
 
+/**
+ * Output + retry settings applied by the Watch Folders engine to a policy's
+ * backing folder (the real, working settings reused from the folder setup).
+ */
+export interface PolicyFolderSettings {
+  outputMode: "new_file" | "new_version";
+  outputName: string;
+  outputNamePosition: "prefix" | "suffix" | "auto-number";
+  maxRetries: number;
+  retryDelayMinutes: number;
+}
+
 /** Everything the shared policy wizard collects, handed back on submit. */
 export interface PolicyWizardResult {
   /** The saved workflow automation (created on setup, updated in place on edit). */
@@ -175,6 +187,8 @@ export interface PolicyWizardResult {
   sources: string[];
   scopeTypes: string[];
   reviewerEmail: string;
+  /** Output + retry settings for the backing folder. */
+  folder: PolicyFolderSettings;
 }
 
 /** Which sub-view of a configured policy's detail panel is showing. */

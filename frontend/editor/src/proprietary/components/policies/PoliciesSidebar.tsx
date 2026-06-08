@@ -321,11 +321,13 @@ export function PolicyDetailTakeover() {
         classificationEnabled={false}
         mode="edit"
         existingAutomation={backingAutomation}
+        initialFolder={backingFolder ?? undefined}
         onCancel={() => setPolicyDetailView("detail")}
         onComplete={(result) => {
-          pol.savePolicyConfig(selectedId, result);
-          setReloadKey((k) => k + 1);
-          setPolicyDetailView("detail");
+          void pol.savePolicyConfig(selectedId, result).then(() => {
+            setReloadKey((k) => k + 1);
+            setPolicyDetailView("detail");
+          });
         }}
         onSetupClassification={onSetupClassification}
       />

@@ -27,6 +27,13 @@ const wizardResult = {
   sources: ["editor"],
   scopeTypes: [],
   reviewerEmail: "reviewer@x.com",
+  folder: {
+    outputMode: "new_file" as const,
+    outputName: "",
+    outputNamePosition: "prefix" as const,
+    maxRetries: 3,
+    retryDelayMinutes: 5,
+  },
 };
 
 describe("usePolicies", () => {

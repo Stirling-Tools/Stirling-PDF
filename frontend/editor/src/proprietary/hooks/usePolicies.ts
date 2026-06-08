@@ -17,6 +17,7 @@ import {
   createPolicyFolderForAutomation,
   deletePolicyFolder,
   setPolicyFolderPaused,
+  updatePolicyFolderSettings,
 } from "@app/services/policyFolders";
 import {
   MOCK_POLICY_USER,
@@ -67,6 +68,7 @@ export function usePolicies() {
         category,
         result.automation.id,
       );
+      await updatePolicyFolderSettings(folder.id, result.folder);
       updatePolicy(id, {
         configured: true,
         status: "active",
@@ -82,10 +84,13 @@ export function usePolicies() {
 
   /**
    * Save edits from the wizard. The workflow automation is updated in place by
-   * the builder; persist the rest of the policy's settings here.
+   * the builder; persist the folder's output/retry settings + the rest of the
+   * policy's settings here.
    */
   const savePolicyConfig = useCallback(
-    (id: string, result: PolicyWizardResult) => {
+    async (id: string, result: PolicyWizardResult) => {
+      const folderId = loadPolicies()[id]?.folderId;
+      if (folderId) await updatePolicyFolderSettings(folderId, result.folder);
       updatePolicy(id, {
         fieldValues: result.fieldValues,
         sources: result.sources,

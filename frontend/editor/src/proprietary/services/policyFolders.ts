@@ -18,7 +18,10 @@ import type {
   AutomationOperation,
 } from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
-import type { PolicyCategory } from "@app/types/policies";
+import type {
+  PolicyCategory,
+  PolicyFolderSettings,
+} from "@app/types/policies";
 
 /** Folder icon (a name string) used for each policy category's backing folder. */
 const CATEGORY_FOLDER_ICON: Record<string, string> = {
@@ -105,6 +108,16 @@ export async function updatePolicyOperations(
   const automation = await automationStorage.getAutomation(folder.automationId);
   if (!automation) return;
   await automationStorage.updateAutomation({ ...automation, operations });
+}
+
+/** Apply output + retry settings to the policy's backing folder. */
+export async function updatePolicyFolderSettings(
+  folderId: string,
+  settings: PolicyFolderSettings,
+): Promise<void> {
+  const folder = await smartFolderStorage.getFolder(folderId);
+  if (!folder) return;
+  await smartFolderStorage.updateFolder({ ...folder, ...settings });
 }
 
 /** Pause/resume the policy by toggling its backing folder's paused flag. */

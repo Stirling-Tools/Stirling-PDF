@@ -7,6 +7,8 @@ import { Button } from "@shared/components/Button";
 import { ChipFlow } from "@shared/components/ChipFlow";
 import { DataRow } from "@shared/components/DataRow";
 import { Input } from "@shared/components/Input";
+import { Select } from "@shared/components/Select";
+import { SettingsRow } from "@shared/components/SettingsRow";
 import { FormField } from "@shared/components/FormField";
 import { Checkbox } from "@shared/components/Checkbox";
 import { Banner } from "@shared/components/Banner";
@@ -21,6 +23,8 @@ import type {
   PolicyWizardResult,
 } from "@app/types/policies";
 import type { AutomationConfig } from "@app/types/automation";
+import type { SmartFolder } from "@app/types/smartFolders";
+import { MOCK_POLICY_USER } from "@app/data/policyDefinitions";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
 import {
@@ -45,6 +49,8 @@ interface PolicySetupWizardProps {
   mode?: "create" | "edit";
   /** The backing automation to edit (edit mode). */
   existingAutomation?: AutomationConfig;
+  /** The backing folder, to pre-fill output + retry settings (edit mode). */
+  initialFolder?: SmartFolder;
   onCancel: () => void;
   /** Fires on submit with the saved workflow + collected settings. */
   onComplete: (result: PolicyWizardResult) => void;
@@ -67,6 +73,7 @@ export function PolicySetupWizard({
   classificationEnabled,
   mode = "create",
   existingAutomation,
+  initialFolder,
   onCancel,
   onComplete,
   onSetupClassification,
@@ -81,7 +88,23 @@ export function PolicySetupWizard({
   );
   const [scopeNarrow, setScopeNarrow] = useState(initial.scopeTypes.length > 0);
   const [scopeTypes, setScopeTypes] = useState<string[]>(initial.scopeTypes);
-  const [reviewerEmail, setReviewerEmail] = useState(initial.reviewerEmail);
+  // Default flagged-document reviewer to the current user.
+  const [reviewerEmail, setReviewerEmail] = useState(
+    initial.reviewerEmail || MOCK_POLICY_USER.email,
+  );
+  // Output + retry settings — the real, working folder settings (the engine
+  // applies them). Pre-filled from the backing folder in edit mode.
+  const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
+    initialFolder?.outputMode ?? "new_file",
+  );
+  const [outputName, setOutputName] = useState(initialFolder?.outputName ?? "");
+  const [outputNamePosition, setOutputNamePosition] = useState<
+    "prefix" | "suffix" | "auto-number"
+  >(initialFolder?.outputNamePosition ?? "prefix");
+  const [maxRetries, setMaxRetries] = useState(initialFolder?.maxRetries ?? 3);
+  const [retryDelayMinutes, setRetryDelayMinutes] = useState(
+    initialFolder?.retryDelayMinutes ?? 5,
+  );
   const workflowSave = useRef<(() => void) | null>(null);
 
   // Seed the workflow builder: the backing automation in edit, else a synthetic
@@ -134,6 +157,13 @@ export function PolicySetupWizard({
       sources,
       scopeTypes: scopeNarrow ? scopeTypes : [],
       reviewerEmail,
+      folder: {
+        outputMode,
+        outputName: outputName.trim(),
+        outputNamePosition,
+        maxRetries,
+        retryDelayMinutes,
+      },
     });
 
   return (
@@ -189,6 +219,105 @@ export function PolicySetupWizard({
                   }
                 />
               ))}
+            </Card>
+
+            {/* Real, working output + retry settings (applied by the engine). */}
+            <p className="pol-section-label">Output &amp; retries</p>
+            <Card padding="none">
+              <div className="pol-field" data-first>
+                <SettingsRow
+                  label="Output"
+                  control={
+                    <Select
+                      inputSize="sm"
+                      value={outputMode}
+                      onChange={(e) =>
+                        setOutputMode(
+                          e.target.value as "new_file" | "new_version",
+                        )
+                      }
+                      aria-label="Output mode"
+                      options={[
+                        { value: "new_file", label: "New file" },
+                        { value: "new_version", label: "New version" },
+                      ]}
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-field">
+                <SettingsRow
+                  label="Output name"
+                  control={
+                    <Input
+                      inputSize="sm"
+                      value={outputName}
+                      onChange={(e) => setOutputName(e.target.value)}
+                      placeholder="optional"
+                      aria-label="Output name"
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-field">
+                <SettingsRow
+                  label="Name position"
+                  control={
+                    <Select
+                      inputSize="sm"
+                      value={outputNamePosition}
+                      onChange={(e) =>
+                        setOutputNamePosition(
+                          e.target.value as
+                            | "prefix"
+                            | "suffix"
+                            | "auto-number",
+                        )
+                      }
+                      aria-label="Name position"
+                      options={[
+                        { value: "prefix", label: "Prefix" },
+                        { value: "suffix", label: "Suffix" },
+                        { value: "auto-number", label: "Auto-number" },
+                      ]}
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-field">
+                <SettingsRow
+                  label="Max retries"
+                  control={
+                    <Input
+                      type="number"
+                      inputSize="sm"
+                      value={String(maxRetries)}
+                      onChange={(e) =>
+                        setMaxRetries(Math.max(0, Number(e.target.value) || 0))
+                      }
+                      aria-label="Max retries"
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-field">
+                <SettingsRow
+                  label="Retry delay (min)"
+                  control={
+                    <Input
+                      type="number"
+                      inputSize="sm"
+                      value={String(retryDelayMinutes)}
+                      onChange={(e) =>
+                        setRetryDelayMinutes(
+                          Math.max(0, Number(e.target.value) || 0),
+                        )
+                      }
+                      aria-label="Retry delay minutes"
+                    />
+                  }
+                />
+              </div>
             </Card>
           </>
         )}
