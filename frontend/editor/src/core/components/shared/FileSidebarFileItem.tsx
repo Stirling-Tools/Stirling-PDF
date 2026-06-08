@@ -1,61 +1,14 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { useFileManagement } from "@app/contexts/FileContext";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
 import "@app/components/shared/FileSidebarFileItem.css";
-
-const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
-
-/** Generate + persist a thumbnail for a sidebar file that doesn't have one yet. */
-function useLazyThumbnail(
-  fileId: FileId,
-  size: number,
-  thumbnailUrl?: string,
-): string | undefined {
-  const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
-  const attempted = useRef(false);
-  const indexedDB = useIndexedDB();
-  const { updateStirlingFileStub } = useFileManagement();
-
-  // Sync prop changes (e.g. thumbnail arrives after TTL bump)
-  useEffect(() => {
-    if (thumbnailUrl) setThumb(thumbnailUrl);
-  }, [thumbnailUrl]);
-
-  useEffect(() => {
-    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT)
-      return;
-    attempted.current = true;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const file = await indexedDB.loadFile(fileId);
-        if (!file || cancelled) return;
-        const thumbnail = await generateThumbnailForFile(file);
-        if (cancelled || !thumbnail) return;
-        setThumb(thumbnail);
-        void indexedDB.updateThumbnail(fileId, thumbnail);
-        updateStirlingFileStub(fileId, { thumbnailUrl: thumbnail });
-      } catch {
-        // non-critical
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
-
-  return thumb;
-}
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -189,6 +142,7 @@ export function FileItem({
   onClick,
   onEyeClick,
 }: FileItemProps) {
+  const { t } = useTranslation();
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
@@ -263,7 +217,11 @@ export function FileItem({
           }}
           tabIndex={-1}
           type="button"
-          aria-label={isViewedInViewer ? "Close viewer" : "Open in viewer"}
+          aria-label={
+            isViewedInViewer
+              ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
+              : t("fileSidebar.fileItem.openInViewer", "Open in viewer")
+          }
         >
           <VisibilityOutlinedIcon
             className="file-sidebar-eye-open"

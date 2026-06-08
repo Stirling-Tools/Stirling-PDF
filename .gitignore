@@ -23,6 +23,10 @@ customFiles/
 configs/
 watchedFolders/
 clientWebUI/
+# Scratch dir used by local fixture-regeneration runs (see
+# app/proprietary/src/test/resources/db-migration-fixtures/README.md).
+# Holds downloaded JARs and disposable workdirs. Never committed.
+.alpha-local/
 !cucumber/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
@@ -53,6 +57,8 @@ app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/pdfium/
 app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
+app/core/src/main/resources/static/**/*.gz
+app/core/src/main/resources/static/**/*.br
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
@@ -174,7 +180,6 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
-!.env.saas.example
 
 # VS Code
 /.vscode/**/*
@@ -209,7 +214,7 @@ out/
 *.asc
 
 # Allow test fixture certificates (synthetic, no real credentials)
-!frontend/src/core/tests/test-fixtures/certs/**
+!frontend/editor/src/core/tests/test-fixtures/certs/**
 
 # SSH Keys
 *.pub
@@ -251,7 +256,7 @@ node_modules/
 *compact*.json
 test_batch.json
 *.backup.*.json
-frontend/public/locales/*/translation.backup*.json
+frontend/editor/public/locales/*/translation.backup*.json
 
 # Development/build artifacts
 .gradle-cache/
@@ -274,3 +279,6 @@ docs/type3/signatures/
 # Playwright MCP screenshots / traces
 .playwright-mcp/
 *.playwright-mcp.png
+
+# Local screenshot artifacts from *-screenshots.spec.ts
+frontend/editor/screenshots/

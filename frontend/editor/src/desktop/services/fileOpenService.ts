@@ -7,6 +7,11 @@ export interface FileOpenService {
   ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
   clearOpenedFiles(): Promise<void>;
   onFileOpened(callback: (filePath: string) => void): () => void; // Returns unlisten function
+  openInNewWindow(paths?: string[]): Promise<void>;
+  /** Open already-stored files (by IndexedDB id) in a new window. */
+  openFilesInNewWindow(fileIds: string[]): Promise<void>;
+  /** Pop the stored-file ids queued for the current window (consumed on mount). */
+  popWindowFileIds(): Promise<string[]>;
 }
 
 class TauriFileOpenService implements FileOpenService {
@@ -51,6 +56,35 @@ class TauriFileOpenService implements FileOpenService {
       console.log("✅ Successfully cleared opened files");
     } catch (error) {
       console.error("❌ Failed to clear opened files:", error);
+    }
+  }
+
+  async openInNewWindow(paths: string[] = []): Promise<void> {
+    try {
+      const label = await invoke<string>("open_in_new_window", { paths });
+      console.log(`🪟 Spawned new window: ${label}`);
+    } catch (error) {
+      console.error("❌ Failed to open in new window:", error);
+    }
+  }
+
+  async openFilesInNewWindow(fileIds: string[]): Promise<void> {
+    try {
+      const label = await invoke<string>("open_files_in_new_window", {
+        fileIds,
+      });
+      console.log(`🪟 Spawned new window ${label} for stored files:`, fileIds);
+    } catch (error) {
+      console.error("❌ Failed to open files in new window:", error);
+    }
+  }
+
+  async popWindowFileIds(): Promise<string[]> {
+    try {
+      return await invoke<string[]>("pop_window_file_ids");
+    } catch (error) {
+      console.error("❌ Failed to pop window file ids:", error);
+      return [];
     }
   }
 
@@ -139,6 +173,18 @@ class WebFileOpenService implements FileOpenService {
     return () => {
       // No-op cleanup for web mode
     };
+  }
+
+  async openInNewWindow(_paths: string[] = []): Promise<void> {
+    // Multi-window isn't a thing in browser mode.
+  }
+
+  async openFilesInNewWindow(_fileIds: string[]): Promise<void> {
+    // Multi-window isn't a thing in browser mode.
+  }
+
+  async popWindowFileIds(): Promise<string[]> {
+    return [];
   }
 }
 

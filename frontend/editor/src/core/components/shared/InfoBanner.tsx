@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { Paper, Group, Text, Button, ActionIcon, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
 type InfoBannerTone = "info" | "warning";
@@ -31,7 +32,11 @@ const toneStyles: Record<
 };
 
 interface InfoBannerProps {
-  icon: string;
+  /**
+   * Either a LocalIcon name (string) for the standard sized icon slot, or a
+   * pre-rendered ReactNode (e.g. a logo image) which is dropped in as-is.
+   */
+  icon?: string | ReactNode;
   title?: ReactNode;
   message: ReactNode;
   buttonText?: string;
@@ -48,6 +53,8 @@ interface InfoBannerProps {
   iconColor?: string;
   buttonColor?: string;
   buttonVariant?: "light" | "filled" | "white" | "outline" | "subtle";
+  /** Override the button label colour (for dark/custom theme variants). */
+  buttonTextColor?: string;
   minHeight?: number | string;
   closeIconColor?: string;
   compact?: boolean;
@@ -74,10 +81,12 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   iconColor,
   buttonColor,
   buttonVariant = "light",
+  buttonTextColor,
   minHeight = 56,
   closeIconColor,
   compact = false,
 }) => {
+  const { t } = useTranslation();
   if (!show) {
     return null;
   }
@@ -120,12 +129,21 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
           wrap="nowrap"
           style={{ flex: 1, minWidth: 0 }}
         >
-          <LocalIcon
-            icon={icon}
-            width={iconSize}
-            height={iconSize}
-            style={{ color: iconColor ?? toneStyle.icon, flexShrink: 0 }}
-          />
+          {icon != null &&
+            (typeof icon === "string" ? (
+              <LocalIcon
+                icon={icon}
+                width={iconSize}
+                height={iconSize}
+                style={{ color: iconColor ?? toneStyle.icon, flexShrink: 0 }}
+              />
+            ) : (
+              <div
+                style={{ flexShrink: 0, display: "flex", alignItems: "center" }}
+              >
+                {icon}
+              </div>
+            ))}
           <Stack gap={compact ? 1 : 2} style={{ flex: 1, minWidth: 0 }}>
             {title && (
               <Text
@@ -161,6 +179,11 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
                   height={compact ? "0.75rem" : "0.9rem"}
                 />
               }
+              styles={
+                buttonTextColor
+                  ? { label: { color: buttonTextColor } }
+                  : undefined
+              }
             >
               {buttonText}
             </Button>
@@ -171,7 +194,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               color={closeIconColor ? undefined : "gray"}
               size="sm"
               onClick={handleDismiss}
-              aria-label="Dismiss"
+              aria-label={t("infoBanner.dismiss", "Dismiss")}
               style={closeIconColor ? { color: closeIconColor } : undefined}
             >
               <LocalIcon

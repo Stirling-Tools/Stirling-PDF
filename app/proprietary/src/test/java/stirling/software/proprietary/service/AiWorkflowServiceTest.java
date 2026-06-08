@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -56,6 +57,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.policy.engine.PolicyExecutor;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -106,18 +108,22 @@ class AiWorkflowServiceTest {
                 .when(fileIdStrategy.idFor(any(MultipartFile.class)))
                 .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
+        PolicyExecutor policyExecutor =
+                new PolicyExecutor(
+                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
         service =
                 new AiWorkflowService(
                         pdfDocumentFactory,
                         aiEngineClient,
                         pdfContentExtractor,
                         objectMapper,
-                        internalApiClient,
                         fileStorage,
-                        toolMetadataService,
                         tempFileManager,
                         fileIdStrategy,
-                        endpointResolver);
+                        endpointResolver,
+                        policyExecutor,
+                        null,
+                        new ApplicationProperties());
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 
@@ -479,18 +485,20 @@ class AiWorkflowServiceTest {
                                         {"outcome":"answer","answer":"done","evidence":[]}
                                         """;
                             }
-                            Consumer<String> consumer = inv.getArgument(2);
+                            Consumer<String> consumer = inv.getArgument(3);
                             consumer.accept(wrapAsResultEvent(responseJson));
                             return null;
                         })
                 .when(aiEngineClient)
-                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString());
-        verify(aiEngineClient, times(2)).streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+        verify(aiEngineClient, times(1))
+                .postLongRunning(eq("/api/v1/documents"), anyString(), nullable(String.class));
+        verify(aiEngineClient, times(2))
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
     }
 
     // --- helpers ---
@@ -498,12 +506,12 @@ class AiWorkflowServiceTest {
     private void stubOrchestrator(String responseJson) throws IOException {
         doAnswer(
                         inv -> {
-                            Consumer<String> consumer = inv.getArgument(2);
+                            Consumer<String> consumer = inv.getArgument(3);
                             consumer.accept(wrapAsResultEvent(responseJson));
                             return null;
                         })
                 .when(aiEngineClient)
-                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
     }
 
     /**

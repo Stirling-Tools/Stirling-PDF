@@ -109,6 +109,7 @@ describe("Login", () => {
     vi.mocked(useAuth).mockReturnValue({
       session: null,
       user: null,
+      displayName: null,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -155,6 +156,7 @@ describe("Login", () => {
     vi.mocked(useAuth).mockReturnValue({
       session: mockSession,
       user: mockSession.user,
+      displayName: mockSession.user.username,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -178,6 +180,7 @@ describe("Login", () => {
     vi.mocked(useAuth).mockReturnValue({
       session: null,
       user: null,
+      displayName: null,
       loading: true,
       error: null,
       signOut: vi.fn(),

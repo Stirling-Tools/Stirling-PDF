@@ -5,6 +5,8 @@ repositories {
 
 ext {
     jwtVersion = '0.13.0'
+    awsSdkVersion = '2.44.12'
+    testcontainersMinioVersion = '1.21.4'
 }
 
 bootRun {
@@ -53,8 +55,13 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.18.0'
+    implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
+    // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
+    // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
+    // boundary doubling).
+    implementation 'com.bucket4j:bucket4j_jdk17-lettuce:8.19.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
@@ -71,6 +78,16 @@ dependencies {
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
+
+    implementation "software.amazon.awssdk:s3:$awsSdkVersion"
+    implementation "software.amazon.awssdk:url-connection-client:$awsSdkVersion"
+
+    // Testcontainers: real MinIO/LocalStack (S3) and Valkey for integration tests in CI without
+    // manually-started instances. Tests skip cleanly when Docker is unavailable.
+    testImplementation "org.testcontainers:testcontainers:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:minio:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:localstack:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:junit-jupiter:$testcontainersMinioVersion"
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

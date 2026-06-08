@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -29,7 +31,44 @@ from stirling.api.routes import (
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
+from stirling.documents import DocumentService
 from stirling.services import build_runtime, setup_posthog_tracking
+
+logger = logging.getLogger(__name__)
+
+
+async def _run_expired_doc_reaper(
+    documents: DocumentService,
+    interval_seconds: int,
+) -> None:
+    """Periodically delete documents whose ``expires_at`` has passed.
+
+    A reaped collection drops everything rooted at that document. Backstop
+    for the explicit logout purge: catches sessions that ended without a
+    clean logout (tab close, JWT expiry, engine restart). Persistent rows
+    (``expires_at`` null, the shape we use for org-shared docs) are never
+    touched. Runs until cancelled by the lifespan teardown.
+    """
+    await _reap(documents)
+    while True:
+        await asyncio.sleep(interval_seconds)
+        await _reap(documents)
+
+
+async def _reap(documents: DocumentService) -> None:
+    """One reaper iteration. Logs the deleted count on success and the full
+    exception with traceback on failure; never re-raises non-cancel errors so
+    a bad iteration doesn't kill the loop. ``asyncio.CancelledError`` is
+    re-raised so the lifespan teardown can cancel the task cleanly.
+    """
+    try:
+        deleted = await documents.reap_expired()
+        if deleted:
+            logger.info("Reaped %d expired document collection(s)", deleted)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.exception("Document reaper iteration failed; will retry on next interval")
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -56,7 +95,19 @@ async def lifespan(fast_api: FastAPI):
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
+    reaper_task = asyncio.create_task(
+        _run_expired_doc_reaper(
+            runtime.documents,
+            interval_seconds=settings.documents_reaper_interval_seconds,
+        ),
+        name="expired-document-reaper",
+    )
     yield
+    reaper_task.cancel()
+    try:
+        await reaper_task
+    except asyncio.CancelledError:
+        pass
     await runtime.documents.close()
     if tracer_provider:
         tracer_provider.shutdown()

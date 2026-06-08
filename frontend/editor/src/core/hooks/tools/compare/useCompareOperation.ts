@@ -609,24 +609,34 @@ export const useCompareOperation = (): CompareOperationHook => {
       } catch (error: unknown) {
         console.error("[compare] operation failed", error);
         const errorCode = getWorkerErrorCode(error);
+        let resolvedMessage: string;
         if (errorCode === "EMPTY_TEXT") {
-          setErrorMessage(
+          resolvedMessage =
             warningMessages.emptyTextMessage ??
-              t("compare.error.generic", "Unable to compare these files."),
-          );
+            t("compare.error.generic", "Unable to compare these files.");
         } else {
           const fallbackMessage = t(
             "compare.error.generic",
             "Unable to compare these files.",
           );
           if (error instanceof Error && error.message) {
-            setErrorMessage(error.message);
+            resolvedMessage = error.message;
           } else if (typeof error === "string" && error.trim().length > 0) {
-            setErrorMessage(error);
+            resolvedMessage = error;
           } else {
-            setErrorMessage(fallbackMessage);
+            resolvedMessage = fallbackMessage;
           }
         }
+        setErrorMessage(resolvedMessage);
+        setStatusState("error");
+        // Surface the failure to the user. Without this, the error only goes
+        // to the console and the custom workbench just keeps spinning.
+        alert({
+          alertType: "warning",
+          title: t("compare.error.title", "Comparison failed"),
+          body: resolvedMessage,
+          location: "bottom-right" as ToastLocation,
+        });
       } finally {
         const duration = performance.now() - operationStart;
         setStatusDetailMs(Math.round(duration));
@@ -696,7 +706,9 @@ export const useCompareOperation = (): CompareOperationHook => {
               ? t("compare.status.complete", "Comparison ready")
               : statusState === "cancelled"
                 ? t("operationCancelled", "Operation cancelled")
-                : "";
+                : statusState === "error"
+                  ? t("compare.status.error", "Comparison failed")
+                  : "";
     if (label && statusDetailMs != null)
       return `${label} (${statusDetailMs} ms)`;
     return label;

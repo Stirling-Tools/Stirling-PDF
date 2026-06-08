@@ -30,8 +30,10 @@ import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import AppConfigLoader from "@app/components/shared/AppConfigLoader";
+import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
+import { FolderProvider } from "@app/contexts/FolderContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -121,43 +123,48 @@ export function AppProviders({
               <ScarfTrackingInitializer />
               <AppConfigLoader />
               <ServerDefaultsSync />
+              {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+                  No-ops inside Tauri — the desktop popup handles that flow. */}
+              <UpdateStartupPopup />
               <FileContextProvider
                 enableUrlSync={true}
                 enablePersistence={true}
               >
-                <AppInitializer />
-                <BrandingAssetManager />
-                <ToolRegistryProvider>
-                  <NavigationProvider>
-                    <FilesModalProvider>
-                      <ToolWorkflowProvider>
-                        <HotkeyProvider>
-                          <SidebarProvider>
-                            <ViewerProvider>
-                              <PageEditorProvider>
-                                <SignatureProvider>
-                                  <RedactionProvider>
-                                    <FormFillProvider>
-                                      <AnnotationProvider>
-                                        <WorkbenchBarProvider>
-                                          <TourOrchestrationProvider>
-                                            <AdminTourOrchestrationProvider>
-                                              {children}
-                                            </AdminTourOrchestrationProvider>
-                                          </TourOrchestrationProvider>
-                                        </WorkbenchBarProvider>
-                                      </AnnotationProvider>
-                                    </FormFillProvider>
-                                  </RedactionProvider>
-                                </SignatureProvider>
-                              </PageEditorProvider>
-                            </ViewerProvider>
-                          </SidebarProvider>
-                        </HotkeyProvider>
-                      </ToolWorkflowProvider>
-                    </FilesModalProvider>
-                  </NavigationProvider>
-                </ToolRegistryProvider>
+                <FolderProvider>
+                  <AppInitializer />
+                  <BrandingAssetManager />
+                  <ToolRegistryProvider>
+                    <NavigationProvider>
+                      <FilesModalProvider>
+                        <ToolWorkflowProvider>
+                          <HotkeyProvider>
+                            <SidebarProvider>
+                              <ViewerProvider>
+                                <PageEditorProvider>
+                                  <SignatureProvider>
+                                    <RedactionProvider>
+                                      <FormFillProvider>
+                                        <AnnotationProvider>
+                                          <WorkbenchBarProvider>
+                                            <TourOrchestrationProvider>
+                                              <AdminTourOrchestrationProvider>
+                                                {children}
+                                              </AdminTourOrchestrationProvider>
+                                            </TourOrchestrationProvider>
+                                          </WorkbenchBarProvider>
+                                        </AnnotationProvider>
+                                      </FormFillProvider>
+                                    </RedactionProvider>
+                                  </SignatureProvider>
+                                </PageEditorProvider>
+                              </ViewerProvider>
+                            </SidebarProvider>
+                          </HotkeyProvider>
+                        </ToolWorkflowProvider>
+                      </FilesModalProvider>
+                    </NavigationProvider>
+                  </ToolRegistryProvider>
+                </FolderProvider>
               </FileContextProvider>
             </AppConfigProvider>
           </BannerProvider>
