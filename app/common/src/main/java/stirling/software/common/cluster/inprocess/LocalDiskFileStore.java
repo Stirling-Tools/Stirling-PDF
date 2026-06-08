@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,10 +20,26 @@ public class LocalDiskFileStore implements FileStore {
 
     private static final String OWNER_SUFFIX = ".owner";
 
+    // File ids are generated as random UUIDs; reject anything else so a tainted id can never reach
+    // Files.* APIs (defence in depth on top of the resolve() prefix check, and silences CodeQL's
+    // path-injection finding on the resolveOwner sidecar lookup).
+    private static final Pattern UUID_PATTERN =
+            Pattern.compile(
+                    "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+
     private final String baseDirPath;
+    // Fixed-size lock stripes so concurrent store/delete on the same (or colliding) fileId
+    // serialise the data-file + owner-sidecar pair as one critical section. Striped (not
+    // per-id) so the map never has to be cleaned up; collisions across unrelated ids are
+    // harmless contention.
+    private static final int LOCK_STRIPES = 64;
+    private final ReentrantLock[] stripes = new ReentrantLock[LOCK_STRIPES];
 
     public LocalDiskFileStore(String baseDirPath) {
         this.baseDirPath = baseDirPath;
+        for (int i = 0; i < LOCK_STRIPES; i++) {
+            stripes[i] = new ReentrantLock();
+        }
     }
 
     @Override
@@ -29,6 +47,7 @@ public class LocalDiskFileStore implements FileStore {
         String fileId = UUID.randomUUID().toString();
         Path filePath = resolve(fileId);
         Files.createDirectories(filePath.getParent());
+        ReentrantLock lock = acquire(fileId);
         boolean success = false;
         try {
             long size = Files.copy(in, filePath);
@@ -39,6 +58,7 @@ public class LocalDiskFileStore implements FileStore {
             if (!success) {
                 cleanupAfterFailedStore(fileId, filePath);
             }
+            release(fileId, lock);
         }
     }
 
@@ -54,6 +74,7 @@ public class LocalDiskFileStore implements FileStore {
         Path filePath = resolve(fileId);
         Files.createDirectories(filePath.getParent());
         long size = Files.size(source);
+        ReentrantLock lock = acquire(fileId);
         boolean success = false;
         try {
             Files.copy(source, filePath);
@@ -64,6 +85,7 @@ public class LocalDiskFileStore implements FileStore {
             if (!success) {
                 cleanupAfterFailedStore(fileId, filePath);
             }
+            release(fileId, lock);
         }
     }
 
@@ -113,19 +135,27 @@ public class LocalDiskFileStore implements FileStore {
 
     @Override
     public boolean delete(String fileId) {
-        boolean removed;
+        ReentrantLock lock = acquire(fileId);
         try {
-            removed = Files.deleteIfExists(resolve(fileId));
-        } catch (IOException e) {
-            log.error("Error deleting file with ID: {}", fileId, e);
-            return false;
+            // Data first, owner second: a concurrent retrieve that observes the transient
+            // (data-gone, owner-still-present) window simply fails with IOException; the inverse
+            // order would briefly look like an unowned file and could grant cross-user access.
+            boolean removed;
+            try {
+                removed = Files.deleteIfExists(resolve(fileId));
+            } catch (IOException e) {
+                log.error("Error deleting file with ID: {}", fileId, e);
+                return false;
+            }
+            try {
+                Files.deleteIfExists(resolveOwner(fileId));
+            } catch (IOException e) {
+                log.warn("Error deleting owner sidecar for file ID: {}", fileId, e);
+            }
+            return removed;
+        } finally {
+            release(fileId, lock);
         }
-        try {
-            Files.deleteIfExists(resolveOwner(fileId));
-        } catch (IOException e) {
-            log.warn("Error deleting owner sidecar for file ID: {}", fileId, e);
-        }
-        return removed;
     }
 
     @Override
@@ -147,7 +177,7 @@ public class LocalDiskFileStore implements FileStore {
     }
 
     public Path resolve(String fileId) {
-        if (fileId.contains(".") || fileId.contains("/") || fileId.contains("\\")) {
+        if (fileId == null || !UUID_PATTERN.matcher(fileId).matches()) {
             throw new IllegalArgumentException("Invalid file ID");
         }
         Path basePath = Path.of(baseDirPath).normalize().toAbsolutePath();
@@ -161,5 +191,15 @@ public class LocalDiskFileStore implements FileStore {
     private Path resolveOwner(String fileId) {
         Path data = resolve(fileId);
         return data.resolveSibling(data.getFileName().toString() + OWNER_SUFFIX);
+    }
+
+    private ReentrantLock acquire(String fileId) {
+        ReentrantLock lock = stripes[(fileId.hashCode() & Integer.MAX_VALUE) % LOCK_STRIPES];
+        lock.lock();
+        return lock;
+    }
+
+    private void release(String fileId, ReentrantLock lock) {
+        lock.unlock();
     }
 }

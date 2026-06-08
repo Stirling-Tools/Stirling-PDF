@@ -120,6 +120,11 @@ public class McpSecurityConfig {
     private SecurityFilterChain apiKeyFilterChain(HttpSecurity http) throws Exception {
         applyCors(http);
         http.securityMatcher(BASE_PATH, BASE_PATH + "/**")
+                // CSRF intentionally disabled: /mcp is a stateless JSON-RPC API authenticated by an
+                // out-of-band X-API-KEY header (or Authorization: Bearer <key>). No cookies, no
+                // session, no form submissions; a browser cannot trick a victim into sending the
+                // header cross-origin, so the CSRF attack model does not apply. CodeQL flags this
+                // generically; the SessionCreationPolicy.STATELESS below is the relevant guarantee.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a.anyRequest().authenticated())
@@ -153,6 +158,12 @@ public class McpSecurityConfig {
         String metadataPath = "/.well-known/oauth-protected-resource";
         applyCors(http);
         http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath)
+                // CSRF intentionally disabled: /mcp is a stateless JSON-RPC resource server
+                // authenticated by OAuth2 Bearer JWTs (Authorization header). No cookies, no
+                // session, no form submissions; CSRF requires browser-attached ambient credentials
+                // and the bearer token is supplied per-request by the MCP client. CodeQL flags
+                // this generically; the SessionCreationPolicy.STATELESS below is the actual
+                // guarantee, and the .well-known metadata endpoint only serves GET.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(

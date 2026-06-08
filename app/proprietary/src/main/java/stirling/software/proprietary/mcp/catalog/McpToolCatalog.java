@@ -53,7 +53,12 @@ public class McpToolCatalog {
 
     // Concurrent: written on the boot thread, read on request threads, AI map replaced at runtime.
     private final Map<String, OperationMeta> pdfOps = new ConcurrentHashMap<>();
-    private final Map<String, OperationMeta> aiOps = new ConcurrentHashMap<>();
+
+    // Engine-driven AI capabilities. Replaced wholesale by the scheduled refresh task on a
+    // background thread while request threads read via findByOperationId/enabledOps. The volatile
+    // reference makes the swap publication-safe; readers either see the old or the new snapshot,
+    // never a partially-merged one.
+    private volatile Map<String, OperationMeta> aiOps = new ConcurrentHashMap<>();
 
     public McpToolCatalog(
             ApplicationContext applicationContext,
@@ -206,9 +211,13 @@ public class McpToolCatalog {
 
     /** Replace the AI capabilities snapshot. Called by the engine refresh task. */
     public void replaceAiCapabilities(Map<String, OperationMeta> updated) {
-        aiOps.putAll(updated);
-        aiOps.keySet().retainAll(updated.keySet());
-        log.info("MCP tool catalog AI capabilities replaced: {} entries", aiOps.size());
+        // Build a fresh map then swap atomically via the volatile reference. The previous
+        // implementation did putAll-then-retainAll on a shared ConcurrentHashMap, which left a
+        // transient window where readers could observe stale entries that should have been
+        // removed (race between the two structural updates).
+        Map<String, OperationMeta> next = new ConcurrentHashMap<>(updated);
+        this.aiOps = next;
+        log.info("MCP tool catalog AI capabilities replaced: {} entries", next.size());
     }
 
     /** Only POST/PUT endpoints are exposed as tools; DELETE and GET are excluded. */

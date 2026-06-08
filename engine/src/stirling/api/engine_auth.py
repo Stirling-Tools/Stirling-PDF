@@ -1,15 +1,15 @@
 """
 Shared-secret middleware that locks the engine to the trusted Java backend.
 
-Config: STIRLING_ENGINE_SHARED_SECRET (non-public routes need X-Engine-Auth or 401) and
-STIRLING_ENGINE_REQUIRE_AUTH (fail closed with 503 when truthy and no secret is set).
+Config (resolved via :class:`stirling.config.AppSettings`/pydantic-settings):
+``STIRLING_ENGINE_SHARED_SECRET`` - non-public routes need ``X-Engine-Auth`` or 401.
+``STIRLING_ENGINE_REQUIRE_AUTH``  - fail closed with 503 when truthy and no secret is set.
 """
 
 from __future__ import annotations
 
 import hmac
 import logging
-import os
 from collections.abc import Iterable
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -17,10 +17,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp
 
+from stirling.config import load_settings
+
 logger = logging.getLogger(__name__)
 
-_ENV_VAR = "STIRLING_ENGINE_SHARED_SECRET"
-_REQUIRE_ENV = "STIRLING_ENGINE_REQUIRE_AUTH"
 _HEADER = "X-Engine-Auth"
 
 # Public paths (liveness + docs); everything else needs the secret when configured.
@@ -31,25 +31,35 @@ _PUBLIC_PREFIXES: tuple[str, ...] = (
     "/openapi.json",
 )
 
-_TRUTHY = {"1", "true", "yes", "on"}
-
-
-def _is_truthy(value: str | None) -> bool:
-    return value is not None and value.strip().lower() in _TRUTHY
-
 
 class EngineSharedSecretMiddleware(BaseHTTPMiddleware):
     """Reject non-public requests lacking the shared secret.
 
     Non-public path: secret set -> require matching X-Engine-Auth (else 401); else require flag
     truthy -> 503 (fail-closed); else allow through.
+
+    Secret/require values come from :class:`stirling.config.AppSettings` by default; tests can
+    pass them explicitly to avoid touching the lru-cached settings.
     """
 
-    def __init__(self, app: ASGIApp, public_prefixes: Iterable[str] = _PUBLIC_PREFIXES) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        public_prefixes: Iterable[str] = _PUBLIC_PREFIXES,
+        *,
+        secret: str | None = None,
+        require: bool | None = None,
+    ) -> None:
         super().__init__(app)
         self._public_prefixes = tuple(public_prefixes)
-        self._secret = os.getenv(_ENV_VAR)
-        self._require = _is_truthy(os.getenv(_REQUIRE_ENV))
+        if secret is None or require is None:
+            settings = load_settings()
+            if secret is None:
+                secret = settings.engine_shared_secret
+            if require is None:
+                require = settings.engine_require_auth
+        self._secret = secret or ""
+        self._require = bool(require)
         if self._secret:
             logger.info(
                 "Engine shared-secret enforcement ENABLED: non-public routes require a valid %s"
@@ -58,18 +68,16 @@ class EngineSharedSecretMiddleware(BaseHTTPMiddleware):
             )
         elif self._require:
             logger.error(
-                "%s is enabled but %s is not set - the engine will REFUSE every non-public request"
-                " (HTTP 503, fail-closed) until a shared secret is configured.",
-                _REQUIRE_ENV,
-                _ENV_VAR,
+                "STIRLING_ENGINE_REQUIRE_AUTH is enabled but STIRLING_ENGINE_SHARED_SECRET is not"
+                " set - the engine will REFUSE every non-public request (HTTP 503, fail-closed)"
+                " until a shared secret is configured.",
             )
         else:
             logger.warning(
-                "%s not set - engine shared-secret enforcement is DISABLED. The AI and document"
-                " routes then trust the caller-supplied X-User-Id header alone. Set this secret"
-                " (and %s=true) in any deployment that exposes the engine beyond localhost.",
-                _ENV_VAR,
-                _REQUIRE_ENV,
+                "STIRLING_ENGINE_SHARED_SECRET not set - engine shared-secret enforcement is"
+                " DISABLED. The AI and document routes then trust the caller-supplied X-User-Id"
+                " header alone. Set this secret (and STIRLING_ENGINE_REQUIRE_AUTH=true) in any"
+                " deployment that exposes the engine beyond localhost.",
             )
 
     def _is_public(self, path: str) -> bool:
