@@ -465,25 +465,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].role`, message.role);
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
-        if (documentStyle?.primaryColor) {
-          formData.append(
-            "documentStyle.primaryColor",
-            documentStyle.primaryColor,
-          );
-        }
-        if (documentStyle?.backgroundColor) {
-          formData.append(
-            "documentStyle.backgroundColor",
-            documentStyle.backgroundColor,
-          );
-        }
-        if (documentStyle?.bodyTextColor) {
-          formData.append(
-            "documentStyle.bodyTextColor",
-            documentStyle.bodyTextColor,
-          );
-        }
-
         const response = await fetch("/api/v1/ai/orchestrate/stream", {
           method: "POST",
           body: formData,
