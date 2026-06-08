@@ -90,8 +90,7 @@ public class RuntimePathConfig {
         boolean isDocker = isRunningInDocker();
 
         // Initialize Operation paths
-        String defaultWeasyPrintPath =
-                isDocker ? "/opt/venv/bin/weasyprint" : resolveWeasyPrintDevPath();
+        String defaultWeasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
         String defaultUnoConvertPath = isDocker ? "/usr/local/bin/unoconvert" : "unoconvert";
         String defaultCalibrePath = isDocker ? "/opt/calibre/ebook-convert" : "ebook-convert";
         String defaultOcrMyPdfPath = isDocker ? "/opt/venv/bin/ocrmypdf" : "ocrmypdf";
@@ -139,25 +138,6 @@ public class RuntimePathConfig {
         }
         this.unoServerEndpoints = buildUnoServerEndpoints(processExecutor, libreOfficeLimit);
         ProcessExecutor.setUnoServerPool(new UnoServerPool(this.unoServerEndpoints));
-    }
-
-    /**
-     * Resolves the WeasyPrint binary path for non-Docker (dev) environments. Checks known Homebrew
-     * install locations on macOS before falling back to plain {@code weasyprint} on PATH, so that
-     * {@code brew install weasyprint} works without any manual configuration.
-     */
-    private static String resolveWeasyPrintDevPath() {
-        String[] candidates = {
-            "/opt/homebrew/bin/weasyprint", // macOS Apple Silicon (Homebrew)
-            "/usr/local/bin/weasyprint", // macOS Intel / pip install
-            "/usr/bin/weasyprint", // Linux system package (apt/dnf/pacman)
-        };
-        for (String candidate : candidates) {
-            if (Files.exists(Paths.get(candidate))) {
-                return candidate;
-            }
-        }
-        return "weasyprint";
     }
 
     private String resolvePath(String defaultPath, String customPath) {
