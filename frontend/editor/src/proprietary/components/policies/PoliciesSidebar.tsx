@@ -311,7 +311,11 @@ export function PolicyDetailTakeover() {
         }
         canConfigure={pol.canConfigure}
         onBack={() => closePolicy()}
-        onEditSettings={() => setEditing(true)}
+        onEditSettings={() => {
+          // Seeded/active policies may have no backing folder yet — create one
+          // from the preset so there's a pipeline to edit, then open the modal.
+          void pol.ensurePolicyFolder(selectedId).then(() => setEditing(true));
+        }}
         onTogglePause={() =>
           status === "paused"
             ? pol.resumePolicy(selectedId)

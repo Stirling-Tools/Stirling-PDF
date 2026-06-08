@@ -60,6 +60,17 @@ describe("usePolicies", () => {
     expect(result.current.policies.routing.folderId).toBeUndefined();
   });
 
+  it("ensurePolicyFolder creates a backing folder for a folderless policy", async () => {
+    const { result } = renderHook(() => usePolicies());
+    // The seeded ingestion policy is active but has no backing folder.
+    expect(result.current.policies.ingestion.configured).toBe(true);
+    expect(result.current.policies.ingestion.folderId).toBeUndefined();
+    await act(async () => {
+      await result.current.ensurePolicyFolder("ingestion");
+    });
+    expect(result.current.policies.ingestion.folderId).toBeTruthy();
+  });
+
   it("spend limit is disabled by default (no warning/reached)", () => {
     const { result } = renderHook(() => usePolicies());
     expect(result.current.spendLimitReached).toBe(false);

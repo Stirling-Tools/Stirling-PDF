@@ -88,6 +88,23 @@ export function usePolicies() {
     resetPolicy(id);
   }, []);
 
+  /**
+   * Ensure a configured policy has a backing folder (its editable pipeline),
+   * creating one from the preset if missing — e.g. the seeded policy, which is
+   * active without ever having gone through enable. Returns the folder id.
+   */
+  const ensurePolicyFolder = useCallback(async (id: string) => {
+    const existing = loadPolicies()[id]?.folderId;
+    if (existing) return existing;
+    const catalog = loadPolicyCatalog();
+    const category = catalog.categories.find((c) => c.id === id);
+    const config = catalog.configs[id];
+    if (!category || !config) return undefined;
+    const folder = await createPolicyFolder(category, config.defaultOperations);
+    updatePolicy(id, { folderId: folder.id });
+    return folder.id;
+  }, []);
+
   const canConfigure = useMemo(
     () => canConfigurePolicies(MOCK_POLICY_USER),
     [],
@@ -104,5 +121,6 @@ export function usePolicies() {
     pausePolicy,
     resumePolicy,
     deletePolicy,
+    ensurePolicyFolder,
   };
 }
