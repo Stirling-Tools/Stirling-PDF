@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
-import { PolicySettingsForm } from "@app/components/policies/PolicySettingsForm";
 import { PoliciesSection } from "@app/components/policies/PoliciesSidebar";
 import {
   POLICY_CATEGORIES,
@@ -196,19 +195,6 @@ export const Wizard: Story = {
   ),
 };
 
-/** Edit-settings sub-view for a configured policy. */
-export const Settings: Story = {
-  render: () => (
-    <RailFrame>
-      <PolicySettingsForm
-        category={ingestion}
-        config={POLICY_CONFIG.ingestion}
-        state={activeState}
-        status="active"
-        onCancel={noop}
-        onClose={noop}
-        onSave={noop}
-      />
-    </RailFrame>
-  ),
-};
+// Note: the edit-settings page embeds the Watch Folders automation builder,
+// which needs the ToolWorkflow context — so it's exercised in-app, not via an
+// isolated story here.

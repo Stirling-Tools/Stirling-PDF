@@ -1,44 +1,44 @@
-import { useState } from "react";
+import { useRef } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { PanelHeader } from "@shared/components/PanelHeader";
-import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { StatusBadge } from "@shared/components/StatusBadge";
-import type {
-  PolicyCategory,
-  PolicyConfigDef,
-  PolicyRowStatus,
-  PolicyState,
-} from "@app/types/policies";
-import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
-import { resolveFieldValues } from "@app/components/policies/policyValues";
+import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
+import { AutomationMode } from "@app/types/automation";
+import type { AutomationConfig } from "@app/types/automation";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import type { PolicyCategory, PolicyRowStatus } from "@app/types/policies";
 
 interface PolicySettingsFormProps {
   category: PolicyCategory;
-  config: PolicyConfigDef;
-  state: PolicyState;
   /** Derived display status (treats a spend-limit hit as paused). */
   status: PolicyRowStatus;
+  /** The policy's backing automation — its editable workflow. Null while loading. */
+  automation: AutomationConfig | null;
   /** Back to the policy's detail view. */
   onCancel: () => void;
   /** Close the policy entirely (returns to the list). */
   onClose: () => void;
-  onSave: (fieldValues: Record<string, boolean | string | string[]>) => void;
+  /** Called once the workflow has been saved. */
+  onSaved: () => void;
 }
 
-/** Edit-settings sub-view for an already-configured policy. */
+/**
+ * Edit-settings sub-view: edit the policy's actual workflow inline, reusing the
+ * Watch Folders automation builder ({@link AutomationCreation}). The host drives
+ * save via a trigger ref (the builder's own controls are hidden); on save the
+ * backing automation is updated in place.
+ */
 export function PolicySettingsForm({
   category,
-  config,
-  state,
   status,
+  automation,
   onCancel,
   onClose,
-  onSave,
+  onSaved,
 }: PolicySettingsFormProps) {
-  const [fieldValues, setFieldValues] = useState(() =>
-    resolveFieldValues(config, state),
-  );
+  const { toolRegistry } = useToolWorkflow();
+  const saveTrigger = useRef<(() => void) | null>(null);
   const isPaused = status === "paused";
 
   return (
@@ -69,19 +69,21 @@ export function PolicySettingsForm({
       />
 
       <div className="pol-scroll">
-        <Card padding="none">
-          {config.fields.map((f, i) => (
-            <PolicyFieldRow
-              key={f.key}
-              field={f}
-              value={fieldValues[f.key]}
-              first={i === 0}
-              onChange={(v) =>
-                setFieldValues((prev) => ({ ...prev, [f.key]: v }))
-              }
-            />
-          ))}
-        </Card>
+        <p className="pol-section-label">Workflow</p>
+        {automation ? (
+          <AutomationCreation
+            mode={AutomationMode.EDIT}
+            existingAutomation={automation}
+            toolRegistry={toolRegistry}
+            hideMetadata
+            nameOverride={automation.name}
+            saveTriggerRef={saveTrigger}
+            onBack={onCancel}
+            onComplete={() => onSaved()}
+          />
+        ) : (
+          <p className="pol-desc">Loading workflow…</p>
+        )}
       </div>
 
       <div className="pol-footer pol-footer-end">
@@ -91,7 +93,8 @@ export function PolicySettingsForm({
         <Button
           variant="gradient"
           size="sm"
-          onClick={() => onSave(fieldValues)}
+          disabled={!automation}
+          onClick={() => saveTrigger.current?.()}
         >
           Save Changes
         </Button>
