@@ -246,7 +246,11 @@ export function PolicySetupWizard({
                   <ChipFlow items={config.rules} />
                 </DataRow>
                 <DataRow label="Sources">{sources.length} selected</DataRow>
-                <DataRow label="Reviewer">{reviewerEmail}</DataRow>
+                <DataRow label="Reviewer">
+                  {reviewerEmail || (
+                    <span className="pol-muted">Not set</span>
+                  )}
+                </DataRow>
               </div>
             </Card>
           </>

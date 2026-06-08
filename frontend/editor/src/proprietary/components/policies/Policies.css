@@ -171,6 +171,10 @@
   flex-direction: column;
   gap: var(--space-1_5);
 }
+/* Muted placeholder for an unset summary value (e.g. no reviewer chosen). */
+.pol-muted {
+  color: var(--color-text-4);
+}
 
 /* ---- Enforces rule flow (wraps a SUI ChipFlow) ---- */
 .pol-rule-flow {
