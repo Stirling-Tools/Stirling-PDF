@@ -107,6 +107,8 @@ export function PolicySetupWizard({
     initialFolder?.retryDelayMinutes ?? 5,
   );
   const workflowSave = useRef<(() => void) | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Seed the workflow builder: the backing automation in edit, else a synthetic
   // config carrying the category preset's operations (created on save).
@@ -149,8 +151,8 @@ export function PolicySetupWizard({
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
 
-  // The submit (final step) triggers the workflow builder's save; once it
-  // persists, we hand the saved automation + settings back to the host.
+  // Once the builder persists the workflow, hand the automation + settings to
+  // the host (which closes the wizard on success).
   const handleWorkflowSaved = (automation: AutomationConfig) =>
     onComplete({
       automation,
@@ -166,6 +168,23 @@ export function PolicySetupWizard({
         retryDelayMinutes,
       },
     });
+
+  // Final submit: guard against double-submit (the builder stays mounted, so a
+  // second click would persist twice), then trigger the builder's save.
+  const submit = () => {
+    if (submitting) return;
+    setSaveError(null);
+    setSubmitting(true);
+    workflowSave.current?.();
+  };
+
+  // The builder couldn't save (e.g. no configured tools) — surface it and send
+  // the user back to the Workflow step to fix it.
+  const handleSaveFailed = () => {
+    setSubmitting(false);
+    setSaveError("Add at least one configured tool to the workflow first.");
+    setStep(1);
+  };
 
   return (
     <div className="pol-detail">
@@ -190,6 +209,13 @@ export function PolicySetupWizard({
       </div>
 
       <div className="pol-scroll">
+        {saveError && (
+          <Banner
+            tone="danger"
+            icon={<InfoOutlinedIcon sx={{ fontSize: "1rem" }} />}
+            description={saveError}
+          />
+        )}
         {/* Step 1 — Workflow. Kept mounted (hidden on other steps) so the final
             submit can trigger its save. */}
         <div style={{ display: step === 1 ? undefined : "none" }}>
@@ -201,7 +227,7 @@ export function PolicySetupWizard({
             mode={isEdit ? AutomationMode.EDIT : AutomationMode.SUGGESTED}
             saveTriggerRef={workflowSave}
             onComplete={handleWorkflowSaved}
-            onSaveFailed={() => setStep(1)}
+            onSaveFailed={handleSaveFailed}
           />
         </div>
 
@@ -467,7 +493,8 @@ export function PolicySetupWizard({
             variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
-            onClick={() => workflowSave.current?.()}
+            onClick={submit}
+            disabled={submitting}
           >
             {isEdit ? "Save Changes" : "Enable Policy"}
           </Button>
