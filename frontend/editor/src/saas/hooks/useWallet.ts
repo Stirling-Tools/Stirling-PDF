@@ -167,12 +167,19 @@ export interface UseWalletResult {
     capUnits: number | null,
   ) => Promise<SubCapUpdateResult>;
   /**
-   * Mint a Stripe Customer Portal session and open it in a new tab. Calls
+   * Mint a Stripe Customer Portal session and navigate to it. Calls
    * {@code POST /api/v1/payg/portal-session} (which proxies to a Supabase
-   * edge function) and {@code window.open}s the returned URL. Throws on
-   * backend error so the caller can show a friendly toast — notably 503
+   * edge function) and assigns {@code window.location} to the returned URL
+   * — same-tab redirect, matching the sibling {@code ManageBillingButton}.
+   * We do not use {@code window.open(...,"_blank")} after an {@code await}
+   * because browsers treat it as non-user-gesture and silently popup-block
+   * it; the portal is a full-page experience anyway and Stripe redirects
+   * back to {@code returnUrl} on close. Throws on backend error so the
+   * caller can show a friendly toast — notably 503
    * {@code PORTAL_NOT_CONFIGURED} (Supabase unavailable in local dev) and
-   * 404 (team not yet subscribed).
+   * 404 (team not yet subscribed). The HTTP request passes
+   * {@code suppressErrorToast: true} so the global response interceptor
+   * doesn't show a generic toast on top of the caller's friendly one.
    */
   openPortal: () => Promise<void>;
 }
@@ -450,13 +457,19 @@ export function useWallet(): UseWalletResult {
         await refetch();
         return { effective: capUnits ?? 0, clamped: false };
       }
+      // suppressErrorToast: true — the MemberRow caller shows a friendly
+      // toast on failure; without this the global interceptor's generic
+      // toast would stack on top. Matches the established pattern in
+      // saas/services/userManagementService.ts.
       const res = await apiClient.patch<{
         success: boolean;
         capUnits: number;
         clamped: boolean;
-      }>(`/api/v1/payg/sub-caps/${encodeURIComponent(userId)}`, {
-        capUnits,
-      });
+      }>(
+        `/api/v1/payg/sub-caps/${encodeURIComponent(userId)}`,
+        { capUnits },
+        { suppressErrorToast: true },
+      );
       await refetch();
       return { effective: res.data.capUnits, clamped: res.data.clamped };
     },
@@ -465,19 +478,30 @@ export function useWallet(): UseWalletResult {
 
   const openPortal = useCallback(async () => {
     if (devPreview) {
-      // No real Stripe in dev preview — open a placeholder so the click
-      // still feels alive. Real flow opens the Stripe-hosted session URL.
-      window.open("https://billing.stripe.com/p/login/mock", "_blank", "noopener,noreferrer");
+      // No real Stripe in dev preview — navigate to a placeholder so the
+      // click still feels alive. Same-tab to match the real-flow behaviour.
+      window.location.assign("https://billing.stripe.com/p/login/mock");
       return;
     }
+    // suppressErrorToast: true — the StripePortalLink caller shows a
+    // friendly toast on failure (notably 404 / 503 PORTAL_NOT_CONFIGURED);
+    // without this the global interceptor's generic toast would stack on
+    // top. Matches saas/services/userManagementService.ts pattern.
     const res = await apiClient.post<{ url: string }>(
       "/api/v1/payg/portal-session",
       { returnUrl: window.location.href },
+      { suppressErrorToast: true },
     );
     if (!res.data?.url) {
       throw new Error("Portal session response missing url");
     }
-    window.open(res.data.url, "_blank", "noopener,noreferrer");
+    // Same-tab navigation rather than window.open(...,"_blank"). The
+    // sibling ManageBillingButton uses the same approach: Stripe's
+    // customer portal is a full-page experience and brings the user back
+    // via returnUrl, so a popup buys us nothing — and window.open after
+    // an awaited promise is treated as non-user-gesture and silently
+    // popup-blocked by most browsers.
+    window.location.assign(res.data.url);
   }, [devPreview]);
 
   return {
