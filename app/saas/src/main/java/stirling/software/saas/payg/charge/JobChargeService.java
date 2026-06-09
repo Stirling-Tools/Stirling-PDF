@@ -11,6 +11,8 @@ import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +23,16 @@ import stirling.software.saas.payg.job.JobContext;
 import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
+import stirling.software.saas.payg.meter.PaygMeterReportingService;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
+import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
+import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.ProcessingJobRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 
@@ -55,18 +61,26 @@ public class JobChargeService {
     private final DocumentClassifier classifier;
     private final PaygShadowChargeRepository shadowRepository;
     private final ProcessingJobRepository jobRepository;
+    private final PaygTeamExtensionsRepository teamExtensionsRepository;
+    private final PaygMeterReportingService meterReportingService;
 
     public JobChargeService(
             JobService jobService,
             PricingPolicyService policyService,
             DocumentClassifier classifier,
             PaygShadowChargeRepository shadowRepository,
-            ProcessingJobRepository jobRepository) {
+            ProcessingJobRepository jobRepository,
+            PaygTeamExtensionsRepository teamExtensionsRepository,
+            PaygMeterReportingService meterReportingService) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
         this.shadowRepository = Objects.requireNonNull(shadowRepository, "shadowRepository");
         this.jobRepository = Objects.requireNonNull(jobRepository, "jobRepository");
+        this.teamExtensionsRepository =
+                Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
+        this.meterReportingService =
+                Objects.requireNonNull(meterReportingService, "meterReportingService");
     }
 
     /**
@@ -199,6 +213,105 @@ public class JobChargeService {
             job.setClosedAt(now);
             jobRepository.save(job);
         }
+    }
+
+    /**
+     * Closes a process and — for paid teams — pushes a Stripe meter event for the units captured on
+     * the originating shadow row. Idempotent w.r.t. process state (delegates to {@link
+     * JobService#close(UUID)}, which silently no-ops on an already-closed row).
+     *
+     * <p>The meter POST runs in an {@code afterCommit} hook so we only tell Stripe about work that
+     * actually committed to our ledger (the customer's bill is authoritative — Stripe is the
+     * downstream invoice). A failed POST does not roll back the close; the reconciliation backfill
+     * (separate chunk) is the durability mechanism.
+     *
+     * <p>Skipped paths — no meter event fired:
+     *
+     * <ul>
+     *   <li>{@code BillingCategory.BYPASSED} on the shadow row (manual UI tool — defensive; the
+     *       interceptor never opens a process for these).
+     *   <li>Refunded shadow row (the customer was credited; nothing to bill).
+     *   <li>Team has no {@link PaygTeamExtensions#getStripeCustomerId() stripe_customer_id} (free
+     *       tier; ledger entry suffices).
+     *   <li>No shadow row at all (job opened outside the shadow path, e.g. legacy import).
+     * </ul>
+     */
+    @Transactional
+    public ProcessingJob close(UUID jobId) {
+        Objects.requireNonNull(jobId, "jobId");
+        ProcessingJob closed = jobService.close(jobId);
+
+        // The afterCommit hook only fires if there's an active transaction (Spring's
+        // @Transactional ensures that). If we're called outside one — e.g. a test using the raw
+        // bean — fall through with a debug log: the close() above already happened in a
+        // sub-transaction created by JobService, but the surrounding scope has no synchronization.
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            log.debug("close({}): no active synchronization; skipping meter POST", jobId);
+            return closed;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            postMeterEventForClose(jobId);
+                        } catch (RuntimeException e) {
+                            // PaygMeterReportingService should already swallow; defence in depth so
+                            // a thrown exception out of afterCommit doesn't leak past the
+                            // synchronization boundary and bubble into the caller.
+                            log.warn(
+                                    "afterCommit meter post for job {} threw unexpectedly: {}",
+                                    jobId,
+                                    e.getMessage());
+                        }
+                    }
+                });
+
+        return closed;
+    }
+
+    private void postMeterEventForClose(UUID jobId) {
+        Optional<PaygShadowCharge> rowOpt = shadowRepository.findFirstByJobIdOrderByIdAsc(jobId);
+        if (rowOpt.isEmpty()) {
+            // No shadow row → not a PAYG-tracked job; nothing to meter.
+            return;
+        }
+        PaygShadowCharge row = rowOpt.get();
+        if (row.getStatus() == ShadowChargeStatus.REFUNDED) {
+            // Refunded rows are zero-net charges; do not emit a meter event.
+            return;
+        }
+        BillingCategory category = row.getBillingCategory();
+        if (category == null || category == BillingCategory.BYPASSED) {
+            // Defensive: BYPASSED rows shouldn't exist (interceptor short-circuits before
+            // openProcess), but tolerate if a future caller writes one.
+            log.debug("close({}): shadow row category={} → no meter event", jobId, category);
+            return;
+        }
+        Integer units = row.getPaygUnits();
+        if (units == null || units <= 0) {
+            return;
+        }
+        Long teamId = row.getTeamId();
+        if (teamId == null) {
+            return;
+        }
+        Optional<PaygTeamExtensions> ext = teamExtensionsRepository.findById(teamId);
+        String stripeCustomerId = ext.map(PaygTeamExtensions::getStripeCustomerId).orElse(null);
+        if (stripeCustomerId == null || stripeCustomerId.isBlank()) {
+            // Free-tier team (no Stripe identity) — ledger entry is enough. When PR #6532 lands
+            // this check tightens to ext.getPaygSubscriptionId() != null, but on this branch the
+            // presence of stripe_customer_id is the established stand-in for "is subscribed."
+            log.debug(
+                    "close({}): team {} has no stripeCustomerId → free-tier, no meter event",
+                    jobId,
+                    teamId);
+            return;
+        }
+        String idempotencyKey = "process:" + jobId + ":close";
+        meterReportingService.recordUsage(
+                teamId, stripeCustomerId, units, category, idempotencyKey);
     }
 
     /**

@@ -17,14 +17,18 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.saas.payg.docs.DocumentClassifier;
@@ -33,14 +37,17 @@ import stirling.software.saas.payg.job.JobContext;
 import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
+import stirling.software.saas.payg.meter.PaygMeterReportingService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
+import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
+import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.ProcessingJobRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 
@@ -55,6 +62,8 @@ class JobChargeServiceTest {
     private DocumentClassifier classifier;
     private PaygShadowChargeRepository shadowRepo;
     private ProcessingJobRepository jobRepo;
+    private PaygTeamExtensionsRepository teamExtRepo;
+    private PaygMeterReportingService meterReporter;
     private JobChargeService service;
 
     @BeforeEach
@@ -64,7 +73,26 @@ class JobChargeServiceTest {
         classifier = Mockito.mock(DocumentClassifier.class);
         shadowRepo = Mockito.mock(PaygShadowChargeRepository.class);
         jobRepo = Mockito.mock(ProcessingJobRepository.class);
-        service = new JobChargeService(jobService, policyService, classifier, shadowRepo, jobRepo);
+        teamExtRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
+        meterReporter = Mockito.mock(PaygMeterReportingService.class);
+        service =
+                new JobChargeService(
+                        jobService,
+                        policyService,
+                        classifier,
+                        shadowRepo,
+                        jobRepo,
+                        teamExtRepo,
+                        meterReporter);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Defensive: a previous test could have left a fake synchronization registered. Clearing
+        // ensures isolation when tests run in any order.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clear();
+        }
     }
 
     @Test
@@ -394,6 +422,198 @@ class JobChargeServiceTest {
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
         service.decrementStepCount(jobId); // must not throw
         verify(jobRepo, never()).save(any());
+    }
+
+    // --- close() — meter reporting in afterCommit -----------------------------------------------
+
+    @Test
+    void close_subscribedTeam_postsMeterEventAfterCommit() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        withTransactionSynchronization(
+                () -> {
+                    service.close(jobId);
+                    Mockito.verifyNoInteractions(meterReporter);
+                });
+
+        // afterCommit ran on tearDown of withTransactionSynchronization → meter posted now.
+        verify(meterReporter)
+                .recordUsage(
+                        100L,
+                        "cus_subscribed",
+                        4,
+                        BillingCategory.API,
+                        "process:" + jobId + ":close");
+    }
+
+    @Test
+    void close_freeTierTeam_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        // No stripe_customer_id → treated as free-tier on this branch (pre-#6532).
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId(null);
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+    }
+
+    @Test
+    void close_noTeamExtensionsRow_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.empty());
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+    }
+
+    @Test
+    void close_refundedShadowRow_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        row.setStatus(ShadowChargeStatus.REFUNDED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+        Mockito.verifyNoInteractions(teamExtRepo);
+    }
+
+    @Test
+    void close_noShadowRow_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.empty());
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+        Mockito.verifyNoInteractions(teamExtRepo);
+    }
+
+    @Test
+    void close_bypassedCategoryOnShadowRow_doesNotPostMeterEvent() {
+        // Defensive: BYPASSED rows shouldn't normally exist (the interceptor short-circuits
+        // before openProcess), but if one slips through we must not meter it.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.BYPASSED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+        Mockito.verifyNoInteractions(teamExtRepo);
+    }
+
+    @Test
+    void close_meterReporterThrowsRuntimeException_doesNotPropagate() {
+        // PaygMeterReportingService is documented to swallow; defence-in-depth in
+        // JobChargeService catches a misbehaving impl so the afterCommit hook can't poison the
+        // close flow.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.AUTOMATION);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        Mockito.doThrow(new RuntimeException("simulated meter failure"))
+                .when(meterReporter)
+                .recordUsage(
+                        Mockito.anyLong(),
+                        Mockito.anyString(),
+                        Mockito.anyInt(),
+                        Mockito.any(BillingCategory.class),
+                        Mockito.anyString());
+
+        // Should not throw — afterCommit's defence-in-depth wraps the call.
+        withTransactionSynchronization(() -> service.close(jobId));
+        verify(meterReporter)
+                .recordUsage(
+                        100L,
+                        "cus_subscribed",
+                        4,
+                        BillingCategory.AUTOMATION,
+                        "process:" + jobId + ":close");
+    }
+
+    @Test
+    void close_noActiveTransactionSync_skipsMeterPostButStillClosesJob() {
+        // Direct call without an outer @Transactional → no sync to register against. close()
+        // must still close the job; the meter post is implicitly deferred to whatever async path
+        // eventually wraps the call (or is never made, which is fine for ledger-only flows).
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
+        service.close(jobId);
+
+        Mockito.verifyNoInteractions(meterReporter);
+        verify(jobService).close(jobId);
+    }
+
+    private static void withTransactionSynchronization(Runnable body) {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            body.run();
+            // Drain registered synchronizations to simulate a successful commit.
+            for (TransactionSynchronization sync :
+                    TransactionSynchronizationManager.getSynchronizations()) {
+                sync.afterCommit();
+            }
+        } finally {
+            TransactionSynchronizationManager.clear();
+        }
+    }
+
+    private static PaygShadowCharge chargedShadowRow(
+            UUID jobId, Long teamId, int units, BillingCategory category) {
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setJobId(jobId);
+        row.setTeamId(teamId);
+        row.setPaygUnits(units);
+        row.setStatus(ShadowChargeStatus.CHARGED);
+        row.setBillingCategory(category);
+        return row;
     }
 
     // --- helpers --------------------------------------------------------------------------------
