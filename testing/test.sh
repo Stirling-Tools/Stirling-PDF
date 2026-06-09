@@ -999,7 +999,7 @@ main() {
             # Save docker logs from the behave window to a dedicated file
             local cucumber_log="$REPORT_DIR/cucumber-docker-context.log"
             docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$cucumber_log" 2>/dev/null || true
-            test_failure_logs["Stirling-PDF-Regression"]="$cucumber_log"
+            test_failure_logs["Stirling-PDF-Regression $CONTAINER_NAME"]="$cucumber_log"
 
             gha_group "Docker logs during behave run: $CONTAINER_NAME"
             tail -100 "$cucumber_log"
@@ -1012,7 +1012,7 @@ main() {
             capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
             compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"
         fi
-        stop_test_timer "Stirling-PDF-Regression"
+        stop_test_timer "Stirling-PDF-Regression $CONTAINER_NAME"
     fi
     # `down` with the override removes the agent bind-mount cleanly. The
     # SIGTERM that `down` sends is what triggers dumponexit=true in the

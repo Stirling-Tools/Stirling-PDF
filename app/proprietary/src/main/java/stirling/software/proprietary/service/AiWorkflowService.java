@@ -365,8 +365,16 @@ public class AiWorkflowService {
                         AiWorkflowProgressEvent.executingTool(
                                 PDF_TO_MARKDOWN_ENDPOINT, i + 1, filesToConvert.size()));
                 Resource input = toResource(multipartFile);
-                ToolResult result =
-                        callEndpoint(PDF_TO_MARKDOWN_ENDPOINT, Map.of(), List.of(input));
+                PipelineDefinition definition =
+                        new PipelineDefinition(
+                                "convert-markdown",
+                                List.of(new PipelineStep(PDF_TO_MARKDOWN_ENDPOINT, Map.of())),
+                                null);
+                PolicyExecutionResult result =
+                        policyExecutor.execute(
+                                definition,
+                                PolicyInputs.of(List.of(input)),
+                                PolicyProgressListener.NOOP);
                 resultFiles.addAll(result.files());
                 inputNames.add(multipartFile.getOriginalFilename());
             }
