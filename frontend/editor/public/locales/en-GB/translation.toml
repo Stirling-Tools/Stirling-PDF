@@ -1931,6 +1931,19 @@ pastePlaceholder = "Paste your automation JSON here…"
 title = "Import automation"
 unresolved = "Unmapped: {{ops}}"
 
+[automate.recorder]
+discard = "Discard"
+indicator = "{{count}} step(s)"
+recordingTitle = "Recording workflow"
+review = "Review"
+reviewTitle = "Recorded workflow"
+skippedHint = "Skipped steps are shown for awareness but are not saved into the automation."
+start = "Start Recording"
+startDescription = "Run tools normally, then save the captured steps as an automation."
+startTitle = "Record a workflow"
+stepSummary = "{{recorded}} saved step(s), {{skipped}} skipped step(s)"
+stop = "Stop"
+
 [automate.run]
 title = "Run Automation"
 

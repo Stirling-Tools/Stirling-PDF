@@ -34,6 +34,7 @@ import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
+import { WorkflowRecorderProvider } from "@app/contexts/workflowRecorder/WorkflowRecorderContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -134,35 +135,37 @@ export function AppProviders({
                   <AppInitializer />
                   <BrandingAssetManager />
                   <ToolRegistryProvider>
-                    <NavigationProvider>
-                      <FilesModalProvider>
-                        <ToolWorkflowProvider>
-                          <HotkeyProvider>
-                            <SidebarProvider>
-                              <ViewerProvider>
-                                <PageEditorProvider>
-                                  <SignatureProvider>
-                                    <RedactionProvider>
-                                      <FormFillProvider>
-                                        <AnnotationProvider>
-                                          <WorkbenchBarProvider>
-                                            <TourOrchestrationProvider>
-                                              <AdminTourOrchestrationProvider>
-                                                {children}
-                                              </AdminTourOrchestrationProvider>
-                                            </TourOrchestrationProvider>
-                                          </WorkbenchBarProvider>
-                                        </AnnotationProvider>
-                                      </FormFillProvider>
-                                    </RedactionProvider>
-                                  </SignatureProvider>
-                                </PageEditorProvider>
-                              </ViewerProvider>
-                            </SidebarProvider>
-                          </HotkeyProvider>
-                        </ToolWorkflowProvider>
-                      </FilesModalProvider>
-                    </NavigationProvider>
+                    <WorkflowRecorderProvider>
+                      <NavigationProvider>
+                        <FilesModalProvider>
+                          <ToolWorkflowProvider>
+                            <HotkeyProvider>
+                              <SidebarProvider>
+                                <ViewerProvider>
+                                  <PageEditorProvider>
+                                    <SignatureProvider>
+                                      <RedactionProvider>
+                                        <FormFillProvider>
+                                          <AnnotationProvider>
+                                            <WorkbenchBarProvider>
+                                              <TourOrchestrationProvider>
+                                                <AdminTourOrchestrationProvider>
+                                                  {children}
+                                                </AdminTourOrchestrationProvider>
+                                              </TourOrchestrationProvider>
+                                            </WorkbenchBarProvider>
+                                          </AnnotationProvider>
+                                        </FormFillProvider>
+                                      </RedactionProvider>
+                                    </SignatureProvider>
+                                  </PageEditorProvider>
+                                </ViewerProvider>
+                              </SidebarProvider>
+                            </HotkeyProvider>
+                          </ToolWorkflowProvider>
+                        </FilesModalProvider>
+                      </NavigationProvider>
+                    </WorkflowRecorderProvider>
                   </ToolRegistryProvider>
                 </FolderProvider>
               </FileContextProvider>

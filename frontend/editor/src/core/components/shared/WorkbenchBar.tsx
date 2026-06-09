@@ -35,6 +35,7 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
+import WorkflowRecordingIndicator from "@app/components/shared/WorkflowRecordingIndicator";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
 import CloseIcon from "@mui/icons-material/Close";
@@ -450,6 +451,8 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        <WorkflowRecordingIndicator />
+
         {/* Print */}
         {currentView === "viewer" &&
           renderWithTooltip(
