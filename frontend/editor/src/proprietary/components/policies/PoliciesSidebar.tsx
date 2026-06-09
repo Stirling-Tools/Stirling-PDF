@@ -35,6 +35,9 @@ import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicyDeleteConfirmModal } from "@app/components/policies/PolicyDeleteConfirmModal";
+import { PolicyConfigPage } from "@app/components/policies/PolicyConfigPage";
+import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
+import type { PolicyWizardResult } from "@app/types/policies";
 import {
   usePolicySelection,
   selectPolicy,
@@ -232,6 +235,30 @@ export function PolicyDetailTakeover() {
         </div>
       );
     }
+    const saveConfig = (result: PolicyWizardResult) =>
+      pol.savePolicyConfig(selectedId, result).then(() => {
+        setReloadKey((k) => k + 1);
+        setPolicyDetailView("detail");
+      });
+
+    // Categories with a fixed tool chain (Security) use the locked, per-tool
+    // config page; the rest fall back to the full add/remove wizard for now.
+    const toolChain = getPolicyToolChain(selectedId);
+    if (toolChain) {
+      return (
+        <PolicyConfigPage
+          key={`config-${selectedId}`}
+          category={category}
+          state={state}
+          chainIds={toolChain}
+          automation={backingAutomation}
+          folder={backingFolder}
+          onCancel={() => setPolicyDetailView("detail")}
+          onComplete={saveConfig}
+        />
+      );
+    }
+
     return (
       <PolicySetupWizard
         key={`edit-${selectedId}`}
@@ -246,12 +273,7 @@ export function PolicyDetailTakeover() {
         existingAutomation={backingAutomation}
         initialFolder={backingFolder ?? undefined}
         onCancel={() => setPolicyDetailView("detail")}
-        onComplete={(result) =>
-          pol.savePolicyConfig(selectedId, result).then(() => {
-            setReloadKey((k) => k + 1);
-            setPolicyDetailView("detail");
-          })
-        }
+        onComplete={saveConfig}
         onSetupClassification={onSetupClassification}
       />
     );

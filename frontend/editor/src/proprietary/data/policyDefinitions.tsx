@@ -93,10 +93,12 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   security: {
     summary:
       "Detects PII, encrypts, verifies authenticity, controls access, and certifies documents.",
-    rules: ["Detect PII", "Encrypt", "Verify", "Access", "Certify"],
+    rules: ["Redact PII", "Remove JavaScript"],
+    // Default chain: redact PII + remove JavaScript (via sanitize) on; watermark
+    // is offered in the config page but off by default (not seeded here).
     defaultOperations: [
+      { operation: "redact", parameters: {} },
       { operation: "sanitize", parameters: {} },
-      { operation: "addPassword", parameters: {} },
     ],
     scopeLabel: "All PDFs on this device",
     // Policy-level controls only — detection/encryption/signing/watermark are
