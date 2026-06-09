@@ -25,6 +25,7 @@ import { Group, Stack } from "@mantine/core";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import CheckIcon from "@mui/icons-material/CheckRounded";
 import LockIcon from "@mui/icons-material/LockOutlined";
+import { useTranslation } from "react-i18next";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
@@ -81,29 +82,36 @@ interface FreeHeroProps {
 }
 
 function FreeHero({ snap }: FreeHeroProps) {
+  const { t } = useTranslation();
   const pct = Math.min(100, (snap.billableUsed / snap.billableLimit) * 100);
   const daysLeft = daysUntil(snap.billingPeriodEnd);
   const state =
     pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
   const stateLabel =
     state === "DEGRADED"
-      ? "Limit reached"
+      ? t("payg.free.state.limitReached", "Limit reached")
       : state === "WARNED"
-        ? "Approaching limit"
-        : "Plenty left";
+        ? t("payg.free.state.approachingLimit", "Approaching limit")
+        : t("payg.free.state.plentyLeft", "Plenty left");
 
   return (
     <div className="payg-hero" data-state={state}>
       <div className="payg-hero__inner">
         <div className="payg-hero__head-row">
           <div>
-            <div className="payg-hero__eyebrow">This billing period</div>
+            <div className="payg-hero__eyebrow">
+              {t("payg.free.hero.eyebrow", "This billing period")}
+            </div>
             <div className="payg-hero__figure">
               <span className="payg-hero__spend">
                 {snap.billableUsed.toLocaleString()}
               </span>
               <span className="payg-hero__cap">
-                / {snap.billableLimit.toLocaleString()} free operations
+                {t(
+                  "payg.free.hero.capSuffix",
+                  "/ {{limit}} free operations",
+                  { limit: snap.billableLimit.toLocaleString() },
+                )}
               </span>
             </div>
           </div>
@@ -122,12 +130,16 @@ function FreeHero({ snap }: FreeHeroProps) {
         </div>
 
         <div className="payg-hero__meta">
-          <span>Automation · AI · API requests</span>
+          <span>
+            {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
+          </span>
           <span className="payg-hero__meta-dot">•</span>
           <span>
             {daysLeft === 1
-              ? "Resets tomorrow"
-              : `Resets in ${daysLeft} days`}
+              ? t("payg.free.hero.resetsTomorrow", "Resets tomorrow")
+              : t("payg.free.hero.resetsIn", "Resets in {{days}} days", {
+                  days: daysLeft,
+                })}
           </span>
         </div>
       </div>
@@ -148,12 +160,17 @@ interface SectionHeaderProps {
 }
 
 function SectionHeader({ snap, pill, leader }: SectionHeaderProps) {
+  const { t } = useTranslation();
   return (
     <Group justify="space-between" align="center" wrap="nowrap">
       <div className="payg-header__subtitle">
-        Editor plan — manual tools are always free. Pay only for automation,
-        AI &amp; API. Billing period{" "}
-        {formatPeriod(snap.billingPeriodStart, snap.billingPeriodEnd)}.
+        {t(
+          "payg.free.header.subtitle",
+          "Editor plan — manual tools are always free. Pay only for automation, AI & API. Billing period {{period}}.",
+          {
+            period: formatPeriod(snap.billingPeriodStart, snap.billingPeriodEnd),
+          },
+        )}
       </div>
       <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
         {pill}
@@ -176,13 +193,18 @@ export interface PaygFreeLeaderProps {
 
 function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   useRenderCount("PaygFreeLeader");
+  const { t } = useTranslation();
   const snap = useFreeMock();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   return (
     <div className="payg">
       <Stack gap="lg">
-        <SectionHeader snap={snap} pill="Team owner" leader />
+        <SectionHeader
+          snap={snap}
+          pill={t("payg.role.leader", "Team owner")}
+          leader
+        />
 
         <FreeHero snap={snap} />
 
@@ -190,10 +212,17 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
           <div className="paygf-cta__heading-row">
             <BoltIcon className="paygf-cta__icon" />
             <div className="paygf-cta__heading-text">
-              <h3 className="paygf-cta__title">Turn on the Processor plan</h3>
+              <h3 className="paygf-cta__title">
+                {t(
+                  "payg.free.cta.title",
+                  "Turn on the Processor plan",
+                )}
+              </h3>
               <p className="paygf-cta__subtitle">
-                Unlock more than 500 automation, AI, and API operations per
-                month. Set a monthly ceiling — you stay in control.
+                {t(
+                  "payg.free.cta.subtitle",
+                  "Unlock more than 500 automation, AI, and API operations per month. Set a monthly ceiling — you stay in control.",
+                )}
               </p>
             </div>
           </div>
@@ -202,21 +231,43 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
             <li>
               <CheckIcon className="paygf-cta__check" fontSize="small" />
               <span>
-                <strong>Automation pipelines</strong> — chain tools, schedule
-                runs, batch process
+                <strong>
+                  {t(
+                    "payg.free.cta.benefit1Title",
+                    "Automation pipelines",
+                  )}
+                </strong>
+                {" — "}
+                {t(
+                  "payg.free.cta.benefit1Body",
+                  "chain tools, schedule runs, batch process",
+                )}
               </span>
             </li>
             <li>
               <CheckIcon className="paygf-cta__check" fontSize="small" />
               <span>
-                <strong>AI tools</strong> — summarise, classify, redact, AI-OCR
+                <strong>
+                  {t("payg.free.cta.benefit2Title", "AI tools")}
+                </strong>
+                {" — "}
+                {t(
+                  "payg.free.cta.benefit2Body",
+                  "summarise, classify, redact, AI-OCR",
+                )}
               </span>
             </li>
             <li>
               <CheckIcon className="paygf-cta__check" fontSize="small" />
               <span>
-                <strong>API access</strong> — call any Stirling endpoint
-                programmatically
+                <strong>
+                  {t("payg.free.cta.benefit3Title", "API access")}
+                </strong>
+                {" — "}
+                {t(
+                  "payg.free.cta.benefit3Body",
+                  "call any Stirling endpoint programmatically",
+                )}
               </span>
             </li>
           </ul>
@@ -228,10 +279,13 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
               onClick={() => setUpgradeOpen(true)}
               data-testid="turn-on-processor"
             >
-              Turn on Processor →
+              {t("payg.free.cta.button", "Turn on Processor →")}
             </button>
             <span className="paygf-cta__reassurance">
-              No minimum · Set a $0 cap to test · Cancel anytime
+              {t(
+                "payg.free.cta.reassurance",
+                "No minimum · Set a $0 cap to test · Cancel anytime",
+              )}
             </span>
           </div>
         </div>
@@ -243,12 +297,13 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
                 className="paygf-explainer__icon paygf-explainer__icon--free"
                 fontSize="small"
               />
-              Always free
+              {t("payg.free.explainer.alwaysFreeLabel", "Always free")}
             </div>
             <p className="paygf-explainer__text">
-              Manual tools — viewing, editing, merging, splitting, signing,
-              watermarks, compression, conversion, manual OCR. Use them as
-              much as you want, no matter where you trigger them from.
+              {t(
+                "payg.free.explainer.alwaysFreeBody",
+                "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, no matter where you trigger them from.",
+              )}
             </p>
           </div>
           <div className="paygf-explainer__col">
@@ -257,12 +312,16 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
                 className="paygf-explainer__icon paygf-explainer__icon--paid"
                 fontSize="small"
               />
-              Counts toward 500/month
+              {t(
+                "payg.free.explainer.countsLabel",
+                "Counts toward 500/month",
+              )}
             </div>
             <p className="paygf-explainer__text">
-              Automation pipelines (chained tools, scheduled runs), AI tools
-              (summaries, classification, AI-OCR), and API calls (programmatic
-              access). Above 500 you'll need Processor.
+              {t(
+                "payg.free.explainer.countsBody",
+                "Automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Above 500 you'll need Processor.",
+              )}
             </p>
           </div>
         </div>
@@ -295,12 +354,13 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
 
 function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");
+  const { t } = useTranslation();
   const snap = useFreeMock();
 
   return (
     <div className="payg">
       <Stack gap="lg">
-        <SectionHeader snap={snap} pill="Team member" />
+        <SectionHeader snap={snap} pill={t("payg.role.member", "Member")} />
 
         <FreeHero snap={snap} />
 
@@ -308,13 +368,16 @@ function PaygFreeMemberInner() {
           <LockIcon className="paygf-member-note__icon" />
           <div>
             <h3 className="paygf-member-note__title">
-              Want more than 500 automation, AI, or API operations a month?
+              {t(
+                "payg.free.member.title",
+                "Want more than 500 automation, AI, or API operations a month?",
+              )}
             </h3>
             <p className="paygf-member-note__body">
-              Your team owner can enable the Processor plan and set a monthly
-              ceiling. Until then, manual tools are free for you to use as
-              much as you like — automation, AI, and API access are limited
-              to the team's 500/month free allowance.
+              {t(
+                "payg.free.member.body",
+                "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API access are limited to the team's 500/month free allowance.",
+              )}
             </p>
           </div>
         </div>
@@ -326,12 +389,16 @@ function PaygFreeMemberInner() {
                 className="paygf-explainer__icon paygf-explainer__icon--free"
                 fontSize="small"
               />
-              Always free for you
+              {t(
+                "payg.free.explainer.alwaysFreeForYouLabel",
+                "Always free for you",
+              )}
             </div>
             <p className="paygf-explainer__text">
-              Manual tools — viewing, editing, merging, splitting, signing,
-              watermarks, compression, conversion, manual OCR. Use them as
-              much as you want, never counted.
+              {t(
+                "payg.free.explainer.alwaysFreeForYouBody",
+                "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, never counted.",
+              )}
             </p>
           </div>
           <div className="paygf-explainer__col">
@@ -340,12 +407,16 @@ function PaygFreeMemberInner() {
                 className="paygf-explainer__icon paygf-explainer__icon--paid"
                 fontSize="small"
               />
-              Shared with the team
+              {t(
+                "payg.free.explainer.sharedLabel",
+                "Shared with the team",
+              )}
             </div>
             <p className="paygf-explainer__text">
-              Automation pipelines, AI tools, and API calls share a single
-              500/month allowance across the whole team. If it's full, ask
-              your owner to enable Processor.
+              {t(
+                "payg.free.explainer.sharedBody",
+                "Automation pipelines, AI tools, and API calls share a single 500/month allowance across the whole team. If it's full, ask your owner to enable Processor.",
+              )}
             </p>
           </div>
         </div>

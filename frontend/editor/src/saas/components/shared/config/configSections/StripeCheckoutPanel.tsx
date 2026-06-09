@@ -57,6 +57,7 @@
  * presses "Continue with mock" in unconfigured environments.
  */
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@app/auth/supabase";
 
 // Eager static imports here are OK because this whole module is itself lazy-
@@ -109,6 +110,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   onComplete,
   onError,
 }) => {
+  const { t } = useTranslation();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isMock, setIsMock] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -126,6 +128,12 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   // pass an inline onError.
   const onErrorRef = useRef<typeof onError>(onError);
   onErrorRef.current = onError;
+
+  // Stash t() in a ref so the effect — which is single-flight via fetchedRef
+  // and deliberately not re-running on translation changes — can read the
+  // current translator without forcing t into its deps.
+  const tRef = useRef(t);
+  tRef.current = t;
 
   const publishableKey =
     import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
@@ -179,7 +187,12 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
         setIsMock(Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"));
       } catch (e: unknown) {
         const msg =
-          e instanceof Error ? e.message : "Couldn't start checkout session";
+          e instanceof Error
+            ? e.message
+            : tRef.current(
+                "payg.checkout.error.startFailed",
+                "Couldn't start checkout session",
+              );
         if (!cancelled) {
           setError(msg);
           onErrorRef.current?.(msg);
@@ -197,7 +210,9 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   if (loading) {
     return (
       <div className="upm-stripe-mount" data-state="loading">
-        <div className="upm-stripe-mount__title">Connecting to Stripe…</div>
+        <div className="upm-stripe-mount__title">
+          {t("payg.checkout.connecting", "Connecting to Stripe…")}
+        </div>
       </div>
     );
   }
@@ -205,7 +220,9 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   if (error) {
     return (
       <div className="upm-stripe-mount" data-state="error">
-        <div className="upm-stripe-mount__title">Stripe error</div>
+        <div className="upm-stripe-mount__title">
+          {t("payg.checkout.errorTitle", "Stripe error")}
+        </div>
         <div>{error}</div>
       </div>
     );
@@ -218,12 +235,21 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     return (
       <div className="upm-stripe-mount" data-state="mock">
         <div className="upm-stripe-mount__title">
-          Stripe Embedded Checkout (mock mode)
+          {t(
+            "payg.checkout.mock.title",
+            "Stripe Embedded Checkout (mock mode)",
+          )}
         </div>
         <div>
           {publishableKey.length === 0
-            ? "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
-            : "Backend is in mock mode — no real Stripe session was created."}
+            ? t(
+                "payg.checkout.mock.noKey",
+                "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured.",
+              )
+            : t(
+                "payg.checkout.mock.backend",
+                "Backend is in mock mode — no real Stripe session was created.",
+              )}
         </div>
         <div style={{ marginTop: 12 }}>
           <button
@@ -232,7 +258,10 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
             data-variant="primary"
             onClick={onComplete}
           >
-            Continue with mock subscription
+            {t(
+              "payg.checkout.mock.continue",
+              "Continue with mock subscription",
+            )}
           </button>
         </div>
       </div>

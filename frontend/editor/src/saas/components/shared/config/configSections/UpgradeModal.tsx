@@ -20,6 +20,7 @@ import React, { Suspense, useState } from "react";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
+import { useTranslation } from "react-i18next";
 // eslint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
 
@@ -63,6 +64,7 @@ export default function UpgradeModal({
   onComplete,
   currency = "USD",
 }: UpgradeModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>("cap");
   const [capUsd, setCapUsd] = useState<number>(25);
   const [noCap, setNoCap] = useState<boolean>(false);
@@ -92,13 +94,13 @@ export default function UpgradeModal({
           <header className="upm-header">
             <h2 className="upm-header__title">
               {step === "confirm"
-                ? "You're subscribed"
-                : "Upgrade to Processor plan"}
+                ? t("payg.upgrade.title.confirm", "You're subscribed")
+                : t("payg.upgrade.title.default", "Upgrade to Processor plan")}
             </h2>
             <button
               type="button"
               className="upm-header__close"
-              aria-label="Close"
+              aria-label={t("payg.upgrade.closeAria", "Close")}
               onClick={closeAndReset}
             >
               <CloseIcon fontSize="small" />
@@ -114,7 +116,9 @@ export default function UpgradeModal({
                 data-state={step === "cap" ? "active" : "done"}
               >
                 <span className="upm-step__dot">1</span>
-                <span>Set monthly ceiling</span>
+                <span>
+                  {t("payg.upgrade.steps.cap", "Set monthly ceiling")}
+                </span>
               </div>
               <div className="upm-step__connector" />
               <div
@@ -122,7 +126,12 @@ export default function UpgradeModal({
                 data-state={step === "checkout" ? "active" : "idle"}
               >
                 <span className="upm-step__dot">2</span>
-                <span>Add payment method</span>
+                <span>
+                  {t(
+                    "payg.upgrade.steps.payment",
+                    "Add payment method",
+                  )}
+                </span>
               </div>
             </div>
           )}
@@ -161,11 +170,21 @@ export default function UpgradeModal({
 
           <footer className="upm-footer">
             <span className="upm-footer__hint">
-              {step === "cap" && "You can change your cap any time later."}
+              {step === "cap" &&
+                t(
+                  "payg.upgrade.footer.capHint",
+                  "You can change your cap any time later.",
+                )}
               {step === "checkout" &&
-                "Card details handled by Stripe — never touched by Stirling."}
+                t(
+                  "payg.upgrade.footer.checkoutHint",
+                  "Card details handled by Stripe — never touched by Stirling.",
+                )}
               {step === "confirm" &&
-                "Your wallet will refresh automatically in a moment."}
+                t(
+                  "payg.upgrade.footer.confirmHint",
+                  "Your wallet will refresh automatically in a moment.",
+                )}
             </span>
             <div className="upm-footer__actions">
               {step === "checkout" && (
@@ -176,7 +195,7 @@ export default function UpgradeModal({
                     data-variant="ghost"
                     onClick={goBackToCap}
                   >
-                    ← Back
+                    {t("payg.upgrade.button.back", "← Back")}
                   </button>
                 </>
               )}
@@ -188,7 +207,7 @@ export default function UpgradeModal({
                     data-variant="ghost"
                     onClick={closeAndReset}
                   >
-                    Cancel
+                    {t("payg.upgrade.button.cancel", "Cancel")}
                   </button>
                   <button
                     type="button"
@@ -196,7 +215,7 @@ export default function UpgradeModal({
                     data-variant="primary"
                     onClick={goToCheckout}
                   >
-                    Continue →
+                    {t("payg.upgrade.button.continue", "Continue →")}
                   </button>
                 </>
               )}
@@ -210,7 +229,7 @@ export default function UpgradeModal({
                     onComplete({ capUsd: effectiveCap });
                   }}
                 >
-                  Finish
+                  {t("payg.upgrade.button.finish", "Finish")}
                 </button>
               )}
             </div>
@@ -232,6 +251,7 @@ interface CapStepProps {
 }
 
 function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps) {
+  const { t } = useTranslation();
   const sym = currencySymbol(currency);
 
   return (
@@ -240,22 +260,39 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
         <ShieldIcon className="upm-promise__icon" fontSize="small" />
         <div>
           <span className="upm-promise__highlight">
-            Manual tools stay free, always.
+            {t(
+              "payg.upgrade.promise.highlight",
+              "Manual tools stay free, always.",
+            )}
           </span>{" "}
-          You only pay for automation pipelines, AI tools, and API calls —
-          the work that goes beyond a single click. Edit, merge, split,
-          sign, compress as much as you want, no charge.
+          {t(
+            "payg.upgrade.promise.body",
+            "You only pay for automation pipelines, AI tools, and API calls — the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge.",
+          )}
         </div>
       </div>
 
-      <h3 className="upm-section-title">Set your monthly spend ceiling</h3>
+      <h3 className="upm-section-title">
+        {t(
+          "payg.upgrade.cap.title",
+          "Set your monthly spend ceiling",
+        )}
+      </h3>
       <p className="upm-section-help">
-        We'll never charge above this. Your first 500 automation / AI / API
-        operations every month are free. Set $0 if you want to keep
-        everything free while testing.
+        {t(
+          "payg.upgrade.cap.help",
+          "We'll never charge above this. Your first 500 automation / AI / API operations every month are free. Set $0 if you want to keep everything free while testing.",
+        )}
       </p>
 
-      <div className="upm-cap-presets" role="radiogroup" aria-label="Monthly cap preset">
+      <div
+        className="upm-cap-presets"
+        role="radiogroup"
+        aria-label={t(
+          "payg.upgrade.cap.presetsAria",
+          "Monthly cap preset",
+        )}
+      >
         {CAP_PRESETS_USD.map((preset) => (
           <button
             key={preset}
@@ -285,7 +322,10 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
           max={10000}
           value={noCap ? "" : capUsd}
           disabled={noCap}
-          placeholder="Or enter your own amount ($0 keeps it free)"
+          placeholder={t(
+            "payg.upgrade.cap.customPlaceholder",
+            "Or enter your own amount ($0 keeps it free)",
+          )}
           onChange={(e) => {
             const v = parseInt(e.target.value, 10);
             if (!Number.isNaN(v) && v >= 0) {
@@ -295,7 +335,9 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
           }}
           className="upm-cap-input-row__input"
         />
-        <span className="upm-cap-input-row__period">/ month</span>
+        <span className="upm-cap-input-row__period">
+          {t("payg.upgrade.cap.perMonthSuffix", "/ month")}
+        </span>
       </label>
 
       <label className="upm-no-cap-toggle">
@@ -305,33 +347,66 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
           onChange={(e) => setNoCap(e.target.checked)}
         />
         <span className="upm-no-cap-toggle__text">
-          No cap — I'll manage spend manually
+          {t(
+            "payg.upgrade.cap.noCapLabel",
+            "No cap — I'll manage spend manually",
+          )}
           <span className="upm-no-cap-toggle__hint">
-            You can still cancel anytime from the customer portal.
+            {t(
+              "payg.upgrade.cap.noCapHint",
+              "You can still cancel anytime from the customer portal.",
+            )}
           </span>
         </span>
       </label>
 
       <div className="upm-help-card">
-        <span className="upm-help-card__title">What we count toward billing</span>
+        <span className="upm-help-card__title">
+          {t(
+            "payg.upgrade.help.title",
+            "What we count toward billing",
+          )}
+        </span>
         <ul style={{ margin: "4px 0 0", paddingLeft: 18, lineHeight: 1.55 }}>
           <li>
-            <strong>Automation pipelines</strong> — chained tools or scheduled
-            runs that don't need clicks
+            <strong>
+              {t(
+                "payg.upgrade.help.automationTitle",
+                "Automation pipelines",
+              )}
+            </strong>
+            {" — "}
+            {t(
+              "payg.upgrade.help.automationBody",
+              "chained tools or scheduled runs that don't need clicks",
+            )}
           </li>
           <li>
-            <strong>AI tools</strong> — summarise, classify, redact, AI-OCR
+            <strong>
+              {t("payg.upgrade.help.aiTitle", "AI tools")}
+            </strong>
+            {" — "}
+            {t(
+              "payg.upgrade.help.aiBody",
+              "summarise, classify, redact, AI-OCR",
+            )}
           </li>
           <li>
-            <strong>API calls</strong> — programmatic access to any Stirling
-            endpoint
+            <strong>
+              {t("payg.upgrade.help.apiTitle", "API calls")}
+            </strong>
+            {" — "}
+            {t(
+              "payg.upgrade.help.apiBody",
+              "programmatic access to any Stirling endpoint",
+            )}
           </li>
         </ul>
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
-          Manual tools — viewing, editing, merging, splitting, signing,
-          watermarking, compressing, manual OCR — are always free, even
-          past 500. The distinction is the type of work, not where you
-          click.
+          {t(
+            "payg.upgrade.help.footnote",
+            "Manual tools — viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR — are always free, even past 500. The distinction is the type of work, not where you click.",
+          )}
         </div>
       </div>
     </>
@@ -353,32 +428,50 @@ function CheckoutStep({
   onEditCap,
   onComplete,
 }: CheckoutStepProps) {
+  const { t } = useTranslation();
   const sym = currencySymbol(currency);
   return (
     <>
       <div className="upm-cap-confirmation">
-        <span className="upm-cap-confirmation__label">Monthly ceiling:</span>
+        <span className="upm-cap-confirmation__label">
+          {t("payg.upgrade.checkout.capLabel", "Monthly ceiling:")}
+        </span>
         <span className="upm-cap-confirmation__value">
-          {effectiveCap === null ? "No cap" : `${sym}${effectiveCap} / month`}
+          {effectiveCap === null
+            ? t("payg.upgrade.checkout.noCap", "No cap")
+            : t("payg.upgrade.checkout.capValue", "{{symbol}}{{amount}} / month", {
+                symbol: sym,
+                amount: effectiveCap,
+              })}
         </span>
         <button
           type="button"
           className="upm-cap-confirmation__edit"
           onClick={onEditCap}
         >
-          Edit
+          {t("payg.upgrade.checkout.edit", "Edit")}
         </button>
       </div>
 
-      <h3 className="upm-section-title">Add your payment method</h3>
+      <h3 className="upm-section-title">
+        {t(
+          "payg.upgrade.checkout.title",
+          "Add your payment method",
+        )}
+      </h3>
       <p className="upm-section-help">
-        Stripe handles your card details. Stirling never sees them.
+        {t(
+          "payg.upgrade.checkout.help",
+          "Stripe handles your card details. Stirling never sees them.",
+        )}
       </p>
 
       <Suspense
         fallback={
           <div className="upm-stripe-mount" data-state="loading">
-            <div className="upm-stripe-mount__title">Loading checkout…</div>
+            <div className="upm-stripe-mount__title">
+              {t("payg.upgrade.checkout.loading", "Loading checkout…")}
+            </div>
           </div>
         }
       >
@@ -399,24 +492,39 @@ interface ConfirmationStepProps {
 }
 
 function ConfirmationStep({ effectiveCap, currency }: ConfirmationStepProps) {
+  const { t } = useTranslation();
   const sym = currencySymbol(currency);
   return (
     <div className="upm-confirm">
       <CheckCircleIcon className="upm-confirm__icon" />
-      <h3 className="upm-confirm__title">Welcome to the Processor plan</h3>
+      <h3 className="upm-confirm__title">
+        {t(
+          "payg.confirm.title",
+          "Welcome to the Processor plan",
+        )}
+      </h3>
       <p className="upm-confirm__body">
-        Your team can now run automation, AI, and API operations beyond the
-        500/month free allowance.
+        {t(
+          "payg.confirm.body",
+          "Your team can now run automation, AI, and API operations beyond the 500/month free allowance.",
+        )}
       </p>
       <div className="upm-confirm__summary">
-        <span>Monthly ceiling</span>
+        <span>{t("payg.confirm.summaryLabel", "Monthly ceiling")}</span>
         <strong>
-          {effectiveCap === null ? "No cap" : `${sym}${effectiveCap} / month`}
+          {effectiveCap === null
+            ? t("payg.confirm.noCap", "No cap")
+            : t("payg.confirm.capValue", "{{symbol}}{{amount}} / month", {
+                symbol: sym,
+                amount: effectiveCap,
+              })}
         </strong>
       </div>
       <p className="upm-confirm__note">
-        You can change your cap, cancel, or open the Stripe customer portal
-        any time from this page.
+        {t(
+          "payg.confirm.note",
+          "You can change your cap, cancel, or open the Stripe customer portal any time from this page.",
+        )}
       </p>
     </div>
   );

@@ -5596,6 +5596,77 @@ title = "Monthly spending cap"
 warnAt = "Warn me at"
 warnAtDesc = "Notify when usage crosses this threshold."
 
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode — no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond the 500/month free allowance."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.exhausted]
+body = "You've used your free 500 operations this month. Upgrade to Processor to keep going."
+cta = "Go to billing"
+title = "You've hit your free monthly limit"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Unlock more than 500 automation, AI, and API operations per month. Set a monthly ceiling — you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.explainer]
+alwaysFreeBody = "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, no matter where you trigger them from."
+alwaysFreeForYouBody = "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, never counted."
+alwaysFreeForYouLabel = "Always free for you"
+alwaysFreeLabel = "Always free"
+countsBody = "Automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Above 500 you'll need Processor."
+countsLabel = "Counts toward 500/month"
+sharedBody = "Automation pipelines, AI tools, and API calls share a single 500/month allowance across the whole team. If it's full, ask your owner to enable Processor."
+sharedLabel = "Shared with the team"
+
+[payg.free.header]
+subtitle = "Editor plan — manual tools are always free. Pay only for automation, AI & API. Billing period {{period}}."
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free operations"
+eyebrow = "This billing period"
+metaCategories = "Automation · AI · API requests"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+
+[payg.free.member]
+body = "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API access are limited to the team's 500/month free allowance."
+title = "Want more than 500 automation, AI, or API operations a month?"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
 [payg.gates]
 ai = "AI tools (AI Create, suggestions, AI-OCR)"
 automation = "Automations & pipelines"
@@ -5611,10 +5682,24 @@ contactLeader = "Ask team owner to raise cap"
 editCap = "Edit"
 noCap = "· no sub-cap"
 setCap = "Set cap"
+units = "units"
 
 [payg.role]
 leader = "Team owner"
 member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations per month — enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
 
 [payg.state]
 degraded = "Cap reached"
@@ -5626,9 +5711,82 @@ open = "Open billing portal"
 subtitle = "Receipts, invoices, payment method, billing currency."
 title = "Manage billing in Stripe"
 
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
 [payg.subcaps]
 subtitle = "Optional: cap individual teammates so one person can't drain the team budget."
 title = "Per-member sub-caps"
+
+[payg.subcaps.editor]
+label = "Sub-cap for {{name}}"
+remove = "Remove cap"
+
+[payg.subcaps.toast.clamped]
+body = "Clamped to team cap of {{units}} documents."
+title = "Sub-cap clamped"
+
+[payg.subcaps.toast.error]
+body = "Please try again in a moment."
+title = "Couldn't update sub-cap"
+
+[payg.subcaps.toast.saved]
+title = "Sub-cap updated"
+
+[payg.upgrade]
+closeAria = "Close"
+
+[payg.upgrade.button]
+back = "← Back"
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+customPlaceholder = "Or enter your own amount ($0 keeps it free)"
+help = "We'll never charge above this. Your first 500 automation / AI / API operations every month are free. Set $0 if you want to keep everything free while testing."
+noCapHint = "You can still cancel anytime from the customer portal."
+noCapLabel = "No cap — I'll manage spend manually"
+perMonthSuffix = "/ month"
+presetsAria = "Monthly cap preset"
+title = "Set your monthly spend ceiling"
+
+[payg.upgrade.checkout]
+capLabel = "Monthly ceiling:"
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.footer]
+capHint = "You can change your cap any time later."
+checkoutHint = "Card details handled by Stripe — never touched by Stirling."
+confirmHint = "Your wallet will refresh automatically in a moment."
+
+[payg.upgrade.help]
+aiBody = "summarise, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools — viewing, editing, merging, splitting, watermarking, compressing, manual OCR — are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls — the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
 
 [payg.usage]
 credit = "{{amount}} account credit"

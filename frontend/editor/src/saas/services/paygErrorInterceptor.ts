@@ -23,6 +23,7 @@
  * effects.
  */
 import { alert } from "@app/components/toast";
+import i18n from "@app/i18n";
 import { openPlanSettings } from "@app/utils/appSettings";
 
 /**
@@ -98,9 +99,15 @@ export function handlePaygError(kind: PaygErrorKind, error: unknown): void {
   if (kind === "FEATURE_DEGRADED") {
     alert({
       alertType: "warning",
-      title: "You've hit your free monthly limit",
-      body: "You've used your free 500 operations this month. Upgrade to Processor to keep going.",
-      buttonText: "Go to billing",
+      title: i18n.t(
+        "payg.exhausted.title",
+        "You've hit your free monthly limit",
+      ),
+      body: i18n.t(
+        "payg.exhausted.body",
+        "You've used your free 500 operations this month. Upgrade to Processor to keep going.",
+      ),
+      buttonText: i18n.t("payg.exhausted.cta", "Go to billing"),
       buttonCallback: () => openPlanSettings(),
       isPersistentPopup: true,
       location: "bottom-right",
