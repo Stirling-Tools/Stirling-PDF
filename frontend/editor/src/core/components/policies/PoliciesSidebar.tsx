@@ -7,6 +7,8 @@
  * tool list unchanged.
  */
 
+import type { ReactNode } from "react";
+
 /** Whether the right rail should host the Policies section. False in core. */
 export function usePoliciesEnabled(): boolean {
   return false;
@@ -21,7 +23,7 @@ export function usePolicyDetailActive(): boolean {
 }
 
 /** Collapsible policy list rendered above the Tools section. Null in core. */
-export function PoliciesSection() {
+export function PoliciesSection(_props: { leadingControl?: ReactNode } = {}) {
   return null;
 }
 

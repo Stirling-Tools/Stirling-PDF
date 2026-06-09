@@ -381,73 +381,90 @@ export default function RightSidebar() {
             </div>
           ) : (
             <>
-              <div className="tool-panel__compact-header">
-                {activeTool ? (
-                  <div
-                    className="tool-panel__active-tool-pill"
-                    aria-label={activeTool.name}
-                  >
-                    <span className="tool-panel__active-tool-pill-icon">
-                      <ToolIcon
-                        icon={activeTool.icon}
-                        marginRight="0"
-                        color="var(--mantine-color-blue-filled)"
+              {!showPolicies && (
+                <div className="tool-panel__compact-header">
+                  {activeTool ? (
+                    <div
+                      className="tool-panel__active-tool-pill"
+                      aria-label={activeTool.name}
+                    >
+                      <span className="tool-panel__active-tool-pill-icon">
+                        <ToolIcon
+                          icon={activeTool.icon}
+                          marginRight="0"
+                          color="var(--mantine-color-blue-filled)"
+                        />
+                      </span>
+                      <span className="tool-panel__active-tool-pill-label">
+                        {activeTool.name}
+                      </span>
+                    </div>
+                  ) : showHeaderSearch ? (
+                    <div className="tool-panel__compact-header-search">
+                      <ToolSearch
+                        value={searchQuery}
+                        onChange={handleHeaderSearchChange}
+                        toolRegistry={toolRegistry}
+                        mode="filter"
+                        autoFocus={allToolsView && !inToolView}
                       />
-                    </span>
-                    <span className="tool-panel__active-tool-pill-label">
-                      {activeTool.name}
-                    </span>
-                  </div>
-                ) : showHeaderSearch ? (
-                  <div className="tool-panel__compact-header-search">
-                    <ToolSearch
-                      value={searchQuery}
-                      onChange={handleHeaderSearchChange}
-                      toolRegistry={toolRegistry}
-                      mode="filter"
-                      autoFocus={allToolsView && !inToolView}
-                    />
-                  </div>
-                ) : (
-                  showAgents && (
-                    <span className="tool-panel__section-label">
-                      {t("agents.section_title", "Agents")}
-                    </span>
-                  )
-                )}
-                {showCloseButton ? (
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    radius="xl"
-                    size="md"
-                    onClick={handleHeaderBack}
-                    aria-label={
-                      inToolView
-                        ? t("toolPanel.backToAllTools", "Back to all tools")
-                        : t("toolPanel.goBack", "Go back")
-                    }
-                    className="tool-panel__expand-btn"
-                  >
-                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                  </ActionIcon>
-                ) : (
-                  <ActionIcon
-                    variant="outline"
-                    radius="xl"
-                    size="md"
-                    onClick={handleCollapse}
-                    aria-label={t("toolPanel.collapse", "Collapse panel")}
-                    className="tool-panel__expand-btn"
-                  >
-                    <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                  </ActionIcon>
-                )}
-              </div>
+                    </div>
+                  ) : (
+                    showAgents && (
+                      <span className="tool-panel__section-label">
+                        {t("agents.section_title", "Agents")}
+                      </span>
+                    )
+                  )}
+                  {showCloseButton ? (
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      radius="xl"
+                      size="md"
+                      onClick={handleHeaderBack}
+                      aria-label={
+                        inToolView
+                          ? t("toolPanel.backToAllTools", "Back to all tools")
+                          : t("toolPanel.goBack", "Go back")
+                      }
+                      className="tool-panel__expand-btn"
+                    >
+                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="outline"
+                      radius="xl"
+                      size="md"
+                      onClick={handleCollapse}
+                      aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      className="tool-panel__expand-btn"
+                    >
+                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  )}
+                </div>
+              )}
 
               {showAgents && <AgentsSection />}
 
-              {showPolicies && <PoliciesSection />}
+              {showPolicies && (
+                <PoliciesSection
+                  leadingControl={
+                    <ActionIcon
+                      variant="outline"
+                      radius="xl"
+                      size="md"
+                      onClick={handleCollapse}
+                      aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      className="tool-panel__expand-btn"
+                    >
+                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  }
+                />
+              )}
 
               {showInlineSearch && (
                 <div className="tool-panel__between-search">

@@ -14,9 +14,17 @@
   display: flex;
   flex-direction: column;
 }
-/* Side gutter for the SUI SectionHeader inside the list. */
+/* Header row: optional leading control (sidebar collapse) + the SectionHeader,
+   mirroring the back-button + title layout inside an open policy. */
 .pol-list-head {
-  padding: 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+.pol-list-head > :last-child {
+  flex: 1;
+  min-width: 0;
 }
 .pol-list-rows {
   display: flex;

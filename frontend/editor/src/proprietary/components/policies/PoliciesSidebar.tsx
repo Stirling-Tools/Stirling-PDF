@@ -12,7 +12,7 @@
  *     collapsed; clicking an icon selects the policy and expands the rail.
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
@@ -20,7 +20,10 @@ import { getPolicyAutomation } from "@app/services/policyFolders";
 import { smartFolderStorage } from "@app/services/smartFolderStorage";
 import { runsToActivity, runsToStats } from "@app/services/policyLiveData";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
-import type { AutomationConfig, AutomationOperation } from "@app/types/automation";
+import type {
+  AutomationConfig,
+  AutomationOperation,
+} from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
@@ -59,7 +62,13 @@ export function usePolicyDetailActive(): boolean {
 }
 
 /** The collapsible policy list, rendered above the Tools section. */
-export function PoliciesSection() {
+export function PoliciesSection({
+  leadingControl,
+}: {
+  /** Optional control rendered to the left of the header (e.g. the sidebar
+   *  collapse button), mirroring the back-button + title in a policy. */
+  leadingControl?: ReactNode;
+} = {}) {
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
   const [expanded, setExpanded] = useState(true);
@@ -75,6 +84,7 @@ export function PoliciesSection() {
   return (
     <div className="pol-list">
       <div className="pol-list-head">
+        {leadingControl}
         <SectionHeader
           title="Policies"
           count={`${configuredCount} active`}
