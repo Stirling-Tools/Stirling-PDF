@@ -36,6 +36,7 @@ import {
   useChat,
   AiWorkflowPhase,
   ChatRole,
+  PROGRESS_LOG_MAX,
   isKnownEngineProgressDetail,
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
@@ -187,8 +188,6 @@ function progressStepIcon(
  * Displays the last {@link PROGRESS_LOG_VISIBLE} steps from the live event stream,
  * with the active (most recent) step highlighted and older steps dimmed.
  */
-const PROGRESS_LOG_VISIBLE = 4;
-
 function ProgressLogDisplay({
   progressLog,
   t,
@@ -219,7 +218,9 @@ function ProgressLogDisplay({
   }
 
   // Chronological order: oldest at top, newest (active) at bottom.
-  const visibleSteps = progressLog.slice(-PROGRESS_LOG_VISIBLE);
+  // The reducer already caps progressLog at PROGRESS_LOG_MAX entries, so this
+  // slice is effectively a no-op but kept for defensive correctness.
+  const visibleSteps = progressLog.slice(-PROGRESS_LOG_MAX);
   const startIndex = progressLog.length - visibleSteps.length;
 
   return (
