@@ -13,6 +13,7 @@ import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
+import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -36,6 +37,7 @@ export default function App() {
         <AppLayout>
           <OnboardingBootstrap />
           <TrialExpiredBootstrap />
+          <SignupRequiredBootstrap />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

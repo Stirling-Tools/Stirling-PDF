@@ -106,7 +106,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
 
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
 
-  // Left navigation structure and icons
+  // Left navigation structure and icons. The Plan tab now internally branches
+  // free vs subscribed × leader vs member via useWallet(), so the modal no
+  // longer plumbs paygEnabled / isLeader through to the nav builder.
   const configNavSections = useMemo(
     () =>
       createSaasConfigNavSections(Overview, openLogoutConfirm, {

@@ -111,7 +111,11 @@ function appendBillingSection(
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
-  { isDev = false, isAnonymous = false, t }: CreateSaasConfigNavSectionsOptions,
+  {
+    isDev = false,
+    isAnonymous = false,
+    t,
+  }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   const baseSections = createCoreConfigNavSections(false, false, false);
 
@@ -153,6 +157,9 @@ export function createSaasConfigNavSections(
   sections = appendDeveloperSection(sections);
 
   if (!isAnonymous) {
+    // The Plan tab is now the single billing surface — it internally branches
+    // free vs subscribed × leader vs member via useWallet(). The old separate
+    // "Pay-as-you-go" tab and paygEnabled / isLeader options were removed.
     sections = appendBillingSection(sections, t);
   }
 
