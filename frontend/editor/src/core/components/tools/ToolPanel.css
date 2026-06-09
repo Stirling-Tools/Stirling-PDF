@@ -271,16 +271,19 @@
   width: 100%;
 }
 
-/* Search that separates the Policies section from the Tools list below it —
-   bracketed by dividers above (from Policies) and below (from Tools). */
+/* Search that separates the Policies section from the Tools list below it. */
 .tool-panel__between-search {
   padding: 0.5rem 0.75rem;
   border-top: 1px solid var(--border-subtle, var(--color-border));
-  border-bottom: 1px solid var(--border-subtle, var(--color-border));
 }
 
 .tool-panel__between-search .search-input-container {
   width: 100%;
+}
+
+/* Slightly recessed search field so it reads as distinct from the panel. */
+.tool-panel__between-search input {
+  background-color: var(--bg-muted);
 }
 
 .tool-panel__active-tool-pill {
