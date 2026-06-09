@@ -64,7 +64,12 @@ export function usePolicyAutoRun(): void {
         if (isDispatched(categoryId, stub.id)) continue;
         // Mark synchronously so a re-render mid-dispatch can't double-fire.
         markDispatched(categoryId, stub.id);
-        void dispatch(categoryId, s.backendId as string, stub.id, stub.name);
+        void runPolicyOnFile(
+          categoryId,
+          s.backendId as string,
+          stub.id,
+          stub.name,
+        );
       }
     }
   }, [fileStubs, policies]);
@@ -121,8 +126,11 @@ async function importOutputs(
   }
 }
 
-/** Resolve the file's bytes, fire the run, and record it. */
-async function dispatch(
+/**
+ * Resolve the file's bytes, fire a backend run, and record it. Exported so the
+ * activity feed's Retry action can re-run a policy on a previously-failed file.
+ */
+export async function runPolicyOnFile(
   categoryId: string,
   backendId: string,
   fileId: FileId,
@@ -131,6 +139,7 @@ async function dispatch(
   try {
     const file = await fileStorage.getStirlingFile(fileId);
     if (!file) return; // already marked dispatched; nothing to run.
+    markDispatched(categoryId, fileId);
     const runId = await runStoredPolicy(backendId, [file]);
     recordRunStart({
       runId,

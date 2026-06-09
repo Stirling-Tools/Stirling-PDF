@@ -46,6 +46,8 @@ interface PolicyDetailPanelProps {
   onEditSettings: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
+  /** Re-run a failed activity item's policy on its file. */
+  onRetry?: (item: PolicyActivityItem) => void;
 }
 
 /** "addPassword" → "Add Password", "ocr" → "Ocr" — a light humanisation of op ids. */
@@ -70,6 +72,7 @@ export function PolicyDetailPanel({
   onEditSettings,
   onTogglePause,
   onDelete,
+  onRetry,
 }: PolicyDetailPanelProps) {
   const isPaused = status === "paused";
   // Real configured steps drive the flow; fall back to the preset's rule labels.
@@ -158,6 +161,17 @@ export function PolicyDetailPanel({
                   title={item.doc}
                   description={item.action}
                   meta={item.time}
+                  trailing={
+                    item.status === "flagged" && onRetry ? (
+                      <button
+                        type="button"
+                        className="pol-retry-btn"
+                        onClick={() => onRetry(item)}
+                      >
+                        Retry
+                      </button>
+                    ) : undefined
+                  }
                 />
               ))}
             </Card>

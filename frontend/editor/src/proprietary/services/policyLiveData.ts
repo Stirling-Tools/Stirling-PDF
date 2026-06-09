@@ -73,6 +73,8 @@ export function runsToActivity(runs: PolicyRunRecord[]): PolicyActivityItem[] {
     action: activityAction(run),
     time: relativeTime(run.startedAt),
     status: activityStatus(run),
+    runId: run.runId,
+    fileId: run.fileId,
   }));
 }
 

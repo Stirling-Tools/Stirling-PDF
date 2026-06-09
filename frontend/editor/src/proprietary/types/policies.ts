@@ -107,6 +107,10 @@ export interface PolicyActivityItem {
    * (in progress — enforcement currently running, blue).
    */
   status: "enforced" | "flagged" | "processing";
+  /** The backend run this row reflects — used to offer Retry on a failed run. */
+  runId?: string;
+  /** The file the run acted on — needed to re-run it on Retry. */
+  fileId?: string;
 }
 
 /** Per-category runtime state persisted in the mock store. */

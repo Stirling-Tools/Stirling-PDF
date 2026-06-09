@@ -14,12 +14,15 @@
 
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
 import { getPolicyAutomation } from "@app/services/policyFolders";
 import { smartFolderStorage } from "@app/services/smartFolderStorage";
 import { runsToActivity, runsToStats } from "@app/services/policyLiveData";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
+import { runPolicyOnFile } from "@app/components/policies/usePolicyAutoRun";
+import type { FileId } from "@app/types/file";
 import type {
   AutomationConfig,
   AutomationOperation,
@@ -92,6 +95,20 @@ export function PoliciesSection({
           expanded={expanded}
           onToggle={() => setExpanded((v) => !v)}
         />
+        <AppTooltip
+          content="A policy automatically runs a fixed set of tools on every document you add (e.g. redacting PII), so enforcement happens with no manual steps."
+          position="left"
+          arrow
+          delay={200}
+        >
+          <button
+            type="button"
+            className="pol-info-btn"
+            aria-label="What is a policy?"
+          >
+            <InfoOutlinedIcon sx={{ fontSize: "1rem" }} />
+          </button>
+        </AppTooltip>
       </div>
 
       {expanded && (
@@ -323,6 +340,16 @@ export function PolicyDetailTakeover() {
             : pol.pausePolicy(selectedId)
         }
         onDelete={() => setConfirmingDelete(true)}
+        onRetry={(item) => {
+          if (item.fileId && state.backendId) {
+            void runPolicyOnFile(
+              selectedId,
+              state.backendId,
+              item.fileId as FileId,
+              item.doc,
+            );
+          }
+        }}
       />
       {confirmingDelete && (
         <PolicyDeleteConfirmModal

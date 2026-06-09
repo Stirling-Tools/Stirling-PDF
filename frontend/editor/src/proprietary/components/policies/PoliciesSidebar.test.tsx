@@ -1,7 +1,14 @@
 import "fake-indexeddb/auto";
+import type { ReactNode } from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+
+// The shared Tooltip (used by the "what is a policy?" info button) pulls in
+// preferences/sidebar contexts we don't set up here — passthrough it.
+vi.mock("@app/components/shared/Tooltip", () => ({
+  Tooltip: ({ children }: { children: ReactNode }) => children,
+}));
 
 // The wizard's Workflow step embeds the Watch Folders automation builder, which
 // needs the ToolWorkflow context. Mock it: a stub that wires the save trigger to

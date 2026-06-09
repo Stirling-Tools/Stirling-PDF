@@ -22,9 +22,28 @@
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
 }
-.pol-list-head > :last-child {
+.pol-list-head .sui-sectionhdr {
   flex: 1;
   min-width: 0;
+}
+/* Small "what is a policy?" info button on the header. */
+.pol-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  color: var(--color-text-4);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.pol-info-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-2);
 }
 .pol-list-rows {
   display: flex;
@@ -76,6 +95,20 @@
 .pol-row-chevron {
   color: var(--color-text-4);
   flex-shrink: 0;
+}
+
+/* Retry button on a failed activity row. */
+.pol-retry-btn {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  padding: 0.125rem 0.4rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pol-retry-btn:hover {
+  background: var(--color-bg-hover);
 }
 
 /* Locked "Coming soon" row — muted, not interactive. */
