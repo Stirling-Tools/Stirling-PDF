@@ -56,6 +56,44 @@ describe("buildPipelineDefinition", () => {
     expect(unresolved).toEqual(["notARealTool"]);
     expect(definition.steps).toHaveLength(1);
   });
+
+  it("runs each tool's buildFormData so stored params match its endpoint", () => {
+    // A redact-like tool whose UI param (wordsToRedact[]) is transformed into
+    // the endpoint's field (listOfText) by buildFormData — the "marry up".
+    const redactish = {
+      redact: {
+        operationConfig: {
+          endpoint: () => "/api/v1/security/auto-redact",
+          buildFormData: (p: { wordsToRedact?: string[]; useRegex?: boolean }, file: File) => {
+            const fd = new FormData();
+            fd.append("fileInput", file);
+            fd.append("listOfText", (p.wordsToRedact ?? []).join("\n"));
+            fd.append("useRegex", String(p.useRegex ?? false));
+            return fd;
+          },
+        },
+      },
+    } as unknown as Partial<ToolRegistry>;
+
+    const { definition } = buildPipelineDefinition(
+      {
+        name: "Security",
+        operations: [
+          {
+            operation: "redact",
+            parameters: { wordsToRedact: ["SSN", "Account"], useRegex: true },
+          },
+        ],
+      },
+      redactish,
+    );
+
+    // The document field is dropped; the UI param became the endpoint field.
+    expect(definition.steps[0]).toEqual({
+      operation: "/api/v1/security/auto-redact",
+      parameters: { listOfText: "SSN\nAccount", useRegex: "true" },
+    });
+  });
 });
 
 const samplePolicy = {

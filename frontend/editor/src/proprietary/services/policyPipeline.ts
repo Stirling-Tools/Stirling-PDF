@@ -93,6 +93,40 @@ function resolveEndpoint(
 }
 
 /**
+ * Convert a tool's UI parameters into the exact scalar form-fields its backend
+ * endpoint expects, by running the same `buildFormData` the client-side runner
+ * uses (the one source of truth for the request shape) and keeping its non-file
+ * fields. This is what makes the stored steps "marry up" with the engine: e.g.
+ * redact's `wordsToRedact: string[]` becomes the `listOfText` string the
+ * /auto-redact endpoint reads. Falls back to the raw params if the tool has no
+ * transform (or it throws), so tools without one are unaffected.
+ */
+function toApiParameters(
+  config: ToolRegistry[keyof ToolRegistry]["operationConfig"] | undefined,
+  parameters: Record<string, unknown>,
+): Record<string, unknown> {
+  const build = config?.buildFormData;
+  if (typeof build !== "function") return parameters;
+  const dummy = new File([], "input.pdf", { type: "application/pdf" });
+  // buildFormData takes a File (single-file tools) or File[] (multi) — try both.
+  for (const fileArg of [dummy, [dummy]]) {
+    try {
+      const formData = build(parameters, fileArg as never);
+      const out: Record<string, unknown> = {};
+      // Keep scalar fields; skip File entries (the document(s) the engine feeds
+      // separately, and any supporting-file blobs).
+      formData.forEach((value, key) => {
+        if (typeof value === "string") out[key] = value;
+      });
+      return out;
+    } catch {
+      // Wrong file-arg shape for this tool — try the other, then give up.
+    }
+  }
+  return parameters;
+}
+
+/**
  * Map a frontend automation to the backend pipeline definition. Steps whose
  * endpoint can't be resolved from the registry are dropped (and reported), so
  * the backend never receives an unrunnable operation id.
@@ -110,7 +144,12 @@ export function buildPipelineDefinition(
       unresolved.push(op.operation);
       continue;
     }
-    steps.push({ operation: endpoint, parameters });
+    const config =
+      toolRegistry[op.operation as keyof ToolRegistry]?.operationConfig;
+    steps.push({
+      operation: endpoint,
+      parameters: toApiParameters(config, parameters),
+    });
   }
   return {
     definition: {
