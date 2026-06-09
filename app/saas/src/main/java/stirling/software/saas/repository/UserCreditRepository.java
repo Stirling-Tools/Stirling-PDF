@@ -91,7 +91,7 @@ public interface UserCreditRepository extends JpaRepository<UserCredit, Long> {
                             + "    END, "
                             + "  total_api_calls_made = total_api_calls_made + 1, "
                             + "  last_api_usage = now() "
-                            + "WHERE user_id = (SELECT u.user_id FROM users u WHERE u.supabase_id = :supabaseId) "
+                            + "WHERE user_id = (SELECT u.user_id FROM users u WHERE u.supabase_auth_id = :supabaseId) "
                             + "  AND (cycle_credits_remaining + bought_credits_remaining >= :creditAmount)",
             nativeQuery = true)
     int consumeCreditBySupabaseId(
@@ -109,7 +109,7 @@ public interface UserCreditRepository extends JpaRepository<UserCredit, Long> {
                             + "  cycle_credits_remaining = cycle_credits_remaining - :amount, "
                             + "  total_api_calls_made = total_api_calls_made + 1, "
                             + "  last_api_usage = now() "
-                            + "WHERE user_id = (SELECT u.user_id FROM users u WHERE u.supabase_id = :supabaseId) "
+                            + "WHERE user_id = (SELECT u.user_id FROM users u WHERE u.supabase_auth_id = :supabaseId) "
                             + "  AND cycle_credits_remaining >= :amount",
             nativeQuery = true)
     int consumeCycleCredits(@Param("supabaseId") UUID supabaseId, @Param("amount") int amount);
@@ -123,7 +123,7 @@ public interface UserCreditRepository extends JpaRepository<UserCredit, Long> {
                             + "  bought_credits_remaining = bought_credits_remaining - :amount, "
                             + "  total_api_calls_made = total_api_calls_made + 1, "
                             + "  last_api_usage = now() "
-                            + "WHERE user_id = (SELECT u.user_id FROM users u WHERE u.supabase_id = :supabaseId) "
+                            + "WHERE user_id = (SELECT u.user_id FROM users u WHERE u.supabase_auth_id = :supabaseId) "
                             + "  AND bought_credits_remaining >= :amount",
             nativeQuery = true)
     int consumeBoughtCredits(@Param("supabaseId") UUID supabaseId, @Param("amount") int amount);
@@ -133,7 +133,7 @@ public interface UserCreditRepository extends JpaRepository<UserCredit, Long> {
             value =
                     "SELECT CASE WHEN uc.cycle_credits_remaining >= :amount THEN TRUE ELSE FALSE END "
                             + "FROM user_credits uc "
-                            + "WHERE uc.user_id = (SELECT u.user_id FROM users u WHERE u.supabase_id = :supabaseId)",
+                            + "WHERE uc.user_id = (SELECT u.user_id FROM users u WHERE u.supabase_auth_id = :supabaseId)",
             nativeQuery = true)
     Boolean hasCycleCredits(@Param("supabaseId") UUID supabaseId, @Param("amount") int amount);
 
@@ -142,7 +142,7 @@ public interface UserCreditRepository extends JpaRepository<UserCredit, Long> {
             value =
                     "SELECT CASE WHEN uc.bought_credits_remaining >= :amount THEN TRUE ELSE FALSE END "
                             + "FROM user_credits uc "
-                            + "WHERE uc.user_id = (SELECT u.user_id FROM users u WHERE u.supabase_id = :supabaseId)",
+                            + "WHERE uc.user_id = (SELECT u.user_id FROM users u WHERE u.supabase_auth_id = :supabaseId)",
             nativeQuery = true)
     Boolean hasBoughtCredits(@Param("supabaseId") UUID supabaseId, @Param("amount") int amount);
 }
