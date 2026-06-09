@@ -14,7 +14,7 @@
 
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
 import { getPolicyAutomation } from "@app/services/policyFolders";
@@ -50,6 +50,9 @@ import {
 } from "@app/components/policies/policySelectionStore";
 import "@app/components/policies/Policies.css";
 
+/** localStorage key persisting the Policies section's expand/collapse state. */
+const POLICIES_COLLAPSED_KEY = "stirling-policies-section-collapsed";
+
 /** Whether the right rail should host the Policies section. True in proprietary. */
 export function usePoliciesEnabled(): boolean {
   return POLICIES_ENABLED;
@@ -74,7 +77,24 @@ export function PoliciesSection({
 } = {}) {
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
-  const [expanded, setExpanded] = useState(true);
+  // Persist the expand/collapse state across refreshes.
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem(POLICIES_COLLAPSED_KEY) !== "1";
+    } catch {
+      return true;
+    }
+  });
+  const toggleExpanded = () =>
+    setExpanded((open) => {
+      const next = !open;
+      try {
+        localStorage.setItem(POLICIES_COLLAPSED_KEY, next ? "0" : "1");
+      } catch {
+        // Best-effort; ignore quota/availability failures.
+      }
+      return next;
+    });
 
   if (!POLICIES_ENABLED) return null;
 
@@ -93,20 +113,24 @@ export function PoliciesSection({
           count={`${configuredCount} active`}
           collapsible
           expanded={expanded}
-          onToggle={() => setExpanded((v) => !v)}
+          onToggle={toggleExpanded}
         />
         <AppTooltip
           content="A policy automatically runs a fixed set of tools on every document you add (e.g. redacting PII), so enforcement happens with no manual steps."
-          position="left"
-          arrow
-          delay={200}
+          sidebarTooltip
+          pinOnClick
         >
           <button
             type="button"
             className="pol-info-btn"
             aria-label="What is a policy?"
           >
-            <InfoOutlinedIcon sx={{ fontSize: "1rem" }} />
+            <LocalIcon
+              icon="info-outline-rounded"
+              width="1.25rem"
+              height="1.25rem"
+              style={{ color: "var(--icon-files-color)" }}
+            />
           </button>
         </AppTooltip>
       </div>

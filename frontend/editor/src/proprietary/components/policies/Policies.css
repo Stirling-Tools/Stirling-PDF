@@ -27,23 +27,20 @@
   min-width: 0;
 }
 /* Small "what is a policy?" info button on the header. */
+/* Bare info icon matching the tool-step affordance (LocalIcon, no chrome). */
 .pol-info-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  color: var(--color-text-4);
+  padding: 0;
+  border: none;
+  background: none;
   cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
+  transition: opacity var(--motion-fast);
 }
 .pol-info-btn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-2);
+  opacity: 0.7;
 }
 .pol-list-rows {
   display: flex;
