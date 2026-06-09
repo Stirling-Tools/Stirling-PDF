@@ -258,7 +258,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                             handleNavigation(item.key);
                           }
                         }}
-                        className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
+                        className={`modal-nav-item ${isActive ? "active" : ""} ${isMobile ? "mobile" : ""}`}
                         style={{
                           background: isActive
                             ? colors.navItemActiveBg
@@ -275,8 +275,19 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                           style={{ color }}
                         />
                         {!isMobile && (
-                          <Group gap={4} align="center" wrap="nowrap">
-                            <Text size="sm" fw={500} style={{ color }}>
+                          <Group
+                            gap={4}
+                            align="center"
+                            wrap="nowrap"
+                            style={{ minWidth: 0, flex: 1 }}
+                          >
+                            <Text
+                              size="sm"
+                              fw={500}
+                              truncate
+                              style={{ color, minWidth: 0, flex: 1 }}
+                              title={item.label}
+                            >
                               {item.label}
                             </Text>
                             {item.badge && (
@@ -284,6 +295,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                                 size="xs"
                                 variant="light"
                                 color={item.badgeColor ?? "orange"}
+                                className="modal-nav-item-badge"
                                 style={{ flexShrink: 0 }}
                               >
                                 {item.badge}

@@ -200,7 +200,7 @@ export default function AdminFeaturesSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.features.serverCertificate.enabled.label",
@@ -316,7 +316,7 @@ export default function AdminFeaturesSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.features.serverCertificate.regenerateOnStartup.label",
