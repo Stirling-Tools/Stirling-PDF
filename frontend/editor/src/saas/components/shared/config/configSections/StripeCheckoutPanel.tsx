@@ -127,22 +127,13 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Strict-Mode-safe single-flight: React 18 dev mounts effects twice; we use
-  // a ref-guarded fetch so we don't burn two Stripe Checkout Sessions per
-  // mount in dev. (Cap changes are handled via key= in the parent, so each
-  // distinct cap gets a fresh mount — fetchedRef only protects within a
-  // single logical mount.)
-  const fetchedRef = useRef<boolean>(false);
-
   // Stable ref for the error callback so we don't have to include it in the
-  // effect deps — keeps the single-flight semantics intact for callers that
-  // pass an inline onError.
+  // effect deps.
   const onErrorRef = useRef<typeof onError>(onError);
   onErrorRef.current = onError;
 
-  // Stash t() in a ref so the effect — which is single-flight via fetchedRef
-  // and deliberately not re-running on translation changes — can read the
-  // current translator without forcing t into its deps.
+  // Stash t() in a ref so the effect can read the current translator without
+  // forcing t into its deps.
   const tRef = useRef(t);
   tRef.current = t;
 
@@ -159,9 +150,6 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     window.location.pathname.startsWith("/dev/");
 
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
     if (devPreview) {
       setClientSecret("cs_mock_devpreview");
       setIsMock(true);
@@ -169,6 +157,13 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
       return;
     }
 
+    // React 18 strict-mode dev mounts effects twice. We use `cancelled` to
+    // discard the first mount's response (its setState calls become no-ops),
+    // and the second mount's response wins. We deliberately do NOT short-
+    // circuit the second mount with a ref — earlier versions did that and
+    // ran into the trap where mount 1 was cancelled but the live mount
+    // never re-fetched, leaving `loading` stuck at true. Two network calls
+    // in dev is an acceptable cost; prod has no strict mode → single fetch.
     let cancelled = false;
     async function createSession() {
       try {
@@ -195,16 +190,17 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
               },
             },
           );
-        if (cancelled) return;
         if (invokeError) {
           throw invokeError;
         }
         if (!data?.client_secret) {
           throw new Error("Edge function returned no client_secret");
         }
+        if (cancelled) return;
         setClientSecret(data.client_secret);
         setIsMock(Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"));
       } catch (e: unknown) {
+        if (cancelled) return;
         const msg =
           e instanceof Error
             ? e.message
@@ -212,10 +208,8 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
                 "payg.checkout.error.startFailed",
                 "Couldn't start checkout session",
               );
-        if (!cancelled) {
-          setError(msg);
-          onErrorRef.current?.(msg);
-        }
+        setError(msg);
+        onErrorRef.current?.(msg);
       } finally {
         if (!cancelled) setLoading(false);
       }
