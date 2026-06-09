@@ -42,9 +42,7 @@ interface RulerMeasurementLayerProps {
   onDelete: (id: string) => void;
   onHoverChange: (id: string | null) => void;
   onClearAll: () => void;
-  onLabelVisibilityModeChange: React.Dispatch<
-    React.SetStateAction<RulerLabelVisibilityMode>
-  >;
+  onCycleLabelVisibilityMode: () => void;
 }
 
 interface LabelBox {
@@ -754,27 +752,35 @@ export function RulerMeasurementLayer({
   onDelete,
   onHoverChange,
   onClearAll,
-  onLabelVisibilityModeChange,
+  onCycleLabelVisibilityMode,
 }: RulerMeasurementLayerProps) {
   const { t } = useTranslation();
-  const measurementLineLabels = {
-    scaled: t("ruler.scaled", "Scaled"),
-    physical: t("ruler.physicalValues", "Physical"),
-  };
-  const visibleIdleLabelIds = getVisibleIdleLabelIds(measurements, zoom);
-  const orderedMeasurements = [...measurements].sort((a, b) => {
+  const measurementLineLabels = React.useMemo(
+    () => ({
+      scaled: t("ruler.scaled", "Scaled"),
+      physical: t("ruler.physicalValues", "Physical"),
+    }),
+    [t],
+  );
+  const visibleIdleLabelIds = React.useMemo(
+    () => getVisibleIdleLabelIds(measurements, zoom),
+    [measurements, zoom],
+  );
+  const orderedMeasurements = React.useMemo(() => {
     const getRank = (item: RulerRenderedMeasurement) => {
       if (item.measurement.id === hoveredId) {
         return 2;
       }
+
       if (item.measurement.id === selectedId) {
         return 1;
       }
+
       return 0;
     };
 
-    return getRank(a) - getRank(b);
-  });
+    return [...measurements].sort((a, b) => getRank(a) - getRank(b));
+  }, [hoveredId, measurements, selectedId]);
 
   const getShouldShowIdleLabel = (measurementId: string) => {
     if (labelVisibilityMode === "showAll") {
@@ -794,20 +800,6 @@ export function RulerMeasurementLayer({
       : labelVisibilityMode === "showAll"
         ? t("ruler.hideAllLabels", "Hide all labels")
         : t("ruler.hideSmallLabels", "Hide small labels");
-
-  const cycleLabelVisibilityMode = () => {
-    onLabelVisibilityModeChange((currentMode) => {
-      if (currentMode === "hideSmall") {
-        return "showAll";
-      }
-
-      if (currentMode === "showAll") {
-        return "hideAll";
-      }
-
-      return "hideSmall";
-    });
-  };
 
   return (
     <>
@@ -921,7 +913,7 @@ export function RulerMeasurementLayer({
             style={{ pointerEvents: "all", cursor: "pointer" }}
             onClick={(e) => {
               e.stopPropagation();
-              cycleLabelVisibilityMode();
+              onCycleLabelVisibilityMode();
             }}
           >
             <rect

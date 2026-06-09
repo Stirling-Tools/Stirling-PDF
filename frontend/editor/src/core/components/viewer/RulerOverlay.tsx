@@ -57,8 +57,8 @@ function dist(a: Point, b: Point): number {
 
 /**
  * Given the start/end PagePoints of a measurement, find the scale from the
- * viewport whose BBox contains the midpoint. Falls back to customScale if provided,
- * then to the first viewport if none contains it (handles whole-page viewports with bbox=null).
+ * custom scale, then the viewport whose BBox contains the midpoint, then the
+ * first whole-page viewport with bbox=null.
  */
 function pickScale(
   start: PagePoint,
@@ -81,8 +81,14 @@ function pickScale(
   // Flip y: screen y=0 is page top; PDF user space y=0 is page bottom
   const my = info.pageHeight - (start.y + end.y) / 2;
 
+  let fallbackScale: MeasureScale | null = null;
+
   for (const { bbox, scale } of info.viewports) {
-    if (!bbox) return scale; // whole-page viewport
+    if (!bbox) {
+      fallbackScale ??= scale;
+      continue;
+    }
+
     const [x0, y0, x1, y1] = bbox;
     if (
       mx >= Math.min(x0, x1) &&
@@ -93,7 +99,7 @@ function pickScale(
       return scale;
     }
   }
-  return null;
+  return fallbackScale;
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -152,7 +158,7 @@ function findPageAtClientPoint(
 }
 
 /**
- * Find the nearest point on any page boundary and return it as both
+ * Find the nearest point on the starting page boundary and return it as both
  * an SVG screen coordinate and a PagePoint (page-relative PDF units).
  * Used to clamp the live line when the cursor drifts off the page.
  */
@@ -160,48 +166,38 @@ function nearestPageDocPt(
   cursor: Point,
   container: HTMLElement,
   zoom: number,
+  pageIndex: number,
 ): { screenPt: Point; docPt: PagePoint } | null {
-  const pages = container.querySelectorAll("[data-page-index]");
-  if (!pages.length) return null;
+  const pageEl = container.querySelector(
+    `[data-page-index="${pageIndex}"]`,
+  ) as HTMLElement | null;
+  if (!pageEl) return null;
 
   const cr = container.getBoundingClientRect();
-  let bestDist = Infinity;
-  let best: { screenPt: Point; docPt: PagePoint } | null = null;
+  const r = pageEl.getBoundingClientRect();
 
-  pages.forEach((pageNode) => {
-    const pageEl = pageNode as HTMLElement;
-    const r = pageEl.getBoundingClientRect();
-    const pageIndex = parseInt(pageEl.dataset.pageIndex ?? "0", 10);
+  // Page bounds in SVG (container-relative) space
+  const left = r.left - cr.left;
+  const top = r.top - cr.top;
+  const right = r.right - cr.left;
+  const bottom = r.bottom - cr.top;
 
-    // Page bounds in SVG (container-relative) space
-    const left = r.left - cr.left;
-    const top = r.top - cr.top;
-    const right = r.right - cr.left;
-    const bottom = r.bottom - cr.top;
+  // Nearest point on this rect to the cursor (SVG space)
+  const cx = Math.max(left, Math.min(right, cursor.x));
+  const cy = Math.max(top, Math.min(bottom, cursor.y));
 
-    // Nearest point on this rect to the cursor (SVG space)
-    const cx = Math.max(left, Math.min(right, cursor.x));
-    const cy = Math.max(top, Math.min(bottom, cursor.y));
-    const d = Math.sqrt((cursor.x - cx) ** 2 + (cursor.y - cy) ** 2);
-
-    if (d < bestDist) {
-      bestDist = d;
-      // Convert SVG-space point (cx, cy) → page-relative viewport → PDF points:
-      //   viewport position of cx = cr.left + cx
-      //   page-relative position  = (cr.left + cx) - r.left
-      //   PDF units               = page-relative / zoom
-      best = {
-        screenPt: { x: cx, y: cy },
-        docPt: {
-          pageIndex,
-          x: (cr.left + cx - r.left) / zoom,
-          y: (cr.top + cy - r.top) / zoom,
-        },
-      };
-    }
-  });
-
-  return best;
+  // Convert SVG-space point (cx, cy) → page-relative viewport → PDF points:
+  //   viewport position of cx = cr.left + cx
+  //   page-relative position  = (cr.left + cx) - r.left
+  //   PDF units               = page-relative / zoom
+  return {
+    screenPt: { x: cx, y: cy },
+    docPt: {
+      pageIndex,
+      x: (cr.left + cx - r.left) / zoom,
+      y: (cr.top + cy - r.top) / zoom,
+    },
+  };
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -263,6 +259,20 @@ export const RulerOverlay = React.forwardRef<
     if (isEnabled) {
       setHoveredId(null);
     }
+  }, []);
+
+  const cycleLabelVisibilityMode = useCallback(() => {
+    setLabelVisibilityMode((currentMode) => {
+      if (currentMode === "hideSmall") {
+        return "showAll";
+      }
+
+      if (currentMode === "showAll") {
+        return "hideAll";
+      }
+
+      return "hideSmall";
+    });
   }, []);
 
   const notifyMeasurementsChange = useCallback(
@@ -527,7 +537,12 @@ export const RulerOverlay = React.forwardRef<
       } else if (firstPtRef.current !== null) {
         // First point placed, cursor wandered off page — clamp to nearest edge
         el.style.cursor = "crosshair";
-        const result = nearestPageDocPt(screenPt, el, zoomRef.current);
+        const result = nearestPageDocPt(
+          screenPt,
+          el,
+          zoomRef.current,
+          firstPtRef.current.pageIndex,
+        );
         if (result) {
           setCursorS(result.screenPt);
           setCursorDoc(result.docPt);
@@ -573,10 +588,6 @@ export const RulerOverlay = React.forwardRef<
       // CRITICAL: Reject cross-page measurements
       // Measurements must have both points on the same page
       if (prev.pageIndex !== nextPoint.pageIndex) {
-        console.warn(
-          "[Ruler] Cross-page measurements not allowed. Resetting measurement.",
-          `Start: page ${prev.pageIndex}, End: page ${nextPoint.pageIndex}`,
-        );
         // Reset first point so user can start fresh on same page
         firstPtRef.current = null;
         setFirstPt(null);
@@ -700,7 +711,7 @@ export const RulerOverlay = React.forwardRef<
         measurement,
         startS,
         endS,
-        distPts: dist(startS, endS) / zoom,
+        distPts: dist(measurement.start, measurement.end),
         measureScale,
       });
       return items;
@@ -771,7 +782,7 @@ export const RulerOverlay = React.forwardRef<
           setSelectedId(null);
           setHoveredId(null);
         }}
-        onLabelVisibilityModeChange={setLabelVisibilityMode}
+        onCycleLabelVisibilityMode={cycleLabelVisibilityMode}
       />
     </svg>
   );

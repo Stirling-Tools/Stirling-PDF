@@ -146,13 +146,13 @@ function parseScale(
   const factor = lookupNumber(firstFmt, "C", pdfObjects);
   if (factor === null || factor <= 0) return null;
 
-  const unit = lookupText(firstFmt, "U", pdfObjects) ?? "units";
-  const baseFactor = getUnitFactor(unit);
-  const ratio =
-    typeof baseFactor === "number" && baseFactor > 0
-      ? factor / baseFactor
-      : null;
+  const unit = lookupText(firstFmt, "U", pdfObjects)?.trim().toLowerCase();
+  if (!unit) return null;
 
+  const baseFactor = getUnitFactor(unit);
+  if (!baseFactor) return null;
+
+  const ratio = factor / baseFactor;
   return { factor, ratio, unit };
 }
 

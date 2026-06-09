@@ -119,6 +119,9 @@ export const UNIT_OPTIONS = [
   { value: "mi", label: "Miles (mi)" },
 ] as const;
 
+const MAX_SESSION_ENTRIES = 50;
+const TRIMMED_SESSION_ENTRIES = 40;
+
 /**
  * Detect quota exceeded errors across browser implementations.
  * Handles: name "QuotaExceededError", code 22 (legacy), "NS_ERROR_DOM_QUOTA_REACHED"
@@ -174,7 +177,7 @@ export function loadSessionMap(key: string): Record<string, unknown> {
   }
 }
 
-// Save entry to sessionStorage with quota management (50-file limit)
+// Save entry to sessionStorage with quota management.
 export function saveSessionMap(
   key: string,
   fileKey: string,
@@ -191,10 +194,13 @@ export function saveSessionMap(
     delete existing[fileKey];
     existing[fileKey] = value;
 
-    // Enforce 50-file limit - keep only 40 most recent entries by insertion order
+    // Trim back below the max to avoid pruning again on every subsequent save.
     const keys = Object.keys(existing);
-    if (keys.length > 50) {
-      const entriesToDelete = keys.slice(0, keys.length - 40);
+    if (keys.length > MAX_SESSION_ENTRIES) {
+      const entriesToDelete = keys.slice(
+        0,
+        keys.length - TRIMMED_SESSION_ENTRIES,
+      );
       entriesToDelete.forEach((k) => delete existing[k]);
     }
 
