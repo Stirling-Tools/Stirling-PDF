@@ -585,9 +585,12 @@ export default function PeopleSection() {
               {t("workspace.people.user")}
             </Table.Th>
             <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
+              style={{
+                fontWeight: 600,
+                color: "var(--mantine-color-gray-7)",
+                whiteSpace: "nowrap",
+              }}
               fz="sm"
-              w={100}
             >
               {t("workspace.people.role")}
             </Table.Th>
@@ -690,7 +693,7 @@ export default function PeopleSection() {
                     </Box>
                   </Group>
                 </Table.Td>
-                <Table.Td w={100}>
+                <Table.Td style={{ whiteSpace: "nowrap" }}>
                   <Badge
                     size="sm"
                     variant="light"
@@ -699,6 +702,10 @@ export default function PeopleSection() {
                         ? "blue"
                         : "cyan"
                     }
+                    styles={{
+                      root: { maxWidth: "none" },
+                      label: { overflow: "visible" },
+                    }}
                   >
                     {(user.rolesAsString || "").includes("ROLE_ADMIN")
                       ? t("workspace.people.admin", "Admin")

@@ -8,6 +8,7 @@ import {
   Group,
 } from "@mantine/core";
 import { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import ColorizeIcon from "@mui/icons-material/Colorize";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
@@ -33,6 +34,7 @@ export function ColorControl({
   label,
   disabled = false,
 }: ColorControlProps) {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   // Buffer the colour locally so the picker stays responsive during drag.
   // Only propagate to the parent (which triggers expensive annotation updates)
@@ -111,7 +113,9 @@ export function ColorControl({
           />
           {supportsEyeDropper && (
             <Group justify="flex-end">
-              <Tooltip label="Pick colour from screen">
+              <Tooltip
+                label={t("color.eyeDropper.tooltip", "Pick colour from screen")}
+              >
                 <ActionIcon
                   variant="subtle"
                   color="gray"
