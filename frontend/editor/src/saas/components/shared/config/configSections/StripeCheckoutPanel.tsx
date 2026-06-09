@@ -25,14 +25,29 @@
  * Both chunks are eligible for Vite tree-shaking + lazy load; nothing in the
  * main bundle references either package.
  *
+ * <h2>Architecture</h2>
+ *
+ * Stripe-touching code lives in Supabase edge functions, not the Java
+ * backend. This panel invokes {@code create-payg-team-subscription}
+ * directly via {@code supabase.functions.invoke()} — same pattern {@link
+ * usePlans} already uses for {@code stripe-price-lookup}. The auth JWT is
+ * attached automatically by the Supabase client.
+ *
+ * <p>The edge function (SaaS PR #300) is the canonical place Stripe Checkout
+ * Sessions get created — it uses the Stripe Sync Engine tables, has dedicated
+ * unit tests, and shares Stripe SDK / secret-key plumbing with the metering +
+ * webhook edge functions. Routing through Java would have meant a useless
+ * proxy hop + a second Stripe SDK to maintain.
+ *
  * <h2>Behaviour</h2>
  *
  * <ol>
- *   <li>On mount: POSTs to {@code /api/v1/payg/checkout} with the cap, gets
- *       back a {@code clientSecret}.
- *   <li>If the secret starts with {@code cs_mock_} (the backend mock-mode
- *       sentinel) OR no {@code VITE_STRIPE_PUBLISHABLE_KEY} is configured,
- *       render a clearly-labelled placeholder + a "Continue with mock" button.
+ *   <li>On mount: calls {@code supabase.functions.invoke("create-payg-team-subscription", {capUsd, noCap})}
+ *       to obtain a {@code client_secret}.
+ *   <li>If no {@code VITE_STRIPE_PUBLISHABLE_KEY} is configured OR the edge
+ *       function isn't deployed yet (errors out / returns a {@code cs_mock_}
+ *       sentinel), render a clearly-labelled placeholder + "Continue with
+ *       mock" button so the post-completion path stays testable.
  *   <li>Otherwise render the real {@code <EmbeddedCheckoutProvider>} +
  *       {@code <EmbeddedCheckout>} iframe.
  * </ol>
@@ -42,7 +57,7 @@
  * presses "Continue with mock" in unconfigured environments.
  */
 import React, { useEffect, useRef, useState } from "react";
-import apiClient from "@app/services/apiClient";
+import { supabase } from "@app/auth/supabase";
 
 // Eager static imports here are OK because this whole module is itself lazy-
 // imported by the modal. They land in the same lazy chunk.
@@ -61,9 +76,19 @@ export interface StripeCheckoutPanelProps {
   onError?: (message: string) => void;
 }
 
+/**
+ * Response shape from the {@code create-payg-team-subscription} Supabase edge
+ * function. Mirrors what the function returns in SaaS PR #300.
+ */
 interface CheckoutResponse {
-  clientSecret: string;
-  mock: boolean;
+  /** Stripe Checkout Session client_secret. */
+  client_secret: string;
+  /**
+   * Optional sentinel: edge functions in non-prod environments may return a
+   * stubbed secret prefixed {@code cs_mock_} so the FE knows to render the
+   * placeholder rather than try to mount a real iframe with a bad secret.
+   */
+  mock?: boolean;
 }
 
 // Singleton Stripe promise — created on first use and reused for the lifetime
@@ -129,17 +154,29 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     async function createSession() {
       try {
         const noCap = capUsd === null;
-        const res = await apiClient.post<CheckoutResponse>(
-          "/api/v1/payg/checkout",
-          {
-            capUsd: capUsd ?? 0,
-            noCap,
-            returnUrl: window.location.href,
-          },
-        );
+        // Direct Supabase edge function invocation — same pattern as usePlans
+        // for stripe-price-lookup. The user's JWT is attached automatically;
+        // edge fn uses it to derive the team id + stripe_customer_id.
+        const { data, error: invokeError } =
+          await supabase.functions.invoke<CheckoutResponse>(
+            "create-payg-team-subscription",
+            {
+              body: {
+                capUsd: capUsd ?? 0,
+                noCap,
+                returnUrl: window.location.href,
+              },
+            },
+          );
         if (cancelled) return;
-        setClientSecret(res.data.clientSecret);
-        setIsMock(res.data.mock || res.data.clientSecret.startsWith("cs_mock_"));
+        if (invokeError) {
+          throw invokeError;
+        }
+        if (!data?.client_secret) {
+          throw new Error("Edge function returned no client_secret");
+        }
+        setClientSecret(data.client_secret);
+        setIsMock(Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"));
       } catch (e: unknown) {
         const msg =
           e instanceof Error ? e.message : "Couldn't start checkout session";

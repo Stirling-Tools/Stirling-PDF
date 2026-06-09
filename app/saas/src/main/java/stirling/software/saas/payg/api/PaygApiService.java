@@ -17,18 +17,22 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h2>Why this is a mock</h2>
  *
- * The real PAYG persistence + Stripe wiring lives across two unmerged surfaces:
+ * <p>Stripe-touching code (create Checkout Session, update subscription cap) lives in Supabase edge
+ * functions; the FE invokes them directly via {@code supabase.functions.invoke()}, same pattern
+ * {@code usePlans} uses for {@code stripe-price-lookup}. So this Java service NEVER calls Stripe —
+ * it's wallet reads + a dev-only side-channel to mark a team subscribed without going through
+ * Stripe.
+ *
+ * <p>The real PAYG persistence lives on SaaS PR <a
+ * href="https://github.com/Stirling-Tools/Stirling-PDF-SaaS/pull/300">#300</a>, which adds:
  *
  * <ul>
- *   <li>SaaS PR <a href="https://github.com/Stirling-Tools/Stirling-PDF-SaaS/pull/300">#300</a> —
- *       adds the {@code payg_subscription_id} + {@code free_tier} columns on {@code
- *       payg_team_extensions}, the {@code payg_meter_event_log} table for usage rollups, and the
- *       Supabase edge functions {@code create-payg-team-subscription} (Checkout Session creator)
- *       and {@code payg-subscription-webhook} (flips subscription state on {@code
- *       customer.subscription.created}).
- *   <li>Stripe Java SDK — not yet added to {@code build.gradle}. Real {@link
- *       PaygApiController#createCheckoutSession} would either use the SDK directly or proxy to the
- *       Supabase edge function above.
+ *   <li>{@code payg_team_extensions.payg_subscription_id} + {@code free_tier} columns
+ *   <li>{@code payg_meter_event_log} table for usage rollups
+ *   <li>{@code create-payg-team-subscription} edge function (Stripe Checkout Session creator)
+ *   <li>{@code payg-subscription-webhook} edge function ({@code customer.subscription.created} →
+ *       writes the new {@code payg_subscription_id})
+ *   <li>{@code meter-payg-units} edge function (records usage to Stripe)
  * </ul>
  *
  * <p>Until those land we keep all state in {@link ConcurrentHashMap}s, keyed by a synthetic team
@@ -41,11 +45,13 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>When PR #300's Supabase migrations land in main: replace {@link #subscriptionStateByTeam}
  *       reads with {@code paygTeamExtensionsRepository.findByTeamId(...)} + the new {@code
  *       payg_subscription_id} column check.
- *   <li>When the Stripe SDK is added: replace {@link #createMockClientSecret} with a real {@code
- *       Session.create(...)} call or an HTTP call to the {@code create-payg-team-subscription} edge
- *       function.
  *   <li>Usage rollups: replace {@link #mockUsageThisPeriod} with a query against {@code
  *       payg_meter_event_log} (sum of {@code units} for the current cycle).
+ *   <li>Cap updates: replace {@link #updateCap} with a call to the future {@code update-payg-cap}
+ *       edge function (not yet on PR #300). Until then it's a no-op write to the in-memory store.
+ *   <li>{@link #markSubscribed} disappears entirely once PR #300's {@code
+ *       payg-subscription-webhook} is deployed — the webhook is what flips subscription state in
+ *       the real flow.
  * </ol>
  */
 @Service
@@ -124,39 +130,6 @@ public class PaygApiService {
     }
 
     /**
-     * Creates a (mock) Stripe Checkout Session for the team to subscribe to Processor.
-     *
-     * <p>Returns a synthetic {@code client_secret} string with a sentinel prefix so the frontend's
-     * Embedded Checkout integration can either:
-     *
-     * <ul>
-     *   <li>detect the mock and render its "Stripe sandbox not configured" placeholder, OR
-     *   <li>be fed the value to a real Stripe iframe (which will fail validation, but the failure
-     *       path is also exercise-worthy).
-     * </ul>
-     *
-     * <p>Real impl: call {@code com.stripe.model.checkout.Session.create(SessionCreateParams)} with
-     * {@code mode=SUBSCRIPTION}, the team's Stripe price IDs from {@code
-     * pricing_policy_stripe_price}, customer = the team's {@code
-     * payg_team_extensions.stripe_customer_id} (eager-created), and pass the cap through {@code
-     * subscription_data.metadata.cap_usd} so the webhook can pick it up.
-     */
-    public CheckoutSessionResult createCheckoutSession(
-            String teamKey, int capUsd, boolean noCap, String returnUrl) {
-        log.info(
-                "Mock checkout session requested: team={} cap={} noCap={} returnUrl={}",
-                teamKey,
-                capUsd,
-                noCap,
-                returnUrl);
-        String clientSecret = createMockClientSecret(teamKey);
-        return new CheckoutSessionResult(clientSecret, true /* mock */);
-    }
-
-    /** Result of {@link #createCheckoutSession}. */
-    public record CheckoutSessionResult(String clientSecret, boolean mock) {}
-
-    /**
      * Marks the team as subscribed in the mock store. Called from the (currently absent) Stripe
      * webhook handler in the real flow — here it's exposed as a dev-only side-channel via {@link
      * PaygApiController#devMarkSubscribed} so the UI can be exercised end-to-end without Stripe.
@@ -230,10 +203,5 @@ public class PaygApiService {
     private int mockUsageThisPeriod(String teamKey) {
         // Hash-based curve gives stable per-team variety: 0–249 units.
         return Math.floorMod(teamKey.hashCode(), 250);
-    }
-
-    private String createMockClientSecret(String teamKey) {
-        // Prefix lets the frontend detect mock mode and skip the real iframe wire-up.
-        return "cs_mock_" + Integer.toHexString(teamKey.hashCode()) + "_" + UUID.randomUUID();
     }
 }

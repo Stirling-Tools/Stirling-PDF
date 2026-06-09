@@ -25,7 +25,6 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.saas.payg.api.PaygApiService.CheckoutSessionResult;
 import stirling.software.saas.payg.api.PaygApiService.WalletSnapshot;
 
 /**
@@ -33,6 +32,29 @@ import stirling.software.saas.payg.api.PaygApiService.WalletSnapshot;
  *
  * <p>All endpoints are gated on the {@code saas} profile and require an authenticated user; the
  * Spring Security chain in the saas module already enforces that for {@code /api/v1/payg/**}.
+ *
+ * <h2>Scope — Java vs Supabase edge function</h2>
+ *
+ * <p>Stripe-touching code (create Checkout Session, update subscription_item) lives in Supabase
+ * edge functions, <b>not</b> here:
+ *
+ * <ul>
+ *   <li>{@code create-payg-team-subscription} (SaaS PR #300) — the FE calls this directly via
+ *       {@code supabase.functions.invoke()}; same pattern {@code usePlans} uses for {@code
+ *       stripe-price-lookup}.
+ *   <li>Cap updates — when the {@code update-payg-cap} edge function lands, the {@link #updateCap}
+ *       endpoint here will be removed too. Until then it's a Java stub so the FE wiring is
+ *       testable.
+ *   <li>{@code payg-subscription-webhook} (PR #300) — Stripe's {@code
+ *       customer.subscription.created} fires here, writes to {@code
+ *       payg_team_extensions.payg_subscription_id}. The Java side just refetches the wallet to pick
+ *       up the change.
+ * </ul>
+ *
+ * <p>Java keeps the wallet read because (a) it composes data from team_memberships +
+ * payg_team_extensions + payg_meter_event_log, all of which Spring Data already handles, and (b)
+ * the Spring Security context is already attached. Adding a Stripe SDK to the Java backend would
+ * mean two integrations to maintain.
  *
  * <p><b>Backed by a mock service today.</b> See {@link PaygApiService} for the swap-out plan.
  */
@@ -70,36 +92,14 @@ public class PaygApiController {
         return ResponseEntity.ok(paygApi.getWalletSnapshot(teamKey, isLeader));
     }
 
-    // ─── Checkout session creation ──────────────────────────────────────
-
-    /**
-     * Request body for {@link #createCheckoutSession}. {@code capUsd} is ignored when {@code noCap
-     * = true}, but always required to keep the payload simple.
-     */
-    public record CheckoutSessionRequest(
-            @Min(0) @Max(10_000) int capUsd, boolean noCap, String returnUrl) {}
-
-    /** Response body for {@link #createCheckoutSession}. */
-    public record CheckoutSessionResponse(String clientSecret, boolean mock) {}
-
-    @PostMapping("/checkout")
-    @Operation(
-            summary = "Create a Stripe Checkout Session",
-            description =
-                    "Creates a Stripe Embedded Checkout session for subscribing to Processor."
-                            + " The returned client_secret is consumed by the frontend's"
-                            + " <EmbeddedCheckoutProvider> in step 2 of the Upgrade modal."
-                            + " Today returns a mock secret prefixed `cs_mock_` so the FE can detect"
-                            + " unconfigured environments and render a placeholder.")
-    public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(
-            Authentication authentication, @Valid @RequestBody CheckoutSessionRequest req) {
-        String teamKey = paygApi.resolveTeamKey(authentication);
-        CheckoutSessionResult res =
-                paygApi.createCheckoutSession(teamKey, req.capUsd(), req.noCap(), req.returnUrl());
-        return ResponseEntity.ok(new CheckoutSessionResponse(res.clientSecret(), res.mock()));
-    }
-
     // ─── Cap update ─────────────────────────────────────────────────────
+    //
+    // NOTE: This endpoint also wants to live in a Supabase edge function
+    // ({@code update-payg-cap}, not yet on PR #300) because updating the cap
+    // requires a {@code subscription_item.update} call to Stripe to adjust
+    // the {@code billing_thresholds.amount_gte} threshold. Until that edge
+    // function exists, Java holds the stub so the FE wiring is testable; the
+    // mock service just records the new cap in-memory.
 
     /** Request body for {@link #updateCap}. */
     public record UpdateCapRequest(@Min(0) @Max(10_000) int capUsd, boolean noCap) {}
