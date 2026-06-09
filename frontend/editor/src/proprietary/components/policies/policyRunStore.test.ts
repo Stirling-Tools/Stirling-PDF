@@ -17,7 +17,7 @@ function rec(over: Partial<PolicyRunRecord>): PolicyRunRecord {
     fileName: "f.pdf",
     fileSize: 10,
     status: "PENDING",
-    outputFileIds: [],
+    outputs: [],
     error: null,
     startedAt: 1,
     ...over,
@@ -53,10 +53,13 @@ describe("policyRunStore", () => {
 
   it("updateRun patches an in-flight run's status + outputs", () => {
     recordRunStart(rec({ runId: "abc" }));
-    updateRun("abc", { status: "COMPLETED", outputFileIds: ["out-1"] });
+    updateRun("abc", {
+      status: "COMPLETED",
+      outputs: [{ fileId: "out-1", fileName: "redacted.pdf" }],
+    });
     const run = read("stirling-policy-runs").runs[0];
     expect(run.status).toBe("COMPLETED");
-    expect(run.outputFileIds).toEqual(["out-1"]);
+    expect(run.outputs).toEqual([{ fileId: "out-1", fileName: "redacted.pdf" }]);
   });
 
   it("updateRun ignores an unknown run id", () => {

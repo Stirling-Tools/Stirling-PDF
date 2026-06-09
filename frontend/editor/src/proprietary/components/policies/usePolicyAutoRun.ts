@@ -12,10 +12,14 @@
  */
 
 import { useEffect, useRef } from "react";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
-import { runStoredPolicy, getPolicyRun } from "@app/services/policyApi";
+import {
+  runStoredPolicy,
+  getPolicyRun,
+  downloadPolicyOutput,
+} from "@app/services/policyApi";
 import type { PolicyRunStatus } from "@app/services/policyPipeline";
 import type { FileId } from "@app/types/file";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -25,6 +29,7 @@ import {
   recordRunStart,
   updateRun,
   usePolicyRuns,
+  type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
 
 /** Poll cadence + cap for a single run's status (≈2.5 min worst case). */
@@ -41,10 +46,12 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
+  const { addFiles } = useFileManagement();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
-  // Run ids currently being polled, so the poll effect never double-polls.
+  // Run ids currently being polled / imported, so the effects never double-fire.
   const polling = useRef<Set<string>>(new Set());
+  const importing = useRef<Set<string>>(new Set());
 
   // Dispatch: for each active policy × each session file not yet run, fire a run.
   useEffect(() => {
@@ -71,6 +78,47 @@ export function usePolicyAutoRun(): void {
       void poll(run.runId).finally(() => polling.current.delete(run.runId));
     }
   }, [runs]);
+
+  // Import each completed run's outputs into the workspace (once per run), so the
+  // enforced file actually appears in the app rather than only on the backend.
+  useEffect(() => {
+    if (!POLICIES_ENABLED) return;
+    for (const run of runs) {
+      if (
+        run.status !== "COMPLETED" ||
+        run.imported ||
+        run.outputs.length === 0 ||
+        importing.current.has(run.runId)
+      ) {
+        continue;
+      }
+      importing.current.add(run.runId);
+      void importOutputs(run, addFiles).finally(() =>
+        importing.current.delete(run.runId),
+      );
+    }
+  }, [runs, addFiles]);
+}
+
+/** Fetch a completed run's output files and add them to the workspace. */
+async function importOutputs(
+  run: PolicyRunRecord,
+  addFiles: (files: File[]) => Promise<unknown>,
+): Promise<void> {
+  try {
+    const files = await Promise.all(
+      run.outputs.map(async (out) => {
+        const blob = await downloadPolicyOutput(out.fileId);
+        return new File([blob], out.fileName || run.fileName, {
+          type: blob.type || "application/pdf",
+        });
+      }),
+    );
+    if (files.length > 0) await addFiles(files);
+    updateRun(run.runId, { imported: true });
+  } catch {
+    // Leave imported=false so it retries on a later tick (transient failure).
+  }
 }
 
 /** Resolve the file's bytes, fire the run, and record it. */
@@ -91,7 +139,7 @@ async function dispatch(
       fileName,
       fileSize: file.size,
       status: "PENDING",
-      outputFileIds: [],
+      outputs: [],
       error: null,
       startedAt: Date.now(),
     });
@@ -113,7 +161,7 @@ async function poll(runId: string): Promise<void> {
     }
     updateRun(runId, {
       status: view.status,
-      outputFileIds: view.outputs.map((o) => o.fileId),
+      outputs: view.outputs,
       error: view.error,
     });
     if (isTerminal(view.status)) return;

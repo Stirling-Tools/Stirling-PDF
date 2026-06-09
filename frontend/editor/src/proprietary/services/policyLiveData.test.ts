@@ -15,7 +15,7 @@ function run(over: Partial<PolicyRunRecord>): PolicyRunRecord {
     fileName: "f.pdf",
     fileSize: 0,
     status: "COMPLETED",
-    outputFileIds: [],
+    outputs: [],
     error: null,
     startedAt: Date.now(),
     ...over,

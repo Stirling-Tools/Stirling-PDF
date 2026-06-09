@@ -81,6 +81,15 @@ export async function runPolicyPipeline(
   return res.data.jobId;
 }
 
+/** Download a run's output file by id (via the shared general-files endpoint). */
+export async function downloadPolicyOutput(fileId: string): Promise<Blob> {
+  const res = await apiClient.get<Blob>(
+    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
+    { responseType: "blob" },
+  );
+  return res.data;
+}
+
 /** Current status, step cursor and output files of a run. */
 export async function getPolicyRun(runId: string): Promise<PolicyRunView> {
   const res = await apiClient.get<PolicyRunView>(
