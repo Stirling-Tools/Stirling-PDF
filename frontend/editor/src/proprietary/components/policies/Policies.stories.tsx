@@ -92,6 +92,7 @@ export const DetailActive: Story = {
         ]}
         stats={sampleStats}
         canConfigure
+        canDelete
         onBack={noop}
         onEditSettings={noop}
         onTogglePause={noop}
@@ -112,6 +113,7 @@ export const DetailPaused: Story = {
         activity={sampleActivity}
         stats={sampleStats}
         canConfigure
+        canDelete
         onBack={noop}
         onEditSettings={noop}
         onTogglePause={noop}
@@ -132,6 +134,7 @@ export const DetailManaged: Story = {
         activity={sampleActivity}
         stats={sampleStats}
         canConfigure={false}
+        canDelete={false}
         onBack={noop}
         onEditSettings={noop}
         onTogglePause={noop}

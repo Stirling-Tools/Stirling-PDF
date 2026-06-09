@@ -53,6 +53,8 @@ export function decodedToState(
     fieldValues: decoded.fieldValues,
     folderId: localFolderId,
     backendId: decoded.id,
+    // Catalog-category policies are built-in defaults (not deletable).
+    isDefault: true,
   };
 }
 

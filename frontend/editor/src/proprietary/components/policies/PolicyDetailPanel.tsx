@@ -40,6 +40,8 @@ interface PolicyDetailPanelProps {
   /** Summary stats derived from the user's files. */
   stats?: PolicyStats;
   canConfigure: boolean;
+  /** Default (built-in) policies aren't deletable, so the Delete action hides. */
+  canDelete: boolean;
   onBack: () => void;
   onEditSettings: () => void;
   onTogglePause: () => void;
@@ -63,6 +65,7 @@ export function PolicyDetailPanel({
   activity,
   stats,
   canConfigure,
+  canDelete,
   onBack,
   onEditSettings,
   onTogglePause,
@@ -201,17 +204,19 @@ export function PolicyDetailPanel({
       </div>
 
       {canConfigure && (
-        <div className="pol-footer">
-          <Button
-            variant="ghost"
-            accent="red"
-            size="sm"
-            leadingIcon={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
-            onClick={onDelete}
-            style={{ marginRight: "auto" }}
-          >
-            Delete
-          </Button>
+        <div className={`pol-footer${canDelete ? "" : " pol-footer-end"}`}>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              accent="red"
+              size="sm"
+              leadingIcon={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
+              onClick={onDelete}
+              style={{ marginRight: "auto" }}
+            >
+              Delete
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onTogglePause}>
             {isPaused ? "Resume" : "Pause"}
           </Button>

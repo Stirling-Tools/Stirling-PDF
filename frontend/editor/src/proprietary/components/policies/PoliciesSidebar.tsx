@@ -267,6 +267,7 @@ export function PolicyDetailTakeover() {
         activity={runsToActivity(categoryRuns)}
         stats={runsToStats(categoryRuns, backingFolder?.createdAt)}
         canConfigure={pol.canConfigure}
+        canDelete={!state.isDefault}
         onBack={() => closePolicy()}
         onEditSettings={() => {
           // Seeded/active policies may have no backing folder yet — create one
