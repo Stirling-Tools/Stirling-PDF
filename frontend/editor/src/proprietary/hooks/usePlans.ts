@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import licenseService, {
   PlanTier,
   PlansResponse,
 } from "@app/services/licenseService";
+import {
+  usePlanFeatures,
+  usePlanHighlights,
+} from "@app/constants/planConstants";
 
 export interface UsePlansReturn {
   plans: PlanTier[];
@@ -12,16 +16,22 @@ export interface UsePlansReturn {
 }
 
 export const usePlans = (currency: string = "gbp"): UsePlansReturn => {
+  const planFeatures = usePlanFeatures();
+  const planHighlights = usePlanHighlights();
   const [plans, setPlans] = useState<PlanTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const data: PlansResponse = await licenseService.getPlans(currency);
+      const data: PlansResponse = await licenseService.getPlans(
+        planFeatures,
+        planHighlights,
+        currency,
+      );
       setPlans(data.plans);
     } catch (err) {
       console.error("Error fetching plans:", err);
@@ -29,11 +39,11 @@ export const usePlans = (currency: string = "gbp"): UsePlansReturn => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currency, planFeatures, planHighlights]);
 
   useEffect(() => {
     fetchPlans();
-  }, [currency]);
+  }, [fetchPlans]);
 
   return {
     plans,

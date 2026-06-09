@@ -287,8 +287,6 @@ export default function Login() {
         setPostLoginRedirectPath(returnPath);
       }
 
-      console.log(`[Login] Signing in with provider: ${provider}`);
-
       // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
       // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
       const { error } = await springAuth.signInWithOAuth({
@@ -520,8 +518,6 @@ export default function Login() {
       setError(null);
       clearLogoutBlock();
 
-      console.log("[Login] Signing in with email:", email);
-
       const { user, session, error } = await springAuth.signInWithPassword({
         email: email.trim(),
         password: password,
@@ -529,13 +525,11 @@ export default function Login() {
       });
 
       if (error) {
-        console.error("[Login] Email sign in error:", error);
         setError(error.message);
         if (error.mfaRequired || error.code === "invalid_mfa_code") {
           setRequiresMfa(true);
         }
       } else if (user && session) {
-        console.log("[Login] Email sign in successful");
         clearLogoutBlock();
         setRequiresMfa(false);
         setMfaCode("");

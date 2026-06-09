@@ -272,7 +272,6 @@ export function FolderProvider({ children }: FolderProviderProps) {
           if (mountedRef.current) setServerReachable(false);
           return { ok: false, reason: "endpoint-missing" };
         }
-        console.warn("[FolderContext] pullFromServer failed", err);
         if (mountedRef.current) {
           setServerReachable(false);
           // Only surface a banner when this is a server-side outage or
@@ -284,6 +283,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
           // manager. Folder-mutation buttons get individual disabled
           // tooltips via `serverReachable`, which is enough signal.
           if (status === undefined || status >= 500) {
+            console.warn("[FolderContext] pullFromServer failed", err);
             setError(`Folder sync failed: ${formatServerError(err)}`);
           }
         }
