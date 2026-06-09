@@ -44,7 +44,16 @@ export function useCredits() {
   const [error, setError] = useState<Error | null>(null);
   const [hasAttempted, setHasAttempted] = useState<boolean>(false);
 
+  // Legacy weekly-credits endpoint. PAYG replaces this — gated off by default.
+  // Flip VITE_LEGACY_CREDITS_ENABLED=true to re-enable for parallel testing.
+  const legacyCreditsEnabled =
+    import.meta.env.VITE_LEGACY_CREDITS_ENABLED === "true";
+
   const fetchCredits = useCallback(async () => {
+    if (!legacyCreditsEnabled) {
+      setHasAttempted(true);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -67,7 +76,7 @@ export function useCredits() {
       setIsLoading(false);
       setHasAttempted(true);
     }
-  }, []);
+  }, [legacyCreditsEnabled]);
 
   useEffect(() => {
     if (!loading && session && !hasAttempted && !isAnonymous) {

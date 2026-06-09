@@ -144,8 +144,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
 
+  // Legacy weekly-credits feed (GET /api/v1/credits). PAYG replaces this
+  // entirely — the BE controller is gated behind the legacy-credits profile
+  // so the call would 404. No-op here so the auth bootstrap doesn't spam
+  // 404s on every login / config-modal open. The `creditBalance` +
+  // `creditSummary` + `subscription` state stay at null; downstream PAYG
+  // surfaces read from useWallet() instead.
+  //
+  // To bring this back (e.g. while testing the legacy credit pipeline) set
+  // VITE_LEGACY_CREDITS_ENABLED=true at FE build time.
+  const legacyCreditsEnabled =
+    import.meta.env.VITE_LEGACY_CREDITS_ENABLED === "true";
+
   const fetchCredits = useCallback(
     async (sessionToUse?: Session | null) => {
+      if (!legacyCreditsEnabled) {
+        return;
+      }
       const currentSession = sessionToUse ?? session;
 
       if (!currentSession?.user) {
@@ -199,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSubscription(null);
       }
     },
-    [session],
+    [legacyCreditsEnabled, session],
   );
 
   const refreshCredits = useCallback(async () => {
