@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.ai.service.AiProxyService;
+import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -33,6 +35,7 @@ import stirling.software.saas.util.CreditHeaderUtils;
 @RestController
 @Profile("saas")
 @RequestMapping("/api/v1/ai")
+@RequiresFeature(FeatureGate.AI_SUPPORT)
 @Slf4j
 public class AiProxyController {
 
