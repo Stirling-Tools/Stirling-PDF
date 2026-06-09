@@ -30,11 +30,15 @@ import {
   usePolicyDataMode,
   setPolicyDataMode,
 } from "@app/components/policies/policyDataModeStore";
-import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Banner } from "@shared/components/Banner";
-import { IconBadge, type IconBadgeAccent } from "@shared/components/IconBadge";
+import { IconBadge } from "@shared/components/IconBadge";
+import {
+  deriveRowStatus,
+  STATUS_LABEL,
+  ROW_ACCENT,
+} from "@app/components/policies/policyStatus";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
@@ -47,31 +51,6 @@ import {
   closePolicy,
 } from "@app/components/policies/policySelectionStore";
 import "@app/components/policies/Policies.css";
-
-/** Derive a single row/detail status, treating a spend-limit hit as paused. */
-function deriveRowStatus(
-  state: PolicyState | undefined,
-  spendReached: boolean,
-): PolicyRowStatus {
-  if (!state?.configured) return "setup";
-  if (spendReached || state.status === "paused") return "paused";
-  return "active";
-}
-
-const STATUS_LABEL: Record<PolicyRowStatus, string> = {
-  active: "Active",
-  paused: "Paused",
-  setup: "Set up",
-};
-
-/** A soft tinted icon tile per category — gives each policy a calm identity colour. */
-const ROW_ACCENT: Record<string, IconBadgeAccent> = {
-  ingestion: "blue",
-  security: "purple",
-  compliance: "green",
-  routing: "amber",
-  retention: "red",
-};
 
 /** Whether the right rail should host the Policies section. True in proprietary. */
 export function usePoliciesEnabled(): boolean {
