@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
@@ -176,7 +176,7 @@ describe("Login", () => {
     });
   });
 
-  it("should show loading state while auth is loading", () => {
+  it("should show loading state while auth is loading", async () => {
     vi.mocked(useAuth).mockReturnValue({
       session: null,
       user: null,
@@ -187,13 +187,15 @@ describe("Login", () => {
       refreshSession: vi.fn(),
     });
 
-    render(
-      <TestWrapper>
-        <BrowserRouter>
-          <Login />
-        </BrowserRouter>
-      </TestWrapper>,
-    );
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <BrowserRouter>
+            <Login />
+          </BrowserRouter>
+        </TestWrapper>,
+      );
+    });
 
     // Component shouldn't redirect or show form while loading
     expect(mockNavigate).not.toHaveBeenCalled();
@@ -510,26 +512,30 @@ describe("Login", () => {
     expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it("should display session expired message from URL param", () => {
-    render(
-      <TestWrapper>
-        <MemoryRouter initialEntries={["/login?expired=true"]}>
-          <Login />
-        </MemoryRouter>
-      </TestWrapper>,
-    );
+  it("should display session expired message from URL param", async () => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={["/login?expired=true"]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
 
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
 
-  it("should display account created success message", () => {
-    render(
-      <TestWrapper>
-        <MemoryRouter initialEntries={["/login?messageType=accountCreated"]}>
-          <Login />
-        </MemoryRouter>
-      </TestWrapper>,
-    );
+  it("should display account created success message", async () => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={["/login?messageType=accountCreated"]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
 
     expect(screen.getByText(/account created/i)).toBeInTheDocument();
   });

@@ -98,8 +98,11 @@ export default function EditableSecretField({
               variant="light"
               onClick={handleEdit}
               disabled={disabled}
-              title="Edit"
-              aria-label="Edit secret value"
+              title={t("editableSecretField.edit", "Edit")}
+              aria-label={t(
+                "editableSecretField.editSecretValue",
+                "Edit secret value",
+              )}
             >
               <LocalIcon icon="edit" width="1rem" height="1rem" />
             </ActionIcon>
