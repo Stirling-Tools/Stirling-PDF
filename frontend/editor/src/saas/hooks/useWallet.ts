@@ -1,7 +1,8 @@
 /**
- * Hook backing the PAYG Plan page. Wraps {@code GET /api/v1/payg/wallet} (the
- * backend mock-service in {@code PaygApiService}) and exposes mutations for
- * marking-subscribed and updating-the-cap.
+ * Hook backing the PAYG Plan page. Wraps {@code GET /api/v1/payg/wallet}
+ * (served by {@code PaygWalletController} once Wave 1 BE lands; until then
+ * the dev preview route synthesises a wallet from localStorage) and exposes
+ * mutations for marking-subscribed and updating-the-cap.
  *
  * <h2>Render efficiency</h2>
  *
@@ -50,7 +51,38 @@ import apiClient from "@app/services/apiClient";
 export type WalletStatus = "free" | "subscribed";
 export type WalletRole = "leader" | "member";
 
-/** Mirror of {@code PaygApiService.WalletSnapshot} (the JSON the backend returns). */
+/**
+ * A single team member's billing-relevant info — name + email for the avatar
+ * row, {@code spendUnits} for the mini-bar, and {@code capUnits} for the
+ * optional per-member sub-cap. Mirrors a row of the backend's {@code members}
+ * array on {@code WalletSnapshot} (the {@code wallet_category_summary} view
+ * joined with {@code team_memberships}).
+ */
+export interface WalletMember {
+  /** Supabase user id of the member. */
+  userId: string;
+  name: string;
+  email: string;
+  /** Per-member sub-cap, or {@code null} for "no sub-cap". */
+  capUnits: number | null;
+  /** Member's current-period billable spend. */
+  spendUnits: number;
+}
+
+/**
+ * Per-category breakdown of current-period spend in billable units. The
+ * categories mirror the {@code FeatureGate} buckets the backend tracks:
+ * server-side tool calls ({@code api}), AI-backed tools ({@code ai}), and
+ * pipeline / automation runs ({@code automation}). Numbers sum to {@code
+ * billableUsed} (modulo rounding in mock data).
+ */
+export interface WalletCategoryBreakdown {
+  api: number;
+  ai: number;
+  automation: number;
+}
+
+/** Mirror of the backend's {@code WalletSnapshot} record (the JSON returned from {@code GET /api/v1/payg/wallet}). */
 export interface Wallet {
   status: WalletStatus;
   role: WalletRole;
@@ -69,6 +101,23 @@ export interface Wallet {
   stripeSubscriptionId: string | null;
   /** Current-period spend in billable units. */
   spendUnitsThisPeriod: number;
+  /** Per-category spend breakdown (api / ai / automation). */
+  categoryBreakdown: WalletCategoryBreakdown;
+  /**
+   * Team members, populated for the leader view; empty for members or
+   * single-seat tenants. Leader-vs-member is still resolved via {@link
+   * Wallet#role} — this field just carries the per-member rows the leader's
+   * sub-cap table needs.
+   */
+  members: WalletMember[];
+  /**
+   * Recent billable-activity rows. V1 returns {@code []} from the backend;
+   * the field exists so the Plan page can render an empty state without
+   * branching on undefined. Each entry is a {@code Record<string, unknown>}
+   * because the activity-row shape is not yet finalised — when the meter-
+   * event surface lands, this widens to a real interface.
+   */
+  recent: Array<Record<string, unknown>>;
 }
 
 export interface UseWalletResult {
@@ -100,26 +149,55 @@ const STORAGE_KEY = "stirling.payg.devSubscription";
 /**
  * Stable reference reuse — if the new payload deep-equals the previous one,
  * return the previous object so React's reference check short-circuits child
- * renders. Cheap because Wallet is a small flat record (no nested objects /
- * arrays in V1).
+ * renders. Walks the top-level scalars first (cheapest), then the nested
+ * {@code categoryBreakdown} object, then the {@code members} array. The
+ * {@code recent} array is identity-compared only — Wave 1 always returns
+ * {@code []} so a reference-stability check is sufficient; we'll deepen
+ * this once the activity surface lands.
  */
 function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   if (!prev) return next;
   if (
-    prev.status === next.status &&
-    prev.role === next.role &&
-    prev.billingPeriodStart === next.billingPeriodStart &&
-    prev.billingPeriodEnd === next.billingPeriodEnd &&
-    prev.billableUsed === next.billableUsed &&
-    prev.billableLimit === next.billableLimit &&
-    prev.capUsd === next.capUsd &&
-    prev.noCap === next.noCap &&
-    prev.stripeSubscriptionId === next.stripeSubscriptionId &&
-    prev.spendUnitsThisPeriod === next.spendUnitsThisPeriod
+    prev.status !== next.status ||
+    prev.role !== next.role ||
+    prev.billingPeriodStart !== next.billingPeriodStart ||
+    prev.billingPeriodEnd !== next.billingPeriodEnd ||
+    prev.billableUsed !== next.billableUsed ||
+    prev.billableLimit !== next.billableLimit ||
+    prev.capUsd !== next.capUsd ||
+    prev.noCap !== next.noCap ||
+    prev.stripeSubscriptionId !== next.stripeSubscriptionId ||
+    prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod
   ) {
-    return prev;
+    return next;
   }
-  return next;
+  if (
+    prev.categoryBreakdown.api !== next.categoryBreakdown.api ||
+    prev.categoryBreakdown.ai !== next.categoryBreakdown.ai ||
+    prev.categoryBreakdown.automation !== next.categoryBreakdown.automation
+  ) {
+    return next;
+  }
+  if (prev.members.length !== next.members.length) {
+    return next;
+  }
+  for (let i = 0; i < prev.members.length; i++) {
+    const a = prev.members[i];
+    const b = next.members[i];
+    if (
+      a.userId !== b.userId ||
+      a.name !== b.name ||
+      a.email !== b.email ||
+      a.capUnits !== b.capUnits ||
+      a.spendUnits !== b.spendUnits
+    ) {
+      return next;
+    }
+  }
+  if (prev.recent !== next.recent && prev.recent.length !== next.recent.length) {
+    return next;
+  }
+  return prev;
 }
 
 /**
@@ -154,6 +232,21 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     noCap: false,
     stripeSubscriptionId: subscribed ? "sub_devpreview" : null,
     spendUnitsThisPeriod: 62,
+    // Wave 1 backend (PR #6574) returns a per-category breakdown so the
+    // hero panel can split AI / automation / API. Use realistic but
+    // tier-distinguishable mock values so the dev preview shows a
+    // different visual when the localStorage flip toggles subscribed.
+    categoryBreakdown: subscribed
+      ? { api: 12, ai: 35, automation: 15 }
+      : { api: 5, ai: 40, automation: 17 },
+    // Members are populated in the leader view by the real backend
+    // (joining team_memberships); the dev preview returns an empty
+    // array — Plan.tsx + PaygLeader still resolve role via wallet.role,
+    // so empty members just hides the sub-caps card.
+    members: [],
+    // Activity feed is V1 = [], the backend ships this in Wave 2 once
+    // payg_meter_event_log is read-accessible from the wallet endpoint.
+    recent: [],
   };
 }
 
@@ -259,10 +352,37 @@ export function useWallet(): UseWalletResult {
         return;
       }
       const noCap = capUsd === null;
-      await apiClient.post("/api/v1/payg/dev/mark-subscribed", {
-        capUsd: capUsd ?? 0,
-        noCap,
-      });
+      // The dev side-channel only exists when the BE mock service is
+      // running (FE-branch local dev). Once the real backend (PR #6574)
+      // is in play, /dev/mark-subscribed is removed and the webhook
+      // (customer.subscription.created) is what flips the team to
+      // subscribed. We swallow 404s so the modal's completion path —
+      // which awaits this promise before rendering the confirmation
+      // screen — doesn't error out on a perfectly normal "the real
+      // backend doesn't expose this dev hook" response. A subsequent
+      // refetch picks up the webhook-driven flip whenever it lands.
+      try {
+        await apiClient.post("/api/v1/payg/dev/mark-subscribed", {
+          capUsd: capUsd ?? 0,
+          noCap,
+        });
+      } catch (e: unknown) {
+        const status =
+          typeof e === "object" && e !== null && "response" in e
+            ? (e as { response?: { status?: number } }).response?.status
+            : undefined;
+        if (status === 404) {
+          // Real BE in play — webhook will land the subscription
+          // state; log and continue. Loud-but-harmless so the dev
+          // notices their /dev/mark-subscribed isn't wired up.
+          // eslint-disable-next-line no-console
+          console.info(
+            "[useWallet] /dev/mark-subscribed not available (404) — relying on Stripe webhook to flip subscription state",
+          );
+        } else {
+          throw e;
+        }
+      }
       await refetch();
     },
     [devPreview, refetch],
