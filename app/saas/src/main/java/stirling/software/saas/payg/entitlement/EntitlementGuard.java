@@ -43,10 +43,11 @@ import stirling.software.saas.util.AuthenticationUtils;
  * circuits the request before any handler work happens when the team's snapshot is missing one of
  * the gates the route declared via {@link RequiresFeature}.
  *
- * <p>Scope: only routes whose handler method (or bean type) carries {@link AutoJobPostMapping}.
- * Admin / info / config endpoints are excluded by the path-pattern in {@code PaygWebMvcConfig} and
- * are additionally skipped by the {@code AutoJobPostMapping} check so non-billable infra never
- * trips the guard.
+ * <p>Scope: routes whose handler method (or bean type) carries either {@link AutoJobPostMapping}
+ * (multipart tool POSTs) or {@link RequiresFeature} (AI controllers, future non-multipart gated
+ * routes). Admin / info / config endpoints are excluded by the path-pattern in {@code
+ * PaygWebMvcConfig} and are additionally skipped here when they carry neither annotation, so non-
+ * billable infra never trips the guard.
  *
  * <p>Decision matrix:
  *
@@ -114,10 +115,19 @@ public class EntitlementGuard implements HandlerInterceptor {
         if (!(handler instanceof HandlerMethod hm)) {
             return true;
         }
-        // Scope: only AutoJobPostMapping routes — admin / info / config never trip the guard.
-        if (AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) == null
-                && AnnotationUtils.findAnnotation(hm.getBeanType(), AutoJobPostMapping.class)
-                        == null) {
+        // Scope: AutoJobPostMapping routes (multipart tool POSTs) OR routes that explicitly
+        // declare @RequiresFeature (e.g. AI controllers — JSON-bodied, no AutoJobPostMapping).
+        // Admin / info / config endpoints carry neither annotation and never trip the guard.
+        boolean hasAutoJobPostMapping =
+                AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
+                        || AnnotationUtils.findAnnotation(
+                                        hm.getBeanType(), AutoJobPostMapping.class)
+                                != null;
+        boolean hasRequiresFeature =
+                AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
+                        || AnnotationUtils.findAnnotation(hm.getBeanType(), RequiresFeature.class)
+                                != null;
+        if (!hasAutoJobPostMapping && !hasRequiresFeature) {
             skippedNoAnnotationCounter.increment();
             return true;
         }

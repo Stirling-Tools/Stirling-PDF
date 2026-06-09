@@ -88,7 +88,7 @@ class EntitlementGuardTest {
     }
 
     @Test
-    void routeWithoutAutoJobPostMapping_isSkipped() throws Exception {
+    void routeWithNeitherAnnotation_isSkipped() throws Exception {
         HandlerMethod hm = handlerFor("plainEndpoint");
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
@@ -97,6 +97,55 @@ class EntitlementGuardTest {
 
         assertThat(proceed).isTrue();
         Mockito.verifyNoInteractions(entitlementService, userRepository);
+    }
+
+    @Test
+    void routeWithRequiresFeatureButNoAutoJobPostMapping_isInScope() throws Exception {
+        // Regression: @RequiresFeature alone (e.g. JSON-bodied AI controllers) must be in-scope.
+        // Previously the guard short-circuited unless @AutoJobPostMapping was present, which meant
+        // a team without AI entitlement could hit /api/v1/ai/* freely.
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(jwtAuth(supabaseId));
+        when(userRepository.findBySupabaseId(supabaseId))
+                .thenReturn(Optional.of(userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        HandlerMethod hm = handlerFor("aiOnlyNoAutoJobPostMapping");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("FEATURE_DEGRADED");
+        assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
+        verify(entitlementService).getSnapshot(42L);
+    }
+
+    @Test
+    void routeWithClassLevelRequiresFeatureOnly_isInScope() throws Exception {
+        // Mirrors AiCreateController shape: @RequiresFeature lives on the @RestController class,
+        // not the method. Must still be picked up by the guard.
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new AnonymousAuthenticationToken(
+                                "key",
+                                "anonymousUser",
+                                List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+
+        HandlerMethod hm = handlerForClassLevel("classLevelAiMethod");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(401);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("SIGNUP_REQUIRED");
+        assertThat(body.get("category").asText()).isEqualTo("AI");
     }
 
     // ---------------------------------------------------------------------------------------
@@ -373,7 +422,13 @@ class EntitlementGuardTest {
         return new HandlerMethod(new TestController(), m);
     }
 
-    /** Fixture mounting four route shapes the guard's resolver needs to discriminate. */
+    private static HandlerMethod handlerForClassLevel(String methodName)
+            throws NoSuchMethodException {
+        Method m = ClassLevelAiController.class.getDeclaredMethod(methodName);
+        return new HandlerMethod(new ClassLevelAiController(), m);
+    }
+
+    /** Fixture mounting route shapes the guard's resolver needs to discriminate. */
     static class TestController {
 
         @AutoJobPostMapping("/manual")
@@ -393,8 +448,25 @@ class EntitlementGuardTest {
             return "ok";
         }
 
-        /** Endpoint without @AutoJobPostMapping — guard must skip. */
+        /** Endpoint without any annotation — guard must skip. */
         public String plainEndpoint() {
+            return "ok";
+        }
+
+        /** AI-controller shape: @RequiresFeature with NO @AutoJobPostMapping (JSON body). */
+        @RequiresFeature(FeatureGate.AI_SUPPORT)
+        public String aiOnlyNoAutoJobPostMapping() {
+            return "ok";
+        }
+    }
+
+    /**
+     * Mirrors {@code AiCreateController} layout: @RequiresFeature on the class, plain methods. The
+     * guard must pick up the class-level annotation.
+     */
+    @RequiresFeature(FeatureGate.AI_SUPPORT)
+    static class ClassLevelAiController {
+        public String classLevelAiMethod() {
             return "ok";
         }
     }

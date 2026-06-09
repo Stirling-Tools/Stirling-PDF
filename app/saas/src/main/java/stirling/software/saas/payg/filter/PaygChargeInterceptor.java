@@ -55,10 +55,13 @@ import stirling.software.saas.util.AuthenticationUtils;
  * after it in {@code PaygWebMvcConfig} so legacy credit-rejection short-circuits before we waste
  * work hashing inputs.
  *
- * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping}, reads the parsed multipart parts,
- * materialises each input to a {@code TempFile}, and asks {@link JobChargeService#openProcess} to
- * open (or join) a process. The resulting {@link ChargeOutcome} plus input temp-files are stashed
- * as request attributes for {@code afterCompletion}.
+ * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping} OR {@code @RequiresFeature} (the
+ * latter lets AI controllers — JSON-bodied, no AutoJobPostMapping — bill correctly), reads the
+ * parsed multipart parts, materialises each input to a {@code TempFile}, and asks {@link
+ * JobChargeService#openProcess} to open (or join) a process. The resulting {@link ChargeOutcome}
+ * plus input temp-files are stashed as request attributes for {@code afterCompletion}. Routes
+ * without multipart inputs short-circuit inside {@code doPreHandle} without touching the charge
+ * service.
  *
  * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
  * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
@@ -155,8 +158,25 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             if (!properties.isEnabled()) {
                 return true;
             }
-            if (!(handler instanceof HandlerMethod hm)
-                    || hm.getMethodAnnotation(AutoJobPostMapping.class) == null) {
+            if (!(handler instanceof HandlerMethod hm)) {
+                callsShortCircuit.increment();
+                return true;
+            }
+            // In-scope when the handler carries @AutoJobPostMapping (multipart tool POSTs) OR
+            // @RequiresFeature (AI controllers, future non-multipart gated routes). Without one of
+            // these the interceptor short-circuits — admin / info / static routes never run
+            // determineCategory.
+            boolean hasAutoJobPostMapping =
+                    AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
+                            || AnnotationUtils.findAnnotation(
+                                            hm.getBeanType(), AutoJobPostMapping.class)
+                                    != null;
+            boolean hasRequiresFeature =
+                    AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
+                            || AnnotationUtils.findAnnotation(
+                                            hm.getBeanType(), RequiresFeature.class)
+                                    != null;
+            if (!hasAutoJobPostMapping && !hasRequiresFeature) {
                 callsShortCircuit.increment();
                 return true;
             }

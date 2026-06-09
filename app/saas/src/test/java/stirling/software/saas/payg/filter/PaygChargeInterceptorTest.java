@@ -424,6 +424,76 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
+    void preHandle_requiresFeatureWithoutAutoJobPostMapping_reachesCategoryGate() throws Exception {
+        // Regression: AI controllers carry @RequiresFeature but NO @AutoJobPostMapping. They must
+        // still flow past the short-circuit gate so determineCategory runs (and so future
+        // multipart-bearing @RequiresFeature routes bill correctly). API-key auth +
+        // @RequiresFeature
+        // — even without multipart inputs — should land in the BillingCategory.API branch via
+        // determineCategory's auth check, then short-circuit inside doPreHandle because there are
+        // no multipart parts.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        MockMultipartHttpServletRequest req = newMultipart();
+        // No file parts — emulates a JSON-bodied AI controller request that happens to be wrapped
+        // as multipart. doPreHandle short-circuits with no openProcess call.
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", new byte[0]));
+
+        boolean cont =
+                interceptor.preHandle(
+                        req, new MockHttpServletResponse(), handlerMethodForAiNoAutoJob());
+
+        assertThat(cont).isTrue();
+        verify(chargeService, never()).openProcess(any(), anyList());
+        // Importantly: not counted as BYPASSED — the AI category was determined correctly.
+        assertThat(meterRegistry.counter("payg.filter.bypassed").count()).isEqualTo(0.0);
+    }
+
+    @Test
+    void preHandle_aiEndpointWithoutAutoJobPostMapping_categoryIsAi() throws Exception {
+        // With multipart parts present + @RequiresFeature(AI_SUPPORT) but no @AutoJobPostMapping:
+        // the interceptor must run determineCategory and tag the ChargeContext as AI.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForAiNoAutoJob());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AI);
+    }
+
+    @Test
+    void preHandle_classLevelRequiresFeatureOnly_isInScope() throws Exception {
+        // Mirrors AiCreateController shape: @RequiresFeature on the @RestController class.
+        // The interceptor must resolve it via beanType lookup and not short-circuit as
+        // "no annotation".
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForClassLevelAi());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AI);
+    }
+
+    @Test
     void preHandle_aiEndpointWithAutomationHeader_automationWinsByPrecedence() throws Exception {
         // X-Stirling-Automation: true on an @RequiresFeature(AI_SUPPORT) endpoint → AUTOMATION
         // (header beats annotation by design — pipeline-driven AI counts as automation usage).
@@ -524,6 +594,24 @@ class PaygChargeInterceptorTest {
         }
     }
 
+    private static HandlerMethod handlerMethodForAiNoAutoJob() {
+        try {
+            Method m = FakeController.class.getDeclaredMethod("handleAiNoAutoJob");
+            return new HandlerMethod(new FakeController(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static HandlerMethod handlerMethodForClassLevelAi() {
+        try {
+            Method m = ClassLevelAiController.class.getDeclaredMethod("classLevelAi");
+            return new HandlerMethod(new ClassLevelAiController(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void authenticateWithApiKey(User user) {
         stirling.software.proprietary.security.model.ApiKeyAuthenticationToken token =
                 new stirling.software.proprietary.security.model.ApiKeyAuthenticationToken(
@@ -546,6 +634,20 @@ class PaygChargeInterceptorTest {
         @stirling.software.saas.payg.cap.RequiresFeature(
                 stirling.software.saas.payg.model.FeatureGate.AI_SUPPORT)
         public void handleAi() {}
+
+        /**
+         * AI-controller shape: @RequiresFeature without @AutoJobPostMapping (JSON body / proxy).
+         */
+        @stirling.software.saas.payg.cap.RequiresFeature(
+                stirling.software.saas.payg.model.FeatureGate.AI_SUPPORT)
+        public void handleAiNoAutoJob() {}
+    }
+
+    /** Mirrors AiCreateController layout: @RequiresFeature on the class, plain methods. */
+    @stirling.software.saas.payg.cap.RequiresFeature(
+            stirling.software.saas.payg.model.FeatureGate.AI_SUPPORT)
+    static class ClassLevelAiController {
+        public void classLevelAi() {}
     }
 
     /** Placeholder so AutoCloseable resources flow in some helper methods. */
