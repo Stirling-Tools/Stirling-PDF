@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="Stirling-PDF API Server">
+    <meta name="description" content="Stirling PDF Cloud API">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stirling-PDF - API Server</title>
+    <title>Stirling PDF - Cloud API</title>
 
     <!-- Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -60,14 +60,9 @@
             margin-bottom: 1.25rem;
         }
 
-        .login-logo-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.5rem;
-        }
-
-        .login-logo-text {
-            height: 2rem;
+        .login-logo-modern {
+            height: 3rem;
+            width: auto;
         }
 
         .login-title {
@@ -125,15 +120,6 @@
             text-decoration: underline;
         }
 
-        .code-inline {
-            background-color: #f3f4f6;
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8125rem;
-            color: #374151;
-        }
-
         .cta-button {
             width: 100%;
             padding: 0.75rem 1rem;
@@ -155,24 +141,20 @@
             background-color: #9a2e2e;
         }
 
+        .cta-button.secondary {
+            background-color: #ffffff;
+            color: #AF3434;
+            border: 1px solid #AF3434;
+        }
+
+        .cta-button.secondary:hover {
+            background-color: #fdf2f2;
+        }
+
         .divider {
             margin: 1.5rem 0;
             border: 0;
             border-top: 1px solid #e5e7eb;
-        }
-
-        .footer-link {
-            font-size: 0.875rem;
-            color: #6b7280;
-            text-align: center;
-            display: block;
-            margin-top: 1rem;
-            text-decoration: none;
-        }
-
-        .footer-link:hover {
-            color: #374151;
-            text-decoration: underline;
         }
 
         .footer {
@@ -205,56 +187,56 @@
         <div class="auth-content">
             <div class="login-header">
                 <div class="login-header-logos">
-                    <img src="favicon.svg" alt="Stirling PDF" class="login-logo-icon">
-                    <img src="api-wordmark.svg" alt="Stirling PDF" class="login-logo-text">
+                    <img src="modern-logo.svg" alt="Stirling PDF" class="login-logo-modern">
                 </div>
-                <h1 class="login-title">API Server</h1>
-                <p class="login-subtitle">Backend-only mode without web UI</p>
+                <h1 class="login-title">Stirling PDF API</h1>
+                <p class="login-subtitle">REST API for PDF manipulation, in the cloud</p>
             </div>
 
             <div class="section">
                 <p class="section-text">
-                    This Stirling-PDF instance is running in <strong>API-only mode</strong>. The web interface has not been included in this build.
+                    You've reached the <strong>Stirling PDF Cloud API</strong>. This endpoint serves the REST API that powers our apps and your integrations.
                 </p>
             </div>
 
             <a href="swagger-ui/index.html" class="cta-button">Open API Documentation</a>
+            <a href="https://docs.stirlingpdf.com" target="_blank" class="cta-button secondary">Read the Developer Docs</a>
 
             <hr class="divider">
 
             <div class="section">
-                <h2 class="section-title">Looking for the Web UI?</h2>
-
-                <p class="section-text"><strong>If you're using Docker:</strong></p>
+                <h2 class="section-title">Just looking to edit a PDF?</h2>
+                <p class="section-text">
+                    This page is the API endpoint - it doesn't have an editor. If you want the full interface:
+                </p>
                 <ul class="section-list">
-                    <li>You may have pulled an <strong>API-only image</strong> or there was a build configuration issue</li>
-                    <li>Use the standard Docker image: <code class="code-inline">stirlingtools/stirling-pdf:latest</code></li>
-                </ul>
-
-                <p class="section-text"><strong>If you're using a JAR file:</strong></p>
-                <ul class="section-list">
-                    <li>You downloaded <code class="code-inline">Stirling-PDF-server.jar</code> which is the <strong>API-only version without UI</strong></li>
-                    <li>Download the full version from <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank">GitHub Releases</a>:</li>
-                    <li style="margin-left: 1.5rem;"><code class="code-inline">Stirling-PDF.jar</code> - Standard version with UI</li>
-                    <li style="margin-left: 1.5rem;"><code class="code-inline">Stirling-PDF-with-login.jar</code> - Version with authentication features</li>
-                </ul>
-
-                <p class="section-text"><strong>If you built from source:</strong></p>
-                <ul class="section-list">
-                    <li>Rebuild with: <code class="code-inline">./gradlew build -PbuildWithFrontend=true</code></li>
-                    <li>Or deploy the frontend separately from the <code class="code-inline">/frontend</code> directory</li>
+                    <li><a href="https://stirling.com/app" target="_blank">Open Stirling PDF in your browser</a> - the hosted web app</li>
+                    <li><a href="https://stirling.com/download" target="_blank">Download the desktop app</a> - macOS, Windows, and Linux</li>
+                    <li><a href="https://stirling.com/pricing" target="_blank">Pricing &amp; plans</a> - free tier, paid plans, and enterprise</li>
                 </ul>
             </div>
 
             <hr class="divider">
 
             <div class="section">
-                <h2 class="section-title">Need Help?</h2>
-                <p class="section-text">Join our community for support:</p>
+                <h2 class="section-title">Want to run your own?</h2>
+                <p class="section-text">
+                    Stirling PDF is open source. You can self-host the same toolkit on your own hardware or run it inside your network:
+                </p>
                 <ul class="section-list">
-                    <li><a href="https://discord.gg/Cn8pWhQRxZ" target="_blank">Discord Community</a> - Get help from the community</li>
-                    <li><a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" target="_blank">GitHub Issues</a> - Report bugs or request features</li>
-                    <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank">GitHub Repository</a> - View documentation and source code</li>
+                    <li><a href="https://docs.stirlingpdf.com/Installation/Versions" target="_blank">Installation guide</a> - Docker, JAR, Windows, Mac, and Linux</li>
+                    <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank">GitHub repository</a> - source code and releases</li>
+                </ul>
+            </div>
+
+            <hr class="divider">
+
+            <div class="section">
+                <h2 class="section-title">Support</h2>
+                <ul class="section-list">
+                    <li><a href="https://docs.stirlingpdf.com" target="_blank">Documentation</a> - guides, API reference, integration tutorials</li>
+                    <li><a href="https://discord.gg/Cn8pWhQRxZ" target="_blank">Discord community</a> - chat with other developers and users</li>
+                    <li><a href="https://stirling.com" target="_blank">stirling.com</a> - company website</li>
                 </ul>
             </div>
         </div>

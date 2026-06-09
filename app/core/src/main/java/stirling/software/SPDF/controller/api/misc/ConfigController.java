@@ -378,20 +378,6 @@ public class ConfigController {
                 // EE features not available, continue without them
             }
 
-            // Deployment mode - "saas" when the saas Spring profile is active, otherwise
-            // "selfhosted". Used by the static api-landing.html (served when no frontend is
-            // bundled) to swap between SaaS-information wording and self-hosted troubleshooting
-            // wording.
-            String[] activeProfiles = applicationContext.getEnvironment().getActiveProfiles();
-            boolean saasProfileActive = false;
-            for (String profile : activeProfiles) {
-                if ("saas".equalsIgnoreCase(profile)) {
-                    saasProfileActive = true;
-                    break;
-                }
-            }
-            configData.put("deploymentMode", saasProfileActive ? "saas" : "selfhosted");
-
             // Add version and machine info for update checking
             try {
                 if (applicationContext.containsBean("appVersion")) {
