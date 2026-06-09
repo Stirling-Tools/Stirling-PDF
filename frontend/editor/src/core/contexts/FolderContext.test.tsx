@@ -3,6 +3,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
 import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 /**
  * Regression test for the sync-banner 4xx gating fix in commit c38b646c5.
@@ -122,6 +123,9 @@ describe("FolderContext sync-banner gating", () => {
   });
 
   test("500 (server error) DOES surface a banner", async () => {
+    // Surfacing the banner also logs a warning - that's the contract this branch
+    // tests for.
+    expectConsole.warn(/\[FolderContext\] pullFromServer failed/);
     mockList.mockRejectedValue(axiosError(500, "internal"));
     await renderAndWaitForPull();
     expect(screen.getByTestId("error").textContent).toContain(
@@ -133,7 +137,8 @@ describe("FolderContext sync-banner gating", () => {
   test("network error (no response) DOES surface a banner", async () => {
     // axios on a network failure rejects with an Error that has NO
     // `.response` property - that's the "status === undefined" branch
-    // the gate explicitly covers.
+    // the gate explicitly covers. Surfacing the banner also logs a warning.
+    expectConsole.warn(/\[FolderContext\] pullFromServer failed/);
     mockList.mockRejectedValue(new Error("ECONNREFUSED"));
     await renderAndWaitForPull();
     expect(screen.getByTestId("error").textContent).toContain(
