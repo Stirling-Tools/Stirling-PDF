@@ -138,8 +138,9 @@ describe("Policies right-sidebar surface", () => {
     expect(screen.getByText("Policies")).toBeInTheDocument();
   });
 
-  // Security now uses the locked config page (needs ToolWorkflow context); the
-  // wizard still serves categories without a fixed tool chain, e.g. Compliance.
+  // Security's wizard uses the locked tool-config step (needs ToolWorkflow
+  // context); categories without a fixed tool chain (e.g. Compliance) use the
+  // builder step, which these tests mock — so drive the wizard via Compliance.
   it("opens the setup wizard (workflow first) for an unconfigured policy", () => {
     renderHost();
     fireEvent.click(screen.getByText("Compliance"));

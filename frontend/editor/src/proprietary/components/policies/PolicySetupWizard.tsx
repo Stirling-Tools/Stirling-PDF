@@ -18,11 +18,15 @@ import { IconBadge } from "@shared/components/IconBadge";
 import type {
   PolicyCategory,
   PolicyConfigDef,
+  PolicyConfigResult,
   PolicySource,
   PolicyState,
   PolicyWizardResult,
 } from "@app/types/policies";
-import type { AutomationConfig } from "@app/types/automation";
+import type {
+  AutomationConfig,
+  AutomationOperation,
+} from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { SmartFolder } from "@app/types/smartFolders";
 import { buildPipelineDefinition } from "@app/services/policyPipeline";
@@ -33,6 +37,8 @@ import {
   PolicyWorkflowStep,
   AutomationMode,
 } from "@app/components/policies/PolicyWorkflowStep";
+import { PolicyToolConfigStep } from "@app/components/policies/PolicyToolConfigStep";
+import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
 
 const TOTAL_STEPS = 4;
 
@@ -60,6 +66,13 @@ interface PolicySetupWizardProps {
    * the failure rather than hanging on a permanently-disabled button.
    */
   onComplete: (result: PolicyWizardResult) => void | Promise<void>;
+  /**
+   * For preset (tool-chain) policies whose Workflow step is the locked tool
+   * config: fires instead of `onComplete`, carrying the configured tools as
+   * operations + mapped pipeline steps. When absent the wizard uses the
+   * add/remove builder + `onComplete`.
+   */
+  onCommitConfig?: (result: PolicyConfigResult) => void | Promise<void>;
   onSetupClassification: () => void;
 }
 
@@ -82,9 +95,13 @@ export function PolicySetupWizard({
   initialFolder,
   onCancel,
   onComplete,
+  onCommitConfig,
   onSetupClassification,
 }: PolicySetupWizardProps) {
   const isEdit = mode === "edit";
+  // Preset (tool-chain) policies render the locked tool config as their Workflow
+  // step instead of the add/remove builder.
+  const toolChain = getPolicyToolChain(category.id);
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [fieldValues, setFieldValues] = useState(() =>
@@ -193,8 +210,38 @@ export function PolicySetupWizard({
     });
   };
 
-  // Final submit: guard against double-submit (the builder stays mounted, so a
-  // second click would persist twice), then trigger the builder's save.
+  // Tool-chain policies: the locked config step emits its enabled tools as
+  // operations + mapped steps; hand them to the host's commit path.
+  const handleToolConfigSaved = (
+    operations: AutomationOperation[],
+    pipelineSteps: { operation: string; parameters: Record<string, unknown> }[],
+    unresolvedOps: string[],
+  ) => {
+    Promise.resolve(
+      onCommitConfig?.({
+        operations,
+        pipelineSteps,
+        unresolvedOps,
+        fieldValues,
+        sources,
+        scopeTypes: scopeNarrow ? scopeTypes : [],
+        reviewerEmail,
+        folder: {
+          outputMode,
+          outputName: outputName.trim(),
+          outputNamePosition,
+          maxRetries,
+          retryDelayMinutes,
+        },
+      }),
+    ).catch(() => {
+      setSubmitting(false);
+      setSaveError("Couldn't save the policy. Please try again.");
+    });
+  };
+
+  // Final submit: guard against double-submit (the step stays mounted, so a
+  // second click would persist twice), then trigger the step's save.
   const submit = () => {
     if (submitting) return;
     setSaveError(null);
@@ -241,18 +288,38 @@ export function PolicySetupWizard({
           />
         )}
         {/* Step 1 — Workflow. Kept mounted (hidden on other steps) so the final
-            submit can trigger its save. */}
+            submit can trigger its save. Preset (tool-chain) policies show the
+            locked, per-tool config; the rest show the add/remove builder. */}
         <div style={{ display: step === 1 ? undefined : "none" }}>
-          <p className="pol-desc">
-            Build the sequence of tools this policy runs on each document.
-          </p>
-          <PolicyWorkflowStep
-            automation={seedAutomation}
-            mode={isEdit ? AutomationMode.EDIT : AutomationMode.SUGGESTED}
-            saveTriggerRef={workflowSave}
-            onComplete={handleWorkflowSaved}
-            onSaveFailed={handleSaveFailed}
-          />
+          {toolChain ? (
+            <>
+              <p className="pol-desc">
+                Configure the tools this policy runs on each document.
+              </p>
+              <PolicyToolConfigStep
+                chainIds={toolChain}
+                initialOperations={
+                  existingAutomation?.operations ?? config.defaultOperations
+                }
+                categoryLabel={category.label}
+                saveTriggerRef={workflowSave}
+                onComplete={handleToolConfigSaved}
+              />
+            </>
+          ) : (
+            <>
+              <p className="pol-desc">
+                Build the sequence of tools this policy runs on each document.
+              </p>
+              <PolicyWorkflowStep
+                automation={seedAutomation}
+                mode={isEdit ? AutomationMode.EDIT : AutomationMode.SUGGESTED}
+                saveTriggerRef={workflowSave}
+                onComplete={handleWorkflowSaved}
+                onSaveFailed={handleSaveFailed}
+              />
+            </>
+          )}
         </div>
 
         {step === 2 && (
