@@ -35,26 +35,40 @@ import stirling.software.saas.payg.api.PaygApiService.WalletSnapshot;
  *
  * <h2>Scope — Java vs Supabase edge function</h2>
  *
- * <p>Stripe-touching code (create Checkout Session, update subscription_item) lives in Supabase
- * edge functions, <b>not</b> here:
+ * <p>The split is about <em>who owns the data</em>, not whether it touches Stripe. Code that
+ * mutates our own Postgres (under our auth + RLS) lives here; code that mutates Stripe lives in
+ * edge functions.
+ *
+ * <p>This controller owns:
  *
  * <ul>
- *   <li>{@code create-payg-team-subscription} (SaaS PR #300) — the FE calls this directly via
- *       {@code supabase.functions.invoke()}; same pattern {@code usePlans} uses for {@code
- *       stripe-price-lookup}.
- *   <li>Cap updates — when the {@code update-payg-cap} edge function lands, the {@link #updateCap}
- *       endpoint here will be removed too. Until then it's a Java stub so the FE wiring is
- *       testable.
- *   <li>{@code payg-subscription-webhook} (PR #300) — Stripe's {@code
- *       customer.subscription.created} fires here, writes to {@code
- *       payg_team_extensions.payg_subscription_id}. The Java side just refetches the wallet to pick
- *       up the change.
+ *   <li>{@link #getWallet} — pure read from Postgres ({@code payg_team_extensions} + {@code
+ *       payg_meter_event_log} + {@code team_memberships}).
+ *   <li>{@link #updateCap} — pure write to our own {@code wallet_policy.cap_units}. The cap is an
+ *       <b>application-layer enforcement rule</b>, not a Stripe concept: Stripe has no native hard
+ *       cap (its {@code billing_thresholds.amount_gte} is just an early-invoice trigger, not a
+ *       cut-off). We enforce by gating the {@code meter-payg-units} push on a current-period-spend
+ *       check; Stripe only ever sees events we let through. Cap updates are therefore a single SQL
+ *       UPDATE — no edge function, no Stripe round-trip.
+ *   <li>{@link #devMarkSubscribed} — dev-only side-channel for the mock loop. Disappears once the
+ *       real {@code payg-subscription-webhook} (SaaS PR #300) is deployed; that webhook is what
+ *       writes {@code payg_team_extensions.payg_subscription_id} from {@code
+ *       customer.subscription.created} in the real flow.
  * </ul>
  *
- * <p>Java keeps the wallet read because (a) it composes data from team_memberships +
- * payg_team_extensions + payg_meter_event_log, all of which Spring Data already handles, and (b)
- * the Spring Security context is already attached. Adding a Stripe SDK to the Java backend would
- * mean two integrations to maintain.
+ * <p>Stripe-touching code lives in edge functions (SaaS PR #300):
+ *
+ * <ul>
+ *   <li>{@code create-payg-team-subscription} — creates Checkout Sessions. FE invokes directly via
+ *       {@code supabase.functions.invoke()}, same pattern {@code usePlans} uses for {@code
+ *       stripe-price-lookup}.
+ *   <li>{@code meter-payg-units} — pushes usage events to Stripe. Called from the metered job
+ *       pipeline once the cap check (above) has cleared.
+ *   <li>{@code payg-subscription-webhook} — receives Stripe lifecycle events (subscription created
+ *       / updated / cancelled) and writes them to {@code payg_team_extensions}.
+ * </ul>
+ *
+ * <p>So no Stripe SDK ever lands in this Java module — usage gating is our own rule, not Stripe's.
  *
  * <p><b>Backed by a mock service today.</b> See {@link PaygApiService} for the swap-out plan.
  */
@@ -94,12 +108,12 @@ public class PaygApiController {
 
     // ─── Cap update ─────────────────────────────────────────────────────
     //
-    // NOTE: This endpoint also wants to live in a Supabase edge function
-    // ({@code update-payg-cap}, not yet on PR #300) because updating the cap
-    // requires a {@code subscription_item.update} call to Stripe to adjust
-    // the {@code billing_thresholds.amount_gte} threshold. Until that edge
-    // function exists, Java holds the stub so the FE wiring is testable; the
-    // mock service just records the new cap in-memory.
+    // The cap is an application-layer rule (gate the meter push on
+    // current_period_spend ≤ cap). No Stripe touch needed — Stripe doesn't
+    // have a native hard cap, and the meter only sees events we explicitly
+    // push. Real impl: UPDATE wallet_policy SET cap_units = $1 WHERE
+    // team_id = $2. The mock service in this branch just records the new
+    // cap in its in-memory store; the swap-out is a single repository write.
 
     /** Request body for {@link #updateCap}. */
     public record UpdateCapRequest(@Min(0) @Max(10_000) int capUsd, boolean noCap) {}

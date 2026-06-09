@@ -47,8 +47,10 @@ import lombok.extern.slf4j.Slf4j;
  *       payg_subscription_id} column check.
  *   <li>Usage rollups: replace {@link #mockUsageThisPeriod} with a query against {@code
  *       payg_meter_event_log} (sum of {@code units} for the current cycle).
- *   <li>Cap updates: replace {@link #updateCap} with a call to the future {@code update-payg-cap}
- *       edge function (not yet on PR #300). Until then it's a no-op write to the in-memory store.
+ *   <li>Cap updates: replace {@link #updateCap}'s in-memory write with a single {@code
+ *       paygWalletPolicyRepository.updateCap(teamId, capUnits)} call. The cap is
+ *       application-enforced (the metered job pipeline checks against it before pushing meter
+ *       events), so no Stripe round-trip is needed.
  *   <li>{@link #markSubscribed} disappears entirely once PR #300's {@code
  *       payg-subscription-webhook} is deployed — the webhook is what flips subscription state in
  *       the real flow.
@@ -153,9 +155,10 @@ public class PaygApiService {
     /**
      * Updates the cap for a subscribed team. No-op if the team is on the free tier.
      *
-     * <p>Real impl: update {@code wallet_policy.cap_units} AND push the change to Stripe via {@code
-     * SubscriptionItem.update(...)} with the new {@code billing_thresholds.amount_gte} so Stripe's
-     * usage thresholds reflect the new ceiling.
+     * <p>Real impl: {@code UPDATE wallet_policy SET cap_units = $1, updated_at = now() WHERE
+     * team_id = $2}. No Stripe call — the cap is enforced application-side by the metered job
+     * pipeline gating the {@code meter-payg-units} push on {@code current_period_spend ≤ cap}.
+     * Stripe never sees the cap; it only sees the events we let through.
      */
     public boolean updateCap(String teamKey, int capUsd, boolean noCap) {
         AtomicReference<SubscriptionState> ref = subscriptionStateByTeam.get(teamKey);
