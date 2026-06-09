@@ -73,11 +73,6 @@ function persist(state: PoliciesByCategory): void {
   }
 }
 
-/** Replace the full state. */
-export function setPolicies(next: PoliciesByCategory): void {
-  persist(next);
-}
-
 /** Merge a partial update into one category's state and persist. */
 export function updatePolicy(
   categoryId: string,
@@ -86,7 +81,13 @@ export function updatePolicy(
   const current = loadPolicies();
   const next: PoliciesByCategory = {
     ...current,
-    [categoryId]: { ...current[categoryId], ...patch },
+    // Fall back to defaults so a not-yet-seeded category id still yields a
+    // complete PolicyState rather than a partial.
+    [categoryId]: {
+      ...defaultState(categoryId),
+      ...current[categoryId],
+      ...patch,
+    },
   };
   persist(next);
   return next;

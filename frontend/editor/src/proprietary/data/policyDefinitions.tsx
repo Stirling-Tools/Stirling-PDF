@@ -15,7 +15,6 @@ import CloudIcon from "@mui/icons-material/Cloud";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import type {
-  PolicyBilling,
   PolicyCategory,
   PolicyConfigDef,
   PolicySource,
@@ -347,12 +346,3 @@ export const POLICY_DOC_TYPES: string[] = [
   "Financial reports",
 ];
 
-/** Base per-document cost; total scales with the active-policy count. */
-export const PER_POLICY_DOC_COST = 0.02;
-
-/** Mock billing context. */
-export const MOCK_POLICY_BILLING: PolicyBilling = {
-  used: 247,
-  monthlyQuota: 500,
-  tier: "free",
-};

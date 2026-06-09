@@ -48,7 +48,6 @@ interface PolicyDetailPanelProps {
   onDelete: () => void;
 }
 
-/** Narrative view for a configured policy (Enforces / Activity / Stats). */
 /** "addPassword" → "Add Password", "ocr" → "Ocr" — a light humanisation of op ids. */
 function humanizeOperation(op: string): string {
   return op
@@ -57,6 +56,7 @@ function humanizeOperation(op: string): string {
     .trim();
 }
 
+/** Narrative view for a configured policy (Enforces / Activity / Stats). */
 export function PolicyDetailPanel({
   category,
   config,

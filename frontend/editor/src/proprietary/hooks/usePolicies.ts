@@ -48,11 +48,6 @@ export function usePolicies() {
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
   /**
-   * Enable a policy: create its backing folder trigger (a Watch Folders
-   * SmartFolder + automation seeded from the category preset) and record the
-   * link. Reuses the Watch Folders engine for execution.
-   */
-  /**
    * Enable a new policy from the wizard result: link the saved workflow
    * automation to a backing folder and persist the collected settings.
    */

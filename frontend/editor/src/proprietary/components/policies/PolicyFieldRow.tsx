@@ -61,6 +61,7 @@ export function PolicyFieldRow({
         size="sm"
         checked={Boolean(value)}
         onChange={(checked) => onChange(checked)}
+        aria-label={field.label}
       />
     ) : field.type === "select" ? (
       <Select

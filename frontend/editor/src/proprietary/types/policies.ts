@@ -137,26 +137,6 @@ export interface PolicyState {
 
 export type PoliciesByCategory = Record<string, PolicyState>;
 
-/** Mock current-user / org context used for the permission model. */
-export type UserRole = "owner" | "admin" | "member";
-export interface PolicyUser {
-  name: string;
-  email: string;
-  initials: string;
-  role: UserRole;
-  /** false = solo user (always full access). */
-  hasOrg: boolean;
-  /** Explicit grant for members; ignored for owner/admin. */
-  policyPermission: boolean;
-}
-
-export type BillingTier = "free" | "payg" | "enterprise";
-export interface PolicyBilling {
-  used: number;
-  monthlyQuota: number;
-  tier: BillingTier;
-}
-
 export interface SpendLimit {
   enabled: boolean;
   limit: number;
