@@ -67,6 +67,8 @@ export enum LanguageSource {
   User = 3,
 }
 
+const isDev = process.env.NODE_ENV === "development";
+
 i18n
   .use(TomlBackend)
   .use(LanguageDetector)
@@ -76,7 +78,23 @@ i18n
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
     nonExplicitSupportedLngs: false,
-    debug: process.env.NODE_ENV === "development",
+    debug: isDev,
+
+    // Dev-only: surface translation lookups that fall through to the key as
+    // a console.error so we can spot dynamic t() calls whose constructed
+    // key isn't in the en-GB file. Gated to development so end users never
+    // see this noise — they just get the standard fallback behaviour.
+    saveMissing: isDev,
+    missingKeyHandler: isDev
+      ? (lngs, ns, key, fallbackValue) => {
+          console.error(
+            `[i18n] Missing translation: "${key}" ` +
+              `(language=${lngs.join(",")}, namespace=${ns}` +
+              (fallbackValue ? `, fallback="${fallbackValue}"` : "") +
+              `)`,
+          );
+        }
+      : undefined,
 
     // Ensure synchronous loading to prevent timing issues
     initImmediate: false,
