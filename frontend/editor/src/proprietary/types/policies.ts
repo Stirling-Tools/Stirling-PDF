@@ -113,7 +113,7 @@ export interface PolicyActivityItem {
   fileId?: string;
 }
 
-/** Per-category runtime state persisted in the mock store. */
+/** Per-category runtime state held in the local cache. */
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
@@ -147,9 +147,6 @@ export interface PolicyState {
 }
 
 export type PoliciesByCategory = Record<string, PolicyState>;
-
-/** The three steps of the unconfigured-policy setup wizard. */
-export type PolicySetupStep = 1 | 2 | 3;
 
 /**
  * Output + retry settings applied by the Watch Folders engine to a policy's

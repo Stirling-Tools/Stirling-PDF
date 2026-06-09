@@ -62,8 +62,7 @@ export function usePolicyAutoRun(): void {
     for (const [categoryId, s] of active) {
       for (const stub of fileStubs) {
         if (isDispatched(categoryId, stub.id)) continue;
-        // Mark synchronously so a re-render mid-dispatch can't double-fire.
-        markDispatched(categoryId, stub.id);
+        // runPolicyOnFile marks dispatched synchronously before its first await.
         void runPolicyOnFile(
           categoryId,
           s.backendId as string,
@@ -136,10 +135,12 @@ export async function runPolicyOnFile(
   fileId: FileId,
   fileName: string,
 ): Promise<void> {
+  // Mark synchronously, before any await, so neither the dispatch effect nor a
+  // rapid Retry click can double-fire while the file bytes load.
+  markDispatched(categoryId, fileId);
   try {
     const file = await fileStorage.getStirlingFile(fileId);
-    if (!file) return; // already marked dispatched; nothing to run.
-    markDispatched(categoryId, fileId);
+    if (!file) return; // file gone; nothing to run (already marked above).
     const runId = await runStoredPolicy(backendId, [file]);
     recordRunStart({
       runId,

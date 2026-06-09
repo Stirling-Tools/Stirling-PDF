@@ -6,9 +6,9 @@
  * the seam that creates and manages that backing record.
  *
  * The folder is tagged with `policyCategoryId` so the Watch Folders UI can
- * filter it out (it's owned by Policies), while the folder poller still
- * processes it. When the backend lands, this layer is what maps a policy to a
- * server `Policy { trigger, steps, output }`.
+ * filter it out (it's owned by Policies). The backing automation also rides
+ * along to the backend (in the saved policy's output.options) for round-trip;
+ * this folder remains the locally-editable copy.
  */
 
 import { automationStorage } from "@app/services/automationStorage";

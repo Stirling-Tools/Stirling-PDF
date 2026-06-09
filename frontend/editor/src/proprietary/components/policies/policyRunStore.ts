@@ -24,7 +24,7 @@ export interface PolicyRunRecord {
   /** True once the outputs have been imported into the workspace (added once). */
   imported?: boolean;
   error: string | null;
-  /** Epoch ms when the run was dispatched (passed in — the store stays pure). */
+  /** Epoch ms when the run was dispatched. */
   startedAt: number;
 }
 

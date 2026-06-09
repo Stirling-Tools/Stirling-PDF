@@ -5,10 +5,8 @@
  * reach the UI: components never import the static definitions directly, they
  * read the catalog (via {@link usePolicyCatalog}).
  *
- * Mock-backed by the static `policyDefinitions` today. When definitions move
- * server-side, only {@link loadPolicyCatalog} changes (to a fetch) — no
- * component is touched. It is synchronous for now; the loading/async handshake
- * would live in the hook when that day comes.
+ * Backed by the static `policyDefinitions` today; swap {@link loadPolicyCatalog}
+ * for a fetch to move definitions server-side without touching any component.
  */
 
 import {

@@ -50,7 +50,7 @@ interface PolicyDetailPanelProps {
   onRetry?: (item: PolicyActivityItem) => void;
 }
 
-/** "addPassword" → "Add Password", "ocr" → "Ocr" — a light humanisation of op ids. */
+/** "addWatermark" → "Add Watermark" — a light humanisation of op ids for display. */
 function humanizeOperation(op: string): string {
   return op
     .replace(/([A-Z])/g, " $1")
@@ -137,7 +137,7 @@ export function PolicyDetailPanel({
             <Card padding="none">
               {activityItems.map((item, i) => (
                 <ListRow
-                  key={i}
+                  key={item.runId ?? `${item.doc}-${item.time}`}
                   divider={i > 0}
                   leadingTone={
                     item.status === "flagged"

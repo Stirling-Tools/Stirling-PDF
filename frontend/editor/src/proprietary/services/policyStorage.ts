@@ -1,8 +1,8 @@
 /**
- * Local persistence for Policies. localStorage-backed stand-in for the future
- * server API — keeps per-category state (configured/active/paused, sources,
- * scope, reviewer, field overrides) and broadcasts changes so hooks re-render.
- * Mirrors the change-event pattern of the automation/folder stores.
+ * Local cache + offline fallback for Policies — the backend (/api/v1/policies)
+ * is the source of truth. Holds per-category state (configured/active/paused,
+ * sources, scope, reviewer, field overrides) and broadcasts changes so hooks
+ * re-render. Mirrors the change-event pattern of the automation/folder stores.
  */
 
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
@@ -62,7 +62,7 @@ function persist(state: PoliciesByCategory): void {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
   } catch {
-    // Best-effort; ignore quota/availability failures in the mock.
+    // Best-effort; ignore quota/availability failures.
   }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(POLICIES_CHANGE_EVENT));

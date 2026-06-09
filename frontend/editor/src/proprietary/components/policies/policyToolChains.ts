@@ -7,7 +7,8 @@
  * Only Security is wired today; other categories follow.
  */
 export const POLICY_TOOL_CHAINS: Record<string, string[]> = {
-  // Redact PII (on) · Watermark (off) · Remove JavaScript via sanitize (on).
+  // Security: redact PII + watermark + sanitize (strips JS). Which are enabled
+  // by default comes from the preset's defaultOperations, not this list.
   security: ["redact", "watermark", "sanitize"],
 };
 
