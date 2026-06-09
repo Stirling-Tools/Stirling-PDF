@@ -273,12 +273,13 @@
 
 /* Search that separates the Policies section from the Tools list below it. */
 .tool-panel__between-search {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem 0.25rem;
   border-top: 1px solid var(--border-subtle, var(--color-border));
 }
 
 .tool-panel__between-search .search-input-container {
   width: 100%;
+  margin-bottom: 0;
 }
 
 /* Slightly recessed search field so it reads as distinct from the panel. */
