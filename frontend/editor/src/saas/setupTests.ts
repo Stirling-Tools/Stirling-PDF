@@ -1,5 +1,8 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import { installFailOnConsole } from "@app/tests/failOnConsole";
+
+installFailOnConsole();
 
 // Mock localStorage for tests
 const localStorageMock = (() => {
