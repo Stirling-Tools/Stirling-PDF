@@ -5,6 +5,7 @@ import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@app/components/tools/automate/AutomationImportModal";
+import WorkflowRecorderPanel from "@app/components/tools/automate/WorkflowRecorderPanel";
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
@@ -27,6 +28,7 @@ interface AutomationSelectionProps {
   ) => Promise<AutomationConfig>;
   onImportError?: (message: string) => void;
   onImportSuccess?: (message: string) => void;
+  onReviewRecording: (automation: AutomationConfig) => void;
   toolRegistry: Partial<ToolRegistry>;
 }
 
@@ -40,6 +42,7 @@ export default function AutomationSelection({
   onImportAutomation,
   onImportError,
   onImportSuccess,
+  onReviewRecording,
   toolRegistry,
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
@@ -93,6 +96,7 @@ export default function AutomationSelection({
       </Title>
 
       <Stack gap="xs">
+        <WorkflowRecorderPanel onReview={onReviewRecording} />
         <AutomationEntry
           title={t(
             "automate.selection.createNew.title",

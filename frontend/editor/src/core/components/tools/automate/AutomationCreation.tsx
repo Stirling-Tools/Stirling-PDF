@@ -31,6 +31,7 @@ import {
 interface AutomationCreationProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
+  initialAutomation?: AutomationConfig;
   onBack: () => void;
   onComplete: (automation: AutomationConfig) => void;
   toolRegistry: Partial<ToolRegistry>;
@@ -39,6 +40,7 @@ interface AutomationCreationProps {
 export default function AutomationCreation({
   mode,
   existingAutomation,
+  initialAutomation,
   onBack,
   onComplete,
   toolRegistry,
@@ -58,7 +60,12 @@ export default function AutomationCreation({
     canSaveAutomation,
     getToolName,
     getToolDefaultParameters,
-  } = useAutomationForm({ mode, existingAutomation, toolRegistry });
+  } = useAutomationForm({
+    mode,
+    existingAutomation,
+    initialAutomation,
+    toolRegistry,
+  });
 
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [configuraingToolIndex, setConfiguringToolIndex] = useState(-1);
@@ -162,8 +169,10 @@ export default function AutomationCreation({
    * export buttons can run without requiring the user to save first. The
    * `id` and timestamps are placeholders — the export utilities strip them.
    */
+  const sourceAutomation = existingAutomation ?? initialAutomation;
+
   const buildExportableAutomation = (): AutomationConfig => ({
-    id: existingAutomation?.id || "temp",
+    id: sourceAutomation?.id || "temp",
     name: automationName.trim(),
     description: automationDescription.trim(),
     icon: automationIcon,
@@ -171,7 +180,7 @@ export default function AutomationCreation({
       operation: tool.operation,
       parameters: tool.parameters || {},
     })),
-    createdAt: existingAutomation?.createdAt || new Date().toISOString(),
+    createdAt: sourceAutomation?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
 

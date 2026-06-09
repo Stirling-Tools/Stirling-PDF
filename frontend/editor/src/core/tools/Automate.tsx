@@ -9,6 +9,7 @@ import { createFilesToolStep } from "@app/components/tools/shared/FilesToolStep"
 import AutomationSelection from "@app/components/tools/automate/AutomationSelection";
 import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
 import AutomationRun from "@app/components/tools/automate/AutomationRun";
+import { useWorkflowRecorder } from "@app/contexts/workflowRecorder/WorkflowRecorderContext";
 
 import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "@app/types/tool";
@@ -36,6 +37,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 
   const automateOperation = useAutomateOperation();
+  const workflowRecorder = useWorkflowRecorder();
   const { regularTools: toolRegistry } = useToolRegistry();
   const hasResults =
     automateOperation.files.length > 0 ||
@@ -157,6 +159,13 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             onImportAutomation={importAutomation}
             onImportError={(message) => onError?.(message)}
             toolRegistry={toolRegistry}
+            onReviewRecording={(automation: AutomationConfig) =>
+              handleStepChange({
+                step: AUTOMATION_STEPS.CREATION,
+                mode: AutomationMode.CREATE,
+                automation,
+              })
+            }
           />
         );
 
@@ -169,10 +178,18 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <AutomationCreation
             mode={stepData.mode}
             existingAutomation={stepData.automation}
+            initialAutomation={
+              stepData.mode === AutomationMode.CREATE
+                ? stepData.automation
+                : undefined
+            }
             onBack={() =>
               handleStepChange({ step: AUTOMATION_STEPS.SELECTION })
             }
-            onComplete={() => {
+            onComplete={(automation: AutomationConfig) => {
+              if (automation.id && stepData.mode === AutomationMode.CREATE) {
+                workflowRecorder.discardRecording();
+              }
               refreshAutomations();
               handleStepChange({ step: AUTOMATION_STEPS.SELECTION });
             }}
