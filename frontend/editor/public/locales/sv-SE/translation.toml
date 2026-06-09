@@ -12,7 +12,6 @@ cancel = "Avbryt"
 changedCredsMessage = "Inloggningsuppgifter ändrade!"
 chooseFile = "Välj fil"
 close = "Stäng"
-color = "Färg"
 comingSoon = "Kommer snart"
 confirm = "Bekräfta"
 confirmClose = "Bekräfta stängning"
@@ -202,6 +201,10 @@ ssoDescription = "Tvåfaktorsautentisering hanteras av din identitetsleverantör
 ssoManaged = "Konfigurera MFA via din identitetsleverantör."
 title = "Tvåfaktorsautentisering"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "paginera,etikett,organisera,indexera"
 
@@ -228,6 +231,9 @@ title = "Vad det gör"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Om Lägg till bilagor"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Använd bilder"
@@ -609,6 +615,7 @@ label = "Hantering av temporära filer"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Baskatalog för temporära filer (lämna tomt för standard: java.io.tmpdir/stirling-pdf)"
 label = "Baskatalog för temporära filer"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Hur ofta rensning ska köras (i minuter)"
@@ -621,6 +628,7 @@ label = "Rensa systemets temp"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Katalog för temporära LibreOffice-filer (lämna tomt för standard: baseTmpDir/libreoffice)"
 label = "LibreOffice-tempkatalog"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximal ålder i timmar innan temporära filer rensas"
@@ -637,6 +645,7 @@ label = "Rensning vid start"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systemets tempkatalog att rensa (används endast om cleanupSystemTemp är aktiverat)"
 label = "Systemets tempkatalog"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Sökväg till tessdata-katalogen för OCR-språkfiler"
@@ -842,6 +851,7 @@ label = "Databasnamn"
 [admin.settings.database.password]
 description = "Lösenord för databasauthentisering"
 label = "Lösenord"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Databasserverns port (används inte om anpassad URL anges)"
@@ -873,10 +883,12 @@ label = "Dölj otillgängliga verktyg som standard"
 [admin.settings.endpoints.groupsToRemove]
 description = "Välj slutpunktsgrupper att inaktivera"
 label = "Inaktiverade slutpunktsgrupper"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Välj enskilda slutpunkter att inaktivera"
 label = "Inaktiverade slutpunkter"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
@@ -1091,6 +1103,7 @@ label = "SMTP-värd"
 [admin.settings.mail.password]
 description = "Lösenord för SMTP-autentisering"
 label = "SMTP-lösenord"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Portnummer för SMTP-anslutning (vanligen 25, 465 eller 587)"
@@ -1099,6 +1112,10 @@ label = "SMTP-port"
 [admin.settings.mail.username]
 description = "Användarnamn för SMTP-autentisering"
 label = "SMTP-användarnamn"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Konfigurera din premium- eller enterprise-licensnyckel."
@@ -1146,6 +1163,9 @@ info = "Om du har en licensnyckel eller certifikatfil från ett direktköp kan d
 toggle = "Har du en licensnyckel eller certifikatfil?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Premium- och Enterprise-funktioner är nu organiserade i sina respektive sektioner:"
 title = "Premiumfunktioner uppdelade"
 
@@ -2144,11 +2164,31 @@ placeholder = "Antal sidor"
 title = "Sista N sidor"
 
 [bulkSelection.operators]
-and = "AND: & eller \"and\" — kräver båda villkoren (t.ex. 1-50 & even)"
-comma = "Komma: , eller | — kombinerar val (t.ex. 1-10, 20)"
-not = "NOT: ! eller \"not\" — utesluter sidor (t.ex. 3n & not 30)"
 text = "AND har högre prioritet än komma. NOT gäller inom dokumentets sidomfång."
 title = "Operatorer"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Från"
@@ -2801,6 +2841,9 @@ unknownTool = "Okänt verktyg"
 [cloudBadge]
 tooltip = "Denna åtgärd kommer att använda dina molnkrediter"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Välj färg"
 
@@ -3024,6 +3067,10 @@ title = "Komprimeringsmetod"
 [compress.selectText.1]
 1 = "1–3 PDF-komprimering,</br> 4–6 lätt bildkomprimering,</br> 7–9 kraftig bildkomprimering Försämrar bildkvaliteten avsevärt"
 _value = "Komprimeringsinställningar"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Komprimering är ett enkelt sätt att minska filstorleken. Välj Filstorlek för att ange en målstorlek så justerar vi kvaliteten åt dig. Välj Kvalitet för att ställa in komprimeringsstyrkan manuellt."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Tillämpa innehållsförteckning"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Arbetsyta för disposition"
 [editTableOfContents.workbench.empty]
 description = "Välj verktyget Redigera innehållsförteckning för att ladda dess arbetsyta."
 title = "Öppna verktyget för att börja redigera"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Denna PDF är lösenordsskyddad. Ange lösenordet så att du kan fortsätta arbeta med den."
@@ -3717,6 +3774,10 @@ title = "Inställningar"
 [extractPages.tooltip]
 description = "Extraherar de valda sidorna till en ny PDF och bevarar ordningen."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Klicka"
 dragAndDrop = "Dra & Släpp"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Dra & Släpp PDF fil"
 extractPDF = "Extraherar..."
 hoveredDragAndDrop = "Dra & Släpp fil(er) här"
 or = "eller"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Lägg till filer"
@@ -3890,6 +3954,10 @@ openFromComputer = "Öppna från dator"
 openSettings = "Öppna inställningar"
 search = "Sök"
 searchPlaceholder = "Sök filer..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "Om att platta ut PDF:er"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Ladda ner JSON"
@@ -4806,6 +4883,11 @@ tags = "markup,webbinnehåll,transformation,konvertera"
 title = "HTML till PDF"
 zoom = "Zoomnivå för visning av webbplatsen."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "konvertering,img,jpg,bild,foto"
 
@@ -4823,6 +4905,9 @@ title = "Bild till PDF"
 3 = "Multifillogik (Endast aktiverad om man arbetar med flera bilder)"
 4 = "Slå samman till en enda PDF"
 5 = "Konvertera till separata PDF-filer"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Misslyckades med att skapa konto"
@@ -5160,6 +5245,7 @@ failed = "OCR-åtgärden misslyckades"
 
 [ocr.languagePicker]
 additionalLanguages = "Letar du efter fler språk?"
+loading = "Loading available languages..."
 viewSetupGuide = "Visa installationsguide →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "{{days}} dag kvar"
 title = "Din 30-dagars Pro-provperiod"
 trialEnds = "Provperioden slutar {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "När du aktiverar inloggningsläge kan du hantera användare, konfigurera inställningar och övervaka serverhälsa. De första <strong>{{freeTierLimit}}</strong> personerna på din server får använda Stirling gratis."
 adminBodyLoginEnabled = "Som admin kan du hantera användare, konfigurera inställningar och övervaka serverhälsa. De första <strong>{{freeTierLimit}}</strong> personerna på din server får använda Stirling gratis."
@@ -5305,6 +5395,9 @@ userTitle = "Planöversikt"
 
 [onboarding.securityCheck]
 message = "Applikationen har nyligen genomgått stora förändringar. Din serveradmins uppmärksamhet kan krävas. Bekräfta din roll för att fortsätta."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
@@ -5430,6 +5523,17 @@ title = "Sidredigerare"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Extrahera sidor"
 placeholder = "(t.ex. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Lägg till kanter"
 borderWidth = "Kantlinjetjocklek"
 bottom = "Nedre marginal"
 cols = "Kolumner"
+colsPlaceholder = "Enter columns"
 header = "Flersidigt layout"
 innerMargin = "Inre marginal"
 left = "Vänster marginal"
 pagesPerSheet = "Sidor per ark:"
 right = "Höger marginal"
 rows = "Rader"
+rowsPlaceholder = "Enter rows"
 submit = "Skicka"
 tags = "slå samman,sammansatt,enkel-vy,organisera"
 title = "Flersidigt layout"
@@ -5487,6 +5593,14 @@ failed = "Ett fel inträffade vid skapandet av layouten med flera sidor."
 innerMarginTooLarge = "Den inre marginalen är för stor för den valda layouten."
 outerHorizontalMarginsTooLarge = "Vänster/högermarginalerna är för stora för denna pappersstorlek."
 outerVerticalMarginsTooLarge = "Övre/nedre marginalerna är för stora för denna pappersstorlek."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Aktivera kantlinjer för att rita linjer runt varje placerad sida. Detta kan hjälpa visuell åtskillnad eller trimning."
@@ -6141,6 +6255,26 @@ pdfTools = "Grundläggande PDF-verktyg"
 priority = "Prioriterad support"
 title = "Funktion"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Gratis för alltid"
 highlight1 = "Begränsad verktygsanvändning per vecka"
@@ -6148,6 +6282,22 @@ highlight2 = "Tillgång till alla verktyg"
 highlight3 = "Community-stöd"
 included = "Ingår"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Du har {{total}} användare men gratisnivån stöder endast {{limit}} per server. Uppgradera för att hålla Stirling PDF igång smidigt."
@@ -6459,6 +6609,7 @@ allSessions = "Alla sessioner"
 allTools = "All Tools"
 automate = "Automatisera"
 back = "Tillbaka"
+backToAllTools = "Back to all tools"
 certSign = "Certifikatsignering"
 completedSessions = "Slutförda sessioner"
 completedTab = "Slutförda"
@@ -7128,6 +7279,9 @@ bullet3 = "Kritiskt för godkännandeprocesser och juridisk spårbarhet"
 description = "Den ordning du anger när du skapar sessionen avgör vem som signerar först."
 title = "Signeringsordning"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Avancerat"
 database = "Databas"
@@ -7612,6 +7766,7 @@ sharedDescription = "Alla användare kan se och använda dessa signaturer."
 sharedHeading = "Delade signaturer"
 tempStorageDescription = "Signaturer lagras endast i din webbläsare. De går förlorade om du rensar webbläsardata eller byter webbläsare."
 tempStorageTitle = "Tillfällig lagring i webbläsaren"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Sparad"
@@ -8196,6 +8351,9 @@ center = "Centrerat"
 left = "Vänster"
 right = "Höger"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Växla tema"
 
@@ -8230,6 +8388,10 @@ label = "Välj en TSA-server"
 
 [timestampPdf.steps]
 settings = "Inställningar"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Detta verktyg är inte tillgängligt på din server."
@@ -8317,6 +8479,9 @@ verification = "Verifiering"
 noSearchResults = "Inga verktyg hittades"
 noTools = "Inga verktyg tillgängliga"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Detta verktyg tar bort skrivskyddsbegränsningar från PDF-formulärfält så att de blir redigerbara och ifyllbara."
 filenamePrefix = "upplåsta_formulär"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Denna version innehåller brytande ändringar."
 breakingChangesDetected = "Brytande ändringar upptäckta"
 breakingChangesMessage = "Vissa versioner innehåller brytande ändringar. Läs migreringsguiderna nedan innan du uppdaterar."
 close = "Stäng"
+closeModal = "Close update modal"
 current = "Aktuell version"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Hämta senaste"
@@ -8596,6 +8762,9 @@ typeInsertText = "Infoga text"
 typeReplaceText = "Ersätt text"
 viewComment = "Visa kommentar"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Verkställ ändringar"
 dismiss = "Avfärda"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
 title = "Formulärfält"
 unsavedBadge = "Ej sparat"
 unsavedDesc = "Du har osparade ändringar"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Kolumn {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Läser in..."
 renderMarkdown = "Rendera markdown"
 sortedBy = "Sorterad efter: {{column}}"
 textStats = "{{lines}} rader · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Visa PDF"
@@ -8867,6 +9052,37 @@ toggleLayers = "Visa/dölj lager"
 toggleSidebar = "Visa/dölj sidofält"
 toggleTheme = "Växla tema"
 viewer = "Visare"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Arbetsyta"

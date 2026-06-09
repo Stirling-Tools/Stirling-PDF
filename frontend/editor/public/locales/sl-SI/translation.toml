@@ -12,7 +12,6 @@ cancel = "Prekliči"
 changedCredsMessage = "Poverilnice spremenjene!"
 chooseFile = "Izberi datoteko"
 close = "Zapri"
-color = "Barva"
 comingSoon = "Kmalu na voljo"
 confirm = "Potrdi"
 confirmClose = "Potrdi zapiranje"
@@ -202,6 +201,10 @@ ssoDescription = "Dvofaktorsko preverjanje pristnosti za račune z enotno prijav
 ssoManaged = "Nastavite MFA prek svojega ponudnika identitete."
 title = "Dvofaktorsko preverjanje pristnosti"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "oštevilči,označi,uredi,kazalo"
 
@@ -228,6 +231,9 @@ title = "Kaj počne"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "O dodajanju prilog"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Uporabi slike"
@@ -609,6 +615,7 @@ label = "Upravljanje začasnih datotek"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Osnovni imenik za začasne datoteke (pustite prazno za privzeto: java.io.tmpdir/stirling-pdf)"
 label = "Osnovni imenik za začasne datoteke"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Kako pogosto se izvaja čiščenje (v minutah)"
@@ -621,6 +628,7 @@ label = "Čiščenje sistemskega začasnega imenika"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Imenik za začasne datoteke LibreOffice (pustite prazno za privzeto: baseTmpDir/libreoffice)"
 label = "Začasni imenik LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Največja starost v urah pred čiščenjem začasnih datotek"
@@ -637,6 +645,7 @@ label = "Čiščenje ob zagonu"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Sistemski začasni imenik za čiščenje (uporablja se le, če je omogočeno cleanupSystemTemp)"
 label = "Sistemski začasni imenik"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Pot do imenika tessdata za jezikovne datoteke OCR"
@@ -842,6 +851,7 @@ label = "Ime baze podatkov"
 [admin.settings.database.password]
 description = "Geslo za preverjanje pristnosti v bazi"
 label = "Geslo"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Vrata strežnika baze (ni uporabljeno, če je podan URL po meri)"
@@ -873,10 +883,12 @@ label = "Privzeto skrij orodja, ki niso na voljo"
 [admin.settings.endpoints.groupsToRemove]
 description = "Izberite skupine končnih točk za onemogočanje"
 label = "Onemogočene skupine končnih točk"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Izberite posamezne končne točke za onemogočanje"
 label = "Onemogočene končne točke"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Za dostop do {{featureName}} je potrebna licenca Enterprise. Ogledate si predstavitvene podatke za referenco."
@@ -1091,6 +1103,7 @@ label = "Gostitelj SMTP"
 [admin.settings.mail.password]
 description = "Geslo za preverjanje pristnosti SMTP"
 label = "Geslo SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Številka vrat za povezavo SMTP (običajno 25, 465 ali 587)"
@@ -1099,6 +1112,10 @@ label = "Vrata SMTP"
 [admin.settings.mail.username]
 description = "Uporabniško ime za preverjanje pristnosti SMTP"
 label = "Uporabniško ime SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Konfigurirajte svoj ključ licence Premium ali Enterprise."
@@ -1146,6 +1163,9 @@ info = "Če imate licenčni ključ ali potrdilno datoteko iz neposrednega nakupa
 toggle = "Imate licenčni ključ ali potrdilno datoteko?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Funkcije Premium in Enterprise so zdaj organizirane v svojih razdelkih:"
 title = "Funkcije Premium razporejene"
 
@@ -2144,11 +2164,31 @@ placeholder = "Število strani"
 title = "Zadnjih N strani"
 
 [bulkSelection.operators]
-and = "AND: & ali \"and\" — zahtevata oba pogoja (npr., 1-50 & even)"
-comma = "Vejica: , ali | — združi izbore (npr., 1-10, 20)"
-not = "NOT: ! ali \"not\" — izključi strani (npr., 3n & not 30)"
 text = "AND ima višjo prednost kot vejica. NOT velja znotraj obsega dokumenta."
 title = "Operatorji"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Od"
@@ -2801,6 +2841,9 @@ unknownTool = "Neznano orodje"
 [cloudBadge]
 tooltip = "Ta operacija bo uporabila vaše kredite v oblaku"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Izberite barvo"
 
@@ -3024,6 +3067,10 @@ title = "Način stiskanja"
 [compress.selectText.1]
 1 = "1-3 stiskanje PDF,</br> 4-6 enostavno stiskanje slik,</br> 7-9 intenzivno stiskanje slik Bo dramatično zmanjšalo kakovost slike"
 _value = "Nastavitve stiskanja"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Stiskanje je enostaven način za zmanjšanje velikosti datoteke. Izberite Velikost datoteke za vnos ciljne velikosti in mi bomo prilagodili kakovost namesto vas. Izberite Kakovost, če želite ročno nastaviti moč stiskanja."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Uveljavi kazalo"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Delovni prostor orisa"
 [editTableOfContents.workbench.empty]
 description = "Izberite orodje Uredi kazalo za nalaganje delovnega prostora."
 title = "Odprite orodje za začetek urejanja"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Ta PDF je zaščiten z geslom. Vnesite geslo, da lahko nadaljujete z delom."
@@ -3717,6 +3774,10 @@ title = "Nastavitve"
 [extractPages.tooltip]
 description = "Izbrane strani izvleče v nov PDF in ohrani vrstni red."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Klikni"
 dragAndDrop = "Povleci in spusti"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Povleci in spusti datoteko PDF"
 extractPDF = "Izvlečenje..."
 hoveredDragAndDrop = "Povleci in spusti datoteko(e) sem"
 or = "ali"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Dodaj datoteke"
@@ -3890,6 +3954,10 @@ openFromComputer = "Odpri iz računalnika"
 openSettings = "Odpri nastavitve"
 search = "Išči"
 searchPlaceholder = "Išči datoteke..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "O sploščenju PDF-jev"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Prenesite JSON"
@@ -4806,6 +4883,11 @@ tags = "oznake,spletna-vsebina,pretvorba,pretvori"
 title = "HTML v PDF"
 zoom = "Raven povečave za prikaz spletne strani."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "pretvorba,img,jpg,slika,fotografija"
 
@@ -4823,6 +4905,9 @@ title = "Slika v PDF"
 3 = "Logika več datotek (omogočeno samo pri delu z več slikami)"
 4 = "Združi v en PDF"
 5 = "Pretvori v ločene datoteke PDF"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Računa ni bilo mogoče ustvariti"
@@ -5160,6 +5245,7 @@ failed = "Operacija OCR ni uspela"
 
 [ocr.languagePicker]
 additionalLanguages = "Iščete dodatne jezike?"
+loading = "Loading available languages..."
 viewSetupGuide = "Oglejte si vodnik za nastavitev →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "Preostaja {{days}} dan"
 title = "Vaš 30-dnevni preizkus Pro"
 trialEnds = "Preizkus se konča {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Ko omogočite način prijave, lahko upravljate uporabnike, nastavite možnosti in spremljate stanje strežnika. Prvih <strong>{{freeTierLimit}}</strong> oseb na vašem strežniku lahko Stirling uporablja brezplačno."
 adminBodyLoginEnabled = "Kot skrbnik lahko upravljate uporabnike, nastavite možnosti in spremljate stanje strežnika. Prvih <strong>{{freeTierLimit}}</strong> oseb na vašem strežniku lahko Stirling uporablja brezplačno."
@@ -5305,6 +5395,9 @@ userTitle = "Pregled načrta"
 
 [onboarding.securityCheck]
 message = "Aplikacija je nedavno doživela pomembne spremembe. Morda bo potrebna pozornost skrbnika strežnika. Za nadaljevanje potrdite svojo vlogo."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Naše licenciranje <strong>Open-Core</strong> brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Za nemoteno rast in zgodnji dostop do našega novega <strong>orodja za urejanje besedila PDF</strong> priporočamo načrt Stirling Server – polno urejanje in <strong>neomejena mesta</strong> za $99/strežnik/mesec."
@@ -5430,6 +5523,17 @@ title = "Urejevalnik strani"
 zoomIn = "Povečaj"
 zoomOut = "Pomanjšaj"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Izvleči strani"
 placeholder = "(npr. 1,2,8 ali 4,7,12-16 ali 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Dodaj obrobe"
 borderWidth = "Debelina obrobe"
 bottom = "Spodnji rob"
 cols = "Stolpci"
+colsPlaceholder = "Enter columns"
 header = "Postavitev več strani"
 innerMargin = "Notranji razmik"
 left = "Levi rob"
 pagesPerSheet = "Strani na list:"
 right = "Desni rob"
 rows = "Vrstice"
+rowsPlaceholder = "Enter rows"
 submit = "Pošlji"
 tags = "spoji,sestavi,enojni pogled,organiziraj"
 title = "Postavitev več strani"
@@ -5487,6 +5593,14 @@ failed = "Pri ustvarjanju postavitve več strani je prišlo do napake."
 innerMarginTooLarge = "Notranji razmik je prevelik za izbrano postavitev."
 outerHorizontalMarginsTooLarge = "Levi/desni robovi so preveliki za to velikost strani."
 outerVerticalMarginsTooLarge = "Zgornji/spodnji robovi so preveliki za to velikost strani."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Omogočite obrobe za risanje črt okoli vsake nameščene strani. To lahko pomaga pri vizualni ločitvi ali obrezovanju."
@@ -6141,6 +6255,26 @@ pdfTools = "Osnovna PDF orodja"
 priority = "Prednostna podpora"
 title = "Funkcija"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Za vedno brezplačno"
 highlight1 = "Omejena uporaba orodij na teden"
@@ -6148,6 +6282,22 @@ highlight2 = "Dostop do vseh orodij"
 highlight3 = "Skupnostna podpora"
 included = "Vključeno"
 name = "Brezplačni"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Imate {{total}} uporabnikov, vendar brezplačni nivo podpira le {{limit}} na strežnik. Nadgradite, da bo Stirling PDF deloval nemoteno."
@@ -6459,6 +6609,7 @@ allSessions = "Vse seje"
 allTools = "All Tools"
 automate = "Poteki"
 back = "Nazaj"
+backToAllTools = "Back to all tools"
 certSign = "Podpis s potrdilom"
 completedSessions = "Zaključene seje"
 completedTab = "Zaključeno"
@@ -7128,6 +7279,9 @@ bullet3 = "Ključno za potrditvene poteke in pravno sledljivost"
 description = "Vrstni red, ki ga določite ob ustvarjanju seje, določa, kdo podpisuje prvi."
 title = "Vrstni red podpisov"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Napredno"
 database = "Podatkovna baza"
@@ -7612,6 +7766,7 @@ sharedDescription = "Vsi uporabniki lahko te podpise vidijo in uporabljajo."
 sharedHeading = "Deljeni podpisi"
 tempStorageDescription = "Podpisi so shranjeni samo v vašem brskalniku. Izgubite jih, če počistite podatke brskalnika ali zamenjate brskalnik."
 tempStorageTitle = "Začasno shranjevanje v brskalniku"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Shranjeno"
@@ -8196,6 +8351,9 @@ center = "Na sredino"
 left = "Levo"
 right = "Desno"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Preklopi temo"
 
@@ -8230,6 +8388,10 @@ label = "Izberite strežnik TSA"
 
 [timestampPdf.steps]
 settings = "Nastavitve"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "To orodje na vašem strežniku ni na voljo."
@@ -8317,6 +8479,9 @@ verification = "Preverjanje"
 noSearchResults = "Ni najdenih orodij"
 noTools = "Ni razpoložljivih orodij"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "To orodje bo odstranilo omejitve »samo za branje« iz polj obrazcev PDF, da bodo urejana in izpolnljiva."
 filenamePrefix = "odklenjeni_obrazci"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Ta različica vsebuje prelomne spremembe."
 breakingChangesDetected = "Zaznane prelomne spremembe"
 breakingChangesMessage = "Nekatere različice vsebujejo prelomne spremembe. Pred posodobitvijo preglejte spodnje vodiče za migracijo."
 close = "Zapri"
+closeModal = "Close update modal"
 current = "Trenutna različica"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Prenesi najnovejše"
@@ -8596,6 +8762,9 @@ typeInsertText = "Vstavi besedilo"
 typeReplaceText = "Zamenjaj besedilo"
 viewComment = "Prikaži komentar"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Uveljavi spremembe"
 dismiss = "Zapri"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Ta PDF vsebuje izpolnljiva polja"
 title = "Polja obrazca"
 unsavedBadge = "Neshranjeno"
 unsavedDesc = "Imate neshranjene spremembe"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Stolpec {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Nalaganje..."
 renderMarkdown = "Upodobi markdown"
 sortedBy = "Razvrščeno po: {{column}}"
 textStats = "{{lines}} vrstic · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Ogled PDF-ja"
@@ -8867,6 +9052,37 @@ toggleLayers = "Preklopi plasti"
 toggleSidebar = "Preklopi stransko vrstico"
 toggleTheme = "Preklopi temo"
 viewer = "Pregledovalnik"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Delovni prostor"

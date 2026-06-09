@@ -12,7 +12,6 @@ cancel = "Zrušit"
 changedCredsMessage = "Přihlašovací údaje byly změněny!"
 chooseFile = "Vybrat soubor"
 close = "Zavřít"
-color = "Barva"
 comingSoon = "Již brzy"
 confirm = "Potvrdit"
 confirmClose = "Potvrdit zavření"
@@ -202,6 +201,10 @@ ssoDescription = "U účtů s jednotným přihlášením je dvoufázové ověře
 ssoManaged = "Nastavte MFA prostřednictvím svého poskytovatele identity."
 title = "Dvoufázové ověření"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "číslování,popisek,uspořádat,rejstřík"
 
@@ -228,6 +231,9 @@ title = "Co dělá"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "O nástroji Přidat přílohy"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Použít obrázky"
@@ -609,6 +615,7 @@ label = "Správa dočasných souborů"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Základní adresář pro dočasné soubory (ponechte prázdné pro výchozí: java.io.tmpdir/stirling-pdf)"
 label = "Základní dočasný adresář"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Jak často spouštět čištění (v minutách)"
@@ -621,6 +628,7 @@ label = "Čistit systémový dočasný adresář"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Adresář pro dočasné soubory LibreOffice (ponechte prázdné pro výchozí: baseTmpDir/libreoffice)"
 label = "Dočasný adresář LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximální stáří v hodinách před vyčištěním dočasných souborů"
@@ -637,6 +645,7 @@ label = "Čištění při spuštění"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systémový dočasný adresář k čištění (použito pouze pokud je povoleno cleanupSystemTemp)"
 label = "Systémový dočasný adresář"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Cesta k adresáři tessdata pro jazykové soubory OCR"
@@ -842,6 +851,7 @@ label = "Název databáze"
 [admin.settings.database.password]
 description = "Heslo pro autentizaci k databázi"
 label = "Heslo"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Port databázového serveru (nepoužije se, pokud je zadáno vlastní URL)"
@@ -873,10 +883,12 @@ label = "Ve výchozím nastavení skrýt nedostupné nástroje"
 [admin.settings.endpoints.groupsToRemove]
 description = "Vyberte skupiny koncových bodů k zakázání"
 label = "Zakázané skupiny koncových bodů"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Vyberte jednotlivé koncové body k zakázání"
 label = "Zakázané koncové body"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Pro přístup k {{featureName}} je vyžadována licence Enterprise. Zobrazená data jsou pouze ukázková."
@@ -1091,6 +1103,7 @@ label = "Hostitel SMTP"
 [admin.settings.mail.password]
 description = "Heslo pro autentizaci SMTP"
 label = "Heslo SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Číslo portu pro připojení SMTP (typicky 25, 465 nebo 587)"
@@ -1099,6 +1112,10 @@ label = "Port SMTP"
 [admin.settings.mail.username]
 description = "Uživatelské jméno pro autentizaci SMTP"
 label = "Uživatelské jméno SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Nakonfigurujte svůj prémiový nebo enterprise licenční klíč."
@@ -1146,6 +1163,9 @@ info = "Máte-li licenční klíč nebo certifikační soubor z přímého náku
 toggle = "Máte licenční klíč nebo certifikační soubor?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Prémiové a Enterprise funkce jsou nyní uspořádány ve svých příslušných sekcích:"
 title = "Prémiové funkce přesunuty"
 
@@ -2144,11 +2164,31 @@ placeholder = "Počet stránek"
 title = "Posledních N stránek"
 
 [bulkSelection.operators]
-and = "AND: & nebo „and“ — vyžaduje obě podmínky (např. 1-50 & even)"
-comma = "Čárka: , nebo | — kombinuje výběry (např. 1-10, 20)"
-not = "NOT: ! nebo „not“ — vyloučí stránky (např. 3n & not 30)"
 text = "AND má vyšší prioritu než čárka. NOT se uplatňuje v rámci rozsahu dokumentu."
 title = "Operátory"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Od"
@@ -2801,6 +2841,9 @@ unknownTool = "Neznámý nástroj"
 [cloudBadge]
 tooltip = "Tato operace využije vaše cloudové kredity"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Zvolte barvu"
 
@@ -3024,6 +3067,10 @@ title = "Metoda komprese"
 [compress.selectText.1]
 1 = "1–3 komprese PDF,</br> 4–6 mírná komprese obrázků,</br> 7–9 silná komprese obrázků výrazně sníží kvalitu obrazu"
 _value = "Nastavení komprese"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Komprese je snadný způsob, jak zmenšit velikost souboru. Zvolte Velikost souboru pro zadání cílové velikosti a my upravíme kvalitu za vás. Zvolte Kvalitu pro ruční nastavení síly komprese."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Použít obsah"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Pracovní prostor osnovy"
 [editTableOfContents.workbench.empty]
 description = "Vyberte nástroj Upravit obsah pro načtení pracovního prostoru."
 title = "Otevřete nástroj a začněte upravovat"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Toto PDF je chráněno heslem. Zadejte heslo, abyste mohli pokračovat v práci."
@@ -3717,6 +3774,10 @@ title = "Nastavení"
 [extractPages.tooltip]
 description = "Extrahuje vybrané stránky do nového PDF se zachováním pořadí."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Kliknout"
 dragAndDrop = "Přetáhnout"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Přetáhnout PDF soubor"
 extractPDF = "Extrahování..."
 hoveredDragAndDrop = "Přetáhněte soubor(y) sem"
 or = "nebo"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Přidat soubory"
@@ -3890,6 +3954,10 @@ openFromComputer = "Otevřít z počítače"
 openSettings = "Otevřít nastavení"
 search = "Hledat"
 searchPlaceholder = "Hledat soubory..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "O zplošťování PDF"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Stáhnout JSON"
@@ -4806,6 +4883,11 @@ tags = "značkování,webový-obsah,transformace,převod"
 title = "HTML na PDF"
 zoom = "Úroveň přiblížení pro zobrazení webové stránky."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "převod,img,jpg,obrázek,fotka"
 
@@ -4823,6 +4905,9 @@ title = "Obrázek na PDF"
 3 = "Logika pro více souborů (Povoleno pouze při práci s více obrázky)"
 4 = "Sloučit do jednoho PDF"
 5 = "Převést na samostatné PDF"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Nepodařilo se vytvořit účet"
@@ -5160,6 +5245,7 @@ failed = "Operace OCR selhala"
 
 [ocr.languagePicker]
 additionalLanguages = "Hledáte další jazyky?"
+loading = "Loading available languages..."
 viewSetupGuide = "Zobrazit průvodce nastavením →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "Zbývá {{days}} den"
 title = "Vaše 30denní zkušební verze Pro"
 trialEnds = "Zkušební období končí {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Po povolení režimu přihlášení můžete spravovat uživatele, konfigurovat nastavení a sledovat stav serveru. Prvních <strong>{{freeTierLimit}}</strong> uživatelů na vašem serveru může Stirling používat zdarma."
 adminBodyLoginEnabled = "Jako správce můžete spravovat uživatele, konfigurovat nastavení a sledovat stav serveru. Prvních <strong>{{freeTierLimit}}</strong> uživatelů na vašem serveru může Stirling používat zdarma."
@@ -5305,6 +5395,9 @@ userTitle = "Přehled plánu"
 
 [onboarding.securityCheck]
 message = "Aplikace nedávno prošla významnými změnami. Může být nutný zásah správce serveru. Pro pokračování prosím potvrďte svou roli."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušený růst a přednostní přístup k našemu novému <strong>nástroji pro úpravu textu PDF</strong> doporučujeme plán Stirling Server – plné úpravy a <strong>neomezený počet míst</strong> za 99 $/server/měsíc."
@@ -5430,6 +5523,17 @@ title = "Editor stránek"
 zoomIn = "Přiblížit"
 zoomOut = "Oddálit"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Extrahovat stránky"
 placeholder = "(např. 1,2,8 nebo 4,7,12-16 nebo 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Přidat okraje"
 borderWidth = "Tloušťka rámečku"
 bottom = "Dolní okraj"
 cols = "Sloupce"
+colsPlaceholder = "Enter columns"
 header = "Rozvržení více stránek"
 innerMargin = "Vnitřní okraj"
 left = "Levý okraj"
 pagesPerSheet = "Stránek na list:"
 right = "Pravý okraj"
 rows = "Řádky"
+rowsPlaceholder = "Enter rows"
 submit = "Odeslat"
 tags = "sloučit,kompozitní,jedno-zobrazení,uspořádat"
 title = "Rozvržení více stránek"
@@ -5487,6 +5593,14 @@ failed = "Při vytváření vícestránkového rozvržení došlo k chybě."
 innerMarginTooLarge = "Vnitřní okraj je pro zvolené rozložení příliš velký."
 outerHorizontalMarginsTooLarge = "Levé/pravé okraje jsou pro tuto velikost stránky příliš velké."
 outerVerticalMarginsTooLarge = "Horní/dolní okraje jsou pro tuto velikost stránky příliš velké."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Povolte rámečky pro kreslení čar kolem každé umístěné stránky. Může to pomoci s vizuálním oddělením nebo ořezem."
@@ -6141,6 +6255,26 @@ pdfTools = "Základní PDF nástroje"
 priority = "Prioritní podpora"
 title = "Funkce"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Navždy zdarma"
 highlight1 = "Omezené používání nástrojů týdně"
@@ -6148,6 +6282,22 @@ highlight2 = "Přístup ke všem nástrojům"
 highlight3 = "Komunitní podpora"
 included = "Zahrnuto"
 name = "Zdarma"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Máte {{total}} uživatelů, ale bezplatná úroveň podporuje pouze {{limit}} na server. Upgradujte, aby Stirling PDF běžel hladce."
@@ -6459,6 +6609,7 @@ allSessions = "Všechny relace"
 allTools = "All Tools"
 automate = "Automat."
 back = "Zpět"
+backToAllTools = "Back to all tools"
 certSign = "Podepsat certifikátem"
 completedSessions = "Dokončené relace"
 completedTab = "Dokončené"
@@ -7128,6 +7279,9 @@ bullet3 = "Zásadní pro schvalovací procesy a právní řetězce předání"
 description = "Pořadí, které určíte při vytvoření relace, určuje, kdo podepisuje jako první."
 title = "Pořadí podpisů"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Pokročilé"
 database = "Databáze"
@@ -7612,6 +7766,7 @@ sharedDescription = "Všichni uživatelé mohou tyto podpisy vidět a používat
 sharedHeading = "Sdílené podpisy"
 tempStorageDescription = "Podpisy jsou uloženy pouze ve vašem prohlížeči. Při vymazání dat prohlížeče nebo při přepnutí na jiný prohlížeč budou ztraceny."
 tempStorageTitle = "Dočasné úložiště prohlížeče"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Uloženo"
@@ -8196,6 +8351,9 @@ center = "Center"
 left = "Left"
 right = "Right"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Přepnout motiv"
 
@@ -8230,6 +8388,10 @@ label = "Vyberte server TSA"
 
 [timestampPdf.steps]
 settings = "Nastavení"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Tento nástroj není na vašem serveru dostupný."
@@ -8317,6 +8479,9 @@ verification = "Ověření"
 noSearchResults = "Nebyly nalezeny žádné nástroje"
 noTools = "Žádné dostupné nástroje"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Tento nástroj odstraní omezení „jen pro čtení“ z formulářových polí v PDF, aby byla editovatelná a vyplnitelná."
 filenamePrefix = "odemknute_formulare"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Tato verze obsahuje nekompatibilní změny."
 breakingChangesDetected = "Zjištěny nekompatibilní změny"
 breakingChangesMessage = "Některé verze obsahují nekompatibilní změny. Před aktualizací si prosím prostudujte migrační průvodce níže."
 close = "Zavřít"
+closeModal = "Close update modal"
 current = "Aktuální verze"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Stáhnout nejnovější"
@@ -8596,6 +8762,9 @@ typeInsertText = "Vložit text"
 typeReplaceText = "Nahradit text"
 viewComment = "Zobrazit komentář"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Použít změny"
 dismiss = "Skrýt"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Toto PDF obsahuje vyplnitelná pole"
 title = "Formulářová pole"
 unsavedBadge = "Neuloženo"
 unsavedDesc = "Máte neuložené změny"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Sloupec {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Načítání..."
 renderMarkdown = "Vykreslit Markdown"
 sortedBy = "Seřazeno podle: {{column}}"
 textStats = "{{lines}} řádků · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Zobrazit PDF"
@@ -8867,6 +9052,37 @@ toggleLayers = "Přepnout vrstvy"
 toggleSidebar = "Přepnout postranní panel"
 toggleTheme = "Přepnout motiv"
 viewer = "Prohlížeč"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Pracovní prostor"

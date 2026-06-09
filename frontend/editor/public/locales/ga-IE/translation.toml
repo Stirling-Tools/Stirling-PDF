@@ -12,7 +12,6 @@ cancel = "Cealaigh"
 changedCredsMessage = "Dintiúir athraithe!"
 chooseFile = "Roghnaigh Comhad"
 close = "Dún"
-color = "Dath"
 comingSoon = "Ag teacht go luath"
 confirm = "Deimhnigh"
 confirmClose = "Deimhnigh Dúnadh"
@@ -202,6 +201,10 @@ ssoDescription = "Is ag do sholáthraí aitheantais a bhainistítear fíordheimh
 ssoManaged = "Cumraigh MFA trí do sholáthraí aitheantais."
 title = "Fíordheimhniú dhá fhachtóir"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "leathanach, lipéad, eagraigh, innéacs"
 
@@ -228,6 +231,9 @@ title = "Cad a dhéanann sé"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Maidir le Cuir Iatáin Leis"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Cuir Íomhánna i bhFeidhm"
@@ -609,6 +615,7 @@ label = "Bainistíocht Comhad Sealadach"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Bun‑chomhadlann do chomhaid shealadacha (fág folamh don réamhshocrú: java.io.tmpdir/stirling-pdf)"
 label = "Bun‑Chomhadlann Shealadach"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Cé chomh minic is a rithfear an glanadh (i nóiméid)"
@@ -621,6 +628,7 @@ label = "Glan Comhadlann Shealadach an Chórais"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Comhadlann do chomhaid shealadacha LibreOffice (fág folamh don réamhshocrú: baseTmpDir/libreoffice)"
 label = "Comhadlann Shealadach LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Aois uasta in uaireanta sula nglanfar comhaid shealadacha"
@@ -637,6 +645,7 @@ label = "Glanadh Ag Tús"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Comhadlann shealadach an chórais le glanadh (ní úsáidtear ach má chumasaítear cleanupSystemTemp)"
 label = "Comhadlann Shealadach an Chórais"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Conair chuig an gcomhadlann tessdata do chomhaid teanga OCR"
@@ -842,6 +851,7 @@ label = "Ainm an Bhunachair Sonraí"
 [admin.settings.database.password]
 description = "Focal faire fíordheimhnithe bunachair sonraí"
 label = "Focal Faire"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Port an fhreastalaí bunachair sonraí (ní úsáidtear má sholáthraítear URL saincheaptha)"
@@ -873,10 +883,12 @@ label = "Folaigh uirlisí nach bhfuil ar fáil de réir réamhshocraithe"
 [admin.settings.endpoints.groupsToRemove]
 description = "Roghnaigh grúpaí críochphointe le díchumasú"
 label = "Grúpaí Deireadhphointe Díchumasaithe"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Roghnaigh críochphointí aonair le díchumasú"
 label = "Críochphointí Díchumasaithe"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Tá ceadúnas Fiontraíochta de dhíth chun rochtain a fháil ar {{featureName}}. Tá tú ag féachaint ar shonraí taispeána mar thagairt."
@@ -1091,6 +1103,7 @@ label = "Óstach SMTP"
 [admin.settings.mail.password]
 description = "Focal faire le haghaidh fíordheimhnithe SMTP"
 label = "Focal Faire SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Uimhir an phoirt don cheangal SMTP (de ghnáth 25, 465, nó 587)"
@@ -1099,6 +1112,10 @@ label = "Port SMTP"
 [admin.settings.mail.username]
 description = "Ainm úsáideora le haghaidh fíordheimhnithe SMTP"
 label = "Ainm Úsáideora SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Cumraigh do eochair cheadúnais préimhe nó fiontair."
@@ -1146,6 +1163,9 @@ info = "Má tá eochair cheadúnais nó comhad teastais agat ó cheannach dírea
 toggle = "An bhfuil eochair cheadúnais nó comhad teastais agat?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Tá gnéithe Préimhe agus Fiontair eagraithe anois ina gcuid rannán féin:"
 title = "Gnéithe Préimhe Dáilte"
 
@@ -2144,11 +2164,31 @@ placeholder = "Líon na leathanach"
 title = "Na N Leathanach Deireanacha"
 
 [bulkSelection.operators]
-and = "AND: & nó \"and\" — éilíonn an dá choinníoll (m.sh., 1-50 & even)"
-comma = "Camóg: , nó | — cumaisc roghanna (m.sh., 1-10, 20)"
-not = "NOT: ! nó \"not\" — eisiann leathanaigh (m.sh., 3n & not 30)"
 text = "Tá tosaíocht níos airde ag AND ná camóg. Baintear NOT laistigh de raon an doiciméid."
 title = "Oibreoirí"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Ó"
@@ -2801,6 +2841,9 @@ unknownTool = "Uirlis anaithnid"
 [cloudBadge]
 tooltip = "Úsáidfidh an oibríocht seo do chreidmheasanna scamall"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Roghnaigh dath"
 
@@ -3024,6 +3067,10 @@ title = "Modh Comhbhrúite"
 [compress.selectText.1]
 1 = "1-3 comhbhrú PDF,</br> 4-6 comhbhrú éadrom íomhá,</br> 7-9 comhbhrú dian íomhá Laghdóidh sé cáilíocht na n-íomhánna go mór"
 _value = "Socruithe Comhbhrúite"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Is bealach éasca é comhbhrú chun do mhéid comhaid a laghdú. Roghnaigh Méid Comhaid chun spriocmhéid a iontráil agus ligean dúinn an cháilíocht a choigeartú duitse. Roghnaigh Cáilíocht chun neart an chomhbhrú a shocrú de láimh."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Cuir clár ábhair i bhfeidhm"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Spás oibre imlíne"
 [editTableOfContents.workbench.empty]
 description = "Roghnaigh an uirlis Cuir Clár Ábhair in Eagar chun a spás oibre a lódáil."
 title = "Oscail an uirlis chun eagarthóireacht a thosú"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Tá an PDF seo cosanta le pasfhocal. Cuir isteach an pasfhocal ionas gur féidir leat leanúint ag obair leis."
@@ -3717,6 +3774,10 @@ title = "Socruithe"
 [extractPages.tooltip]
 description = "Baineann sé na leathanaigh roghnaithe isteach i PDF nua, ag coinneáil an ord."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Cliceáil"
 dragAndDrop = "Tarraing & Scaoil"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Tarraing & Scaoil comhad PDF"
 extractPDF = "Ag Aistriú..."
 hoveredDragAndDrop = "Tarraing agus scaoil comhad(í) anseo"
 or = "nó"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Cuir Comhaid Leis"
@@ -3890,6 +3954,10 @@ openFromComputer = "Oscail ón ríomhaire"
 openSettings = "Oscail socruithe"
 search = "Cuardaigh"
 searchPlaceholder = "Cuardaigh comhaid..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "Maidir le Maolú PDFanna"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Íosluchtaigh ceol JSON"
@@ -4806,6 +4883,11 @@ tags = "marcáil, ábhar gréasáin, claochlú, tiontú"
 title = "HTML go PDF"
 zoom = "Leibhéal súmáil chun an suíomh Gréasáin a thaispeáint."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "comhshó, img, jpg, pictiúr, grianghraf"
 
@@ -4823,6 +4905,9 @@ title = "Íomhá go PDF"
 3 = "Loighic ilchomhad (cumasaithe ach amháin má oibríonn tú le híomhánna iolracha)"
 4 = "Chumasadh go PDF amháin"
 5 = "Tiontaigh go PDF ar leith"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Theip ar chuntas a chruthú"
@@ -5160,6 +5245,7 @@ failed = "Theip ar oibríocht OCR"
 
 [ocr.languagePicker]
 additionalLanguages = "Ag lorg teangacha breise?"
+loading = "Loading available languages..."
 viewSetupGuide = "Féach treoir socraithe →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "{{days}} lá fágtha"
 title = "Do thriail Pro 30 lá"
 trialEnds = "Críochnaíonn an triail {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Nuair a chumasaíonn tú mód logála isteach, is féidir leat úsáideoirí a bhainistiú, socruithe a chumrú, agus sláinte an fhreastalaí a mheas. Faigheann an chéad <strong>{{freeTierLimit}}</strong> duine ar do fhreastalaí Stirling saor in aisce."
 adminBodyLoginEnabled = "Mar riarthóir, is féidir leat úsáideoirí a bhainistiú, socruithe a chumrú, agus sláinte an fhreastalaí a mheas. Faigheann an chéad <strong>{{freeTierLimit}}</strong> duine ar do fhreastalaí Stirling saor in aisce."
@@ -5305,6 +5395,9 @@ userTitle = "Forbhreathnú Plean"
 
 [onboarding.securityCheck]
 message = "Tá athruithe suntasacha déanta ar an bhfeidhmchlár le déanaí. B’fhéidir go mbeidh aird riarthóir do fhreastalaí ag teastáil. Deimhnigh do ról le leanúint ar aghaidh."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Ceadaíonn ár gceadúnú <strong>Open-Core</strong> suas le <strong>{{freeTierLimit}}</strong> úsáideoirí saor in aisce in aghaidh an fhreastalaí. Chun scálú gan bhriseadh, molaimid an plean Stirling Server - <strong>suíocháin neamhtheoranta</strong> agus <strong>tacaíocht SSO</strong> ar $99/server/mo."
@@ -5430,6 +5523,17 @@ title = "Eagarthóir Leathanach"
 zoomIn = "Súmáil Isteach"
 zoomOut = "Súmáil Amach"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Leathanaigh Sliocht"
 placeholder = "(m.sh. 1,2,8 nó 4,7,12-16 nó 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Cuir Teorainneacha leis"
 borderWidth = "Tiús Teorann"
 bottom = "Imeall Íochtair"
 cols = "Colúin"
+colsPlaceholder = "Enter columns"
 header = "Leagan Amach Illeathanaigh"
 innerMargin = "Imeall Istigh"
 left = "Imeall Clé"
 pagesPerSheet = "Leathanaigh in aghaidh na bileoige:"
 right = "Imeall Deas"
 rows = "Sraitheanna"
+rowsPlaceholder = "Enter rows"
 submit = "Cuir isteach"
 tags = "chumasc, ilchodach, aon-amharc, a eagrú"
 title = "Leagan Amach Illeathanaigh"
@@ -5487,6 +5593,14 @@ failed = "Tharla earráid agus an leagan amach il-leathanaigh á chruthú."
 innerMarginTooLarge = "Tá an t-imeall istigh rómhór don leagan amach roghnaithe."
 outerHorizontalMarginsTooLarge = "Tá na himill clé/deise rómhóra don mhéid leathanaigh seo."
 outerVerticalMarginsTooLarge = "Tá na himill uachtair/íochtair rómhóra don mhéid leathanaigh seo."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Cumasaigh teorainneacha chun línte a tharraingt timpeall gach leathanach suite. Féadfaidh sé seo cabhrú le deighilt amhairc nó le bearradh."
@@ -6141,6 +6255,26 @@ pdfTools = "Uirlisí PDF Bunúsacha"
 priority = "Tacaíocht Thosaíochta"
 title = "Gné"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Saor go deo"
 highlight1 = "Úsáid Teoranta Uirlisí in aghaidh na seachtaine"
@@ -6148,6 +6282,22 @@ highlight2 = "Rochtain ar gach uirlis"
 highlight3 = "Tacaíocht phobail"
 included = "San áireamh"
 name = "Saor"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Tá {{total}} úsáideoir agat ach ní thacaíonn an sraith saor in aisce ach le {{limit}} in aghaidh an fhreastalaí. Uasghrádaigh chun Stirling PDF a choinneáil ag rith go réidh."
@@ -6459,6 +6609,7 @@ allSessions = "Gach Seisiún"
 allTools = "All Tools"
 automate = "Auto"
 back = "Ar ais"
+backToAllTools = "Back to all tools"
 certSign = "Sínigh le Teastas"
 completedSessions = "Seisiúin Chríochnaithe"
 completedTab = "Críochnaithe"
@@ -7128,6 +7279,9 @@ bullet3 = "Riachtanach do shreabha oibre formheasa agus do shlabhraí coimeádta
 description = "Socraíonn an t-ord a shonraíonn tú nuair a chruthaíonn tú an seisiún cé a shíníonn ar dtús."
 title = "Ord an tSínithe"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Ardroghanna"
 database = "Bunachar Sonraí"
@@ -7612,6 +7766,7 @@ sharedDescription = "Is féidir le gach úsáideoir na sínithe seo a fheiceáil
 sharedHeading = "Sínithe Comhroinnte"
 tempStorageDescription = "Stóráiltear na sínithe i do bhrabhsálaí amháin. Caillfear iad má ghlanann tú sonraí an bhrabhsálaí nó má athraíonn tú brabhsálaithe."
 tempStorageTitle = "Stóráil shealadach an bhrabhsálaí"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Sábháilte"
@@ -8196,6 +8351,9 @@ center = "Lár"
 left = "Ar chlé"
 right = "Ar dheis"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Athraigh an Téama"
 
@@ -8230,6 +8388,10 @@ label = "Roghnaigh freastalaí TSA"
 
 [timestampPdf.steps]
 settings = "Socruithe"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Níl an uirlis seo ar fáil ar do fhreastalaí."
@@ -8317,6 +8479,9 @@ verification = "Fíorú"
 noSearchResults = "Níor aimsíodh uirlisí"
 noTools = "Níl aon uirlisí ar fáil"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Bainfidh an uirlis seo srianta léamh-amáin ó réimsí foirme PDF, rud a fhágann go mbeidh siad in-eagarthóireachta agus inlíonta."
 filenamePrefix = "foirmeacha_díghlasáilte"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Tá athruithe bristeacha sa leagan seo."
 breakingChangesDetected = "Aimsíodh Athruithe Bristeacha"
 breakingChangesMessage = "Tá athruithe bristeacha i roinnt leaganacha. Déan athbhreithniú ar na treoracha imirce thíos sula nuashonraíonn tú."
 close = "Dún"
+closeModal = "Close update modal"
 current = "Leagan Reatha"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Íoslódáil an ceann is déanaí"
@@ -8596,6 +8762,9 @@ typeInsertText = "Ionsáigh Téacs"
 typeReplaceText = "Cuir Téacs in Ionad"
 viewComment = "Féach an trácht"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Cuir Athruithe i bhFeidhm"
 dismiss = "Neamhaird"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Tá réimsí inlíonta sa PDF seo"
 title = "Réimsí Foirme"
 unsavedBadge = "Gan Sábháil"
 unsavedDesc = "Tá athruithe gan sábháil agat"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Colún {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Á lódáil..."
 renderMarkdown = "Rindreáil Markdown"
 sortedBy = "Sórtáilte de réir: {{column}}"
 textStats = "{{lines}} líne · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Féach PDF"
@@ -8867,6 +9052,37 @@ toggleLayers = "Scoránaigh sraitheanna"
 toggleSidebar = "Scoránaigh an barra taoibh"
 toggleTheme = "Scoránaigh an téama"
 viewer = "Breathnóir"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Spás Oibre"

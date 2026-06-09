@@ -12,7 +12,6 @@ cancel = "Άκυρο"
 changedCredsMessage = "Τα διαπιστευτήρια άλλαξαν!"
 chooseFile = "Επιλέξτε αρχείο"
 close = "Κλείσιμο"
-color = "Χρώμα"
 comingSoon = "Σύντομα διαθέσιμο"
 confirm = "Επιβεβαίωση"
 confirmClose = "Επιβεβαίωση κλεισίματος"
@@ -202,6 +201,10 @@ ssoDescription = "Ο έλεγχος ταυτότητας δύο παραγόντ
 ssoManaged = "Ρυθμίστε το MFA μέσω του παρόχου ταυτότητάς σας."
 title = "Έλεγχος ταυτότητας δύο παραγόντων"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "αρίθμηση,ετικέτα,οργάνωση,ευρετήριο"
 
@@ -228,6 +231,9 @@ title = "Τι κάνει"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Σχετικά με το Add Attachments"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Εφαρμογή εικόνων"
@@ -609,6 +615,7 @@ label = "Διαχείριση προσωρινών αρχείων"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Βασικός κατάλογος για προσωρινά αρχεία (αφήστε κενό για προεπιλογή: java.io.tmpdir/stirling-pdf)"
 label = "Βασικός κατάλογος προσωρινών"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Συχνότητα εκτέλεσης καθαρισμού (σε λεπτά)"
@@ -621,6 +628,7 @@ label = "Καθαρισμός προσωρινών συστήματος"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Κατάλογος για προσωρινά αρχεία LibreOffice (αφήστε κενό για προεπιλογή: baseTmpDir/libreoffice)"
 label = "Κατάλογος προσωρινών LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Μέγιστη ηλικία σε ώρες πριν καθαριστούν τα προσωρινά αρχεία"
@@ -637,6 +645,7 @@ label = "Καθαρισμός κατά την εκκίνηση"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Κατάλογος προσωρινών του συστήματος προς καθαρισμό (χρησιμοποιείται μόνο αν είναι ενεργό το cleanupSystemTemp)"
 label = "Κατάλογος προσωρινών συστήματος"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Διαδρομή προς τον κατάλογο tessdata για αρχεία γλωσσών OCR"
@@ -842,6 +851,7 @@ label = "Όνομα βάσης δεδομένων"
 [admin.settings.database.password]
 description = "Κωδικός πιστοποίησης βάσης δεδομένων"
 label = "Κωδικός"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Θύρα διακομιστή βάσης δεδομένων (δεν χρησιμοποιείται αν παρέχεται προσαρμοσμένο URL)"
@@ -873,10 +883,12 @@ label = "Απόκρυψη μη διαθέσιμων εργαλείων από π
 [admin.settings.endpoints.groupsToRemove]
 description = "Επιλέξτε ομάδες endpoints προς απενεργοποίηση"
 label = "Απενεργοποιημένες ομάδες endpoints"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Επιλέξτε μεμονωμένα endpoints προς απενεργοποίηση"
 label = "Απενεργοποιημένα endpoints"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Απαιτείται άδεια Enterprise για πρόσβαση στο {{featureName}}. Βλέπετε δεδομένα επίδειξης για αναφορά."
@@ -1091,6 +1103,7 @@ label = "Κεντρικός υπολογιστής SMTP"
 [admin.settings.mail.password]
 description = "Κωδικός για πιστοποίηση SMTP"
 label = "Κωδικός SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Ο αριθμός θύρας για σύνδεση SMTP (συνήθως 25, 465 ή 587)"
@@ -1099,6 +1112,10 @@ label = "Θύρα SMTP"
 [admin.settings.mail.username]
 description = "Όνομα χρήστη για πιστοποίηση SMTP"
 label = "Όνομα χρήστη SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Ρυθμίστε το κλειδί άδειας premium ή enterprise."
@@ -1146,6 +1163,9 @@ info = "Αν έχετε κλειδί άδειας ή αρχείο πιστοπο
 toggle = "Έχετε κλειδί άδειας ή αρχείο πιστοποιητικού;"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Οι λειτουργίες Premium και Enterprise έχουν πλέον οργανωθεί στις αντίστοιχες ενότητες:"
 title = "Κατανομή λειτουργιών Premium"
 
@@ -2144,11 +2164,31 @@ placeholder = "Αριθμός σελίδων"
 title = "Τελευταίες N σελίδες"
 
 [bulkSelection.operators]
-and = "AND: & ή \"and\" — απαιτούν και τις δύο συνθήκες (π.χ., 1-50 & even)"
-comma = "Κόμμα: , ή | — συνδυάζει επιλογές (π.χ., 1-10, 20)"
-not = "NOT: ! ή \"not\" — εξαιρεί σελίδες (π.χ., 3n & not 30)"
 text = "Το AND έχει υψηλότερη προτεραιότητα από το κόμμα. Το NOT εφαρμόζεται εντός του εύρους του εγγράφου."
 title = "Τελεστές"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Από"
@@ -2801,6 +2841,9 @@ unknownTool = "Άγνωστο εργαλείο"
 [cloudBadge]
 tooltip = "Αυτή η λειτουργία θα χρησιμοποιήσει τις πιστώσεις cloud σας"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Επιλέξτε χρώμα"
 
@@ -3024,6 +3067,10 @@ title = "Μέθοδος συμπίεσης"
 [compress.selectText.1]
 1 = "1-3 συμπίεση PDF,</br> 4-6 ελαφριά συμπίεση εικόνας,</br> 7-9 έντονη συμπίεση εικόνας Θα μειώσει δραστικά την ποιότητα εικόνας"
 _value = "Ρυθμίσεις συμπίεσης"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Η συμπίεση είναι ένας εύκολος τρόπος να μειώσετε το μέγεθος του αρχείου σας. Επιλέξτε Μέγεθος αρχείου για να εισαγάγετε έναν στόχο και να προσαρμόσουμε την ποιότητα για εσάς. Επιλέξτε Ποιότητα για να ρυθμίσετε χειροκίνητα την ισχύ συμπίεσης."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Εφαρμογή πίνακα περιεχομένων"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Χώρος εργασίας διάρθρωσης"
 [editTableOfContents.workbench.empty]
 description = "Επιλέξτε το εργαλείο Επεξεργασία Πίνακα Περιεχομένων για να φορτώσει τον χώρο εργασίας του."
 title = "Ανοίξτε το εργαλείο για να ξεκινήσετε την επεξεργασία"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Αυτό το PDF είναι προστατευμένο με κωδικό. Εισαγάγετε τον κωδικό ώστε να συνεχίσετε να δουλεύετε με αυτό."
@@ -3717,6 +3774,10 @@ title = "Ρυθμίσεις"
 [extractPages.tooltip]
 description = "Εξάγει τις επιλεγμένες σελίδες σε νέο PDF, διατηρώντας τη σειρά."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Κλικ"
 dragAndDrop = "Σύρετε & αφήστε"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Σύρετε & αφήστε αρχείο PDF"
 extractPDF = "Εξαγωγή..."
 hoveredDragAndDrop = "Σύρετε & αφήστε αρχείο(α) εδώ"
 or = "ή"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Προσθήκη αρχείων"
@@ -3890,6 +3954,10 @@ openFromComputer = "Άνοιγμα από υπολογιστή"
 openSettings = "Άνοιγμα ρυθμίσεων"
 search = "Αναζήτηση"
 searchPlaceholder = "Αναζήτηση αρχείων..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "Σχετικά με την επιπέδωση PDF"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Λήψη JSON"
@@ -4806,6 +4883,11 @@ tags = "markup,περιεχόμενο-web,μετατροπή,μετατροπή"
 title = "HTML σε PDF"
 zoom = "Επίπεδο ζουμ για την εμφάνιση της ιστοσελίδας."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "μετατροπή,εικόνα,jpg,φωτογραφία"
 
@@ -4823,6 +4905,9 @@ title = "Εικόνα σε PDF"
 3 = "Λογική πολλαπλών αρχείων (Ενεργοποιείται μόνο όταν εργάζεστε με πολλαπλές εικόνες)"
 4 = "Συγχώνευση σε ένα PDF"
 5 = "Μετατροπή σε ξεχωριστά PDF"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Αποτυχία δημιουργίας λογαριασμού"
@@ -5160,6 +5245,7 @@ failed = "Η λειτουργία OCR απέτυχε"
 
 [ocr.languagePicker]
 additionalLanguages = "Ψάχνετε για επιπλέον γλώσσες;"
+loading = "Loading available languages..."
 viewSetupGuide = "Προβολή οδηγού ρύθμισης →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "Απομένει {{days}} ημέρα"
 title = "Η 30ήμερη δοκιμή Pro σας"
 trialEnds = "Η δοκιμή λήγει {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Μόλις ενεργοποιήσετε τη λειτουργία σύνδεσης, μπορείτε να διαχειρίζεστε χρήστες, να ρυθμίζετε επιλογές και να παρακολουθείτε την υγεία του διακομιστή. Τα πρώτα <strong>{{freeTierLimit}}</strong> άτομα στον διακομιστή σας χρησιμοποιούν το Stirling δωρεάν."
 adminBodyLoginEnabled = "Ως διαχειριστής, μπορείτε να διαχειρίζεστε χρήστες, να ρυθμίζετε επιλογές και να παρακολουθείτε την υγεία του διακομιστή. Τα πρώτα <strong>{{freeTierLimit}}</strong> άτομα στον διακομιστή σας χρησιμοποιούν το Stirling δωρεάν."
@@ -5305,6 +5395,9 @@ userTitle = "Επισκόπηση πλάνου"
 
 [onboarding.securityCheck]
 message = "Η εφαρμογή έχει υποστεί σημαντικές αλλαγές πρόσφατα. Ίσως απαιτείται η προσοχή του διαχειριστή του διακομιστή σας. Επιβεβαιώστε τον ρόλο σας για να συνεχίσετε."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Η αδειοδότηση <strong>Open-Core</strong> μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση και έγκαιρη πρόσβαση στο νέο <strong>εργαλείο επεξεργασίας κειμένου PDF</strong>, προτείνουμε το πλάνο Stirling Server - πλήρης επεξεργασία και <strong>απεριόριστες θέσεις</strong> για $99/server/μήνα."
@@ -5430,6 +5523,17 @@ title = "Επεξεργαστής σελίδων"
 zoomIn = "Μεγέθυνση"
 zoomOut = "Σμίκρυνση"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Εξαγωγή σελίδων"
 placeholder = "(π.χ. 1,2,8 ή 4,7,12-16 ή 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Προσθήκη περιγραμμάτων"
 borderWidth = "Πάχος περιγράμματος"
 bottom = "Κάτω περιθώριο"
 cols = "Στήλες"
+colsPlaceholder = "Enter columns"
 header = "Διάταξη πολλαπλών σελίδων"
 innerMargin = "Εσωτερικό περιθώριο"
 left = "Αριστερό περιθώριο"
 pagesPerSheet = "Σελίδες ανά φύλλο:"
 right = "Δεξί περιθώριο"
 rows = "Γραμμές"
+rowsPlaceholder = "Enter rows"
 submit = "Υποβολή"
 tags = "συγχώνευση,σύνθεση,ενιαία-προβολή,οργάνωση"
 title = "Διάταξη πολλαπλών σελίδων"
@@ -5487,6 +5593,14 @@ failed = "Παρουσιάστηκε σφάλμα κατά τη δημιουργ
 innerMarginTooLarge = "Το εσωτερικό περιθώριο είναι πολύ μεγάλο για την επιλεγμένη διάταξη."
 outerHorizontalMarginsTooLarge = "Τα αριστερά/δεξιά περιθώρια είναι πολύ μεγάλα για αυτό το μέγεθος σελίδας."
 outerVerticalMarginsTooLarge = "Τα άνω/κάτω περιθώρια είναι πολύ μεγάλα για αυτό το μέγεθος σελίδας."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Ενεργοποιήστε τα περιγράμματα για να σχεδιάζονται γραμμές γύρω από κάθε τοποθετημένη σελίδα. Βοηθά στον οπτικό διαχωρισμό ή το κόψιμο."
@@ -6141,6 +6255,26 @@ pdfTools = "Βασικά εργαλεία PDF"
 priority = "Υποστήριξη προτεραιότητας"
 title = "Λειτουργία"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Για πάντα δωρεάν"
 highlight1 = "Περιορισμένη χρήση εργαλείων ανά εβδομάδα"
@@ -6148,6 +6282,22 @@ highlight2 = "Πρόσβαση σε όλα τα εργαλεία"
 highlight3 = "Υποστήριξη κοινότητας"
 included = "Περιλαμβάνεται"
 name = "Δωρεάν"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Έχετε {{total}} χρήστες, αλλά το δωρεάν επίπεδο υποστηρίζει μόνο {{limit}} ανά διακομιστή. Αναβαθμίστε για να συνεχίσει το Stirling PDF να λειτουργεί ομαλά."
@@ -6459,6 +6609,7 @@ allSessions = "Όλες οι συνεδρίες"
 allTools = "All Tools"
 automate = "Αυτόματα"
 back = "Πίσω"
+backToAllTools = "Back to all tools"
 certSign = "Υπογραφή με πιστοποιητικό"
 completedSessions = "Ολοκληρωμένες συνεδρίες"
 completedTab = "Ολοκληρωμένες"
@@ -7128,6 +7279,9 @@ bullet3 = "Κρίσιμο για ροές έγκρισης και νομικές
 description = "Η σειρά που ορίζετε κατά τη δημιουργία της συνεδρίας καθορίζει ποιος υπογράφει πρώτος."
 title = "Σειρά υπογραφών"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Προχωρημένα"
 database = "Βάση δεδομένων"
@@ -7612,6 +7766,7 @@ sharedDescription = "Όλοι οι χρήστες μπορούν να βλέπο
 sharedHeading = "Κοινόχρηστες υπογραφές"
 tempStorageDescription = "Οι υπογραφές αποθηκεύονται μόνο στον περιηγητή σας. Θα χαθούν αν καθαρίσετε τα δεδομένα του περιηγητή ή αλλάξετε περιηγητή."
 tempStorageTitle = "Προσωρινή αποθήκευση στον περιηγητή"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Αποθηκεύτηκε"
@@ -8196,6 +8351,9 @@ center = "Κέντρο"
 left = "Αριστερά"
 right = "Δεξιά"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Εναλλαγή θέματος"
 
@@ -8230,6 +8388,10 @@ label = "Επιλέξτε διακομιστή TSA"
 
 [timestampPdf.steps]
 settings = "Ρυθμίσεις"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Αυτό το εργαλείο δεν είναι διαθέσιμο στον διακομιστή σας."
@@ -8317,6 +8479,9 @@ verification = "Επαλήθευση"
 noSearchResults = "Δεν βρέθηκαν εργαλεία"
 noTools = "Δεν υπάρχουν διαθέσιμα εργαλεία"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Αυτό το εργαλείο θα αφαιρέσει τους περιορισμούς μόνο για ανάγνωση από τα πεδία φόρμας του PDF, καθιστώντας τα επεξεργάσιμα και συμπληρώσιμα."
 filenamePrefix = "φόρμες_ξεκλειδώθηκαν"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Αυτή η έκδοση περιέχει ασύμβα
 breakingChangesDetected = "Εντοπίστηκαν ασύμβατες αλλαγές"
 breakingChangesMessage = "Ορισμένες εκδόσεις περιέχουν ασύμβατες αλλαγές. Ελέγξτε τους οδηγούς μετεγκατάστασης παρακάτω πριν ενημερώσετε."
 close = "Κλείσιμο"
+closeModal = "Close update modal"
 current = "Τρέχουσα έκδοση"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Λήψη νεότερης"
@@ -8596,6 +8762,9 @@ typeInsertText = "Εισαγωγή κειμένου"
 typeReplaceText = "Αντικατάσταση κειμένου"
 viewComment = "Προβολή σχολίου"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Εφαρμογή αλλαγών"
 dismiss = "Απόρριψη"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Αυτό το PDF περιέχει πεδία προς συμπ
 title = "Πεδία φόρμας"
 unsavedBadge = "Μη αποθηκευμένο"
 unsavedDesc = "Έχετε μη αποθηκευμένες αλλαγές"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Στήλη {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Φόρτωση..."
 renderMarkdown = "Απόδοση Markdown"
 sortedBy = "Ταξινόμηση κατά: {{column}}"
 textStats = "{{lines}} γραμμές · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Προβολή PDF"
@@ -8867,6 +9052,37 @@ toggleLayers = "Εναλλαγή επιπέδων"
 toggleSidebar = "Εναλλαγή πλευρικής στήλης"
 toggleTheme = "Εναλλαγή θέματος"
 viewer = "Προβολή"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Χώρος εργασίας"

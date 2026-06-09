@@ -12,7 +12,6 @@ cancel = "Cancelar"
 changedCredsMessage = "¡Se cambiaron las credenciales!"
 chooseFile = "Elegir Archivo"
 close = "Cerrar"
-color = "Color"
 comingSoon = "Próximamente"
 confirm = "Confirmar"
 confirmClose = "Confirmar cierre"
@@ -202,6 +201,10 @@ ssoDescription = "La autenticación de dos factores es gestionada por tu proveed
 ssoManaged = "Configura la MFA a través de tu proveedor de identidad."
 title = "Autenticación de dos factores"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "paginar,etiquetar,organizar,indexar"
 
@@ -228,6 +231,9 @@ title = "Qué hace"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Acerca de añadir adjuntos"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Aplicar imágenes"
@@ -609,6 +615,7 @@ label = "Gestión de archivos temporales"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Directorio base para archivos temporales (dejar vacío para el valor predeterminado: java.io.tmpdir/stirling-pdf)"
 label = "Directorio temporal base"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Con qué frecuencia ejecutar la limpieza (en minutos)"
@@ -621,6 +628,7 @@ label = "Limpiar temp del sistema"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Directorio para archivos temporales de LibreOffice (dejar vacío para el valor predeterminado: baseTmpDir/libreoffice)"
 label = "Directorio temporal de LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Edad máxima en horas antes de limpiar los archivos temporales"
@@ -637,6 +645,7 @@ label = "Limpieza al inicio"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Directorio temporal del sistema a limpiar (solo se usa si cleanupSystemTemp está habilitado)"
 label = "Directorio temporal del sistema"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Ruta al directorio tessdata para archivos de idioma de OCR"
@@ -842,6 +851,7 @@ label = "Nombre de la base de datos"
 [admin.settings.database.password]
 description = "Contraseña para la autenticación de la base de datos"
 label = "Contraseña"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Puerto del servidor de base de datos (no se usa si se proporciona una URL personalizada)"
@@ -873,10 +883,12 @@ label = "Ocultar por defecto las herramientas no disponibles"
 [admin.settings.endpoints.groupsToRemove]
 description = "Selecciona grupos de endpoints para deshabilitar"
 label = "Grupos de endpoints deshabilitados"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Selecciona endpoints individuales para deshabilitar"
 label = "Endpoints deshabilitados"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Se requiere una licencia Enterprise para acceder a {{featureName}}. Estás viendo datos de demostración como referencia."
@@ -1091,6 +1103,7 @@ label = "Host SMTP"
 [admin.settings.mail.password]
 description = "Contraseña para la autenticación SMTP"
 label = "Contraseña SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "El número de puerto para la conexión SMTP (normalmente 25, 465 o 587)"
@@ -1099,6 +1112,10 @@ label = "Puerto SMTP"
 [admin.settings.mail.username]
 description = "Nombre de usuario para la autenticación SMTP"
 label = "Nombre de usuario SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Configura tu clave de licencia premium o enterprise."
@@ -1146,6 +1163,9 @@ info = "Si tiene una clave de licencia o un archivo de certificado de una compra
 toggle = "¿Tiene una clave de licencia o un archivo de certificado?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Las funciones Premium y Enterprise ahora están organizadas en sus secciones respectivas:"
 title = "Funciones Premium distribuidas"
 
@@ -2144,11 +2164,31 @@ placeholder = "Número de páginas"
 title = "Últimas N páginas"
 
 [bulkSelection.operators]
-and = "AND: & o \"and\" — requiere ambas condiciones (ej., 1-50 & even)"
-comma = "Coma: , o | — combina selecciones (ej., 1-10, 20)"
-not = "NOT: ! o \"not\" — excluye páginas (ej., 3n & not 30)"
 text = "AND tiene mayor precedencia que la coma. NOT se aplica dentro del rango del documento."
 title = "Operadores"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Desde"
@@ -2801,6 +2841,9 @@ unknownTool = "Herramienta desconocida"
 [cloudBadge]
 tooltip = "Esta operación usará tus créditos en la nube"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Elija el color"
 
@@ -3024,6 +3067,10 @@ title = "Método de Compresión"
 [compress.selectText.1]
 1 = "1-3 compresión PDF,</br> 4-6 compresión de imagen suave,</br> 7-9 compresión de imágenes intensa reducirá drásticamente la calidad de imagen"
 _value = "Configuración de Compresión"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "La compresión es una forma fácil de reducir el tamaño de su archivo. Elija Tamaño de Archivo para ingresar un tamaño objetivo y nosotros ajustaremos la calidad por usted. Elija Calidad para establecer la intensidad de compresión manualmente."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Aplicar índice"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Espacio de trabajo del esquema"
 [editTableOfContents.workbench.empty]
 description = "Seleccione la herramienta Editar índice para cargar su espacio de trabajo."
 title = "Abra la herramienta para empezar a editar"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Este PDF está protegido con contraseña. Introduzca la contraseña para seguir trabajando con él."
@@ -3717,6 +3774,10 @@ title = "Configuración"
 [extractPages.tooltip]
 description = "Extrae las páginas seleccionadas a un nuevo PDF, preservando el orden."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Clic"
 dragAndDrop = "Arrastrar & Soltar"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Arrastrar & Soltar archivo PDF"
 extractPDF = "Extrayendo..."
 hoveredDragAndDrop = "Arrastrar & Soltar archivos(s) aquí"
 or = "o"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Añadir archivos"
@@ -3890,6 +3954,10 @@ openFromComputer = "Abrir desde el ordenador"
 openSettings = "Abrir configuración"
 search = "Buscar"
 searchPlaceholder = "Buscar archivos..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "Acerca de Aplanar PDFs"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Descargar JSON"
@@ -4806,6 +4883,11 @@ tags = "margen,contenido web,transformación,convertir"
 title = "HTML a PDF"
 zoom = "Nivel de zoom para mostrar la página web."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "conversión,img,jpg,imagen,fotografía"
 
@@ -4823,6 +4905,9 @@ title = "Imagen a PDF"
 3 = "Lógica de archivos múltiples (únicamente activado si funciona con multiples imágenes)"
 4 = "Unir en un único archivo PDF"
 5 = "Convertir a PDFs separados"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "No se pudo crear la cuenta"
@@ -5160,6 +5245,7 @@ failed = "La operación de OCR falló"
 
 [ocr.languagePicker]
 additionalLanguages = "¿Busca idiomas adicionales?"
+loading = "Loading available languages..."
 viewSetupGuide = "Ver guía de configuración →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "{{days}} día restante"
 title = "Tu Prueba Pro de 30 Días"
 trialEnds = "La prueba finaliza el {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Cuando habilite el modo de inicio de sesión, podrá gestionar usuarios, configurar ajustes y supervisar la salud del servidor. Las primeras <strong>{{freeTierLimit}}</strong> personas de su servidor pueden usar Stirling gratis."
 adminBodyLoginEnabled = "Como administrador, puede gestionar usuarios, configurar ajustes y supervisar la salud del servidor. Las primeras <strong>{{freeTierLimit}}</strong> personas de su servidor pueden usar Stirling gratis."
@@ -5305,6 +5395,9 @@ userTitle = "Resumen del plan"
 
 [onboarding.securityCheck]
 message = "La aplicación ha sufrido cambios importantes recientemente. Puede requerirse la atención del administrador del servidor. Confirme su rol para continuar."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Nuestra licencia <strong>Open-Core</strong> permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Para escalar sin interrupciones y obtener acceso anticipado a nuestra nueva <strong>herramienta de edición de texto PDF</strong>, recomendamos el plan Stirling Server: edición completa y <strong>plazas ilimitadas</strong> por 99 $/servidor/mes."
@@ -5430,6 +5523,17 @@ title = "Editor de Páginas"
 zoomIn = "Acercar"
 zoomOut = "Alejar"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Extraer Páginas"
 placeholder = "(por ejemplo, 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Añadir bordes"
 borderWidth = "Grosor del borde"
 bottom = "Margen inferior"
 cols = "Columnas"
+colsPlaceholder = "Enter columns"
 header = "Diseño de varias páginas"
 innerMargin = "Margen interior"
 left = "Margen izquierdo"
 pagesPerSheet = "Páginas por hoja:"
 right = "Margen derecho"
 rows = "Filas"
+rowsPlaceholder = "Enter rows"
 submit = "Entregar"
 tags = "unir,compuesto,vista única,organizar"
 title = "Diseño de varias páginas"
@@ -5487,6 +5593,14 @@ failed = "Se produjo un error al crear el diseño multipágina."
 innerMarginTooLarge = "El margen interior es demasiado grande para la disposición seleccionada."
 outerHorizontalMarginsTooLarge = "Los márgenes izquierdo/derecho son demasiado grandes para este tamaño de página."
 outerVerticalMarginsTooLarge = "Los márgenes superior/inferior son demasiado grandes para este tamaño de página."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Activa los bordes para dibujar líneas alrededor de cada página colocada. Puede ayudar a la separación visual o al recorte."
@@ -6141,6 +6255,26 @@ pdfTools = "Herramientas PDF básicas"
 priority = "Soporte prioritario"
 title = "Función"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Gratis para siempre"
 highlight1 = "Uso de herramientas limitado por semana"
@@ -6148,6 +6282,22 @@ highlight2 = "Acceso a todas las herramientas"
 highlight3 = "Soporte de la comunidad"
 included = "Incluido"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Tiene {{total}} usuarios, pero el nivel gratuito solo admite {{limit}} por servidor. Actualice para que Stirling PDF siga funcionando sin problemas."
@@ -6459,6 +6609,7 @@ allSessions = "Todas las sesiones"
 allTools = "Herram."
 automate = "Automatizar"
 back = "Atrás"
+backToAllTools = "Back to all tools"
 certSign = "Firma con certificado"
 completedSessions = "Sesiones completadas"
 completedTab = "Completadas"
@@ -7128,6 +7279,9 @@ bullet3 = "Crucial para flujos de aprobación y cadenas de custodia legales"
 description = "El orden que especifiques al crear la sesión determina quién firma primero."
 title = "Orden de firmas"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Avanzado"
 database = "Base de datos"
@@ -7612,6 +7766,7 @@ sharedDescription = "Todos los usuarios pueden ver y usar estas firmas."
 sharedHeading = "Firmas compartidas"
 tempStorageDescription = "Las firmas se almacenan solo en tu navegador. Se perderán si borras los datos del navegador o cambias de navegador."
 tempStorageTitle = "Almacenamiento temporal del navegador"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Guardado"
@@ -8196,6 +8351,9 @@ center = "Centrado"
 left = "Izquierda"
 right = "Derecha"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Alternar Tema"
 
@@ -8230,6 +8388,10 @@ label = "Selecciona un servidor TSA"
 
 [timestampPdf.steps]
 settings = "Ajustes"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Esta herramienta no está disponible en tu servidor."
@@ -8317,6 +8479,9 @@ verification = "Verificación"
 noSearchResults = "No se encontraron herramientas"
 noTools = "No hay herramientas disponibles"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Esta herramienta eliminará las restricciones de solo lectura de los campos de formulario PDF, haciéndolos editables y rellenables."
 filenamePrefix = "formularios_desbloqueados"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Esta versión contiene cambios incompatibles."
 breakingChangesDetected = "Se detectaron cambios incompatibles"
 breakingChangesMessage = "Algunas versiones contienen cambios incompatibles. Revise las guías de migración a continuación antes de actualizar."
 close = "Cerrar"
+closeModal = "Close update modal"
 current = "Versión actual"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Descargar la última"
@@ -8596,6 +8762,9 @@ typeInsertText = "Insertar texto"
 typeReplaceText = "Reemplazar texto"
 viewComment = "Ver comentario"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Aplicar cambios"
 dismiss = "Descartar"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Este PDF contiene campos rellenables"
 title = "Campos del formulario"
 unsavedBadge = "Sin guardar"
 unsavedDesc = "Tienes cambios sin guardar"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Columna {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Cargando..."
 renderMarkdown = "Renderizar markdown"
 sortedBy = "Ordenado por: {{column}}"
 textStats = "{{lines}} líneas · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Ver PDF"
@@ -8867,6 +9052,37 @@ toggleLayers = "Alternar capas"
 toggleSidebar = "Alternar barra lateral"
 toggleTheme = "Alternar tema"
 viewer = "Visor"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Espacio de trabajo"

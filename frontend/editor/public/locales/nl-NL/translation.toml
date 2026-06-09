@@ -12,7 +12,6 @@ cancel = "Annuleren"
 changedCredsMessage = "Inloggegevens gewijzigd!"
 chooseFile = "Bestand kiezen"
 close = "Sluiten"
-color = "Kleur"
 comingSoon = "Binnenkort"
 confirm = "Bevestigen"
 confirmClose = "Sluiten bevestigen"
@@ -202,6 +201,10 @@ ssoDescription = "Tweefactorauthenticatie wordt beheerd door uw identiteitsprovi
 ssoManaged = "Configureer MFA via uw identiteitsprovider."
 title = "Tweefactorauthenticatie"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "pagineren,labelen,organiseren,indexeren"
 
@@ -228,6 +231,9 @@ title = "Zo werkt het"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Over Bijlagen toevoegen"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Afbeeldingen toepassen"
@@ -609,6 +615,7 @@ label = "Beheer tijdelijke bestanden"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Basismap voor tijdelijke bestanden (laat leeg voor standaard: java.io.tmpdir/stirling-pdf)"
 label = "Basismap voor tijdelijke bestanden"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Hoe vaak opschonen wordt uitgevoerd (in minuten)"
@@ -621,6 +628,7 @@ label = "Systeemtemp opschonen"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Map voor tijdelijke LibreOffice-bestanden (laat leeg voor standaard: baseTmpDir/libreoffice)"
 label = "LibreOffice-tijdelijke map"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximale leeftijd in uren voordat tijdelijke bestanden worden opgeschoond"
@@ -637,6 +645,7 @@ label = "Opschonen bij opstarten"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systeem-tijdelijke map om op te schonen (alleen gebruikt als cleanupSystemTemp is ingeschakeld)"
 label = "Systeem-tijdelijke map"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Pad naar de tessdata-map voor OCR-taalbestanden"
@@ -842,6 +851,7 @@ label = "Databasenaam"
 [admin.settings.database.password]
 description = "Wachtwoord voor database-authenticatie"
 label = "Wachtwoord"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Poort van de databaseserver (niet gebruikt als een aangepaste URL is opgegeven)"
@@ -873,10 +883,12 @@ label = "Onbeschikbare tools standaard verbergen"
 [admin.settings.endpoints.groupsToRemove]
 description = "Selecteer endpointgroepen om uit te schakelen"
 label = "Uitgeschakelde endpointgroepen"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Selecteer afzonderlijke endpoints om uit te schakelen"
 label = "Uitgeschakelde endpoints"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Voor toegang tot {{featureName}} is een Enterprise-licentie vereist. U bekijkt demogegevens ter referentie."
@@ -1091,6 +1103,7 @@ label = "SMTP-host"
 [admin.settings.mail.password]
 description = "Wachtwoord voor SMTP-authenticatie"
 label = "SMTP-wachtwoord"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Het poortnummer voor de SMTP-verbinding (meestal 25, 465 of 587)"
@@ -1099,6 +1112,10 @@ label = "SMTP-poort"
 [admin.settings.mail.username]
 description = "Gebruikersnaam voor SMTP-authenticatie"
 label = "SMTP-gebruikersnaam"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Configureer uw premium- of enterprise-licentiesleutel."
@@ -1146,6 +1163,9 @@ info = "Als u een licentiesleutel of certificaatbestand hebt van een directe aan
 toggle = "Heeft u een licentiesleutel of certificaatbestand?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Premium- en Enterprise-functies zijn nu georganiseerd in hun respectieve secties:"
 title = "Premiumfuncties verdeeld"
 
@@ -2144,11 +2164,31 @@ placeholder = "Aantal pagina's"
 title = "Laatste N pagina's"
 
 [bulkSelection.operators]
-and = "AND: & of \"and\" — vereisen beide voorwaarden (bijv. 1-50 & even)"
-comma = "Komma: , of | — combineer selecties (bijv. 1-10, 20)"
-not = "NOT: ! of \"not\" — sluit pagina's uit (bijv. 3n & not 30)"
 text = "AND heeft hogere prioriteit dan komma. NOT is van toepassing binnen het documentbereik."
 title = "Operatoren"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Van"
@@ -2801,6 +2841,9 @@ unknownTool = "Onbekende tool"
 [cloudBadge]
 tooltip = "Deze bewerking gebruikt je cloud-credits"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Kies kleur"
 
@@ -3024,6 +3067,10 @@ title = "Compressiemethode"
 [compress.selectText.1]
 1 = "1-3 PDF-compressie,</br> 4-6 lichte afbeeldingscompressie,</br> 7-9 intense afbeeldingscompressie Zal de beeldkwaliteit sterk verminderen"
 _value = "Compressie-instellingen"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Compressie is een eenvoudige manier om uw bestandsgrootte te verkleinen. Kies Bestandsgrootte om een doelformaat in te voeren en laat ons de kwaliteit voor u aanpassen. Kies Kwaliteit om de compressiesterkte handmatig in te stellen."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Inhoudsopgave toepassen"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Werkruimte inhoud"
 [editTableOfContents.workbench.empty]
 description = "Selecteer de tool Inhoudsopgave bewerken om de werkruimte te laden."
 title = "Open de tool om te beginnen met bewerken"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Deze PDF is met een wachtwoord beveiligd. Voer het wachtwoord in om verder te werken."
@@ -3717,6 +3774,10 @@ title = "Instellingen"
 [extractPages.tooltip]
 description = "Extraheert de geselecteerde pagina's in een nieuwe PDF, met behoud van de volgorde."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Klik"
 dragAndDrop = "Slepen en neerzetten"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "PDF-bestand slepen en neerzetten"
 extractPDF = "Extraheren..."
 hoveredDragAndDrop = "Bestand(en) hier slepen en neerzetten"
 or = "of"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Bestanden toevoegen"
@@ -3890,6 +3954,10 @@ openFromComputer = "Openen vanaf computer"
 openSettings = "Instellingen openen"
 search = "Zoeken"
 searchPlaceholder = "Bestanden zoeken..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "Over PDF's afvlakken"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "JSON downloaden"
@@ -4806,6 +4883,11 @@ tags = "markup,web-inhoud,transformatie,omzetten"
 title = "HTML naar PDF"
 zoom = "Zoomniveau voor weergave van de website."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "conversie,img,jpg,foto"
 
@@ -4823,6 +4905,9 @@ title = "Afbeelding naar PDF"
 3 = "Meervoudige bestandslogica (Alleen ingeschakeld bij werken met meerdere afbeeldingen)"
 4 = "Samenvoegen tot één PDF"
 5 = "Zet om naar afzonderlijke PDF's"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Account aanmaken mislukt"
@@ -5160,6 +5245,7 @@ failed = "OCR-bewerking mislukt"
 
 [ocr.languagePicker]
 additionalLanguages = "Op zoek naar extra talen?"
+loading = "Loading available languages..."
 viewSetupGuide = "Bekijk de installatiehandleiding →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "Nog {{days}} dag resterend"
 title = "Je 30-daagse Pro-proefperiode"
 trialEnds = "Proefperiode eindigt op {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Zodra u de loginmodus inschakelt, kunt u gebruikers beheren, instellingen configureren en de servergezondheid monitoren. De eerste <strong>{{freeTierLimit}}</strong> personen op uw server gebruiken Stirling gratis."
 adminBodyLoginEnabled = "Als admin kunt u gebruikers beheren, instellingen configureren en de servergezondheid monitoren. De eerste <strong>{{freeTierLimit}}</strong> personen op uw server gebruiken Stirling gratis."
@@ -5305,6 +5395,9 @@ userTitle = "Abonnementoverzicht"
 
 [onboarding.securityCheck]
 message = "De applicatie heeft recent belangrijke wijzigingen ondergaan. De aandacht van uw serveradmin kan nodig zijn. Bevestig uw rol om door te gaan."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Onze <strong>Open-Core</strong>-licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers per server gratis toe. Om ononderbroken op te schalen, raden we het Stirling Server-abonnement aan - <strong>onbeperkte plaatsen</strong> en <strong>SSO-ondersteuning</strong> voor $99/server/maand."
@@ -5430,6 +5523,17 @@ title = "Pagina-editor"
 zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Pagina's extraheren"
 placeholder = "(bijv. 1,2,8 of 4,7,12-16 of 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Randen toevoegen"
 borderWidth = "Randdikte"
 bottom = "Ondermarge"
 cols = "Kolommen"
+colsPlaceholder = "Enter columns"
 header = "Meerdere pagina indeling"
 innerMargin = "Binnenmarge"
 left = "Linkermarge"
 pagesPerSheet = "Pagina's per vel:"
 right = "Rechtermarge"
 rows = "Rijen"
+rowsPlaceholder = "Enter rows"
 submit = "Indienen"
 tags = "samenvoegen,composiet,enkel-zicht,organiseren"
 title = "Meerdere pagina indeling"
@@ -5487,6 +5593,14 @@ failed = "Er is een fout opgetreden bij het maken van de multi-pagina-indeling."
 innerMarginTooLarge = "Binnenmarge is te groot voor de geselecteerde lay-out."
 outerHorizontalMarginsTooLarge = "Links-/rechtermarges zijn te groot voor dit paginaformaat."
 outerVerticalMarginsTooLarge = "Boven-/ondermarges zijn te groot voor dit paginaformaat."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Schakel randen in om lijnen rond elke geplaatste pagina te tekenen. Dit kan helpen bij visuele scheiding of bij het afsnijden."
@@ -6141,6 +6255,26 @@ pdfTools = "Basis PDF-tools"
 priority = "Prioritaire ondersteuning"
 title = "Functie"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Voor altijd gratis"
 highlight1 = "Beperkt gebruik van tools per week"
@@ -6148,6 +6282,22 @@ highlight2 = "Toegang tot alle tools"
 highlight3 = "Community-ondersteuning"
 included = "Inbegrepen"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "U hebt {{total}} gebruikers, maar de gratis laag ondersteunt slechts {{limit}} per server. Upgrade om Stirling PDF soepel te laten draaien."
@@ -6459,6 +6609,7 @@ allSessions = "Alle sessies"
 allTools = "Tools"
 automate = "Automatiseren"
 back = "Terug"
+backToAllTools = "Back to all tools"
 certSign = "Met certificaat ondertekenen"
 completedSessions = "Voltooide sessies"
 completedTab = "Voltooid"
@@ -7128,6 +7279,9 @@ bullet3 = "Cruciaal voor goedkeuringsworkflows en juridische ketens van bewaring
 description = "De volgorde die u bij het maken van de sessie opgeeft, bepaalt wie als eerste tekent."
 title = "Ondertekeningsvolgorde"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Geavanceerd"
 database = "Database"
@@ -7612,6 +7766,7 @@ sharedDescription = "Alle gebruikers kunnen deze handtekeningen zien en gebruike
 sharedHeading = "Gedeelde handtekeningen"
 tempStorageDescription = "Handtekeningen worden alleen in de browser opgeslagen. Ze gaan verloren als u de browsergegevens wist of van browser wisselt."
 tempStorageTitle = "Tijdelijke browseropslag"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Opgeslagen"
@@ -8196,6 +8351,9 @@ center = "Gecentreerd"
 left = "Links"
 right = "Rechts"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Thema wisselen"
 
@@ -8230,6 +8388,10 @@ label = "Selecteer een TSA-server"
 
 [timestampPdf.steps]
 settings = "Instellingen"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Deze tool is niet beschikbaar op je server."
@@ -8317,6 +8479,9 @@ verification = "Verificatie"
 noSearchResults = "Geen tools gevonden"
 noTools = "Geen tools beschikbaar"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Deze tool verwijdert alleen-lezenbeperkingen van PDF-formuliervelden, zodat ze bewerkbaar en invulbaar worden."
 filenamePrefix = "formulieren_ontgrendeld"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Deze versie bevat incompatibele wijzigingen."
 breakingChangesDetected = "Incompatibele wijzigingen gedetecteerd"
 breakingChangesMessage = "Sommige versies bevatten incompatibele wijzigingen. Bekijk onderstaande migratiehandleidingen voordat u update."
 close = "Sluiten"
+closeModal = "Close update modal"
 current = "Huidige versie"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Nieuwste downloaden"
@@ -8596,6 +8762,9 @@ typeInsertText = "Tekst invoegen"
 typeReplaceText = "Tekst vervangen"
 viewComment = "Opmerking bekijken"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Wijzigingen toepassen"
 dismiss = "Sluiten"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Deze PDF bevat invulbare velden"
 title = "Formuliervelden"
 unsavedBadge = "Niet opgeslagen"
 unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Kolom {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Laden..."
 renderMarkdown = "Markdown renderen"
 sortedBy = "Gesorteerd op: {{column}}"
 textStats = "{{lines}} regels · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "PDF bekijken"
@@ -8867,6 +9052,37 @@ toggleLayers = "Lagen tonen/verbergen"
 toggleSidebar = "Zijbalk tonen/verbergen"
 toggleTheme = "Thema wisselen"
 viewer = "Viewer"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Werkruimte"

@@ -12,7 +12,6 @@ cancel = "Annuller"
 changedCredsMessage = "Legitimationsoplysninger ændret!"
 chooseFile = "Vælg fil"
 close = "Luk"
-color = "Farve"
 comingSoon = "Kommer snart"
 confirm = "Bekræft"
 confirmClose = "Bekræft lukning"
@@ -202,6 +201,10 @@ ssoDescription = "Tofaktorgodkendelse administreres af din identitetsudbyder for
 ssoManaged = "Konfigurer MFA via din identitetsudbyder."
 title = "Tofaktorgodkendelse"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "nummerér,etiket,organisér,indeks"
 
@@ -228,6 +231,9 @@ title = "Hvad den gør"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Om Tilføj vedhæftede filer"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Anvend billeder"
@@ -609,6 +615,7 @@ label = "Håndtering af midlertidige filer"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Basismappe til midlertidige filer (lad tom for standard: java.io.tmpdir/stirling-pdf)"
 label = "Basis-mappe for midlertidige filer"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Hvor ofte oprydning skal køres (i minutter)"
@@ -621,6 +628,7 @@ label = "Ryd systemets temp"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Mappe til LibreOffice midlertidige filer (lad tom for standard: baseTmpDir/libreoffice)"
 label = "LibreOffice midlertidig mappe"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maksimal alder i timer før midlertidige filer ryddes op"
@@ -637,6 +645,7 @@ label = "Oprydning ved opstart"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systemets midlertidige mappe der skal ryddes (bruges kun hvis cleanupSystemTemp er aktiveret)"
 label = "Systemets midlertidige mappe"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Sti til tessdata-mappen for OCR-sprogfiler"
@@ -842,6 +851,7 @@ label = "Databasenavn"
 [admin.settings.database.password]
 description = "Adgangskode til databasegodkendelse"
 label = "Adgangskode"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Databaseserverens port (bruges ikke hvis brugerdefineret URL er angivet)"
@@ -873,10 +883,12 @@ label = "Skjul utilgængelige værktøjer som standard"
 [admin.settings.endpoints.groupsToRemove]
 description = "Vælg endpointgrupper, der skal deaktiveres"
 label = "Deaktiverede endpointgrupper"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Vælg individuelle endpoints, der skal deaktiveres"
 label = "Deaktiverede endpoints"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "En Enterprise-licens er påkrævet for at få adgang til {{featureName}}. Du ser demodata til reference."
@@ -1091,6 +1103,7 @@ label = "SMTP-vært"
 [admin.settings.mail.password]
 description = "Adgangskode til SMTP-godkendelse"
 label = "SMTP-adgangskode"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Portnummer til SMTP-forbindelse (typisk 25, 465 eller 587)"
@@ -1099,6 +1112,10 @@ label = "SMTP-port"
 [admin.settings.mail.username]
 description = "Brugernavn til SMTP-godkendelse"
 label = "SMTP-brugernavn"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Konfigurer din premium- eller enterprise-licensnøgle."
@@ -1146,6 +1163,9 @@ info = "Hvis du har en licensnøgle eller en certifikatfil fra et direkte køb, 
 toggle = "Har du en licensnøgle eller en certifikatfil?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Premium- og Enterprise-funktioner er nu organiseret i deres respektive sektioner:"
 title = "Premium-funktioner fordelt"
 
@@ -2144,11 +2164,31 @@ placeholder = "Antal sider"
 title = "Sidste N sider"
 
 [bulkSelection.operators]
-and = "AND: & eller \"and\" — kræver begge betingelser (f.eks. 1-50 & even)"
-comma = "Komma: , eller | — kombinerer valg (f.eks. 1-10, 20)"
-not = "NOT: ! eller \"not\" — udelukker sider (f.eks. 3n & not 30)"
 text = "AND har højere prioritet end komma. NOT gælder inden for dokumentets område."
 title = "Operatorer"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Fra"
@@ -2801,6 +2841,9 @@ unknownTool = "Ukendt værktøj"
 [cloudBadge]
 tooltip = "Denne handling vil bruge dine cloud-kreditter"
 
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
+
 [colorPicker]
 title = "Vælg farve"
 
@@ -3024,6 +3067,10 @@ title = "Komprimeringsmetode"
 [compress.selectText.1]
 1 = "1-3 PDF-komprimering,</br> 4-6 let billedkomprimering,</br> 7-9 intens billedkomprimering vil markant reducere billedkvaliteten"
 _value = "Komprimeringsindstillinger"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Komprimering er en nem måde at reducere filstørrelsen på. Vælg filstørrelse for at angive en målstørrelse og lad os justere kvaliteten for dig. Vælg kvalitet for at indstille komprimeringsstyrken manuelt."
@@ -3515,6 +3562,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Anvend indholdsfortegnelsen"
 
@@ -3601,6 +3655,9 @@ tabTitle = "Oversigtsarbejdsområde"
 [editTableOfContents.workbench.empty]
 description = "Vælg værktøjet Rediger indholdsfortegnelse for at indlæse arbejdsområdet."
 title = "Åbn værktøjet for at begynde at redigere"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Denne PDF er beskyttet med adgangskode. Indtast adgangskoden, så du kan fortsætte arbejdet."
@@ -3717,6 +3774,10 @@ title = "Indstillinger"
 [extractPages.tooltip]
 description = "Udtrækker de valgte sider til en ny PDF og bevarer rækkefølgen."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Klik"
 dragAndDrop = "Træk & slip"
@@ -3725,6 +3786,9 @@ dragAndDropPDF = "Træk & slip PDF-fil"
 extractPDF = "Udtrækker..."
 hoveredDragAndDrop = "Træk & slip fil(er) her"
 or = "eller"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Tilføj filer"
@@ -3890,6 +3954,10 @@ openFromComputer = "Åbn fra computer"
 openSettings = "Åbn indstillinger"
 search = "Søg"
 searchPlaceholder = "Søg i filer..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4243,6 +4311,15 @@ title = "Om udfladning af PDF'er"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Download JSON"
@@ -4806,6 +4883,11 @@ tags = "markup,webindhold,transformation,konvertér"
 title = "HTML Til PDF"
 zoom = "Zoom-niveau for visning af hjemmesiden."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "konvertering,img,jpg,billede,foto"
 
@@ -4823,6 +4905,9 @@ title = "Billede til PDF"
 3 = "Multi-fil logik (Kun aktiveret ved arbejde med flere billeder)"
 4 = "Flet til enkelt PDF"
 5 = "Konvertér til separate PDF'er"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Kunne ikke oprette konto"
@@ -5160,6 +5245,7 @@ failed = "OCR-handlingen mislykkedes"
 
 [ocr.languagePicker]
 additionalLanguages = "Leder du efter flere sprog?"
+loading = "Loading available languages..."
 viewSetupGuide = "Se opsætningsvejledning →"
 
 [ocr.operation]
@@ -5296,6 +5382,10 @@ daysRemainingSingular = "{{days}} dag tilbage"
 title = "Din 30-dages Pro-prøveperiode"
 trialEnds = "Prøveperioden slutter {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Når du aktiverer login-tilstand, kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis."
 adminBodyLoginEnabled = "Som admin kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis."
@@ -5305,6 +5395,9 @@ userTitle = "Plan-overblik"
 
 [onboarding.securityCheck]
 message = "Applikationen har gennemgået væsentlige ændringer for nylig. Din serveradmins opmærksomhed kan være påkrævet. Bekræft din rolle for at fortsætte."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser og få tidlig adgang til vores nye <strong>PDF-tekstredigeringsværktøj</strong> anbefaler vi Stirling Server-planen – fuld redigering og <strong>ubegrænsede pladser</strong> for $99/server/md."
@@ -5430,6 +5523,17 @@ title = "Sideeditor"
 zoomIn = "Zoom ind"
 zoomOut = "Zoom ud"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Udtræk Sider"
 placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -5441,12 +5545,14 @@ addBorder = "Tilføj Kanter"
 borderWidth = "Kanttykkelse"
 bottom = "Bundmargen"
 cols = "Kolonner"
+colsPlaceholder = "Enter columns"
 header = "Multi-Side Layout"
 innerMargin = "Indre margen"
 left = "Venstremargen"
 pagesPerSheet = "Sider pr. ark:"
 right = "Højremargen"
 rows = "Rækker"
+rowsPlaceholder = "Enter rows"
 submit = "Indsend"
 tags = "flet,sammensæt,enkelt-visning,organisér"
 title = "Multi-Side Layout"
@@ -5487,6 +5593,14 @@ failed = "Der opstod en fejl under oprettelse af flersidelayoutet."
 innerMarginTooLarge = "Den indre margen er for stor til det valgte layout."
 outerHorizontalMarginsTooLarge = "Venstre-/højremargener er for store til denne sidestørrelse."
 outerVerticalMarginsTooLarge = "Top-/bundmargener er for store til denne sidestørrelse."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Aktivér kanter for at tegne linjer rundt om hver placeret side. Dette kan hjælpe med visuel adskillelse eller beskæring."
@@ -6141,6 +6255,26 @@ pdfTools = "Grundlæggende PDF-værktøjer"
 priority = "Prioriteret support"
 title = "Funktion"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Altid gratis"
 highlight1 = "Begrænset brug af værktøjer pr. uge"
@@ -6148,6 +6282,22 @@ highlight2 = "Adgang til alle værktøjer"
 highlight3 = "Support fra fællesskabet"
 included = "Inkluderet"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Du har {{total}} brugere, men den gratis plan understøtter kun {{limit}} pr. server. Opgrader for at holde Stirling PDF kørende uden problemer."
@@ -6459,6 +6609,7 @@ allSessions = "Alle sessioner"
 allTools = "All Tools"
 automate = "Automat."
 back = "Tilbage"
+backToAllTools = "Back to all tools"
 certSign = "Certifikatunderskrift"
 completedSessions = "Fuldførte sessioner"
 completedTab = "Fuldført"
@@ -7128,6 +7279,9 @@ bullet3 = "Afgørende for godkendelsesarbejdsgange og juridiske beviskæder"
 description = "Den rækkefølge, du angiver, når du opretter sessionen, bestemmer, hvem der underskriver først."
 title = "Underskriftsrækkefølge"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Avanceret"
 database = "Database"
@@ -7612,6 +7766,7 @@ sharedDescription = "Alle brugere kan se og bruge disse signaturer."
 sharedHeading = "Delte signaturer"
 tempStorageDescription = "Signaturer gemmes kun i din browser. De går tabt, hvis du rydder browserdata eller skifter browser."
 tempStorageTitle = "Midlertidig browserlagring"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Gemt"
@@ -8196,6 +8351,9 @@ center = "Centreret"
 left = "Venstre"
 right = "Højre"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Skift tema"
 
@@ -8230,6 +8388,10 @@ label = "Vælg en TSA-server"
 
 [timestampPdf.steps]
 settings = "Indstillinger"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "Dette værktøj er ikke tilgængeligt på din server."
@@ -8317,6 +8479,9 @@ verification = "Verifikation"
 noSearchResults = "Ingen værktøjer fundet"
 noTools = "Ingen værktøjer tilgængelige"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Dette værktøj fjerner skrivebeskyttelse fra PDF-formularfelter, så de kan redigeres og udfyldes."
 filenamePrefix = "oplåste_formularer"
@@ -8343,6 +8508,7 @@ breakingChangesDefault = "Denne version indeholder inkompatible ændringer."
 breakingChangesDetected = "Inkompatible ændringer registreret"
 breakingChangesMessage = "Nogle versioner indeholder inkompatible ændringer. Gennemgå venligst migrationsvejledningerne nedenfor før opdatering."
 close = "Luk"
+closeModal = "Close update modal"
 current = "Nuværende version"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Download seneste"
@@ -8596,6 +8762,9 @@ typeInsertText = "Indsæt tekst"
 typeReplaceText = "Erstat tekst"
 viewComment = "Vis kommentar"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Anvend ændringer"
 dismiss = "Afvis"
@@ -8604,6 +8773,9 @@ hasFieldsDesc = "Denne PDF indeholder udfyldelige felter"
 title = "Formularfelter"
 unsavedBadge = "Ikke gemt"
 unsavedDesc = "Du har ikke-gemte ændringer"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Kolonne {{index}}"
@@ -8619,6 +8791,19 @@ loading = "Indlæser..."
 renderMarkdown = "Gengiv Markdown"
 sortedBy = "Sorterede efter: {{column}}"
 textStats = "{{lines}} linjer · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Se PDF"
@@ -8867,6 +9052,37 @@ toggleLayers = "Slå lag til/fra"
 toggleSidebar = "Slå sidepanel til/fra"
 toggleTheme = "Skift tema"
 viewer = "Fremviser"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Arbejdsområde"
