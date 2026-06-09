@@ -11,8 +11,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,9 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
@@ -99,6 +106,9 @@ public class PaygWalletController {
     private final WalletLedgerRepository ledgerRepo;
     private final WalletCategorySummaryDao categorySummaryDao;
     private final UserRepository userRepository;
+    private final RestTemplate saasRestTemplate;
+    private final String portalEndpoint;
+    private final String portalServiceRoleToken;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -107,7 +117,10 @@ public class PaygWalletController {
             WalletPolicyRepository policyRepo,
             WalletLedgerRepository ledgerRepo,
             WalletCategorySummaryDao categorySummaryDao,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            RestTemplate saasRestTemplate,
+            @Value("${payg.portal.endpoint:}") String portalEndpoint,
+            @Value("${payg.portal.service-role-token:}") String portalServiceRoleToken) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
         this.extRepo = Objects.requireNonNull(extRepo, "extRepo");
@@ -115,6 +128,9 @@ public class PaygWalletController {
         this.ledgerRepo = Objects.requireNonNull(ledgerRepo, "ledgerRepo");
         this.categorySummaryDao = Objects.requireNonNull(categorySummaryDao, "categorySummaryDao");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
+        this.saasRestTemplate = Objects.requireNonNull(saasRestTemplate, "saasRestTemplate");
+        this.portalEndpoint = portalEndpoint == null ? "" : portalEndpoint;
+        this.portalServiceRoleToken = portalServiceRoleToken == null ? "" : portalServiceRoleToken;
     }
 
     // ---------------------------------------------------------------------------------------
@@ -331,6 +347,138 @@ public class PaygWalletController {
      *     member is bounded only by the team cap.
      */
     public record UpdateSubCapRequest(@Min(0) Integer capUnits) {}
+
+    // ---------------------------------------------------------------------------------------
+    // POST /portal-session — proxy to Supabase create-customer-portal-session edge function
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Mints a Stripe-hosted billing-portal session URL for the caller's team and returns it for the
+     * FE to redirect to. We proxy through Supabase's {@code create-customer-portal-session} edge
+     * function rather than calling Stripe directly so the Stripe secret never leaves Supabase and
+     * portal config stays version-controlled alongside the rest of the billing pipeline.
+     *
+     * <p>Authorisation: any authenticated team member can open the portal. The portal itself shows
+     * billing for the whole team (Stripe customer is per-team), so this is by design — we don't
+     * gate to leaders the way {@code PATCH /cap} does. If product later wants leader-only access
+     * we'd add a {@code TeamRole.LEADER} check here.
+     *
+     * <p>We pre-check that the team actually has a Stripe customer before calling the edge fn so a
+     * free-tier team gets a clean 404 + {@code TEAM_NOT_SUBSCRIBED} instead of a generic 502 from a
+     * downstream error. {@link #isSubscribed(Optional)} stays the source of truth for "subscribed"
+     * across both this endpoint and {@code GET /wallet}.
+     *
+     * <p>Status map:
+     *
+     * <ul>
+     *   <li>200 + {@code {url}} — happy path.
+     *   <li>401 — anonymous / missing principal.
+     *   <li>403 — authenticated but no team (caller can't have a portal session without one).
+     *   <li>404 + {@code {error: "TEAM_NOT_SUBSCRIBED"}} — team has no Stripe customer yet.
+     *   <li>502 + {@code {error: "PORTAL_UNAVAILABLE"}} — edge fn returned non-2xx or {@code
+     *       success=false}, or the call itself threw.
+     *   <li>503 + {@code {error: "PORTAL_NOT_CONFIGURED"}} — {@code payg.portal.endpoint} is blank
+     *       (local dev / unit tests).
+     * </ul>
+     */
+    @PostMapping("/portal-session")
+    @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
+    public ResponseEntity<Map<String, Object>> createPortalSession(
+            @Valid @RequestBody PortalSessionRequest req, Authentication auth) {
+        if (portalEndpoint.isBlank()) {
+            // Local dev / unit tests without Supabase configured — return a clean 503 instead of
+            // letting RestTemplate explode on a blank URL.
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "PORTAL_NOT_CONFIGURED"));
+        }
+
+        User user;
+        try {
+            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<TeamMembership> primary = primaryMembership(user.getId());
+        if (primary.isEmpty()) {
+            // Authenticated but no team → no Stripe customer can exist for them. 403 mirrors the
+            // cap endpoints' "no team to act on" response.
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        Long teamId = primary.get().getTeam().getId();
+
+        Optional<PaygTeamExtensions> extOpt = extRepo.findById(teamId);
+        if (!isSubscribed(extOpt)) {
+            // Free-tier team — no Stripe customer means no portal to open. Return a 404 with the
+            // documented error code so the FE can show "Subscribe first" rather than a generic
+            // error toast.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "TEAM_NOT_SUBSCRIBED"));
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            if (!portalServiceRoleToken.isBlank()) {
+                headers.setBearerAuth(portalServiceRoleToken);
+            }
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("team_id", teamId.toString());
+            if (req != null && req.returnUrl() != null && !req.returnUrl().isBlank()) {
+                body.put("return_url", req.returnUrl());
+            }
+
+            ResponseEntity<Map> response =
+                    saasRestTemplate.exchange(
+                            portalEndpoint,
+                            HttpMethod.POST,
+                            new HttpEntity<>(body, headers),
+                            Map.class);
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn(
+                        "Portal session edge fn returned {} for team {}",
+                        response.getStatusCode(),
+                        teamId);
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("error", "PORTAL_UNAVAILABLE"));
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> respBody = (Map<String, Object>) response.getBody();
+            Object successVal = respBody.get("success");
+            Object urlVal = respBody.get("url");
+            boolean success = Boolean.TRUE.equals(successVal);
+            if (!success || !(urlVal instanceof String) || ((String) urlVal).isBlank()) {
+                log.warn(
+                        "Portal session edge fn payload invalid for team {}: success={} urlPresent={}",
+                        teamId,
+                        successVal,
+                        urlVal != null);
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("error", "PORTAL_UNAVAILABLE"));
+            }
+
+            return ResponseEntity.ok(Map.of("url", urlVal));
+        } catch (Exception e) {
+            // Edge fn unreachable, timeout, malformed response, etc. Anything that propagates up
+            // becomes a 502 — the caller hits "Manage billing" again or contacts support; we
+            // never 500 on a downstream wobble.
+            log.warn("Portal session edge fn call failed for team {}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(Map.of("error", "PORTAL_UNAVAILABLE"));
+        }
+    }
+
+    /**
+     * Request body for {@link #createPortalSession}. {@code returnUrl} is optional — if blank /
+     * null the edge function falls back to its configured default. We don't validate the URL shape
+     * here because the edge fn already does and Stripe will reject a malformed value, so double
+     * validation only diverges over time.
+     */
+    public record PortalSessionRequest(String returnUrl) {}
 
     // ---------------------------------------------------------------------------------------
     // Helpers

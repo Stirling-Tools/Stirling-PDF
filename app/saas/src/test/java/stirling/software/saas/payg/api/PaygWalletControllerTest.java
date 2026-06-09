@@ -23,18 +23,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.TeamMembership;
+import stirling.software.saas.payg.api.PaygWalletController.PortalSessionRequest;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateSubCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
@@ -61,6 +66,10 @@ import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
 @ExtendWith(MockitoExtension.class)
 class PaygWalletControllerTest {
 
+    private static final String PORTAL_ENDPOINT =
+            "https://example.supabase.co/functions/v1/create-customer-portal-session";
+    private static final String PORTAL_TOKEN = "service-role-test-token";
+
     @Mock private EntitlementService entitlementService;
     @Mock private TeamMembershipRepository memberRepo;
     @Mock private PaygTeamExtensionsRepository extRepo;
@@ -68,20 +77,27 @@ class PaygWalletControllerTest {
     @Mock private WalletLedgerRepository ledgerRepo;
     @Mock private WalletCategorySummaryDao categorySummaryDao;
     @Mock private UserRepository userRepository;
+    @Mock private RestTemplate restTemplate;
 
     private PaygWalletController controller;
 
     @BeforeEach
     void setUp() {
-        controller =
-                new PaygWalletController(
-                        entitlementService,
-                        memberRepo,
-                        extRepo,
-                        policyRepo,
-                        ledgerRepo,
-                        categorySummaryDao,
-                        userRepository);
+        controller = newController(PORTAL_ENDPOINT, PORTAL_TOKEN);
+    }
+
+    private PaygWalletController newController(String portalEndpoint, String portalToken) {
+        return new PaygWalletController(
+                entitlementService,
+                memberRepo,
+                extRepo,
+                policyRepo,
+                ledgerRepo,
+                categorySummaryDao,
+                userRepository,
+                restTemplate,
+                portalEndpoint,
+                portalToken);
     }
 
     // -----------------------------------------------------------------------------------------
@@ -553,6 +569,169 @@ class PaygWalletControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         verifyNoInteractions(memberRepo, policyRepo, entitlementService);
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // POST /portal-session
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    void portalSession_subscribedTeam_returnsUrlAndCallsEdgeFnWithBearer() {
+        User user = userWithId(60L, UUID.randomUUID());
+        Team team = teamWithId(80L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(60L))
+                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(80L);
+        ext.setStripeCustomerId("cus_subscribed");
+        when(extRepo.findById(80L)).thenReturn(Optional.of(ext));
+
+        when(restTemplate.exchange(
+                        eq(PORTAL_ENDPOINT),
+                        eq(HttpMethod.POST),
+                        any(HttpEntity.class),
+                        eq(Map.class)))
+                .thenReturn(
+                        ResponseEntity.ok(
+                                (Map)
+                                        Map.of(
+                                                "success",
+                                                true,
+                                                "url",
+                                                "https://billing.stripe.com/p/session/xyz")));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest("https://app.example/return"),
+                        jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().get("url")).isEqualTo("https://billing.stripe.com/p/session/xyz");
+
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate)
+                .exchange(
+                        eq(PORTAL_ENDPOINT), eq(HttpMethod.POST), captor.capture(), eq(Map.class));
+        HttpEntity<?> sent = captor.getValue();
+        // Bearer service-role header forwarded so the edge fn can authorise.
+        assertThat(sent.getHeaders().getFirst("Authorization")).isEqualTo("Bearer " + PORTAL_TOKEN);
+        // Body carries team_id (string) + the optional return_url.
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) sent.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.get("team_id")).isEqualTo("80");
+        assertThat(body.get("return_url")).isEqualTo("https://app.example/return");
+    }
+
+    @Test
+    void portalSession_teamWithoutStripeCustomer_returns404() {
+        User user = userWithId(61L, UUID.randomUUID());
+        Team team = teamWithId(81L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(61L))
+                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        // No PaygTeamExtensions row at all → unsubscribed.
+        when(extRepo.findById(81L)).thenReturn(Optional.empty());
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest(null), jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().get("error")).isEqualTo("TEAM_NOT_SUBSCRIBED");
+        verifyNoInteractions(restTemplate);
+    }
+
+    @Test
+    void portalSession_edgeFnReturnsSuccessFalse_returns502() {
+        User user = userWithId(62L, UUID.randomUUID());
+        Team team = teamWithId(82L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(62L))
+                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(82L);
+        ext.setStripeCustomerId("cus_sad");
+        when(extRepo.findById(82L)).thenReturn(Optional.of(ext));
+
+        when(restTemplate.exchange(
+                        eq(PORTAL_ENDPOINT),
+                        eq(HttpMethod.POST),
+                        any(HttpEntity.class),
+                        eq(Map.class)))
+                .thenReturn(
+                        ResponseEntity.ok((Map) Map.of("success", false, "error", "stripe_down")));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest(null), jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().get("error")).isEqualTo("PORTAL_UNAVAILABLE");
+    }
+
+    @Test
+    void portalSession_edgeFnThrows_returns502() {
+        User user = userWithId(63L, UUID.randomUUID());
+        Team team = teamWithId(83L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(63L))
+                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(83L);
+        ext.setStripeCustomerId("cus_throw");
+        when(extRepo.findById(83L)).thenReturn(Optional.of(ext));
+
+        when(restTemplate.exchange(
+                        eq(PORTAL_ENDPOINT),
+                        eq(HttpMethod.POST),
+                        any(HttpEntity.class),
+                        eq(Map.class)))
+                .thenThrow(new ResourceAccessException("connect timeout"));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest(null), jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().get("error")).isEqualTo("PORTAL_UNAVAILABLE");
+    }
+
+    @Test
+    void portalSession_endpointBlank_returns503() {
+        // Rebuild controller with blank endpoint to simulate local dev / unconfigured env.
+        controller = newController("", PORTAL_TOKEN);
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest(null), jwtAuth(UUID.randomUUID()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().get("error")).isEqualTo("PORTAL_NOT_CONFIGURED");
+        // Should short-circuit before resolving the user or hitting downstream.
+        verifyNoInteractions(userRepository, memberRepo, extRepo, restTemplate);
+    }
+
+    @Test
+    void portalSession_anonymous_returns401() {
+        Authentication anon =
+                new AnonymousAuthenticationToken(
+                        "k",
+                        "anonymousUser",
+                        List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(new PortalSessionRequest(null), anon);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        verifyNoInteractions(restTemplate, extRepo, memberRepo);
     }
 
     // -----------------------------------------------------------------------------------------
