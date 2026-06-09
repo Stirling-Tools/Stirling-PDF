@@ -40,6 +40,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -77,6 +78,7 @@ public class PolicyController {
     private final PolicyStore policyStore;
     private final PolicyValidator policyValidator;
     private final FolderAccessGuard folderAccessGuard;
+    private final PolicyAccessGuard policyAccessGuard;
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
@@ -159,13 +161,45 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
-        requireAuthorizedForFolderAccess(policy);
+        Policy owned = resolveOwnership(policy);
+        requireAuthorizedForFolderAccess(owned);
         try {
-            policyValidator.validate(policy);
+            policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return ResponseEntity.ok(policyStore.save(policy));
+        return ResponseEntity.ok(policyStore.save(owned));
+    }
+
+    /**
+     * Stamp the policy with the correct owner. Creating a policy assigns the current user as owner;
+     * updating an existing one requires access to it and preserves its original owner, so the
+     * client can neither forge ownership on create nor reassign it on update.
+     */
+    private Policy resolveOwnership(Policy incoming) {
+        String id = incoming.id();
+        if (id != null && !id.isBlank()) {
+            Policy existing = policyStore.get(id).orElse(null);
+            if (existing != null) {
+                if (!policyAccessGuard.canAccess(existing)) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
+                }
+                return withOwner(incoming, existing.owner());
+            }
+        }
+        return withOwner(incoming, policyAccessGuard.ownerForNewPolicy());
+    }
+
+    private static Policy withOwner(Policy policy, String owner) {
+        return new Policy(
+                policy.id(),
+                policy.name(),
+                owner,
+                policy.enabled(),
+                policy.trigger(),
+                policy.sources(),
+                policy.steps(),
+                policy.output());
     }
 
     /**
@@ -189,9 +223,11 @@ public class PolicyController {
     }
 
     @GetMapping
-    @Operation(summary = "List policies")
+    @Operation(
+            summary = "List policies",
+            description = "Lists the caller's policies; admins see all.")
     public List<Policy> listPolicies() {
-        return policyStore.all();
+        return policyAccessGuard.visible(policyStore.all());
     }
 
     @GetMapping("/{policyId}")
@@ -199,6 +235,7 @@ public class PolicyController {
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
+                .filter(policyAccessGuard::canAccess)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -206,9 +243,12 @@ public class PolicyController {
     @DeleteMapping("/{policyId}")
     @Operation(summary = "Delete a policy by id")
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
-        return policyStore.delete(policyId)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        boolean accessible =
+                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+        if (accessible && policyStore.delete(policyId)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping(value = "/{policyId}/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -225,6 +265,7 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
+                        .filter(policyAccessGuard::canAccess)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
