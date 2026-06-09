@@ -11,9 +11,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -29,6 +28,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,16 +86,16 @@ public class PolicyController {
             summary = "Run a tool pipeline",
             description =
                     "Accepts the documents to process (multipart field 'fileInput'), any supporting"
-                            + " files (each under a multipart field named as its asset key, e.g."
-                            + " 'company-logo'), and the pipeline definition as an application/json"
-                            + " part named 'json'. Runs the steps in order asynchronously and returns"
-                            + " a run id. Poll the run status endpoint and download outputs via"
-                            + " /api/v1/general/files/{id}.")
+                            + " files (under 'assets[i].key' / 'assets[i].file'), and the pipeline"
+                            + " definition as an application/json part named 'json'. Runs the steps"
+                            + " in order asynchronously and returns a run id. Poll the run status"
+                            + " endpoint and download outputs via /api/v1/general/files/{id}.")
     public ResponseEntity<JobResponse<Void>> run(
-            @RequestPart("json") PipelineDefinition definition, MultipartHttpServletRequest request)
+            @RequestPart("json") PipelineDefinition definition,
+            @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
         requireRunnable(definition);
-        PolicyInputs inputs = collectInputs(request);
+        PolicyInputs inputs = toInputs(files);
         String runId =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
@@ -108,10 +109,11 @@ public class PolicyController {
                             + " starts and completes, then a terminal 'completed', 'failed',"
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public SseEmitter runStream(
-            @RequestPart("json") PipelineDefinition definition, MultipartHttpServletRequest request)
+            @RequestPart("json") PipelineDefinition definition,
+            @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
         requireRunnable(definition);
-        PolicyInputs inputs = collectInputs(request);
+        PolicyInputs inputs = toInputs(files);
 
         SseEmitter emitter =
                 new SseEmitter(applicationProperties.getPolicies().getStreamTimeoutMs());
@@ -214,11 +216,12 @@ public class PolicyController {
             summary = "Run a stored policy",
             description =
                     "Runs the stored policy's pipeline on the supplied files (primary documents"
-                            + " under 'fileInput', supporting files under their asset-key fields)."
-                            + " Runs regardless of the policy's enabled flag, which only gates"
-                            + " automatic triggering. Returns a run id.")
+                            + " under 'fileInput', supporting files under 'assets[i].key' /"
+                            + " 'assets[i].file'). Runs regardless of the policy's enabled flag,"
+                            + " which only gates automatic triggering. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
-            @PathVariable String policyId, MultipartHttpServletRequest request) throws IOException {
+            @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
+            throws IOException {
         Policy policy =
                 policyStore
                         .get(policyId)
@@ -226,7 +229,7 @@ public class PolicyController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
-        PolicyInputs inputs = collectInputs(request);
+        PolicyInputs inputs = toInputs(files);
         String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
@@ -239,21 +242,20 @@ public class PolicyController {
     }
 
     /**
-     * Split the multipart file parts into the primary document stream ("fileInput") and the named
-     * supporting-file store: every other file field becomes an asset keyed by its field name, which
-     * a step references from {@code fileParameters}.
+     * Turn the typed run files into engine {@link PolicyInputs}: the primary documents plus the
+     * named supporting-file store, where each asset's {@code key} is the name a step references
+     * from its {@code fileParameters}. Assets sharing a key are grouped, so a key may carry several
+     * files.
      */
-    private PolicyInputs collectInputs(MultipartHttpServletRequest request) throws IOException {
-        MultiValueMap<String, MultipartFile> fileMap = request.getMultiFileMap();
-        List<Resource> primary = toResources(fileMap.get("fileInput"));
+    private PolicyInputs toInputs(PolicyRunFiles files) throws IOException {
+        List<Resource> primary = toResources(files.getFileInput());
         Map<String, List<Resource>> supportingFiles = new LinkedHashMap<>();
-        for (Map.Entry<String, List<MultipartFile>> entry : fileMap.entrySet()) {
-            if ("fileInput".equals(entry.getKey())) {
-                continue;
-            }
-            List<Resource> assets = toResources(entry.getValue());
-            if (!assets.isEmpty()) {
-                supportingFiles.put(entry.getKey(), assets);
+        for (NamedAsset asset : files.getAssets()) {
+            Resource resource = toResource(asset.getFile());
+            if (resource != null) {
+                supportingFiles
+                        .computeIfAbsent(asset.getKey(), key -> new ArrayList<>())
+                        .add(resource);
             }
         }
         return new PolicyInputs(primary, supportingFiles);
@@ -312,20 +314,27 @@ public class PolicyController {
             return resources;
         }
         for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) {
-                continue;
+            Resource resource = toResource(file);
+            if (resource != null) {
+                resources.add(resource);
             }
-            TempFile tempFile = tempFileManager.createManagedTempFile("policy-run");
-            file.transferTo(tempFile.getPath());
-            final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
-            resources.add(
-                    new FileSystemResource(tempFile.getFile()) {
-                        @Override
-                        public String getFilename() {
-                            return originalName;
-                        }
-                    });
         }
         return resources;
+    }
+
+    /** Spool a single uploaded file to a managed temp file, preserving its name; null if empty. */
+    private Resource toResource(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+        TempFile tempFile = tempFileManager.createManagedTempFile("policy-run");
+        file.transferTo(tempFile.getPath());
+        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
+        return new FileSystemResource(tempFile.getFile()) {
+            @Override
+            public String getFilename() {
+                return originalName;
+            }
+        };
     }
 }
