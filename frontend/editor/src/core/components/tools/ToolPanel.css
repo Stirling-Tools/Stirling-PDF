@@ -201,6 +201,13 @@
   border-color: var(--border-subtle) !important;
 }
 
+/* The collapse/expand toggle keeps a stable identity across the collapsed strip
+   and the expanded header, so a view transition translates it between the two
+   (same size) instead of cross-fading/scaling it ("big then small"). */
+.tool-panel__toggle-vt {
+  view-transition-name: sidebar-toggle;
+}
+
 .tool-panel__expand-btn svg {
   color: var(--text-secondary) !important;
 }

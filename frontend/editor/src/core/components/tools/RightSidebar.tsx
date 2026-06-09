@@ -321,7 +321,7 @@ export default function RightSidebar() {
               color="gray.4"
               radius="xl"
               size="md"
-              className="tool-panel__expand-btn"
+              className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
               aria-label={t("toolPanel.expand", "Expand panel")}
             >
@@ -439,7 +439,7 @@ export default function RightSidebar() {
                       size="md"
                       onClick={handleCollapse}
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
-                      className="tool-panel__expand-btn"
+                      className="tool-panel__expand-btn tool-panel__toggle-vt"
                     >
                       <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
                     </ActionIcon>
@@ -458,7 +458,7 @@ export default function RightSidebar() {
                       size="md"
                       onClick={handleCollapse}
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
-                      className="tool-panel__expand-btn"
+                      className="tool-panel__expand-btn tool-panel__toggle-vt"
                     >
                       <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
                     </ActionIcon>
