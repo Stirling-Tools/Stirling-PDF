@@ -312,6 +312,7 @@ tasks.register('copyFrontendAssets', Copy) {
     dependsOn cleanFrontendAssets
     from(frontendEditorDistDir) {
         // Exclude files that conflict with backend static resources
+        exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
     }
     into resourcesStaticDir

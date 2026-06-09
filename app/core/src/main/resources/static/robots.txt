@@ -1,5 +1,0 @@
-# https://www.robotstxt.org/robotstxt.html
-# Backend baseline served in API-only / SaaS builds. The self-hosted build
-# bundles its own robots.txt from frontend/editor/public/ which overrides this.
-User-agent: *
-Disallow:
