@@ -148,12 +148,6 @@ apiClient.interceptors.response.use(
         );
       }
     }
-    if (response.config?.url?.includes("/api/v1/credits")) {
-      console.debug(
-        "[API Client] Credits endpoint response headers:",
-        response.headers,
-      );
-    }
     return response;
   },
   async (error) => {

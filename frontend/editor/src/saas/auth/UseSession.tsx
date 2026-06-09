@@ -18,7 +18,6 @@ import {
   CreditSummary,
   SubscriptionInfo,
   CreditCheckResult,
-  ApiCredits,
 } from "@app/types/credits";
 import apiClient, {
   setGlobalCreditUpdateCallback,
@@ -144,82 +143,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
 
-  // Legacy weekly-credits feed (GET /api/v1/credits). PAYG replaces this
-  // entirely — the BE controller is gated behind the legacy-credits profile
-  // so the call would 404. No-op here so the auth bootstrap doesn't spam
-  // 404s on every login / config-modal open. The `creditBalance` +
-  // `creditSummary` + `subscription` state stay at null; downstream PAYG
-  // surfaces read from useWallet() instead.
-  //
-  // To bring this back (e.g. while testing the legacy credit pipeline) set
-  // VITE_LEGACY_CREDITS_ENABLED=true at FE build time.
-  const legacyCreditsEnabled =
-    import.meta.env.VITE_LEGACY_CREDITS_ENABLED === "true";
-
-  const fetchCredits = useCallback(
-    async (sessionToUse?: Session | null) => {
-      if (!legacyCreditsEnabled) {
-        return;
-      }
-      const currentSession = sessionToUse ?? session;
-
-      if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping credit fetch");
-        setCreditBalance(null);
-        setCreditSummary(null);
-        setSubscription(null);
-        return;
-      }
-
-      try {
-        console.debug(
-          "[Auth Debug] Fetching credits for user:",
-          currentSession.user.id,
-        );
-        const response = await apiClient.get<ApiCredits>("/api/v1/credits");
-        const apiCredits = response.data;
-
-        // Map server payload to app CreditSummary
-        const credits: CreditSummary = {
-          currentCredits: apiCredits.totalAvailableCredits,
-          maxCredits:
-            apiCredits.weeklyCreditsAllocated + apiCredits.totalBoughtCredits,
-          creditsUsed:
-            apiCredits.weeklyCreditsAllocated -
-            apiCredits.weeklyCreditsRemaining +
-            (apiCredits.totalBoughtCredits - apiCredits.boughtCreditsRemaining),
-          creditsRemaining: apiCredits.totalAvailableCredits,
-          resetDate: apiCredits.weeklyResetDate,
-          weeklyAllowance: apiCredits.weeklyCreditsAllocated,
-        };
-
-        setCreditSummary(credits);
-        setCreditBalance(credits.creditsRemaining);
-
-        const subscriptionInfo: SubscriptionInfo = {
-          status: "active",
-          tier: (credits.weeklyAllowance || 0) > 100 ? "premium" : "free",
-          creditsPerWeek: credits.weeklyAllowance,
-          maxCredits: credits.maxCredits,
-        };
-        setSubscription(subscriptionInfo);
-
-        console.debug("[Auth Debug] Credits fetched successfully:", credits);
-      } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch credits:", error);
-        // Don't set error state for credit fetching failures to avoid disrupting auth flow
-        // Credits might not be available in all deployments
-        setCreditBalance(null);
-        setCreditSummary(null);
-        setSubscription(null);
-      }
-    },
-    [legacyCreditsEnabled, session],
-  );
+  // Legacy weekly-credits feed (GET /api/v1/credits) is dead. PAYG replaces it via
+  // useWallet() reading /api/v1/payg/wallet. Symbols are kept as no-ops so existing
+  // consumers of useAuth() that still destructure creditBalance / refreshCredits
+  // compile cleanly; values just stay null forever and refreshCredits is a noop.
+  // _ underscore on the param keeps the public signature stable for callers.
+  const fetchCredits = useCallback(async (_sessionToUse?: Session | null) => {
+    /* legacy credit fetch removed — see comment above */
+  }, []);
 
   const refreshCredits = useCallback(async () => {
-    await fetchCredits();
-  }, [fetchCredits]);
+    /* legacy credit refresh removed — useWallet() replaces this */
+  }, []);
 
   const fetchProStatus = useCallback(
     async (sessionToUse?: Session | null) => {

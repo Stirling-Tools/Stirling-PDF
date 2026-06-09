@@ -44,45 +44,20 @@ export function useCredits() {
   const [error, setError] = useState<Error | null>(null);
   const [hasAttempted, setHasAttempted] = useState<boolean>(false);
 
-  // Legacy weekly-credits endpoint. PAYG replaces this — gated off by default.
-  // Flip VITE_LEGACY_CREDITS_ENABLED=true to re-enable for parallel testing.
-  const legacyCreditsEnabled =
-    import.meta.env.VITE_LEGACY_CREDITS_ENABLED === "true";
-
+  // Legacy weekly-credits endpoint (/api/v1/credits) is dead. PAYG replaces this — the
+  // wallet hook (useWallet) carries the equivalent state via /api/v1/payg/wallet. The
+  // hook surface is preserved for the ApiKeys page consumer (it destructures `data`,
+  // `isLoading`, `error`, `refetch`, `hasAttempted`), but `data` always stays null —
+  // the consumer's usage widget will render its "no data" state.
   const fetchCredits = useCallback(async () => {
-    if (!legacyCreditsEnabled) {
-      setHasAttempted(true);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res =
-        await apiClient.get<Record<string, unknown>>("/api/v1/credits");
-      const normalized = normalizeCredits(res.data);
-      // If backend returns an "empty" payload, keep data null so the UI stays in loading/skeleton
-      const isEmpty =
-        !normalized.weeklyCreditsAllocated &&
-        !normalized.weeklyCreditsRemaining &&
-        !normalized.totalBoughtCredits &&
-        !normalized.boughtCreditsRemaining &&
-        !normalized.totalAvailableCredits &&
-        !normalized.weeklyResetDate &&
-        !normalized.lastApiUsage;
-      setData(isEmpty ? null : normalized);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e : new Error(String(e)));
-    } finally {
-      setIsLoading(false);
-      setHasAttempted(true);
-    }
-  }, [legacyCreditsEnabled]);
+    setHasAttempted(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && session && !hasAttempted && !isAnonymous) {
-      fetchCredits();
+      setHasAttempted(true);
     }
-  }, [loading, session, hasAttempted, isAnonymous, fetchCredits]);
+  }, [loading, session, hasAttempted, isAnonymous]);
 
   return {
     data,
