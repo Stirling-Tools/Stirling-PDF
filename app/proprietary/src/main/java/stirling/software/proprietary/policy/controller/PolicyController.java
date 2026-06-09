@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -53,9 +53,6 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-
 /**
  * Manages policies and runs pipelines. The premium backend entry point: CRUD for stored {@code
  * Policy} objects, running a stored policy by id, and running an ad-hoc pipeline (for AI/Automate
@@ -81,7 +78,6 @@ public class PolicyController {
     private final FolderAccessGuard folderAccessGuard;
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
-    private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -90,13 +86,14 @@ public class PolicyController {
             description =
                     "Accepts the documents to process (multipart field 'fileInput'), any supporting"
                             + " files (each under a multipart field named as its asset key, e.g."
-                            + " 'company-logo'), and a JSON pipeline definition ('json'). Runs the"
-                            + " steps in order asynchronously and returns a run id. Poll the run"
-                            + " status endpoint and download outputs via /api/v1/general/files/{id}.")
+                            + " 'company-logo'), and the pipeline definition as an application/json"
+                            + " part named 'json'. Runs the steps in order asynchronously and returns"
+                            + " a run id. Poll the run status endpoint and download outputs via"
+                            + " /api/v1/general/files/{id}.")
     public ResponseEntity<JobResponse<Void>> run(
-            @RequestParam("json") String json, MultipartHttpServletRequest request)
+            @RequestPart("json") PipelineDefinition definition, MultipartHttpServletRequest request)
             throws IOException {
-        PipelineDefinition definition = parseDefinition(json);
+        requireRunnable(definition);
         PolicyInputs inputs = collectInputs(request);
         String runId =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP).runId();
@@ -111,9 +108,9 @@ public class PolicyController {
                             + " starts and completes, then a terminal 'completed', 'failed',"
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public SseEmitter runStream(
-            @RequestParam("json") String json, MultipartHttpServletRequest request)
+            @RequestPart("json") PipelineDefinition definition, MultipartHttpServletRequest request)
             throws IOException {
-        PipelineDefinition definition = parseDefinition(json);
+        requireRunnable(definition);
         PolicyInputs inputs = collectInputs(request);
 
         SseEmitter emitter =
@@ -159,8 +156,7 @@ public class PolicyController {
             description =
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
-    public ResponseEntity<Policy> savePolicy(@RequestBody String json) {
-        Policy policy = parsePolicy(json);
+    public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requireAuthorizedForFolderAccess(policy);
         try {
             policyValidator.validate(policy);
@@ -235,27 +231,11 @@ public class PolicyController {
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
-    private Policy parsePolicy(String json) {
-        try {
-            return objectMapper.readValue(json, Policy.class);
-        } catch (JacksonException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid policy JSON");
-        }
-    }
-
-    private PipelineDefinition parseDefinition(String json) {
-        PipelineDefinition definition;
-        try {
-            definition = objectMapper.readValue(json, PipelineDefinition.class);
-        } catch (JacksonException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Invalid pipeline definition JSON");
-        }
+    private static void requireRunnable(PipelineDefinition definition) {
         if (definition.steps().isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
         }
-        return definition;
     }
 
     /**
