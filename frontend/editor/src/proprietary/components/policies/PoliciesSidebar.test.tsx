@@ -145,16 +145,15 @@ describe("Policies right-sidebar surface", () => {
     renderHost();
     fireEvent.click(screen.getByText("Compliance"));
     expect(screen.getByText("Set up Compliance Policy")).toBeInTheDocument();
-    expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
+    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
   });
 
   it("advances through the wizard and enables the policy", async () => {
     renderHost();
     fireEvent.click(screen.getByText("Compliance"));
     fireEvent.click(screen.getByText("Continue")); // workflow → settings
-    fireEvent.click(screen.getByText("Continue")); // settings → sources
-    expect(screen.getByText("Sources")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("Continue")); // sources → review
+    fireEvent.click(screen.getByText("Continue")); // settings → review
+    // Sources step is out of the flow for this release (always "editor").
     expect(screen.getByText("Summary")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Enable Policy"));
     // Enable is async (links the workflow + creates the backing folder); the

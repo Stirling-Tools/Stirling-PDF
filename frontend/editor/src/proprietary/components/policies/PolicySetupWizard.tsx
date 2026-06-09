@@ -40,7 +40,10 @@ import {
 import { PolicyToolConfigStep } from "@app/components/policies/PolicyToolConfigStep";
 import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
 
-const TOTAL_STEPS = 4;
+// Sources are always "editor" for this release, so the Sources step is dropped
+// from the flow (its panel code is kept below for when other sources return).
+const SOURCES_IN_FLOW = false;
+const TOTAL_STEPS = SOURCES_IN_FLOW ? 4 : 3;
 
 interface PolicySetupWizardProps {
   category: PolicyCategory;
@@ -440,7 +443,9 @@ export function PolicySetupWizard({
           </>
         )}
 
-        {step === 3 && (
+        {/* Sources step — kept in code, out of the flow for this release
+            (SOURCES_IN_FLOW), since sources are always "editor" for now. */}
+        {SOURCES_IN_FLOW && step === 3 && (
           <>
             <p className="pol-desc">
               Choose where this policy runs and which document types it applies
@@ -520,7 +525,7 @@ export function PolicySetupWizard({
           </>
         )}
 
-        {step === 4 && (
+        {step === TOTAL_STEPS && (
           <>
             <p className="pol-desc">
               When Stirling has low confidence in an enforcement action, it will
@@ -556,7 +561,9 @@ export function PolicySetupWizard({
                 <DataRow label="Enforces" align="top">
                   <ChipFlow items={config.rules} />
                 </DataRow>
-                <DataRow label="Sources">{sources.length} selected</DataRow>
+                {SOURCES_IN_FLOW && (
+                  <DataRow label="Sources">{sources.length} selected</DataRow>
+                )}
                 <DataRow label="Reviewer">
                   {reviewerEmail || <span className="pol-muted">Not set</span>}
                 </DataRow>
