@@ -78,6 +78,21 @@
   flex-shrink: 0;
 }
 
+/* Locked "Coming soon" row — muted, not interactive. */
+.pol-row--soon {
+  opacity: 0.55;
+  cursor: default;
+}
+.pol-row--soon:hover {
+  background: transparent;
+}
+.pol-row-soon {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-4);
+  white-space: nowrap;
+}
+
 /* In-progress activity icon spins gently. */
 .pol-spin {
   animation: pol-spin 1.2s linear infinite;

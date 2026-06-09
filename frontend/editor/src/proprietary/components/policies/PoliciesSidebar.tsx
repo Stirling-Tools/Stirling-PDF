@@ -98,6 +98,23 @@ export function PoliciesSection({
         <>
           <div className="pol-list-rows">
             {categories.map((cat) => {
+              if (cat.comingSoon) {
+                return (
+                  <div
+                    key={cat.id}
+                    className="pol-row pol-row--soon"
+                    aria-disabled="true"
+                  >
+                    <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
+                      {cat.icon}
+                    </IconBadge>
+                    <span className="pol-row-label">{cat.label}</span>
+                    <span className="pol-row-trail">
+                      <span className="pol-row-soon">Coming soon</span>
+                    </span>
+                  </div>
+                );
+              }
               const status = deriveRowStatus(pol.policies[cat.id]);
               return (
                 <button
@@ -194,6 +211,8 @@ export function PolicyDetailTakeover() {
   const state = pol.policies[selectedId];
   const config = configs[selectedId];
   if (!category || !state || !config) return null;
+  // Coming-soon categories can't be opened (the list row is locked anyway).
+  if (category.comingSoon) return null;
 
   const status = deriveRowStatus(state);
 
@@ -339,40 +358,42 @@ export function PoliciesCollapsedButton({
   return (
     <>
       <div className="pol-crail">
-        {categories.map((cat) => {
-          const status = deriveRowStatus(pol.policies[cat.id]);
-          const suffix =
-            status === "active"
-              ? " (Active)"
-              : status === "paused"
-                ? " (Paused)"
-                : "";
-          return (
-            <AppTooltip
-              key={cat.id}
-              content={`${cat.label}${suffix}`}
-              position="left"
-              arrow
-              delay={300}
-            >
-              <button
-                type="button"
-                className="pol-crail-btn"
-                data-status={status}
-                aria-label={`${cat.label} policy — ${STATUS_LABEL[status]}`}
-                onClick={() => {
-                  selectPolicy(cat.id);
-                  onExpand();
-                }}
+        {categories
+          .filter((cat) => !cat.comingSoon)
+          .map((cat) => {
+            const status = deriveRowStatus(pol.policies[cat.id]);
+            const suffix =
+              status === "active"
+                ? " (Active)"
+                : status === "paused"
+                  ? " (Paused)"
+                  : "";
+            return (
+              <AppTooltip
+                key={cat.id}
+                content={`${cat.label}${suffix}`}
+                position="left"
+                arrow
+                delay={300}
               >
-                {cat.icon}
-                {(status === "active" || status === "paused") && (
-                  <span className="pol-crail-dot" data-status={status} />
-                )}
-              </button>
-            </AppTooltip>
-          );
-        })}
+                <button
+                  type="button"
+                  className="pol-crail-btn"
+                  data-status={status}
+                  aria-label={`${cat.label} policy — ${STATUS_LABEL[status]}`}
+                  onClick={() => {
+                    selectPolicy(cat.id);
+                    onExpand();
+                  }}
+                >
+                  {cat.icon}
+                  {(status === "active" || status === "paused") && (
+                    <span className="pol-crail-dot" data-status={status} />
+                  )}
+                </button>
+              </AppTooltip>
+            );
+          })}
       </div>
       <div className="tool-panel__collapsed-divider" />
     </>

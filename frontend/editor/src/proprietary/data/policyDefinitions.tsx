@@ -33,6 +33,8 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     desc: "Classify documents, extract structured data, enforce naming conventions, and normalize pages.",
     // The classifier the wizard's "Set up Classification" action routes to.
     providesClassification: true,
+    // Needs the classify agent + RAG, which aren't built yet.
+    comingSoon: true,
   },
   {
     id: "security",
@@ -45,18 +47,21 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "Compliance",
     icon: <CheckCircleIcon sx={ICON_SX} />,
     desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
+    comingSoon: true,
   },
   {
     id: "routing",
     label: "Routing",
     icon: <ArrowForwardIcon sx={ICON_SX} />,
     desc: "Auto-route documents to the right team, folder, or system.",
+    comingSoon: true,
   },
   {
     id: "retention",
     label: "Retention",
     icon: <StorageIcon sx={ICON_SX} />,
     desc: "Set how long documents are kept, when to archive, and when to delete.",
+    comingSoon: true,
   },
 ];
 
@@ -298,4 +303,3 @@ export const POLICY_DOC_TYPES: string[] = [
   "Legal filings",
   "Financial reports",
 ];
-

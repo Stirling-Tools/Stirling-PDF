@@ -47,6 +47,11 @@ export interface PolicyCategory {
    * the hardcoded `selectPolicy("ingestion")` call site.
    */
   providesClassification?: boolean;
+  /**
+   * Not yet available — shown as a locked "Coming soon" row that can't be opened
+   * or configured. Only Security is live today.
+   */
+  comingSoon?: boolean;
 }
 
 /**
