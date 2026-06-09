@@ -1,15 +1,21 @@
 package stirling.software.saas.payg.api;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -109,6 +115,7 @@ public class PaygWalletController {
     private final RestTemplate saasRestTemplate;
     private final String portalEndpoint;
     private final String portalServiceRoleToken;
+    private final Set<String> portalReturnUrlAllowedHosts;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -120,7 +127,8 @@ public class PaygWalletController {
             UserRepository userRepository,
             RestTemplate saasRestTemplate,
             @Value("${payg.portal.endpoint:}") String portalEndpoint,
-            @Value("${payg.portal.service-role-token:}") String portalServiceRoleToken) {
+            @Value("${payg.portal.service-role-token:}") String portalServiceRoleToken,
+            @Value("${payg.portal.allowed-return-hosts:}") String portalReturnUrlAllowedHostsCsv) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
         this.extRepo = Objects.requireNonNull(extRepo, "extRepo");
@@ -131,6 +139,21 @@ public class PaygWalletController {
         this.saasRestTemplate = Objects.requireNonNull(saasRestTemplate, "saasRestTemplate");
         this.portalEndpoint = portalEndpoint == null ? "" : portalEndpoint;
         this.portalServiceRoleToken = portalServiceRoleToken == null ? "" : portalServiceRoleToken;
+        this.portalReturnUrlAllowedHosts = parseHostAllowlist(portalReturnUrlAllowedHostsCsv);
+    }
+
+    private static Set<String> parseHostAllowlist(String csv) {
+        if (csv == null || csv.isBlank()) {
+            return Collections.emptySet();
+        }
+        Set<String> out = new HashSet<>();
+        for (String raw : Arrays.asList(csv.split(","))) {
+            String trimmed = raw.trim().toLowerCase(Locale.ROOT);
+            if (!trimmed.isEmpty()) {
+                out.add(trimmed);
+            }
+        }
+        return Collections.unmodifiableSet(out);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -368,10 +391,27 @@ public class PaygWalletController {
      * downstream error. {@link #isSubscribed(Optional)} stays the source of truth for "subscribed"
      * across both this endpoint and {@code GET /wallet}.
      *
+     * <p>The {@code returnUrl} (optional, body field) is validated against the {@code
+     * payg.portal.allowed-return-hosts} allowlist before forwarding to the edge fn — an
+     * authenticated attacker can otherwise mint a legit Stripe portal session that bounces the
+     * victim back to {@code https://evil.example} after they "Return to Stirling." Defense in
+     * depth: even if the Supabase edge fn enforces its own allowlist, we enforce one here too so
+     * the security contract is visible in this controller's tests.
+     *
+     * <p>Transaction scope: the DB lookup (team membership + {@code payg_team_extensions}) runs
+     * inside {@link #loadPortalContext}; each Spring Data repo call uses its own short transaction,
+     * and the {@code JOIN FETCH} on {@code findPrimaryMembership} eagerly hydrates the team so no
+     * lazy access happens later. The outbound HTTP call to Supabase therefore runs with no DB
+     * connection held — a slow edge fn cannot pin a HikariCP connection for the full 30s read
+     * timeout. Same pattern as {@code PaygMeterReportingService}, which fires from a {@code
+     * JobChargeService} afterCommit hook.
+     *
      * <p>Status map:
      *
      * <ul>
      *   <li>200 + {@code {url}} — happy path.
+     *   <li>400 + {@code {error: "INVALID_RETURN_URL"}} — caller-supplied {@code returnUrl} is
+     *       malformed or its host isn't in {@code payg.portal.allowed-return-hosts}.
      *   <li>401 — anonymous / missing principal.
      *   <li>403 — authenticated but no team (caller can't have a portal session without one).
      *   <li>404 + {@code {error: "TEAM_NOT_SUBSCRIBED"}} — team has no Stripe customer yet.
@@ -383,9 +423,8 @@ public class PaygWalletController {
      */
     @PostMapping("/portal-session")
     @PreAuthorize("isAuthenticated()")
-    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> createPortalSession(
-            @Valid @RequestBody PortalSessionRequest req, Authentication auth) {
+            @Valid @RequestBody(required = false) PortalSessionRequest req, Authentication auth) {
         if (portalEndpoint.isBlank()) {
             // Local dev / unit tests without Supabase configured — return a clean 503 instead of
             // letting RestTemplate explode on a blank URL.
@@ -393,30 +432,33 @@ public class PaygWalletController {
                     .body(Map.of("error", "PORTAL_NOT_CONFIGURED"));
         }
 
-        User user;
+        // returnUrl is the only optional field on the body; the body itself is optional too, so a
+        // caller that doesn't care about a custom return URL can POST with no body at all and let
+        // the edge fn fall back to its configured default.
+        String requestedReturnUrl = req == null ? null : req.returnUrl();
+        if (requestedReturnUrl != null
+                && !requestedReturnUrl.isBlank()
+                && !isReturnUrlAllowed(requestedReturnUrl)) {
+            log.warn("Portal session rejected: returnUrl host not on allowlist");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "INVALID_RETURN_URL"));
+        }
+
+        // DB work is in its own readOnly tx; the HTTP call runs outside any transaction.
+        PortalContext ctx;
         try {
-            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+            ctx = loadPortalContext(auth);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        Optional<TeamMembership> primary = primaryMembership(user.getId());
-        if (primary.isEmpty()) {
-            // Authenticated but no team → no Stripe customer can exist for them. 403 mirrors the
-            // cap endpoints' "no team to act on" response.
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (ctx.notFoundReason() != null) {
+            return ResponseEntity.status(ctx.status()).body(Map.of("error", ctx.notFoundReason()));
         }
-        Long teamId = primary.get().getTeam().getId();
-
-        Optional<PaygTeamExtensions> extOpt = extRepo.findById(teamId);
-        if (!isSubscribed(extOpt)) {
-            // Free-tier team — no Stripe customer means no portal to open. Return a 404 with the
-            // documented error code so the FE can show "Subscribe first" rather than a generic
-            // error toast.
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "TEAM_NOT_SUBSCRIBED"));
+        if (ctx.status() != HttpStatus.OK) {
+            return ResponseEntity.status(ctx.status()).build();
         }
 
+        Long teamId = ctx.teamId();
         try {
             HttpHeaders headers = new HttpHeaders();
             if (!portalServiceRoleToken.isBlank()) {
@@ -426,8 +468,8 @@ public class PaygWalletController {
 
             Map<String, Object> body = new HashMap<>();
             body.put("team_id", teamId.toString());
-            if (req != null && req.returnUrl() != null && !req.returnUrl().isBlank()) {
-                body.put("return_url", req.returnUrl());
+            if (requestedReturnUrl != null && !requestedReturnUrl.isBlank()) {
+                body.put("return_url", requestedReturnUrl);
             }
 
             ResponseEntity<Map> response =
@@ -473,10 +515,78 @@ public class PaygWalletController {
     }
 
     /**
+     * Loads the team + subscription state needed by {@link #createPortalSession}.
+     *
+     * <p>Each Spring Data repo call gets its own short transaction (managed by the repository
+     * proxy); {@link TeamMembershipRepository#findPrimaryMembership} uses {@code JOIN FETCH} so the
+     * returned {@link TeamMembership#getTeam()} is fully initialised — no lazy access happens after
+     * the call returns. Crucially, by the time this method returns there is <em>no</em> active
+     * transaction, so the outbound RestTemplate call in {@link #createPortalSession} runs with no
+     * DB connection held. We deliberately do <em>not</em> mark this {@code @Transactional} because
+     * Spring's self-invocation proxy semantics mean the annotation would be silently no-op when
+     * called via {@code this.loadPortalContext(...)}, which is exactly how it is called below.
+     * Documenting the intent here rather than relying on a non-functional annotation.
+     *
+     * <p>Returned {@link PortalContext#status} drives the caller's response: {@code OK} means
+     * forward to the edge fn, anything else short-circuits with that status (and the optional
+     * {@code notFoundReason} error body for the 404 case).
+     */
+    PortalContext loadPortalContext(Authentication auth) {
+        User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+        Optional<TeamMembership> primary = primaryMembership(user.getId());
+        if (primary.isEmpty()) {
+            // Authenticated but no team → no Stripe customer can exist for them. 403 mirrors the
+            // cap endpoints' "no team to act on" response.
+            return new PortalContext(null, HttpStatus.FORBIDDEN, null);
+        }
+        Long teamId = primary.get().getTeam().getId();
+        Optional<PaygTeamExtensions> extOpt = extRepo.findById(teamId);
+        if (!isSubscribed(extOpt)) {
+            // Free-tier team — no Stripe customer means no portal to open. The FE shows "Subscribe
+            // first" rather than a generic error toast.
+            return new PortalContext(teamId, HttpStatus.NOT_FOUND, "TEAM_NOT_SUBSCRIBED");
+        }
+        return new PortalContext(teamId, HttpStatus.OK, null);
+    }
+
+    /** Snapshot of the DB state used by {@link #createPortalSession}. Package-private for tests. */
+    record PortalContext(Long teamId, HttpStatus status, String notFoundReason) {}
+
+    /**
+     * Returns {@code true} iff the caller-supplied {@code returnUrl} parses cleanly and its host
+     * appears in {@code payg.portal.allowed-return-hosts}. If the allowlist is empty we reject any
+     * caller-supplied {@code returnUrl} — the operator must explicitly opt-in to which hosts the
+     * portal may redirect through. Match is case-insensitive on host; scheme is restricted to
+     * {@code https} (and {@code http} for local-dev tools that pin to {@code localhost}) so a
+     * caller can't smuggle a {@code javascript:} or {@code data:} URL past the edge fn.
+     */
+    private boolean isReturnUrlAllowed(String returnUrl) {
+        if (portalReturnUrlAllowedHosts.isEmpty()) {
+            return false;
+        }
+        URI uri;
+        try {
+            uri = new URI(returnUrl);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+        if (scheme == null || host == null) {
+            return false;
+        }
+        String lowerScheme = scheme.toLowerCase(Locale.ROOT);
+        if (!"https".equals(lowerScheme) && !"http".equals(lowerScheme)) {
+            return false;
+        }
+        return portalReturnUrlAllowedHosts.contains(host.toLowerCase(Locale.ROOT));
+    }
+
+    /**
      * Request body for {@link #createPortalSession}. {@code returnUrl} is optional — if blank /
-     * null the edge function falls back to its configured default. We don't validate the URL shape
-     * here because the edge fn already does and Stripe will reject a malformed value, so double
-     * validation only diverges over time.
+     * null the edge function falls back to its configured default. We validate the URL's host
+     * against {@code payg.portal.allowed-return-hosts} before forwarding; see {@link
+     * #createPortalSession} for the security rationale.
      */
     public record PortalSessionRequest(String returnUrl) {}
 

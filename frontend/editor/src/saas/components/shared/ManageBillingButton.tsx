@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { supabase } from "@app/auth/supabase";
 import { Button } from "@mantine/core";
 import { usePlans } from "@app/hooks/usePlans";
+import apiClient from "@app/services/apiClient";
 
 interface TrialStatus {
   isTrialing: boolean;
@@ -38,21 +38,36 @@ export function ManageBillingButton({
     setLoading(true);
     setErr(null);
     try {
-      const { data, error } = await supabase.functions.invoke<{
-        url: string;
-        error?: string;
-      }>("manage-billing", {
-        body: {
-          name: "Functions",
-          return_url: returnUrl,
-        },
-      });
-      if (error) throw error;
-      if (!data || "error" in data)
-        throw new Error(data?.error ?? "No portal URL");
-      window.location.href = data.url;
+      // Routes through POST /api/v1/payg/portal-session — the Java controller centralises
+      // authorisation (team membership + subscription state), validates returnUrl against the
+      // configured host allowlist, and short-circuits free-tier teams with 404 TEAM_NOT_SUBSCRIBED
+      // before the Supabase edge fn is even called. The previous direct supabase.functions.invoke
+      // call bypassed all of that.
+      const resp = await apiClient.post<{ url?: string; error?: string }>(
+        "/api/v1/payg/portal-session",
+        { returnUrl },
+      );
+      const portalUrl = resp.data?.url;
+      if (!portalUrl) {
+        throw new Error(resp.data?.error ?? "No portal URL");
+      }
+      window.location.href = portalUrl;
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Could not open billing portal");
+      // Axios error response body shape mirrors the controller's status map (PORTAL_UNAVAILABLE,
+      // PORTAL_NOT_CONFIGURED, TEAM_NOT_SUBSCRIBED, INVALID_RETURN_URL).
+      const responseBody = (e as { response?: { data?: { error?: string } } })?.response?.data;
+      const code = responseBody?.error;
+      const message =
+        code === "TEAM_NOT_SUBSCRIBED"
+          ? "Subscribe first to manage billing"
+          : code === "INVALID_RETURN_URL"
+            ? "Could not open billing portal: invalid return URL"
+            : code === "PORTAL_NOT_CONFIGURED"
+              ? "Billing portal is not configured"
+              : e instanceof Error
+                ? e.message
+                : "Could not open billing portal";
+      setErr(message);
     } finally {
       setLoading(false);
     }

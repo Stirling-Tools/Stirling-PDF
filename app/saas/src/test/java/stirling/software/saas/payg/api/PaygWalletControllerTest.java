@@ -69,6 +69,7 @@ class PaygWalletControllerTest {
     private static final String PORTAL_ENDPOINT =
             "https://example.supabase.co/functions/v1/create-customer-portal-session";
     private static final String PORTAL_TOKEN = "service-role-test-token";
+    private static final String PORTAL_ALLOWED_HOSTS = "app.example,staging.example";
 
     @Mock private EntitlementService entitlementService;
     @Mock private TeamMembershipRepository memberRepo;
@@ -83,10 +84,11 @@ class PaygWalletControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = newController(PORTAL_ENDPOINT, PORTAL_TOKEN);
+        controller = newController(PORTAL_ENDPOINT, PORTAL_TOKEN, PORTAL_ALLOWED_HOSTS);
     }
 
-    private PaygWalletController newController(String portalEndpoint, String portalToken) {
+    private PaygWalletController newController(
+            String portalEndpoint, String portalToken, String allowedHosts) {
         return new PaygWalletController(
                 entitlementService,
                 memberRepo,
@@ -97,7 +99,8 @@ class PaygWalletControllerTest {
                 userRepository,
                 restTemplate,
                 portalEndpoint,
-                portalToken);
+                portalToken,
+                allowedHosts);
     }
 
     // -----------------------------------------------------------------------------------------
@@ -706,7 +709,7 @@ class PaygWalletControllerTest {
     @Test
     void portalSession_endpointBlank_returns503() {
         // Rebuild controller with blank endpoint to simulate local dev / unconfigured env.
-        controller = newController("", PORTAL_TOKEN);
+        controller = newController("", PORTAL_TOKEN, PORTAL_ALLOWED_HOSTS);
 
         ResponseEntity<Map<String, Object>> resp =
                 controller.createPortalSession(
@@ -717,6 +720,114 @@ class PaygWalletControllerTest {
         assertThat(resp.getBody().get("error")).isEqualTo("PORTAL_NOT_CONFIGURED");
         // Should short-circuit before resolving the user or hitting downstream.
         verifyNoInteractions(userRepository, memberRepo, extRepo, restTemplate);
+    }
+
+    @Test
+    void portalSession_returnUrlNotOnAllowlist_returns400() {
+        // No DB / RestTemplate stubbing — rejection happens before the controller resolves the
+        // user, so none of those collaborators should be touched.
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest("https://evil.example/billing-return"),
+                        jwtAuth(UUID.randomUUID()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().get("error")).isEqualTo("INVALID_RETURN_URL");
+        verifyNoInteractions(userRepository, memberRepo, extRepo, restTemplate);
+    }
+
+    @Test
+    void portalSession_returnUrlMalformed_returns400() {
+        // Non-http(s) scheme should be rejected before any DB / HTTP work.
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest("javascript:alert(1)"),
+                        jwtAuth(UUID.randomUUID()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resp.getBody().get("error")).isEqualTo("INVALID_RETURN_URL");
+        verifyNoInteractions(userRepository, memberRepo, extRepo, restTemplate);
+    }
+
+    @Test
+    void portalSession_returnUrlEmpty_allowlistNotChecked() {
+        // returnUrl == null / blank → no allowlist enforcement; the edge fn falls back to its
+        // configured default. Use a controller with an EMPTY allowlist to prove the path bypasses
+        // it: with the empty allowlist any non-null URL would be rejected, but null sails through.
+        controller = newController(PORTAL_ENDPOINT, PORTAL_TOKEN, "");
+
+        User user = userWithId(64L, UUID.randomUUID());
+        Team team = teamWithId(84L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(64L))
+                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(84L);
+        ext.setStripeCustomerId("cus_blank");
+        when(extRepo.findById(84L)).thenReturn(Optional.of(ext));
+        when(restTemplate.exchange(
+                        eq(PORTAL_ENDPOINT),
+                        eq(HttpMethod.POST),
+                        any(HttpEntity.class),
+                        eq(Map.class)))
+                .thenReturn(
+                        ResponseEntity.ok(
+                                (Map)
+                                        Map.of(
+                                                "success",
+                                                true,
+                                                "url",
+                                                "https://billing.stripe.com/p/session/abc")));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(
+                        new PortalSessionRequest(null), jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // The forwarded body must NOT carry return_url when caller didn't supply one.
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate)
+                .exchange(
+                        eq(PORTAL_ENDPOINT), eq(HttpMethod.POST), captor.capture(), eq(Map.class));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> sentBody = (Map<String, Object>) captor.getValue().getBody();
+        assertThat(sentBody).doesNotContainKey("return_url");
+        assertThat(sentBody.get("team_id")).isEqualTo("84");
+    }
+
+    @Test
+    void portalSession_nullBody_isAllowed() {
+        // FE may POST with no body at all — Spring binds @RequestBody(required = false) to null,
+        // and the controller treats that the same as a body with returnUrl=null.
+        User user = userWithId(65L, UUID.randomUUID());
+        Team team = teamWithId(85L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(65L))
+                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(85L);
+        ext.setStripeCustomerId("cus_nullbody");
+        when(extRepo.findById(85L)).thenReturn(Optional.of(ext));
+        when(restTemplate.exchange(
+                        eq(PORTAL_ENDPOINT),
+                        eq(HttpMethod.POST),
+                        any(HttpEntity.class),
+                        eq(Map.class)))
+                .thenReturn(
+                        ResponseEntity.ok(
+                                (Map)
+                                        Map.of(
+                                                "success",
+                                                true,
+                                                "url",
+                                                "https://billing.stripe.com/p/session/null")));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createPortalSession(null, jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
