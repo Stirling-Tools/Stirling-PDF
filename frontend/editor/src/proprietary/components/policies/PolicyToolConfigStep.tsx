@@ -8,11 +8,37 @@ import {
 import type { ToolId } from "@app/types/toolId";
 import type { AutomationOperation } from "@app/types/automation";
 
+/**
+ * Seed a tool's parameters: start from the tool's own registry defaults, overlay
+ * the preset's defaults (e.g. the PII patterns), then apply only the saved
+ * values the user actually changed from the tool default. This means a policy
+ * saved while a param was at its default (an empty redact list) still inherits
+ * the preset value, while genuine user edits are preserved.
+ */
+function seedToolParameters(
+  registryDefaults: Record<string, unknown>,
+  presetParams: Record<string, unknown>,
+  savedParams: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...registryDefaults, ...presetParams };
+  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  for (const [key, value] of Object.entries(savedParams)) {
+    if (!eq(value, registryDefaults[key])) merged[key] = value;
+  }
+  return merged;
+}
+
 interface PolicyToolConfigStepProps {
   /** The fixed, configurable tool chain (locked set) for this policy. */
   chainIds: string[];
   /** Operations to seed enabled/params from (saved ops, or preset defaults). */
   initialOperations: AutomationOperation[];
+  /**
+   * The preset's default operations. Their params seed any tool whose saved
+   * value is still at the tool's own default — so e.g. a policy saved before the
+   * PII patterns existed inherits them rather than running with an empty list.
+   */
+  presetOperations: AutomationOperation[];
   /** Used to name the built pipeline definition. */
   categoryLabel: string;
   /** The wizard triggers this on its final submit (mirrors PolicyWorkflowStep). */
@@ -35,6 +61,7 @@ interface PolicyToolConfigStepProps {
 export function PolicyToolConfigStep({
   chainIds,
   initialOperations,
+  presetOperations,
   categoryLabel,
   saveTriggerRef,
   onComplete,
@@ -44,12 +71,17 @@ export function PolicyToolConfigStep({
   const [tools, setTools] = useState<PolicyToolState[]>(() =>
     chainIds.map((op) => {
       const saved = initialOperations.find((o) => o.operation === op);
-      const defaults =
-        toolRegistry[op as ToolId]?.operationConfig?.defaultParameters ?? {};
+      const preset = presetOperations.find((o) => o.operation === op);
+      const defaults = (toolRegistry[op as ToolId]?.operationConfig
+        ?.defaultParameters ?? {}) as Record<string, unknown>;
       return {
         operation: op,
         enabled: Boolean(saved),
-        parameters: { ...defaults, ...(saved?.parameters ?? {}) },
+        parameters: seedToolParameters(
+          defaults,
+          (preset?.parameters ?? {}) as Record<string, unknown>,
+          (saved?.parameters ?? {}) as Record<string, unknown>,
+        ),
       };
     }),
   );

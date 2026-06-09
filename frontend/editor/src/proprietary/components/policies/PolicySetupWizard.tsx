@@ -304,6 +304,7 @@ export function PolicySetupWizard({
                 initialOperations={
                   existingAutomation?.operations ?? config.defaultOperations
                 }
+                presetOperations={config.defaultOperations}
                 categoryLabel={category.label}
                 saveTriggerRef={workflowSave}
                 onComplete={handleToolConfigSaved}
