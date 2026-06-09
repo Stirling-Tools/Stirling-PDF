@@ -84,6 +84,13 @@ export interface WalletCategoryBreakdown {
 
 /** Mirror of the backend's {@code WalletSnapshot} record (the JSON returned from {@code GET /api/v1/payg/wallet}). */
 export interface Wallet {
+  /**
+   * The caller's primary team_id. Needed when invoking Supabase edge functions
+   * (create-checkout-session, etc.) that run outside Spring Security and have
+   * no other way to resolve the caller's team. May be null on the synthetic
+   * empty snapshot returned to anonymous / team-less callers.
+   */
+  teamId: number | null;
   status: WalletStatus;
   role: WalletRole;
   /** ISO yyyy-mm-dd. */
@@ -264,6 +271,7 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
   const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
   return {
+    teamId: null,
     status: subscribed ? "subscribed" : "free",
     role,
     billingPeriodStart: isoDay(periodStart),

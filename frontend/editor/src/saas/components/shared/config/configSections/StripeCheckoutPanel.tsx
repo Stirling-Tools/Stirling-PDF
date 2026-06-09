@@ -69,7 +69,16 @@ import {
 import type { Stripe } from "@stripe/stripe-js";
 
 export interface StripeCheckoutPanelProps {
-  /** Cap in USD; null means no cap. */
+  /**
+   * The caller's team_id — required by the Supabase edge function, which can't
+   * derive it from the JWT alone (the function runs outside our app's Spring
+   * Security context and has no access to the {@code team_memberships} table
+   * other than via this hint).
+   */
+  teamId: number;
+  /** Currency lower-case 3-letter ISO (e.g. {@code "gbp"}). Selects the Stripe Price. */
+  currency?: string;
+  /** Cap in USD; null means no cap. Tracked locally; set on the wallet via PATCH after subscription. */
   capUsd: number | null;
   /** Called when Stripe (or the mock continue button) signals completion. */
   onComplete: () => void;
@@ -106,6 +115,8 @@ function getStripe(publishableKey: string): Promise<Stripe | null> {
 }
 
 const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
+  teamId,
+  currency = "gbp",
   capUsd,
   onComplete,
   onError,
@@ -161,18 +172,26 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     let cancelled = false;
     async function createSession() {
       try {
-        const noCap = capUsd === null;
-        // Direct Supabase edge function invocation — same pattern as usePlans
-        // for stripe-price-lookup. The user's JWT is attached automatically;
-        // edge fn uses it to derive the team id + stripe_customer_id.
+        // Direct Supabase edge function invocation. We call
+        // {@code create-checkout-session} (not {@code create-payg-team-subscription} —
+        // that one creates a subscription directly without going through the
+        // hosted Stripe Embedded Checkout iframe and doesn't return a
+        // client_secret). team_id is required because the edge fn runs
+        // outside our Spring Security context and can't resolve it from the
+        // JWT alone. The cap is *not* set during checkout — it's an
+        // application-layer setting, applied via PATCH /payg/cap after the
+        // subscription lands. window.location.href is the success_url so the
+        // user comes back to the Plan tab after Stripe finishes the redirect.
+        const returnUrl = window.location.href;
         const { data, error: invokeError } =
           await supabase.functions.invoke<CheckoutResponse>(
-            "create-payg-team-subscription",
+            "create-checkout-session",
             {
               body: {
-                capUsd: capUsd ?? 0,
-                noCap,
-                returnUrl: window.location.href,
+                team_id: teamId,
+                currency,
+                success_url: returnUrl,
+                cancel_url: returnUrl,
               },
             },
           );
@@ -205,7 +224,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [capUsd, devPreview]);
+  }, [teamId, currency, devPreview]);
 
   if (loading) {
     return (

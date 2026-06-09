@@ -27,13 +27,14 @@ import CheckIcon from "@mui/icons-material/CheckRounded";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import { useTranslation } from "react-i18next";
 import { useRenderCount } from "@app/hooks/useRenderCount";
+import { useWallet } from "@app/hooks/useWallet";
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
 import "./PaygFree.css";
 import UpgradeModal from "./UpgradeModal";
 
-// ─── Shared free-tier snapshot (mock for now) ────────────────────────────
+// ─── Shared free-tier snapshot ────────────────────────────
 
 interface FreeSnapshot {
   /** ISO yyyy-mm-dd. */
@@ -45,8 +46,25 @@ interface FreeSnapshot {
   billableLimit: number;
 }
 
-function useFreeMock(): FreeSnapshot {
+/**
+ * Read free-tier snapshot from the real {@link useWallet} hook. Falls back to
+ * a zeroed view with today's billing window if the wallet hasn't loaded yet —
+ * this only happens briefly on first paint; once the snapshot arrives the
+ * component re-renders with real numbers. Earlier versions returned a mock
+ * "62 of 500" sentinel which leaked into the rendered UI and made the page
+ * look like nothing was wired up.
+ */
+function useFreeSnapshot(): FreeSnapshot {
+  const { wallet } = useWallet();
   return useMemo(() => {
+    if (wallet) {
+      return {
+        billingPeriodStart: wallet.billingPeriodStart,
+        billingPeriodEnd: wallet.billingPeriodEnd,
+        billableUsed: wallet.billableUsed,
+        billableLimit: wallet.billableLimit,
+      };
+    }
     const now = new Date();
     const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -54,10 +72,10 @@ function useFreeMock(): FreeSnapshot {
     return {
       billingPeriodStart: isoDay(periodStart),
       billingPeriodEnd: isoDay(periodEnd),
-      billableUsed: 62,
+      billableUsed: 0,
       billableLimit: 500,
     };
-  }, []);
+  }, [wallet]);
 }
 
 function formatPeriod(start: string, end: string): string {
@@ -194,7 +212,8 @@ export interface PaygFreeLeaderProps {
 function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   useRenderCount("PaygFreeLeader");
   const { t } = useTranslation();
-  const snap = useFreeMock();
+  const snap = useFreeSnapshot();
+  const { wallet } = useWallet();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   return (
@@ -327,25 +346,28 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
         </div>
       </Stack>
 
-      <UpgradeModal
-        open={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        onComplete={({ capUsd }) => {
-          setUpgradeOpen(false);
-          if (onUpgraded) {
-            onUpgraded({ capUsd });
-          } else {
-            // Standalone fallback (dev preview route renders without a parent
-            // handler). Real flow always passes onUpgraded via PlanSection.
-            // eslint-disable-next-line no-alert
-            alert(
-              `Demo: subscription complete. Cap = ${
-                capUsd === null ? "no cap" : `$${capUsd}/mo`
-              }.`,
-            );
-          }
-        }}
-      />
+      {wallet?.teamId != null && (
+        <UpgradeModal
+          open={upgradeOpen}
+          teamId={wallet.teamId}
+          onClose={() => setUpgradeOpen(false)}
+          onComplete={({ capUsd }) => {
+            setUpgradeOpen(false);
+            if (onUpgraded) {
+              onUpgraded({ capUsd });
+            } else {
+              // Standalone fallback (dev preview route renders without a parent
+              // handler). Real flow always passes onUpgraded via PlanSection.
+              // eslint-disable-next-line no-alert
+              alert(
+                `Demo: subscription complete. Cap = ${
+                  capUsd === null ? "no cap" : `$${capUsd}/mo`
+                }.`,
+              );
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -355,7 +377,7 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
 function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");
   const { t } = useTranslation();
-  const snap = useFreeMock();
+  const snap = useFreeSnapshot();
 
   return (
     <div className="payg">

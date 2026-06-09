@@ -31,6 +31,12 @@ const StripeCheckoutPanel = React.lazy(() => import("./StripeCheckoutPanel"));
 
 interface UpgradeModalProps {
   open: boolean;
+  /**
+   * The caller's team_id. Threaded through to {@link StripeCheckoutPanel} so the
+   * {@code create-checkout-session} edge function can scope the subscription to
+   * the right team.
+   */
+  teamId: number;
   /** Called when the user closes the modal without completing checkout. */
   onClose: () => void;
   /**
@@ -60,6 +66,7 @@ function currencySymbol(c: UpgradeModalProps["currency"]): string {
 
 export default function UpgradeModal({
   open,
+  teamId,
   onClose,
   onComplete,
   currency = "USD",
@@ -154,6 +161,7 @@ export default function UpgradeModal({
               // session keeps the stale cap.
               <CheckoutStep
                 key={`co:${effectiveCap ?? "nocap"}`}
+                teamId={teamId}
                 effectiveCap={effectiveCap}
                 currency={currency}
                 onEditCap={goBackToCap}
@@ -416,6 +424,7 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
 // ─── Step 2: Stripe Embedded Checkout (lazy-loaded) ────────────────────
 
 interface CheckoutStepProps {
+  teamId: number;
   effectiveCap: number | null;
   currency: UpgradeModalProps["currency"];
   onEditCap: () => void;
@@ -423,6 +432,7 @@ interface CheckoutStepProps {
 }
 
 function CheckoutStep({
+  teamId,
   effectiveCap,
   currency,
   onEditCap,
@@ -476,6 +486,8 @@ function CheckoutStep({
         }
       >
         <StripeCheckoutPanel
+          teamId={teamId}
+          currency={currency?.toLowerCase() ?? "gbp"}
           capUsd={effectiveCap}
           onComplete={onComplete}
         />

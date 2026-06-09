@@ -213,6 +213,7 @@ public class PaygWalletController {
 
         WalletSnapshotResponse body =
                 new WalletSnapshotResponse(
+                        teamId,
                         status,
                         isLeader ? ROLE_LEADER : ROLE_MEMBER,
                         ISO_DATE.format(periodStartDate),
@@ -697,6 +698,7 @@ public class PaygWalletController {
     private WalletSnapshotResponse emptySnapshot() {
         LocalDateTime[] window = currentMonthWindow();
         return new WalletSnapshotResponse(
+                null, // teamId — unknown when the caller has no team membership
                 STATUS_FREE,
                 ROLE_MEMBER,
                 ISO_DATE.format(window[0].toLocalDate()),

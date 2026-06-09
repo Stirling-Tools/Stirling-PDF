@@ -11,6 +11,9 @@ import java.util.List;
  * frontend's reuse-if-equal comparison treats as "unchanged". {@code recent} is reserved for a
  * future activity feed and stays empty in V1.
  *
+ * @param teamId the caller's primary team_id. Needed by the frontend so it can pass it to the
+ *     Supabase edge functions that create Stripe Checkout / portal sessions — those run outside
+ *     Spring Security and have no other way to resolve the caller's team.
  * @param status {@code "free"} when the team has no Stripe subscription; {@code "subscribed"} once
  *     a card is on file and the engine bills meter events.
  * @param role the current caller's role within their team — {@code "leader"} or {@code "member"}.
@@ -35,6 +38,7 @@ import java.util.List;
  * @param recent reserved for a future "recent activity" feed; empty in V1.
  */
 public record WalletSnapshotResponse(
+        Long teamId,
         String status,
         String role,
         String billingPeriodStart,
