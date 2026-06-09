@@ -5,7 +5,7 @@ import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -84,6 +84,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
@@ -352,12 +353,14 @@ export default function HomePage() {
                     {t("home.mobile.workspace", "Workspace")}
                   </button>
                 </div>
-                <span className="mobile-toggle-hint">
-                  {t(
-                    "home.mobile.swipeHint",
-                    "Swipe left or right to switch views",
-                  )}
-                </span>
+                {isTouch && (
+                  <span className="mobile-toggle-hint">
+                    {t(
+                      "home.mobile.swipeHint",
+                      "Swipe left or right to switch views",
+                    )}
+                  </span>
+                )}
               </div>
             )}
             {navigationState.workbench === "myFiles" ? (
