@@ -23,7 +23,9 @@ The original design proposed:
 
 Pull request:
 
-- TBD after PR creation
+- https://github.com/Stirling-Tools/Stirling-PDF/compare/main...saul1310:Stirling-PDF:feature/automation-workflow-recorder-mvp?expand=1
+
+The branch has been pushed to the fork. The terminal environment does not have `gh` or a GitHub token available, so this is the GitHub compare link for opening the pull request from the pushed branch.
 
 ## 3. Project Guidelines
 
