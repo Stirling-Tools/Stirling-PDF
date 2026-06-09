@@ -39,6 +39,7 @@ import { StatusBadge } from "@shared/components/StatusBadge";
 import { SectionHeader } from "@shared/components/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
+import { PolicyDeleteConfirmModal } from "@app/components/policies/PolicyDeleteConfirmModal";
 import {
   usePolicySelection,
   selectPolicy,
@@ -205,6 +206,7 @@ export function PolicyDetailTakeover() {
   const [backingAutomation, setBackingAutomation] =
     useState<AutomationConfig | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   useEffect(() => {
     if (!folderId) {
       setSteps([]);
@@ -335,40 +337,51 @@ export function PolicyDetailTakeover() {
   }
 
   return (
-    <PolicyDetailPanel
-      category={category}
-      config={config}
-      state={state}
-      status={status}
-      steps={steps}
-      activity={liveData?.activity}
-      stats={
-        liveData
-          ? {
-              ...liveData.stats,
-              activeFor: policyActiveFor(backingFolder?.createdAt),
-            }
-          : undefined
-      }
-      canConfigure={pol.canConfigure}
-      onBack={() => closePolicy()}
-      onEditSettings={() => {
-        // Seeded/active policies may have no backing folder yet — create one
-        // from the preset so there's a workflow to edit, then open settings.
-        void pol
-          .ensurePolicyFolder(selectedId)
-          .then(() => setPolicyDetailView("settings"));
-      }}
-      onTogglePause={() =>
-        status === "paused"
-          ? pol.resumePolicy(selectedId)
-          : pol.pausePolicy(selectedId)
-      }
-      onDelete={() => {
-        closePolicy();
-        pol.deletePolicy(selectedId);
-      }}
-    />
+    <>
+      <PolicyDetailPanel
+        category={category}
+        config={config}
+        state={state}
+        status={status}
+        steps={steps}
+        activity={liveData?.activity}
+        stats={
+          liveData
+            ? {
+                ...liveData.stats,
+                activeFor: policyActiveFor(backingFolder?.createdAt),
+              }
+            : undefined
+        }
+        canConfigure={pol.canConfigure}
+        onBack={() => closePolicy()}
+        onEditSettings={() => {
+          // Seeded/active policies may have no backing folder yet — create one
+          // from the preset so there's a workflow to edit, then open settings.
+          void pol
+            .ensurePolicyFolder(selectedId)
+            .then(() => setPolicyDetailView("settings"));
+        }}
+        onTogglePause={() =>
+          status === "paused"
+            ? pol.resumePolicy(selectedId)
+            : pol.pausePolicy(selectedId)
+        }
+        onDelete={() => setConfirmingDelete(true)}
+      />
+      {confirmingDelete && (
+        <PolicyDeleteConfirmModal
+          opened
+          label={category.label}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={() => {
+            setConfirmingDelete(false);
+            closePolicy();
+            void pol.deletePolicy(selectedId);
+          }}
+        />
+      )}
+    </>
   );
 }
 
