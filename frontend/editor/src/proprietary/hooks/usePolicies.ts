@@ -18,8 +18,10 @@ import {
   createPolicyFolder,
   createPolicyFolderForAutomation,
   deletePolicyFolder,
+  getPolicyAutomation,
   setPolicyFolderPaused,
   updatePolicyFolderSettings,
+  updatePolicyOperations,
 } from "@app/services/policyFolders";
 import {
   fetchPoliciesByCategory,
@@ -31,6 +33,7 @@ import {
 import type { PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
+  PolicyConfigResult,
   PolicyWizardResult,
 } from "@app/types/policies";
 
@@ -158,6 +161,63 @@ export function usePolicies() {
     [],
   );
 
+  /**
+   * Create-or-update a policy from the locked tool-config page. Unlike the
+   * wizard path this works straight from the tool `operations` (the config page
+   * owns the chain): it creates the backing folder + automation on first
+   * configure, or updates the existing automation's operations on edit, then
+   * mirrors the whole policy to the backend. One method serves both because a
+   * preset policy has no separate "create" — you're just configuring it.
+   */
+  const commitPolicyConfig = useCallback(
+    async (id: string, result: PolicyConfigResult) => {
+      const category = loadPolicyCatalog().categories.find((c) => c.id === id);
+      if (!category) throw new Error(`Unknown policy category: ${id}`);
+      const current = loadPolicies()[id];
+      let folderId = current?.folderId;
+      if (folderId) {
+        await updatePolicyOperations(folderId, result.operations);
+      } else {
+        const folder = await createPolicyFolder(category, result.operations);
+        folderId = folder.id;
+      }
+      await updatePolicyFolderSettings(folderId, result.folder);
+      // The saved automation (with its id) is the lossless round-trip blob.
+      const automation = await getPolicyAutomation(folderId);
+      const store: PolicyToStore = {
+        id: current?.backendId,
+        categoryId: id,
+        name: `${category.label} Policy`,
+        enabled: current?.status !== "paused",
+        automation: automation ?? {
+          id: "",
+          name: `${category.label} Policy`,
+          operations: result.operations,
+          createdAt: "",
+          updatedAt: "",
+        },
+        pipelineSteps: result.pipelineSteps,
+        sources: result.sources,
+        scopeTypes: result.scopeTypes,
+        reviewerEmail: result.reviewerEmail,
+        fieldValues: result.fieldValues,
+        folder: result.folder,
+      };
+      const backendId = await persistPolicy(store);
+      updatePolicy(id, {
+        configured: true,
+        status: current?.status === "paused" ? "paused" : "active",
+        folderId,
+        backendId,
+        fieldValues: result.fieldValues,
+        sources: result.sources,
+        scopeTypes: result.scopeTypes,
+        reviewerEmail: result.reviewerEmail,
+      });
+    },
+    [],
+  );
+
   const pausePolicy = useCallback(async (id: string) => {
     const current = loadPolicies()[id];
     if (current?.backendId) await setPolicyEnabled(current.backendId, false);
@@ -204,6 +264,7 @@ export function usePolicies() {
     canConfigure,
     enablePolicy,
     savePolicyConfig,
+    commitPolicyConfig,
     pausePolicy,
     resumePolicy,
     deletePolicy,

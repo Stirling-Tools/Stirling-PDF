@@ -11,11 +11,14 @@ import {
 import type { ToolId } from "@app/types/toolId";
 import type {
   PolicyCategory,
+  PolicyConfigResult,
   PolicyFolderSettings,
   PolicyState,
-  PolicyWizardResult,
 } from "@app/types/policies";
-import type { AutomationConfig } from "@app/types/automation";
+import type {
+  AutomationConfig,
+  AutomationOperation,
+} from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
 
 interface PolicyConfigPageProps {
@@ -23,12 +26,18 @@ interface PolicyConfigPageProps {
   state: PolicyState;
   /** The fixed, configurable tool chain for this category (locked set). */
   chainIds: string[];
-  /** The policy's backing automation — its currently-saved operations + params. */
-  automation: AutomationConfig;
+  /**
+   * The policy's backing automation (its saved operations + params), or null
+   * when the preset hasn't been configured yet — in which case the page seeds
+   * from `defaultOperations`.
+   */
+  automation: AutomationConfig | null;
+  /** Preset default operations, used to seed an unconfigured policy. */
+  defaultOperations: AutomationOperation[];
   /** Backing folder, read-only here — its output/retry settings are preserved. */
   folder: SmartFolder | null;
   onCancel: () => void;
-  onComplete: (result: PolicyWizardResult) => void | Promise<void>;
+  onComplete: (result: PolicyConfigResult) => void | Promise<void>;
 }
 
 /**
@@ -43,17 +52,20 @@ export function PolicyConfigPage({
   state,
   chainIds,
   automation,
+  defaultOperations,
   folder,
   onCancel,
   onComplete,
 }: PolicyConfigPageProps) {
   const { toolRegistry } = useToolWorkflow();
 
-  // Seed each section from the saved operation (enabled + its params) or, if the
-  // policy doesn't run that tool yet, from the registry's default parameters.
-  const [tools, setTools] = useState<PolicyToolState[]>(() =>
-    chainIds.map((op) => {
-      const saved = automation.operations.find((o) => o.operation === op);
+  // Seed each section from the policy's saved operations, or the preset defaults
+  // when it hasn't been configured yet. A tool is enabled if it's in that set;
+  // its params come from there, layered over the registry's defaults.
+  const [tools, setTools] = useState<PolicyToolState[]>(() => {
+    const seed = automation?.operations ?? defaultOperations;
+    return chainIds.map((op) => {
+      const saved = seed.find((o) => o.operation === op);
       const defaults =
         toolRegistry[op as ToolId]?.operationConfig?.defaultParameters ?? {};
       return {
@@ -61,8 +73,8 @@ export function PolicyConfigPage({
         enabled: Boolean(saved),
         parameters: { ...defaults, ...(saved?.parameters ?? {}) },
       };
-    }),
-  );
+    });
+  });
   const [submitting, setSubmitting] = useState(false);
 
   // Preserve the policy's existing output/retry settings unchanged.
@@ -80,24 +92,23 @@ export function PolicyConfigPage({
   const save = () => {
     if (submitting) return;
     setSubmitting(true);
-    const operations = tools
+    const operations: AutomationOperation[] = tools
       .filter((t) => t.enabled)
       .map((t) => ({ operation: t.operation, parameters: t.parameters }));
-    const nextAutomation: AutomationConfig = { ...automation, operations };
     const { definition, unresolved } = buildPipelineDefinition(
-      nextAutomation,
+      { name: automation?.name ?? `${category.label} Policy`, operations },
       toolRegistry,
     );
     Promise.resolve(
       onComplete({
-        automation: nextAutomation,
+        operations,
+        pipelineSteps: definition.steps,
+        unresolvedOps: unresolved,
         fieldValues: state.fieldValues,
         sources: state.sources,
         scopeTypes: state.scopeTypes,
         reviewerEmail: state.reviewerEmail,
         folder: folderSettings,
-        pipelineSteps: definition.steps,
-        unresolvedOps: unresolved,
       }),
     ).catch(() => setSubmitting(false));
   };

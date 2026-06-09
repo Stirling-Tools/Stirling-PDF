@@ -180,5 +180,26 @@ export interface PolicyWizardResult {
   unresolvedOps: string[];
 }
 
+/**
+ * What the locked tool-config page hands back on save. Unlike the wizard's
+ * result it carries the tool `operations` directly (the page owns a fixed,
+ * configure-only chain — there's no separate saved automation), plus the
+ * endpoint-mapped pipeline steps. Used for both first-time configure and edits
+ * of a preset policy.
+ */
+export interface PolicyConfigResult {
+  /** The enabled tools (in order) as automation operations. */
+  operations: AutomationOperation[];
+  /** Endpoint-mapped backend steps built from `operations` via the registry. */
+  pipelineSteps: PolicyWizardResult["pipelineSteps"];
+  /** Operation ids whose endpoint couldn't be resolved (dropped from steps). */
+  unresolvedOps: string[];
+  fieldValues: Record<string, boolean | string | string[]>;
+  sources: string[];
+  scopeTypes: string[];
+  reviewerEmail: string;
+  folder: PolicyFolderSettings;
+}
+
 /** Which sub-view of a configured policy's detail panel is showing. */
 export type PolicyDetailView = "detail" | "settings";

@@ -37,7 +37,7 @@ import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicyDeleteConfirmModal } from "@app/components/policies/PolicyDeleteConfirmModal";
 import { PolicyConfigPage } from "@app/components/policies/PolicyConfigPage";
 import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
-import type { PolicyWizardResult } from "@app/types/policies";
+import type { PolicyConfigResult } from "@app/types/policies";
 import {
   usePolicySelection,
   selectPolicy,
@@ -194,10 +194,36 @@ export function PolicyDetailTakeover() {
     if (classifier) selectPolicy(classifier.id);
   };
 
-  // Setup: the shared wizard in create mode (workflow → settings → sources →
-  // review). The workflow step embeds the builder, so the wizard is only
+  // Categories with a fixed preset tool chain (Security) are configured via the
+  // locked, per-tool config page — the same page for first-time configure and
+  // edits, since a preset has no separate "create from scratch" step. The rest
+  // still use the add/remove wizard.
+  const toolChain = getPolicyToolChain(selectedId);
+  const commitConfig = (result: PolicyConfigResult) =>
+    pol.commitPolicyConfig(selectedId, result).then(() => {
+      setReloadKey((k) => k + 1);
+      setPolicyDetailView("detail");
+    });
+
+  // Setup: the locked config page (preset) for tool-chain categories, else the
+  // shared wizard in create mode. The wizard embeds the builder, so it's only
   // rendered here, not in the rail tests (which mock it).
   if (!state.configured) {
+    if (toolChain) {
+      return (
+        <PolicyConfigPage
+          key={`config-${selectedId}`}
+          category={category}
+          state={state}
+          chainIds={toolChain}
+          automation={null}
+          defaultOperations={config.defaultOperations}
+          folder={backingFolder}
+          onCancel={() => closePolicy()}
+          onComplete={commitConfig}
+        />
+      );
+    }
     return (
       <PolicySetupWizard
         key={selectedId}
@@ -235,15 +261,8 @@ export function PolicyDetailTakeover() {
         </div>
       );
     }
-    const saveConfig = (result: PolicyWizardResult) =>
-      pol.savePolicyConfig(selectedId, result).then(() => {
-        setReloadKey((k) => k + 1);
-        setPolicyDetailView("detail");
-      });
-
-    // Categories with a fixed tool chain (Security) use the locked, per-tool
-    // config page; the rest fall back to the full add/remove wizard for now.
-    const toolChain = getPolicyToolChain(selectedId);
+    // Tool-chain categories (Security) edit via the locked config page; the rest
+    // fall back to the add/remove wizard for now.
     if (toolChain) {
       return (
         <PolicyConfigPage
@@ -252,9 +271,10 @@ export function PolicyDetailTakeover() {
           state={state}
           chainIds={toolChain}
           automation={backingAutomation}
+          defaultOperations={config.defaultOperations}
           folder={backingFolder}
           onCancel={() => setPolicyDetailView("detail")}
-          onComplete={saveConfig}
+          onComplete={commitConfig}
         />
       );
     }
@@ -273,7 +293,12 @@ export function PolicyDetailTakeover() {
         existingAutomation={backingAutomation}
         initialFolder={backingFolder ?? undefined}
         onCancel={() => setPolicyDetailView("detail")}
-        onComplete={saveConfig}
+        onComplete={(result) =>
+          pol.savePolicyConfig(selectedId, result).then(() => {
+            setReloadKey((k) => k + 1);
+            setPolicyDetailView("detail");
+          })
+        }
         onSetupClassification={onSetupClassification}
       />
     );

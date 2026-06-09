@@ -138,16 +138,18 @@ describe("Policies right-sidebar surface", () => {
     expect(screen.getByText("Policies")).toBeInTheDocument();
   });
 
+  // Security now uses the locked config page (needs ToolWorkflow context); the
+  // wizard still serves categories without a fixed tool chain, e.g. Compliance.
   it("opens the setup wizard (workflow first) for an unconfigured policy", () => {
     renderHost();
-    fireEvent.click(screen.getByText("Security"));
-    expect(screen.getByText("Set up Security Policy")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Compliance"));
+    expect(screen.getByText("Set up Compliance Policy")).toBeInTheDocument();
     expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
   });
 
   it("advances through the wizard and enables the policy", async () => {
     renderHost();
-    fireEvent.click(screen.getByText("Security"));
+    fireEvent.click(screen.getByText("Compliance"));
     fireEvent.click(screen.getByText("Continue")); // workflow → settings
     fireEvent.click(screen.getByText("Continue")); // settings → sources
     expect(screen.getByText("Sources")).toBeInTheDocument();
