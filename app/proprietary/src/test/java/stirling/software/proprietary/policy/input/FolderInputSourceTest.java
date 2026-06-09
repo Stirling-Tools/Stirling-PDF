@@ -21,9 +21,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.StandardEnvironment;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
-import stirling.software.proprietary.policy.config.PolicyProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 
 /** Tests for {@link FolderInputSource}: consume (claim + route) and snapshot (read-only) modes. */
@@ -38,8 +38,8 @@ class FolderInputSourceTest {
 
     @BeforeEach
     void setUp() {
-        PolicyProperties properties = new PolicyProperties();
-        properties.setAllowedFolderRoots(List.of(tempDir.toString()));
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         FolderAccessGuard guard = new FolderAccessGuard(properties, new StandardEnvironment());
         source = new FolderInputSource(readinessChecker, guard);
         // Lenient: the missing-dir / nonexistent-dir cases return before any readiness check.

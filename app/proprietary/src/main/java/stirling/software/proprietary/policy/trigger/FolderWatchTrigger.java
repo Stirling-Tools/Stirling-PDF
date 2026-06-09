@@ -20,12 +20,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -58,16 +58,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
     private final PolicyStore policyStore;
     private final PolicyRunner policyRunner;
     private final List<InputSource> inputSources;
-
-    @Value("${stirling.policies.watchReconcileSeconds:300}")
-    private long reconcileSeconds;
-
-    /**
-     * How long to keep draining events after the first before acting, so a single file copy (which
-     * emits a burst of create/modify events) coalesces into one run rather than many.
-     */
-    @Value("${stirling.policies.watchQuietPeriodMs:500}")
-    private long quietPeriodMs;
+    private final ApplicationProperties applicationProperties;
 
     private final Map<Path, WatchKey> keysByDir = new ConcurrentHashMap<>();
     private final Map<WatchKey, Path> dirByKey = new ConcurrentHashMap<>();
@@ -105,6 +96,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
         running = true;
         Thread.ofVirtual().name("policy-folder-watch").start(this::watchLoop);
+        long reconcileSeconds = applicationProperties.getPolicies().getWatchReconcileSeconds();
         reconciler =
                 Executors.newSingleThreadScheduledExecutor(
                         Thread.ofVirtual().name("policy-folder-reconcile-", 0).factory());
@@ -159,6 +151,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
      * directories. The event kinds are irrelevant: any event on a watched dir just means "go look".
      */
     private Set<Path> drainBurst(WatchService watcher, WatchKey first) {
+        long quietPeriodMs = applicationProperties.getPolicies().getWatchQuietPeriodMs();
         Set<Path> changed = new HashSet<>();
         WatchKey key = first;
         while (key != null) {

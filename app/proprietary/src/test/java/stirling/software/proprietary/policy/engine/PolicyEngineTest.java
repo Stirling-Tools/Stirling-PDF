@@ -92,7 +92,7 @@ class PolicyEngineTest {
                         toolMetadataService,
                         tempFileManager,
                         JsonMapper.builder().build());
-        registry = new PolicyRunRegistry(30);
+        registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
         engine =
                 new PolicyEngine(

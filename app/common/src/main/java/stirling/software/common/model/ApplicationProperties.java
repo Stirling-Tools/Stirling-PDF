@@ -79,6 +79,7 @@ public class ApplicationProperties {
     private AiEngine aiEngine = new AiEngine();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
+    private Policies policies = new Policies();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -200,6 +201,45 @@ public class ApplicationProperties {
              */
             private List<String> allowedExtensions = new java.util.ArrayList<>();
         }
+    }
+
+    @Data
+    public static class Policies {
+        /**
+         * Absolute directories that policy folder input sources and output sinks may read from or
+         * write to. Empty (the default) disables folder access entirely, so a policy can never be
+         * pointed at an arbitrary server path. Stirling's own config directory is always
+         * off-limits, and folder access is always disabled in SaaS mode regardless of this list.
+         */
+        private List<String> allowedFolderRoots = new java.util.ArrayList<>();
+
+        /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
+        private long scheduleSweepSeconds = 60;
+
+        /**
+         * How often (seconds) the folder-watch trigger reconciles its watch registrations and
+         * re-runs every folder-watch policy as a safety net for filesystem events that were missed
+         * (NFS, bind mounts, inotify-queue overflow).
+         */
+        private long watchReconcileSeconds = 300;
+
+        /**
+         * How long (milliseconds) the folder-watch trigger keeps draining filesystem events after
+         * the first, so a burst from a single file copy coalesces into one run instead of many.
+         */
+        private long watchQuietPeriodMs = 500;
+
+        /**
+         * SSE emitter timeout (milliseconds) for streamed runs; generous for long multi-step runs.
+         */
+        private long streamTimeoutMs = 1800000;
+
+        /**
+         * How long (minutes) a finished run's in-memory state is retained before eviction,
+         * mirroring the job-result expiry so rich run state does not outlive the process. Active
+         * and paused runs are kept regardless of age.
+         */
+        private int runExpiryMinutes = 30;
     }
 
     @Data

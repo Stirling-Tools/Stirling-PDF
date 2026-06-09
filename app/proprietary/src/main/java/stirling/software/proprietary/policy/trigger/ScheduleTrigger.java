@@ -10,12 +10,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.Schedule;
@@ -45,9 +45,7 @@ public class ScheduleTrigger implements PolicyTrigger {
     private final PolicyStore policyStore;
     private final PolicyRunner policyRunner;
     private final ObjectMapper objectMapper;
-
-    @Value("${stirling.policies.scheduleSweepSeconds:60}")
-    private long sweepSeconds;
+    private final ApplicationProperties applicationProperties;
 
     private final Map<String, Instant> lastFiredByPolicy = new ConcurrentHashMap<>();
     private volatile ScheduledExecutorService scheduler;
@@ -67,6 +65,7 @@ public class ScheduleTrigger implements PolicyTrigger {
         if (scheduler != null) {
             return;
         }
+        long sweepSeconds = applicationProperties.getPolicies().getScheduleSweepSeconds();
         scheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         Thread.ofVirtual().name("policy-schedule-", 0).factory());

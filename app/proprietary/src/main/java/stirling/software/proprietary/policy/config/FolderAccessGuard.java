@@ -9,6 +9,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
@@ -26,7 +27,7 @@ import stirling.software.proprietary.policy.model.Policy;
  *   <li><b>Protected paths</b> - Stirling's own config directory (settings, database, keys,
  *       backups) is always rejected, even if an allowed root were misconfigured to contain it.
  *   <li><b>Allowlist</b> - the directory must resolve within one of {@code
- *       stirling.policies.allowedFolderRoots}; with none configured, all folder access is refused.
+ *       policies.allowedFolderRoots}; with none configured, all folder access is refused.
  * </ul>
  *
  * <p>Paths are compared after normalisation, so {@code ..} segments cannot walk out of an allowed
@@ -42,9 +43,10 @@ public class FolderAccessGuard {
     private final List<Path> allowedRoots;
     private final List<Path> protectedRoots;
 
-    public FolderAccessGuard(PolicyProperties properties, Environment environment) {
+    public FolderAccessGuard(ApplicationProperties applicationProperties, Environment environment) {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
-        this.allowedRoots = normalizeAll(properties.getAllowedFolderRoots());
+        this.allowedRoots =
+                normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
     }
 
@@ -69,8 +71,7 @@ public class FolderAccessGuard {
         }
         if (allowedRoots.isEmpty()) {
             throw new IllegalArgumentException(
-                    "folder access is disabled; set stirling.policies.allowedFolderRoots to permit"
-                            + " it");
+                    "folder access is disabled; set policies.allowedFolderRoots to permit it");
         }
         boolean within = allowedRoots.stream().anyMatch(normalized::startsWith);
         if (!within) {

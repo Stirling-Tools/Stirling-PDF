@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -48,7 +49,12 @@ class ScheduleTriggerTest {
 
     @BeforeEach
     void setUp() {
-        trigger = new ScheduleTrigger(policyStore, policyRunner, JsonMapper.builder().build());
+        trigger =
+                new ScheduleTrigger(
+                        policyStore,
+                        policyRunner,
+                        JsonMapper.builder().build(),
+                        new ApplicationProperties());
     }
 
     @Test

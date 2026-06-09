@@ -18,9 +18,9 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
-import stirling.software.proprietary.policy.config.PolicyProperties;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /** Tests for {@link FolderOutputSink}: outputs are written to the configured directory on disk. */
@@ -32,8 +32,8 @@ class FolderOutputSinkTest {
 
     @BeforeEach
     void setUp() {
-        PolicyProperties properties = new PolicyProperties();
-        properties.setAllowedFolderRoots(List.of(tempDir.toString()));
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         sink = new FolderOutputSink(new FolderAccessGuard(properties, new StandardEnvironment()));
     }
 

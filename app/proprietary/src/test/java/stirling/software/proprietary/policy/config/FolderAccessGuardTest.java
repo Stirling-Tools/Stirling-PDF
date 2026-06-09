@@ -13,6 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.env.StandardEnvironment;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
@@ -26,8 +27,8 @@ class FolderAccessGuardTest {
     @TempDir Path tempDir;
 
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
-        PolicyProperties properties = new PolicyProperties();
-        properties.setAllowedFolderRoots(allowedRoots);
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
         environment.setActiveProfiles(activeProfiles);
         return new FolderAccessGuard(properties, environment);

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -53,7 +54,12 @@ class FolderWatchTriggerTest {
 
     @BeforeEach
     void setUp() {
-        trigger = new FolderWatchTrigger(policyStore, policyRunner, List.of(folderSource));
+        trigger =
+                new FolderWatchTrigger(
+                        policyStore,
+                        policyRunner,
+                        List.of(folderSource),
+                        new ApplicationProperties());
         lenient().when(folderSource.supports(any())).thenReturn(true);
         lenient()
                 .when(folderSource.watchTargets(any()))

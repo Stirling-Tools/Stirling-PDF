@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -85,10 +84,6 @@ public class PolicyController {
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
-    /** SSE emitter timeout, generous enough for long multi-step runs on large files. */
-    @Value("${stirling.policies.streamTimeoutMs:1800000}")
-    private long streamTimeoutMs;
-
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Run a tool pipeline",
@@ -121,7 +116,8 @@ public class PolicyController {
         PipelineDefinition definition = parseDefinition(json);
         PolicyInputs inputs = collectInputs(request);
 
-        SseEmitter emitter = new SseEmitter(streamTimeoutMs);
+        SseEmitter emitter =
+                new SseEmitter(applicationProperties.getPolicies().getStreamTimeoutMs());
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
         PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));

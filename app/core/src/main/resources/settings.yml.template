@@ -364,6 +364,18 @@ aiEngine:
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
+policies:
+  # Folder automations can read from and write to the directories you allow here, so treat this as a
+  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs
+  # entirely; list absolute directories to permit folder access only within them. Stirling's own
+  # config directory is always off-limits, and folder access is always disabled in SaaS mode.
+  allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
+  watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
+  watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
+  streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams
+  runExpiryMinutes: 30 # How long (minutes) a finished run's in-memory state is kept before eviction
+
 # Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
 cluster:
   enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
