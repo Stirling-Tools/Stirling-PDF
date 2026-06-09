@@ -39,7 +39,11 @@ function durationSince(ts: number | undefined): string {
   return hrs >= 1 ? `${hrs}h` : "Today";
 }
 
-/** Human byte size, e.g. "2.1 MB". */
+/**
+ * Human byte size, e.g. "2.1 MB". Intentionally NOT core `formatFileSize`:
+ * that one renders 2 decimals (`2.13 MB`), whereas the policy summary wants
+ * the quieter whole-number / single-decimal form used across this surface.
+ */
 function formatBytes(bytes: number): string {
   if (!bytes) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];
