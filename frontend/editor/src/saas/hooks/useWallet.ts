@@ -120,6 +120,19 @@ export interface Wallet {
   recent: Array<Record<string, unknown>>;
 }
 
+/**
+ * Result of a per-member sub-cap update. The backend may clamp the requested
+ * value down to the team-level cap (so a member can't be granted more than
+ * the team has to spend) — {@code clamped} surfaces that so the UI can show
+ * a "Clamped to team cap of $X" toast.
+ */
+export interface SubCapUpdateResult {
+  /** The cap units that actually landed on the row (post-clamp). */
+  effective: number;
+  /** {@code true} when the server reduced the request to fit the team cap. */
+  clamped: boolean;
+}
+
 export interface UseWalletResult {
   wallet: Wallet | null;
   loading: boolean;
@@ -140,6 +153,28 @@ export interface UseWalletResult {
    * {@code loading} state can be safely cleared on resolution.
    */
   updateCap: (capUsd: number | null) => Promise<void>;
+  /**
+   * Update a single member's per-seat sub-cap. {@code capUnits === null}
+   * removes the sub-cap (member shares the team budget). Returns the
+   * effective value the server actually stored — clamping happens server-
+   * side because only the server knows the current team cap, and we'd
+   * race the leader's own cap edit if we tried to clamp in the FE.
+   * Refetches the wallet on success so {@code members[]} reflects the
+   * new value.
+   */
+  updateSubCap: (
+    userId: string,
+    capUnits: number | null,
+  ) => Promise<SubCapUpdateResult>;
+  /**
+   * Mint a Stripe Customer Portal session and open it in a new tab. Calls
+   * {@code POST /api/v1/payg/portal-session} (which proxies to a Supabase
+   * edge function) and {@code window.open}s the returned URL. Throws on
+   * backend error so the caller can show a friendly toast — notably 503
+   * {@code PORTAL_NOT_CONFIGURED} (Supabase unavailable in local dev) and
+   * 404 (team not yet subscribed).
+   */
+  openPortal: () => Promise<void>;
 }
 
 // ─── Implementation ─────────────────────────────────────────────────────
@@ -404,5 +439,55 @@ export function useWallet(): UseWalletResult {
     [devPreview, refetch],
   );
 
-  return { wallet, loading, error, refetch, markSubscribed, updateCap };
+  const updateSubCap = useCallback(
+    async (
+      userId: string,
+      capUnits: number | null,
+    ): Promise<SubCapUpdateResult> => {
+      if (devPreview) {
+        // Dev preview has no real members; report a successful no-op so the
+        // toast still fires and the inline editor exits its loading state.
+        await refetch();
+        return { effective: capUnits ?? 0, clamped: false };
+      }
+      const res = await apiClient.patch<{
+        success: boolean;
+        capUnits: number;
+        clamped: boolean;
+      }>(`/api/v1/payg/sub-caps/${encodeURIComponent(userId)}`, {
+        capUnits,
+      });
+      await refetch();
+      return { effective: res.data.capUnits, clamped: res.data.clamped };
+    },
+    [devPreview, refetch],
+  );
+
+  const openPortal = useCallback(async () => {
+    if (devPreview) {
+      // No real Stripe in dev preview — open a placeholder so the click
+      // still feels alive. Real flow opens the Stripe-hosted session URL.
+      window.open("https://billing.stripe.com/p/login/mock", "_blank", "noopener,noreferrer");
+      return;
+    }
+    const res = await apiClient.post<{ url: string }>(
+      "/api/v1/payg/portal-session",
+      { returnUrl: window.location.href },
+    );
+    if (!res.data?.url) {
+      throw new Error("Portal session response missing url");
+    }
+    window.open(res.data.url, "_blank", "noopener,noreferrer");
+  }, [devPreview]);
+
+  return {
+    wallet,
+    loading,
+    error,
+    refetch,
+    markSubscribed,
+    updateCap,
+    updateSubCap,
+    openPortal,
+  };
 }

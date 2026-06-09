@@ -31,7 +31,15 @@ import {
 const Plan: React.FC = () => {
   useRenderCount("Plan");
   const { t } = useTranslation();
-  const { wallet, loading, error, markSubscribed, updateCap } = useWallet();
+  const {
+    wallet,
+    loading,
+    error,
+    markSubscribed,
+    updateCap,
+    updateSubCap,
+    openPortal,
+  } = useWallet();
 
   // Stable callback so PaygFreeLeader's React.memo doesn't see a new prop
   // identity on every Plan render (e.g. loading flips false→true→false on
@@ -70,7 +78,12 @@ const Plan: React.FC = () => {
 
   if (wallet.status === "subscribed") {
     return wallet.role === "leader" ? (
-      <PaygLeader onSaveCap={updateCap} />
+      <PaygLeader
+        onSaveCap={updateCap}
+        members={wallet.members}
+        onSaveSubCap={updateSubCap}
+        onOpenPortal={openPortal}
+      />
     ) : (
       <PaygMember />
     );
