@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildPipelineDefinition,
   buildBackendPolicy,
+  fromBackendPolicy,
 } from "@app/services/policyPipeline";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
@@ -57,27 +58,55 @@ describe("buildPipelineDefinition", () => {
   });
 });
 
-describe("buildBackendPolicy", () => {
-  it("maps a frontend policy to the backend Policy shape (manual trigger)", () => {
-    const { policy } = buildBackendPolicy(
-      {
-        name: "Security",
-        enabled: true,
-        automation: {
-          name: "Security",
-          operations: [{ operation: "compress", parameters: {} }],
-        },
-      },
-      registry,
-    );
+const samplePolicy = {
+  name: "Security",
+  enabled: true,
+  automation: {
+    id: "auto-1",
+    name: "Security",
+    operations: [{ operation: "compress", parameters: {} }],
+    createdAt: "",
+    updatedAt: "",
+  },
+  sources: ["editor"],
+  scopeTypes: ["Contracts"],
+  reviewerEmail: "me@x.com",
+  fieldValues: { minConfidence: "80%" },
+  folder: {
+    outputMode: "new_version" as const,
+    outputName: "secured",
+    outputNamePosition: "suffix" as const,
+    maxRetries: 2,
+    retryDelayMinutes: 10,
+  },
+};
 
+describe("buildBackendPolicy", () => {
+  it("maps a frontend policy to the backend Policy shape", () => {
+    const { policy } = buildBackendPolicy(samplePolicy, registry);
     expect(policy.id).toBe(""); // blank → backend assigns
     expect(policy.name).toBe("Security");
     expect(policy.enabled).toBe(true);
-    expect(policy.trigger).toEqual({ type: "manual", options: {} });
-    expect(policy.output).toEqual({ type: "inline", options: {} });
     expect(policy.steps).toEqual([
       { operation: "/api/v1/misc/compress-pdf", parameters: {} },
     ]);
+    // Extras ride in options.
+    expect(policy.trigger.options.reviewerEmail).toBe("me@x.com");
+    expect(policy.output.options.maxRetries).toBe(2);
+  });
+
+  it("round-trips losslessly through fromBackendPolicy", () => {
+    const { policy } = buildBackendPolicy(samplePolicy, registry);
+    const decoded = fromBackendPolicy({ ...policy, id: "p1" });
+    expect(decoded.id).toBe("p1");
+    expect(decoded.enabled).toBe(true);
+    expect(decoded.sources).toEqual(["editor"]);
+    expect(decoded.scopeTypes).toEqual(["Contracts"]);
+    expect(decoded.reviewerEmail).toBe("me@x.com");
+    expect(decoded.fieldValues).toEqual({ minConfidence: "80%" });
+    expect(decoded.folder).toEqual(samplePolicy.folder);
+    expect(decoded.automation?.operations).toEqual(
+      samplePolicy.automation.operations,
+    );
   });
 });

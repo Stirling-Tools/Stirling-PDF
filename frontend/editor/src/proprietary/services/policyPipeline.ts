@@ -13,6 +13,7 @@
 
 import type { AutomationConfig } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import type { PolicyFolderSettings } from "@app/types/policies";
 
 /** A single backend pipeline step: a tool endpoint path + its scalar params. */
 export interface BackendPipelineStep {
@@ -121,21 +122,50 @@ export function buildPipelineDefinition(
   };
 }
 
-/** A frontend policy ready to persist on the backend. */
+/** A frontend policy ready to persist on the backend (the full settings set). */
 export interface PolicyToStore {
   /** Existing backend id (blank/omitted → create). */
   id?: string;
   name: string;
   /** Active (enabled) vs paused/off. */
   enabled: boolean;
-  automation: Pick<AutomationConfig, "name" | "operations">;
+  automation: AutomationConfig;
+  sources: string[];
+  scopeTypes: string[];
+  reviewerEmail: string;
+  fieldValues: Record<string, boolean | string | string[]>;
+  folder: PolicyFolderSettings;
 }
+
+/** The decoded policy read back from the backend. */
+export interface DecodedPolicy {
+  id: string;
+  name: string;
+  enabled: boolean;
+  /** Null if the stored policy carried no automation blob. */
+  automation: AutomationConfig | null;
+  sources: string[];
+  scopeTypes: string[];
+  reviewerEmail: string;
+  fieldValues: Record<string, boolean | string | string[]>;
+  folder: PolicyFolderSettings;
+}
+
+const DEFAULT_FOLDER: PolicyFolderSettings = {
+  outputMode: "new_file",
+  outputName: "",
+  outputNamePosition: "prefix",
+  maxRetries: 3,
+  retryDelayMinutes: 5,
+};
 
 /**
  * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
- * Trigger is "manual" for now (the backend only implements manual triggering;
- * the "all uploaded files" trigger is a frontend concept until a backend
- * trigger type exists). Returns any unresolved step ops alongside.
+ * The backend models only name/enabled/trigger/steps/output, so the policy-level
+ * extras (sources, scope, reviewer, fields) ride in `trigger.options` and the
+ * output + retry settings in `output.options`; the full frontend automation is
+ * stashed in `output.options.automation` for a lossless UI round-trip (while
+ * `steps` carries the endpoint-mapped pipeline the engine runs).
  */
 export function buildBackendPolicy(
   input: PolicyToStore,
@@ -151,10 +181,69 @@ export function buildBackendPolicy(
       name: input.name,
       owner: "",
       enabled: input.enabled,
-      trigger: { type: "manual", options: {} },
+      trigger: {
+        type: "folder",
+        options: {
+          sources: input.sources,
+          scopeTypes: input.scopeTypes,
+          reviewerEmail: input.reviewerEmail,
+          fieldValues: input.fieldValues,
+        },
+      },
       steps: definition.steps,
-      output: definition.output,
+      output: {
+        type: "inline",
+        options: {
+          mode: input.folder.outputMode,
+          name: input.folder.outputName,
+          position: input.folder.outputNamePosition,
+          maxRetries: input.folder.maxRetries,
+          retryDelayMinutes: input.folder.retryDelayMinutes,
+          automation: input.automation,
+        },
+      },
     },
     unresolved,
+  };
+}
+
+/** Decode a stored backend policy back into the frontend settings. */
+export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
+  const trigger = policy.trigger.options;
+  const output = policy.output.options;
+  const str = (v: unknown, fallback = "") =>
+    typeof v === "string" ? v : fallback;
+  const num = (v: unknown, fallback: number) =>
+    typeof v === "number" ? v : fallback;
+  return {
+    id: policy.id,
+    name: policy.name,
+    enabled: policy.enabled,
+    automation: (output.automation as AutomationConfig | undefined) ?? null,
+    sources: Array.isArray(trigger.sources)
+      ? (trigger.sources as string[])
+      : [],
+    scopeTypes: Array.isArray(trigger.scopeTypes)
+      ? (trigger.scopeTypes as string[])
+      : [],
+    reviewerEmail: str(trigger.reviewerEmail),
+    fieldValues:
+      (trigger.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
+    folder: {
+      outputMode:
+        output.mode === "new_version" ? "new_version" : "new_file",
+      outputName: str(output.name),
+      outputNamePosition:
+        output.position === "suffix"
+          ? "suffix"
+          : output.position === "auto-number"
+            ? "auto-number"
+            : "prefix",
+      maxRetries: num(output.maxRetries, DEFAULT_FOLDER.maxRetries),
+      retryDelayMinutes: num(
+        output.retryDelayMinutes,
+        DEFAULT_FOLDER.retryDelayMinutes,
+      ),
+    },
   };
 }
