@@ -3173,6 +3173,38 @@ impact = "Any applications or services currently using these keys will stop work
 title = "Refresh API Keys"
 warning = "⚠️ Warning: This action will generate new API keys and make your previous keys invalid."
 
+[config.mcp]
+description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+navLabel = "MCP Server"
+tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
+viewApiKeys = "View API keys"
+
+[config.mcp.connect]
+step1 = "In your MCP client, add a"
+step1b = "server pointing at:"
+step1Type = "streamable-HTTP"
+step2 = "The client discovers sign-in automatically from:"
+step3 = "Approve the sign-in with your Stirling account. The client retries with a token - no keys to copy or paste."
+step4 = "Your tools appear in the assistant, grouped by category. You're ready to go."
+title = "Connect your AI assistant"
+
+[config.mcp.endpoint]
+description = "Add this as a streamable-HTTP server in your MCP client."
+label = "Your MCP endpoint"
+
+[config.mcp.example]
+description = "Add this to your client's MCP config, then restart it. On first use you'll be asked to sign in."
+title = "Example: Claude Desktop"
+
+[config.mcp.tools]
+ai = "AI - run Stirling's AI-powered document operations"
+convert = "Convert - PDF to/from Office, images, HTML and more"
+misc = "Misc - compress, OCR, flatten, repair and metadata"
+pages = "Pages - merge, split, rotate, reorder and remove pages"
+security = "Security - add/remove passwords, watermark, redact, sign"
+title = "What your assistant can do"
+
 [config.overview]
 description = "Current application settings and configuration details."
 error = "Error"
