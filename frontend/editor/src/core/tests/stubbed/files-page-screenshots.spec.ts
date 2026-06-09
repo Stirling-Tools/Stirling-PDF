@@ -492,9 +492,7 @@ test.describe("Files page screenshots", () => {
     await card.getByTestId("file-card-actions").click();
     await page.getByTestId("file-menu-move-to").click();
     await page.getByTestId("move-dialog-create-folder-toggle").click();
-    await expect(
-      page.getByTestId("move-dialog-new-folder-name"),
-    ).toBeVisible();
+    await expect(page.getByTestId("move-dialog-new-folder-name")).toBeVisible();
     await settle(page);
     await page.screenshot({
       path: shotPath("17_rtl_move_dialog_create_folder"),
