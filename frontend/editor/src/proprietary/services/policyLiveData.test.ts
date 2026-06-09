@@ -1,62 +1,82 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { fileStorage } from "@app/services/fileStorage";
 import {
-  getPolicyLiveData,
+  runsToActivity,
+  runsToStats,
   policyActiveFor,
 } from "@app/services/policyLiveData";
+import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
-function stub(over: Record<string, unknown>) {
-  // Minimal StirlingFileStub shape for the fields getPolicyLiveData reads.
-  return { id: "x", name: "f.pdf", size: 0, createdAt: Date.now(), ...over };
+function run(over: Partial<PolicyRunRecord>): PolicyRunRecord {
+  return {
+    runId: "r1",
+    categoryId: "security",
+    fileId: "f1",
+    fileName: "f.pdf",
+    fileSize: 0,
+    status: "COMPLETED",
+    outputFileIds: [],
+    error: null,
+    startedAt: Date.now(),
+    ...over,
+  };
 }
 
-afterEach(() => vi.restoreAllMocks());
+const HOUR = 3_600_000;
 
-describe("getPolicyLiveData (all uploaded files)", () => {
-  const HOUR = 3_600_000;
-
-  it("derives activity + stats from the app's uploaded files", async () => {
-    vi.spyOn(fileStorage, "getLeafStirlingFileStubs").mockResolvedValue([
-      stub({
-        name: "contract.pdf",
-        size: 2_100_000,
-        createdAt: Date.now() - HOUR,
+describe("runsToActivity", () => {
+  it("maps completed/running/failed runs to activity rows", () => {
+    const activity = runsToActivity([
+      run({ runId: "a", fileName: "fresh.pdf", status: "RUNNING" }),
+      run({
+        runId: "b",
+        fileName: "contract.pdf",
+        status: "COMPLETED",
+        fileSize: 2_100_000,
+        startedAt: Date.now() - HOUR,
       }),
-      stub({
-        name: "invoice.pdf",
-        size: 900_000,
-        createdAt: Date.now() - 2 * HOUR,
+      run({
+        runId: "c",
+        fileName: "bad.pdf",
+        status: "FAILED",
+        error: "Step 2 failed",
       }),
-    ] as never);
+    ]);
 
-    const data = await getPolicyLiveData();
-    expect(data.stats.enforced).toBe(2);
-    expect(data.stats.dataProcessed).toBe("2.9 MB");
-    expect(data.activity).toHaveLength(2);
-    // Most-recent first; older files are settled to "enforced".
-    expect(data.activity[0].doc).toBe("contract.pdf");
-    expect(data.activity[0].status).toBe("enforced");
-    expect(data.activity[0].action).toContain("2.0 MB");
+    expect(activity).toHaveLength(3);
+    expect(activity[0]).toMatchObject({
+      doc: "fresh.pdf",
+      status: "processing",
+      action: "Enforcing…",
+    });
+    expect(activity[1]).toMatchObject({ doc: "contract.pdf", status: "enforced" });
+    expect(activity[1].action).toContain("2.0 MB");
+    expect(activity[2]).toMatchObject({
+      doc: "bad.pdf",
+      status: "flagged",
+      action: "Step 2 failed",
+    });
   });
+});
 
-  it("marks just-uploaded files as in progress (enforcing)", async () => {
-    vi.spyOn(fileStorage, "getLeafStirlingFileStubs").mockResolvedValue([
-      stub({ name: "fresh.pdf", size: 1000, createdAt: Date.now() }),
-    ] as never);
-
-    const data = await getPolicyLiveData();
-    expect(data.activity[0].status).toBe("processing");
-    expect(data.activity[0].action).toBe("Enforcing…");
-  });
-
-  it("returns empty live data when nothing has been uploaded", async () => {
-    vi.spyOn(fileStorage, "getLeafStirlingFileStubs").mockResolvedValue(
-      [] as never,
+describe("runsToStats", () => {
+  it("counts + sizes only the completed runs", () => {
+    const stats = runsToStats(
+      [
+        run({ runId: "a", status: "COMPLETED", fileSize: 2_100_000 }),
+        run({ runId: "b", status: "COMPLETED", fileSize: 900_000 }),
+        run({ runId: "c", status: "RUNNING", fileSize: 5_000_000 }),
+      ],
+      undefined,
     );
-    const data = await getPolicyLiveData();
-    expect(data.activity).toEqual([]);
-    expect(data.stats.enforced).toBe(0);
+    expect(stats.enforced).toBe(2);
+    expect(stats.dataProcessed).toBe("2.9 MB");
+    expect(stats.activeFor).toBe("Today");
+  });
+
+  it("derives activeFor from the backing folder's creation time", () => {
+    const fiveDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
+    expect(runsToStats([], fiveDaysAgo).activeFor).toBe("5d");
   });
 });
 
@@ -64,7 +84,7 @@ describe("policyActiveFor", () => {
   it("returns 'Today' for a just-activated policy", () => {
     expect(policyActiveFor(new Date().toISOString())).toBe("Today");
   });
-  it("returns 'Today' when there's no backing folder (seeded policy)", () => {
+  it("returns 'Today' when there's no backing folder", () => {
     expect(policyActiveFor(undefined)).toBe("Today");
   });
   it("reports whole-day duration since activation", () => {

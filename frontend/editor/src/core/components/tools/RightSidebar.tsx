@@ -20,6 +20,7 @@ import {
   usePoliciesEnabled,
   usePolicyDetailActive,
 } from "@app/components/policies/PoliciesSidebar";
+import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { useChat } from "@app/components/chat/ChatContext";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
@@ -285,6 +286,8 @@ export default function RightSidebar() {
         ...(isChatDragging ? { transition: "none" } : {}),
       }}
     >
+      {/* Headless: enforces enabled policies on every uploaded file. */}
+      {policiesEnabled && <PolicyAutoRunController />}
       {!fullscreenExpanded && isChatOpen && (
         <div
           style={{

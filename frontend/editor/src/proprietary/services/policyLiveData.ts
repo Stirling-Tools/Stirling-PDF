@@ -1,25 +1,17 @@
 /**
- * Derives a policy's activity feed + stats from the app's real uploaded files
- * (the "all uploaded files" trigger).
- *
- * Every active policy enforces on all uploaded files, so the feed is the user's
- * actual files (leaf versions) — meaningful immediately, unlike a folder that
- * starts empty.
+ * Maps real backend policy runs (from policyRunStore) into the detail view's
+ * activity feed + summary stats. Runs are produced by the auto-run controller
+ * firing `/api/v1/policies/{id}/run` on every uploaded file, so the feed is the
+ * policy's actual enforcement history — not a cosmetic file listing.
  */
 
-import { fileStorage } from "@app/services/fileStorage";
 import type { PolicyActivityItem, PolicyStats } from "@app/types/policies";
+import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
-export interface PolicyLiveData {
-  activity: PolicyActivityItem[];
-  stats: PolicyStats;
-}
-
-/** Relative "Nm/Nh ago" for an activity timestamp. */
-function relativeTime(date: Date | string | number | undefined): string {
-  if (!date) return "—";
-  const ms = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(ms / 60000);
+/** Relative "Nm/Nh ago" for an activity timestamp (epoch ms). */
+function relativeTime(ts: number): string {
+  if (!ts) return "—";
+  const mins = Math.floor((Date.now() - ts) / 60000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
@@ -29,8 +21,7 @@ function relativeTime(date: Date | string | number | undefined): string {
 }
 
 /** Duration since a timestamp, e.g. "18d" / "5h" (no "ago"). */
-function durationSince(ts: number | undefined): string {
-  if (!ts) return "—";
+function durationSince(ts: number): string {
   const ms = Date.now() - ts;
   const days = Math.floor(ms / 86400000);
   if (days >= 1) return `${days}d`;
@@ -55,56 +46,53 @@ function formatBytes(bytes: number): string {
   return `${i > 0 && v < 10 ? v.toFixed(1) : Math.round(v)} ${units[i]}`;
 }
 
-/** A file uploaded within this window is shown as still being enforced. */
-const IN_PROGRESS_MS = 2 * 60 * 1000;
+/** Map a run's lifecycle status to an activity row's display status. */
+function activityStatus(
+  run: PolicyRunRecord,
+): PolicyActivityItem["status"] {
+  if (run.status === "COMPLETED") return "enforced";
+  if (run.status === "FAILED" || run.status === "CANCELLED") return "flagged";
+  return "processing";
+}
 
-const EMPTY: PolicyLiveData = {
-  activity: [],
-  stats: { enforced: 0, dataProcessed: "0 B", activeFor: "—" },
-};
+function activityAction(run: PolicyRunRecord): string {
+  switch (activityStatus(run)) {
+    case "enforced":
+      return `${formatBytes(run.fileSize)} • enforced`;
+    case "flagged":
+      return run.error ?? "Enforcement failed";
+    default:
+      return "Enforcing…";
+  }
+}
 
-/**
- * Build the live view from the app's uploaded files. Returns empty stats/
- * activity when nothing has been uploaded yet (an honest empty state).
- */
-export async function getPolicyLiveData(): Promise<PolicyLiveData> {
-  const files = await fileStorage.getLeafStirlingFileStubs();
-  if (files.length === 0) return EMPTY;
+/** Build the detail view's activity feed from a category's runs (newest first). */
+export function runsToActivity(runs: PolicyRunRecord[]): PolicyActivityItem[] {
+  return runs.map((run) => ({
+    doc: run.fileName,
+    action: activityAction(run),
+    time: relativeTime(run.startedAt),
+    status: activityStatus(run),
+  }));
+}
 
-  const sorted = [...files].sort(
-    (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0),
-  );
-  // A just-uploaded file is still being enforced ("in progress"); it settles to
-  // "enforced" once it ages past the window.
-  const now = Date.now();
-  const activity: PolicyActivityItem[] = sorted.slice(0, 8).map((f) => {
-    const inProgress = f.createdAt != null && now - f.createdAt < IN_PROGRESS_MS;
-    return {
-      doc: f.name,
-      action: inProgress
-        ? "Enforcing…"
-        : `${formatBytes(f.size)} • enforced on upload`,
-      time: relativeTime(f.createdAt),
-      status: inProgress ? "processing" : "enforced",
-    };
-  });
-
-  const totalBytes = files.reduce((sum, f) => sum + (f.size ?? 0), 0);
+/** Build the summary stats from a category's runs. */
+export function runsToStats(
+  runs: PolicyRunRecord[],
+  folderCreatedAt: string | undefined,
+): PolicyStats {
+  const enforced = runs.filter((r) => r.status === "COMPLETED");
+  const bytes = enforced.reduce((sum, r) => sum + (r.fileSize ?? 0), 0);
   return {
-    activity,
-    stats: {
-      enforced: files.length,
-      dataProcessed: formatBytes(totalBytes),
-      // "Active for" is about when the policy went live, not file age — the
-      // caller overrides this via policyActiveFor(folder.createdAt).
-      activeFor: "—",
-    },
+    enforced: enforced.length,
+    dataProcessed: formatBytes(bytes),
+    activeFor: policyActiveFor(folderCreatedAt),
   };
 }
 
 /**
  * How long a policy has been active — from its backing folder's creation time
- * (when it was enabled), or "Today" for the seeded demo policy with no folder.
+ * (when it was enabled), or "Today" when there's no folder yet.
  */
 export function policyActiveFor(folderCreatedAt: string | undefined): string {
   if (!folderCreatedAt) return "Today";

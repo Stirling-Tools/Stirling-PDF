@@ -12,17 +12,14 @@
  *     collapsed; clicking an icon selects the policy and expands the rail.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
 import { getPolicyAutomation } from "@app/services/policyFolders";
 import { smartFolderStorage } from "@app/services/smartFolderStorage";
-import {
-  getPolicyLiveData,
-  policyActiveFor,
-  type PolicyLiveData,
-} from "@app/services/policyLiveData";
+import { runsToActivity, runsToStats } from "@app/services/policyLiveData";
+import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { AutomationConfig, AutomationOperation } from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
@@ -170,30 +167,15 @@ export function PolicyDetailTakeover() {
     };
   }, [folderId, reloadKey]);
 
-  // Activity/stats derived from the app's real uploaded files (the "all uploaded
-  // files" trigger). Only polled while the narrative detail is on screen — the
-  // wizard/settings views don't show it, so there's nothing to keep current.
-  const [liveData, setLiveData] = useState<PolicyLiveData | null>(null);
-  useEffect(() => {
-    if (detailView !== "detail") return;
-    let cancelled = false;
-    const load = () =>
-      getPolicyLiveData()
-        .then((d) => {
-          if (!cancelled) setLiveData(d);
-        })
-        .catch(() => {
-          /* storage unavailable — leave the last-known feed in place */
-        });
-    void load();
-    // Poll so the feed stays current — new uploads appear and "Enforcing…"
-    // settles to "enforced" without a manual reopen.
-    const interval = setInterval(() => void load(), 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [detailView]);
+  // Activity/stats come from the real backend runs the auto-run controller fires
+  // on every upload (policyRunStore), filtered to this policy's category. The
+  // store is reactive, so the feed updates live as runs progress — no polling
+  // here (the controller does the run-status polling).
+  const allRuns = usePolicyRuns();
+  const categoryRuns = useMemo(
+    () => allRuns.filter((r) => r.categoryId === selectedId),
+    [allRuns, selectedId],
+  );
 
   if (!POLICIES_ENABLED || selectedId == null) return null;
 
@@ -282,15 +264,8 @@ export function PolicyDetailTakeover() {
         config={config}
         status={status}
         steps={steps}
-        activity={liveData?.activity}
-        stats={
-          liveData
-            ? {
-                ...liveData.stats,
-                activeFor: policyActiveFor(backingFolder?.createdAt),
-              }
-            : undefined
-        }
+        activity={runsToActivity(categoryRuns)}
+        stats={runsToStats(categoryRuns, backingFolder?.createdAt)}
         canConfigure={pol.canConfigure}
         onBack={() => closePolicy()}
         onEditSettings={() => {
