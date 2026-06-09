@@ -503,7 +503,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.enableAlphaFunctionality.label",
@@ -543,7 +543,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.enableUrlToPDF.label",
@@ -581,7 +581,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.disableSanitize.label",
@@ -959,7 +959,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.tempFileManagement.startupCleanup.label",
@@ -1002,7 +1002,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.tempFileManagement.cleanupSystemTemp.label",
