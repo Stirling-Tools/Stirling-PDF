@@ -13,6 +13,7 @@ interface RulerScaleSettingsButtonProps {
   onApplyScale?: (scale: MeasureScale) => void;
   onResetScale?: () => void;
   onStartCalibration?: () => void;
+  onCancelCalibration?: () => void;
   isCalibrationActive?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function RulerScaleSettingsButton({
   onApplyScale,
   onResetScale,
   onStartCalibration,
+  onCancelCalibration,
   isCalibrationActive,
 }: RulerScaleSettingsButtonProps) {
   const scalePopoverRef = useRef<HTMLButtonElement>(null);
@@ -69,6 +71,7 @@ export function RulerScaleSettingsButton({
             onResetScale?.();
           }}
           onStartCalibration={onStartCalibration}
+          onCancelCalibration={onCancelCalibration}
           isCalibrationActive={isCalibrationActive}
           onClose={() => {
             scalePopoverRef.current?.click();

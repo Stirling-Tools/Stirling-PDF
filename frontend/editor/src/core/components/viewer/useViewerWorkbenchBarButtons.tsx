@@ -37,6 +37,7 @@ export function useViewerWorkbenchBarButtons(
   setCustomScale?: (scale: MeasureScale | null) => void,
   isScaleCalibrationActive?: boolean,
   startScaleCalibration?: () => void,
+  cancelScaleCalibration?: () => void,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -145,6 +146,10 @@ export function useViewerWorkbenchBarButtons(
       setIsPanning(false);
     }
   }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
+
+  const handleCancelScaleCalibration = useCallback(() => {
+    cancelScaleCalibration?.();
+  }, [cancelScaleCalibration]);
 
   const handleApplyRulerScale = useCallback(
     (scale: MeasureScale) => {
@@ -290,6 +295,7 @@ export function useViewerWorkbenchBarButtons(
                   onApplyScale={handleApplyRulerScale}
                   onResetScale={handleResetRulerScale}
                   onStartCalibration={handleStartScaleCalibration}
+                  onCancelCalibration={handleCancelScaleCalibration}
                   isCalibrationActive={isScaleCalibrationActive}
                 />
               ),
@@ -625,6 +631,7 @@ export function useViewerWorkbenchBarButtons(
     isRulerActive,
     setIsRulerActive,
     handleStartScaleCalibration,
+    handleCancelScaleCalibration,
     handleApplyRulerScale,
     handleResetRulerScale,
     customScale,

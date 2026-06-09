@@ -9297,7 +9297,11 @@ unit = "Unit"
 unitInvalid = "Invalid unit: {{scaleUnit}}"
 
 [ruler]
+clearAll = "Clear all"
+hideAllLabels = "Hide all labels"
+hideSmallLabels = "Hide small labels"
 scaled = "Scaled"
+showAllLabels = "Show all labels"
 physicalValues = "Physical"
 
 [zipWarning]

@@ -26,6 +26,7 @@ interface ScaleSettingsPanelProps {
   onApplyScale: (scale: MeasureScale) => void;
   onResetScale?: () => void;
   onStartCalibration?: () => void;
+  onCancelCalibration?: () => void;
   isCalibrationActive?: boolean;
   currentScale?: MeasureScale | null;
   onClose?: () => void;
@@ -35,6 +36,7 @@ export function ScaleSettingsPanel({
   onApplyScale,
   onResetScale,
   onStartCalibration,
+  onCancelCalibration,
   isCalibrationActive = false,
   currentScale,
   onClose,
@@ -191,10 +193,13 @@ export function ScaleSettingsPanel({
     applyScale(numValue, unit, true);
   };
 
-  const handleStartCalibration = () => {
+  const handleCalibrationToggle = () => {
     clearErrors();
-    onStartCalibration?.();
-    // Close panel after starting calibration
+    if (isCalibrationActive) {
+      onCancelCalibration?.();
+    } else {
+      onStartCalibration?.();
+    }
     onClose?.();
   };
 
@@ -289,11 +294,13 @@ export function ScaleSettingsPanel({
 
       {/* Calibration Mode */}
       <Button
-        onClick={handleStartCalibration}
+        onClick={handleCalibrationToggle}
         fullWidth
         variant={isCalibrationActive ? "filled" : "outline"}
         size="sm"
-        disabled={!onStartCalibration}
+        disabled={
+          isCalibrationActive ? !onCancelCalibration : !onStartCalibration
+        }
         title={t(
           "scaleSettings.calibrationTooltip",
           "Measure a known distance to calculate the scale automatically",

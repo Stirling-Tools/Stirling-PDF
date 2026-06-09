@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import type {
   MeasureScale,
@@ -7,14 +6,13 @@ import type {
   PageMeasureScales,
   PagePoint,
 } from "@app/utils/measurementTypes";
-import {
-  POINT_TO_UNIT,
-  isImperialUnit,
-  convertUnit,
-  generateScaleLabel,
-  validateMeasurement,
-} from "@app/utils/measurementUtils";
+import { validateMeasurement } from "@app/utils/measurementUtils";
 import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
+import {
+  RulerMeasurementLayer,
+  type RulerLabelVisibilityMode,
+  type RulerRenderedMeasurement,
+} from "@app/components/viewer/RulerMeasurementLayer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,35 +53,6 @@ interface RulerOverlayProps {
 
 function dist(a: Point, b: Point): number {
   return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
-}
-
-function midpoint(a: Point, b: Point): Point {
-  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-}
-
-function perpUnit(a: Point, b: Point): { nx: number; ny: number } {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  return { nx: -dy / len, ny: dx / len };
-}
-
-/** Angle from horizontal 0°–90°. Computed from screen-space points (same angle as PDF space). */
-function angleDeg(a: Point, b: Point): number {
-  return Math.atan2(Math.abs(b.y - a.y), Math.abs(b.x - a.x)) * (180 / Math.PI);
-}
-
-function formatDist(pts: number): string {
-  const mm = (pts / 72) * 25.4;
-  if (mm < 100) return `${mm.toFixed(1)} mm`;
-  if (mm < 1000) return `${(mm / 10).toFixed(1)} cm`;
-  return `${(mm / 1000).toFixed(2)} m`;
-}
-
-function formatInches(pts: number): string {
-  const inches = pts / 72;
-  if (inches < 12) return `${inches.toFixed(2)} in`;
-  return `${(inches / 12).toFixed(2)} ft`;
 }
 
 /**
@@ -127,71 +96,6 @@ function pickScale(
   return null;
 }
 
-/**
- * Determine decimal places based on value magnitude
- * Ensures small values show precision and large values stay readable
- */
-function getDecimalPlaces(value: number): number {
-  const absVal = Math.abs(value);
-
-  const decimalRanges = [
-    { threshold: 1000000, decimals: 0 },
-    { threshold: 1000, decimals: 2 },
-    { threshold: 1, decimals: 3 },
-    { threshold: 0.1, decimals: 3 },
-    { threshold: 0.01, decimals: 4 },
-    { threshold: 0.001, decimals: 5 },
-  ];
-
-  return decimalRanges.find((r) => absVal >= r.threshold)?.decimals ?? 6;
-}
-
-function formatScaled(pts: number, scale: MeasureScale): string {
-  // Use raw PDF factor directly for maximum precision
-  const val = pts * scale.factor;
-  if (val === 0) return `0 ${scale.unit}`;
-
-  const decimals = getDecimalPlaces(val);
-
-  return `${val.toFixed(decimals)} ${scale.unit}`;
-}
-
-/**
- * Returns the scaled real-world value in the *other* unit system, or null if
- * the unit is not a recognised metric/imperial unit.
- *
- * Uses raw PDF factor for precise calculations, then converts to opposite system
- * using the generic convertUnit function.
- *
- * Guarantees consistent units:
- *   - If PDF scale is imperial → show metric in metres
- *   - If PDF scale is metric → show imperial in feet
- */
-function scaledCross(pts: number, scale: MeasureScale): string | null {
-  const unit = scale.unit.toLowerCase().trim();
-
-  // Validate unit is known — use safe own-property check
-  if (!Object.hasOwn(POINT_TO_UNIT, unit)) return null;
-
-  // Get the value in the PDF's own unit system using raw factor
-  const valueInUnit = pts * scale.factor;
-
-  // Convert to opposite system using generic convertUnit function
-  if (isImperialUnit(scale.unit)) {
-    // PDF is imperial (ft, in, yd, mi) → convert to meters
-    const meters = convertUnit(valueInUnit, scale.unit, "m");
-    if (meters === null) return null;
-    const decimals = getDecimalPlaces(meters);
-    return `${meters.toFixed(decimals)} m`;
-  } else {
-    // PDF is metric (m, cm, mm, km) → convert to feet
-    const feet = convertUnit(valueInUnit, scale.unit, "ft");
-    if (feet === null) return null;
-    const decimals = getDecimalPlaces(feet);
-    return `${feet.toFixed(decimals)} ft`;
-  }
-}
-
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
 function findScrollEl(root: HTMLElement): HTMLElement | null {
@@ -212,8 +116,39 @@ function findScrollEl(root: HTMLElement): HTMLElement | null {
   return null;
 }
 
-function isOverPage(e: MouseEvent): boolean {
-  return !!(e.target as Element).closest?.("[data-page-index]");
+function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return (
+    target.isContentEditable ||
+    target.closest("input, textarea, select") !== null
+  );
+}
+
+function findPageAtClientPoint(
+  container: HTMLElement,
+  clientX: number,
+  clientY: number,
+): HTMLElement | null {
+  const pages = container.querySelectorAll("[data-page-index]");
+
+  for (const pageNode of pages) {
+    const pageEl = pageNode as HTMLElement;
+    const rect = pageEl.getBoundingClientRect();
+
+    if (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    ) {
+      return pageEl;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -269,407 +204,6 @@ function nearestPageDocPt(
   return best;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const TICK = 10;
-const DOT_R = 5;
-const LH = 26; // label height (normal — 1 line)
-const LH2 = 44; // label height (hovered, no scale — 2 lines)
-const LH3 = 62; // label height (hovered, with scale — 3 lines)
-const LP = 10; // label horizontal padding
-const DEL_R = 8;
-
-interface MeasurementLineProps {
-  id: string;
-  startS: Point;
-  endS: Point;
-  /** Physical distance in PDF points (= screen pixel distance / zoom). */
-  distPts: number;
-  isSelected: boolean;
-  onSelect: (id: string | null) => void;
-  onDelete: (id: string) => void;
-  measureScale?: MeasureScale | null;
-  zoom: number;
-}
-
-function MeasurementLine({
-  id,
-  startS,
-  endS,
-  distPts,
-  isSelected,
-  onSelect,
-  onDelete,
-  measureScale,
-  zoom,
-}: MeasurementLineProps) {
-  const { t } = useTranslation();
-  const mid = midpoint(startS, endS);
-  const { nx, ny } = perpUnit(startS, endS);
-  const ang = angleDeg(startS, endS);
-  const angLabel = `∠ ${ang.toFixed(1)}°`;
-
-  // Whether the PDF's unit is imperial — determines display order (imperial-first vs metric-first)
-  const imperialFirst = !!measureScale && isImperialUnit(measureScale.unit);
-
-  // Idle: scaled primary if scale present, else physical metric
-  const distLabel = measureScale
-    ? formatScaled(distPts, measureScale)
-    : formatDist(distPts);
-
-  // Hover line 1 — measurement converted to real-world scale (factor * PDF points) + cross-unit:
-  //   imperial scale (ft/in/yd/mi): "Scaled: 10.000 ft / 3.048 m" (shows imperial + metric conversion)
-  //   metric scale (m/cm/mm/km):    "Scaled: 142.5 m / 467.5 ft"   (shows metric + imperial conversion)
-  //   no scale:                      "25.4 mm / 1.00 in"          (shows both units, no scale label)
-  const scaledLabel = t("ruler.scaled", "Scaled");
-  const hoverLine1 = measureScale
-    ? (() => {
-        const primary = formatScaled(distPts, measureScale);
-        const cross = scaledCross(distPts, measureScale);
-        return cross
-          ? `${scaledLabel}: ${primary} / ${cross}`
-          : `${scaledLabel}: ${primary}`;
-      })()
-    : `${formatDist(distPts)} / ${formatInches(distPts)}`;
-
-  // Hover line 2 — both physical paper values, same order as line 1:
-  //   imperial PDF: "Physical: 1.00 in / 25.4 mm"
-  //   metric PDF or no scale: "Physical: 25.4 mm / 1.00 in"
-  const physicalLabel = t("ruler.physicalValues", "Physical");
-  const hoverLine2 = measureScale
-    ? imperialFirst
-      ? `${physicalLabel}: ${formatInches(distPts)} / ${formatDist(distPts)}`
-      : `${physicalLabel}: ${formatDist(distPts)} / ${formatInches(distPts)}`
-    : null;
-
-  // Hover line 3 (scaled) / line 2 (no scale) — scale label + angle
-  const scaleLabel = measureScale
-    ? generateScaleLabel(measureScale.ratio, measureScale.unit)
-    : null;
-  const contextLabel = scaleLabel ? `${scaleLabel}   ${angLabel}` : angLabel;
-
-  // Scale dimensions based on zoom level
-  const zoomScale = Math.max(0.6, Math.min(1.0, zoom / 1.5));
-  const scaledLH = Math.round(LH * zoomScale);
-  const scaledLH2 = Math.round(LH2 * zoomScale);
-  const scaledLH3 = Math.round(LH3 * zoomScale);
-
-  const maxHoverLh = measureScale ? scaledLH3 : scaledLH2;
-  const lh = isSelected ? maxHoverLh : scaledLH;
-
-  const lwNormal = Math.max(distLabel.length * 8 + LP * 2, 80);
-  const lwHover = Math.max(
-    hoverLine1.length * 8 + LP * 2,
-    (hoverLine2?.length ?? 0) * 8 + LP * 2,
-    contextLabel.length * 8 + LP * 2,
-    80,
-  );
-  const lw = isSelected ? lwHover : lwNormal;
-  const sw = isSelected ? 3 : 2;
-
-  const delX = mid.x + lwHover / 2 + DEL_R + 4;
-  const delY = mid.y;
-
-  // Hit area: small when idle, expanded when selected to include delete button
-  const idleHitLeft = mid.x - lw / 2 - 2;
-  const idleHitTop = mid.y - lh / 2 - 2;
-  const idleHitWidth = lw + 4;
-  const idleHitHeight = lh + 4;
-
-  const selectedHitLeft = mid.x - lwHover / 2 - 4;
-  const selectedHitTop = mid.y - maxHoverLh / 2 - 4;
-  const selectedHitWidth = delX + DEL_R + 4 - selectedHitLeft;
-  const selectedHitHeight = maxHoverLh + 8;
-
-  const hitLeft = isSelected ? selectedHitLeft : idleHitLeft;
-  const hitTop = isSelected ? selectedHitTop : idleHitTop;
-  const hitWidth = isSelected ? selectedHitWidth : idleHitWidth;
-  const hitHeight = isSelected ? selectedHitHeight : idleHitHeight;
-
-  const mono = "'Roboto Mono','Consolas',monospace";
-
-  return (
-    <g
-      data-ruler-interactive="true"
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(isSelected ? null : id);
-      }}
-      style={{ pointerEvents: "all", cursor: "pointer" }}
-    >
-      <rect
-        x={hitLeft}
-        y={hitTop}
-        width={hitWidth}
-        height={hitHeight}
-        fill="transparent"
-        stroke="none"
-        style={{ pointerEvents: "all" }}
-      />
-
-      <line
-        x1={startS.x}
-        y1={startS.y}
-        x2={endS.x}
-        y2={endS.y}
-        stroke="#1e88e5"
-        strokeWidth={sw}
-        strokeLinecap="round"
-      />
-      <line
-        x1={startS.x + (nx * TICK) / 2}
-        y1={startS.y + (ny * TICK) / 2}
-        x2={startS.x - (nx * TICK) / 2}
-        y2={startS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
-        strokeWidth={sw}
-        strokeLinecap="round"
-      />
-      <line
-        x1={endS.x + (nx * TICK) / 2}
-        y1={endS.y + (ny * TICK) / 2}
-        x2={endS.x - (nx * TICK) / 2}
-        y2={endS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
-        strokeWidth={sw}
-        strokeLinecap="round"
-      />
-      <circle
-        cx={startS.x}
-        cy={startS.y}
-        r={DOT_R}
-        fill="#1e88e5"
-        stroke="white"
-        strokeWidth={2}
-      />
-      <circle
-        cx={endS.x}
-        cy={endS.y}
-        r={DOT_R}
-        fill="#1e88e5"
-        stroke="white"
-        strokeWidth={2}
-      />
-
-      <g style={{ pointerEvents: "all", cursor: "default" }}>
-        <rect
-          x={mid.x - lw / 2}
-          y={mid.y - lh / 2}
-          width={lw}
-          height={lh}
-          rx={5}
-          fill="white"
-          stroke="#1e88e5"
-          strokeWidth={1.5}
-          filter="url(#ruler-shadow)"
-        />
-
-        {isSelected && measureScale ? (
-          // 3-line scaled (selected)
-          <>
-            <text
-              x={mid.x}
-              y={mid.y - Math.round(17 * zoomScale)}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#1e88e5"
-              fontSize={12}
-              fontFamily={mono}
-              fontWeight={600}
-              style={{ userSelect: "none" }}
-            >
-              {hoverLine1}
-            </text>
-            <text
-              x={mid.x}
-              y={mid.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#546e7a"
-              fontSize={11}
-              fontFamily={mono}
-              fontWeight={500}
-              style={{ userSelect: "none" }}
-            >
-              {hoverLine2}
-            </text>
-            <text
-              x={mid.x}
-              y={mid.y + Math.round(17 * zoomScale)}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#5c6bc0"
-              fontSize={10}
-              fontFamily={mono}
-              fontWeight={500}
-              style={{ userSelect: "none" }}
-            >
-              {contextLabel}
-            </text>
-          </>
-        ) : isSelected ? (
-          // 2-line no-scale (selected)
-          <>
-            <text
-              x={mid.x}
-              y={mid.y - Math.round(6 * zoomScale)}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#1e88e5"
-              fontSize={12}
-              fontFamily={mono}
-              fontWeight={600}
-              style={{ userSelect: "none" }}
-            >
-              {hoverLine1}
-            </text>
-            <text
-              x={mid.x}
-              y={mid.y + Math.round(13 * zoomScale)}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#5c6bc0"
-              fontSize={11}
-              fontFamily={mono}
-              fontWeight={500}
-              style={{ userSelect: "none" }}
-            >
-              {contextLabel}
-            </text>
-          </>
-        ) : (
-          // Idle — single line
-          <text
-            x={mid.x}
-            y={mid.y + 1}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="#1e88e5"
-            fontSize={12}
-            fontFamily={mono}
-            fontWeight={600}
-            style={{ userSelect: "none" }}
-          >
-            {distLabel}
-          </text>
-        )}
-
-        <g
-          style={{ cursor: "pointer" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(id);
-          }}
-        >
-          <circle
-            cx={delX}
-            cy={delY}
-            r={DEL_R}
-            fill="#ef5350"
-            stroke="white"
-            strokeWidth={1.5}
-          />
-          <text
-            x={delX}
-            y={delY}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="white"
-            fontSize={12}
-            fontWeight={700}
-            style={{ userSelect: "none" }}
-          >
-            ×
-          </text>
-        </g>
-      </g>
-    </g>
-  );
-}
-
-interface LiveLineProps {
-  startS: Point;
-  endS: Point;
-  zoom: number;
-  measureScale?: MeasureScale | null;
-}
-
-function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
-  const d = dist(startS, endS) / zoom; // PDF points from screen distance
-  const mid = midpoint(startS, endS);
-  const { nx, ny } = perpUnit(startS, endS);
-  const ang = angleDeg(startS, endS);
-  const distLabel = measureScale
-    ? formatScaled(d, measureScale)
-    : formatDist(d);
-  const lw = Math.max(distLabel.length * 8 + LP * 2, 80);
-
-  return (
-    <g>
-      <line
-        x1={startS.x}
-        y1={startS.y}
-        x2={endS.x}
-        y2={endS.y}
-        stroke="#1e88e5"
-        strokeWidth={2}
-        strokeDasharray="7 4"
-        strokeLinecap="round"
-        opacity={0.85}
-      />
-      <line
-        x1={startS.x + (nx * TICK) / 2}
-        y1={startS.y + (ny * TICK) / 2}
-        x2={startS.x - (nx * TICK) / 2}
-        y2={startS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-      {d > 4 && (
-        <g>
-          <rect
-            x={mid.x - lw / 2}
-            y={mid.y - LH2 / 2}
-            width={lw}
-            height={LH2}
-            rx={5}
-            fill="#1e88e5"
-            stroke="white"
-            strokeWidth={1}
-          />
-          <text
-            x={mid.x}
-            y={mid.y - 6}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="white"
-            fontSize={12}
-            fontFamily="'Roboto Mono','Consolas',monospace"
-            fontWeight={600}
-            style={{ userSelect: "none" }}
-          >
-            {distLabel}
-          </text>
-          <text
-            x={mid.x}
-            y={mid.y + 13}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="rgba(255,255,255,0.85)"
-            fontSize={11}
-            fontFamily="'Roboto Mono','Consolas',monospace"
-            fontWeight={500}
-            style={{ userSelect: "none" }}
-          >
-            {`∠ ${ang.toFixed(1)}°`}
-          </text>
-        </g>
-      )}
-    </g>
-  );
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export const RulerOverlay = React.forwardRef<
@@ -693,6 +227,10 @@ export const RulerOverlay = React.forwardRef<
   /** Current cursor in page-relative PDF units — for finalising off-page clicks. */
   const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [labelVisibilityMode, setLabelVisibilityMode] =
+    useState<RulerLabelVisibilityMode>("hideSmall");
+  const [isDrawThroughActive, setIsDrawThroughActive] = useState(false);
 
   // Callbacks for explicit measurement changes; restores stay silent.
   const measurementsListenersRef = useRef<
@@ -715,6 +253,17 @@ export const RulerOverlay = React.forwardRef<
   }, [firstPt]);
 
   const cursorDocRef = useRef<PagePoint | null>(null);
+  const wasCalibrationActiveRef = useRef(isCalibrationActive);
+  const drawThroughActiveRef = useRef(false);
+
+  const setDrawThroughMode = useCallback((isEnabled: boolean) => {
+    drawThroughActiveRef.current = isEnabled;
+    setIsDrawThroughActive(isEnabled);
+
+    if (isEnabled) {
+      setHoveredId(null);
+    }
+  }, []);
 
   const notifyMeasurementsChange = useCallback(
     (nextMeasurements: Measurement[]) => {
@@ -848,6 +397,7 @@ export const RulerOverlay = React.forwardRef<
       setCursorS(null);
       setCursorDoc(null);
       setSelectedId(null);
+      setHoveredId(null);
     },
     getMeasurements: () => measurementsRef.current,
     setMeasurements: (newMeasurements: Measurement[]) => {
@@ -879,8 +429,58 @@ export const RulerOverlay = React.forwardRef<
       setCursorS(null);
       setCursorDoc(null);
       setSelectedId(null);
+      setHoveredId(null);
+      setDrawThroughMode(false);
     }
-  }, [isActive]);
+  }, [isActive, setDrawThroughMode]);
+
+  useEffect(() => {
+    const wasCalibrationActive = wasCalibrationActiveRef.current;
+    wasCalibrationActiveRef.current = isCalibrationActive;
+
+    if (wasCalibrationActive && !isCalibrationActive) {
+      firstPtRef.current = null;
+      cursorDocRef.current = null;
+      setFirstPt(null);
+      setCursorS(null);
+      setCursorDoc(null);
+    }
+  }, [isCalibrationActive]);
+
+  useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Alt" || isEditableKeyboardTarget(e.target)) {
+        return;
+      }
+
+      e.preventDefault();
+      setDrawThroughMode(true);
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Alt") {
+        setDrawThroughMode(false);
+      }
+    };
+
+    const onBlur = () => {
+      setDrawThroughMode(false);
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+      setDrawThroughMode(false);
+    };
+  }, [isActive, setDrawThroughMode]);
 
   // ── Mouse events ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -894,12 +494,10 @@ export const RulerOverlay = React.forwardRef<
 
     /**
      * Convert a mouse event to a page-relative PagePoint.
-     * Returns null if the cursor is not directly over a page element.
+     * Returns null if the cursor is not over a page.
      */
     const toDocPagePt = (e: MouseEvent): PagePoint | null => {
-      const pageEl = (e.target as Element).closest?.(
-        "[data-page-index]",
-      ) as HTMLElement | null;
+      const pageEl = findPageAtClientPoint(el, e.clientX, e.clientY);
       if (!pageEl) return null;
       const pageIndex = parseInt(pageEl.dataset.pageIndex ?? "0", 10);
       const r = pageEl.getBoundingClientRect();
@@ -919,10 +517,10 @@ export const RulerOverlay = React.forwardRef<
 
     const onMove = (e: MouseEvent) => {
       const screenPt = toScreenPt(e);
+      const docPt = toDocPagePt(e);
 
-      if (isOverPage(e)) {
+      if (docPt) {
         el.style.cursor = "crosshair";
-        const docPt = toDocPagePt(e);
         setCursorS(screenPt);
         setCursorDoc(docPt);
         cursorDocRef.current = docPt;
@@ -943,28 +541,41 @@ export const RulerOverlay = React.forwardRef<
 
     const onClick = (e: MouseEvent) => {
       if (e.button !== 0) return;
-      if ((e.target as Element).closest?.("[data-ruler-interactive]")) return;
+      const target = e.target as Element;
+      if (target.closest?.("[data-ruler-control]")) return;
 
-      const overPage = isOverPage(e);
+      const hasMeasurementInProgress =
+        firstPtRef.current !== null || drawThroughActiveRef.current || e.altKey;
+      if (
+        !hasMeasurementInProgress &&
+        target.closest?.("[data-ruler-interactive]")
+      ) {
+        return;
+      }
+
+      const dp = toDocPagePt(e);
+      const overPage = dp !== null;
       if (!overPage && firstPtRef.current === null) return;
       e.preventDefault();
 
-      const dp = overPage ? toDocPagePt(e) : cursorDocRef.current;
-      if (!dp) return;
+      const nextPoint = dp ?? cursorDocRef.current;
+      if (!nextPoint) return;
 
       const prev = firstPtRef.current;
       if (!prev) {
-        firstPtRef.current = dp;
-        setFirstPt(dp);
+        firstPtRef.current = nextPoint;
+        setFirstPt(nextPoint);
+        setSelectedId(null);
+        setHoveredId(null);
         return;
       }
 
       // CRITICAL: Reject cross-page measurements
       // Measurements must have both points on the same page
-      if (prev.pageIndex !== dp.pageIndex) {
+      if (prev.pageIndex !== nextPoint.pageIndex) {
         console.warn(
           "[Ruler] Cross-page measurements not allowed. Resetting measurement.",
-          `Start: page ${prev.pageIndex}, End: page ${dp.pageIndex}`,
+          `Start: page ${prev.pageIndex}, End: page ${nextPoint.pageIndex}`,
         );
         // Reset first point so user can start fresh on same page
         firstPtRef.current = null;
@@ -978,11 +589,11 @@ export const RulerOverlay = React.forwardRef<
       setFirstPt(null);
 
       if (isCalibrationActive) {
-        const distancePts = dist(prev, dp);
+        const distancePts = dist(prev, nextPoint);
         if (distancePts > 0) {
           onCalibrationMeasure?.({
             start: prev,
-            end: dp,
+            end: nextPoint,
             pdfDistancePts: distancePts,
           });
         }
@@ -990,7 +601,10 @@ export const RulerOverlay = React.forwardRef<
       }
 
       const id = createRulerMeasurementId();
-      updateMeasurements((m) => [...m, { id, start: prev, end: dp }], true);
+      updateMeasurements(
+        (m) => [...m, { id, start: prev, end: nextPoint }],
+        true,
+      );
     };
 
     const onLeave = () => {
@@ -1031,8 +645,11 @@ export const RulerOverlay = React.forwardRef<
       if (selectedId === id) {
         setSelectedId(null);
       }
+      if (hoveredId === id) {
+        setHoveredId(null);
+      }
     },
-    [selectedId, updateMeasurements],
+    [hoveredId, selectedId, updateMeasurements],
   );
 
   if (!isActive && measurements.length === 0) return null;
@@ -1064,6 +681,45 @@ export const RulerOverlay = React.forwardRef<
   };
 
   const firstPtS = firstPt ? pagePointToScreen(firstPt) : null;
+  const renderedMeasurements = measurements.reduce<RulerRenderedMeasurement[]>(
+    (items, measurement) => {
+      const startS = pagePointToScreen(measurement.start);
+      const endS = pagePointToScreen(measurement.end);
+      if (!startS || !endS) {
+        return items;
+      }
+
+      const measureScale = pickScale(
+        measurement.start,
+        measurement.end,
+        pageMeasureScales,
+        customScale,
+      );
+
+      items.push({
+        measurement,
+        startS,
+        endS,
+        distPts: dist(startS, endS) / zoom,
+        measureScale,
+      });
+      return items;
+    },
+    [],
+  );
+  const isMeasurementInteractionPassthroughActive =
+    firstPt !== null || isDrawThroughActive;
+  const liveLine =
+    isActive && firstPtS && cursorS
+      ? {
+          startS: firstPtS,
+          endS: cursorS,
+          measureScale:
+            !isCalibrationActive && firstPt && cursorDoc
+              ? pickScale(firstPt, cursorDoc, pageMeasureScales, customScale)
+              : null,
+        }
+      : null;
 
   return (
     <svg
@@ -1095,116 +751,28 @@ export const RulerOverlay = React.forwardRef<
         </filter>
       </defs>
 
-      {/* Completed measurements */}
-      {measurements.map((m) => {
-        const startS = pagePointToScreen(m.start);
-        const endS = pagePointToScreen(m.end);
-        if (!startS || !endS) return null;
-        const mScale = pickScale(
-          m.start,
-          m.end,
-          pageMeasureScales,
-          customScale,
-        );
-        return (
-          <MeasurementLine
-            key={m.id}
-            id={m.id}
-            startS={startS}
-            endS={endS}
-            distPts={dist(startS, endS) / zoom}
-            isSelected={selectedId === m.id}
-            onSelect={setSelectedId}
-            onDelete={deleteMeasurement}
-            measureScale={mScale}
-            zoom={zoom}
-          />
-        );
-      })}
-
-      {/* Live line while drawing */}
-      {isActive && firstPtS && cursorS && (
-        <LiveLine
-          startS={firstPtS}
-          endS={cursorS}
-          zoom={zoom}
-          measureScale={
-            !isCalibrationActive && firstPt && cursorDoc
-              ? pickScale(firstPt, cursorDoc, pageMeasureScales, customScale)
-              : null
-          }
-        />
-      )}
-
-      {/* First-point anchor dot */}
-      {isActive && firstPtS && (
-        <circle
-          cx={firstPtS.x}
-          cy={firstPtS.y}
-          r={DOT_R}
-          fill="#1e88e5"
-          stroke="white"
-          strokeWidth={2}
-        />
-      )}
-
-      {/* Crosshair */}
-      {isActive && cursorS && (
-        <g opacity={0.75}>
-          <line
-            x1={cursorS.x - 12}
-            y1={cursorS.y}
-            x2={cursorS.x + 12}
-            y2={cursorS.y}
-            stroke="#1e88e5"
-            strokeWidth={1.5}
-          />
-          <line
-            x1={cursorS.x}
-            y1={cursorS.y - 12}
-            x2={cursorS.x}
-            y2={cursorS.y + 12}
-            stroke="#1e88e5"
-            strokeWidth={1.5}
-          />
-          <circle cx={cursorS.x} cy={cursorS.y} r={2} fill="#1e88e5" />
-        </g>
-      )}
-
-      {/* Clear all */}
-      {measurements.length > 0 && (
-        <g
-          data-ruler-interactive="true"
-          style={{ pointerEvents: "all", cursor: "pointer" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            replaceMeasurements([], true);
-          }}
-        >
-          <rect
-            x={8}
-            y={8}
-            width={88}
-            height={26}
-            rx={5}
-            fill="rgba(239,83,80,0.9)"
-            stroke="white"
-            strokeWidth={1}
-          />
-          <text
-            x={52}
-            y={25}
-            textAnchor="middle"
-            fill="white"
-            fontSize={12}
-            fontFamily="sans-serif"
-            fontWeight={600}
-            style={{ userSelect: "none" }}
-          >
-            Clear all
-          </text>
-        </g>
-      )}
+      <RulerMeasurementLayer
+        measurements={renderedMeasurements}
+        zoom={zoom}
+        selectedId={selectedId}
+        hoveredId={hoveredId}
+        labelVisibilityMode={labelVisibilityMode}
+        isInteractionPassthroughActive={
+          isMeasurementInteractionPassthroughActive
+        }
+        liveLine={liveLine}
+        firstPoint={isActive ? firstPtS : null}
+        cursor={isActive ? cursorS : null}
+        onSelect={setSelectedId}
+        onDelete={deleteMeasurement}
+        onHoverChange={setHoveredId}
+        onClearAll={() => {
+          replaceMeasurements([], true);
+          setSelectedId(null);
+          setHoveredId(null);
+        }}
+        onLabelVisibilityModeChange={setLabelVisibilityMode}
+      />
     </svg>
   );
 });
