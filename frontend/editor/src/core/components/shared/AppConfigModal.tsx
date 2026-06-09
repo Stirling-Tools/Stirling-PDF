@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
@@ -33,6 +34,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   opened,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [active, setActive] = useState<NavKey>("general");
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -240,7 +242,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                             handleNavigation(item.key);
                           }
                         }}
-                        className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
+                        className={`modal-nav-item ${isActive ? "active" : ""} ${isMobile ? "mobile" : ""}`}
                         style={{
                           background: isActive
                             ? colors.navItemActiveBg
@@ -257,8 +259,19 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                           style={{ color }}
                         />
                         {!isMobile && (
-                          <Group gap={4} align="center" wrap="nowrap">
-                            <Text size="sm" fw={500} style={{ color }}>
+                          <Group
+                            gap={4}
+                            align="center"
+                            wrap="nowrap"
+                            style={{ minWidth: 0, flex: 1 }}
+                          >
+                            <Text
+                              size="sm"
+                              fw={500}
+                              truncate
+                              style={{ color, minWidth: 0, flex: 1 }}
+                              title={item.label}
+                            >
                               {item.label}
                             </Text>
                             {item.badge && (
@@ -266,6 +279,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                                 size="xs"
                                 variant="light"
                                 color={item.badgeColor ?? "orange"}
+                                className="modal-nav-item-badge"
                                 style={{ flexShrink: 0 }}
                               >
                                 {item.badge}
@@ -332,7 +346,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                   ref={closeButtonRef}
                   variant="subtle"
                   onClick={handleClose}
-                  aria-label="Close"
+                  aria-label={t("settings.close", "Close")}
                   data-autofocus
                 >
                   <LocalIcon icon="close-rounded" width={18} height={18} />

@@ -14,14 +14,9 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -32,14 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
-import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
-import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
 import stirling.software.proprietary.model.api.ai.AiDocumentIngestRequest;
 import stirling.software.proprietary.model.api.ai.AiEngineProgressDetail;
@@ -53,6 +45,13 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
+import stirling.software.proprietary.policy.engine.PolicyExecutionResult;
+import stirling.software.proprietary.policy.engine.PolicyExecutor;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
@@ -72,12 +71,11 @@ public class AiWorkflowService {
     private final AiEngineClient aiEngineClient;
     private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
-    private final InternalApiClient internalApiClient;
     private final FileStorage fileStorage;
-    private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
+    private final PolicyExecutor policyExecutor;
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
 
@@ -86,24 +84,22 @@ public class AiWorkflowService {
             AiEngineClient aiEngineClient,
             PdfContentExtractor pdfContentExtractor,
             ObjectMapper objectMapper,
-            InternalApiClient internalApiClient,
             FileStorage fileStorage,
-            ToolMetadataService toolMetadataService,
             TempFileManager tempFileManager,
             FileIdStrategy fileIdStrategy,
             AiEngineEndpointResolver endpointResolver,
+            PolicyExecutor policyExecutor,
             @Autowired(required = false) UserServiceInterface userService,
             ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.aiEngineClient = aiEngineClient;
         this.pdfContentExtractor = pdfContentExtractor;
         this.objectMapper = objectMapper;
-        this.internalApiClient = internalApiClient;
         this.fileStorage = fileStorage;
-        this.toolMetadataService = toolMetadataService;
         this.tempFileManager = tempFileManager;
         this.fileIdStrategy = fileIdStrategy;
         this.endpointResolver = endpointResolver;
+        this.policyExecutor = policyExecutor;
         this.userService = userService;
         this.applicationProperties = applicationProperties;
     }
@@ -149,16 +145,6 @@ public class AiWorkflowService {
 
         record Terminal(AiWorkflowResponse response) implements WorkflowState {}
     }
-
-    /**
-     * Internal value-class for tool responses. {@code files} holds any result files (typically one;
-     * multiple for ZIP-response tools). {@code report} holds an optional structured metadata
-     * payload the tool chose to surface alongside (or instead of) a file.
-     *
-     * <p>Tools populate the report either by returning a JSON body (whole body → report) or by
-     * adding the {@link AiToolResponseHeaders#TOOL_REPORT} header alongside a file body.
-     */
-    private record ToolResult(List<Resource> files, JsonNode report) {}
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         return orchestrate(request, NOOP_LISTENER);
@@ -377,7 +363,6 @@ public class AiWorkflowService {
                 pages.size());
     }
 
-    @SuppressWarnings("unchecked")
     private WorkflowState onToolCall(
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesById,
@@ -394,8 +379,14 @@ public class AiWorkflowService {
 
         try {
             List<Resource> inputFiles = toResources(filesById);
-            listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
-            ToolResult result = executeStep(endpointPath, parameters, inputFiles);
+            PipelineDefinition definition =
+                    new PipelineDefinition(
+                            null,
+                            List.of(new PipelineStep(endpointPath, parameters)),
+                            OutputSpec.inline());
+            PolicyExecutionResult result =
+                    policyExecutor.execute(
+                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
                             response.getRationale(),
@@ -469,38 +460,32 @@ public class AiWorkflowService {
                     cannotContinue("AI engine returned a plan with no steps."));
         }
 
-        try {
-            List<Resource> currentFiles = toResources(filesById);
-            // Propagate the *last* non-null report — the terminal step defines the output.
-            JsonNode lastReport = null;
-            String lastReportTool = null;
-
-            for (int i = 0; i < steps.size(); i++) {
-                Map<String, Object> step = steps.get(i);
-                String endpointPath = (String) step.get("tool");
-                Map<String, Object> parameters =
-                        step.containsKey("parameters")
-                                ? (Map<String, Object>) step.get("parameters")
-                                : Map.of();
-
-                if (endpointPath == null || endpointPath.isBlank()) {
-                    return new WorkflowState.Terminal(
-                            cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
-                }
-
-                listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(endpointPath, i + 1, steps.size()));
-                ToolResult stepResult = executeStep(endpointPath, parameters, currentFiles);
-                currentFiles = stepResult.files();
-                if (stepResult.report() != null) {
-                    lastReport = stepResult.report();
-                    lastReportTool = endpointPath;
-                }
+        List<PipelineStep> pipelineSteps = new ArrayList<>();
+        for (int i = 0; i < steps.size(); i++) {
+            Map<String, Object> step = steps.get(i);
+            String endpointPath = (String) step.get("tool");
+            if (endpointPath == null || endpointPath.isBlank()) {
+                return new WorkflowState.Terminal(
+                        cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
             }
+            Map<String, Object> parameters =
+                    step.containsKey("parameters")
+                            ? (Map<String, Object>) step.get("parameters")
+                            : Map.of();
+            pipelineSteps.add(new PipelineStep(endpointPath, parameters));
+        }
+
+        try {
+            List<Resource> inputFiles = toResources(filesById);
+            PipelineDefinition definition =
+                    new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
+            PolicyExecutionResult result =
+                    policyExecutor.execute(
+                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
 
             // Multi-turn: if the plan was emitted with resume_with set, the delegate wants
             // Java to re-invoke the orchestrator with any captured report as an artifact.
-            if (resumeWith != null && !resumeWith.isBlank() && lastReport != null) {
+            if (resumeWith != null && !resumeWith.isBlank() && result.report() != null) {
                 WorkflowTurnRequest resumeRequest = new WorkflowTurnRequest();
                 resumeRequest.setUserMessage(previousRequest.getUserMessage());
                 resumeRequest.setFiles(previousRequest.getFiles());
@@ -510,14 +495,14 @@ public class AiWorkflowService {
                         .getArtifacts()
                         .add(
                                 new PdfContentExtractor.ToolReportArtifact(
-                                        lastReportTool, lastReport));
+                                        result.reportTool(), result.report()));
                 resumeRequest.setResumeWith(resumeWith);
                 return new WorkflowState.Pending(resumeRequest);
             }
 
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            summary, currentFiles, inputFileNames(filesById), lastReport));
+                            summary, result.files(), inputFileNames(filesById), result.report()));
         } catch (InternalApiTimeoutException e) {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
@@ -548,123 +533,19 @@ public class AiWorkflowService {
     }
 
     /**
-     * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
-     * call. Otherwise, the endpoint is called once per file. ZIP responses are unpacked so each
-     * inner file is treated as its own result (e.g. split outputs a ZIP of pages).
-     *
-     * <p>A structured {@code report} may be returned alongside (or instead of) files — see {@link
-     * ToolResult}. For per-file dispatch (single-input endpoints called once per input), the first
-     * non-null report wins.
+     * Adapt the AI workflow's {@link ProgressListener} to the engine's {@link
+     * PolicyProgressListener}: each step start maps to an {@code EXECUTING_TOOL} progress event
+     * carrying the tool path and 1-based step position, preserving the event shape the frontend
+     * already renders.
      */
-    private ToolResult executeStep(
-            String endpointPath, Map<String, Object> parameters, List<Resource> inputFiles)
-            throws IOException {
-        List<Resource> files = new ArrayList<>();
-        JsonNode report = null;
-        if (toolMetadataService.isMultiInput(endpointPath)) {
-            ToolResult r = callEndpoint(endpointPath, parameters, inputFiles);
-            files.addAll(r.files());
-            report = r.report();
-        } else {
-            for (Resource file : inputFiles) {
-                ToolResult r = callEndpoint(endpointPath, parameters, List.of(file));
-                files.addAll(r.files());
-                if (report == null) {
-                    report = r.report();
-                }
+    private static PolicyProgressListener stepProgress(ProgressListener listener) {
+        return new PolicyProgressListener() {
+            @Override
+            public void onStepStart(int stepIndex, int stepCount, String operation) {
+                listener.onProgress(
+                        AiWorkflowProgressEvent.executingTool(operation, stepIndex, stepCount));
             }
-        }
-        return new ToolResult(files, report);
-    }
-
-    /**
-     * Call an endpoint and return its result files and optional report.
-     *
-     * <ul>
-     *   <li>JSON body (Content-Type: application/json) → the entire body is the report, no files
-     *       are returned.
-     *   <li>File body (PDF etc.) → the file is returned; if an {@link
-     *       AiToolResponseHeaders#TOOL_REPORT} header is present, its (minified JSON) value is
-     *       parsed as the report.
-     *   <li>ZIP responses declared by the tool metadata service are unpacked so callers always see
-     *       a flat list of result files.
-     * </ul>
-     */
-    private ToolResult callEndpoint(
-            String endpointPath, Map<String, Object> parameters, List<Resource> files)
-            throws IOException {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        for (Resource file : files) {
-            body.add("fileInput", file);
-        }
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            if (entry.getValue() instanceof List<?> list) {
-                if (containsStructuredElements(list)) {
-                    // Endpoints binding lists of structured objects (e.g. /security/redact's
-                    // redactions, /general/edit-text's edits) parse a single JSON string field via
-                    // a property editor. Pre-serialize the whole list so binding succeeds.
-                    body.add(entry.getKey(), objectMapper.writeValueAsString(list));
-                } else {
-                    for (Object item : list) {
-                        body.add(entry.getKey(), item);
-                    }
-                }
-            } else {
-                body.add(entry.getKey(), entry.getValue());
-            }
-        }
-        ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
-        if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
-            throw new IOException(
-                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
-        }
-        Resource resource = response.getBody();
-        HttpHeaders headers = response.getHeaders();
-        MediaType contentType = headers.getContentType();
-
-        // JSON-only response — the whole body is the structured report, no result file.
-        if (contentType != null && MediaType.APPLICATION_JSON.isCompatibleWith(contentType)) {
-            try (java.io.InputStream is = resource.getInputStream()) {
-                JsonNode report = objectMapper.readTree(is);
-                return new ToolResult(List.of(), report);
-            }
-        }
-
-        JsonNode report = parseReportHeader(headers, endpointPath);
-        if (toolMetadataService.shouldUnpackZipResponse(endpointPath)) {
-            return new ToolResult(ZipExtractionUtils.extractZip(resource, tempFileManager), report);
-        }
-        return new ToolResult(List.of(resource), report);
-    }
-
-    /**
-     * Parse the optional {@link AiToolResponseHeaders#TOOL_REPORT} header into a {@link JsonNode},
-     * or return null.
-     */
-    private JsonNode parseReportHeader(HttpHeaders headers, String endpointPath) {
-        String raw = headers.getFirst(AiToolResponseHeaders.TOOL_REPORT);
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        try {
-            return objectMapper.readTree(raw);
-        } catch (JacksonException e) {
-            log.warn(
-                    "Ignoring malformed {} header from {}: {}",
-                    AiToolResponseHeaders.TOOL_REPORT,
-                    endpointPath,
-                    e.getMessage());
-            return null;
-        }
-    }
-
-    private static boolean containsStructuredElements(List<?> list) {
-        for (Object item : list) {
-            if (item instanceof Map<?, ?> || item instanceof List<?>) {
-                return true;
-            }
-        }
-        return false;
+        };
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesById) throws IOException {

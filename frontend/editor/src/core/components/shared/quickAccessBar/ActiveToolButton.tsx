@@ -15,6 +15,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActionIcon, Divider } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   useNavigationState,
@@ -37,6 +38,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
   setActiveButton,
   tooltipPosition = "right",
 }) => {
+  const { t } = useTranslation();
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } =
     useToolWorkflow();
   const { hasUnsavedChanges } = useNavigationState();
@@ -158,7 +160,11 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
               <Tooltip
-                content={isBackHover ? "Back to all tools" : indicatorTool.name}
+                content={
+                  isBackHover
+                    ? t("quickAccess.backToAllTools", "Back to all tools")
+                    : indicatorTool.name
+                }
                 position={tooltipPosition}
                 arrow
                 maxWidth={140}
@@ -183,7 +189,9 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
                   aria-label={
-                    isBackHover ? "Back to all tools" : indicatorTool.name
+                    isBackHover
+                      ? t("quickAccess.backToAllTools", "Back to all tools")
+                      : indicatorTool.name
                   }
                   style={{
                     backgroundColor: isBackHover
