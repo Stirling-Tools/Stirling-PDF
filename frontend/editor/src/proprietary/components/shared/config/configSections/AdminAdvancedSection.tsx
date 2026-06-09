@@ -809,7 +809,10 @@ export default function AdminAdvancedSection() {
                     },
                   })
                 }
-                placeholder="Default: java.io.tmpdir/stirling-pdf"
+                placeholder={t(
+                  "admin.settings.advanced.tempFileManagement.baseTmpDir.placeholder",
+                  "Default: java.io.tmpdir/stirling-pdf",
+                )}
                 disabled={!loginEnabled}
               />
             </div>
@@ -834,7 +837,10 @@ export default function AdminAdvancedSection() {
                     },
                   })
                 }
-                placeholder="Default: baseTmpDir/libreoffice"
+                placeholder={t(
+                  "admin.settings.advanced.tempFileManagement.libreofficeDir.placeholder",
+                  "Default: baseTmpDir/libreoffice",
+                )}
                 disabled={!loginEnabled}
               />
             </div>
@@ -859,7 +865,10 @@ export default function AdminAdvancedSection() {
                     },
                   })
                 }
-                placeholder="System temp directory path"
+                placeholder={t(
+                  "admin.settings.advanced.tempFileManagement.systemTempDir.placeholder",
+                  "System temp directory path",
+                )}
                 disabled={!loginEnabled}
               />
             </div>

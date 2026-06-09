@@ -27,6 +27,7 @@ import {
   Tooltip,
   ActionIcon,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import {
   useFormFill,
   useAllFormValues,
@@ -120,6 +121,7 @@ const _MODE_TABS: ModeTabDef[] = [
 // ---------------------------------------------------------------------------
 
 const FormFill = (_props: BaseToolProps) => {
+  const { t } = useTranslation();
   const { selectedTool } = useNavigation();
   const { selectors, state: fileState } = useFileState();
 
@@ -488,7 +490,10 @@ const FormFill = (_props: BaseToolProps) => {
 
                 {/* Flatten toggle */}
                 <Switch
-                  label="Flatten after filling"
+                  label={t(
+                    "formFill.flattenAfterFilling",
+                    "Flatten after filling",
+                  )}
                   checked={flatten}
                   onChange={(e) => setFlatten(e.currentTarget.checked)}
                   size="xs"
@@ -507,15 +512,22 @@ const FormFill = (_props: BaseToolProps) => {
                       loading={saving}
                       disabled={!formState.isDirty && !flattenChanged}
                     >
-                      Save
+                      {t("formFill.save", "Save")}
                     </Button>
 
-                    <Tooltip label="Re-scan fields" withArrow position="bottom">
+                    <Tooltip
+                      label={t("formFill.rescanFields", "Re-scan fields")}
+                      withArrow
+                      position="bottom"
+                    >
                       <ActionIcon
                         variant="light"
                         size="md"
                         onClick={handleRefresh}
-                        aria-label="Re-scan form fields"
+                        aria-label={t(
+                          "formFill.rescanFormFields",
+                          "Re-scan form fields",
+                        )}
                       >
                         <RefreshIcon sx={{ fontSize: 16 }} />
                       </ActionIcon>

@@ -134,7 +134,7 @@ const AddFileCard = ({
               )}
             </Button>
             <Button
-              aria-label="Upload"
+              aria-label={t("addFileCard.upload", "Upload")}
               style={{
                 backgroundColor: "var(--landing-button-bg)",
                 color: "var(--landing-button-color)",

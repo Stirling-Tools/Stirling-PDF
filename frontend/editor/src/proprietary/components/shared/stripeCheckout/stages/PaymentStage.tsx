@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Stack, Text, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { loadStripe } from "@stripe/stripe-js";
@@ -8,9 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { PlanTier } from "@app/services/licenseService";
 
-// Load Stripe once
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 interface PaymentStageProps {
   clientSecret: string | null;
@@ -24,6 +22,14 @@ export const PaymentStage: React.FC<PaymentStageProps> = ({
   onPaymentComplete,
 }) => {
   const { t } = useTranslation();
+  // Load Stripe.js lazily, only when PaymentStage mounts. Loading at module
+  // scope pulled the Stripe script into every page (CheckoutContext is in
+  // AppProviders), which triggered the dev "HTTPS required" warning on every
+  // non-payment route.
+  const stripePromise = useMemo(
+    () => (STRIPE_KEY ? loadStripe(STRIPE_KEY) : null),
+    [],
+  );
 
   // Show loading while creating checkout session
   if (!clientSecret || !selectedPlan) {
