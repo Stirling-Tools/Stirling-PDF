@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,8 @@ import stirling.software.saas.util.CreditHeaderUtils;
 @RestController
 @Profile("saas")
 @RequestMapping("/api/v1/ai")
+@Tag(name = "AI")
+@Hidden
 @Slf4j
 public class AiProxyController {
 

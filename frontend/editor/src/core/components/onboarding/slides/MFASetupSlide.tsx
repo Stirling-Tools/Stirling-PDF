@@ -16,6 +16,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import { accountService } from "@app/services/accountService";
@@ -31,6 +32,7 @@ interface MFASetupSlideProps {
 }
 
 function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
+  const { t } = useTranslation();
   const [mfaSetupData, setMfaSetupData] = useState<MfaSetupResponse | null>(
     null,
   );
@@ -179,7 +181,9 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
           {mfaLoading && !isReady && (
             <Group gap="sm">
               <Loader size="sm" />
-              <Text size="sm">Generating your QR code…</Text>
+              <Text size="sm">
+                {t("onboarding.mfa.qrCodeLoading", "Generating your QR code…")}
+              </Text>
             </Group>
           )}
 
@@ -189,7 +193,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
             <Stack gap="sm">
               <TextInput
                 id="mfa-setup-code"
-                label="Authentication code"
+                label={t(
+                  "onboarding.mfa.authenticationCode",
+                  "Authentication code",
+                )}
                 placeholder="123456"
                 value={mfaSetupCode}
                 onChange={(event) =>

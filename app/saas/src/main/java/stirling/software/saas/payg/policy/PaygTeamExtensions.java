@@ -58,6 +58,19 @@ public class PaygTeamExtensions implements Serializable {
     @Column(name = "stripe_customer_id", unique = true, length = 128)
     private String stripeCustomerId;
 
+    /**
+     * Stripe subscription id (sub_xxx) for this team's PAYG metered subscription. {@code null}
+     * means the team has not added a card yet — engine writes shadow rows only and free-tier gating
+     * applies. {@code non-null} means engine posts meter events to Stripe on every billable tool
+     * call.
+     *
+     * <p>This is the single switch that determines whether a team is billed. Mutated only by the
+     * {@code payg_link_subscription} / {@code payg_unlink_subscription} Postgres functions (V14) —
+     * never directly via JPA writes. Treat as read-only from Java.
+     */
+    @Column(name = "payg_subscription_id", unique = true, length = 128)
+    private String paygSubscriptionId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

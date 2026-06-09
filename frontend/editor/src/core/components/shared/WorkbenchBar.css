@@ -97,9 +97,16 @@
   order: 3;
   flex: 0 0 100%;
   height: auto;
-  overflow: visible;
   padding: 4px 0;
   border-top: 1px solid var(--border-subtle);
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
+  flex-shrink: 0;
 }
 
 /* ---- Right: global buttons (theme / language / download) ---- */
