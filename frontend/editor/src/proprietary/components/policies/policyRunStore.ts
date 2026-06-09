@@ -46,7 +46,14 @@ function read(): RunState {
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<RunState>;
       return {
-        runs: Array.isArray(parsed.runs) ? parsed.runs : [],
+        // Normalise older persisted records (which predate the `outputs` field)
+        // so consumers can always rely on `outputs` being an array.
+        runs: Array.isArray(parsed.runs)
+          ? parsed.runs.map((r) => ({
+              ...r,
+              outputs: Array.isArray(r.outputs) ? r.outputs : [],
+            }))
+          : [],
         dispatched: Array.isArray(parsed.dispatched) ? parsed.dispatched : [],
       };
     }

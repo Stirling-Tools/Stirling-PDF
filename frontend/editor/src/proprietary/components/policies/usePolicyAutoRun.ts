@@ -87,7 +87,7 @@ export function usePolicyAutoRun(): void {
       if (
         run.status !== "COMPLETED" ||
         run.imported ||
-        run.outputs.length === 0 ||
+        !run.outputs?.length ||
         importing.current.has(run.runId)
       ) {
         continue;
