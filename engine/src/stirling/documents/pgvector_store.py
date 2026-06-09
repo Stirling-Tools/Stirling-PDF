@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 
 import psycopg
+from pgvector import Vector
 from pgvector.psycopg import register_vector_async
 
 from stirling.contracts.documents import Page, PageRange
@@ -45,6 +46,13 @@ class PgVectorStore(DocumentStore):
     async def _ensure_schema(self) -> None:
         if self._initialized:
             return
+        # The `vector` type must exist before register_vector_async (called inside
+        # _connect) can resolve it. On a fresh database it doesn't yet, so create the
+        # extension first on a raw connection that hasn't registered the type.
+        async with await psycopg.AsyncConnection.connect(self._dsn) as bootstrap:
+            async with bootstrap.cursor() as cur:
+                await cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            await bootstrap.commit()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -206,7 +214,7 @@ class PgVectorStore(DocumentStore):
                             metadata = EXCLUDED.metadata,
                             embedding = EXCLUDED.embedding
                         """,
-                        (doc.id, collection, owner_id, doc.text, json.dumps(doc.metadata), emb),
+                        (doc.id, collection, owner_id, doc.text, json.dumps(doc.metadata), Vector(emb)),
                     )
                 await conn.commit()
 
@@ -283,6 +291,7 @@ class PgVectorStore(DocumentStore):
                 owner_id = await self._readable_owner_for(cur, collection, principals)
                 if owner_id is None:
                     return []
+                query_vec = Vector(query_embedding)
                 await cur.execute(
                     """
                     SELECT id, text, metadata, 1 - (embedding <=> %s) AS score
@@ -291,7 +300,7 @@ class PgVectorStore(DocumentStore):
                     ORDER BY embedding <=> %s
                     LIMIT %s
                     """,
-                    (query_embedding, collection, owner_id, query_embedding, top_k),
+                    (query_vec, collection, owner_id, query_vec, top_k),
                 )
                 rows = await cur.fetchall()
 
