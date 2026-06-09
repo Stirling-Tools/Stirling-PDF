@@ -451,6 +451,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     },
                   ]}
                   maw={360}
+                  comboboxProps={{
+                    withinPortal: true,
+                    zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                  }}
                 />
               </Stack>
             )}
@@ -488,7 +492,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.theme", "Theme")}
               </Text>
@@ -523,7 +527,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.language", "Language")}
               </Text>
@@ -548,7 +552,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultToolPickerMode",
@@ -586,7 +590,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultStartupView",
@@ -628,7 +632,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.defaultViewerZoom", "Default reader zoom")}
               </Text>
@@ -683,7 +687,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableTools",
@@ -714,7 +718,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableConversions",
@@ -755,7 +759,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 cursor: "help",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t("settings.general.autoUnzip", "Auto-unzip API responses")}
                 </Text>
@@ -792,7 +796,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 cursor: "help",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "settings.general.autoUnzipFileLimit",

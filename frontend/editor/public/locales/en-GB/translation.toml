@@ -12,7 +12,6 @@ cancel = "Cancel"
 changedCredsMessage = "Credentials changed!"
 chooseFile = "Choose File"
 close = "Close"
-color = "Colour"
 comingSoon = "Coming soon"
 confirm = "Confirm"
 confirmClose = "Confirm Close"
@@ -199,6 +198,10 @@ ssoDescription = "Two-factor authentication is managed by your identity provider
 ssoManaged = "Configure MFA through your identity provider."
 title = "Two-factor authentication"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "paginate,label,organize,index"
 
@@ -225,6 +228,9 @@ title = "What it does"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "About Add Attachments"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Apply Images"
@@ -606,6 +612,7 @@ label = "Temp File Management"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
 label = "Base Temp Directory"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "How often to run cleanup (in minutes)"
@@ -618,6 +625,7 @@ label = "Cleanup System Temp"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
 label = "LibreOffice Temp Directory"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximum age in hours before temp files are cleaned up"
@@ -634,6 +642,7 @@ label = "Startup Cleanup"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
 label = "System Temp Directory"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Path to the tessdata directory for OCR language files"
@@ -839,6 +848,7 @@ label = "Database Name"
 [admin.settings.database.password]
 description = "Database authentication password"
 label = "Password"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Database server port (not used if custom URL is provided)"
@@ -870,10 +880,12 @@ label = "Hide unavailable tools by default"
 [admin.settings.endpoints.groupsToRemove]
 description = "Select endpoint groups to disable"
 label = "Disabled Endpoint Groups"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Select individual endpoints to disable"
 label = "Disabled Endpoints"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "An Enterprise license is required to access {{featureName}}. You are viewing demo data for reference."
@@ -1088,6 +1100,7 @@ label = "SMTP Host"
 [admin.settings.mail.password]
 description = "Password for SMTP authentication"
 label = "SMTP Password"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "The port number for SMTP connection (typically 25, 465, or 587)"
@@ -1096,6 +1109,10 @@ label = "SMTP Port"
 [admin.settings.mail.username]
 description = "Username for SMTP authentication"
 label = "SMTP Username"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Configure your premium or enterprise license key."
@@ -1143,6 +1160,9 @@ info = "If you have a license key or certificate file from a direct purchase, yo
 toggle = "Got a license key or certificate file?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Premium and Enterprise features are now organized in their respective sections:"
 title = "Premium Features Distributed"
 
@@ -1529,6 +1549,7 @@ stirling_description = "Your general-purpose PDF assistant"
 stirling_full_name = "Stirling General Agent"
 stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
 stirling_name = "Stirling"
+stirling_running = "Running..."
 stirling_tooltip = "Stirling agent"
 view_all = "View all agents"
 
@@ -2125,11 +2146,31 @@ placeholder = "Number of pages"
 title = "Last N Pages"
 
 [bulkSelection.operators]
+text = "AND has higher precedence than comma. NOT applies within the document range."
+title = "Operators"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
 and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
 comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
 not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
-text = "AND has higher precedence than comma. NOT applies within the document range."
-title = "Operators"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "From"
@@ -2715,6 +2756,12 @@ title = "Change Permissions"
 [changePermissions.tooltip.warning]
 text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
+[chat]
+resize = "Resize chat panel"
+
+[chat.actions]
+copy = "Copy message"
+
 [chat.header]
 agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
@@ -2774,6 +2821,9 @@ unknownTool = "Unknown tool"
 
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
+
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
 
 [colorPicker]
 title = "Choose colour"
@@ -2998,6 +3048,10 @@ title = "Compression Method"
 [compress.selectText.1]
 1 = "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
 _value = "Compression Settings"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
@@ -3489,6 +3543,13 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Apply table of contents"
 
@@ -3575,6 +3636,9 @@ tabTitle = "Outline workspace"
 [editTableOfContents.workbench.empty]
 description = "Select the Edit Table of Contents tool to load its workspace."
 title = "Open the tool to start editing"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "This PDF is password protected. Enter the password so you can continue working with it."
@@ -3690,6 +3754,10 @@ title = "Settings"
 [extractPages.tooltip]
 description = "Extracts the selected pages into a new PDF, preserving order."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Click"
 dragAndDrop = "Drag & Drop"
@@ -3698,6 +3766,9 @@ dragAndDropPDF = "Drag & Drop PDF file"
 extractPDF = "Extracting..."
 hoveredDragAndDrop = "Drag & Drop file(s) here"
 or = "or"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Add Files"
@@ -3865,6 +3936,10 @@ openFromComputer = "Open from computer"
 openSettings = "Open settings"
 search = "Search"
 searchPlaceholder = "Search files..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -4171,6 +4246,15 @@ title = "About Flattening PDFs"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Download JSON"
@@ -4731,6 +4815,11 @@ tags = "markup,web-content,transformation,convert"
 title = "HTML To PDF"
 zoom = "Zoom level for displaying the website."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
 
@@ -4748,6 +4837,9 @@ title = "Image to PDF"
 3 = "Multi file logic (Only enabled if working with multiple images)"
 4 = "Merge into single PDF"
 5 = "Convert to separate PDFs"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Failed to create account"
@@ -5084,6 +5176,7 @@ failed = "OCR operation failed"
 
 [ocr.languagePicker]
 additionalLanguages = "Looking for additional languages?"
+loading = "Loading available languages..."
 viewSetupGuide = "View setup guide →"
 
 [ocr.operation]
@@ -5220,6 +5313,10 @@ daysRemainingSingular = "{{days}} day remaining"
 title = "Your 30-Day Pro Trial"
 trialEnds = "Trial ends {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
 adminBodyLoginEnabled = "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
@@ -5229,6 +5326,9 @@ userTitle = "Plan Overview"
 
 [onboarding.securityCheck]
 message = "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
@@ -5354,6 +5454,17 @@ title = "Page Editor"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Extract Pages"
 placeholder = "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
@@ -5365,12 +5476,14 @@ addBorder = "Add Borders"
 borderWidth = "Border Thickness"
 bottom = "Bottom Margin"
 cols = "Columns"
+colsPlaceholder = "Enter columns"
 header = "Multi Page Layout"
 innerMargin = "Inner Margin"
 left = "Left Margin"
 pagesPerSheet = "Pages per sheet:"
 right = "Right Margin"
 rows = "Rows"
+rowsPlaceholder = "Enter rows"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
@@ -5411,6 +5524,14 @@ failed = "An error occurred while creating the multi-page layout."
 innerMarginTooLarge = "Inner margin is too large for the selected layout."
 outerHorizontalMarginsTooLarge = "Left/Right margins are too large for this page size."
 outerVerticalMarginsTooLarge = "Top/Bottom margins are too large for this page size."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Enable borders to draw lines around each placed page. This can help visual separation or trimming."
@@ -6065,6 +6186,26 @@ pdfTools = "Basic PDF Tools"
 priority = "Priority Support"
 title = "Feature"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Forever free"
 highlight1 = "Limited Tool Usage Per week"
@@ -6072,6 +6213,22 @@ highlight2 = "Access to all tools"
 highlight3 = "Community support"
 included = "Included"
 name = "Free"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly."
@@ -6384,6 +6541,7 @@ allSessions = "All Sessions"
 allTools = "Tools"
 automate = "Automate"
 back = "Back"
+backToAllTools = "Back to all tools"
 certSign = "Certificate Sign"
 completedSessions = "Completed Sessions"
 completedTab = "Completed"
@@ -7055,6 +7213,9 @@ bullet3 = "Critical for approval workflows and legal chains of custody"
 description = "The order you specify when creating the session determines who signs first."
 title = "Signature Order"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Advanced"
 database = "Database"
@@ -7537,6 +7698,7 @@ sharedDescription = "All users can see and use these signatures."
 sharedHeading = "Shared Signatures"
 tempStorageDescription = "Signatures are stored in your browser only. They will be lost if you clear browser data or switch browsers."
 tempStorageTitle = "Temporary browser storage"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Saved"
@@ -8117,8 +8279,17 @@ center = "Center"
 left = "Left"
 right = "Right"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Toggle Theme"
+
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
 
 [timestampPdf]
 completed = "PDF timestamped successfully"
@@ -8145,6 +8316,10 @@ label = "Select a TSA server"
 
 [timestampPdf.steps]
 settings = "Settings"
+
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."
@@ -8232,6 +8407,9 @@ verification = "Verification"
 noSearchResults = "No tools found"
 noTools = "No tools available"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
 filenamePrefix = "unlocked_forms"
@@ -8258,6 +8436,7 @@ breakingChangesDefault = "This version contains breaking changes."
 breakingChangesDetected = "Breaking Changes Detected"
 breakingChangesMessage = "Some versions contain breaking changes. Please review the migration guides below before updating."
 close = "Close"
+closeModal = "Close update modal"
 current = "Current Version"
 defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Download Latest"
@@ -8466,12 +8645,16 @@ enableDarkFilter = "Enable Dark Filter"
 enableSepiaFilter = "Enable Sepia Filter"
 firstPage = "First Page"
 lastPage = "Last Page"
+moreOptions = "More"
 nextPage = "Next Page"
 onlyPdfSupported = "This file format is not supported for preview."
+pageNavigation = "Page navigation"
 previousPage = "Previous Page"
 resetZoom = "Reset zoom"
 singlePageView = "Single Page View"
 unknownFile = "Unknown file"
+view = "View"
+zoom = "Zoom"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
@@ -8509,6 +8692,9 @@ typeInsertText = "Insert Text"
 typeReplaceText = "Replace Text"
 viewComment = "View comment"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Apply Changes"
 dismiss = "Dismiss"
@@ -8517,6 +8703,9 @@ hasFieldsDesc = "This PDF contains fillable fields"
 title = "Form Fields"
 unsavedBadge = "Unsaved"
 unsavedDesc = "You have unsaved changes"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Column {{index}}"
@@ -8532,6 +8721,19 @@ loading = "Loading..."
 renderMarkdown = "Render markdown"
 sortedBy = "Sorted by: {{column}}"
 textStats = "{{lines}} lines · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "View PDF"
@@ -8780,6 +8982,37 @@ toggleLayers = "Toggle Layers"
 toggleSidebar = "Toggle Sidebar"
 toggleTheme = "Toggle Theme"
 viewer = "Viewer"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Workspace"

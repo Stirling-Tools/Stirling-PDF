@@ -36,9 +36,11 @@ import stirling.software.saas.payg.job.ProcessingJob;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.ProcessType;
+import stirling.software.saas.payg.model.ShadowChargeStatus;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
+import stirling.software.saas.payg.repository.ProcessingJobRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 
 /**
@@ -51,6 +53,7 @@ class JobChargeServiceTest {
     private PricingPolicyService policyService;
     private DocumentClassifier classifier;
     private PaygShadowChargeRepository shadowRepo;
+    private ProcessingJobRepository jobRepo;
     private JobChargeService service;
 
     @BeforeEach
@@ -59,7 +62,8 @@ class JobChargeServiceTest {
         policyService = Mockito.mock(PricingPolicyService.class);
         classifier = Mockito.mock(DocumentClassifier.class);
         shadowRepo = Mockito.mock(PaygShadowChargeRepository.class);
-        service = new JobChargeService(jobService, policyService, classifier, shadowRepo);
+        jobRepo = Mockito.mock(ProcessingJobRepository.class);
+        service = new JobChargeService(jobService, policyService, classifier, shadowRepo, jobRepo);
     }
 
     @Test
@@ -97,7 +101,7 @@ class JobChargeServiceTest {
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
 
         JobInput in = jobInput(tmp, "in.pdf", "application/pdf");
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
 
         ChargeOutcome out =
@@ -107,9 +111,10 @@ class JobChargeServiceTest {
 
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.OPENED);
         assertThat(out.units()).isEqualTo(4);
-        // Single-file path called single-file classifier overload, not the list one.
-        verify(classifier, times(1)).classify(any(MultipartFile.class), eq(policy));
-        verify(classifier, never()).classify(anyList(), eq(policy));
+        // Single-file path called single-file classifier overload (with Path), not the list one.
+        verify(classifier, times(1))
+                .classify(any(MultipartFile.class), any(Path.class), eq(policy));
+        verify(classifier, never()).classify(anyList(), anyList(), eq(policy));
 
         ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
         verify(shadowRepo).save(captor.capture());
@@ -136,7 +141,7 @@ class JobChargeServiceTest {
 
         JobInput a = jobInput(tmp, "a.pdf", "application/pdf");
         JobInput b = jobInput(tmp, "b.pdf", "application/pdf");
-        when(classifier.classify(anyList(), eq(policy)))
+        when(classifier.classify(anyList(), anyList(), eq(policy)))
                 .thenReturn(new DocumentMetrics(100, 2048L, "application/pdf", 7));
 
         ChargeOutcome out =
@@ -145,8 +150,8 @@ class JobChargeServiceTest {
                         List.of(a, b));
 
         assertThat(out.units()).isEqualTo(7);
-        verify(classifier, never()).classify(any(MultipartFile.class), any());
-        verify(classifier, times(1)).classify(anyList(), eq(policy));
+        verify(classifier, never()).classify(any(MultipartFile.class), any(Path.class), any());
+        verify(classifier, times(1)).classify(anyList(), anyList(), eq(policy));
     }
 
     @Test
@@ -157,7 +162,7 @@ class JobChargeServiceTest {
         ProcessingJob newJob = openJob(UUID.randomUUID());
         when(jobService.joinOrOpen(any(JobContext.class), anyList()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(10, 1024L, "application/pdf", 2));
 
         ChargeOutcome out =
@@ -178,7 +183,7 @@ class JobChargeServiceTest {
         ProcessingJob newJob = openJob(UUID.randomUUID());
         when(jobService.joinOrOpen(any(JobContext.class), anyList()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
@@ -202,7 +207,7 @@ class JobChargeServiceTest {
         ProcessingJob newJob = openJob(UUID.randomUUID());
         when(jobService.joinOrOpen(any(JobContext.class), anyList()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
-        when(classifier.classify(any(MultipartFile.class), eq(policy)))
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
@@ -224,6 +229,105 @@ class JobChargeServiceTest {
                                         List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("inputs must not be empty");
+    }
+
+    @Test
+    void markFirstStepFailed_flipsShadowRowAndClosesProcess() {
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setJobId(jobId);
+        row.setStatus(ShadowChargeStatus.CHARGED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
+        ProcessingJob job = openJob(jobId);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        assertThat(row.getStatus()).isEqualTo(ShadowChargeStatus.REFUNDED);
+        assertThat(row.getRefundedAt()).isNotNull();
+        assertThat(row.getRefundReason()).isEqualTo("first-step-5xx:503");
+        assertThat(job.getStatus()).isEqualTo(JobStatus.CLOSED);
+        assertThat(job.getClosedAt()).isNotNull();
+        verify(shadowRepo).save(row);
+        verify(jobRepo).save(job);
+    }
+
+    @Test
+    void markFirstStepFailed_alreadyRefunded_isNoOp() {
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setJobId(jobId);
+        row.setStatus(ShadowChargeStatus.REFUNDED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
+        ProcessingJob job = openJob(jobId);
+        job.setStatus(JobStatus.CLOSED);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:500");
+
+        verify(shadowRepo, never()).save(any());
+        verify(jobRepo, never()).save(any());
+    }
+
+    @Test
+    void markFirstStepFailed_noShadowRow_stillClosesProcess() {
+        UUID jobId = UUID.randomUUID();
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.empty());
+        ProcessingJob job = openJob(jobId);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        assertThat(job.getStatus()).isEqualTo(JobStatus.CLOSED);
+        verify(jobRepo).save(job);
+    }
+
+    @Test
+    void markFirstStepFailed_trimsLongRefundReason() {
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setStatus(ShadowChargeStatus.CHARGED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
+
+        String oversized = "x".repeat(200);
+        service.markFirstStepFailed(jobId, oversized);
+
+        assertThat(row.getRefundReason()).hasSize(128);
+    }
+
+    @Test
+    void decrementStepCount_decrementsByOne() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        job.setStepCount(3);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.decrementStepCount(jobId);
+
+        assertThat(job.getStepCount()).isEqualTo(2);
+        verify(jobRepo).save(job);
+    }
+
+    @Test
+    void decrementStepCount_floorAtOne_neverDrivesNegative() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        job.setStepCount(1);
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
+
+        service.decrementStepCount(jobId);
+
+        assertThat(job.getStepCount()).isEqualTo(1);
+        verify(jobRepo, never()).save(any());
+    }
+
+    @Test
+    void decrementStepCount_missingJob_isNoOp() {
+        UUID jobId = UUID.randomUUID();
+        when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
+        service.decrementStepCount(jobId); // must not throw
+        verify(jobRepo, never()).save(any());
     }
 
     // --- helpers --------------------------------------------------------------------------------

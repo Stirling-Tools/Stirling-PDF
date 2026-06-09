@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@app/auth/supabase";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // Mock supabase
 vi.mock("@app/auth/supabase", () => ({
@@ -177,6 +178,7 @@ describe("apiClient", () => {
   });
 
   it("should handle refresh token failure", async () => {
+    expectConsole.error(/\[API Client\] Token refresh failed/);
     const oldToken = "old-token";
 
     const oldSession = {

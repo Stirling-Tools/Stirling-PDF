@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
@@ -162,6 +163,7 @@ export function FileItem({
   folders = [],
   onFolderClick,
 }: FileItemProps) {
+  const { t } = useTranslation();
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
@@ -293,7 +295,11 @@ export function FileItem({
           }}
           tabIndex={-1}
           type="button"
-          aria-label={isViewedInViewer ? "Close viewer" : "Open in viewer"}
+          aria-label={
+            isViewedInViewer
+              ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
+              : t("fileSidebar.fileItem.openInViewer", "Open in viewer")
+          }
         >
           <VisibilityOutlinedIcon
             className="file-sidebar-eye-open"

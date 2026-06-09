@@ -6,9 +6,12 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.payg.lineage.HashLineageDetector;
 import stirling.software.saas.payg.lineage.LineageMatch;
+import stirling.software.saas.payg.lineage.LineageSignature;
 import stirling.software.saas.payg.model.ArtifactKind;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.JobStepStatus;
@@ -86,7 +90,15 @@ public class JobService {
             throw new IllegalArgumentException("inputs must not be empty");
         }
 
-        Optional<LineageMatch> bestMatch = findBestMatch(ctx.ownerUserId(), inputs);
+        // Extract signatures ONCE per input, then reuse for both the lineage lookup and the
+        // post-decision record() call. Avoids hashing every input twice on the hot path.
+        Map<Path, Set<LineageSignature>> signaturesByInput = new HashMap<>(inputs.size());
+        for (Path input : inputs) {
+            signaturesByInput.put(input, detector.extractSignatures(input));
+        }
+
+        Optional<LineageMatch> bestMatch =
+                findBestMatch(ctx.ownerUserId(), inputs, signaturesByInput);
 
         if (bestMatch.isPresent()) {
             ProcessingJob existing =
@@ -100,7 +112,7 @@ public class JobService {
                                                             + " but no such ProcessingJob row"
                                                             + " exists (stale signature?)"));
             if (existing.getStepCount() < ctx.stepLimit()) {
-                return joinExisting(existing, inputs);
+                return joinExisting(existing, signaturesByInput);
             }
             // Step-limit hit: spawn a fresh job. The new job will share input signatures with
             // the existing chain so future tool calls still lineage-match into the workflow,
@@ -111,7 +123,7 @@ public class JobService {
                     ctx.stepLimit());
         }
 
-        return openFresh(ctx, inputs);
+        return openFresh(ctx, signaturesByInput);
     }
 
     /**
@@ -199,25 +211,26 @@ public class JobService {
         return stale.size();
     }
 
-    private Optional<LineageMatch> findBestMatch(Long userId, List<Path> inputs)
-            throws IOException {
+    private Optional<LineageMatch> findBestMatch(
+            Long userId, List<Path> inputs, Map<Path, Set<LineageSignature>> signaturesByInput) {
         List<LineageMatch> matches = new ArrayList<>(inputs.size());
         for (Path input : inputs) {
-            detector.detect(userId, input).ifPresent(matches::add);
+            detector.detect(userId, signaturesByInput.get(input)).ifPresent(matches::add);
         }
         return matches.stream().max(Comparator.comparing(LineageMatch::jobLastStepAt));
     }
 
-    private JoinOrOpenResult joinExisting(ProcessingJob existing, List<Path> inputs)
-            throws IOException {
+    private JoinOrOpenResult joinExisting(
+            ProcessingJob existing, Map<Path, Set<LineageSignature>> signaturesByInput) {
         existing.setStepCount(existing.getStepCount() + 1);
         existing.setLastStepAt(LocalDateTime.now());
         ProcessingJob saved = jobRepository.save(existing);
-        recordAllInputs(saved.getId(), inputs);
+        recordAllInputs(saved.getId(), signaturesByInput);
         return new JoinOrOpenResult(saved, JoinOrOpenResult.Disposition.JOINED);
     }
 
-    private JoinOrOpenResult openFresh(JobContext ctx, List<Path> inputs) throws IOException {
+    private JoinOrOpenResult openFresh(
+            JobContext ctx, Map<Path, Set<LineageSignature>> signaturesByInput) {
         ProcessingJob fresh = new ProcessingJob();
         fresh.setId(UUID.randomUUID());
         fresh.setOwnerUserId(ctx.ownerUserId());
@@ -231,13 +244,13 @@ public class JobService {
         fresh.setLastStepAt(now);
         fresh.setStatus(JobStatus.OPEN);
         ProcessingJob saved = jobRepository.save(fresh);
-        recordAllInputs(saved.getId(), inputs);
+        recordAllInputs(saved.getId(), signaturesByInput);
         return new JoinOrOpenResult(saved, JoinOrOpenResult.Disposition.OPENED);
     }
 
-    private void recordAllInputs(UUID jobId, List<Path> inputs) throws IOException {
-        for (Path input : inputs) {
-            detector.record(jobId, input, ArtifactKind.INPUT);
+    private void recordAllInputs(UUID jobId, Map<Path, Set<LineageSignature>> signaturesByInput) {
+        for (Set<LineageSignature> signatures : signaturesByInput.values()) {
+            detector.record(jobId, signatures, ArtifactKind.INPUT);
         }
     }
 }

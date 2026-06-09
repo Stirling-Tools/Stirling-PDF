@@ -2,6 +2,76 @@ import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { constants, gzip, brotliCompress } from "node:zlib";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import fs from "node:fs/promises";
+import path from "node:path";
+
+const gzipPromise = promisify(gzip);
+const brotliPromise = promisify(brotliCompress);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function compressStaticCopyPlugin(): PluginOption {
+  return {
+    name: "compress-static-copy",
+    apply: "build" as const,
+    async closeBundle() {
+      const distDir = path.resolve(__dirname, "dist");
+      const targets = ["pdfium", "vendor", "pdfjs"];
+
+      const excludedExtensions = [
+        ".gz",
+        ".br",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp",
+        ".woff",
+        ".woff2",
+      ];
+
+      async function walkAndCompress(dirOrFile: string) {
+        let stat;
+        try {
+          stat = await fs.stat(dirOrFile);
+        } catch {
+          return;
+        }
+
+        if (stat.isFile()) {
+          const ext = path.extname(dirOrFile).toLowerCase();
+          if (stat.size >= 1024 && !excludedExtensions.includes(ext)) {
+            const content = await fs.readFile(dirOrFile);
+
+            // Gzip (level 9)
+            const gzipped = await gzipPromise(content, { level: 9 });
+            await fs.writeFile(`${dirOrFile}.gz`, gzipped);
+
+            // Brotli (quality 11)
+            const brotlied = await brotliPromise(content, {
+              params: {
+                [constants.BROTLI_PARAM_QUALITY]: 11,
+              },
+            });
+            await fs.writeFile(`${dirOrFile}.br`, brotlied);
+          }
+        } else if (stat.isDirectory()) {
+          const files = await fs.readdir(dirOrFile);
+          for (const file of files) {
+            await walkAndCompress(path.join(dirOrFile, file));
+          }
+        }
+      }
+
+      for (const target of targets) {
+        await walkAndCompress(path.join(distDir, target));
+      }
+    },
+  };
+}
 
 const VALID_MODES = [
   "core",
@@ -78,6 +148,18 @@ export default defineConfig(async ({ mode }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
+      compression({
+        threshold: 1024,
+        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        algorithms: [
+          defineAlgorithm("gzip", { level: 9 }),
+          defineAlgorithm("brotliCompress", {
+            params: {
+              [constants.BROTLI_PARAM_QUALITY]: 11,
+            },
+          }),
+        ],
+      }),
       // Set ANALYZE=true to emit dist/stats.html (treemap) alongside the
       // build; rollup-plugin-visualizer is ESM-only so we import dynamically.
       ...(process.env.ANALYZE === "true"
@@ -119,6 +201,7 @@ export default defineConfig(async ({ mode }) => {
           },
         ],
       }),
+      compressStaticCopyPlugin(),
     ],
     server: {
       host: true,
@@ -138,6 +221,20 @@ export default defineConfig(async ({ mode }) => {
       port: 5173,
       strictPort: true,
       proxy: backendProxyConfig,
+    },
+    build: {
+      target: "esnext",
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            "vendor-react": ["react", "react-dom"],
+            "pdf-engine": ["@embedpdf/engines", "@embedpdf/pdfium"],
+          },
+        },
+      },
+    },
+    optimizeDeps: {
+      exclude: ["@embedpdf/pdfium"],
     },
     // base: "./" produces relative asset URLs which work when dist/ is served
     // at any path (e.g. Spring Boot bundling the frontend at /). But under
