@@ -267,11 +267,11 @@ export function PolicyDetailTakeover() {
         classificationEnabled={false}
         mode="create"
         onCancel={() => closePolicy()}
-        onComplete={(result) => {
-          void pol
+        onComplete={(result) =>
+          pol
             .enablePolicy(selectedId, result)
-            .then(() => setPolicyDetailView("detail"));
-        }}
+            .then(() => setPolicyDetailView("detail"))
+        }
         onSetupClassification={onSetupClassification}
       />
     );
@@ -304,12 +304,12 @@ export function PolicyDetailTakeover() {
         existingAutomation={backingAutomation}
         initialFolder={backingFolder ?? undefined}
         onCancel={() => setPolicyDetailView("detail")}
-        onComplete={(result) => {
-          void pol.savePolicyConfig(selectedId, result).then(() => {
+        onComplete={(result) =>
+          pol.savePolicyConfig(selectedId, result).then(() => {
             setReloadKey((k) => k + 1);
             setPolicyDetailView("detail");
-          });
-        }}
+          })
+        }
         onSetupClassification={onSetupClassification}
       />
     );

@@ -54,7 +54,10 @@ export function usePolicies() {
   const enablePolicy = useCallback(
     async (id: string, result: PolicyWizardResult) => {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
-      if (!category) return;
+      // Reject rather than silently no-op: the builder has already persisted an
+      // automation by now, so a quiet return would leave the wizard navigating
+      // to a "configured" view that was never actually saved.
+      if (!category) throw new Error(`Unknown policy category: ${id}`);
       const folder = await createPolicyFolderForAutomation(
         category,
         result.automation.id,

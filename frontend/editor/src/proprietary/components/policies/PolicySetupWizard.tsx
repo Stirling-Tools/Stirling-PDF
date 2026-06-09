@@ -52,8 +52,12 @@ interface PolicySetupWizardProps {
   /** The backing folder, to pre-fill output + retry settings (edit mode). */
   initialFolder?: SmartFolder;
   onCancel: () => void;
-  /** Fires on submit with the saved workflow + collected settings. */
-  onComplete: (result: PolicyWizardResult) => void;
+  /**
+   * Fires on submit with the saved workflow + collected settings. May be async;
+   * if the returned promise rejects, the wizard re-enables submit and surfaces
+   * the failure rather than hanging on a permanently-disabled button.
+   */
+  onComplete: (result: PolicyWizardResult) => void | Promise<void>;
   onSetupClassification: () => void;
 }
 
@@ -152,22 +156,29 @@ export function PolicySetupWizard({
     );
 
   // Once the builder persists the workflow, hand the automation + settings to
-  // the host (which closes the wizard on success).
-  const handleWorkflowSaved = (automation: AutomationConfig) =>
-    onComplete({
-      automation,
-      fieldValues,
-      sources,
-      scopeTypes: scopeNarrow ? scopeTypes : [],
-      reviewerEmail,
-      folder: {
-        outputMode,
-        outputName: outputName.trim(),
-        outputNamePosition,
-        maxRetries,
-        retryDelayMinutes,
-      },
+  // the host (which closes the wizard on success). If the host's async save
+  // rejects, recover so the submit button doesn't stay disabled forever.
+  const handleWorkflowSaved = (automation: AutomationConfig) => {
+    Promise.resolve(
+      onComplete({
+        automation,
+        fieldValues,
+        sources,
+        scopeTypes: scopeNarrow ? scopeTypes : [],
+        reviewerEmail,
+        folder: {
+          outputMode,
+          outputName: outputName.trim(),
+          outputNamePosition,
+          maxRetries,
+          retryDelayMinutes,
+        },
+      }),
+    ).catch(() => {
+      setSubmitting(false);
+      setSaveError("Couldn't save the policy. Please try again.");
     });
+  };
 
   // Final submit: guard against double-submit (the builder stays mounted, so a
   // second click would persist twice), then trigger the builder's save.
