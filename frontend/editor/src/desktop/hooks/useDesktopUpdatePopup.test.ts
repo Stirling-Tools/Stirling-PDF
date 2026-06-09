@@ -1,5 +1,6 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // ── Mocks (hoisted by vi.mock) ──────────────────────────────────────────────
 const invokeMock = vi.fn();
@@ -46,13 +47,21 @@ async function flushMicrotasks() {
 
 const AUTO_FAILURE_KEY = "stirling-pdf-updater:autoFailedAt";
 
-/** Run the hook through its startup timer + async chain. */
+/**
+ * Run the hook through its startup timer + async chain. The post-render
+ * timer-driven async work is wrapped in act() so the state updates it
+ * triggers don't surface as React "not wrapped in act" warnings.
+ * renderHook already wraps the initial render in act internally, so it
+ * stays outside.
+ */
 async function runStartup() {
   renderHook(() => useDesktopUpdatePopup());
-  await vi.advanceTimersByTimeAsync(16_000);
-  await flushMicrotasks();
-  await vi.advanceTimersByTimeAsync(0);
-  await flushMicrotasks();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(16_000);
+    await flushMicrotasks();
+    await vi.advanceTimersByTimeAsync(0);
+    await flushMicrotasks();
+  });
 }
 
 describe("useDesktopUpdatePopup — auto mode", () => {
@@ -83,6 +92,7 @@ describe("useDesktopUpdatePopup — auto mode", () => {
   });
 
   it("does NOT call restart_app when download_and_install_update fails", async () => {
+    expectConsole.error(/\[useDesktopInstall\] Install failed/);
     invokeMock.mockImplementation((cmd: string) => {
       if (cmd === "check_for_update") {
         return Promise.resolve({
@@ -132,6 +142,9 @@ describe("useDesktopUpdatePopup — auto mode", () => {
   });
 
   it("skips the install entirely when a recent failure is within the backoff window", async () => {
+    expectConsole.warn(
+      /\[DesktopUpdatePopup\] auto-update skipped: recent failure within backoff window/,
+    );
     // Recorded 1 hour ago — well inside the 6-hour backoff.
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
     window.localStorage.setItem(AUTO_FAILURE_KEY, String(oneHourAgo));
