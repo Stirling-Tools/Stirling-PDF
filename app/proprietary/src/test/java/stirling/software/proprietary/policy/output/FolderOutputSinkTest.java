@@ -11,20 +11,31 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyProperties;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /** Tests for {@link FolderOutputSink}: outputs are written to the configured directory on disk. */
 class FolderOutputSinkTest {
 
-    private final FolderOutputSink sink = new FolderOutputSink();
-
     @TempDir Path tempDir;
+
+    private FolderOutputSink sink;
+
+    @BeforeEach
+    void setUp() {
+        PolicyProperties properties = new PolicyProperties();
+        properties.setAllowedFolderRoots(List.of(tempDir.toString()));
+        sink = new FolderOutputSink(new FolderAccessGuard(properties, new StandardEnvironment()));
+    }
 
     @Test
     void writesEachOutputToTheDirectory() throws IOException {
@@ -58,6 +69,15 @@ class FolderOutputSinkTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> sink.deliver("run-1", List.of(named("a.pdf", "x")), noDir));
+    }
+
+    @Test
+    void aDirectoryOutsideTheAllowedRootsIsRejected() {
+        OutputSpec outside = OutputSpec.folder(tempDir.resolveSibling("not-allowed").toString());
+        assertThrows(IllegalArgumentException.class, () -> sink.validate(outside));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sink.deliver("run-1", List.of(named("a.pdf", "x")), outside));
     }
 
     @Test

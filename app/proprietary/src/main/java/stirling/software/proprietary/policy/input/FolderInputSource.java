@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.FileReadinessChecker;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 
@@ -42,7 +43,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 @RequiredArgsConstructor
 public class FolderInputSource implements InputSource {
 
-    private static final String TYPE = "folder";
+    private static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     // Bookkeeping lives under one hidden namespace dir so the watched folder stays tidy.
     private static final String WORK_SUBDIR = ".stirling";
     private static final String PROCESSING_SUBDIR = "processing";
@@ -50,6 +51,7 @@ public class FolderInputSource implements InputSource {
     private static final String ERROR_SUBDIR = "error";
 
     private final FileReadinessChecker readinessChecker;
+    private final FolderAccessGuard accessGuard;
 
     @Override
     public String type() {
@@ -63,7 +65,7 @@ public class FolderInputSource implements InputSource {
 
     @Override
     public void validate(InputSpec spec) {
-        FolderConfig.from(spec.options());
+        accessGuard.requirePermitted(FolderConfig.from(spec.options()).directory());
     }
 
     @Override
@@ -74,7 +76,7 @@ public class FolderInputSource implements InputSource {
     @Override
     public List<ResolvedInput> resolve(InputSpec spec) throws IOException {
         FolderConfig config = FolderConfig.from(spec.options());
-        Path inputDir = config.directory();
+        Path inputDir = accessGuard.requirePermitted(config.directory());
         if (!Files.isDirectory(inputDir)) {
             log.debug("Folder input dir does not exist: {}", inputDir);
             return List.of();

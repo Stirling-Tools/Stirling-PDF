@@ -14,9 +14,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
@@ -30,10 +32,13 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FolderOutputSink implements PolicyOutputSink {
 
-    static final String TYPE = "folder";
+    static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     static final String DIRECTORY_OPTION = "directory";
+
+    private final FolderAccessGuard accessGuard;
 
     @Override
     public String type() {
@@ -47,13 +52,13 @@ public class FolderOutputSink implements PolicyOutputSink {
 
     @Override
     public void validate(OutputSpec spec) {
-        directoryOf(spec);
+        accessGuard.requirePermitted(directoryOf(spec));
     }
 
     @Override
     public List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
             throws IOException {
-        Path targetDir = directoryOf(spec);
+        Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
 
         List<ResultFile> results = new ArrayList<>();

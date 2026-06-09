@@ -34,9 +34,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -76,6 +79,9 @@ public class PolicyController {
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
     private final PolicyValidator policyValidator;
+    private final FolderAccessGuard folderAccessGuard;
+    private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
@@ -159,12 +165,33 @@ public class PolicyController {
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody String json) {
         Policy policy = parsePolicy(json);
+        requireAuthorizedForFolderAccess(policy);
         try {
             policyValidator.validate(policy);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         return ResponseEntity.ok(policyStore.save(policy));
+    }
+
+    /**
+     * A policy that reads from or writes to a server folder grants whoever saves it access to that
+     * path, so restrict it to administrators on multi-user deployments. Single-user deployments
+     * (login disabled, e.g. desktop) trust the local operator. The {@link FolderAccessGuard} still
+     * enforces SaaS-off and the path allowlist during validation regardless of who saves.
+     */
+    private void requireAuthorizedForFolderAccess(Policy policy) {
+        if (!folderAccessGuard.usesFolderAccess(policy)) {
+            return;
+        }
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            return;
+        }
+        if (!userService.isCurrentUserAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Folder sources and outputs may only be configured by an administrator");
+        }
     }
 
     @GetMapping
