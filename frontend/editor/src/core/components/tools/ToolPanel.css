@@ -271,6 +271,16 @@
   width: 100%;
 }
 
+/* Search that separates the Policies section from the Tools list below it. */
+.tool-panel__between-search {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border-subtle, var(--color-border));
+}
+
+.tool-panel__between-search .search-input-container {
+  width: 100%;
+}
+
 .tool-panel__active-tool-pill {
   display: inline-flex;
   align-items: center;

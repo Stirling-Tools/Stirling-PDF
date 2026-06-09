@@ -181,10 +181,17 @@ export default function RightSidebar() {
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  // Show search input whenever there's a close button, or when agents are off and
-  // we're in the default tool-picker view (search filters the full list inline).
+  // Policies sit above the tool list in the default tool-picker view.
+  const showPolicies =
+    policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
+  // When Policies are shown, the search moves OUT of the header to sit between
+  // the Policies and Tools sections (separating them); otherwise it stays in the
+  // header. Show the header search when there's a close button, or when agents
+  // are off in the default tool-picker view (inline filtering).
+  const showInlineSearch = showPolicies && !showCloseButton;
   const showHeaderSearch =
-    showCloseButton || (!agentsEnabled && leftPanelView === "toolPicker");
+    !showInlineSearch &&
+    (showCloseButton || (!agentsEnabled && leftPanelView === "toolPicker"));
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -223,11 +230,6 @@ export default function RightSidebar() {
   //  - a specific tool is being rendered (leftPanelView ≠ "toolPicker").
   const showAgents =
     agentsEnabled && !allToolsView && leftPanelView === "toolPicker";
-
-  // Policies section sits above the tool list in the default tool-picker view,
-  // mirroring the prototype (and hidden inside a specific tool / all-tools view).
-  const showPolicies =
-    policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
 
   // The detail takeover replaces the tool list ONLY in the same default view —
   // never over an open tool or the all-tools view (which must keep priority).
@@ -446,6 +448,17 @@ export default function RightSidebar() {
               {showAgents && <AgentsSection />}
 
               {showPolicies && <PoliciesSection />}
+
+              {showInlineSearch && (
+                <div className="tool-panel__between-search">
+                  <ToolSearch
+                    value={searchQuery}
+                    onChange={handleHeaderSearchChange}
+                    toolRegistry={toolRegistry}
+                    mode="filter"
+                  />
+                </div>
+              )}
 
               <ToolPanel
                 allToolsView={allToolsView}
