@@ -97,16 +97,59 @@ public class PaygOutputExtractor {
         // Stirling-PDF tool endpoints sometimes set Content-Type to application/octet-stream (or
         // no header at all) even when the body is a real PDF or ZIP — Spring's default
         // StreamingResponseBody path doesn't always negotiate content type. When the declared
-        // Content-Type is missing or generic, sniff magic bytes to recover lineage capture.
+        // Content-Type is missing or generic, sniff magic bytes in a single head-read so we don't
+        // open the body twice on the common negative path.
         if (mediaType == null || OCTET_STREAM_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
-            if (isPdfMagic(bodyPath)) {
+            BodyMagic magic = sniffMagic(bodyPath);
+            if (magic == BodyMagic.PDF) {
                 return List.of(new ExtractedPdf(bodyPath, null));
             }
-            if (isMagic(bodyPath, ZIP_MAGIC)) {
+            if (magic == BodyMagic.ZIP) {
                 return extractZip(bodyPath);
             }
         }
         return List.of();
+    }
+
+    /** Discriminator returned by {@link #sniffMagic(Path)}. */
+    private enum BodyMagic {
+        PDF,
+        ZIP,
+        NEITHER
+    }
+
+    /**
+     * Single-pass magic-byte sniff used by the generic Content-Type branch. Opens {@code path}
+     * once, reads enough bytes to compare against both PDF and ZIP magics, returns the first match
+     * (or {@link BodyMagic#NEITHER} if neither matched / read failed). Replaces two consecutive
+     * {@link #isMagic} calls that would have opened the file twice on the common negative path.
+     */
+    private BodyMagic sniffMagic(Path path) {
+        int needed = Math.max(PDF_MAGIC.length, ZIP_MAGIC.length);
+        byte[] head = new byte[needed];
+        int read;
+        try (InputStream in = Files.newInputStream(path)) {
+            read = in.read(head);
+        } catch (IOException e) {
+            log.debug("Magic-byte sniff failed for {}", path, e);
+            return BodyMagic.NEITHER;
+        }
+        if (read >= PDF_MAGIC.length && startsWith(head, PDF_MAGIC)) {
+            return BodyMagic.PDF;
+        }
+        if (read >= ZIP_MAGIC.length && startsWith(head, ZIP_MAGIC)) {
+            return BodyMagic.ZIP;
+        }
+        return BodyMagic.NEITHER;
+    }
+
+    private static boolean startsWith(byte[] buf, byte[] prefix) {
+        for (int i = 0; i < prefix.length; i++) {
+            if (buf[i] != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private List<ExtractedPdf> extractZip(Path bodyPath) {
