@@ -12,7 +12,6 @@ cancel = "Cancel·la"
 changedCredsMessage = "Credencials canviades!"
 chooseFile = "Tria fitxer"
 close = "Tanca"
-color = "Color"
 comingSoon = "Properament"
 confirm = "Confirmar"
 confirmClose = "Confirma el tancament"
@@ -90,6 +89,7 @@ nothingToUndo = "No hi ha res per desfer"
 noticeTopUpOrPlan = "No tens prou crèdits; recarrega o passa a un pla"
 noValidFiles = "No hi ha fitxers vàlids per processar"
 oops = "Vaja!"
+openInNewWindow = "Open in new window"
 openInViewer = "Obre al visor"
 operationCancelled = "Operació cancel·lada"
 page = "Pàgina"
@@ -198,6 +198,10 @@ ssoDescription = "L'autenticació de dos factors és gestionada pel vostre prove
 ssoManaged = "Configureu l'MFA a través del vostre proveïdor d'identitat."
 title = "Autenticació de dos factors"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "pàgina,etiqueta,organitza,indexa"
 
@@ -224,6 +228,9 @@ title = "Què fa"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Quant a Afegir adjunts"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Aplica les imatges"
@@ -494,6 +501,11 @@ title = "Ajusta l'escala de pàgina"
 [adjustPageScale.error]
 failed = "S'ha produït un error en ajustar l'escala de pàgina."
 
+[adjustPageScale.orientation]
+label = "Page orientation"
+landscape = "Landscape"
+portrait = "Portrait"
+
 [adjustPageScale.pageSize]
 keep = "Mantén la mida original"
 label = "Mida de pàgina de destinació"
@@ -600,6 +612,7 @@ label = "Gestió de fitxers temporals"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Directori base per als fitxers temporals (deixeu-ho buit per al valor per defecte: java.io.tmpdir/stirling-pdf)"
 label = "Directori temporal base"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Freqüència d'execució de la neteja (en minuts)"
@@ -612,6 +625,7 @@ label = "Neteja el temporal del sistema"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Directori per als fitxers temporals de LibreOffice (deixeu-ho buit per al valor per defecte: baseTmpDir/libreoffice)"
 label = "Directori temporal de LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Antiguitat màxima en hores abans de netejar els fitxers temporals"
@@ -628,6 +642,7 @@ label = "Neteja a l'arrencada"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Directori temporal del sistema a netejar (només s'utilitza si cleanupSystemTemp està habilitat)"
 label = "Directori temporal del sistema"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Camí al directori tessdata per als fitxers d'idioma d'OCR"
@@ -833,6 +848,7 @@ label = "Nom de la base de dades"
 [admin.settings.database.password]
 description = "Contrasenya d'autenticació de la base de dades"
 label = "Contrasenya"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Port del servidor de base de dades (no s'utilitza si es proporciona una URL personalitzada)"
@@ -864,10 +880,12 @@ label = "Amaga per defecte les eines no disponibles"
 [admin.settings.endpoints.groupsToRemove]
 description = "Seleccioneu grups d'endpoints per deshabilitar"
 label = "Grups d'endpoints deshabilitats"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Seleccioneu endpoints individuals per deshabilitar"
 label = "Endpoints deshabilitats"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Es requereix una llicència Enterprise per accedir a {{featureName}}. Esteu veient dades de demostració com a referència."
@@ -1082,6 +1100,7 @@ label = "Amfitrió SMTP"
 [admin.settings.mail.password]
 description = "Contrasenya per a l'autenticació SMTP"
 label = "Contrasenya SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "El número de port per a la connexió SMTP (normalment 25, 465 o 587)"
@@ -1090,6 +1109,10 @@ label = "Port SMTP"
 [admin.settings.mail.username]
 description = "Nom d'usuari per a l'autenticació SMTP"
 label = "Nom d'usuari SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Configureu la clau de llicència Premium o Enterprise."
@@ -1137,6 +1160,9 @@ info = "Si tens una clau de llicència o un fitxer de certificat d'una compra di
 toggle = "Tens una clau de llicència o un fitxer de certificat?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Les funcions Premium i Enterprise ara estan organitzades a les seves seccions respectives:"
 title = "Funcions Premium distribuïdes"
 
@@ -1512,6 +1538,33 @@ user = "Usuari"
 usernameInfo = "El nom d'usuari només pot contenir lletres, números i els següents caràcters especials: @._+- o ha de ser una adreça de correu electrònic vàlida."
 webOnlyUser = "Usuari només WEB"
 
+[agents]
+auto_redaction_description = "Redact PII automatically"
+auto_redaction_name = "Auto Redaction"
+back_to_tools = "Back to tools"
+coming_soon = "Coming soon"
+compliance_description = "Audit documents for compliance"
+compliance_name = "Compliance Check"
+data_extraction_description = "Extract tables & structured data"
+data_extraction_name = "Data Extraction"
+doc_summary_description = "Summarise long documents"
+doc_summary_name = "Summariser"
+form_filler_description = "Fill PDF forms intelligently"
+form_filler_name = "Form Filler"
+fullscreen_title = "Stirling Agents"
+pdf_to_markdown_description = "Convert PDFs to clean Markdown"
+pdf_to_markdown_name = "PDF to Markdown"
+section_title = "Agents"
+show_less = "Show less"
+start_chat = "Start chatting"
+stirling_description = "Your general-purpose PDF assistant"
+stirling_full_name = "Stirling General Agent"
+stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
+stirling_name = "Stirling"
+stirling_running = "Running..."
+stirling_tooltip = "Stirling agent"
+view_all = "View all agents"
+
 [analytics]
 disable = "Desactiva analítiques"
 enable = "Habilita analítiques"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "No tens permís per fer aquesta acció."
 pleaseLoginAgain = "Si us plau, torna a iniciar sessió."
 sessionExpired = "Sessió caducada"
 
+[auth.displayName]
+guest = "Guest"
+user = "User"
+
 [auto-rename]
 description = "Troba automàticament el títol del contingut del vostre PDF i l'utilitza com a nom de fitxer."
 header = "Canvi de Nom Automàtic de PDF"
@@ -1862,6 +1919,13 @@ label = "Obre el menú per a {{title}}"
 
 [automate.files]
 placeholder = "Seleccioneu fitxers per processar amb aquesta automatització"
+
+[automate.folderScanWarning]
+advice = "You can still download the file (e.g. to inspect or hand-edit it), but the unsupported steps will need to be removed before the backend can run it."
+cancel = "Cancel"
+confirm = "Export anyway"
+intro = "Folder scanning runs on the backend, so it can only execute tools that have a backend endpoint. The following step(s) in this automation do not, and will fail when the pipeline runs:"
+title = "Some steps cannot run in folder scanning"
 
 [automate.importModal]
 cancel = "Cancel·la"
@@ -2094,11 +2158,31 @@ placeholder = "Nombre de pàgines"
 title = "Últimes N pàgines"
 
 [bulkSelection.operators]
-and = "AND: & o \"and\" — requereix totes dues condicions (p. ex., 1-50 & even)"
-comma = "Coma: , o | — combina seleccions (p. ex., 1-10, 20)"
-not = "NOT: ! o \"not\" — exclou pàgines (p. ex., 3n & not 30)"
 text = "AND té prioritat més alta que la coma. NOT s'aplica dins del rang del document."
 title = "Operadors"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "Des de"
@@ -2684,6 +2768,22 @@ title = "Canviar Permissos"
 [changePermissions.tooltip.warning]
 text = "Per fer que aquests permisos no es puguin canviar, utilitzeu l’eina Afegir contrasenya per establir una contrasenya del propietari."
 
+[chat]
+resize = "Resize chat panel"
+
+[chat.actions]
+copy = "Copy message"
+
+[chat.header]
+agentMenu = "Stirling agent options"
+clearChat = "Clear chat"
+settings = "Agent settings"
+
+[chat.input]
+attach = "Attach files"
+placeholder = "What do you want to do?"
+send = "Send message"
+
 [chat.progress]
 analyzing = "Analitzant la teva sol·licitud..."
 calling_engine = "La IA està pensant..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "S’ha acabat de llegir el document..."
 whole_doc_read_started = "S’està llegint el document..."
 whole_doc_slice_done = "S’està llegint el document... ({{percent}}% complet)"
 
+[chat.quickActions]
+browseYourFiles = "Browse your files"
+compressMany = "Compress these documents"
+compressOne = "Compress this document"
+convertMany = "Convert these documents to PDF"
+convertOne = "Convert this document to PDF"
+fileSummary_one = "1 file in workbench ({{types}})"
+fileSummary_other = "{{count}} files in workbench ({{types}})"
+heading = "Get started"
+mergeMany = "Merge these {{count}} documents into 1"
+moreFiles = "+{{count}} more"
+openFromComputer = "Open from computer"
+removeFile = "Remove {{name}}"
+rotateMany = "Rotate these documents"
+rotateOne = "Rotate this document"
+splitOne = "Split this document"
+
+[chat.responses]
+cannot_continue = "Something went wrong and I can't continue."
+cannot_do = "I'm unable to do that."
+done = "Done."
+need_clarification = "Could you clarify your request?"
+not_found = "I couldn't find the requested information."
+processing = "Processing ({{outcome}})..."
+unsupported_capability = "Unsupported capability: {{capability}}"
+
 [chat.toolsUsed]
 summary = "S'han executat {{count}} eines"
 summary_one = "S'ha executat 1 eina"
@@ -2707,6 +2833,9 @@ unknownTool = "Eina desconeguda"
 
 [cloudBadge]
 tooltip = "Aquesta operació utilitzarà els vostres crèdits del núvol"
+
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
 
 [colorPicker]
 title = "Tria el color"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Selecciona primer el PDF original"
 filesMissing = "No s'han pogut localitzar els fitxers seleccionats. Torna a seleccionar-los."
 generic = "No es poden comparar aquests fitxers."
 selectRequired = "Selecciona un document original i un d'editat."
+title = "Comparison failed"
 
 [compare.large.file]
 message = "Un o tots dos documents proporcionats són massa grans per ser processats."
@@ -2864,6 +2994,7 @@ title = "Encara treballant…"
 
 [compare.status]
 complete = "Comparació preparada"
+error = "Comparison failed"
 extracting = "Extraient text..."
 processing = "Analitzant diferències..."
 
@@ -2929,6 +3060,10 @@ title = "Mètode de compressió"
 [compress.selectText.1]
 1 = "1-3 compressió de PDF,</br> 4-6 compressió lleugera d'imatges,</br> 7-9 compressió intensa d'imatges Reduirà dràsticament la qualitat de la imatge"
 _value = "Configuració de compressió"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "La compressió és una manera fàcil de reduir la mida del fitxer. Trieu Mida de fitxer per introduir una mida objectiu i que ajustem la qualitat per vosaltres. Trieu Qualitat per establir manualment la intensitat de la compressió."
@@ -3404,6 +3539,29 @@ title = "Configuració oberta"
 message = "Stirling PDF ara és el teu editor PDF per defecte"
 title = "Aplicació per defecte establerta"
 
+[desktopUpdate]
+downloading = "Downloading update..."
+installing = "Installing update..."
+installingWarning = "The app will close automatically to complete the installation."
+installNow = "Install Now"
+readyToRestart = "Update Ready"
+restartMessage = "The update has been installed. Restart the app to finish."
+restartNow = "Restart Now"
+updateFailed = "Update Failed"
+updateFailedMessage = "Failed to download or install the update."
+
+[desktopUpdate.blocked]
+docsLink = "View installation documentation"
+message = "Stirling-PDF does not have permission to update itself on this machine."
+title = "Administrator permissions required"
+
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Aplica la taula de continguts"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Espai de treball de l'esquema"
 [editTableOfContents.workbench.empty]
 description = "Selecciona l'eina Editar taula de continguts per carregar-ne l'espai de treball."
 title = "Obre l'eina per començar a editar"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Aquest PDF està protegit amb contrasenya. Introdueix-la per poder continuar treballant-hi."
@@ -3605,6 +3766,10 @@ title = "Configuració"
 [extractPages.tooltip]
 description = "Extreu les pàgines seleccionades a un nou PDF, preservant-ne l'ordre."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Clica"
 dragAndDrop = "Arrossega i deixa anar"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Arrossega i deixa anar un fitxer PDF"
 extractPDF = "Extraient..."
 hoveredDragAndDrop = "Arrossega i deixa anar fitxer(s) aquí"
 or = "o"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Afegeix fitxers"
@@ -3771,12 +3939,250 @@ expand = "Amplia la barra lateral"
 files = "Fitxers"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive no està configurat"
+leaveMyFiles = "Leave My Files"
+myFiles = "My Files"
 noFiles = "Encara no hi ha fitxers"
 openFileManager = "Obre el gestor de fitxers"
 openFromComputer = "Obre des de l’ordinador"
 openSettings = "Obre la configuració"
 search = "Cerca"
 searchPlaceholder = "Cerca fitxers..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
+
+[filesPage]
+addToWorkspace = "Add to workspace"
+addToWorkspaceCount = "Add {{count}} to workspace"
+allFiles = "All files"
+back = "Back"
+backToFolder = "Back to {{folder}}"
+backToMyFiles = "Back to My Files"
+breadcrumbs = "Folder path"
+cancel = "Cancel"
+clearSearch = "Clear search"
+clearSelection = "Clear selection"
+closeDetails = "Close details"
+create = "Create"
+cycleBlocked = "Can't move a folder into one of its own subfolders."
+delete = "Delete"
+deleteFolder = "Delete folder"
+deleteFolderBody = "Delete folder \"{{name}}\"?"
+deleteFolderConfirm = "Delete folder \"{{name}}\"? Files inside will be moved to All files. {{count}} file(s) affected."
+deleteFolderContents = "Also delete {{count}} file(s) inside the folder"
+deleteFolderContentsWarning = "Files will be permanently removed and cannot be recovered."
+deleteFolderError = "Could not delete the folder. Try again."
+deleteFolderKeepHint = "Files inside will be moved to All files."
+deleteFolderTitle = "Delete folder?"
+deselectAll = "Clear selection"
+details = "Details"
+detailsCount = "{{count}} files selected"
+dismissError = "Dismiss"
+download = "Download"
+downloadAll = "Download all"
+downloadVersion = "Download this version"
+dropOverlay = "Drop files to upload"
+dropOverlaySub = "Files start in Local. Use 'Move to' or 'Save to cloud' to organise them into a folder."
+file = "File"
+fileMenu = "File actions"
+folder = "Folder"
+folderItems = "{{count}} items"
+folderMenu = "Folder actions"
+inPath = "in {{path}}"
+inWorkspace = "Open"
+inWorkspaceAria = "Already in workspace"
+loading = "Loading…"
+localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organise it."
+moreActions = "More folder actions"
+moveLocalToCloudBlocked = "Local-only files can't be moved into cloud folders. Save them to the cloud first."
+moveSkippedRemote = "{{count}} file(s) couldn't be moved on the server (no permission or already deleted)."
+moveTo = "Move to…"
+myFiles = "My Files"
+newFolder = "New folder"
+newFolderStorageDisabled = "Server folder storage isn't enabled. Ask your admin to turn it on."
+newFolderTabUnavailable = "Switch to All or Cloud to create folders."
+newRootFolder = "New folder at root"
+offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disabled. Check sign-in and storage configuration."
+open = "Open"
+openInWorkbench = "Open in workbench"
+openVersionInWorkspace = "Open in workspace"
+originFilter = "Filter by source"
+quickView = "Quick view"
+refresh = "Refresh from server"
+remove = "Delete"
+removeConfirm = "Delete {{count}} file(s)? This cannot be undone."
+removeVersion = "Remove this version"
+rename = "Rename"
+renameFolder = "Rename folder"
+resizeFolderTree = "Resize folder tree (arrow keys, Shift for bigger steps; double-click to auto-fit)"
+save = "Save"
+saveToServer = "Save to server"
+saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
+search = "Search"
+searchPlaceholder = "Search this folder & subfolders"
+selectAll = "Select all"
+selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
+selectedCount = "{{count}} selected"
+selectFile = "Select file {{name}}"
+shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
+shareManage = "Manage sharing"
+showDetails = "Show details"
+summary = "{{count}} items"
+syncFailed = "Folder sync failed: {{message}}"
+syncPartial = "Folder sync partial: {{failed}} of {{total}} folders could not be merged."
+tree = "Folders"
+upload = "Upload"
+uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
+uploadFromMobile = "Upload from Mobile"
+versionActions = "Version actions"
+versionCollapse = "Collapse middle versions"
+versionOrigin = "Original upload"
+versionsCount = "{{count}} versions"
+versionShowHidden = "Show {{count}} earlier versions"
+viewVersion = "View this version"
+
+[filesPage.appearance]
+colour = "Colour"
+icon = "Icon"
+title = "Appearance"
+useColour = "Use colour {{c}}"
+
+[filesPage.column]
+modified = "Modified"
+name = "Name"
+size = "Size"
+type = "Type"
+
+[filesPage.empty]
+hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organise your files."
+newFolderCta = "Create folder"
+title = "This folder is empty"
+uploadCta = "Upload files"
+
+[filesPage.empty.cloud]
+hint = "Upload a file to start, or create a folder to organise."
+offlineHint = "Reconnect to load your cloud library."
+offlineTitle = "No cached cloud files"
+title = "No cloud files yet"
+
+[filesPage.empty.local]
+hint = "Files saved without uploading stay here. Drop a file to add one."
+title = "No local-only files"
+
+[filesPage.empty.recent]
+hint = "Files you open or edit will appear here."
+title = "Nothing modified yet"
+
+[filesPage.empty.shared]
+hint = "When someone shares a file via link, it appears here."
+title = "Nothing shared with you"
+
+[filesPage.empty.sharedByMe]
+hint = "Create a share link or invite a teammate from any of your files to see it here."
+title = "You haven't shared any files yet"
+
+[filesPage.error]
+actionFailed = "Could not {{action}}."
+actionFailedDetail = "Could not {{action}}: {{message}}"
+deleteFolderFailed = "Could not delete folder."
+deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+folderAppearanceFailed = "Could not update folder appearance."
+folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
+moveFilesFailed = "Could not move files."
+moveFilesFailedDetail = "Could not move files: {{message}}"
+moveFolderFailed = "Could not move folder."
+moveFolderFailedDetail = "Could not move folder: {{message}}"
+removeFilesFailed = "Could not remove files."
+removeFilesFailedDetail = "Could not remove files: {{message}}"
+uploadFilesFailed = "Could not upload files."
+uploadFilesFailedDetail = "Could not upload files: {{message}}"
+
+[filesPage.field]
+added = "Added"
+count = "Files"
+folder = "Folder"
+modified = "Modified"
+name = "Name"
+size = "Size"
+toolHistory = "Tool history"
+toolHistoryAtVersion = "Cumulative tool chain"
+totalSize = "Total size"
+type = "Type"
+versionHistory = "Version journey"
+
+[filesPage.folderName]
+cancel = "Cancel"
+error = "Could not save folder. Try again."
+label = "Folder name"
+placeholder = "Folder name"
+
+[filesPage.moveDialog]
+cancel = "Cancel"
+confirm = "Move here"
+error = "Could not move. Try again."
+hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
+newFolderCancel = "Discard"
+newFolderCreate = "Create"
+newFolderError = "Could not create folder. Try again."
+newFolderLabel = "New folder name"
+newFolderPlaceholder = "Folder name"
+newFolderToggle = "Create new folder…"
+title = "Move to folder"
+
+[filesPage.origin]
+all = "All sources"
+cloud = "Cloud"
+cloudHint = "Stored on the Stirling server"
+local = "Local"
+localHint = "Only stored in this browser"
+shared = "Shared"
+sharedHint = "Shared with you via link"
+
+[filesPage.sort]
+modifiedAsc = "Oldest first"
+modifiedDesc = "Recent first"
+nameAsc = "Name A→Z"
+nameDesc = "Name Z→A"
+sizeAsc = "Smallest first"
+sizeDesc = "Largest first"
+
+[filesPage.syncError]
+client = "Folder sync failed."
+network = "Could not reach the server."
+server = "Server error during folder sync."
+
+[filesPage.tabName]
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.tabs]
+all = "All"
+ariaLabel = "File views"
+cloud = "Cloud"
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.treeMenu]
+actions = "Folder actions for {{name}}"
+collapse = "Collapse folder"
+delete = "Delete folder"
+expand = "Expand folder"
+newSubfolder = "New subfolder"
+rename = "Rename"
+
+[filesPage.typeFilter]
+allTypes = "All types"
+label = "Filter by type"
+
+[filesPage.viewMode]
+grid = "Grid view"
+label = "View mode"
+list = "List view"
 
 [fileToPDF]
 credit = "Utilitza LibreOffice i Unoconv per a la conversió."
@@ -3891,6 +4297,15 @@ title = "Sobre l'aplanament de PDFs"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Descarrega JSON"
@@ -4451,6 +4866,11 @@ tags = "marcatge,contingut web,transformació,convertir"
 title = "HTML a PDF"
 zoom = "Nivell de zoom per mostrar el lloc web."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "conversió,img,jpg,imatge,foto"
 
@@ -4468,6 +4888,9 @@ title = "Imatge a PDF"
 3 = "Lògica de diversos fitxers (només està activada si es treballa amb diverses imatges)"
 4 = "Combina en un únic PDF"
 5 = "Converteix per separar els PDFs"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "No s’ha pogut crear el compte"
@@ -4804,6 +5227,7 @@ failed = "L'operació d'OCR ha fallat"
 
 [ocr.languagePicker]
 additionalLanguages = "Busques idiomes addicionals?"
+loading = "Loading available languages..."
 viewSetupGuide = "Veure la guia de configuració →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "{{days}} dia restant"
 title = "La teva prova Pro de 30 dies"
 trialEnds = "La prova acaba el {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Quan habilitis el mode d'inici de sessió, podràs gestionar usuaris, configurar paràmetres i supervisar la salut del servidor. Les primeres <strong>{{freeTierLimit}}</strong> persones del teu servidor poden usar Stirling gratuïtament."
 adminBodyLoginEnabled = "Com a administrador, pots gestionar usuaris, configurar paràmetres i supervisar la salut del servidor. Les primeres <strong>{{freeTierLimit}}</strong> persones del teu servidor poden usar Stirling gratuïtament."
@@ -4949,6 +5377,9 @@ userTitle = "Resum del pla"
 
 [onboarding.securityCheck]
 message = "L'aplicació ha patit canvis importants recentment. Pot ser necessària l'atenció de l'administrador del servidor. Confirma el teu rol per continuar."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions i obtenir accés anticipat a la nova <strong>eina d'edició de text PDF</strong>, recomanem el pla Stirling Server: edició completa i <strong>seients il·limitats</strong> per 99 $/servidor/mes."
@@ -5074,6 +5505,17 @@ title = "Editor de pàgines"
 zoomIn = "Amplia"
 zoomOut = "Redueix"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Extreu Pàgines"
 placeholder = "(p. ex. 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Afegeix Marcs"
 borderWidth = "Gruix de la vora"
 bottom = "Marge inferior"
 cols = "Columnes"
+colsPlaceholder = "Enter columns"
 header = "Disposició de Múltiples Pàgines"
 innerMargin = "Marge intern"
 left = "Marge esquerre"
 pagesPerSheet = "Pàgines per full:"
 right = "Marge dret"
 rows = "Files"
+rowsPlaceholder = "Enter rows"
 submit = "Envia"
 tags = "fusió,composició,vista única,organitzar"
 title = "Disposició de Múltiples Pàgines"
@@ -5131,6 +5575,14 @@ failed = "S'ha produït un error en crear la disposició multipàgina."
 innerMarginTooLarge = "El marge intern és massa gran per al disseny seleccionat."
 outerHorizontalMarginsTooLarge = "Els marges esquerre/dret són massa grans per a aquesta mida de pàgina."
 outerVerticalMarginsTooLarge = "Els marges superior/inferior són massa grans per a aquesta mida de pàgina."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Activa les vores per dibuixar línies al voltant de cada pàgina col·locada. Això pot ajudar a la separació visual o al retall."
@@ -5785,6 +6237,26 @@ pdfTools = "Eines PDF bàsiques"
 priority = "Suport prioritari"
 title = "Funció"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Gratuït per sempre"
 highlight1 = "Ús limitat d’eines per setmana"
@@ -5792,6 +6264,22 @@ highlight2 = "Accés a totes les eines"
 highlight3 = "Suport de la comunitat"
 included = "Inclòs"
 name = "Gratuït"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Tens {{total}} usuaris, però el nivell gratuït només admet {{limit}} per servidor. Actualitza per mantenir Stirling PDF funcionant sense problemes."
@@ -6103,6 +6591,7 @@ allSessions = "Totes les sessions"
 allTools = "All Tools"
 automate = "Auto"
 back = "Enrere"
+backToAllTools = "Back to all tools"
 certSign = "Signatura amb certificat"
 completedSessions = "Sessions completades"
 completedTab = "Completades"
@@ -6772,6 +7261,9 @@ bullet3 = "Crític per a fluxos d'aprovació i cadenes de custòdia legals"
 description = "L'ordre que especifiquis en crear la sessió determina qui signa primer."
 title = "Ordre de signatura"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Avançat"
 database = "Base de dades"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Comprova actualitzacions i informació de la versió"
 latestVersion = "Última versió"
+managedByAdmin = "Managed by administrator"
+modeAuto = "Install updates automatically"
+modeDisabled = "Don't check for updates"
+modePrompt = "Ask me before installing updates"
 serverNeedsUpdate = "L'administrador ha d'actualitzar el servidor"
 title = "Actualitzacions de programari"
+updateBehavior = "Update behavior"
+updateBehaviorDescription = "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely."
+updateBehaviorError = "Could not change update behavior"
+updateBehaviorErrorLocked = "This setting is locked by your administrator."
+updateBehaviorLockedDescription = "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this."
+updateBehaviorSaved = "Update behavior saved."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Veure detalls"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Tots els usuaris poden veure i utilitzar aquestes signature
 sharedHeading = "Signatures compartides"
 tempStorageDescription = "Les signatures només s'emmagatzemen al vostre navegador. Es perdran si netegeu les dades del navegador o canvieu de navegador."
 tempStorageTitle = "Emmagatzematge temporal del navegador"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Desada"
@@ -7695,6 +8198,7 @@ bulkTitle = "Pujar fitxers seleccionats"
 description = "Això puja el fitxer actual a l'emmagatzematge del servidor perquè hi pugueu accedir."
 errorTitle = "La pujada ha fallat"
 failure = "La pujada ha fallat. Comproveu l'inici de sessió i la configuració d'emmagatzematge."
+featureDisabled = "Saving to the server isn't enabled on this server."
 fileCount = "{{count}} fitxers seleccionats"
 fileLabel = "Fitxer"
 hint = "Els enllaços públics i els modes d'accés es controlen per la configuració del servidor."
@@ -7823,8 +8327,17 @@ center = "Centre"
 left = "Esquerra"
 right = "Dreta"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Commuta el tema"
+
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
 
 [timestampPdf]
 completed = "S’ha aplicat la marca de temps al PDF correctament"
@@ -7852,6 +8365,10 @@ label = "Selecciona un servidor TSA"
 [timestampPdf.steps]
 settings = "Configuració"
 
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
+
 [tool]
 endpointUnavailable = "Aquesta eina no està disponible al teu servidor."
 endpointUnavailableClickable = "No disponible en aquest mode. Fes clic per iniciar sessió."
@@ -7868,13 +8385,18 @@ viewerMode = "Canvia a l'editor de fitxers per seleccionar diversos fitxers."
 [toolPanel]
 allTools = "Totes les eines"
 alpha = "Alfa"
+backToAllTools = "Back to all tools"
+backToDefault = "Back"
 backToTools = "Torna a les eines"
 collapse = "Redueix el panell"
 comingSoon = "Aviat disponible:"
 expand = "Amplia el panell"
+goBack = "Go back"
 placeholder = "Tria una eina per començar"
 premiumFeature = "Funció premium:"
 search = "Cerca eines"
+toolsHeader = "Tools"
+viewAllTools = "View all tools"
 
 [toolPanel.fullscreen]
 comingSoon = "Properament:"
@@ -7933,6 +8455,9 @@ verification = "Verificació"
 noSearchResults = "No s’han trobat eines"
 noTools = "No hi ha eines disponibles"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Aquesta eina eliminarà les restriccions de només lectura dels camps de formulari del PDF, fent-los editables i emplenables."
 filenamePrefix = "formularis_desbloquejats"
@@ -7951,29 +8476,42 @@ placeholder = "Selecciona un fitxer PDF a la vista principal per començar"
 title = "Resultats de formularis desbloquejats"
 
 [update]
+allReleases = "All Releases"
 availableUpdates = "Actualitzacions disponibles"
+breaking = "Breaking"
 breakingChanges = "Canvis incompatibles"
 breakingChangesDefault = "Aquesta versió conté canvis incompatibles."
 breakingChangesDetected = "S'han detectat canvis incompatibles"
 breakingChangesMessage = "Algunes versions contenen canvis incompatibles. Revisa les guies de migració abans d'actualitzar."
 close = "Tanca"
+closeModal = "Close update modal"
 current = "Versió actual"
+defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Baixa l'última"
+later = "Later"
 latest = "Última versió"
 latestStable = "Última estable"
 loadingDetailedInfo = "Carregant informació detallada..."
 migrationGuide = "Guia de migració"
 migrationGuides = "Guies de migració"
+migrationGuidesDesc = "Review important changes before updating."
+modalSubtitle = "A new version of Stirling PDF is ready to install."
 modalTitle = "Actualització disponible"
+notes = "Notes"
 priorityLabel = "Prioritat"
 recommendedAction = "Acció recomanada"
 releaseNotes = "Notes de llançament"
+showLess = "Show fewer versions"
+showMore = "Show all {{count}} versions"
+stable = "STABLE"
 unableToLoadDetails = "No s'ha pogut carregar la informació detallada."
 updateAvailable = "Actualització disponible"
 urgentUpdateAvailable = "Actualització urgent"
 version = "Versió"
+versionHistory = "Version History"
 viewAllReleases = "Veure totes les versions"
 viewGuide = "Veure guia"
+whatsNewIn = "What's new in"
 
 [update.priority]
 low = "Baixa"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Activa el filtre fosc"
 enableSepiaFilter = "Activa el filtre sèpia"
 firstPage = "Primera pàgina"
 lastPage = "Última pàgina"
+moreOptions = "More"
 nextPage = "Pàgina següent"
 onlyPdfSupported = "El visualitzador només admet fitxers PDF. Aquest fitxer sembla ser d'un format diferent."
+pageNavigation = "Page navigation"
 previousPage = "Pàgina anterior"
 resetZoom = "Restableix el zoom"
 singlePageView = "Vista d'una sola pàgina"
 unknownFile = "Fitxer desconegut"
+view = "View"
+zoom = "Zoom"
 zoomIn = "Amplia"
 zoomOut = "Redueix"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Insereix text"
 typeReplaceText = "Substitueix el text"
 viewComment = "Mostra el comentari"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Aplica els canvis"
 dismiss = "Descarta"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Aquest PDF conté camps emplenables"
 title = "Camps del formulari"
 unsavedBadge = "No desats"
 unsavedDesc = "Tens canvis no desats"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Columna {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Carregant..."
 renderMarkdown = "Renderitza Markdown"
 sortedBy = "Ordenat per: {{column}}"
 textStats = "{{lines}} línies · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Visualitza PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Mostra/oculta les capes"
 toggleSidebar = "Mostra/oculta la barra lateral"
 toggleTheme = "Canvia el tema"
 viewer = "Visor"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Espai de treball"

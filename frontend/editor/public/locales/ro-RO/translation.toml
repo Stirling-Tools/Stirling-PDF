@@ -12,7 +12,6 @@ cancel = "Anulare"
 changedCredsMessage = "Credențialele au fost schimbate!"
 chooseFile = "Alegeți fișier"
 close = "Închide"
-color = "Culoare"
 comingSoon = "În curând"
 confirm = "Confirmați"
 confirmClose = "Confirmare închidere"
@@ -90,6 +89,7 @@ nothingToUndo = "Nimic de anulat"
 noticeTopUpOrPlan = "Credite insuficiente, reîncărcați sau treceți la un plan"
 noValidFiles = "Niciun fișier valid de procesat"
 oops = "Ups!"
+openInNewWindow = "Open in new window"
 openInViewer = "Deschideți în Vizualizator"
 operationCancelled = "Operațiune anulată"
 page = "Pagină"
@@ -198,6 +198,10 @@ ssoDescription = "Autentificarea cu doi factori este gestionată de furnizorul d
 ssoManaged = "Configurați MFA prin furnizorul dvs. de identitate."
 title = "Autentificare cu doi factori"
 
+[account.overview]
+logOut = "Log out"
+signedInAs = "Signed in as: {{email}}"
+
 [add-page-numbers]
 tags = "paginează,etichetează,organizează,indexează"
 
@@ -224,6 +228,9 @@ title = "Ce face"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Despre adăugarea atașamentelor"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Aplică imagini"
@@ -494,6 +501,11 @@ title = "Ajustează scala paginii"
 [adjustPageScale.error]
 failed = "A apărut o eroare la ajustarea scalei paginii."
 
+[adjustPageScale.orientation]
+label = "Page orientation"
+landscape = "Landscape"
+portrait = "Portrait"
+
 [adjustPageScale.pageSize]
 keep = "Păstrează dimensiunea originală"
 label = "Dimensiunea paginii țintă"
@@ -600,6 +612,7 @@ label = "Gestionarea fișierelor temporare"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Directorul de bază pentru fișiere temporare (lăsați gol pentru implicit: java.io.tmpdir/stirling-pdf)"
 label = "Director temporar de bază"
+placeholder = "Default: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Cât de des să ruleze curățarea (în minute)"
@@ -612,6 +625,7 @@ label = "Curățare temp sistem"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Directorul pentru fișiere temporare LibreOffice (lăsați gol pentru implicit: baseTmpDir/libreoffice)"
 label = "Director temporar LibreOffice"
+placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Vârsta maximă în ore înainte ca fișierele temporare să fie curățate"
@@ -628,6 +642,7 @@ label = "Curățare la pornire"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Directorul temporar al sistemului de curățat (utilizat doar dacă cleanupSystemTemp este activat)"
 label = "Director temporar sistem"
+placeholder = "System temp directory path"
 
 [admin.settings.advanced.tessdataDir]
 description = "Calea către directorul tessdata pentru fișierele de limbă OCR"
@@ -833,6 +848,7 @@ label = "Nume bază de date"
 [admin.settings.database.password]
 description = "Parola pentru autentificarea la baza de date"
 label = "Parolă"
+placeholder = "Enter database password"
 
 [admin.settings.database.port]
 description = "Portul serverului de baze de date (nu este utilizat dacă se furnizează URL personalizat)"
@@ -864,10 +880,12 @@ label = "Ascunde instrumentele indisponibile în mod implicit"
 [admin.settings.endpoints.groupsToRemove]
 description = "Selectați grupuri de puncte finale pentru dezactivare"
 label = "Grupuri de puncte finale dezactivate"
+placeholder = "Select groups to disable"
 
 [admin.settings.endpoints.toRemove]
 description = "Selectați puncte finale individuale pentru dezactivare"
 label = "Puncte finale dezactivate"
+placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
 message = "Este necesară o licență Enterprise pentru a accesa {{featureName}}. Vizualizați date demonstrative pentru referință."
@@ -1082,6 +1100,7 @@ label = "Gazdă SMTP"
 [admin.settings.mail.password]
 description = "Parola pentru autentificarea SMTP"
 label = "Parolă SMTP"
+placeholder = "Enter SMTP password"
 
 [admin.settings.mail.port]
 description = "Numărul portului pentru conexiunea SMTP (de obicei 25, 465 sau 587)"
@@ -1090,6 +1109,10 @@ label = "Port SMTP"
 [admin.settings.mail.username]
 description = "Numele de utilizator pentru autentificarea SMTP"
 label = "Utilizator SMTP"
+
+[admin.settings.plan.noData]
+message = "Plans data is not available at the moment."
+title = "No data available"
 
 [admin.settings.premium]
 description = "Configurați cheia de licență premium sau enterprise."
@@ -1137,6 +1160,9 @@ info = "Dacă ai o cheie de licență sau un fișier certificat dintr-o achiziț
 toggle = "Ai o cheie de licență sau un fișier certificat?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
+customMetadata = "<0>Custom Metadata</0> (PRO) - General"
+databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Funcțiile Premium și Enterprise sunt acum organizate în secțiunile lor corespunzătoare:"
 title = "Funcții Premium distribuite"
 
@@ -1512,6 +1538,33 @@ user = "Utilizator"
 usernameInfo = "Numele de utilizator poate conține doar litere, numere și următoarele caractere speciale @._+- sau trebuie să fie o adresă de email validă."
 webOnlyUser = "Utilizator Doar Web"
 
+[agents]
+auto_redaction_description = "Redact PII automatically"
+auto_redaction_name = "Auto Redaction"
+back_to_tools = "Back to tools"
+coming_soon = "Coming soon"
+compliance_description = "Audit documents for compliance"
+compliance_name = "Compliance Check"
+data_extraction_description = "Extract tables & structured data"
+data_extraction_name = "Data Extraction"
+doc_summary_description = "Summarise long documents"
+doc_summary_name = "Summariser"
+form_filler_description = "Fill PDF forms intelligently"
+form_filler_name = "Form Filler"
+fullscreen_title = "Stirling Agents"
+pdf_to_markdown_description = "Convert PDFs to clean Markdown"
+pdf_to_markdown_name = "PDF to Markdown"
+section_title = "Agents"
+show_less = "Show less"
+start_chat = "Start chatting"
+stirling_description = "Your general-purpose PDF assistant"
+stirling_full_name = "Stirling General Agent"
+stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
+stirling_name = "Stirling"
+stirling_running = "Running..."
+stirling_tooltip = "Stirling agent"
+view_all = "View all agents"
+
 [analytics]
 disable = "Dezactivați analizele"
 enable = "Activați analizele"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Nu aveți permisiunea de a efectua această acțiune.
 pleaseLoginAgain = "Vă rugăm să vă autentificați din nou."
 sessionExpired = "Sesiune expirată"
 
+[auth.displayName]
+guest = "Guest"
+user = "User"
+
 [auto-rename]
 description = "Găsește automat titlul din conținutul PDF-ului și îl folosește ca nume de fișier."
 header = "Redenumire Automată PDF"
@@ -1862,6 +1919,13 @@ label = "Deschide meniul pentru {{title}}"
 
 [automate.files]
 placeholder = "Selectați fișiere de procesat cu această automatizare"
+
+[automate.folderScanWarning]
+advice = "You can still download the file (e.g. to inspect or hand-edit it), but the unsupported steps will need to be removed before the backend can run it."
+cancel = "Cancel"
+confirm = "Export anyway"
+intro = "Folder scanning runs on the backend, so it can only execute tools that have a backend endpoint. The following step(s) in this automation do not, and will fail when the pipeline runs:"
+title = "Some steps cannot run in folder scanning"
 
 [automate.importModal]
 cancel = "Anulează"
@@ -2094,11 +2158,31 @@ placeholder = "Număr de pagini"
 title = "Ultimele N pagini"
 
 [bulkSelection.operators]
-and = "AND: & sau \"and\" — necesită ambele condiții (ex.: 1-50 & even)"
-comma = "Virgulă: , sau | — combină selecțiile (ex.: 1-10, 20)"
-not = "NOT: ! sau \"not\" — exclude pagini (ex.: 3n & not 30)"
 text = "AND are prioritate mai mare decât virgula. NOT se aplică în cadrul intervalului documentului."
 title = "Operatori"
+
+[bulkSelection.operators.and]
+title = "Combine selections (both conditions must be true)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Select all even-numbered pages (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclude from selection"
+
+[bulkSelection.operators.odd]
+title = "Select all odd-numbered pages (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Add to selection (either condition can be true)"
+
+[bulkSelection.pageSelection]
+title = "Page Selection"
 
 [bulkSelection.range]
 fromPlaceholder = "De la"
@@ -2684,6 +2768,22 @@ title = "Schimbă Permisiunile"
 [changePermissions.tooltip.warning]
 text = "Pentru ca aceste permisiuni să nu poată fi schimbate, utilizați instrumentul Adăugare parolă pentru a seta o parolă de proprietar."
 
+[chat]
+resize = "Resize chat panel"
+
+[chat.actions]
+copy = "Copy message"
+
+[chat.header]
+agentMenu = "Stirling agent options"
+clearChat = "Clear chat"
+settings = "Agent settings"
+
+[chat.input]
+attach = "Attach files"
+placeholder = "What do you want to do?"
+send = "Send message"
+
 [chat.progress]
 analyzing = "Se analizează solicitarea dvs...."
 calling_engine = "AI se gândește..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "S-a terminat citirea documentului..."
 whole_doc_read_started = "Se citește documentul..."
 whole_doc_slice_done = "Se citește documentul... ({{percent}}% complet)"
 
+[chat.quickActions]
+browseYourFiles = "Browse your files"
+compressMany = "Compress these documents"
+compressOne = "Compress this document"
+convertMany = "Convert these documents to PDF"
+convertOne = "Convert this document to PDF"
+fileSummary_one = "1 file in workbench ({{types}})"
+fileSummary_other = "{{count}} files in workbench ({{types}})"
+heading = "Get started"
+mergeMany = "Merge these {{count}} documents into 1"
+moreFiles = "+{{count}} more"
+openFromComputer = "Open from computer"
+removeFile = "Remove {{name}}"
+rotateMany = "Rotate these documents"
+rotateOne = "Rotate this document"
+splitOne = "Split this document"
+
+[chat.responses]
+cannot_continue = "Something went wrong and I can't continue."
+cannot_do = "I'm unable to do that."
+done = "Done."
+need_clarification = "Could you clarify your request?"
+not_found = "I couldn't find the requested information."
+processing = "Processing ({{outcome}})..."
+unsupported_capability = "Unsupported capability: {{capability}}"
+
 [chat.toolsUsed]
 summary = "S-au rulat {{count}} instrumente"
 summary_one = "S-a rulat 1 instrument"
@@ -2707,6 +2833,9 @@ unknownTool = "Instrument necunoscut"
 
 [cloudBadge]
 tooltip = "Această operație va folosi creditele din cloud"
+
+[color.eyeDropper]
+tooltip = "Pick colour from screen"
 
 [colorPicker]
 title = "Alege culoarea"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Selectează mai întâi PDF-ul original"
 filesMissing = "Nu s-au putut găsi fișierele selectate. Vă rugăm să le selectați din nou."
 generic = "Nu s-au putut compara aceste fișiere."
 selectRequired = "Selectați un document original și unul editat."
+title = "Comparison failed"
 
 [compare.large.file]
 message = "Unul sau ambele documente furnizate sunt prea mari pentru a fi procesate"
@@ -2864,6 +2994,7 @@ title = "Încă lucrăm…"
 
 [compare.status]
 complete = "Compararea este gata"
+error = "Comparison failed"
 extracting = "Se extrage textul..."
 processing = "Se analizează diferențele..."
 
@@ -2929,6 +3060,10 @@ title = "Metodă de comprimare"
 [compress.selectText.1]
 1 = "1-3 comprimare PDF,</br> 4-6 comprimare ușoară a imaginilor,</br> 7-9 comprimare intensă a imaginilor Va reduce semnificativ calitatea imaginilor"
 _value = "Setări de comprimare"
+
+[compress.settings]
+desiredSize = "Desired File Size"
+desiredSizePlaceholder = "Enter size"
 
 [compress.tooltip.description]
 text = "Comprimarea este o modalitate ușoară de a reduce dimensiunea fișierului. Alegeți Dimensiunea fișierului pentru a introduce o dimensiune țintă și vom ajusta noi calitatea. Alegeți Calitate pentru a seta manual intensitatea comprimării."
@@ -3404,6 +3539,29 @@ title = "Setări deschise"
 message = "Stirling PDF este acum editorul tău PDF implicit"
 title = "Aplicație implicită setată"
 
+[desktopUpdate]
+downloading = "Downloading update..."
+installing = "Installing update..."
+installingWarning = "The app will close automatically to complete the installation."
+installNow = "Install Now"
+readyToRestart = "Update Ready"
+restartMessage = "The update has been installed. Restart the app to finish."
+restartNow = "Restart Now"
+updateFailed = "Update Failed"
+updateFailedMessage = "Failed to download or install the update."
+
+[desktopUpdate.blocked]
+docsLink = "View installation documentation"
+message = "Stirling-PDF does not have permission to update itself on this machine."
+title = "Administrator permissions required"
+
+[dropdownList]
+searchPlaceholder = "Search..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit secret value"
+
 [editTableOfContents]
 submit = "Aplică cuprinsul"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Spațiu de lucru cuprins"
 [editTableOfContents.workbench.empty]
 description = "Selectează instrumentul Edit Table of Contents pentru a încărca spațiul de lucru."
 title = "Deschide instrumentul pentru a începe editarea"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Acest PDF este protejat cu parolă. Introdu parola pentru a continua lucrul cu el."
@@ -3605,6 +3766,10 @@ title = "Setări"
 [extractPages.tooltip]
 description = "Extrage paginile selectate într-un nou PDF, păstrând ordinea."
 
+[fileCard]
+openInFileEditor = "Open in File Editor"
+viewInViewer = "View in Viewer"
+
 [fileChooser]
 click = "Faceți clic"
 dragAndDrop = "Trageți și plasați"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Trageți și plasați fișier PDF"
 extractPDF = "Se extrage..."
 hoveredDragAndDrop = "Trageți și plasați fișier(e) aici"
 or = "sau"
+
+[fileDropdownMenu]
+closeFile = "Close file"
 
 [fileEditor]
 addFiles = "Adăugați fișiere"
@@ -3771,12 +3939,250 @@ expand = "Extinde bara laterală"
 files = "Fișiere"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive nu este configurat"
+leaveMyFiles = "Leave My Files"
+myFiles = "My Files"
 noFiles = "Încă nu există fișiere"
 openFileManager = "Deschide managerul de fișiere"
 openFromComputer = "Deschide de pe calculator"
 openSettings = "Deschide setările"
 search = "Căutare"
 searchPlaceholder = "Caută fișiere..."
+
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+openInViewer = "Open in viewer"
+
+[filesPage]
+addToWorkspace = "Add to workspace"
+addToWorkspaceCount = "Add {{count}} to workspace"
+allFiles = "All files"
+back = "Back"
+backToFolder = "Back to {{folder}}"
+backToMyFiles = "Back to My Files"
+breadcrumbs = "Folder path"
+cancel = "Cancel"
+clearSearch = "Clear search"
+clearSelection = "Clear selection"
+closeDetails = "Close details"
+create = "Create"
+cycleBlocked = "Can't move a folder into one of its own subfolders."
+delete = "Delete"
+deleteFolder = "Delete folder"
+deleteFolderBody = "Delete folder \"{{name}}\"?"
+deleteFolderConfirm = "Delete folder \"{{name}}\"? Files inside will be moved to All files. {{count}} file(s) affected."
+deleteFolderContents = "Also delete {{count}} file(s) inside the folder"
+deleteFolderContentsWarning = "Files will be permanently removed and cannot be recovered."
+deleteFolderError = "Could not delete the folder. Try again."
+deleteFolderKeepHint = "Files inside will be moved to All files."
+deleteFolderTitle = "Delete folder?"
+deselectAll = "Clear selection"
+details = "Details"
+detailsCount = "{{count}} files selected"
+dismissError = "Dismiss"
+download = "Download"
+downloadAll = "Download all"
+downloadVersion = "Download this version"
+dropOverlay = "Drop files to upload"
+dropOverlaySub = "Files start in Local. Use 'Move to' or 'Save to cloud' to organise them into a folder."
+file = "File"
+fileMenu = "File actions"
+folder = "Folder"
+folderItems = "{{count}} items"
+folderMenu = "Folder actions"
+inPath = "in {{path}}"
+inWorkspace = "Open"
+inWorkspaceAria = "Already in workspace"
+loading = "Loading…"
+localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organise it."
+moreActions = "More folder actions"
+moveLocalToCloudBlocked = "Local-only files can't be moved into cloud folders. Save them to the cloud first."
+moveSkippedRemote = "{{count}} file(s) couldn't be moved on the server (no permission or already deleted)."
+moveTo = "Move to…"
+myFiles = "My Files"
+newFolder = "New folder"
+newFolderStorageDisabled = "Server folder storage isn't enabled. Ask your admin to turn it on."
+newFolderTabUnavailable = "Switch to All or Cloud to create folders."
+newRootFolder = "New folder at root"
+offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disabled. Check sign-in and storage configuration."
+open = "Open"
+openInWorkbench = "Open in workbench"
+openVersionInWorkspace = "Open in workspace"
+originFilter = "Filter by source"
+quickView = "Quick view"
+refresh = "Refresh from server"
+remove = "Delete"
+removeConfirm = "Delete {{count}} file(s)? This cannot be undone."
+removeVersion = "Remove this version"
+rename = "Rename"
+renameFolder = "Rename folder"
+resizeFolderTree = "Resize folder tree (arrow keys, Shift for bigger steps; double-click to auto-fit)"
+save = "Save"
+saveToServer = "Save to server"
+saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
+search = "Search"
+searchPlaceholder = "Search this folder & subfolders"
+selectAll = "Select all"
+selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
+selectedCount = "{{count}} selected"
+selectFile = "Select file {{name}}"
+shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
+shareManage = "Manage sharing"
+showDetails = "Show details"
+summary = "{{count}} items"
+syncFailed = "Folder sync failed: {{message}}"
+syncPartial = "Folder sync partial: {{failed}} of {{total}} folders could not be merged."
+tree = "Folders"
+upload = "Upload"
+uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
+uploadFromMobile = "Upload from Mobile"
+versionActions = "Version actions"
+versionCollapse = "Collapse middle versions"
+versionOrigin = "Original upload"
+versionsCount = "{{count}} versions"
+versionShowHidden = "Show {{count}} earlier versions"
+viewVersion = "View this version"
+
+[filesPage.appearance]
+colour = "Colour"
+icon = "Icon"
+title = "Appearance"
+useColour = "Use colour {{c}}"
+
+[filesPage.column]
+modified = "Modified"
+name = "Name"
+size = "Size"
+type = "Type"
+
+[filesPage.empty]
+hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organise your files."
+newFolderCta = "Create folder"
+title = "This folder is empty"
+uploadCta = "Upload files"
+
+[filesPage.empty.cloud]
+hint = "Upload a file to start, or create a folder to organise."
+offlineHint = "Reconnect to load your cloud library."
+offlineTitle = "No cached cloud files"
+title = "No cloud files yet"
+
+[filesPage.empty.local]
+hint = "Files saved without uploading stay here. Drop a file to add one."
+title = "No local-only files"
+
+[filesPage.empty.recent]
+hint = "Files you open or edit will appear here."
+title = "Nothing modified yet"
+
+[filesPage.empty.shared]
+hint = "When someone shares a file via link, it appears here."
+title = "Nothing shared with you"
+
+[filesPage.empty.sharedByMe]
+hint = "Create a share link or invite a teammate from any of your files to see it here."
+title = "You haven't shared any files yet"
+
+[filesPage.error]
+actionFailed = "Could not {{action}}."
+actionFailedDetail = "Could not {{action}}: {{message}}"
+deleteFolderFailed = "Could not delete folder."
+deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+folderAppearanceFailed = "Could not update folder appearance."
+folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
+moveFilesFailed = "Could not move files."
+moveFilesFailedDetail = "Could not move files: {{message}}"
+moveFolderFailed = "Could not move folder."
+moveFolderFailedDetail = "Could not move folder: {{message}}"
+removeFilesFailed = "Could not remove files."
+removeFilesFailedDetail = "Could not remove files: {{message}}"
+uploadFilesFailed = "Could not upload files."
+uploadFilesFailedDetail = "Could not upload files: {{message}}"
+
+[filesPage.field]
+added = "Added"
+count = "Files"
+folder = "Folder"
+modified = "Modified"
+name = "Name"
+size = "Size"
+toolHistory = "Tool history"
+toolHistoryAtVersion = "Cumulative tool chain"
+totalSize = "Total size"
+type = "Type"
+versionHistory = "Version journey"
+
+[filesPage.folderName]
+cancel = "Cancel"
+error = "Could not save folder. Try again."
+label = "Folder name"
+placeholder = "Folder name"
+
+[filesPage.moveDialog]
+cancel = "Cancel"
+confirm = "Move here"
+error = "Could not move. Try again."
+hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
+newFolderCancel = "Discard"
+newFolderCreate = "Create"
+newFolderError = "Could not create folder. Try again."
+newFolderLabel = "New folder name"
+newFolderPlaceholder = "Folder name"
+newFolderToggle = "Create new folder…"
+title = "Move to folder"
+
+[filesPage.origin]
+all = "All sources"
+cloud = "Cloud"
+cloudHint = "Stored on the Stirling server"
+local = "Local"
+localHint = "Only stored in this browser"
+shared = "Shared"
+sharedHint = "Shared with you via link"
+
+[filesPage.sort]
+modifiedAsc = "Oldest first"
+modifiedDesc = "Recent first"
+nameAsc = "Name A→Z"
+nameDesc = "Name Z→A"
+sizeAsc = "Smallest first"
+sizeDesc = "Largest first"
+
+[filesPage.syncError]
+client = "Folder sync failed."
+network = "Could not reach the server."
+server = "Server error during folder sync."
+
+[filesPage.tabName]
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.tabs]
+all = "All"
+ariaLabel = "File views"
+cloud = "Cloud"
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.treeMenu]
+actions = "Folder actions for {{name}}"
+collapse = "Collapse folder"
+delete = "Delete folder"
+expand = "Expand folder"
+newSubfolder = "New subfolder"
+rename = "Rename"
+
+[filesPage.typeFilter]
+allTypes = "All types"
+label = "Filter by type"
+
+[filesPage.viewMode]
+grid = "Grid view"
+label = "View mode"
+list = "List view"
 
 [fileToPDF]
 credit = "Acest serviciu utilizează LibreOffice și Unoconv pentru conversia fișierelor."
@@ -3891,6 +4297,15 @@ title = "Despre aplatizarea PDF-urilor"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Flatten after filling"
+rescanFields = "Re-scan fields"
+rescanFormFields = "Re-scan form fields"
+save = "Save"
+
+[formFill.sidebar]
+close = "Close sidebar"
 
 [getPdfInfo]
 downloadJson = "Descarcă JSON"
@@ -4451,6 +4866,11 @@ tags = "markup,conținut-web,transformare,convertește"
 title = "HTML în PDF"
 zoom = "Nivel de zoom pentru afișarea site-ului web."
 
+[image.upload]
+hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
+label = "Upload Image"
+placeholder = "Select image file"
+
 [imageToPdf]
 tags = "conversie,img,jpg,poză,fotografie"
 
@@ -4468,6 +4888,9 @@ title = "Imagine în PDF"
 3 = "Logica pentru mai multe fișiere (activată numai dacă se lucrează cu mai multe imagini)"
 4 = "Unifică într-un singur PDF"
 5 = "Convertește în PDF-uri separate"
+
+[infoBanner]
+dismiss = "Dismiss"
 
 [invite]
 acceptError = "Crearea contului a eșuat"
@@ -4804,6 +5227,7 @@ failed = "Operațiunea OCR a eșuat"
 
 [ocr.languagePicker]
 additionalLanguages = "Căutați limbi suplimentare?"
+loading = "Loading available languages..."
 viewSetupGuide = "Vezi ghidul de configurare →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "{{days}} zi rămasă"
 title = "Perioada de probă Pro de 30 de zile"
 trialEnds = "Perioada de probă se încheie la {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Authentication code"
+qrCodeLoading = "Generating your QR code…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "După ce activezi modul de autentificare, poți gestiona utilizatori, configura setări și monitoriza starea serverului. Primele <strong>{{freeTierLimit}}</strong> persoane de pe serverul tău folosesc Stirling gratuit."
 adminBodyLoginEnabled = "Ca admin, poți gestiona utilizatori, configura setări și monitoriza starea serverului. Primele <strong>{{freeTierLimit}}</strong> persoane de pe serverul tău folosesc Stirling gratuit."
@@ -4949,6 +5377,9 @@ userTitle = "Prezentare plan"
 
 [onboarding.securityCheck]
 message = "Aplicația a suferit schimbări semnificative recent. Poate fi nevoie de atenția adminului serverului. Confirmă-ți rolul pentru a continua."
+roleAdmin = "Admin"
+rolePlaceholder = "Confirm your role"
+roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Licențierea noastră <strong>Open-Core</strong> permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Pentru a scala fără întreruperi și a primi acces timpuriu la noul nostru <strong>instrument de editare text PDF</strong>, recomandăm planul Stirling Server - editare completă și <strong>locuri nelimitate</strong> pentru $99/server/lună."
@@ -5074,6 +5505,17 @@ title = "Editor de pagini"
 zoomIn = "Măriți"
 zoomOut = "Micșorați"
 
+[pageEditor.emptyState]
+body = "Add files to start editing pages"
+title = "No PDF files loaded"
+
+[pageEditor.toolbar]
+delete = "Delete Selected"
+redo = "Redo"
+rotateLeft = "Rotate Selected Left"
+rotateRight = "Rotate Selected Right"
+undo = "Undo"
+
 [pageExtracter]
 header = "Extrage Pagini"
 placeholder = "(ex. 1,2,8 sau 4,7,12-16 sau 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Adaugă Borduri"
 borderWidth = "Grosimea chenarului"
 bottom = "Margine jos"
 cols = "Coloane"
+colsPlaceholder = "Enter columns"
 header = "Aspect Multi-Pagină"
 innerMargin = "Margine interioară"
 left = "Margine stânga"
 pagesPerSheet = "Pagini per foaie:"
 right = "Margine dreapta"
 rows = "Rânduri"
+rowsPlaceholder = "Enter rows"
 submit = "Trimite"
 tags = "îmbină,compozit,vizualizare-unică,organizează"
 title = "Aspect Multi-Pagină"
@@ -5131,6 +5575,14 @@ failed = "A apărut o eroare la crearea configurației multipagină."
 innerMarginTooLarge = "Marginea interioară este prea mare pentru aspectul selectat."
 outerHorizontalMarginsTooLarge = "Marginile stânga/dreapta sunt prea mari pentru această dimensiune de pagină."
 outerVerticalMarginsTooLarge = "Marginile de sus/jos sunt prea mari pentru această dimensiune de pagină."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Enter border thickness"
+bottomPlaceholder = "Enter bottom margin"
+innerPlaceholder = "Enter inner margin"
+leftPlaceholder = "Enter left margin"
+rightPlaceholder = "Enter right margin"
+topPlaceholder = "Enter top margin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Activați chenarele pentru a trasa linii în jurul fiecărei pagini plasate. Acest lucru poate ajuta la separare vizuală sau la tăiere."
@@ -5785,6 +6237,26 @@ pdfTools = "Instrumente PDF de bază"
 priority = "Asistență prioritară"
 title = "Funcție"
 
+[plan.features]
+allPdfOperations = "All PDF operations"
+auditing = "Auditing"
+communitySupport = "Community support"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfs = "Editing text in pdfs"
+externalDatabase = "External Database"
+googleDriveIntegration = "Google drive integration"
+prometheusSupport = "Prometheus Support"
+regularUpdates = "Regular updates"
+saml = "SAML"
+secureLoginSupport = "Secure Login Support"
+selfHostedDeployment = "Self-hosted deployment"
+sso = "SSO"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+upToFiveUsersLowercase = "up to 5 users"
+usageTracking = "Usage tracking"
+usersLimitedToSeats = "Users limited to seats"
+
 [plan.free]
 forever = "Gratuit pentru totdeauna"
 highlight1 = "Utilizare limitată a instrumentelor pe săptămână"
@@ -5792,6 +6264,22 @@ highlight2 = "Acces la toate instrumentele"
 highlight3 = "Asistență din comunitate"
 included = "Inclus"
 name = "Gratuit"
+
+[plan.highlights]
+advancedIntegrations = "Advanced integrations"
+allBasicFeatures = "All basic features"
+cancelAnytime = "Cancel anytime"
+customPdfMetadata = "Custom PDF metadata"
+editingTextInPdfsCaps = "Editing text in PDFs"
+enterpriseFeatures = "Enterprise features (SAML, Auditing)"
+perSeatLicensing = "Per-seat licensing"
+saveWithAnnualBilling = "Save with annual billing"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Unlimited users"
+upToFiveUsers = "Up to 5 users"
+usageTrackingPrometheus = "Usage tracking & Prometheus"
 
 [plan.licenseWarning]
 body = "Ai {{total}} utilizatori, dar nivelul gratuit suportă doar {{limit}} per server. Fă upgrade pentru ca Stirling PDF să ruleze fără probleme."
@@ -6103,6 +6591,7 @@ allSessions = "Toate sesiunile"
 allTools = "All Tools"
 automate = "Auto"
 back = "Înapoi"
+backToAllTools = "Back to all tools"
 certSign = "Semnare cu certificat"
 completedSessions = "Sesiuni finalizate"
 completedTab = "Finalizate"
@@ -6772,6 +7261,9 @@ bullet3 = "Critic pentru fluxuri de aprobare și lanțuri legale de custodie"
 description = "Ordinea specificată la crearea sesiunii determină cine semnează primul."
 title = "Ordinea semnăturilor"
 
+[settings]
+close = "Close"
+
 [settings.configuration]
 advanced = "Avansat"
 database = "Bază de date"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Caută actualizări și vezi informații despre versiune"
 latestVersion = "Ultima versiune"
+managedByAdmin = "Managed by administrator"
+modeAuto = "Install updates automatically"
+modeDisabled = "Don't check for updates"
+modePrompt = "Ask me before installing updates"
 serverNeedsUpdate = "Serverul trebuie actualizat de administrator"
 title = "Actualizări software"
+updateBehavior = "Update behavior"
+updateBehaviorDescription = "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely."
+updateBehaviorError = "Could not change update behavior"
+updateBehaviorErrorLocked = "This setting is locked by your administrator."
+updateBehaviorLockedDescription = "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this."
+updateBehaviorSaved = "Update behavior saved."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Vezi detalii"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Toți utilizatorii pot vedea și utiliza aceste semnături.
 sharedHeading = "Semnături partajate"
 tempStorageDescription = "Semnăturile sunt stocate doar în browserul dvs. Vor fi pierdute dacă ștergeți datele browserului sau schimbați browserul."
 tempStorageTitle = "Stocare temporară în browser"
+use = "Use signature"
 
 [sign.saved.status]
 saved = "Salvat"
@@ -7695,6 +8198,7 @@ bulkTitle = "Încărcați fișierele selectate"
 description = "Aceasta încarcă fișierul curent în spațiul de stocare al serverului pentru accesul dvs."
 errorTitle = "Încărcare eșuată"
 failure = "Încărcare eșuată. Verificați autentificarea și setările de stocare."
+featureDisabled = "Saving to the server isn't enabled on this server."
 fileCount = "{{count}} fișiere selectate"
 fileLabel = "Fișier"
 hint = "Linkurile publice și modurile de acces sunt controlate de setările serverului."
@@ -7823,8 +8327,17 @@ center = "Centru"
 left = "Stânga"
 right = "Dreapta"
 
+[textInput]
+clear = "Clear input"
+
 [theme]
 toggle = "Comutați tema"
+
+[time.relative]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
 
 [timestampPdf]
 completed = "PDF marcat temporal cu succes"
@@ -7852,6 +8365,10 @@ label = "Selectați un server TSA"
 [timestampPdf.steps]
 settings = "Setări"
 
+[toast]
+dismiss = "Dismiss"
+toggleDetails = "Toggle details"
+
 [tool]
 endpointUnavailable = "Acest instrument nu este disponibil pe serverul dvs."
 endpointUnavailableClickable = "Nu este disponibil în acest mod. Faceți clic pentru a vă autentifica."
@@ -7868,13 +8385,18 @@ viewerMode = "Comutați la editorul de fișiere pentru a selecta mai multe fiși
 [toolPanel]
 allTools = "Toate instrumentele"
 alpha = "Alpha"
+backToAllTools = "Back to all tools"
+backToDefault = "Back"
 backToTools = "Înapoi la instrumente"
 collapse = "Restrânge panoul"
 comingSoon = "În curând:"
 expand = "Extinde panoul"
+goBack = "Go back"
 placeholder = "Alegeți un instrument pentru a începe"
 premiumFeature = "Funcție premium:"
 search = "Caută instrumente"
+toolsHeader = "Tools"
+viewAllTools = "View all tools"
 
 [toolPanel.fullscreen]
 comingSoon = "În curând:"
@@ -7933,6 +8455,9 @@ verification = "Verificare"
 noSearchResults = "Nu s-au găsit instrumente"
 noTools = "Niciun instrument disponibil"
 
+[tooltip]
+close = "Close tooltip"
+
 [unlockPDFForms]
 description = "Acest instrument va elimina restricțiile de tip doar citire din câmpurile de formular PDF, făcându-le editabile și completabile."
 filenamePrefix = "formulare_deblocate"
@@ -7951,29 +8476,42 @@ placeholder = "Selectați un fișier PDF în vizualizarea principală pentru a �
 title = "Rezultatele deblocării formularelor"
 
 [update]
+allReleases = "All Releases"
 availableUpdates = "Actualizări disponibile"
+breaking = "Breaking"
 breakingChanges = "Modificări incompatibile"
 breakingChangesDefault = "Această versiune conține modificări incompatibile."
 breakingChangesDetected = "Modificări incompatibile detectate"
 breakingChangesMessage = "Unele versiuni conțin modificări incompatibile. Consultă ghidurile de migrare de mai jos înainte de a actualiza."
 close = "Închide"
+closeModal = "Close update modal"
 current = "Versiune curentă"
+defaultRecommendation = "This update contains important fixes and improvements."
 downloadLatest = "Descarcă cea mai recentă"
+later = "Later"
 latest = "Ultima versiune"
 latestStable = "Ultima stabilă"
 loadingDetailedInfo = "Se încarcă informațiile detaliate..."
 migrationGuide = "Ghid de migrare"
 migrationGuides = "Ghiduri de migrare"
+migrationGuidesDesc = "Review important changes before updating."
+modalSubtitle = "A new version of Stirling PDF is ready to install."
 modalTitle = "Actualizare disponibilă"
+notes = "Notes"
 priorityLabel = "Prioritate"
 recommendedAction = "Acțiune recomandată"
 releaseNotes = "Note de versiune"
+showLess = "Show fewer versions"
+showMore = "Show all {{count}} versions"
+stable = "STABLE"
 unableToLoadDetails = "Nu se pot încărca informațiile detaliate."
 updateAvailable = "Actualizare disponibilă"
 urgentUpdateAvailable = "Actualizare urgentă"
 version = "Versiune"
+versionHistory = "Version History"
 viewAllReleases = "Vezi toate versiunile"
 viewGuide = "Vezi ghidul"
+whatsNewIn = "What's new in"
 
 [update.priority]
 low = "Scăzută"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Activați filtrul întunecat"
 enableSepiaFilter = "Activați filtrul sepia"
 firstPage = "Prima pagină"
 lastPage = "Ultima pagină"
+moreOptions = "More"
 nextPage = "Pagina următoare"
 onlyPdfSupported = "Vizualizatorul acceptă doar fișiere PDF. Acest fișier pare a fi într-un format diferit."
+pageNavigation = "Page navigation"
 previousPage = "Pagina anterioară"
 resetZoom = "Resetați zoomul"
 singlePageView = "Vizualizare cu o singură pagină"
 unknownFile = "Fișier necunoscut"
+view = "View"
+zoom = "Zoom"
 zoomIn = "Măriți"
 zoomOut = "Micșorați"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Inserare text"
 typeReplaceText = "Înlocuire text"
 viewComment = "Vizualizați comentariul"
 
+[viewer.error]
+noFileProvided = "Error: No file provided to viewer"
+
 [viewer.formBar]
 apply = "Aplică modificările"
 dismiss = "Închide"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Acest PDF conține câmpuri completabile"
 title = "Câmpuri formular"
 unsavedBadge = "Nesalvate"
 unsavedDesc = "Ai modificări nesalvate"
+
+[viewer.link]
+delete = "Delete link"
 
 [viewer.nonPdf]
 columnDefault = "Coloana {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Se încarcă..."
 renderMarkdown = "Redați markdown"
 sortedBy = "Sortat după: {{column}}"
 textStats = "{{lines}} linii · {{size}}"
+
+[viewer.redaction]
+removeMark = "Remove this mark"
+
+[viewer.search]
+clear = "Clear search"
+close = "Close search"
+next = "Next result"
+previous = "Previous result"
+resultsOf = "of {{total}}"
+
+[viewer.signature]
+delete = "Delete signature"
 
 [viewPdf]
 header = "Vizualizează PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Comută straturile"
 toggleSidebar = "Comută bara laterală"
 toggleTheme = "Comută tema"
 viewer = "Vizualizator"
+
+[workflow.participant]
+accessExpired = "Your access to this document has expired."
+certificateFile = "Certificate File"
+certificateFilePlaceholder = "Select certificate file"
+certificatePassword = "Certificate Password"
+certificateType = "Certificate Type"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 Certificate"
+certTypeServer = "Server Certificate (if available)"
+completedDeclined = "You have declined this document."
+completedSigned = "You have signed this document."
+decline = "Decline"
+downloadDocument = "Download Document"
+dueDate = "Due Date: {{date}}"
+errorTitle = "Error"
+from = "From: {{name}}"
+loadingSession = "Loading session..."
+location = "Location"
+locationPlaceholder = "e.g., San Francisco, CA"
+pageNumber = "Page Number (optional)"
+reason = "Reason"
+reasonPlaceholder = "e.g., Document approval"
+sessionNotFound = "Session not found or access denied."
+signDocument = "Sign Document"
+statusDeclined = "Declined"
+statusNotified = "Notified"
+statusPending = "Pending"
+statusSigned = "Signed"
+statusViewed = "Viewed"
+submitSignature = "Submit Signature"
 
 [workspace]
 title = "Spațiu de lucru"
