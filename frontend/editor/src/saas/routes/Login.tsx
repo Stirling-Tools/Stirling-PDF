@@ -178,8 +178,6 @@ export default function Login() {
         setError(error.message);
       } else {
         setError(null);
-        alert(t("login.magicLinkSent", { email: magicLinkEmail }));
-        setMagicLinkEmail("");
         setMagicLinkSent(true);
       }
     } catch (err) {
