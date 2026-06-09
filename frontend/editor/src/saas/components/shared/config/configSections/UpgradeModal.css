@@ -51,7 +51,12 @@
   border: 1px solid var(--upm-border);
   border-radius: var(--upm-radius);
   width: 100%;
-  max-width: 520px;
+  /* 800px gives Stripe Embedded Checkout its recommended 750px content area after
+     subtracting the 22px body padding on each side (= 756px). Narrower than this
+     and the iframe's card-detail form forces internal scroll. Cap step + confirm
+     step don't need this width but read fine at it — their internal text widths
+     are already capped (see upm-confirm__body, upm-section-help). */
+  max-width: 800px;
   max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
