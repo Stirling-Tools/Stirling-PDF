@@ -130,6 +130,8 @@ export interface FileItemFolderRef {
 export interface FileItemPolicyRef {
   id: string;
   name: string;
+  /** CSS colour for the badge (matches the policy's accent). */
+  accentColor: string;
 }
 
 export interface FileItemProps {
@@ -257,7 +259,10 @@ export function FileItem({
                     withArrow
                     position="top"
                   >
-                    <span className="file-sidebar-policy-badge">
+                    <span
+                      className="file-sidebar-policy-badge"
+                      style={{ color: policy.accentColor }}
+                    >
                       <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
                     </span>
                   </Tooltip>

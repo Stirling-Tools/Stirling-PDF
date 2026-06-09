@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionIcon, Button, Checkbox, Menu, Tooltip } from "@mantine/core";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -17,6 +18,7 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 import { useFolders } from "@app/contexts/FolderContext";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -572,6 +574,31 @@ function FolderCard({
   );
 }
 
+/** Shield badges for the policies that have run on a file. */
+function PolicyBadges({ fileId }: { fileId: string }) {
+  const badges = usePolicyFileBadges().get(fileId) ?? [];
+  if (badges.length === 0) return null;
+  return (
+    <span className="files-page-policy-badges" data-no-select>
+      {badges.slice(0, 3).map((policy) => (
+        <Tooltip
+          key={policy.id}
+          label={`${policy.name} policy ran on this file`}
+          withArrow
+          position="top"
+        >
+          <span
+            className="files-page-policy-badge"
+            style={{ color: policy.accentColor }}
+          >
+            <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+          </span>
+        </Tooltip>
+      ))}
+    </span>
+  );
+}
+
 interface FileCardProps {
   file: StirlingFileStub;
   isSelected: boolean;
@@ -731,6 +758,7 @@ function FileCard({
           <span>{fileSize}</span>
           <span>·</span>
           <span>{fileDate}</span>
+          <PolicyBadges fileId={file.id as string} />
         </div>
       </div>
       <div className="files-page-card-actions">
@@ -1313,6 +1341,7 @@ function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <PolicyBadges fileId={file.id as string} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />

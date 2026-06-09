@@ -148,8 +148,9 @@
   width: 15px;
   height: 15px;
   border-radius: 4px;
+  /* `color` is set inline to the policy's accent; the tint follows it. */
   color: var(--text-secondary);
-  background: var(--bg-muted, rgba(120, 120, 130, 0.14));
+  background: color-mix(in srgb, currentColor 16%, transparent);
 }
 
 /* ---- Folder membership tags ---- */
