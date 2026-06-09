@@ -71,10 +71,6 @@ export const useConfigNavSections = (
       "settings.tooltips.enableLoginFirst",
       "Enable login mode first",
     );
-    const requiresEnterpriseTooltip = t(
-      "settings.tooltips.requiresEnterprise",
-      "Requires Enterprise license",
-    );
 
     // Workspace
     sections.push({
@@ -199,10 +195,10 @@ export const useConfigNavSections = (
           label: t("settings.licensingAnalytics.audit", "Audit"),
           icon: "fact-check-rounded",
           component: <AdminAuditSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin
-            ? enableLoginTooltip
-            : requiresEnterpriseTooltip,
+          // Non-Enterprise users can still click in: AdminAuditSection
+          // renders a demo preview when `!hasEnterpriseLicense`.
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
         {
           key: "adminUsage",
@@ -212,10 +208,9 @@ export const useConfigNavSections = (
           ),
           icon: "analytics-rounded",
           component: <AdminUsageSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin
-            ? enableLoginTooltip
-            : requiresEnterpriseTooltip,
+          // Same demo-preview story as adminAudit above.
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
       ],
     });
@@ -441,20 +436,22 @@ export const createConfigNavSections = (
           label: "Audit",
           icon: "fact-check-rounded",
           component: <AdminAuditSection />,
-          disabled: !runningEE || requiresLogin,
+          // Non-Enterprise users can click in to see the demo preview.
+          disabled: requiresLogin,
           disabledTooltip: requiresLogin
             ? "Enable login mode first"
-            : "Requires Enterprise license",
+            : undefined,
         },
         {
           key: "adminUsage",
           label: "Usage Analytics",
           icon: "analytics-rounded",
           component: <AdminUsageSection />,
-          disabled: !runningEE || requiresLogin,
+          // Non-Enterprise users can click in to see the demo preview.
+          disabled: requiresLogin,
           disabledTooltip: requiresLogin
             ? "Enable login mode first"
-            : "Requires Enterprise license",
+            : undefined,
         },
       ],
     });
