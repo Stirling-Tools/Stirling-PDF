@@ -205,6 +205,9 @@ signedInAs = "Signed in as: {{email}}"
 [add-page-numbers]
 tags = "paginate,label,organize,index"
 
+[addAttachments]
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+
 [addAttachments.error]
 failed = "An error occurred while adding attachments to the PDF."
 
@@ -238,6 +241,9 @@ header = "Add images to PDFs"
 tags = "img,jpg,picture,photo"
 title = "Add Image"
 
+[addImage.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addImage.error]
 failed = "An error occurred while adding image to the PDF."
 
@@ -264,8 +270,26 @@ resume = "Resume placement"
 title = "Add Image Results"
 
 [addImage.saved]
+defaultCanvasLabel = "Drawing signature"
 defaultImageLabel = "Uploaded image"
 defaultLabel = "Image"
+defaultTextLabel = "Typed signature"
+delete = "Remove"
+emptyTitle = "No saved signatures yet"
+heading = "Saved signatures"
+label = "Label"
+limitTitle = "Limit reached"
+next = "Next"
+personalHeading = "Personal Signatures"
+prev = "Previous"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
+sharedHeading = "Shared Signatures"
+
+[addImage.saved.type]
+canvas = "Drawing"
+image = "Upload"
+text = "Text"
 
 [addImage.step]
 createDesc = "Upload the image you want to add"
@@ -275,7 +299,21 @@ placeDesc = "Click on the PDF to add your image"
 [addImage.steps]
 configure = "Configure Image"
 
+[addImage.text]
+colorLabel = "Text colour"
+fontLabel = "Font"
+fontSizeLabel = "Font size"
+name = "Text"
+placeholder = "Enter text"
+
+[addImage.type]
+canvas = "Canvas"
+image = "Image"
+saved = "Saved"
+text = "Text"
+
 [addPageNumbers]
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 configuration = "Configuration"
 customize = "Customize Appearance"
 customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
@@ -308,6 +346,7 @@ title = "Page Number Results"
 6 = "Custom Text Format"
 
 [addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 completed = "Password protection applied"
 desc = "Encrypt your PDF document with a password."
 filenamePrefix = "encrypted"
@@ -468,10 +507,42 @@ fontSizePlaceholder = "Type or select font size (8-200)"
 name = "Text content"
 placeholder = "Enter the text you want to add"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
+[addText.saved]
+defaultCanvasLabel = "Drawing signature"
+defaultImageLabel = "Uploaded signature"
+defaultLabel = "Signature"
+defaultTextLabel = "Typed signature"
+delete = "Remove"
+emptyTitle = "No saved signatures yet"
+heading = "Saved signatures"
+label = "Label"
+limitTitle = "Limit reached"
+next = "Next"
+personalHeading = "Personal Signatures"
+prev = "Previous"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
+sharedHeading = "Shared Signatures"
+
+[addText.saved.type]
+canvas = "Drawing"
+image = "Upload"
+text = "Text"
+
+[addText.type]
+canvas = "Canvas"
+image = "Image"
+saved = "Saved"
+text = "Text"
+
 [adjust-contrast]
 tags = "color-correction,tune,modify,enhance,colour-correction"
 
 [adjustContrast]
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 adjustColors = "Adjust Colors"
 basic = "Basic Adjustments"
 blue = "Blue"
@@ -1849,6 +1920,7 @@ text = "Automatically finds the title from your PDF content and uses it as the f
 title = "Smart Renaming"
 
 [automate]
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 copyToSaved = "Copy to Saved"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 export = "Export"
@@ -1966,6 +2038,7 @@ secureWorkflow = "Security Workflow"
 secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default."
 
 [autoRename]
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
 
 [autoSizeSplitPDF]
@@ -2591,6 +2664,7 @@ submit = "Submit Changes"
 title = "Change Credentials"
 
 [changeMetadata]
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 filenamePrefix = "metadata"
 header = "Change Metadata"
 submit = "Change"
@@ -2712,6 +2786,7 @@ true = "True"
 unknown = "Unknown"
 
 [changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 completed = "Permissions changed"
 desc = "Change document restrictions and permissions."
 submit = "Change Permissions"
@@ -2934,6 +3009,7 @@ message = "One or both of the selected PDFs have no text content. Please choose 
 
 [compare.original]
 label = "Original PDF"
+placeholder = "Select the original PDF"
 
 [compare.pixel]
 base = "Original"
@@ -3005,6 +3081,7 @@ unlinkedTitle = "Independent scroll & pan enabled"
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."
 
 [compress]
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 credit = "This service uses qpdf for PDF Compress/Optimisation."
 desc = "Compress PDFs to reduce their file size."
 header = "Compress PDF"
@@ -3195,6 +3272,7 @@ selfhostedOffline = "Self-hosted server unreachable"
 selfhostedOnline = "Connected to self-hosted server"
 
 [convert]
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
 blackwhite = "Black & White"
@@ -3551,6 +3629,7 @@ edit = "Edit"
 editSecretValue = "Edit secret value"
 
 [editTableOfContents]
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 submit = "Apply table of contents"
 
 [editTableOfContents.actions]
@@ -3735,6 +3814,7 @@ title = "Settings"
 tags = "extract"
 
 [extractPages]
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 submit = "Extract Pages"
 title = "Extract Pages"
 
@@ -4191,6 +4271,7 @@ welcomeMessage = "For security reasons, you must change your password on your fi
 welcomeTitle = "Welcome!"
 
 [flatten]
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 filenamePrefix = "flattened"
 flattenOnlyForms = "Flatten only forms"
 header = "Flatten PDF"
@@ -5822,6 +5903,7 @@ REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
 SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
 
 [pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 conversionFailed = "Failed to convert PDF. Please try again."
 converting = "Converting PDF to editable format..."
 currentFile = "Current file: {{name}}"
@@ -5922,6 +6004,10 @@ descriptionInline = "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A
 [pdfTextEditor.pageType]
 paragraph = "Paragraph page"
 sparse = "Sparse text"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "This alpha viewer is still evolving-certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
@@ -6033,6 +6119,7 @@ title = "PDF to Presentation"
 tags = "single page"
 
 [pdfToSinglePage]
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 description = "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights."
 filenamePrefix = "single_page"
 header = "PDF To Single Page"
@@ -6763,6 +6850,7 @@ title = "What it does"
 title = "About Remove Annotations"
 
 [removeBlanks]
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 header = "Remove Blank Pages"
 submit = "Remove blank pages"
 title = "Remove Blanks"
@@ -6829,6 +6917,7 @@ placeholder = "Select a PDF file in the main view to get started"
 title = "Certificate Removal Results"
 
 [removeImage]
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 header = "Remove image"
 removeImage = "Remove image"
 submit = "Remove image"
@@ -6919,6 +7008,7 @@ title = "Decrypted PDFs"
 description = "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
 
 [reorganizePages]
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 submit = "Reorganize Pages"
 
 [reorganizePages.error]
@@ -7019,6 +7109,7 @@ text = "Completely invert all colours in the PDF, creating a negative-like effec
 title = "Invert All Colours"
 
 [rotate]
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 rotateLeft = "Rotate Anticlockwise"
 rotateRight = "Rotate Clockwise"
 selectRotation = "Select Rotation Angle (Clockwise)"
@@ -7042,6 +7133,7 @@ text = "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments
 title = "Rotate Settings Overview"
 
 [sanitize]
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 completed = "Sanitisation completed successfully"
 desc = "Remove potentially harmful elements from PDF files."
 filenamePrefix = "sanitised"
@@ -7106,6 +7198,7 @@ title = "Sanitise PDF"
 6 = "Remove Document Info Metadata"
 
 [scalePages]
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 header = "Adjust page-scale"
 keepPageSize = "Original Size"
 pageSize = "Size of a page of the document."
@@ -7115,7 +7208,6 @@ title = "Adjust page-scale"
 
 [ScannerImageSplit]
 info = "Python is not installed. It is required to run."
-tags = "separate,auto-detect,scans,multi-photo,organize"
 
 [ScannerImageSplit.selectText]
 1 = "Angle Threshold:"
@@ -7131,6 +7223,7 @@ tags = "separate,auto-detect,scans,multi-photo,organize"
 
 [scannerImageSplit]
 submit = "Extract Image Scans"
+tags = "separate,auto-detect,scans,multi-photo,organize"
 title = "Extracted Images"
 
 [scannerImageSplit.error]
@@ -7600,6 +7693,7 @@ title = "Extracted JavaScript"
 toggle = "Toggle Sidebar"
 
 [sign]
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 activate = "Activate Signature Placement"
 add = "Add"
 addToAll = "Add to all pages"
@@ -7805,6 +7899,7 @@ small = "Small"
 x-large = "X-Large"
 
 [split]
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 header = "Split PDF"
 resultsTitle = "Split Results"
 selectMethod = "Select a split method"
@@ -8290,6 +8385,7 @@ justNow = "just now"
 minutesAgo = "{{count}}m ago"
 
 [timestampPdf]
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 completed = "PDF timestamped successfully"
 desc = "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server."
 filenamePrefix = "timestamped"
@@ -8738,6 +8834,7 @@ title = "View/Edit PDF"
 tooltipTitle = "Warning"
 
 [watermark]
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 completed = "Watermark added"
 desc = "Add text or image watermarks to PDF files"
 filenamePrefix = "watermarked"
@@ -9274,3 +9371,28 @@ cancel = "Cancel"
 confirm = "Extract"
 message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
+
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
+
