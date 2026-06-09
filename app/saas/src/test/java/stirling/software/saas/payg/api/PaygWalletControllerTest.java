@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
+import stirling.software.saas.payg.api.PaygWalletController.UpdateSubCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
@@ -360,6 +361,198 @@ class PaygWalletControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         verifyNoInteractions(policyRepo, entitlementService);
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // PATCH /sub-caps/{userId}
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    void updateSubCap_leaderBelowTeamCap_savesAndReportsUnclamped() {
+        User leader = userWithId(30L, UUID.randomUUID());
+        User target = userWithId(31L, UUID.randomUUID());
+        Team team = teamWithId(50L);
+        TeamMembership leaderRow = membership(team, leader, TeamRole.LEADER);
+        TeamMembership targetRow = membership(team, target, TeamRole.MEMBER);
+
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
+        when(memberRepo.findPrimaryMembership(30L)).thenReturn(List.of(leaderRow));
+        when(memberRepo.findByTeamIdAndUserId(50L, 31L)).thenReturn(Optional.of(targetRow));
+        WalletPolicy policy = new WalletPolicy();
+        policy.setTeamId(50L);
+        policy.setCapUnits(5000L);
+        when(policyRepo.findByTeamId(50L)).thenReturn(Optional.of(policy));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        31L, new UpdateSubCapRequest(2000), jwtAuth(leader.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> body = resp.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.get("success")).isEqualTo(Boolean.TRUE);
+        assertThat(body.get("clamped")).isEqualTo(Boolean.FALSE);
+        assertThat(body.get("capUnits")).isEqualTo(2000L);
+
+        ArgumentCaptor<TeamMembership> saved = ArgumentCaptor.forClass(TeamMembership.class);
+        verify(memberRepo).save(saved.capture());
+        assertThat(saved.getValue().getCapUnits()).isEqualTo(2000L);
+        verify(entitlementService).invalidate(50L);
+    }
+
+    @Test
+    void updateSubCap_leaderAboveTeamCap_clampsToTeamCap() {
+        User leader = userWithId(32L, UUID.randomUUID());
+        User target = userWithId(33L, UUID.randomUUID());
+        Team team = teamWithId(51L);
+        TeamMembership leaderRow = membership(team, leader, TeamRole.LEADER);
+        TeamMembership targetRow = membership(team, target, TeamRole.MEMBER);
+
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
+        when(memberRepo.findPrimaryMembership(32L)).thenReturn(List.of(leaderRow));
+        when(memberRepo.findByTeamIdAndUserId(51L, 33L)).thenReturn(Optional.of(targetRow));
+        WalletPolicy policy = new WalletPolicy();
+        policy.setTeamId(51L);
+        policy.setCapUnits(1000L);
+        when(policyRepo.findByTeamId(51L)).thenReturn(Optional.of(policy));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        33L, new UpdateSubCapRequest(9999), jwtAuth(leader.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> body = resp.getBody();
+        assertThat(body.get("success")).isEqualTo(Boolean.TRUE);
+        assertThat(body.get("clamped")).isEqualTo(Boolean.TRUE);
+        assertThat(body.get("capUnits")).isEqualTo(1000L);
+
+        ArgumentCaptor<TeamMembership> saved = ArgumentCaptor.forClass(TeamMembership.class);
+        verify(memberRepo).save(saved.capture());
+        assertThat(saved.getValue().getCapUnits()).isEqualTo(1000L);
+        verify(entitlementService).invalidate(51L);
+    }
+
+    @Test
+    void updateSubCap_nullCapUnits_clearsSubCap() {
+        User leader = userWithId(34L, UUID.randomUUID());
+        User target = userWithId(35L, UUID.randomUUID());
+        Team team = teamWithId(52L);
+        TeamMembership leaderRow = membership(team, leader, TeamRole.LEADER);
+        TeamMembership targetRow = membership(team, target, TeamRole.MEMBER);
+        targetRow.setCapUnits(500L); // had a sub-cap before
+
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
+        when(memberRepo.findPrimaryMembership(34L)).thenReturn(List.of(leaderRow));
+        when(memberRepo.findByTeamIdAndUserId(52L, 35L)).thenReturn(Optional.of(targetRow));
+        WalletPolicy policy = new WalletPolicy();
+        policy.setTeamId(52L);
+        policy.setCapUnits(5000L);
+        when(policyRepo.findByTeamId(52L)).thenReturn(Optional.of(policy));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        35L, new UpdateSubCapRequest(null), jwtAuth(leader.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> body = resp.getBody();
+        assertThat(body.get("clamped")).isEqualTo(Boolean.FALSE);
+        assertThat(body.get("capUnits")).isNull();
+
+        ArgumentCaptor<TeamMembership> saved = ArgumentCaptor.forClass(TeamMembership.class);
+        verify(memberRepo).save(saved.capture());
+        assertThat(saved.getValue().getCapUnits()).isNull();
+        verify(entitlementService).invalidate(52L);
+    }
+
+    @Test
+    void updateSubCap_teamHasNoCap_neverClamps() {
+        // Subscribed no-cap team: wallet_policy.cap_units == null → any sub-cap is accepted as-is.
+        User leader = userWithId(36L, UUID.randomUUID());
+        User target = userWithId(37L, UUID.randomUUID());
+        Team team = teamWithId(53L);
+        TeamMembership leaderRow = membership(team, leader, TeamRole.LEADER);
+        TeamMembership targetRow = membership(team, target, TeamRole.MEMBER);
+
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
+        when(memberRepo.findPrimaryMembership(36L)).thenReturn(List.of(leaderRow));
+        when(memberRepo.findByTeamIdAndUserId(53L, 37L)).thenReturn(Optional.of(targetRow));
+        WalletPolicy policy = new WalletPolicy();
+        policy.setTeamId(53L);
+        policy.setCapUnits(null); // no team cap
+        when(policyRepo.findByTeamId(53L)).thenReturn(Optional.of(policy));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        37L, new UpdateSubCapRequest(1_000_000), jwtAuth(leader.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody().get("clamped")).isEqualTo(Boolean.FALSE);
+        assertThat(resp.getBody().get("capUnits")).isEqualTo(1_000_000L);
+    }
+
+    @Test
+    void updateSubCap_memberIsForbidden() {
+        User member = userWithId(38L, UUID.randomUUID());
+        Team team = teamWithId(54L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(member));
+        when(memberRepo.findPrimaryMembership(38L))
+                .thenReturn(List.of(membership(team, member, TeamRole.MEMBER)));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        99L, new UpdateSubCapRequest(100), jwtAuth(member.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verify(memberRepo, never()).save(any());
+        verify(entitlementService, never()).invalidate(any());
+    }
+
+    @Test
+    void updateSubCap_targetInDifferentTeam_returns404() {
+        User leader = userWithId(40L, UUID.randomUUID());
+        Team team = teamWithId(55L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
+        when(memberRepo.findPrimaryMembership(40L))
+                .thenReturn(List.of(membership(team, leader, TeamRole.LEADER)));
+        // Target user 41 is not a member of team 55.
+        when(memberRepo.findByTeamIdAndUserId(55L, 41L)).thenReturn(Optional.empty());
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        41L, new UpdateSubCapRequest(500), jwtAuth(leader.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        verify(memberRepo, never()).save(any());
+        verify(entitlementService, never()).invalidate(any());
+    }
+
+    @Test
+    void updateSubCap_noTeam_isForbidden() {
+        User user = userWithId(42L, UUID.randomUUID());
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of());
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(
+                        99L, new UpdateSubCapRequest(100), jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verify(memberRepo, never()).save(any());
+    }
+
+    @Test
+    void updateSubCap_anonymousIs401() {
+        Authentication anon =
+                new AnonymousAuthenticationToken(
+                        "k",
+                        "anonymousUser",
+                        List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.updateSubCap(99L, new UpdateSubCapRequest(100), anon);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        verifyNoInteractions(memberRepo, policyRepo, entitlementService);
     }
 
     // -----------------------------------------------------------------------------------------
