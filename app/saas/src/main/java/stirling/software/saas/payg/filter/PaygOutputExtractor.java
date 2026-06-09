@@ -49,8 +49,12 @@ public class PaygOutputExtractor {
     /** {@code %PDF-} in ASCII. */
     private static final byte[] PDF_MAGIC = {0x25, 0x50, 0x44, 0x46, 0x2D};
 
+    /** {@code PK\x03\x04} — local file header for any non-empty ZIP. */
+    private static final byte[] ZIP_MAGIC = {0x50, 0x4B, 0x03, 0x04};
+
     private static final String ZIP_CONTENT_TYPE = "application/zip";
     private static final String PDF_CONTENT_TYPE = "application/pdf";
+    private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
 
     private final TempFileManager tempFileManager;
 
@@ -74,11 +78,31 @@ public class PaygOutputExtractor {
             return List.of();
         }
         String mediaType = stripParameters(contentType);
-        if (PDF_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
+
+        // Stirling-PDF tool endpoints sometimes set Content-Type to
+        // application/octet-stream (or no header at all) even when the body
+        // is a real PDF or ZIP — Spring's default StreamingResponseBody path
+        // doesn't always negotiate content type. When the declared
+        // Content-Type is missing or generic, sniff magic bytes to recover
+        // lineage capture.
+        boolean missingOrGeneric =
+                mediaType == null || OCTET_STREAM_CONTENT_TYPE.equalsIgnoreCase(mediaType);
+        boolean isPdf = PDF_CONTENT_TYPE.equalsIgnoreCase(mediaType);
+        boolean isZip = ZIP_CONTENT_TYPE.equalsIgnoreCase(mediaType);
+
+        if (missingOrGeneric) {
+            if (isMagic(bodyPath, PDF_MAGIC)) {
+                isPdf = true;
+            } else if (isMagic(bodyPath, ZIP_MAGIC)) {
+                isZip = true;
+            }
+        }
+
+        if (isPdf) {
             // Wrapper-owned path. Don't claim ownership.
             return List.of(new ExtractedPdf(bodyPath, null));
         }
-        if (ZIP_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
+        if (isZip) {
             return extractZip(bodyPath);
         }
         return List.of();
@@ -126,20 +150,25 @@ public class PaygOutputExtractor {
     }
 
     private boolean isPdfMagic(Path path) {
-        byte[] head = new byte[PDF_MAGIC.length];
+        return isMagic(path, PDF_MAGIC);
+    }
+
+    /** Returns true if the first {@code magic.length} bytes of {@code path} equal {@code magic}. */
+    private boolean isMagic(Path path, byte[] magic) {
+        byte[] head = new byte[magic.length];
         try (InputStream in = Files.newInputStream(path)) {
             int read = in.read(head);
-            if (read != PDF_MAGIC.length) {
+            if (read != magic.length) {
                 return false;
             }
-            for (int i = 0; i < PDF_MAGIC.length; i++) {
-                if (head[i] != PDF_MAGIC[i]) {
+            for (int i = 0; i < magic.length; i++) {
+                if (head[i] != magic[i]) {
                     return false;
                 }
             }
             return true;
         } catch (IOException e) {
-            log.debug("PDF magic-byte check failed for {}", path, e);
+            log.debug("Magic-byte check failed for {}", path, e);
             return false;
         }
     }
