@@ -153,6 +153,10 @@ public class JobChargeService {
         row.setLegacyCreditsCharged(0);
         row.setDiffPct(0);
         row.setStatus(ShadowChargeStatus.CHARGED);
+        // PAYG analytics axis + caller surface — copied from ctx so the row stays self-describing
+        // after processing_job is pruned. Never affects what Stripe meters (single flat meter).
+        row.setBillingCategory(ctx.billingCategory());
+        row.setJobSource(ctx.source());
         shadowRepository.save(row);
     }
 

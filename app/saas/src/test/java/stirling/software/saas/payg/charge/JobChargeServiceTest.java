@@ -33,6 +33,7 @@ import stirling.software.saas.payg.job.JobContext;
 import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.ProcessType;
@@ -80,7 +81,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.SINGLE_TOOL,
+                                BillingCategory.API),
                         List.of(in));
 
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.JOINED);
@@ -106,7 +112,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.SINGLE_TOOL,
+                                BillingCategory.API),
                         List.of(in));
 
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.OPENED);
@@ -126,9 +137,40 @@ class JobChargeServiceTest {
         // Legacy comparison not wired yet — zeroed until CreditService is wired in the follow-up.
         assertThat(row.getLegacyCreditsCharged()).isZero();
         assertThat(row.getDiffPct()).isZero();
+        // PAYG analytics axis: billing_category + job_source are copied from the context so the
+        // row stays self-describing after processing_job rows are pruned.
+        assertThat(row.getBillingCategory()).isEqualTo(BillingCategory.API);
+        assertThat(row.getJobSource()).isEqualTo(JobSource.WEB);
 
         // Job entity carries the classified docUnits so close-time receipts can render correctly.
         assertThat(newJob.getDocUnits()).isEqualTo(4);
+    }
+
+    @Test
+    void openProcess_openedAutomationContext_writesShadowRowWithAutomationCategory(
+            @TempDir Path tmp) throws IOException {
+        PricingPolicy policy =
+                stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10, JobSource.PIPELINE, 20));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.PIPELINE,
+                        ProcessType.AUTOMATION,
+                        BillingCategory.AUTOMATION),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getBillingCategory()).isEqualTo(BillingCategory.AUTOMATION);
+        assertThat(captor.getValue().getJobSource()).isEqualTo(JobSource.PIPELINE);
     }
 
     @Test
@@ -146,7 +188,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.AUTOMATION),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.AUTOMATION,
+                                BillingCategory.AUTOMATION),
                         List.of(a, b));
 
         assertThat(out.units()).isEqualTo(7);
@@ -167,7 +214,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.SINGLE_TOOL,
+                                BillingCategory.API),
                         List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         assertThat(out.units()).isEqualTo(5);
@@ -187,7 +239,12 @@ class JobChargeServiceTest {
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
-                new ChargeContext(42L, 100L, JobSource.PIPELINE, ProcessType.AUTOMATION),
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.PIPELINE,
+                        ProcessType.AUTOMATION,
+                        BillingCategory.AUTOMATION),
                 List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
@@ -211,7 +268,12 @@ class JobChargeServiceTest {
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
-                new ChargeContext(42L, 100L, JobSource.DESKTOP_APP, ProcessType.SINGLE_TOOL),
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.DESKTOP_APP,
+                        ProcessType.SINGLE_TOOL,
+                        BillingCategory.API),
                 List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
@@ -225,7 +287,11 @@ class JobChargeServiceTest {
                         () ->
                                 service.openProcess(
                                         new ChargeContext(
-                                                42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                                                42L,
+                                                100L,
+                                                JobSource.WEB,
+                                                ProcessType.SINGLE_TOOL,
+                                                BillingCategory.API),
                                         List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("inputs must not be empty");

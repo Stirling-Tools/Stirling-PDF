@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -36,11 +37,14 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
 import stirling.software.saas.payg.charge.ChargeOutcome;
 import stirling.software.saas.payg.charge.JobChargeService;
 import stirling.software.saas.payg.charge.JobInput;
 import stirling.software.saas.payg.job.JobService;
+import stirling.software.saas.payg.model.BillingCategory;
+import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStepStatus;
 import stirling.software.saas.payg.model.ProcessType;
@@ -93,6 +97,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     private final Counter callsOpened;
     private final Counter callsJoined;
     private final Counter callsShortCircuit;
+    private final Counter callsBypassed;
     private final Counter refundsCounter;
     private final Timer durationTimer;
 
@@ -127,6 +132,11 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 Counter.builder("payg.filter.calls")
                         .tag("disposition", "SHORT_CIRCUIT")
                         .register(meterRegistry);
+        this.callsBypassed =
+                Counter.builder("payg.filter.bypassed")
+                        .description(
+                                "Manual UI tool calls that skipped openProcess (BillingCategory.BYPASSED)")
+                        .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
                         .description("First-step 5xx refunds applied to shadow rows")
@@ -150,8 +160,17 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 callsShortCircuit.increment();
                 return true;
             }
+            // Bypass fast-path: determine the BillingCategory BEFORE any multipart
+            // materialisation or openProcess call. Manual UI tool calls (BYPASSED) skip the
+            // entire ledger/shadow pipeline — no temp files, no DB writes.
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            BillingCategory category = determineCategory(hm, request, auth);
+            if (category == BillingCategory.BYPASSED) {
+                callsBypassed.increment();
+                return true;
+            }
             try {
-                doPreHandle(request);
+                doPreHandle(request, auth, category);
             } catch (RuntimeException e) {
                 log.warn("PAYG preHandle failed; passing through unbilled", e);
                 errorsCounter.increment();
@@ -164,8 +183,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
-    private void doPreHandle(HttpServletRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    private void doPreHandle(
+            HttpServletRequest request, Authentication auth, BillingCategory category) {
         User currentUser = resolveUser(auth);
         if (currentUser == null) {
             callsShortCircuit.increment();
@@ -225,7 +244,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                         currentUser.getId(),
                         currentUser.getTeam() == null ? null : currentUser.getTeam().getId(),
                         determineSource(request, auth),
-                        ProcessType.SINGLE_TOOL);
+                        ProcessType.SINGLE_TOOL,
+                        category);
 
         ChargeOutcome outcome;
         try {
@@ -416,5 +436,45 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             return JobSource.API;
         }
         return JobSource.WEB;
+    }
+
+    /**
+     * Resolve the {@link BillingCategory} for this request. Precedence: {@code
+     * X-Stirling-Automation: true} or {@code @RequiresFeature(AUTOMATION)} → AUTOMATION;
+     * {@code @RequiresFeature(AI_SUPPORT)} → AI; API-key auth → API; otherwise BYPASSED (manual UI
+     * tool — short-circuited in {@link #preHandle}).
+     *
+     * <p>Method-level {@code @RequiresFeature} wins over class-level. Multiple gates: AUTOMATION
+     * dominates AI within a single annotation.
+     */
+    private static BillingCategory determineCategory(
+            HandlerMethod handler, HttpServletRequest request, Authentication auth) {
+        String automationHeader = request.getHeader(AUTOMATION_HEADER);
+        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+            return BillingCategory.AUTOMATION;
+        }
+        RequiresFeature ann =
+                AnnotationUtils.findAnnotation(handler.getMethod(), RequiresFeature.class);
+        if (ann == null) {
+            ann = AnnotationUtils.findAnnotation(handler.getBeanType(), RequiresFeature.class);
+        }
+        if (ann != null) {
+            boolean ai = false;
+            for (FeatureGate gate : ann.value()) {
+                if (gate == FeatureGate.AUTOMATION) {
+                    return BillingCategory.AUTOMATION;
+                }
+                if (gate == FeatureGate.AI_SUPPORT) {
+                    ai = true;
+                }
+            }
+            if (ai) {
+                return BillingCategory.AI;
+            }
+        }
+        if (auth instanceof ApiKeyAuthenticationToken) {
+            return BillingCategory.API;
+        }
+        return BillingCategory.BYPASSED;
     }
 }
