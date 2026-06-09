@@ -60,6 +60,18 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   },
 ];
 
+/**
+ * Default PII regexes a fresh Security policy redacts out of the box — the
+ * high-risk set (SSN, payment-card, bank-account numbers) pre-selected per the
+ * design. They seed the redact step's `wordsToRedact` (with `useRegex`); users
+ * edit them in the Redact tool's settings.
+ */
+export const DEFAULT_PII_PATTERNS: string[] = [
+  "\\b\\d{3}-\\d{2}-\\d{4}\\b", // US Social Security number
+  "\\b(?:\\d[ -]*?){13,16}\\b", // payment-card numbers (13–16 digits)
+  "\\b\\d{8,17}\\b", // bank account numbers (8–17 digits)
+];
+
 /** Per-category narrative + editable fields (from the prototype's POLICY_CONFIG). */
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
@@ -95,9 +107,17 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Detects PII, encrypts, verifies authenticity, controls access, and certifies documents.",
     rules: ["Redact PII", "Remove JavaScript"],
     // Default chain: redact PII + remove JavaScript (via sanitize) on; watermark
-    // is offered in the config page but off by default (not seeded here).
+    // is offered in the config page but off by default (not seeded here). Redact
+    // ships with the high-risk PII regexes so it works out of the box.
     defaultOperations: [
-      { operation: "redact", parameters: {} },
+      {
+        operation: "redact",
+        parameters: {
+          mode: "automatic",
+          useRegex: true,
+          wordsToRedact: DEFAULT_PII_PATTERNS,
+        },
+      },
       { operation: "sanitize", parameters: {} },
     ],
     scopeLabel: "All PDFs on this device",
