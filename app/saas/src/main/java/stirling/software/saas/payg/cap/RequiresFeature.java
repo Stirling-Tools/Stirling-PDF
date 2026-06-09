@@ -37,7 +37,7 @@ import stirling.software.saas.payg.model.FeatureGate;
  * public ResponseEntity<...> runPipeline(@ModelAttribute PipelineRequest req) { ... }
  * }</pre>
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequiresFeature {
 

@@ -19,6 +19,9 @@ import stirling.software.saas.payg.model.FeatureSet;
  * <ul>
  *   <li>{@code capUnits == null} → {@code FULL} / {@link FeatureSet#FULL} unconditionally.
  *   <li>{@code spend / cap &lt; warnPct} → {@code FULL}.
+ *   <li><b>MINIMAL semantics:</b> under DEGRADED+MINIMAL manual server-side tools (gated by {@link
+ *       FeatureGate#OFFSITE_PROCESSING}) and client-side tools still work; only {@link
+ *       FeatureGate#AUTOMATION} and {@link FeatureGate#AI_SUPPORT} are blocked.
  *   <li>{@code warnPct ≤ spend / cap &lt; degradePct} → {@code WARNED}; feature set still {@link
  *       FeatureSet#FULL} — the warn band is a notification trigger, not a degradation.
  *   <li>{@code spend / cap ≥ degradePct} → {@code DEGRADED}; feature set drops to the policy's
@@ -114,7 +117,7 @@ public final class CapEvaluator {
                             FeatureGate.AUTOMATION,
                             FeatureGate.AI_SUPPORT,
                             FeatureGate.CLIENT_SIDE);
-            case MINIMAL -> List.of(FeatureGate.CLIENT_SIDE);
+            case MINIMAL -> List.of(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
             case CLIENT_ONLY -> List.of(FeatureGate.CLIENT_SIDE);
         };
     }

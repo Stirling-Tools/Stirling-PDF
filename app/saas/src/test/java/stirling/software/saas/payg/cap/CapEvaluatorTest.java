@@ -67,8 +67,10 @@ class CapEvaluatorTest {
         Evaluation e = CapEvaluator.evaluate(100L, 100L, 80, 100, FeatureSet.MINIMAL);
         assertThat(e.state()).isEqualTo(EntitlementState.DEGRADED);
         assertThat(e.featureSet()).isEqualTo(FeatureSet.MINIMAL);
-        // MINIMAL = only CLIENT_SIDE survives
-        assertThat(e.enabledGates()).containsExactly(FeatureGate.CLIENT_SIDE);
+        // MINIMAL keeps manual server tools (OFFSITE_PROCESSING) + client-side; only
+        // AUTOMATION + AI_SUPPORT are blocked.
+        assertThat(e.enabledGates())
+                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
     }
 
     @Test
@@ -142,8 +144,10 @@ class CapEvaluatorTest {
 
         assertThat(combined.state()).isEqualTo(EntitlementState.DEGRADED);
         assertThat(combined.featureSet()).isEqualTo(FeatureSet.MINIMAL);
-        // Intersection of FULL (4 gates) ∩ MINIMAL (CLIENT_SIDE) = CLIENT_SIDE
-        assertThat(combined.enabledGates()).containsExactly(FeatureGate.CLIENT_SIDE);
+        // Intersection of FULL (4 gates) and MINIMAL (OFFSITE_PROCESSING + CLIENT_SIDE) =
+        // OFFSITE_PROCESSING + CLIENT_SIDE
+        assertThat(combined.enabledGates())
+                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
     }
 
     @Test
@@ -155,7 +159,8 @@ class CapEvaluatorTest {
 
         assertThat(combined.state()).isEqualTo(EntitlementState.DEGRADED);
         assertThat(combined.featureSet()).isEqualTo(FeatureSet.MINIMAL);
-        assertThat(combined.enabledGates()).containsExactly(FeatureGate.CLIENT_SIDE);
+        assertThat(combined.enabledGates())
+                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
     }
 
     @Test
@@ -209,9 +214,11 @@ class CapEvaluatorTest {
     }
 
     @Test
-    void gatesFor_minimal_clientSideOnly() {
+    void gatesFor_minimal_keepsOffsiteAndClientSide() {
+        // MINIMAL keeps manual server tools (OFFSITE_PROCESSING) + client-side; AUTOMATION +
+        // AI_SUPPORT are the only gates dropped on degrade.
         assertThat(CapEvaluator.gatesFor(FeatureSet.MINIMAL))
-                .containsExactly(FeatureGate.CLIENT_SIDE);
+                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
     }
 
     @Test
