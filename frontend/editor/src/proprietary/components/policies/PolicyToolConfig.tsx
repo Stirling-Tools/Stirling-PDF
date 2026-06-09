@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Loader } from "@mantine/core";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import { Card } from "@shared/components/Card";
-import { PolicyPiiField } from "@app/components/policies/PolicyPiiField";
+import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { ToolId } from "@app/types/toolId";
 
@@ -51,7 +51,9 @@ export function PolicyToolConfig({
           <Card key={tool.operation} padding="none">
             <div className="pol-tool-head">
               <span className="pol-tool-icon">{entry?.icon}</span>
-              <span className="pol-tool-name">{entry?.name ?? tool.operation}</span>
+              <span className="pol-tool-name">
+                {entry?.name ?? tool.operation}
+              </span>
               <ToggleSwitch
                 size="sm"
                 checked={tool.enabled}
@@ -62,10 +64,10 @@ export function PolicyToolConfig({
             </div>
             {tool.enabled &&
               (tool.operation === "redact" ? (
-                // Redact gets the friendly PII-type dropdown instead of the raw
-                // regex list — it writes the matching patterns into the params.
+                // Redact has a bespoke config: PII quick-add + the editable word/
+                // regex list + advanced options, with mode locked to automatic.
                 <div className="pol-tool-body">
-                  <PolicyPiiField
+                  <PolicyRedactConfig
                     parameters={tool.parameters}
                     onChange={(parameters) => patchTool(index, { parameters })}
                     disabled={!editable}
