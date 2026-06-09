@@ -58,6 +58,18 @@ export function decodedToState(
   };
 }
 
+/**
+ * The backend id of the stored policy for a category, if one exists. Used to
+ * enforce one-policy-per-category: a save reuses this id (update) rather than
+ * creating a duplicate, even if the local cache lost the link.
+ */
+export async function findBackendId(
+  categoryId: string,
+): Promise<string | undefined> {
+  const byCategory = await fetchPoliciesByCategory();
+  return byCategory.get(categoryId)?.id;
+}
+
 /** Persist a policy (create or update); returns the backend-assigned id. */
 export async function persistPolicy(store: PolicyToStore): Promise<string> {
   const saved = await policyApi.savePolicy(buildBackendPolicy(store));

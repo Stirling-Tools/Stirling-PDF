@@ -26,6 +26,7 @@ import {
 import {
   fetchPoliciesByCategory,
   decodedToState,
+  findBackendId,
   persistPolicy,
   setPolicyEnabled,
   removePolicy,
@@ -106,8 +107,12 @@ export function usePolicies() {
     async (id: string, result: PolicyWizardResult) => {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
       if (!category) throw new Error(`Unknown policy category: ${id}`);
+      // One policy per category, ever: reuse any existing backend record.
+      const existingBackendId =
+        loadPolicies()[id]?.backendId ??
+        (await findBackendId(id).catch(() => undefined));
       const backendId = await persistPolicy(
-        toStoreRequest(id, category.label, result, true, undefined),
+        toStoreRequest(id, category.label, result, true, existingBackendId),
       );
       const folder = await createPolicyFolderForAutomation(
         category,
@@ -174,6 +179,10 @@ export function usePolicies() {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
       if (!category) throw new Error(`Unknown policy category: ${id}`);
       const current = loadPolicies()[id];
+      // One policy per category, ever: reuse the existing backend record (even
+      // if the local link was lost) so a save never creates a duplicate.
+      const existingBackendId =
+        current?.backendId ?? (await findBackendId(id).catch(() => undefined));
       let folderId = current?.folderId;
       if (folderId) {
         await updatePolicyOperations(folderId, result.operations);
@@ -185,7 +194,7 @@ export function usePolicies() {
       // The saved automation (with its id) is the lossless round-trip blob.
       const automation = await getPolicyAutomation(folderId);
       const store: PolicyToStore = {
-        id: current?.backendId,
+        id: existingBackendId,
         categoryId: id,
         name: `${category.label} Policy`,
         enabled: current?.status !== "paused",
