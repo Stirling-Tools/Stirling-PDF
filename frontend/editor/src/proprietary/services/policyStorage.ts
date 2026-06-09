@@ -1,5 +1,5 @@
 /**
- * Mock persistence for Policies. localStorage-backed stand-in for the future
+ * Local persistence for Policies. localStorage-backed stand-in for the future
  * server API — keeps per-category state (configured/active/paused, sources,
  * scope, reviewer, field overrides) and broadcasts changes so hooks re-render.
  * Mirrors the change-event pattern of the automation/folder stores.
@@ -26,9 +26,6 @@ function defaultState(categoryId: string): PolicyState {
     // Empty by default; the wizard defaults the reviewer to the signed-in user.
     reviewerEmail: "",
     fieldValues: {},
-    docsEnforced24h: 0,
-    alerts24h: 0,
-    lastEnforced: null,
   };
 }
 

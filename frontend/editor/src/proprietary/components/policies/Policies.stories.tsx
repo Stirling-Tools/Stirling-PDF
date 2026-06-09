@@ -5,7 +5,7 @@ import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
 } from "@app/data/policyDefinitions";
-import type { PolicyState } from "@app/types/policies";
+import type { PolicyActivityItem, PolicyStats } from "@app/types/policies";
 import "@app/components/policies/Policies.css";
 
 /**
@@ -40,17 +40,26 @@ function RailFrame({ children }: { children: React.ReactNode }) {
 const ingestion = POLICY_CATEGORIES.find((c) => c.id === "ingestion")!;
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
 
-/** A configured, running policy. */
-const activeState: PolicyState = {
-  configured: true,
-  status: "active",
-  sources: ["editor", "device"],
-  scopeTypes: [],
-  reviewerEmail: "reviewer@acme.com",
-  fieldValues: {},
-  docsEnforced24h: 42,
-  alerts24h: 1,
-  lastEnforced: "2h ago",
+// Illustrative activity/stats for the static stories. In the app these are
+// derived live from the user's real uploaded files (see policyLiveData).
+const sampleActivity: PolicyActivityItem[] = [
+  {
+    doc: "MSA_Acme_2026.pdf",
+    action: "1.2 MB • enforced on upload",
+    time: "2h ago",
+    status: "enforced",
+  },
+  {
+    doc: "scan_002.pdf",
+    action: "Low confidence • flagged for review",
+    time: "Yesterday",
+    status: "flagged",
+  },
+];
+const sampleStats: PolicyStats = {
+  enforced: 1284,
+  dataProcessed: "3.2 GB",
+  activeFor: "18d",
 };
 
 const noop = () => {};
@@ -70,7 +79,6 @@ export const DetailActive: Story = {
       <PolicyDetailPanel
         category={ingestion}
         config={POLICY_CONFIG.ingestion}
-        state={activeState}
         status="active"
         steps={POLICY_CONFIG.ingestion.defaultOperations}
         activity={[
@@ -80,19 +88,9 @@ export const DetailActive: Story = {
             time: "Just now",
             status: "processing",
           },
-          {
-            doc: "MSA_Acme_2026.pdf",
-            action: "1.2 MB • enforced on upload",
-            time: "2h ago",
-            status: "enforced",
-          },
-          {
-            doc: "scan_002.pdf",
-            action: "Low confidence • flagged for review",
-            time: "Yesterday",
-            status: "flagged",
-          },
+          ...sampleActivity,
         ]}
+        stats={sampleStats}
         canConfigure
         onBack={noop}
         onEditSettings={noop}
@@ -110,8 +108,9 @@ export const DetailPaused: Story = {
       <PolicyDetailPanel
         category={security}
         config={POLICY_CONFIG.security}
-        state={{ ...activeState, status: "paused" }}
         status="paused"
+        activity={sampleActivity}
+        stats={sampleStats}
         canConfigure
         onBack={noop}
         onEditSettings={noop}
@@ -129,8 +128,9 @@ export const DetailManaged: Story = {
       <PolicyDetailPanel
         category={ingestion}
         config={POLICY_CONFIG.ingestion}
-        state={activeState}
         status="active"
+        activity={sampleActivity}
+        stats={sampleStats}
         canConfigure={false}
         onBack={noop}
         onEditSettings={noop}
@@ -141,7 +141,7 @@ export const DetailManaged: Story = {
   ),
 };
 
-/** The policy list section (above Tools), including the mock/live data toggle. */
+/** The policy list section (above Tools). */
 export const ListSection: Story = {
   render: () => (
     <div

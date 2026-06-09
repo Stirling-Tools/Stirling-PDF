@@ -20,7 +20,6 @@ import type {
   PolicyCategory,
   PolicyConfigDef,
   PolicyRowStatus,
-  PolicyState,
   PolicyStats,
 } from "@app/types/policies";
 import type { AutomationOperation } from "@app/types/automation";
@@ -28,8 +27,7 @@ import type { AutomationOperation } from "@app/types/automation";
 interface PolicyDetailPanelProps {
   category: PolicyCategory;
   config: PolicyConfigDef;
-  state: PolicyState;
-  /** Derived display status (treats a spend-limit hit as paused). */
+  /** Derived display status. */
   status: PolicyRowStatus;
   /**
    * The policy's real configured steps (from its backing automation). When
@@ -37,9 +35,9 @@ interface PolicyDetailPanelProps {
    * `rules` are shown (e.g. before configuration).
    */
   steps?: AutomationOperation[];
-  /** Live-mode activity feed; defaults to the preset's mock activity. */
+  /** Activity feed derived from the user's files; empty until files exist. */
   activity?: PolicyActivityItem[];
-  /** Live-mode stats; defaults to the preset's mock stats. */
+  /** Summary stats derived from the user's files. */
   stats?: PolicyStats;
   canConfigure: boolean;
   onBack: () => void;
@@ -60,7 +58,6 @@ function humanizeOperation(op: string): string {
 export function PolicyDetailPanel({
   category,
   config,
-  state,
   status,
   steps,
   activity,
@@ -77,19 +74,19 @@ export function PolicyDetailPanel({
     steps && steps.length > 0
       ? steps.map((s) => humanizeOperation(s.operation))
       : config.rules;
-  // Live-mode overrides for activity + stats; default to the preset's mock data.
-  const activityItems = activity ?? config.activity;
-  const statValues = stats ?? config.stats;
+  // Activity + stats are derived from the user's real files; until they load (or
+  // if none exist) show an honest empty feed / zeroed stats.
+  const activityItems = activity ?? [];
+  const statValues = stats ?? {
+    enforced: 0,
+    dataProcessed: "0 B",
+    activeFor: "—",
+  };
   return (
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
         title={category.label}
-        subtitle={
-          state.docsEnforced24h > 0
-            ? `${state.docsEnforced24h} enforced today`
-            : undefined
-        }
         onBack={onBack}
         actions={
           <StatusBadge

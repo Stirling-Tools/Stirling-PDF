@@ -95,10 +95,4 @@ describe("usePolicies", () => {
     });
     expect(result.current.policies.ingestion.folderId).toBeTruthy();
   });
-
-  it("spend limit is disabled by default (no warning/reached)", () => {
-    const { result } = renderHook(() => usePolicies());
-    expect(result.current.spendLimitReached).toBe(false);
-    expect(result.current.spendLimitWarning).toBe(false);
-  });
 });

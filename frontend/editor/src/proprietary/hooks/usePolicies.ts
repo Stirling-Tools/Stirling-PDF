@@ -1,7 +1,7 @@
 /**
- * State + actions for Policies, backed by the mock policyStorage. Exposes the
- * per-category state, lifecycle actions (enable/pause/resume/delete/save), the
- * permission flag, and the (read-only, mock) spend-limit derivation.
+ * State + actions for Policies, backed by the local policyStorage. Exposes the
+ * per-category state, lifecycle actions (enable/pause/resume/delete/save) and
+ * the permission flag.
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -22,25 +22,7 @@ import {
 import type {
   PoliciesByCategory,
   PolicyWizardResult,
-  SpendLimit,
 } from "@app/types/policies";
-
-/**
- * Spend limit is read-only mock state in the frontend — the real figure comes
- * from the billing backend. Kept as a module constant so every usePolicies()
- * instance reads identical state (no setter ⇒ no cross-instance desync). The
- * spend chip / paused-on-limit derivation stays wired for when it goes live.
- */
-const SPEND_LIMIT: SpendLimit = {
-  enabled: false,
-  limit: 500,
-  used: 0,
-  period: "monthly",
-};
-const spendLimitReached =
-  SPEND_LIMIT.enabled && SPEND_LIMIT.used >= SPEND_LIMIT.limit;
-const spendLimitWarning =
-  SPEND_LIMIT.enabled && SPEND_LIMIT.used >= SPEND_LIMIT.limit * 0.8;
 
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
@@ -137,9 +119,6 @@ export function usePolicies() {
   return {
     policies,
     canConfigure,
-    spendLimit: SPEND_LIMIT,
-    spendLimitReached,
-    spendLimitWarning,
     enablePolicy,
     savePolicyConfig,
     pausePolicy,

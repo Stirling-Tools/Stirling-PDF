@@ -62,8 +62,6 @@ describe("Policies right-sidebar surface", () => {
   it("renders the policy list with every category", () => {
     renderHost();
     expect(screen.getByText("Policies")).toBeInTheDocument();
-    // The mock/live data-source toggle is present in the list header.
-    expect(screen.getByText("Demo data")).toBeInTheDocument();
     for (const label of [
       "Ingestion",
       "Security",
@@ -88,13 +86,13 @@ describe("Policies right-sidebar surface", () => {
     expect(screen.getByText("Edit Settings")).toBeInTheDocument();
   });
 
-  it("shows the recent-activity feed for a policy that has activity", () => {
+  it("shows an honest empty activity feed when no files have been uploaded", async () => {
     renderHost();
     fireEvent.click(screen.getByText("Ingestion"));
     expect(screen.getByText("Recent Activity")).toBeInTheDocument();
-    // Seeded mock activity rows render (not the empty state).
-    expect(screen.getByText("MSA_Acme_2026.pdf")).toBeInTheDocument();
-    expect(screen.queryByText("No activity yet")).not.toBeInTheDocument();
+    // Activity is derived from real uploads; with none, the empty state shows
+    // (no curated mock rows).
+    expect(await screen.findByText("No activity yet")).toBeInTheDocument();
   });
 
   it("returns to the list via the back button", () => {

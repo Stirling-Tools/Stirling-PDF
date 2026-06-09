@@ -4,8 +4,9 @@
  * A Policy is conceptually like a Watch Folder (a configured automation that
  * runs over documents) but backend-driven and triggered by *sources/events*
  * (editor save/export, device sweeps, cloud connectors) rather than just a
- * folder. This frontend is mock/stub-backed; server persistence and real
- * enforcement land in a follow-up.
+ * folder. Per-policy state is persisted locally (localStorage) today; server
+ * persistence and real enforcement land in a follow-up. Activity + stats shown
+ * in the detail view are derived live from the user's real uploaded files.
  */
 
 import type { ReactNode } from "react";
@@ -53,7 +54,10 @@ export interface PolicyCategory {
   providesClassification?: boolean;
 }
 
-/** The three-up summary stats shown at the foot of a configured policy's detail. */
+/**
+ * The three-up summary stats shown at the foot of a configured policy's detail,
+ * derived live from the user's uploaded files (see policyLiveData).
+ */
 export interface PolicyStats {
   /** Documents enforced (rendered with toLocaleString). */
   enforced: number;
@@ -71,10 +75,6 @@ export interface PolicyConfigDef {
   rules: string[];
   /** Human label for the scope this policy applies to. */
   scopeLabel: string;
-  /** Three-up summary stats for the detail view. */
-  stats: PolicyStats;
-  /** Recent enforcement log shown in the detail view (mock). */
-  activity: PolicyActivityItem[];
   /** Editable settings fields. */
   fields: PolicyField[];
   /**
@@ -94,7 +94,7 @@ export interface PolicySource {
   icon: ReactNode;
 }
 
-/** An entry in a policy's recent-activity feed (mock enforcement log). */
+/** An entry in a policy's recent-activity feed (derived from real uploads). */
 export interface PolicyActivityItem {
   /** Document the policy acted on. */
   doc: string;
@@ -129,20 +129,9 @@ export interface PolicyState {
    * `Policy.trigger` (folder) + `steps` + `output`.
    */
   folderId?: string;
-  /** Mock telemetry surfaced in the detail view. */
-  docsEnforced24h: number;
-  alerts24h: number;
-  lastEnforced: string | null;
 }
 
 export type PoliciesByCategory = Record<string, PolicyState>;
-
-export interface SpendLimit {
-  enabled: boolean;
-  limit: number;
-  used: number;
-  period: "monthly" | "weekly" | "daily";
-}
 
 /** The three steps of the unconfigured-policy setup wizard. */
 export type PolicySetupStep = 1 | 2 | 3;

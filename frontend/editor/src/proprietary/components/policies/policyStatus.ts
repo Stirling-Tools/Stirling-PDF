@@ -1,13 +1,12 @@
 import type { IconBadgeAccent } from "@shared/components/IconBadge";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 
-/** Derive a single row/detail status, treating a spend-limit hit as paused. */
+/** Derive a single row/detail status from a policy's persisted state. */
 export function deriveRowStatus(
   state: PolicyState | undefined,
-  spendReached: boolean,
 ): PolicyRowStatus {
   if (!state?.configured) return "setup";
-  if (spendReached || state.status === "paused") return "paused";
+  if (state.status === "paused") return "paused";
   return "active";
 }
 

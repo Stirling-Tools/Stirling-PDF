@@ -1,22 +1,24 @@
-# Policies (frontend, mock-backed)
+# Policies (frontend)
 
 Automation-backed document-enforcement policies — conceptually like Watch
 Folders but backend-driven, with non-folder triggers (editor save/export,
-device sweeps, cloud connectors). **This is the frontend only**; everything is
-mock/stub-backed (localStorage), with no server. It ships behind the
-`POLICIES_ENABLED` feature flag (proprietary build = on while in development,
-core build = off).
+device sweeps, cloud connectors). **This is the frontend only**: per-policy
+state is persisted locally (localStorage) and activity + stats are derived from
+your real uploaded files; server persistence + real enforcement land in a
+follow-up. It ships behind the `POLICIES_ENABLED` feature flag (proprietary
+build = on while in development, core build = off).
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `types/policies.ts` | Type model (category, fields, state, user/billing). |
-| `data/policyDefinitions.tsx` | The **mock source** for the catalog: 5 categories (with `defaultActive` / `providesClassification` data flags), per-category config fields, sources, doc types, **mock** user + billing, `canConfigurePolicies`. Read it through `policyCatalog`, not directly. |
+| `types/policies.ts` | Type model (category, fields, state). |
+| `data/policyDefinitions.tsx` | Static preset definitions for the catalog: 5 categories (with `defaultActive` / `providesClassification` data flags), per-category config fields, sources, doc types, and each category's default tool pipeline. Read it through `policyCatalog`, not directly. |
 | `services/policyCatalog.ts` | **The definitions seam.** `loadPolicyCatalog()` returns categories/configs/sources/doc-types. Components reach definitions only through here (via `usePolicyCatalog`) — swap this one function for a backend fetch to go live without touching a component. |
 | `hooks/usePolicyCatalog.ts` | Hook over the catalog seam (memoised; where loading/error state lands when it becomes async). |
-| `services/policyStorage.ts` | Mock persistence (localStorage) of per-policy **state** + change events. Swap this layer for the real API. |
-| `hooks/usePolicies.ts` | State + lifecycle actions + derived cost + mock user/billing/permission. |
+| `services/policyStorage.ts` | Local persistence (localStorage) of per-policy **state** + change events. Swap this layer for the real API. |
+| `hooks/usePolicies.ts` | State + lifecycle actions + permission flag. |
+| `services/policyLiveData.ts` | Derives the detail view's activity feed + stats from the user's real uploaded files. |
 | `components/policies/PoliciesSidebar.tsx` | The three right-rail slots: list section, detail takeover, collapsed-rail icons (+ `usePoliciesEnabled` / `usePolicyDetailActive`). Shadows the core stub. |
 | `components/policies/policySelectionStore.ts` | Shared selected-policy / detail-view store the three slots sync through. |
 | `components/policies/PolicySetupWizard.tsx` | 3-step setup (operations → sources/types → reviewer/confirm). |

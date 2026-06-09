@@ -1,6 +1,8 @@
 /**
- * Static definitions + mock context for Policies, mirrored from the design
- * prototype. Everything here is mock/stub data — there is no server yet.
+ * Static preset definitions for Policies — the categories, their editable
+ * settings fields, scope labels, and the default tool pipeline each category
+ * seeds a new policy with. Runtime activity + stats are derived live from the
+ * user's real files (see policyLiveData), not defined here.
  */
 
 import LayersIcon from "@mui/icons-material/Layers";
@@ -71,27 +73,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       { operation: "flatten", parameters: {} },
     ],
     scopeLabel: "All PDFs on this device",
-    stats: { enforced: 1284, dataProcessed: "3.2 GB", activeFor: "18d" },
-    activity: [
-      {
-        doc: "MSA_Acme_2026.pdf",
-        action: "Classified as Contract • 3 tables extracted",
-        time: "2h ago",
-        status: "enforced",
-      },
-      {
-        doc: "Invoice_4471.pdf",
-        action: "Classified as Invoice • renamed to standard",
-        time: "5h ago",
-        status: "enforced",
-      },
-      {
-        doc: "scan_002.pdf",
-        action: "Low confidence (62%) • flagged for review",
-        time: "Yesterday",
-        status: "flagged",
-      },
-    ],
     // Policy-level controls only — the per-tool params (OCR level, extract
     // tables, naming, normalize, rotate…) now live in the Workflow step.
     fields: [
@@ -120,21 +101,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       { operation: "addPassword", parameters: {} },
     ],
     scopeLabel: "All PDFs on this device",
-    stats: { enforced: 892, dataProcessed: "1.1 GB", activeFor: "12d" },
-    activity: [
-      {
-        doc: "Patient_Record_88.pdf",
-        action: "6 PII fields detected • redacted on export",
-        time: "1h ago",
-        status: "enforced",
-      },
-      {
-        doc: "offer_letter.pdf",
-        action: "SSN found • blocked external share",
-        time: "3h ago",
-        status: "flagged",
-      },
-    ],
     // Policy-level controls only — detection/encryption/signing/watermark are
     // per-tool and now live in the Workflow step.
     fields: [
@@ -180,21 +146,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       { operation: "flatten", parameters: {} },
     ],
     scopeLabel: "All PDFs on this device",
-    stats: { enforced: 437, dataProcessed: "640 MB", activeFor: "9d" },
-    activity: [
-      {
-        doc: "Lab_Results_Q1.pdf",
-        action: "HIPAA scan passed • audit trail recorded",
-        time: "4h ago",
-        status: "enforced",
-      },
-      {
-        doc: "marketing_export.pdf",
-        action: "GDPR violation • quarantined",
-        time: "Yesterday",
-        status: "flagged",
-      },
-    ],
     fields: [
       {
         label: "Frameworks",
@@ -233,15 +184,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     rules: ["Auto-classify", "Route to folder", "Webhook notify"],
     defaultOperations: [{ operation: "compress", parameters: {} }],
     scopeLabel: "All PDFs on this device",
-    stats: { enforced: 256, dataProcessed: "320 MB", activeFor: "6d" },
-    activity: [
-      {
-        doc: "PO_22815.pdf",
-        action: "Routed to Finance · SharePoint",
-        time: "3h ago",
-        status: "enforced",
-      },
-    ],
     fields: [
       {
         label: "Destination",
@@ -260,15 +202,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     rules: ["Retention hold", "Auto-archive", "Deletion block"],
     defaultOperations: [{ operation: "compress", parameters: {} }],
     scopeLabel: "All PDFs on this device",
-    stats: { enforced: 1100, dataProcessed: "2.4 GB", activeFor: "21d" },
-    activity: [
-      {
-        doc: "Tax_2019_batch.pdf",
-        action: "7-year retention hold applied",
-        time: "6h ago",
-        status: "enforced",
-      },
-    ],
     fields: [
       {
         label: "Keep for",

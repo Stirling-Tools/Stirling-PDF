@@ -1,11 +1,10 @@
 /**
- * Derives a policy's live activity feed + stats from the app's real uploaded
- * files (the "all uploaded files" trigger), as the counterpart to the curated
- * mock data in the catalog. Selected via the policy data-mode toggle.
+ * Derives a policy's activity feed + stats from the app's real uploaded files
+ * (the "all uploaded files" trigger).
  *
- * Every active policy enforces on all uploaded files, so the live feed is the
- * user's actual files (leaf versions) — meaningful immediately, unlike a folder
- * that starts empty.
+ * Every active policy enforces on all uploaded files, so the feed is the user's
+ * actual files (leaf versions) — meaningful immediately, unlike a folder that
+ * starts empty.
  */
 
 import { fileStorage } from "@app/services/fileStorage";

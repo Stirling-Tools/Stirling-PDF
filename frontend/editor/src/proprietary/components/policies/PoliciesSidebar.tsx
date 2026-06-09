@@ -25,14 +25,8 @@ import {
 } from "@app/services/policyLiveData";
 import type { AutomationConfig, AutomationOperation } from "@app/types/automation";
 import type { SmartFolder } from "@app/types/smartFolders";
-import { ToggleSwitch } from "@shared/components/ToggleSwitch";
-import {
-  usePolicyDataMode,
-  setPolicyDataMode,
-} from "@app/components/policies/policyDataModeStore";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
-import { Banner } from "@shared/components/Banner";
 import { IconBadge } from "@shared/components/IconBadge";
 import {
   deriveRowStatus,
@@ -70,7 +64,6 @@ export function usePolicyDetailActive(): boolean {
 export function PoliciesSection() {
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
-  const dataMode = usePolicyDataMode();
   const [expanded, setExpanded] = useState(true);
 
   if (!POLICIES_ENABLED) return null;
@@ -91,44 +84,13 @@ export function PoliciesSection() {
           expanded={expanded}
           onToggle={() => setExpanded((v) => !v)}
         />
-        {expanded && (
-          <div className="pol-data-toggle">
-            <span className="pol-data-toggle__label">
-              {dataMode === "live" ? "Live data" : "Demo data"}
-            </span>
-            <ToggleSwitch
-              size="sm"
-              checked={dataMode === "live"}
-              onChange={(checked) =>
-                setPolicyDataMode(checked ? "live" : "mock")
-              }
-              aria-label="Toggle live data"
-            />
-          </div>
-        )}
       </div>
 
       {expanded && (
         <>
-          {pol.spendLimitWarning && (
-            <div className="pol-spend-wrap">
-              <Banner
-                tone={pol.spendLimitReached ? "danger" : "warning"}
-                description={
-                  pol.spendLimitReached
-                    ? "Policies paused — spend limit reached."
-                    : `$${pol.spendLimit.used.toFixed(2)} / $${pol.spendLimit.limit} limit`
-                }
-              />
-            </div>
-          )}
-
           <div className="pol-list-rows">
             {categories.map((cat) => {
-              const status = deriveRowStatus(
-                pol.policies[cat.id],
-                pol.spendLimitReached,
-              );
+              const status = deriveRowStatus(pol.policies[cat.id]);
               return (
                 <button
                   key={cat.id}
@@ -174,7 +136,6 @@ export function PolicyDetailTakeover() {
   const pol = usePolicies();
   const { categories, configs, sources, docTypes } = usePolicyCatalog();
   const { selectedId, detailView } = usePolicySelection();
-  const dataMode = usePolicyDataMode();
 
   // The configured policy's backing folder + automation (its real, editable
   // pipeline). `reloadKey` bumps after the edit modal saves so the detail
@@ -209,31 +170,30 @@ export function PolicyDetailTakeover() {
     };
   }, [folderId, reloadKey]);
 
-  // Live activity/stats from the backing folder's run state, when the data-mode
-  // toggle is "live"; otherwise the panel uses the preset's mock data.
+  // Activity/stats derived from the app's real uploaded files (the "all uploaded
+  // files" trigger). Only polled while the narrative detail is on screen — the
+  // wizard/settings views don't show it, so there's nothing to keep current.
   const [liveData, setLiveData] = useState<PolicyLiveData | null>(null);
   useEffect(() => {
-    // Mock mode → null so the panel uses the preset's mock data. Live mode →
-    // derive from the app's real uploaded files (the "all uploaded files"
-    // trigger), so live shows the user's actual files, never the mock feed.
-    if (dataMode !== "live") {
-      setLiveData(null);
-      return;
-    }
+    if (detailView !== "detail") return;
     let cancelled = false;
     const load = () =>
-      getPolicyLiveData().then((d) => {
-        if (!cancelled) setLiveData(d);
-      });
-    load();
+      getPolicyLiveData()
+        .then((d) => {
+          if (!cancelled) setLiveData(d);
+        })
+        .catch(() => {
+          /* storage unavailable — leave the last-known feed in place */
+        });
+    void load();
     // Poll so the feed stays current — new uploads appear and "Enforcing…"
     // settles to "enforced" without a manual reopen.
-    const interval = setInterval(load, 5000);
+    const interval = setInterval(() => void load(), 5000);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [dataMode, selectedId]);
+  }, [detailView]);
 
   if (!POLICIES_ENABLED || selectedId == null) return null;
 
@@ -242,7 +202,7 @@ export function PolicyDetailTakeover() {
   const config = configs[selectedId];
   if (!category || !state || !config) return null;
 
-  const status = deriveRowStatus(state, pol.spendLimitReached);
+  const status = deriveRowStatus(state);
 
   const onSetupClassification = () => {
     const classifier = categories.find((c) => c.providesClassification);
@@ -320,7 +280,6 @@ export function PolicyDetailTakeover() {
       <PolicyDetailPanel
         category={category}
         config={config}
-        state={state}
         status={status}
         steps={steps}
         activity={liveData?.activity}
@@ -383,10 +342,7 @@ export function PoliciesCollapsedButton({
     <>
       <div className="pol-crail">
         {categories.map((cat) => {
-          const status = deriveRowStatus(
-            pol.policies[cat.id],
-            pol.spendLimitReached,
-          );
+          const status = deriveRowStatus(pol.policies[cat.id]);
           const suffix =
             status === "active"
               ? " (Active)"
