@@ -11,11 +11,30 @@ vi.mock("@app/components/policies/PolicyWorkflowStep", () => ({
   PolicyWorkflowStep: (props: {
     automation: unknown;
     saveTriggerRef: { current: (() => void) | null };
-    onComplete: (automation: unknown) => void;
+    onComplete: (automation: unknown, toolRegistry: unknown) => void;
   }) => {
-    props.saveTriggerRef.current = () => props.onComplete(props.automation);
+    props.saveTriggerRef.current = () =>
+      props.onComplete(props.automation, {});
     return null;
   },
+}));
+
+// The backend is the source of truth, but these UI tests run offline: list
+// rejects (so the mount reconcile keeps the local cache), while save/delete
+// resolve so the enable flow completes.
+vi.mock("@app/services/policyApi", () => ({
+  listPolicies: vi.fn().mockRejectedValue(new Error("offline")),
+  savePolicy: vi
+    .fn()
+    .mockImplementation(async (p: { id?: string }) => ({
+      ...p,
+      id: p.id && p.id.length > 0 ? p.id : "be-test",
+    })),
+  getPolicy: vi.fn(),
+  deletePolicy: vi.fn().mockResolvedValue(undefined),
+  runStoredPolicy: vi.fn(),
+  runPolicyPipeline: vi.fn(),
+  getPolicyRun: vi.fn(),
 }));
 
 // Enabling a policy creates its backing Watch Folders SmartFolder (IndexedDB);
@@ -56,6 +75,22 @@ function renderHost() {
 describe("Policies right-sidebar surface", () => {
   beforeEach(() => {
     localStorage.clear();
+    // Seed a configured Ingestion policy in the local cache. The backend list is
+    // mocked to reject (offline), so the mount reconcile leaves this in place —
+    // giving the narrative-view tests a configured policy to open.
+    localStorage.setItem(
+      "stirling-policies-state",
+      JSON.stringify({
+        ingestion: {
+          configured: true,
+          status: "active",
+          sources: ["editor"],
+          scopeTypes: [],
+          reviewerEmail: "",
+          fieldValues: {},
+        },
+      }),
+    );
     resetPolicySelection();
   });
 

@@ -23,7 +23,9 @@ import type {
   PolicyWizardResult,
 } from "@app/types/policies";
 import type { AutomationConfig } from "@app/types/automation";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { SmartFolder } from "@app/types/smartFolders";
+import { buildPipelineDefinition } from "@app/services/policyPipeline";
 import { useAuth } from "@app/auth/UseSession";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
@@ -155,10 +157,19 @@ export function PolicySetupWizard({
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
 
-  // Once the builder persists the workflow, hand the automation + settings to
-  // the host (which closes the wizard on success). If the host's async save
-  // rejects, recover so the submit button doesn't stay disabled forever.
-  const handleWorkflowSaved = (automation: AutomationConfig) => {
+  // Once the builder persists the workflow, map its operations to backend
+  // endpoint paths (the registry only lives in the Workflow step) and hand the
+  // automation + built steps + settings to the host (which closes the wizard on
+  // success). If the host's async save rejects, recover so the submit button
+  // doesn't stay disabled forever.
+  const handleWorkflowSaved = (
+    automation: AutomationConfig,
+    toolRegistry: Partial<ToolRegistry>,
+  ) => {
+    const { definition, unresolved } = buildPipelineDefinition(
+      automation,
+      toolRegistry,
+    );
     Promise.resolve(
       onComplete({
         automation,
@@ -173,6 +184,8 @@ export function PolicySetupWizard({
           maxRetries,
           retryDelayMinutes,
         },
+        pipelineSteps: definition.steps,
+        unresolvedOps: unresolved,
       }),
     ).catch(() => {
       setSubmitting(false);

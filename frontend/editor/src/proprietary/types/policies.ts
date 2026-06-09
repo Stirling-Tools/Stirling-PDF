@@ -42,11 +42,6 @@ export interface PolicyCategory {
   /** Long description shown in the setup wizard. */
   desc: string;
   /**
-   * Seeded as configured + active on first load — the mock's "ships on" policy.
-   * Replaces the former hardcoded `id === "ingestion"` check in the store.
-   */
-  defaultActive?: boolean;
-  /**
    * This category provides document classification, so it's the target of the
    * setup wizard's "Set up Classification" action. Data-driven replacement for
    * the hardcoded `selectPolicy("ingestion")` call site.
@@ -129,6 +124,11 @@ export interface PolicyState {
    * `Policy.trigger` (folder) + `steps` + `output`.
    */
   folderId?: string;
+  /**
+   * Id of this policy's record on the backend (the source of truth). Present once
+   * it has been persisted server-side; used to update/delete/run it.
+   */
+  backendId?: string;
 }
 
 export type PoliciesByCategory = Record<string, PolicyState>;
@@ -158,6 +158,20 @@ export interface PolicyWizardResult {
   reviewerEmail: string;
   /** Output + retry settings for the backing folder. */
   folder: PolicyFolderSettings;
+  /**
+   * Backend pipeline steps (each `operation` is a tool ENDPOINT path), built
+   * from the workflow via the tool registry in the wizard's Workflow step — the
+   * hook persists these to the backend without needing the registry itself.
+   * Structurally matches policyPipeline's `BackendPipelineStep` (inlined here to
+   * avoid a types↔services import cycle).
+   */
+  pipelineSteps: {
+    operation: string;
+    parameters: Record<string, unknown>;
+    fileParameters?: Record<string, string>;
+  }[];
+  /** Operation ids whose endpoint couldn't be resolved (dropped from steps). */
+  unresolvedOps: string[];
 }
 
 /** Which sub-view of a configured policy's detail panel is showing. */

@@ -59,6 +59,7 @@ describe("buildPipelineDefinition", () => {
 });
 
 const samplePolicy = {
+  categoryId: "security",
   name: "Security",
   enabled: true,
   automation: {
@@ -68,6 +69,9 @@ const samplePolicy = {
     createdAt: "",
     updatedAt: "",
   },
+  pipelineSteps: [
+    { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+  ],
   sources: ["editor"],
   scopeTypes: ["Contracts"],
   reviewerEmail: "me@x.com",
@@ -83,7 +87,7 @@ const samplePolicy = {
 
 describe("buildBackendPolicy", () => {
   it("maps a frontend policy to the backend Policy shape", () => {
-    const { policy } = buildBackendPolicy(samplePolicy, registry);
+    const policy = buildBackendPolicy(samplePolicy);
     expect(policy.id).toBe(""); // blank → backend assigns
     expect(policy.name).toBe("Security");
     expect(policy.enabled).toBe(true);
@@ -91,14 +95,16 @@ describe("buildBackendPolicy", () => {
       { operation: "/api/v1/misc/compress-pdf", parameters: {} },
     ]);
     // Extras ride in options.
+    expect(policy.trigger.options.categoryId).toBe("security");
     expect(policy.trigger.options.reviewerEmail).toBe("me@x.com");
     expect(policy.output.options.maxRetries).toBe(2);
   });
 
   it("round-trips losslessly through fromBackendPolicy", () => {
-    const { policy } = buildBackendPolicy(samplePolicy, registry);
+    const policy = buildBackendPolicy(samplePolicy);
     const decoded = fromBackendPolicy({ ...policy, id: "p1" });
     expect(decoded.id).toBe("p1");
+    expect(decoded.categoryId).toBe("security");
     expect(decoded.enabled).toBe(true);
     expect(decoded.sources).toEqual(["editor"]);
     expect(decoded.scopeTypes).toEqual(["Contracts"]);

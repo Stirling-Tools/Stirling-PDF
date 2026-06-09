@@ -13,7 +13,7 @@ build = on while in development, core build = off).
 | Path | Role |
 |------|------|
 | `types/policies.ts` | Type model (category, fields, state). |
-| `data/policyDefinitions.tsx` | Static preset definitions for the catalog: 5 categories (with `defaultActive` / `providesClassification` data flags), per-category config fields, sources, doc types, and each category's default tool pipeline. Read it through `policyCatalog`, not directly. |
+| `data/policyDefinitions.tsx` | Static preset definitions for the catalog: 5 categories (with the `providesClassification` data flag), per-category config fields, sources, doc types, and each category's default tool pipeline. Read it through `policyCatalog`, not directly. |
 | `services/policyCatalog.ts` | **The definitions seam.** `loadPolicyCatalog()` returns categories/configs/sources/doc-types. Components reach definitions only through here (via `usePolicyCatalog`) — swap this one function for a backend fetch to go live without touching a component. |
 | `hooks/usePolicyCatalog.ts` | Hook over the catalog seam (memoised; where loading/error state lands when it becomes async). |
 | `services/policyStorage.ts` | Local persistence (localStorage) of per-policy **state** + change events. Swap this layer for the real API. |

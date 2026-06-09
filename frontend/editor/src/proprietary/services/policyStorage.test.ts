@@ -11,10 +11,10 @@ describe("policyStorage", () => {
     localStorage.clear();
   });
 
-  it("seeds ingestion as configured + active and the rest as unconfigured", () => {
+  it("defaults every category to unconfigured (backend is the source of truth)", () => {
     const p = loadPolicies();
-    expect(p.ingestion.configured).toBe(true);
-    expect(p.ingestion.status).toBe("active");
+    expect(p.ingestion.configured).toBe(false);
+    expect(p.ingestion.status).toBe("default");
     expect(p.security.configured).toBe(false);
     expect(p.security.status).toBe("default");
     expect(p.retention.configured).toBe(false);

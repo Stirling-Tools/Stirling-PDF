@@ -126,10 +126,19 @@ export function buildPipelineDefinition(
 export interface PolicyToStore {
   /** Existing backend id (blank/omitted → create). */
   id?: string;
+  /** The frontend catalog category this policy belongs to (1 policy per category). */
+  categoryId: string;
   name: string;
   /** Active (enabled) vs paused/off. */
   enabled: boolean;
+  /** Full frontend automation, stashed for a lossless UI round-trip. */
   automation: AutomationConfig;
+  /**
+   * The engine-runnable steps (endpoint paths), pre-built from `automation` via
+   * the tool registry by the caller that has it (the wizard). The store layer
+   * has no registry, so it receives these ready-made.
+   */
+  pipelineSteps: BackendPipelineStep[];
   sources: string[];
   scopeTypes: string[];
   reviewerEmail: string;
@@ -140,6 +149,8 @@ export interface PolicyToStore {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
+  /** The catalog category this policy maps to (from trigger.options.categoryId). */
+  categoryId: string;
   name: string;
   enabled: boolean;
   /** Null if the stored policy carried no automation blob. */
@@ -162,48 +173,40 @@ const DEFAULT_FOLDER: PolicyFolderSettings = {
 /**
  * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
  * The backend models only name/enabled/trigger/steps/output, so the policy-level
- * extras (sources, scope, reviewer, fields) ride in `trigger.options` and the
- * output + retry settings in `output.options`; the full frontend automation is
- * stashed in `output.options.automation` for a lossless UI round-trip (while
- * `steps` carries the endpoint-mapped pipeline the engine runs).
+ * extras (categoryId, sources, scope, reviewer, fields) ride in `trigger.options`
+ * and the output + retry settings in `output.options`; the full frontend
+ * automation is stashed in `output.options.automation` for a lossless UI
+ * round-trip (while `steps` carries the endpoint-mapped pipeline the engine
+ * runs, pre-built by the caller).
  */
-export function buildBackendPolicy(
-  input: PolicyToStore,
-  toolRegistry: Partial<ToolRegistry>,
-): { policy: BackendPolicy; unresolved: string[] } {
-  const { definition, unresolved } = buildPipelineDefinition(
-    input.automation,
-    toolRegistry,
-  );
+export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
   return {
-    policy: {
-      id: input.id ?? "",
-      name: input.name,
-      owner: "",
-      enabled: input.enabled,
-      trigger: {
-        type: "folder",
-        options: {
-          sources: input.sources,
-          scopeTypes: input.scopeTypes,
-          reviewerEmail: input.reviewerEmail,
-          fieldValues: input.fieldValues,
-        },
-      },
-      steps: definition.steps,
-      output: {
-        type: "inline",
-        options: {
-          mode: input.folder.outputMode,
-          name: input.folder.outputName,
-          position: input.folder.outputNamePosition,
-          maxRetries: input.folder.maxRetries,
-          retryDelayMinutes: input.folder.retryDelayMinutes,
-          automation: input.automation,
-        },
+    id: input.id ?? "",
+    name: input.name,
+    owner: "",
+    enabled: input.enabled,
+    trigger: {
+      type: "folder",
+      options: {
+        categoryId: input.categoryId,
+        sources: input.sources,
+        scopeTypes: input.scopeTypes,
+        reviewerEmail: input.reviewerEmail,
+        fieldValues: input.fieldValues,
       },
     },
-    unresolved,
+    steps: input.pipelineSteps,
+    output: {
+      type: "inline",
+      options: {
+        mode: input.folder.outputMode,
+        name: input.folder.outputName,
+        position: input.folder.outputNamePosition,
+        maxRetries: input.folder.maxRetries,
+        retryDelayMinutes: input.folder.retryDelayMinutes,
+        automation: input.automation,
+      },
+    },
   };
 }
 
@@ -217,6 +220,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     typeof v === "number" ? v : fallback;
   return {
     id: policy.id,
+    categoryId: str(trigger.categoryId),
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,

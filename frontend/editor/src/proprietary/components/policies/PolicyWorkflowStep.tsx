@@ -2,6 +2,7 @@ import type { MutableRefObject } from "react";
 import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
 import { AutomationMode } from "@app/types/automation";
 import type { AutomationConfig } from "@app/types/automation";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
 interface PolicyWorkflowStepProps {
@@ -15,8 +16,15 @@ interface PolicyWorkflowStepProps {
   mode: AutomationMode;
   /** The host (wizard) triggers the builder's save imperatively from its footer. */
   saveTriggerRef: MutableRefObject<(() => void) | null>;
-  /** Called with the saved automation once the builder persists it. */
-  onComplete: (automation: AutomationConfig) => void;
+  /**
+   * Called with the saved automation once the builder persists it, plus the tool
+   * registry (which lives here) so the wizard can map operations to backend
+   * endpoint paths without depending on the ToolWorkflow context itself.
+   */
+  onComplete: (
+    automation: AutomationConfig,
+    toolRegistry: Partial<ToolRegistry>,
+  ) => void;
   /** Called when save is triggered but the workflow isn't in a saveable state. */
   onSaveFailed?: () => void;
 }
@@ -44,7 +52,7 @@ export function PolicyWorkflowStep({
       nameOverride={automation.name}
       saveTriggerRef={saveTriggerRef}
       onBack={() => {}}
-      onComplete={onComplete}
+      onComplete={(saved) => onComplete(saved, toolRegistry)}
       onSaveFailed={onSaveFailed}
     />
   );

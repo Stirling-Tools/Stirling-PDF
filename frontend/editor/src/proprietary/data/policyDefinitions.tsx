@@ -31,9 +31,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "Ingestion",
     icon: <LayersIcon sx={ICON_SX} />,
     desc: "Classify documents, extract structured data, enforce naming conventions, and normalize pages.",
-    // Ships pre-configured + active (immediate value); also the classifier the
-    // wizard's "Set up Classification" action routes to.
-    defaultActive: true,
+    // The classifier the wizard's "Set up Classification" action routes to.
     providesClassification: true,
   },
   {
