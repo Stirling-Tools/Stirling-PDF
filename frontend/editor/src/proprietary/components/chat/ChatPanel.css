@@ -442,7 +442,9 @@
   color: var(--mantine-color-text);
 }
 
-[data-mantine-color-scheme="dark"] .chat-progress-step--active .chat-progress-step__label {
+[data-mantine-color-scheme="dark"]
+  .chat-progress-step--active
+  .chat-progress-step__label {
   color: #ffffff;
 }
 
@@ -487,7 +489,8 @@
 }
 
 /* Past step labels — a touch smaller so the active row reads as the primary. */
-.chat-progress-step:not(.chat-progress-step--active) .chat-progress-step__label {
+.chat-progress-step:not(.chat-progress-step--active)
+  .chat-progress-step__label {
   font-size: 0.8rem;
   padding-top: 4px;
 }
@@ -508,8 +511,12 @@
 
 /* Entry: steps slide up from a few pixels below their final position. */
 @keyframes chat-step-enter {
-  from { transform: translateY(7px); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(7px);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* ─── Completed progress log dropdown ──────────────────────────────────── */

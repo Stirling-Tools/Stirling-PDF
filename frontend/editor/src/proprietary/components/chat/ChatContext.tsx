@@ -218,14 +218,17 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "SET_PROGRESS":
       return { ...state, progress: action.progress };
     case "APPEND_PROGRESS":
-      // Cap the live buffer so each append copies at most PROGRESS_LOG_MAX elements 
+      // Cap the live buffer so each append copies at most PROGRESS_LOG_MAX elements
       return {
         ...state,
         progress: action.progress,
         progressLog:
           state.progressLog.length < PROGRESS_LOG_MAX
             ? [...state.progressLog, action.progress]
-            : [...state.progressLog.slice(1 - PROGRESS_LOG_MAX), action.progress],
+            : [
+                ...state.progressLog.slice(1 - PROGRESS_LOG_MAX),
+                action.progress,
+              ],
       };
     case "TOGGLE_OPEN":
       return { ...state, isOpen: !state.isOpen };

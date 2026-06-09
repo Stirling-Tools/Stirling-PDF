@@ -166,9 +166,7 @@ function progressStepIcon(
     return <StirlingLogoAnimated size={18} />;
   }
   if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL) {
-    const registryIcon = progress.tool
-      ? resolveToolIcon(progress.tool)
-      : null;
+    const registryIcon = progress.tool ? resolveToolIcon(progress.tool) : null;
     if (registryIcon) {
       return <span className="chat-step-icon-scaled">{registryIcon}</span>;
     }
@@ -318,7 +316,9 @@ function CompletedProgressLogDropdown({
                   <div className="chat-progress-step__icon">
                     {progressStepIcon(step, resolveToolIcon, false)}
                   </div>
-                  {showConnector && <div className="chat-progress-step__line" />}
+                  {showConnector && (
+                    <div className="chat-progress-step__line" />
+                  )}
                 </div>
                 <span className="chat-progress-step__label">{stepLabel}</span>
               </div>
@@ -419,7 +419,8 @@ export interface ChatPanelProps {
 
 export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   const { t } = useTranslation();
-  const { messages, isLoading, progressLog, sendMessage, clearChat } = useChat();
+  const { messages, isLoading, progressLog, sendMessage, clearChat } =
+    useChat();
   const resolveToolName = useToolNameResolver();
   const resolveToolIcon = useToolIconResolver();
   const [input, setInput] = useState("");
