@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Loader } from "@mantine/core";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import { Card } from "@shared/components/Card";
+import { PolicyPiiField } from "@app/components/policies/PolicyPiiField";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { ToolId } from "@app/types/toolId";
 
@@ -59,21 +60,32 @@ export function PolicyToolConfig({
                 aria-label={`Enable ${entry?.name ?? tool.operation}`}
               />
             </div>
-            {tool.enabled && Settings && (
-              <div className="pol-tool-body">
-                <Suspense fallback={<Loader size="sm" />}>
-                  <Settings
+            {tool.enabled &&
+              (tool.operation === "redact" ? (
+                // Redact gets the friendly PII-type dropdown instead of the raw
+                // regex list — it writes the matching patterns into the params.
+                <div className="pol-tool-body">
+                  <PolicyPiiField
                     parameters={tool.parameters}
-                    onParameterChange={(key: string, value: unknown) =>
-                      patchTool(index, {
-                        parameters: { ...tool.parameters, [key]: value },
-                      })
-                    }
+                    onChange={(parameters) => patchTool(index, { parameters })}
                     disabled={!editable}
                   />
-                </Suspense>
-              </div>
-            )}
+                </div>
+              ) : Settings ? (
+                <div className="pol-tool-body">
+                  <Suspense fallback={<Loader size="sm" />}>
+                    <Settings
+                      parameters={tool.parameters}
+                      onParameterChange={(key: string, value: unknown) =>
+                        patchTool(index, {
+                          parameters: { ...tool.parameters, [key]: value },
+                        })
+                      }
+                      disabled={!editable}
+                    />
+                  </Suspense>
+                </div>
+              ) : null)}
           </Card>
         );
       })}
