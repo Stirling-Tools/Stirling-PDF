@@ -979,10 +979,20 @@ public class UserController {
     }
 
     /**
-     * List all enabled users for selection in signing workflows.
+     * List enabled users for selection in signing workflows.
+     *
+     * <p>Scope is controlled by {@code storage.signing.userListScope}:
+     *
+     * <ul>
+     *   <li>{@code org} (default) - returns every enabled user on the instance. Correct for
+     *       single-tenant self-host where the whole org shares one Stirling instance.
+     *   <li>{@code team} - returns only users in the caller's team. Required for multi-tenant SaaS;
+     *       the saas profile pins this value. Resolution is fail-closed - any non-{@code org} value
+     *       restricts to the team.
+     * </ul>
      *
      * @param principal The authenticated user
-     * @return List of user summaries
+     * @return List of user summaries scoped per {@code storage.signing.userListScope}
      */
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
@@ -990,8 +1000,40 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        // Fail-closed: only the explicit literal "org" returns the whole instance. Any other or
+        // unrecognised value (typo, blank, or a saas pin that failed to apply) restricts to the
+        // caller's team so a misconfiguration cannot leak every tenant's users.
+        String scope = applicationProperties.getStorage().getSigning().getUserListScope();
+        boolean teamScoped = !"org".equalsIgnoreCase(scope == null ? "" : scope.trim());
+
+        List<User> source;
+        if (teamScoped) {
+            Optional<User> callerOpt = userService.findByUsernameIgnoreCase(principal.getName());
+            if (callerOpt.isEmpty() || callerOpt.get().getTeam() == null) {
+                // Team-scoped but caller has no team: return only themselves to avoid leaking the
+                // org. Self-listing keeps existing UI flows working without exposing other teams.
+                source = callerOpt.map(List::of).orElse(List.of());
+            } else {
+                // KNOWN LIMITATION (single-team scoping): this resolves the caller's team from the
+                // single User.team FK. In SaaS the authoritative membership relation is the
+                // many-to-many TeamMembership table (the saas module), and a user may belong to
+                // several teams. Today User.team holds the user's one team because
+                // SaasTeamService.acceptInvitation() collapses every user to a single team, so
+                // single-team scoping is correct and leaks nothing. If multi-team membership is
+                // ever
+                // enabled this will silently return only the primary team's members. The correct
+                // fix
+                // is a profile-scoped resolver (UserListScopeResolver) whose saas override unions
+                // members across TeamMembershipRepository.findByUserId(callerId) - mirror the
+                // SaasLicenseOverride bean-override pattern.
+                source = userRepository.findAllByTeamId(callerOpt.get().getTeam().getId());
+            }
+        } else {
+            source = userRepository.findAll();
+        }
+
         List<UserSummaryDTO> users =
-                userRepository.findAll().stream()
+                source.stream()
                         .filter(User::isEnabled)
                         .map(this::toUserSummaryDTO)
                         .collect(java.util.stream.Collectors.toList());

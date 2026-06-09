@@ -32,6 +32,23 @@ class ApplicationPropertiesLogicTest {
     }
 
     @Test
+    void storageSigning_userListScope_defaultsToOrg_andIsSettable() {
+        // Self-host backward-compat: the signing user-picker scope must default to "org" (whole
+        // instance). The saas profile is what pins it to "team"; the field must remain settable.
+        ApplicationProperties.Storage.Signing signing = new ApplicationProperties.Storage.Signing();
+
+        assertFalse(signing.isEnabled());
+        assertEquals("org", signing.getUserListScope());
+
+        signing.setUserListScope("team");
+        assertEquals("team", signing.getUserListScope());
+
+        // Reachable from the full tree as storage.signing.userListScope.
+        assertEquals(
+                "org", new ApplicationProperties().getStorage().getSigning().getUserListScope());
+    }
+
+    @Test
     void tempFileManagement_defaults_and_overrides() {
         Function<String, String> normalize = s -> Paths.get(s).normalize().toString();
         ApplicationProperties.TempFileManagement tfm =
