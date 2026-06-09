@@ -138,18 +138,11 @@ function findPageAtClientPoint(
   clientX: number,
   clientY: number,
 ): HTMLElement | null {
-  const pages = container.querySelectorAll("[data-page-index]");
+  const elementsAtPoint = document.elementsFromPoint(clientX, clientY);
 
-  for (const pageNode of pages) {
-    const pageEl = pageNode as HTMLElement;
-    const rect = pageEl.getBoundingClientRect();
-
-    if (
-      clientX >= rect.left &&
-      clientX <= rect.right &&
-      clientY >= rect.top &&
-      clientY <= rect.bottom
-    ) {
+  for (const element of elementsAtPoint) {
+    const pageEl = element.closest?.("[data-page-index]");
+    if (pageEl instanceof HTMLElement && container.contains(pageEl)) {
       return pageEl;
     }
   }
