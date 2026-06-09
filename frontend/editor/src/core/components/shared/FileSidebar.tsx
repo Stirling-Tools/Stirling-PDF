@@ -41,6 +41,7 @@ import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import {
   setWatchFolderDraggedFileIds,
   clearWatchFolderDraggedFileIds,
@@ -129,6 +130,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the workbench). The same map drives the per-file membership dots.
     const folderMembership = useFolderMembership();
     const allFolders = useAllSmartFolders();
+    const policyFileBadges = usePolicyFileBadges();
     const folderById = useMemo(
       () => new Map(allFolders.map((f) => [f.id, f])),
       [allFolders],
@@ -885,6 +887,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           onDragStart={handleWatchFolderDragStart}
                           folders={memberFolders}
                           onFolderClick={openWatchFolder}
+                          policies={policyFileBadges.get(stub.id as string) ?? []}
                         />
                       );
                     })}

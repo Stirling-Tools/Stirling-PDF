@@ -134,6 +134,24 @@
   text-overflow: ellipsis;
 }
 
+/* ---- Policy activity badges (a shield per policy that has run on the file) ---- */
+.file-sidebar-policy-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.file-sidebar-policy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  background: var(--bg-muted, rgba(120, 120, 130, 0.14));
+}
+
 /* ---- Folder membership tags ---- */
 .file-sidebar-folder-tags {
   display: flex;
