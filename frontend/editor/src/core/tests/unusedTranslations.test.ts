@@ -21,17 +21,22 @@ const IGNORED_FILE_PATTERNS = [
 
 /**
  * Keys that look unused to the heuristic but are genuinely used: keep them.
- * Prefer fixing the usage to be detectable; only add here as a last resort.
+ * These are families assembled at runtime, so no static fragment ever reaches
+ * source code for the literal/template matching to catch. Add a regex here
+ * (with a comment naming the runtime usage) rather than teaching the test
+ * about specific component internals. For a single key, anchor it: /^a\.b$/.
  */
-const IGNORED_KEYS = new Set<string>([]);
-
-/**
- * Whole key subtrees to skip. Useful when a feature builds keys entirely from
- * runtime data (e.g. enum values) such that no static fragment ever appears
- * in source code. Match is by literal prefix: include the trailing dot to
- * restrict to children only, or omit it to also match the prefix itself.
- */
-const IGNORED_KEY_PREFIXES: string[] = [];
+const IGNORED_KEY_PATTERNS: RegExp[] = [
+  // SignSettings / SavedSignaturesSection look up every key as
+  // t(`${translationScope}.${key}`); the scope ("sign" | "addText" |
+  // "addImage") and the relative key only ever exist as separate literals.
+  /^(sign|addText|addImage)\./,
+  // SettingsSearchBar builds its search index by loading whole subtrees via
+  // t(prefix, { returnObjects: true }); the leaf keys never appear in source.
+  /^admin\.settings\./,
+  /^settings\./,
+  /^account\./,
+];
 
 const flattenKeys = (
   node: unknown,
@@ -142,10 +147,7 @@ const shapeToMatcher = (shape: string): RegExp => {
 };
 
 const isIgnored = (key: string): boolean => {
-  if (IGNORED_KEYS.has(key)) return true;
-  return IGNORED_KEY_PREFIXES.some(
-    (p) => key === p.replace(/\.$/, "") || key.startsWith(p),
-  );
+  return IGNORED_KEY_PATTERNS.some((re) => re.test(key));
 };
 
 describe("Unused translation coverage", () => {
@@ -198,8 +200,8 @@ describe("Unused translation coverage", () => {
         unused,
         `Found ${unused.length} unused en-GB translation key(s). ` +
           `Remove them from ${localeRelative}, or (if the usage is too ` +
-          `dynamic for the heuristic to spot) add to IGNORED_KEYS / ` +
-          `IGNORED_KEY_PREFIXES in this test.`,
+          `dynamic for the heuristic to spot) add to IGNORED_KEY_PATTERNS ` +
+          `in this test.`,
       ).toEqual([]);
     },
   );
