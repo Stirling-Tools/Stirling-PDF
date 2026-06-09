@@ -911,7 +911,7 @@ main() {
         CUCUMBER_JUNIT_DIR="$PROJECT_ROOT/testing/cucumber/junit"
         mkdir -p "$CUCUMBER_JUNIT_DIR"
         cd "testing/cucumber"
-        start_test_timer "Stirling-PDF-Regression"
+        start_test_timer "Stirling-PDF-Regression $CONTAINER_NAME"
 
         # Snapshot docker log line count before behave so we can extract only behave-window logs
         DOCKER_LOG_BEFORE=$(docker logs "$CONTAINER_NAME" 2>&1 | wc -l)
