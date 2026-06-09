@@ -14,9 +14,6 @@ import ResetPassword from "@app/routes/ResetPassword";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
-// DEV-ONLY preview route — see DevPaygPreview.tsx. Gated by import.meta.env.DEV
-// below so production builds tree-shake it out.
-import DevPaygPreview from "@app/routes/DevPaygPreview";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -46,9 +43,6 @@ export default function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/reset" element={<ResetPassword />} />
-            {import.meta.env.DEV && (
-              <Route path="/dev/payg-preview" element={<DevPaygPreview />} />
-            )}
             <Route path="/*" element={<Landing />} />
           </Routes>
           <OnboardingTour />
