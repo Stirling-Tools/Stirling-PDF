@@ -137,8 +137,7 @@ const shapeToMatcher = (shape: string): RegExp => {
   // Each * stands in for one runtime-supplied path segment. We use `[^.]+`
   // (not `.+`) so a one-variable interpolation doesn't accidentally span
   // multiple key levels. If a real interpolation does carry a multi-segment
-  // string, the IGNORED_KEYS / IGNORED_KEY_PREFIXES lists are the escape
-  // hatch.
+  // string, the IGNORED_KEY_PATTERNS list is the escape hatch.
   const escaped = shape
     .split("*")
     .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
