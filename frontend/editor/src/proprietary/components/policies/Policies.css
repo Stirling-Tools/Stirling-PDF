@@ -108,6 +108,37 @@
   background: var(--color-bg-hover);
 }
 
+/* Expandable error text in the activity feed — long backend errors are clamped
+   and collapsed by default so they don't blow up the row. */
+.pol-activity-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+.pol-activity-error__text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.pol-activity-error__text--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pol-activity-error__toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--color-blue);
+  cursor: pointer;
+}
+.pol-activity-error__toggle:hover {
+  text-decoration: underline;
+}
+
 /* Locked "Coming soon" row — muted, not interactive. */
 .pol-row--soon {
   opacity: 0.55;

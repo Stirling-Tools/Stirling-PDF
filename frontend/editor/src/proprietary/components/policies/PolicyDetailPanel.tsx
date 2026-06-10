@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PublicIcon from "@mui/icons-material/Public";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import HistoryIcon from "@mui/icons-material/History";
@@ -56,6 +57,34 @@ function humanizeOperation(op: string): string {
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (c) => c.toUpperCase())
     .trim();
+}
+
+/**
+ * A failed run's error in the activity feed. Backend errors can be long (or
+ * multi-line stack traces) and would otherwise blow up the row, so anything
+ * lengthy is clamped and collapsed by default with a Show more/less toggle.
+ * Short messages (e.g. "Enforcement failed") render plainly with no toggle.
+ */
+function ActivityError({ message }: { message: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const needsToggle = message.length > 80 || message.includes("\n");
+  if (!needsToggle) return <>{message}</>;
+  return (
+    <span className="pol-activity-error">
+      <span
+        className={`pol-activity-error__text${expanded ? "" : " pol-activity-error__text--clamped"}`}
+      >
+        {message}
+      </span>
+      <button
+        type="button"
+        className="pol-activity-error__toggle"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        {expanded ? "Show less" : "Show more"}
+      </button>
+    </span>
+  );
 }
 
 /** Narrative view for a configured policy (Enforces / Activity / Stats). */
@@ -159,7 +188,13 @@ export function PolicyDetailPanel({
                     )
                   }
                   title={item.doc}
-                  description={item.action}
+                  description={
+                    item.status === "flagged" ? (
+                      <ActivityError message={item.action} />
+                    ) : (
+                      item.action
+                    )
+                  }
                   meta={item.time}
                   trailing={
                     item.status === "flagged" && onRetry ? (
