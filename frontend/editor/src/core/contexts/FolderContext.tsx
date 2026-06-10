@@ -365,11 +365,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
   // guaranteed-to-403 round-trip per session.
   const { config: appConfig } = useAppConfig();
   const storageBackedByServer = appConfig?.storageEnabled === true;
-  // Don't hit the authenticated storage API on auth routes (/login, /signup,
-  // /auth/*, ...). The global FolderProvider is mounted everywhere, including
-  // the login screen where the user has no session yet, so an unguarded pull
-  // fires a guaranteed-401 GET /api/v1/storage/folders before sign-in. Mirror
-  // the auth-route skip used by LicenseContext / AppConfigContext.
+  // Skip server pulls on auth routes: FolderProvider is mounted globally and
+  // /login has no session yet, so the pull would be a guaranteed 401.
   const location = useLocation();
   const onAuthRoute = isAuthRoute(location.pathname);
   useEffect(() => {

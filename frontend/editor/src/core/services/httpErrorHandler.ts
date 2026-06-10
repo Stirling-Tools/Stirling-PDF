@@ -46,12 +46,8 @@ function stashPostLoginRedirect(path: string): void {
   }
 }
 
-// Loop breaker for the 401 hard-redirect below. If the backend persistently
-// 401s an automatic call while the auth session is actually valid, the
-// redirect lands on /login, the login page sees the valid session and bounces
-// back, the call 401s again and we redirect again — forever. sessionStorage
-// survives the full-page navigations of that cycle (per tab), so a second
-// redirect within the window means we're looping, not expiring.
+// Loop breaker: a second 401 redirect within this window means the login page
+// bounced us back with a live session — redirecting again would loop forever.
 const LOGIN_REDIRECT_THROTTLE_KEY = "stirling_last_401_redirect";
 const LOGIN_REDIRECT_THROTTLE_MS = 10_000;
 

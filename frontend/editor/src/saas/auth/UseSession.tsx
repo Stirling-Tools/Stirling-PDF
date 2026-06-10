@@ -162,10 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "[Auth Debug] Fetching credits for user:",
           currentSession.user.id,
         );
-        // Fired automatically on session init and TOKEN_REFRESHED. If the
-        // backend rejects it (deploy skew, authz bug) the failure must stay
-        // local — the global 401 handler would hard-redirect to /login and,
-        // with a valid session, loop login -> / -> login forever.
+        // Auto-fires on session init and TOKEN_REFRESHED; a backend 401 must
+        // stay local rather than trigger the global login redirect.
         const response = await apiClient.get<ApiCredits>("/api/v1/credits", {
           suppressErrorToast: true,
           skipAuthRedirect: true,
@@ -636,8 +634,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
               ]).then(() => {
-                // Fetch the picture once the avatar sync settles rather than
-                // after a fixed 500ms the first-ever sync usually loses.
+                // Fetch the picture once the avatar sync settles.
                 avatarSync.then(() => {
                   fetchProfilePicture(newSession).finally(() => {
                     console.debug(

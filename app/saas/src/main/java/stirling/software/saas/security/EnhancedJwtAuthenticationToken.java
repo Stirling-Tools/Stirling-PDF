@@ -39,12 +39,8 @@ public class EnhancedJwtAuthenticationToken extends JwtAuthenticationToken {
     }
 
     /**
-     * Shared proprietary/core code authorizes with {@code principal instanceof User} (e.g. {@code
-     * FileStorageService.requireAuthenticatedUser}, {@code FolderService}), which the default
-     * {@link JwtAuthenticationToken} principal — the decoded {@link Jwt} — can never satisfy, so
-     * every such endpoint 401'd valid Supabase sessions. When the filter resolved a local {@link
-     * User}, expose it as the principal so those checks behave exactly as under form login; fall
-     * back to the Jwt when no User was attached (anonymous sessions, converter-built tokens).
+     * Returns the resolved local {@link User} when available so shared {@code principal instanceof
+     * User} authorization works under JWT auth; falls back to the decoded Jwt.
      */
     @Override
     public Object getPrincipal() {

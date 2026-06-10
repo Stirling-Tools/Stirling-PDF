@@ -155,10 +155,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
             User user = getOrCreateUser(jwt);
 
-            // Attach the resolved User as the token principal for full accounts so shared
-            // `principal instanceof User` authorization (storage services, account data)
-            // works under JWT auth. Anonymous sessions keep the raw Jwt principal and stay
-            // locked out of those User-gated APIs, matching pre-existing behaviour.
+            // Full accounts carry the resolved User as principal for shared
+            // instanceof-User authorization; anonymous sessions keep the raw Jwt.
             EnhancedJwtAuthenticationToken authToken =
                     new EnhancedJwtAuthenticationToken(
                             jwt,

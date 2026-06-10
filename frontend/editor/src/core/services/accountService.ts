@@ -28,9 +28,8 @@ export const accountService = {
    * This is a public endpoint - doesn't require authentication
    */
   async getLoginPageData(): Promise<LoginPageData> {
-    // Public endpoint, but also auto-called by the onboarding orchestrator
-    // when a stale stirling_jwt is in localStorage — a 401 must never trigger
-    // the global login redirect (it would loop on every page load).
+    // Also auto-called by onboarding when a stale stirling_jwt exists; a 401
+    // must never trigger the global login redirect.
     const response = await apiClient.get<LoginPageData>(
       "/api/v1/proprietary/ui-data/login",
       { suppressErrorToast: true, skipAuthRedirect: true },
