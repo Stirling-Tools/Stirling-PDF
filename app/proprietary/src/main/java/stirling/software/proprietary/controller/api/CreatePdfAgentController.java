@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -112,26 +113,28 @@ public class CreatePdfAgentController {
                 throw e;
             }
 
-            byte[] pdfBytes = Files.readAllBytes(pdfFile.getPath());
-            pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
-
             String safeFilename = Filenames.toSimpleFileName(filename);
             if (safeFilename == null || safeFilename.isBlank() || !safeFilename.endsWith(".pdf")) {
                 safeFilename = "generated-document.pdf";
             }
 
-            log.info(
-                    "[create-pdf-agent] PDF ready — filename={} bytes={}",
-                    safeFilename,
-                    pdfBytes.length);
-
+            // Stamp the standard Stirling metadata onto the WeasyPrint output and write the result
+            // straight to the response temp file. Loading from the file and saving to the file
+            // avoids materialising the whole document as a byte[] twice (read-all + re-serialise),
+            // which matters for large generated documents.
             TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-            try {
-                Files.write(tempOut.getPath(), pdfBytes);
+            try (PDDocument document = pdfDocumentFactory.load(pdfFile.getPath())) {
+                document.save(tempOut.getPath().toFile());
             } catch (Exception e) {
                 tempOut.close();
                 throw e;
             }
+
+            log.info(
+                    "[create-pdf-agent] PDF ready — filename={} bytes={}",
+                    safeFilename,
+                    Files.size(tempOut.getPath()));
+
             return WebResponseUtils.pdfFileToWebResponse(tempOut, safeFilename);
         }
     }
