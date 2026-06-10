@@ -109,12 +109,8 @@ function appendBillingSection(
   ];
 }
 
-/**
- * Add an "MCP Server" tab next to API Keys in the Developer section (falling
- * back to its own section if Developer is somehow absent). MCP is always on in
- * SaaS, so the tab always shows; it is purely informational - how to connect an
- * AI assistant - so it shows for anonymous users too.
- */
+// Add an "MCP Server" tab in the Developer section. Always shown in SaaS;
+// purely informational, so it appears for anonymous users too.
 function appendMcpSection(
   sections: ConfigNavSection[],
   t: TFunction<"translation", undefined>,

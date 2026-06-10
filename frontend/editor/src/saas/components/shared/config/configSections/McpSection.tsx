@@ -50,13 +50,8 @@ function CopyInline({ value, label }: { value: string; label: string }) {
   );
 }
 
-/**
- * SaaS user-facing guide for the MCP (Model Context Protocol) server.
- *
- * MCP is always enabled in SaaS, so this tab always shows. It is purely
- * informational: it explains how an end user points their AI assistant at the
- * OAuth-protected {@code /mcp} endpoint, with copy-paste config per client.
- */
+// SaaS MCP guide: always shown, explains how to point an AI assistant at the
+// OAuth-protected /mcp endpoint with per-client config.
 export default function McpSection() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -70,8 +65,7 @@ export default function McpSection() {
 
   const mcpUrl = `${baseUrl}/mcp`;
 
-  // Per-client connection snippets. Each tab shows where the file lives plus a
-  // copy-paste config block pointing at this deployment's /mcp endpoint.
+  // Per-client connection snippets pointing at this deployment's /mcp endpoint.
   const clients = useMemo(
     () => [
       {
