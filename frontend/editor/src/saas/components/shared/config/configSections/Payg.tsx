@@ -21,6 +21,8 @@ import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import CheckIcon from "@mui/icons-material/CheckRounded";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineRounded";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert as showToast } from "@app/components/toast";
 // Relative (not @app/*) so the co-located CSS resolves directly.
@@ -104,6 +106,66 @@ function gateLabel(
   }
 }
 
+// ─── "What counts as a document?" help ──────────────────────────────────────
+
+/**
+ * Expandable explainer for the billing unit. Shared by the subscribed hero
+ * here and the free-tier hero in {@code PaygFree.tsx}. The bullets state the
+ * real charge mechanics (DefaultDocumentClassifier + JobChargeService)
+ * without hardcoding the policy-tunable thresholds: each non-empty file is
+ * at least one document; page count / file size can make it more; chained
+ * steps on the same file join the open process instead of re-charging; a
+ * first-step failure writes a compensating refund.
+ */
+export function DocHelp() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="payg-help">
+      <button
+        type="button"
+        className="payg-help__toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <HelpOutlineIcon sx={{ fontSize: 15 }} />
+        {t("payg.docHelp.toggle", "What counts as a document?")}
+        <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
+      </button>
+      {open && (
+        <div className="payg-help__panel">
+          <ul>
+            <li>
+              {t(
+                "payg.docHelp.billable",
+                "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free.",
+              )}
+            </li>
+            <li>
+              {t(
+                "payg.docHelp.perFile",
+                "Each file you process counts as one document. Very long or very large files can count as more than one.",
+              )}
+            </li>
+            <li>
+              {t(
+                "payg.docHelp.chains",
+                "Running the same file through several steps of one automation counts it once, not once per step.",
+              )}
+            </li>
+            <li>
+              {t(
+                "payg.docHelp.refunds",
+                "If a job fails on its first step, the document is credited back automatically.",
+              )}
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Hero usage panel ───────────────────────────────────────────────────────
 
 /**
@@ -152,7 +214,7 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
               {hasLimit && (
                 <span className="payg-hero__cap">
                   / {wallet.billableLimit.toLocaleString()}{" "}
-                  {t("payg.usage.units", "units")}
+                  {t("payg.usage.documents", "documents")}
                 </span>
               )}
             </div>
@@ -202,6 +264,8 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
                 })}
           </span>
         </div>
+
+        <DocHelp />
       </div>
     </div>
   );
@@ -554,7 +618,7 @@ function MemberRow({
             w={120}
             size="xs"
             disabled={saving}
-            suffix={` ${t("payg.member.units", "units")}`}
+            suffix={` ${t("payg.member.docs", "docs")}`}
             aria-label={t(
               "payg.subcaps.editor.label",
               "Sub-cap for {{name}}",
@@ -683,7 +747,7 @@ function ActivityFeed({ recent }: { recent: Wallet["recent"] }) {
                   {String(r.kind ?? "")}
                 </span>
                 <span className="payg-activity__units">
-                  {String(r.docUnits ?? 0)} {t("payg.activity.units", "units")}
+                  {String(r.docUnits ?? 0)} {t("payg.activity.docs", "docs")}
                 </span>
               </div>
             ))}

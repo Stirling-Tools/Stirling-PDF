@@ -33,6 +33,7 @@ import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
 import "./PaygFree.css";
 import UpgradeModal from "./UpgradeModal";
+import { DocHelp } from "./Payg";
 
 // ─── Shared free-tier snapshot ────────────────────────────
 
@@ -40,9 +41,13 @@ interface FreeSnapshot {
   /** ISO yyyy-mm-dd. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  /** Automation + AI + API operations used this cycle. */
+  /** Documents processed by automation + AI + API this cycle. */
   billableUsed: number;
-  /** Free-tier ceiling. Hard-coded 500 for V1; will come from pricing_policy. */
+  /**
+   * Free-tier ceiling in documents. Real value from the wallet endpoint
+   * (pricing_policy.free_tier_units_per_cycle); 500 below is only the
+   * pre-load placeholder for the first paint.
+   */
   billableLimit: number;
 }
 
@@ -127,7 +132,7 @@ function FreeHero({ snap }: FreeHeroProps) {
               <span className="payg-hero__cap">
                 {t(
                   "payg.free.hero.capSuffix",
-                  "/ {{limit}} free operations",
+                  "/ {{limit}} free documents",
                   { limit: snap.billableLimit.toLocaleString() },
                 )}
               </span>
@@ -160,6 +165,8 @@ function FreeHero({ snap }: FreeHeroProps) {
                 })}
           </span>
         </div>
+
+        <DocHelp />
       </div>
     </div>
   );
@@ -240,7 +247,8 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
               <p className="paygf-cta__subtitle">
                 {t(
                   "payg.free.cta.subtitle",
-                  "Unlock more than 500 automation, AI, and API operations per month. Set a monthly ceiling — you stay in control.",
+                  "Process more than {{limit}} documents a month with automation, AI, and the API. Set a monthly ceiling — you stay in control.",
+                  { limit: snap.billableLimit.toLocaleString() },
                 )}
               </p>
             </div>
@@ -333,13 +341,15 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
               />
               {t(
                 "payg.free.explainer.countsLabel",
-                "Counts toward 500/month",
+                "Counts toward your {{limit}} documents/month",
+                { limit: snap.billableLimit.toLocaleString() },
               )}
             </div>
             <p className="paygf-explainer__text">
               {t(
                 "payg.free.explainer.countsBody",
-                "Automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Above 500 you'll need Processor.",
+                "Documents processed by automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Above {{limit}} you'll need Processor.",
+                { limit: snap.billableLimit.toLocaleString() },
               )}
             </p>
           </div>
@@ -350,6 +360,7 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
         <UpgradeModal
           open={upgradeOpen}
           teamId={wallet.teamId}
+          freeLimit={snap.billableLimit}
           onClose={() => setUpgradeOpen(false)}
           onComplete={({ capUsd }) => {
             setUpgradeOpen(false);
@@ -392,13 +403,15 @@ function PaygFreeMemberInner() {
             <h3 className="paygf-member-note__title">
               {t(
                 "payg.free.member.title",
-                "Want more than 500 automation, AI, or API operations a month?",
+                "Need to process more than {{limit}} documents a month?",
+                { limit: snap.billableLimit.toLocaleString() },
               )}
             </h3>
             <p className="paygf-member-note__body">
               {t(
                 "payg.free.member.body",
-                "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API access are limited to the team's 500/month free allowance.",
+                "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API work shares the team's free allowance of {{limit}} documents a month.",
+                { limit: snap.billableLimit.toLocaleString() },
               )}
             </p>
           </div>
@@ -437,7 +450,8 @@ function PaygFreeMemberInner() {
             <p className="paygf-explainer__text">
               {t(
                 "payg.free.explainer.sharedBody",
-                "Automation pipelines, AI tools, and API calls share a single 500/month allowance across the whole team. If it's full, ask your owner to enable Processor.",
+                "Automation pipelines, AI tools, and API calls share one allowance of {{limit}} documents a month across the whole team. If it's full, ask your owner to enable Processor.",
+                { limit: snap.billableLimit.toLocaleString() },
               )}
             </p>
           </div>

@@ -272,6 +272,49 @@
   background: linear-gradient(90deg, #dc2626, #f87171);
 }
 
+/* ── "What counts as a document?" expandable help ───────────────────── */
+.payg-help {
+  margin-top: 12px;
+}
+.payg-help__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.payg-help__toggle:hover {
+  color: var(--text-primary);
+}
+.payg-help__chevron {
+  transition: transform 0.15s ease;
+}
+.payg-help__toggle[aria-expanded="true"] .payg-help__chevron {
+  transform: rotate(180deg);
+}
+.payg-help__panel {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--payg-card-border);
+  background: var(--bg-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.payg-help__panel ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
 /* ── Cap preview strip ──────────────────────────────────────────────── */
 .payg-preview {
   display: flex;

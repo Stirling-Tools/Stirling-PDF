@@ -60,6 +60,12 @@ interface UpgradeModalProps {
   onComplete: (result: { capUsd: number | null }) => void;
   /** ISO 4217 currency code for the cap input. Default USD. */
   currency?: "USD" | "EUR" | "GBP";
+  /**
+   * The team's free-tier allowance in documents/month — the real
+   * {@code wallet.billableLimit}, threaded from the free-leader view so the
+   * step copy quotes the backend's number instead of a hardcoded one.
+   */
+  freeLimit: number;
 }
 
 type Step = "cap" | "checkout" | "confirm";
@@ -83,6 +89,7 @@ export default function UpgradeModal({
   onClose,
   onComplete,
   currency = "USD",
+  freeLimit,
 }: UpgradeModalProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>("cap");
@@ -177,6 +184,7 @@ export default function UpgradeModal({
                 noCap={noCap}
                 setNoCap={setNoCap}
                 currency={currency}
+                freeLimit={freeLimit}
               />
             )}
             {step === "checkout" && (
@@ -198,6 +206,7 @@ export default function UpgradeModal({
               <ConfirmationStep
                 effectiveCap={effectiveCap}
                 currency={currency}
+                freeLimit={freeLimit}
               />
             )}
           </div>
@@ -283,9 +292,17 @@ interface CapStepProps {
   noCap: boolean;
   setNoCap: (v: boolean) => void;
   currency: UpgradeModalProps["currency"];
+  freeLimit: number;
 }
 
-function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps) {
+function CapStep({
+  capUsd,
+  setCapUsd,
+  noCap,
+  setNoCap,
+  currency,
+  freeLimit,
+}: CapStepProps) {
   const { t } = useTranslation();
   const sym = currencySymbol(currency);
 
@@ -316,7 +333,8 @@ function CapStep({ capUsd, setCapUsd, noCap, setNoCap, currency }: CapStepProps)
       <p className="upm-section-help">
         {t(
           "payg.upgrade.cap.help",
-          "We'll never charge above this. Your first 500 automation / AI / API operations every month are free. Set $0 if you want to keep everything free while testing.",
+          "We'll never charge above this. Your first {{limit}} documents processed by automation / AI / API every month stay free. Set $0 if you want to keep everything free while testing.",
+          { limit: freeLimit.toLocaleString() },
         )}
       </p>
 
@@ -528,9 +546,14 @@ function CheckoutStep({
 interface ConfirmationStepProps {
   effectiveCap: number | null;
   currency: UpgradeModalProps["currency"];
+  freeLimit: number;
 }
 
-function ConfirmationStep({ effectiveCap, currency }: ConfirmationStepProps) {
+function ConfirmationStep({
+  effectiveCap,
+  currency,
+  freeLimit,
+}: ConfirmationStepProps) {
   const { t } = useTranslation();
   const sym = currencySymbol(currency);
   return (
@@ -545,7 +568,8 @@ function ConfirmationStep({ effectiveCap, currency }: ConfirmationStepProps) {
       <p className="upm-confirm__body">
         {t(
           "payg.confirm.body",
-          "Your team can now run automation, AI, and API operations beyond the 500/month free allowance.",
+          "Your team can now process documents with automation, AI, and the API beyond the {{limit}}/month free allowance.",
+          { limit: freeLimit.toLocaleString() },
         )}
       </p>
       <div className="upm-confirm__summary">
