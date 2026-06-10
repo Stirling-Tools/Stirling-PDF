@@ -55,16 +55,18 @@
   border: 1px solid var(--upm-border);
   border-radius: var(--upm-radius);
   width: 100%;
-  /* 960px gives the live Stripe Embedded Checkout a ~916px content area (after the
-     22px body padding each side, with the live mount's own padding removed — see
-     .upm-stripe-mount[data-state="live"]). That clears the width Stripe needs to
-     render its two-column "horizontal" layout (summary beside the payment form)
-     with headroom. Because the frame stays width:100% under this cap, narrow
-     windows shrink it and Stripe falls back to single column — horizontal when it
-     fits, vertical when it doesn't. Cap + confirm steps read fine at this width
-     (their internal text is already capped — see upm-confirm__body,
+  /* Stripe Embedded Checkout flips from its single-column layout to the two-column
+     "horizontal" one (order summary beside the payment form) once the iframe is
+     ~1000px wide — measured empirically against a live test session; Stripe doesn't
+     document the breakpoint. The live iframe gets frame_width − 44px (the 22px body
+     padding each side; the live mount's own padding is removed — see
+     .upm-stripe-mount[data-state="live"]). So 1100px → ~1056px iframe, comfortably
+     past the ~1000px threshold. Because the frame stays width:100% under this cap,
+     narrow windows shrink it and Stripe falls back to single column — horizontal
+     when it fits, vertical when it doesn't. Cap + confirm steps read fine at this
+     width (their internal text is already capped — see upm-confirm__body,
      upm-section-help). */
-  max-width: 960px;
+  max-width: 1100px;
   max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
@@ -113,6 +115,35 @@
   transition: background 120ms ease, color 120ms ease;
 }
 .upm-header__close:hover {
+  background: var(--upm-divider);
+  color: var(--upm-text);
+}
+
+/* Left cluster: optional back arrow + title. The back arrow only renders on the
+   checkout step (cap/confirm have no parent step to return to) — it replaces the
+   old footer "← Back" button. */
+.upm-header__left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.upm-header__back {
+  background: transparent;
+  border: none;
+  color: var(--upm-muted);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: -6px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.upm-header__back:hover {
   background: var(--upm-divider);
   color: var(--upm-text);
 }
@@ -318,37 +349,28 @@
   font-size: 0.8rem;
 }
 
-/* Step 2 (Stripe iframe placeholder for now) */
-.upm-cap-confirmation {
-  display: flex;
+/* On the checkout step, step 1's "Set monthly ceiling" label is replaced (inside
+   the step bar) by the chosen ceiling + an inline Edit affordance — see
+   UpgradeModal.tsx. Kept here next to the step-bar markup it styles. */
+.upm-step__chosen {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  background: var(--upm-accent-soft);
-  border-radius: 10px;
-  margin-bottom: 16px;
-  font-size: 0.825rem;
-}
-.upm-cap-confirmation__label {
-  color: var(--upm-muted);
-}
-.upm-cap-confirmation__value {
-  font-weight: 700;
+  gap: 8px;
   color: var(--upm-text);
+  font-weight: 700;
 }
-.upm-cap-confirmation__edit {
+.upm-step__edit {
   background: transparent;
   border: none;
   color: var(--upm-accent);
   font-weight: 600;
   cursor: pointer;
-  font-size: 0.78rem;
-  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 2px 8px;
   border-radius: 6px;
-  margin-left: auto;
 }
-.upm-cap-confirmation__edit:hover {
+.upm-step__edit:hover {
   background: rgba(10, 139, 255, 0.12);
 }
 
@@ -400,15 +422,11 @@
 .upm-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   padding: 16px 22px;
   border-top: 1px solid var(--upm-divider);
   background: var(--upm-card-bg);
-}
-.upm-footer__hint {
-  font-size: 0.75rem;
-  color: var(--upm-muted);
 }
 .upm-footer__actions {
   display: flex;

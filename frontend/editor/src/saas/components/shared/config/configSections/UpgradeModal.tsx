@@ -19,6 +19,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import CloseIcon from "@mui/icons-material/CloseRounded";
+import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
@@ -110,6 +111,7 @@ export default function UpgradeModal({
   }
 
   const effectiveCap = noCap ? null : capUsd;
+  const sym = currencySymbol(currency);
 
   const goToCheckout = () => setStep("checkout");
   const goBackToCap = () => setStep("cap");
@@ -132,11 +134,23 @@ export default function UpgradeModal({
           {/* Header — title + close. Title stays constant; the step indicator
               below tells the user where they are. */}
           <header className="upm-header">
-            <h2 className="upm-header__title">
-              {step === "confirm"
-                ? t("payg.upgrade.title.confirm", "You're subscribed")
-                : t("payg.upgrade.title.default", "Upgrade to Processor plan")}
-            </h2>
+            <div className="upm-header__left">
+              {step === "checkout" && (
+                <button
+                  type="button"
+                  className="upm-header__back"
+                  aria-label={t("payg.upgrade.backAria", "Back")}
+                  onClick={goBackToCap}
+                >
+                  <ArrowBackIcon fontSize="small" />
+                </button>
+              )}
+              <h2 className="upm-header__title">
+                {step === "confirm"
+                  ? t("payg.upgrade.title.confirm", "You're subscribed")
+                  : t("payg.upgrade.title.default", "Upgrade to Processor plan")}
+              </h2>
+            </div>
             <button
               type="button"
               className="upm-header__close"
@@ -156,9 +170,28 @@ export default function UpgradeModal({
                 data-state={step === "cap" ? "active" : "done"}
               >
                 <span className="upm-step__dot">1</span>
-                <span>
-                  {t("payg.upgrade.steps.cap", "Set monthly ceiling")}
-                </span>
+                {step === "checkout" ? (
+                  <span className="upm-step__chosen">
+                    {effectiveCap === null
+                      ? t("payg.upgrade.checkout.noCap", "No cap")
+                      : t(
+                          "payg.upgrade.checkout.capValue",
+                          "{{symbol}}{{amount}} / month",
+                          { symbol: sym, amount: effectiveCap },
+                        )}
+                    <button
+                      type="button"
+                      className="upm-step__edit"
+                      onClick={goBackToCap}
+                    >
+                      {t("payg.upgrade.checkout.edit", "Edit")}
+                    </button>
+                  </span>
+                ) : (
+                  <span>
+                    {t("payg.upgrade.steps.cap", "Set monthly ceiling")}
+                  </span>
+                )}
               </div>
               <div className="upm-step__connector" />
               <div
@@ -198,7 +231,6 @@ export default function UpgradeModal({
                 teamId={teamId}
                 effectiveCap={effectiveCap}
                 currency={currency}
-                onEditCap={goBackToCap}
                 onComplete={goToConfirm}
               />
             )}
@@ -211,72 +243,45 @@ export default function UpgradeModal({
             )}
           </div>
 
-          <footer className="upm-footer">
-            <span className="upm-footer__hint">
-              {step === "cap" &&
-                t(
-                  "payg.upgrade.footer.capHint",
-                  "You can change your cap any time later.",
+          {step !== "checkout" && (
+            <footer className="upm-footer">
+              <div className="upm-footer__actions">
+                {step === "cap" && (
+                  <>
+                    <button
+                      type="button"
+                      className="upm-btn"
+                      data-variant="ghost"
+                      onClick={closeAndReset}
+                    >
+                      {t("payg.upgrade.button.cancel", "Cancel")}
+                    </button>
+                    <button
+                      type="button"
+                      className="upm-btn"
+                      data-variant="primary"
+                      onClick={goToCheckout}
+                    >
+                      {t("payg.upgrade.button.continue", "Continue →")}
+                    </button>
+                  </>
                 )}
-              {step === "checkout" &&
-                t(
-                  "payg.upgrade.footer.checkoutHint",
-                  "Card details handled by Stripe — never touched by Stirling.",
-                )}
-              {step === "confirm" &&
-                t(
-                  "payg.upgrade.footer.confirmHint",
-                  "Your wallet will refresh automatically in a moment.",
-                )}
-            </span>
-            <div className="upm-footer__actions">
-              {step === "checkout" && (
-                <>
-                  <button
-                    type="button"
-                    className="upm-btn"
-                    data-variant="ghost"
-                    onClick={goBackToCap}
-                  >
-                    {t("payg.upgrade.button.back", "← Back")}
-                  </button>
-                </>
-              )}
-              {step === "cap" && (
-                <>
-                  <button
-                    type="button"
-                    className="upm-btn"
-                    data-variant="ghost"
-                    onClick={closeAndReset}
-                  >
-                    {t("payg.upgrade.button.cancel", "Cancel")}
-                  </button>
+                {step === "confirm" && (
                   <button
                     type="button"
                     className="upm-btn"
                     data-variant="primary"
-                    onClick={goToCheckout}
+                    onClick={() => {
+                      setStep("cap");
+                      onComplete({ capUsd: effectiveCap });
+                    }}
                   >
-                    {t("payg.upgrade.button.continue", "Continue →")}
+                    {t("payg.upgrade.button.finish", "Finish")}
                   </button>
-                </>
-              )}
-              {step === "confirm" && (
-                <button
-                  type="button"
-                  className="upm-btn"
-                  data-variant="primary"
-                  onClick={() => {
-                    setStep("cap");
-                    onComplete({ capUsd: effectiveCap });
-                  }}
-                >
-                  {t("payg.upgrade.button.finish", "Finish")}
-                </button>
-              )}
-            </div>
-          </footer>
+                )}
+              </div>
+            </footer>
+          )}
         </div>
       </div>
     </div>,
@@ -472,7 +477,6 @@ interface CheckoutStepProps {
   teamId: number;
   effectiveCap: number | null;
   currency: UpgradeModalProps["currency"];
-  onEditCap: () => void;
   onComplete: () => void;
 }
 
@@ -480,34 +484,11 @@ function CheckoutStep({
   teamId,
   effectiveCap,
   currency,
-  onEditCap,
   onComplete,
 }: CheckoutStepProps) {
   const { t } = useTranslation();
-  const sym = currencySymbol(currency);
   return (
     <>
-      <div className="upm-cap-confirmation">
-        <span className="upm-cap-confirmation__label">
-          {t("payg.upgrade.checkout.capLabel", "Monthly ceiling:")}
-        </span>
-        <span className="upm-cap-confirmation__value">
-          {effectiveCap === null
-            ? t("payg.upgrade.checkout.noCap", "No cap")
-            : t("payg.upgrade.checkout.capValue", "{{symbol}}{{amount}} / month", {
-                symbol: sym,
-                amount: effectiveCap,
-              })}
-        </span>
-        <button
-          type="button"
-          className="upm-cap-confirmation__edit"
-          onClick={onEditCap}
-        >
-          {t("payg.upgrade.checkout.edit", "Edit")}
-        </button>
-      </div>
-
       <h3 className="upm-section-title">
         {t(
           "payg.upgrade.checkout.title",
