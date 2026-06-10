@@ -62,6 +62,7 @@ class WorkflowOutcome(StrEnum):
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
     GENERATE_FILE = "generate_file"
+    CONVERT_MARKDOWN = "convert_markdown"
 
 
 class ArtifactKind(StrEnum):
@@ -181,6 +182,19 @@ class NeedIngestResponse(ApiModel):
     reason: str
     files_to_ingest: list[AiFile]
     content_types: list[PdfContentType] = Field(default_factory=list)
+
+
+class ConvertMarkdownResponse(ApiModel):
+    """Terminal signal: convert the listed files to Markdown deterministically.
+
+    This is a deterministic, non-AI conversion. Java runs the PDF→Markdown converter
+    (``PdfMarkdownConverter``) on each file and returns the resulting ``.md`` file(s) as a
+    completed result. There is no resume turn — the conversion output is the final answer.
+    """
+
+    outcome: Literal[WorkflowOutcome.CONVERT_MARKDOWN] = WorkflowOutcome.CONVERT_MARKDOWN
+    reason: str
+    files_to_ingest: list[AiFile]
 
 
 class ToolOperationStep(ApiModel):
