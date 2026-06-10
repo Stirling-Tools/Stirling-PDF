@@ -83,11 +83,27 @@ export default function MobileUploadModal({
   const timerIntervalRef = useRef<number | null>(null);
   const processedFiles = useRef<Set<string>>(new Set());
 
-  // Use configured frontendUrl if set, otherwise use current origin
-  // Combine with base path and mobile-scanner route
-  const baseUrl = localStorage.getItem("server_url") || "";
-  const frontendUrl = baseUrl || config?.frontendUrl || window.location.origin;
-  const mobileUrl = `${frontendUrl}${withBasePath("/mobile-scanner")}?session=${sessionId}`;
+  // A configured server_url/frontendUrl already includes any subpath, so append
+  // the route directly; only the bare-origin fallback needs withBasePath.
+  const configuredUrl = (
+    localStorage.getItem("server_url") ||
+    config?.frontendUrl ||
+    ""
+  ).trim();
+  let mobileBase = "";
+  if (configuredUrl) {
+    try {
+      const parsed = new URL(configuredUrl);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        mobileBase = configuredUrl.replace(/\/$/, "");
+      }
+    } catch {
+      // invalid configured URL — fall back to origin
+    }
+  }
+  const mobileUrl = mobileBase
+    ? `${mobileBase}/mobile-scanner?session=${sessionId}`
+    : `${window.location.origin}${withBasePath("/mobile-scanner")}?session=${sessionId}`;
 
   // Create session on backend
   const createSession = useCallback(
