@@ -79,13 +79,13 @@ const Plan: React.FC = () => {
   if (wallet.status === "subscribed") {
     return wallet.role === "leader" ? (
       <PaygLeader
+        wallet={wallet}
         onSaveCap={updateCap}
-        members={wallet.members}
         onSaveSubCap={updateSubCap}
         onOpenPortal={openPortal}
       />
     ) : (
-      <PaygMember />
+      <PaygMember wallet={wallet} />
     );
   }
 

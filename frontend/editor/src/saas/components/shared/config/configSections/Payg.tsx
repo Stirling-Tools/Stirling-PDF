@@ -1,35 +1,36 @@
 /**
- * Pay-as-you-go billing & usage section.
+ * Pay-as-you-go billing & usage section — the SUBSCRIBED leader/member views.
  *
- * Design mockup for the PAYG settings screen. Mocked data, no backend wiring.
- * Mirrors the framework in docs/PAYG design review:
- *   - doc units as the billing unit (max(pages/25, bytes/10MB))
- *   - customer sets cap in their own currency, backend translates to units
- *     via POST /api/v1/payg/cap-preview
- *   - wallet_policy fields: cap_units, cap_source_money, cap_source_currency,
- *     warn_at_pct (default 80), degrade_at_pct (default 100)
- *   - states: FULL → WARNED (80%) → DEGRADED (100%)
- *   - gates: OFFSITE_PROCESSING, AUTOMATION, AI_SUPPORT, CLIENT_SIDE
- *   - per-member sub-caps
+ * All data comes from the real {@code Wallet} snapshot ({@code GET
+ * /api/v1/payg/wallet} via {@link useWallet}); there is no mock fallback. What
+ * the wallet doesn't provide, the UI doesn't show:
+ *
+ *   - spend + cap render in the units/USD the backend actually returns
+ *     ({@code spendUnitsThisPeriod}, {@code capUsd}, {@code noCap})
+ *   - the per-category breakdown comes from {@code categoryBreakdown}
+ *     (wallet_category_summary view)
+ *   - money-equivalent display and the units↔money cap preview need
+ *     stripe.prices via Sync Engine (design §13 / PR-C2) and are deliberately
+ *     absent until that ships
+ *   - the activity feed renders {@code wallet.recent}, which is {@code []} in
+ *     V1 — so it shows a real empty state, not fabricated rows
  */
-import React, { useMemo, useState } from "react";
-import { Button, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
+import React, { useState } from "react";
+import { Button, Group, NumberInput, Stack, Switch, Text } from "@mantine/core";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import CheckIcon from "@mui/icons-material/CheckRounded";
-import BoltIcon from "@mui/icons-material/BoltRounded";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert as showToast } from "@app/components/toast";
 // Relative (not @app/*) so the co-located CSS resolves directly.
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
 import { useTranslation } from "react-i18next";
-import type { SubCapUpdateResult } from "@app/hooks/useWallet";
+import type { SubCapUpdateResult, Wallet } from "@app/hooks/useWallet";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
-type WalletState = "FULL" | "WARNED" | "DEGRADED";
 type Gate = "OFFSITE_PROCESSING" | "AUTOMATION" | "AI_SUPPORT" | "CLIENT_SIDE";
 
 interface MemberSubCap {
@@ -40,169 +41,31 @@ interface MemberSubCap {
   spendUnits: number;
 }
 
-interface RecentProcess {
-  id: string;
-  ts: string;
-  label: string;
-  // Only billable categories appear in the feed — everyday tools are free.
-  kind: "ai" | "automation";
-  docUnits: number;
-}
-
-interface PaygSnapshot {
-  billingPeriodStart: string; // ISO date
-  billingPeriodEnd: string;
-  spendUnits: number;
-  capUnits: number;
-  capSourceMoney: number; // minor units (cents)
-  capSourceCurrency: string;
-  /**
-   * Account credit in minor units — residual bought-credits / user_credits
-   * migrated to a positive ledger ADJUSTMENT that offsets future debits
-   * (design doc §11-Q8). 0 when the team has none.
-   */
-  accountCreditMoney: number;
-  warnAtPct: number;
-  degradeAtPct: number;
-  state: WalletState;
-  enabledGates: Gate[];
-  members: MemberSubCap[];
-  recent: RecentProcess[];
-  stripePortalUrl: string;
-}
-
 interface PaygProps {
   role: "LEADER" | "MEMBER";
+  /** Real wallet snapshot from {@code useWallet}. Single source of truth. */
+  wallet: Wallet;
   /**
    * Persist a cap change. Provided by {@code Plan} → {@code useWallet} for the
-   * leader view; absent on the member view (read-only) and for the standalone
-   * dev preview route (where it falls back to a no-op).
+   * leader view; absent on the member view (read-only).
    */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
   /**
-   * Real team-member list from {@code wallet.members[]}. When omitted (e.g.
-   * standalone dev preview where there's no backend), the mock falls back to
-   * three synthesised rows so the design surface still renders. Once Wave 1
-   * BE lands this is always provided in the leader view and always {@code []}
-   * for members.
-   */
-  members?: MemberSubCap[];
-  /**
-   * Persist a per-member sub-cap. Same provenance as {@link onSaveCap} — the
-   * leader view gets it from {@code Plan}, dev preview omits it (the inline
-   * editor will be hidden).
+   * Persist a per-member sub-cap. Same provenance as {@link onSaveCap}.
    */
   onSaveSubCap?: (
     userId: string,
     capUnits: number | null,
   ) => Promise<SubCapUpdateResult>;
   /**
-   * Open the Stripe Customer Portal. When omitted the Stripe card is hidden
-   * (dev preview / no-backend case). On error the implementation shows a
-   * friendly toast and resolves — callers don't need to wrap in try/catch.
+   * Open the Stripe Customer Portal. When omitted the Stripe card is hidden.
+   * On error the implementation shows a friendly toast and resolves — callers
+   * don't need to wrap in try/catch.
    */
   onOpenPortal?: () => Promise<void>;
 }
 
-// ─── Mock data hook (replace with real API later) ─────────────────────────
-
-function usePaygMock(role: PaygProps["role"]): PaygSnapshot {
-  return useMemo(() => {
-    const capUnits = 2500;
-    const spendUnits = 312;
-    const pct = (spendUnits / capUnits) * 100;
-    const state: WalletState =
-      pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
-    // Period dates relative to today so the demo doesn't show "Resets in 0 days".
-    const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const isoDay = (d: Date) => d.toISOString().slice(0, 10);
-    return {
-      billingPeriodStart: isoDay(periodStart),
-      billingPeriodEnd: isoDay(periodEnd),
-      spendUnits,
-      capUnits,
-      capSourceMoney: 5000,
-      capSourceCurrency: "USD",
-      accountCreditMoney: 1200,
-      warnAtPct: 80,
-      degradeAtPct: 100,
-      state,
-      enabledGates:
-        state === "DEGRADED"
-          ? ["CLIENT_SIDE"]
-          : ["OFFSITE_PROCESSING", "AUTOMATION", "AI_SUPPORT", "CLIENT_SIDE"],
-      members:
-        role === "LEADER"
-          ? [
-              {
-                userId: "u1",
-                name: "Alice",
-                email: "alice@example.com",
-                capUnits: null,
-                spendUnits: 184,
-              },
-              {
-                userId: "u2",
-                name: "Bob",
-                email: "bob@example.com",
-                capUnits: 500,
-                spendUnits: 128,
-              },
-              {
-                userId: "u3",
-                name: "Carol",
-                email: "carol@example.com",
-                capUnits: null,
-                spendUnits: 0,
-              },
-            ]
-          : [],
-      recent: [
-        {
-          id: "p1",
-          ts: "Today 14:32",
-          label: "AI Create — contract summary",
-          kind: "ai",
-          docUnits: 8,
-        },
-        {
-          id: "p2",
-          ts: "Today 11:20",
-          label: "Auto-redaction pipeline",
-          kind: "automation",
-          docUnits: 12,
-        },
-        {
-          id: "p3",
-          ts: "Yesterday",
-          label: "AI-OCR — scanned batch",
-          kind: "ai",
-          docUnits: 15,
-        },
-        {
-          id: "p4",
-          ts: "2 days ago",
-          label: "Nightly compress automation",
-          kind: "automation",
-          docUnits: 6,
-        },
-      ],
-      stripePortalUrl: "https://billing.stripe.com/p/login/mock",
-    };
-  }, [role]);
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────
-
-const CURRENCY_SYMBOL: Record<string, string> = {
-  USD: "$",
-  GBP: "£",
-  EUR: "€",
-  CNY: "¥",
-  INR: "₹",
-};
 
 // Stable-ish avatar colour from a string.
 const AVATAR_COLORS = [
@@ -217,12 +80,6 @@ function avatarColor(seed: string): string {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
-}
-
-function formatMoney(minor: number, currency: string): string {
-  const major = minor / 100;
-  const sym = CURRENCY_SYMBOL[currency] ?? "";
-  return `${sym}${major.toFixed(2)}`;
 }
 
 function gateLabel(
@@ -249,23 +106,25 @@ function gateLabel(
 
 // ─── Hero usage panel ───────────────────────────────────────────────────────
 
-function UsageHero({ snap }: { snap: PaygSnapshot }) {
+/**
+ * Usage figures straight off the wallet. No spend-vs-cap percent bar and no
+ * money-spent estimate: the cap is stored in USD while spend is in units, and
+ * the units↔money translation needs stripe.prices via Sync Engine (design
+ * §13 / PR-C2). Showing a made-up conversion would be worse than none.
+ */
+function UsageHero({ wallet }: { wallet: Wallet }) {
   const { t } = useTranslation();
-  const pct = Math.min(100, (snap.spendUnits / snap.capUnits) * 100);
-  const stateLabel = {
-    FULL: t("payg.state.full", "Healthy"),
-    WARNED: t("payg.state.warned", "Approaching cap"),
-    DEGRADED: t("payg.state.degraded", "Cap reached"),
-  }[snap.state];
 
-  const periodEnd = new Date(snap.billingPeriodEnd);
+  const periodEnd = new Date(wallet.billingPeriodEnd);
   const daysLeft = Math.max(
     0,
     Math.ceil((periodEnd.getTime() - Date.now()) / 86_400_000),
   );
+  const hasCap = !wallet.noCap && wallet.capUsd != null;
+  const breakdown = wallet.categoryBreakdown;
 
   return (
-    <div className="payg-hero" data-state={snap.state}>
+    <div className="payg-hero">
       <div className="payg-hero__inner">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <div>
@@ -274,37 +133,34 @@ function UsageHero({ snap }: { snap: PaygSnapshot }) {
             </div>
             <div className="payg-hero__figure">
               <span className="payg-hero__spend">
-                {snap.spendUnits.toLocaleString()}
+                {wallet.spendUnitsThisPeriod.toLocaleString()}
               </span>
               <span className="payg-hero__cap">
-                / {snap.capUnits.toLocaleString()}{" "}
-                {t("payg.usage.docs", "documents")}
+                {" "}
+                {t("payg.usage.unitsUsed", "units used")}
               </span>
             </div>
           </div>
-          <div className="payg-status" data-state={snap.state}>
-            <span className="payg-status__dot" />
-            {stateLabel}
+          <div className="payg-status">
+            {hasCap
+              ? t("payg.usage.capLine", "${{cap}}/mo cap", {
+                  cap: wallet.capUsd,
+                })
+              : t("payg.usage.noCap", "No monthly cap")}
           </div>
         </Group>
 
-        <div className="payg-bar">
-          <div
-            className="payg-bar__fill"
-            data-state={snap.state}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-
         <div className="payg-hero__meta">
           <span>
-            {t("payg.usage.spent", "{{spend}} of {{cap}} used", {
-              spend: formatMoney(
-                (snap.capSourceMoney * snap.spendUnits) / snap.capUnits,
-                snap.capSourceCurrency,
-              ),
-              cap: formatMoney(snap.capSourceMoney, snap.capSourceCurrency),
-            })}
+            {t(
+              "payg.usage.breakdown",
+              "AI {{ai}} • Automation {{automation}} • API {{api}}",
+              {
+                ai: breakdown.ai.toLocaleString(),
+                automation: breakdown.automation.toLocaleString(),
+                api: breakdown.api.toLocaleString(),
+              },
+            )}
           </span>
           <span className="payg-hero__meta-dot">•</span>
           <span>
@@ -314,16 +170,6 @@ function UsageHero({ snap }: { snap: PaygSnapshot }) {
                   days: daysLeft,
                 })}
           </span>
-          {snap.accountCreditMoney > 0 && (
-            <span className="payg-hero__credit">
-              {t("payg.usage.credit", "{{amount}} account credit", {
-                amount: formatMoney(
-                  snap.accountCreditMoney,
-                  snap.capSourceCurrency,
-                ),
-              })}
-            </span>
-          )}
         </div>
       </div>
     </div>
@@ -333,34 +179,33 @@ function UsageHero({ snap }: { snap: PaygSnapshot }) {
 // ─── Cap editor ─────────────────────────────────────────────────────────────
 
 interface CapEditorProps {
-  snap: PaygSnapshot;
+  /** Current cap in whole USD; null = no cap set. */
+  capUsd: number | null;
+  /** True when the leader explicitly disabled the cap. */
+  noCap: boolean;
   /**
-   * Persist the cap change. Receives the value in USD whole dollars (matches
-   * the backend's {@code PATCH /api/v1/payg/cap} body). Currency conversion
-   * for non-USD V1 currencies is a TODO — the cap selection backend is USD-
-   * scoped today so the FE rounds to USD before send.
+   * Persist the cap change. Receives whole USD (matches the backend's
+   * {@code PATCH /api/v1/payg/cap} body) or null for no-cap.
    */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
 }
 
-function CapEditor({ snap, onSaveCap }: CapEditorProps) {
+/**
+ * Edits exactly what the backend stores: a USD cap + a no-cap flag. The
+ * units↔money preview and warn/degrade threshold editors from the original
+ * design need backend surfaces that don't exist yet (cap-preview via
+ * stripe.prices, PATCH support for wallet_policy thresholds) and will return
+ * with PR-C2 — until then the editor doesn't render controls it can't save.
+ */
+function CapEditor({ capUsd, noCap, onSaveCap }: CapEditorProps) {
   const { t } = useTranslation();
-  // Local edit state — real impl would call POST /api/v1/payg/cap-preview on change
-  const [money, setMoney] = useState<number>(snap.capSourceMoney / 100);
-  const [currency, setCurrency] = useState<string>(snap.capSourceCurrency);
-  const [warnAt, setWarnAt] = useState<number>(snap.warnAtPct);
-  const [degradeAt, setDegradeAt] = useState<number>(snap.degradeAtPct);
+  const [money, setMoney] = useState<number>(capUsd ?? 25);
+  const [uncapped, setUncapped] = useState<boolean>(noCap || capUsd == null);
   const [saving, setSaving] = useState<boolean>(false);
 
-  // Mock preview — real impl reads stripe.prices.tiers via Sync Engine
-  const previewUnits = Math.round(
-    (money * 100 * snap.capUnits) / snap.capSourceMoney,
-  );
   const dirty =
-    money !== snap.capSourceMoney / 100 ||
-    currency !== snap.capSourceCurrency ||
-    warnAt !== snap.warnAtPct ||
-    degradeAt !== snap.degradeAtPct;
+    uncapped !== (noCap || capUsd == null) ||
+    (!uncapped && money !== (capUsd ?? 25));
 
   return (
     <div className="payg-card">
@@ -371,8 +216,8 @@ function CapEditor({ snap, onSaveCap }: CapEditorProps) {
           </div>
           <div className="payg-card__subtitle">
             {t(
-              "payg.cap.subtitle",
-              "Set your maximum spend. We convert this to documents using the current price tier.",
+              "payg.cap.subtitleUsd",
+              "Set the maximum your team can spend per month. Usage pauses at the cap and resumes next period.",
             )}
           </div>
         </div>
@@ -384,81 +229,26 @@ function CapEditor({ snap, onSaveCap }: CapEditorProps) {
             onChange={(v) => setMoney(typeof v === "number" ? v : 0)}
             min={0}
             step={5}
-            decimalScale={2}
-            fixedDecimalScale
-            prefix={CURRENCY_SYMBOL[currency] ?? ""}
+            decimalScale={0}
+            prefix="$"
             size="md"
             style={{ flex: 1 }}
-          />
-          <Select
-            label={t("payg.cap.currency", "Currency")}
-            value={currency}
-            onChange={(v) => setCurrency(v ?? "USD")}
-            // V1 launch currencies per design doc §11-Q9 (USD/EUR/GBP).
-            // Adding a fourth is one Stripe Price + a config update, no code change.
-            data={[
-              { value: "USD", label: "USD ($)" },
-              { value: "EUR", label: "EUR (€)" },
-              { value: "GBP", label: "GBP (£)" },
-            ]}
-            size="md"
-            w={150}
+            disabled={uncapped}
           />
           <Text size="sm" pb={10} c="dimmed">
             {t("payg.cap.perMonth", "/ month")}
           </Text>
         </Group>
 
-        <div className="payg-preview">
-          <span className="payg-preview__icon">
-            <BoltIcon sx={{ fontSize: 20 }} />
-          </span>
-          <div>
-            <div className="payg-preview__main">
-              {t(
-                "payg.cap.preview",
-                "{{money}} ≈ {{units}} documents per month",
-                {
-                  money: `${CURRENCY_SYMBOL[currency] ?? ""}${money.toFixed(2)}`,
-                  units: previewUnits.toLocaleString(),
-                },
-              )}
-            </div>
-            <div className="payg-preview__note">
-              {t(
-                "payg.cap.previewNote",
-                "At current pricing. Final translation happens server-side on save.",
-              )}
-            </div>
-          </div>
-        </div>
-
-        <Group grow align="flex-start">
-          <NumberInput
-            label={t("payg.cap.warnAt", "Warn me at")}
-            description={t(
-              "payg.cap.warnAtDesc",
-              "Notify when usage crosses this threshold.",
-            )}
-            value={warnAt}
-            onChange={(v) => setWarnAt(typeof v === "number" ? v : 80)}
-            min={0}
-            max={100}
-            suffix=" %"
-          />
-          <NumberInput
-            label={t("payg.cap.degradeAt", "Limit spend at")}
-            description={t(
-              "payg.cap.degradeAtDesc",
-              "Set below 100% to leave yourself headroom.",
-            )}
-            value={degradeAt}
-            onChange={(v) => setDegradeAt(typeof v === "number" ? v : 100)}
-            min={Math.max(1, warnAt)}
-            max={100}
-            suffix=" %"
-          />
-        </Group>
+        <Switch
+          checked={uncapped}
+          onChange={(e) => setUncapped(e.currentTarget.checked)}
+          label={t("payg.cap.noCapLabel", "No monthly cap")}
+          description={t(
+            "payg.cap.noCapDesc",
+            "Usage is billed without an upper limit. You can re-enable a cap at any time.",
+          )}
+        />
 
         <Group justify="flex-end" gap="sm">
           <Button
@@ -466,10 +256,8 @@ function CapEditor({ snap, onSaveCap }: CapEditorProps) {
             size="xs"
             disabled={!dirty}
             onClick={() => {
-              setMoney(snap.capSourceMoney / 100);
-              setCurrency(snap.capSourceCurrency);
-              setWarnAt(snap.warnAtPct);
-              setDegradeAt(snap.degradeAtPct);
+              setMoney(capUsd ?? 25);
+              setUncapped(noCap || capUsd == null);
             }}
           >
             {t("common.cancel", "Cancel")}
@@ -484,9 +272,7 @@ function CapEditor({ snap, onSaveCap }: CapEditorProps) {
               if (!onSaveCap) return;
               setSaving(true);
               try {
-                // For V1 the backend stores USD. Non-USD currencies are a
-                // follow-up — round-trip the dollar value as-is for now.
-                await onSaveCap(Math.round(money));
+                await onSaveCap(uncapped ? null : Math.round(money));
               } finally {
                 setSaving(false);
               }
@@ -500,8 +286,9 @@ function CapEditor({ snap, onSaveCap }: CapEditorProps) {
   );
 }
 
-function CapReadOnly({ snap }: { snap: PaygSnapshot }) {
+function CapReadOnly({ capUsd, noCap }: { capUsd: number | null; noCap: boolean }) {
   const { t } = useTranslation();
+  const hasCap = !noCap && capUsd != null;
   return (
     <div className="payg-card">
       <Stack gap="sm">
@@ -510,17 +297,12 @@ function CapReadOnly({ snap }: { snap: PaygSnapshot }) {
         </div>
         <Group gap="xs" align="baseline">
           <Text fz={28} fw={750} lh={1}>
-            {formatMoney(snap.capSourceMoney, snap.capSourceCurrency)}
+            {hasCap ? `$${capUsd}` : t("payg.cap.noneShort", "No cap")}
           </Text>
-          <Text c="dimmed">{t("payg.cap.perMonth", "/ month")}</Text>
-        </Group>
-        <Text size="sm" c="dimmed">
-          {t(
-            "payg.cap.previewShort",
-            "≈ {{units}} documents per month at current pricing.",
-            { units: snap.capUnits.toLocaleString() },
+          {hasCap && (
+            <Text c="dimmed">{t("payg.cap.perMonth", "/ month")}</Text>
           )}
-        </Text>
+        </Group>
         <div className="payg-preview" style={{ marginTop: 6 }}>
           <div>
             <div className="payg-preview__main">
@@ -529,9 +311,6 @@ function CapReadOnly({ snap }: { snap: PaygSnapshot }) {
                 "Only your team owner can change the cap.",
               )}
             </div>
-            <Button mt={8} size="xs" variant="light">
-              {t("payg.member.contactLeader", "Ask team owner to raise cap")}
-            </Button>
           </div>
         </div>
       </Stack>
@@ -825,42 +604,60 @@ function MemberRow({
 
 // ─── Activity feed ──────────────────────────────────────────────────────────
 
-function ActivityFeed({ snap }: { snap: PaygSnapshot }) {
+/**
+ * Renders {@code wallet.recent} — the backend returns {@code []} in V1 (the
+ * meter-event surface ships in Wave 2), so today this shows a real empty
+ * state. The row renderer is ready for when the rows arrive; fields are read
+ * defensively because the activity-row shape isn't finalised yet (the Wallet
+ * type carries {@code Record<string, unknown>} for the same reason).
+ */
+function ActivityFeed({ recent }: { recent: Wallet["recent"] }) {
   const { t } = useTranslation();
   return (
     <div className="payg-card">
       <Stack gap="sm">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="payg-card__title">
-              {t("payg.activity.title", "Recent billable activity")}
-            </div>
-            <div className="payg-card__subtitle">
-              {t(
-                "payg.activity.subtitle",
-                "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here.",
-              )}
-            </div>
-          </div>
-          <Button variant="default" size="xs" style={{ flexShrink: 0 }}>
-            {t("payg.activity.viewAll", "View all")}
-          </Button>
-        </Group>
         <div>
-          {snap.recent.map((r) => (
-            <div className="payg-activity-row" key={r.id}>
-              <span className="payg-activity__dot" data-kind={r.kind} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="payg-activity__label">{r.label}</div>
-                <div className="payg-activity__ts">{r.ts}</div>
-              </div>
-              <span className="payg-activity__kind">{r.kind}</span>
-              <span className="payg-activity__units">
-                {r.docUnits} {t("payg.activity.units", "units")}
-              </span>
-            </div>
-          ))}
+          <div className="payg-card__title">
+            {t("payg.activity.title", "Recent billable activity")}
+          </div>
+          <div className="payg-card__subtitle">
+            {t(
+              "payg.activity.subtitle",
+              "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here.",
+            )}
+          </div>
         </div>
+        {recent.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            {t(
+              "payg.activity.empty",
+              "No billable activity yet this period.",
+            )}
+          </Text>
+        ) : (
+          <div>
+            {recent.map((r, i) => (
+              <div className="payg-activity-row" key={String(r.id ?? i)}>
+                <span
+                  className="payg-activity__dot"
+                  data-kind={String(r.kind ?? "")}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="payg-activity__label">
+                    {String(r.label ?? "")}
+                  </div>
+                  <div className="payg-activity__ts">{String(r.ts ?? "")}</div>
+                </div>
+                <span className="payg-activity__kind">
+                  {String(r.kind ?? "")}
+                </span>
+                <span className="payg-activity__units">
+                  {String(r.docUnits ?? 0)} {t("payg.activity.units", "units")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Stack>
     </div>
   );
@@ -930,14 +727,13 @@ function StripePortalLink({ onOpenPortal }: { onOpenPortal: () => Promise<void> 
 
 const Payg: React.FC<PaygProps> = ({
   role,
+  wallet,
   onSaveCap,
-  members,
   onSaveSubCap,
   onOpenPortal,
 }) => {
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
-  const snap = usePaygMock(role);
   const isLeader = role === "LEADER";
 
   const fmt = (iso: string) =>
@@ -945,12 +741,6 @@ const Payg: React.FC<PaygProps> = ({
       day: "numeric",
       month: "short",
     });
-
-  // Prefer real members from the wallet snapshot; fall back to the mock list
-  // when no prop is supplied (dev preview / no-backend renderer). The mock
-  // list itself is empty for the member role, so `effectiveMembers` ends up
-  // [] for members regardless of provenance.
-  const effectiveMembers = members ?? snap.members;
 
   return (
     <div className="payg">
@@ -963,8 +753,8 @@ const Payg: React.FC<PaygProps> = ({
               "payg.subtitle",
               "Pay-as-you-go — you only pay for what you process. Billing period {{start}} – {{end}}.",
               {
-                start: fmt(snap.billingPeriodStart),
-                end: fmt(snap.billingPeriodEnd),
+                start: fmt(wallet.billingPeriodStart),
+                end: fmt(wallet.billingPeriodEnd),
               },
             )}
           </div>
@@ -975,24 +765,28 @@ const Payg: React.FC<PaygProps> = ({
           </span>
         </Group>
 
-        <UsageHero snap={snap} />
+        <UsageHero wallet={wallet} />
 
         {isLeader ? (
-          <CapEditor snap={snap} onSaveCap={onSaveCap} />
+          <CapEditor
+            capUsd={wallet.capUsd}
+            noCap={wallet.noCap}
+            onSaveCap={onSaveCap}
+          />
         ) : (
-          <CapReadOnly snap={snap} />
+          <CapReadOnly capUsd={wallet.capUsd} noCap={wallet.noCap} />
         )}
 
         <GatesCard />
 
-        {isLeader && effectiveMembers.length > 0 && (
+        {isLeader && wallet.members.length > 0 && (
           <MemberSubCaps
-            members={effectiveMembers}
+            members={wallet.members}
             onSaveSubCap={onSaveSubCap}
           />
         )}
 
-        <ActivityFeed snap={snap} />
+        <ActivityFeed recent={wallet.recent} />
 
         {isLeader && onOpenPortal && (
           <StripePortalLink onOpenPortal={onOpenPortal} />
@@ -1006,10 +800,10 @@ export default Payg;
 
 // Convenience exports for the config nav to render either variant directly.
 export interface PaygLeaderProps {
+  /** See {@link PaygProps#wallet}. */
+  wallet: Wallet;
   /** See {@link PaygProps#onSaveCap}. */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
-  /** See {@link PaygProps#members}. */
-  members?: MemberSubCap[];
   /** See {@link PaygProps#onSaveSubCap}. */
   onSaveSubCap?: (
     userId: string,
@@ -1019,17 +813,19 @@ export interface PaygLeaderProps {
   onOpenPortal?: () => Promise<void>;
 }
 export const PaygLeader: React.FC<PaygLeaderProps> = ({
+  wallet,
   onSaveCap,
-  members,
   onSaveSubCap,
   onOpenPortal,
-} = {}) => (
+}) => (
   <Payg
     role="LEADER"
+    wallet={wallet}
     onSaveCap={onSaveCap}
-    members={members}
     onSaveSubCap={onSaveSubCap}
     onOpenPortal={onOpenPortal}
   />
 );
-export const PaygMember: React.FC = () => <Payg role="MEMBER" />;
+export const PaygMember: React.FC<{ wallet: Wallet }> = ({ wallet }) => (
+  <Payg role="MEMBER" wallet={wallet} />
+);
