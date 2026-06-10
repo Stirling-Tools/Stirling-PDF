@@ -1083,7 +1083,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           () =>
             import("@app/components/tools/scannerImageSplit/ScannerImageSplitSettings"),
         ),
-        synonyms: getSynonyms(t, "ScannerImageSplit"),
+        synonyms: getSynonyms(t, "scannerImageSplit"),
       },
       overlayPdfs: {
         icon: (
