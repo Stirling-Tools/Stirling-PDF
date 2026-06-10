@@ -243,8 +243,13 @@ export default defineConfig(async ({ mode }) => {
     // SPA fallback returns index.html as text/html and React never mounts.
     // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
     // an absolute base so deep-route asset paths resolve to /assets/...
+    // Trailing slash is required: it becomes `<base href>` in index.html, and
+    // the browser resolves relative links (manifest.json, modern-logo/favicon.ico)
+    // against the base's *directory*. Without it, `/bpp` resolves relatives to
+    // the domain root → `/manifest.json` 404 instead of `/bpp/manifest.json`.
+    // getBasePath() strips the trailing slash, so BASE_PATH/routing are unchanged.
     base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}`
+      ? `/${env.RUN_SUBPATH}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

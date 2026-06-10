@@ -38,6 +38,8 @@ import {
 } from "@app/types/folder";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useLocation } from "react-router-dom";
+import { isAuthRoute } from "@app/constants/routes";
 
 interface FolderContextValue {
   folders: FolderRecord[];
@@ -363,10 +365,17 @@ export function FolderProvider({ children }: FolderProviderProps) {
   // guaranteed-to-403 round-trip per session.
   const { config: appConfig } = useAppConfig();
   const storageBackedByServer = appConfig?.storageEnabled === true;
+  // Don't hit the authenticated storage API on auth routes (/login, /signup,
+  // /auth/*, ...). The global FolderProvider is mounted everywhere, including
+  // the login screen where the user has no session yet, so an unguarded pull
+  // fires a guaranteed-401 GET /api/v1/storage/folders before sign-in. Mirror
+  // the auth-route skip used by LicenseContext / AppConfigContext.
+  const location = useLocation();
+  const onAuthRoute = isAuthRoute(location.pathname);
   useEffect(() => {
-    if (!storageBackedByServer) return;
+    if (!storageBackedByServer || onAuthRoute) return;
     void pullFromServer();
-  }, [pullFromServer, storageBackedByServer]);
+  }, [pullFromServer, storageBackedByServer, onAuthRoute]);
 
   const foldersById = useMemo(() => {
     const map = new Map<FolderId, FolderRecord>();
