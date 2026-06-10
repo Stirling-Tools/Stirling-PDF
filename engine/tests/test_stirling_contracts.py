@@ -88,6 +88,8 @@ def test_app_settings_accepts_model_configuration() -> None:
         rag_embedding_model="voyageai:voyage-4",
         rag_store_path=Path(":memory:"),
         rag_pgvector_dsn="",
+        rag_pgvector_pool_min_size=1,
+        rag_pgvector_pool_max_size=10,
         rag_chunk_size=512,
         rag_chunk_overlap=64,
         rag_default_top_k=5,

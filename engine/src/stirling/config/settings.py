@@ -33,6 +33,8 @@ class AppSettings(BaseSettings):
     rag_embedding_model: str = Field(validation_alias="STIRLING_RAG_EMBEDDING_MODEL")
     rag_store_path: Path = Field(validation_alias="STIRLING_RAG_STORE_PATH")
     rag_pgvector_dsn: str = Field(validation_alias="STIRLING_RAG_PGVECTOR_DSN")
+    rag_pgvector_pool_min_size: int = Field(validation_alias="STIRLING_RAG_PGVECTOR_POOL_MIN_SIZE")
+    rag_pgvector_pool_max_size: int = Field(validation_alias="STIRLING_RAG_PGVECTOR_POOL_MAX_SIZE")
     rag_chunk_size: int = Field(validation_alias="STIRLING_RAG_CHUNK_SIZE")
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")

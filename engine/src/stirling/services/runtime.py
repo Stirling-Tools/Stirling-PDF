@@ -83,7 +83,11 @@ def _build_document_store(settings: AppSettings) -> DocumentStore:
         return SqliteVecStore(db_path=store_path)
     if settings.rag_backend == RagBackend.PGVECTOR:
         logger.info("Document store backend=pgvector, dsn=<configured>")
-        return PgVectorStore(dsn=settings.rag_pgvector_dsn)
+        return PgVectorStore(
+            dsn=settings.rag_pgvector_dsn,
+            pool_min_size=settings.rag_pgvector_pool_min_size,
+            pool_max_size=settings.rag_pgvector_pool_max_size,
+        )
     assert_never(settings.rag_backend)
 
 
