@@ -944,7 +944,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             style={onOpenSettings ? { cursor: "pointer" } : undefined}
           >
             <div
-              className="file-sidebar-bottom-avatar"
+              className={`file-sidebar-bottom-avatar${
+                showProfilePicture ? " file-sidebar-bottom-avatar--picture" : ""
+              }`}
               aria-label={displayName}
             >
               {showProfilePicture ? (
