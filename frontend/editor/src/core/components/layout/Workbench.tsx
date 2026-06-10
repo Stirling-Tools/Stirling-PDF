@@ -62,6 +62,10 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
+  // Custom workbench views (e.g. Watched Folders) manage their own content and may
+  // have no workbench files, but still need the bar's view switcher so users can
+  // navigate back out.
+  const isCustomViewActive = !isBaseWorkbench(currentView);
 
   // Enable bar transitions after first paint so the initial hidden state shows
   // without animating (landing page on load shouldn't animate the bar up).
@@ -205,7 +209,7 @@ export default function Workbench() {
           ?.hideTopControls && (
           <div
             className={styles.workbenchBarWrapper}
-            data-hidden={String(!hasFiles)}
+            data-hidden={String(!hasFiles && !isCustomViewActive)}
             data-no-transition={String(!barTransitionEnabled)}
           >
             <div className={styles.workbenchBarInner}>
