@@ -57,13 +57,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Manages policies and runs pipelines. The premium backend entry point: CRUD for stored {@code
- * Policy} objects, running a stored policy by id, and running an ad-hoc pipeline (for AI/Automate
- * one-offs).
- *
- * <p>Runs execute asynchronously and return a run id immediately. Poll {@code GET /run/{runId}} for
- * status, and download outputs via the existing {@code GET /api/v1/general/files/{fileId}} using
- * the file ids in the run view.
+ * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
+ * GET /run/{runId}} for status, download outputs via {@code GET /api/v1/general/files/{fileId}}.
  */
 @Slf4j
 @RestController
@@ -121,8 +116,8 @@ public class PolicyController {
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
         PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));
-        // Close the stream with a terminal event once the run finishes. whenComplete runs on the
-        // engine's worker thread after the run is done, so this never races the step events.
+        // whenComplete runs on the worker thread after the run finishes, so the terminal event
+        // never races the step events.
         handle.completion()
                 .whenComplete(
                         (run, throwable) -> {
@@ -171,10 +166,9 @@ public class PolicyController {
     }
 
     /**
-     * A policy that reads from or writes to a server folder grants whoever saves it access to that
-     * path, so restrict it to administrators on multi-user deployments. Single-user deployments
-     * (login disabled, e.g. desktop) trust the local operator. The {@link FolderAccessGuard} still
-     * enforces SaaS-off and the path allowlist during validation regardless of who saves.
+     * Folder sources/outputs grant whoever saves the policy access to that path, so gate them to
+     * admins on multi-user deployments. Single-user (login disabled) trusts the local operator;
+     * {@link FolderAccessGuard} still enforces SaaS-off and the path allowlist at validation time.
      */
     private void requireAuthorizedForFolderAccess(Policy policy) {
         if (!folderAccessGuard.usesFolderAccess(policy)) {
@@ -258,11 +252,8 @@ public class PolicyController {
         return definition;
     }
 
-    /**
-     * Split the multipart file parts into the primary document stream ("fileInput") and the named
-     * supporting-file store: every other file field becomes an asset keyed by its field name, which
-     * a step references from {@code fileParameters}.
-     */
+    // "fileInput" is the primary document stream; every other file field becomes a supporting
+    // asset keyed by field name, which a step references from fileParameters.
     private PolicyInputs collectInputs(MultipartHttpServletRequest request) throws IOException {
         MultiValueMap<String, MultipartFile> fileMap = request.getMultiFileMap();
         List<Resource> primary = toResources(fileMap.get("fileInput"));
@@ -279,9 +270,6 @@ public class PolicyController {
         return new PolicyInputs(primary, supportingFiles);
     }
 
-    /**
-     * A progress listener that forwards each step transition to the SSE stream as a "step" event.
-     */
     private PolicyProgressListener streamListener(SseEmitter emitter) {
         return new PolicyProgressListener() {
             @Override
@@ -320,8 +308,8 @@ public class PolicyController {
         try {
             emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
         } catch (IOException | IllegalStateException e) {
-            // Client disconnected or the emitter already closed. The run continues and its results
-            // remain downloadable via the job endpoints; nothing useful left to stream.
+            // Client gone or emitter closed. The run continues and outputs stay downloadable via
+            // the job endpoints.
             log.debug("Dropping policy SSE event '{}': {}", name, e.getMessage());
         }
     }
