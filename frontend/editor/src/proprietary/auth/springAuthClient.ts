@@ -397,22 +397,19 @@ class SpringAuthClient {
       // console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      console.error("[SpringAuth] getSession error:", error);
-
-      // If 401/403, token is invalid - try explicit refresh
+      // 401/403 during getSession is the normal "token expired or invalid"
+      // path - handled via refresh + JWT clear.
       const status = getHttpStatus(error);
       if (status === 401 || status === 403) {
-        // A 401 during startup can be a race with a concurrent refresh. Try one
-        // explicit refresh before treating the session as invalid.
         const refreshResult = await this.refreshSession();
         if (!refreshResult.error && refreshResult.data.session) {
           return refreshResult;
         }
         localStorage.removeItem("stirling_jwt");
-        console.debug("[SpringAuth] getSession: Not authenticated");
         return { data: { session: null }, error: null };
       }
 
+      console.error("[SpringAuth] getSession error:", error);
       // Don't clear token for other errors (e.g., backend not ready, network issues)
       // The token is still valid, just can't verify it right now
       return {
@@ -739,10 +736,11 @@ class SpringAuthClient {
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      console.error("[SpringAuth] refreshSession error:", error);
       localStorage.removeItem("stirling_jwt");
 
-      // Handle different error statuses
+      // 401/403 means the refresh token is no longer valid - normal expired
+      // state, not an error worth surfacing. Other statuses (network, backend
+      // down) ARE worth logging.
       const status = getHttpStatus(error);
       if (status === 401 || status === 403) {
         return {
@@ -751,6 +749,7 @@ class SpringAuthClient {
         };
       }
 
+      console.error("[SpringAuth] refreshSession error:", error);
       return {
         data: { session: null },
         error: { message: getErrorMessage(error, "Token refresh failed") },
