@@ -40,7 +40,7 @@ function CopyInline({ value, label }: { value: string; label: string }) {
         >
           <Button
             size="compact-xs"
-            variant="subtle"
+            variant={copied ? "light" : "default"}
             color={copied ? "teal" : "gray"}
             onClick={copy}
             leftSection={
