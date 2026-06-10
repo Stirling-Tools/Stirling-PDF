@@ -18,6 +18,7 @@ const IGNORED_FILE_PATTERNS = [
   /\.spec\./,
   /\.stories\./,
 ];
+const PLURAL_SUFFIX_PATTERN = /_(zero|one|two|few|many|other)$/;
 
 /**
  * Keys that look unused to the heuristic but are genuinely used: keep them.
