@@ -17,7 +17,7 @@ from stirling.models.tool_models import ParamToolModel, ToolEndpoint
 class AgentToolId(StrEnum):
     MATH_AUDITOR_AGENT = "/api/v1/ai/tools/math-auditor-agent"
     PDF_COMMENT_AGENT = "/api/v1/ai/tools/pdf-comment-agent"
-    CREATE_PDF_FROM_HTML_AGENT = "/api/v1/ai/tools/create-pdf-from-html"
+    CREATE_PDF_FROM_HTML_AGENT = "/api/v1/ai/tools/create-pdf-from-html-agent"
 
 
 class MathAuditorAgentParams(ApiModel):

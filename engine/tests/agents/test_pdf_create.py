@@ -17,7 +17,6 @@ from conftest import build_app_settings
 from pydantic_ai.models.test import TestModel
 from pydantic_ai.profiles import ModelProfile
 
-from stirling.agents.pdf_create import agent as pdf_create_agent
 from stirling.agents.pdf_create.agent import (
     PdfCreateAgent,
     _make_chunks,
@@ -563,44 +562,3 @@ async def test_orchestrate_drops_unsafe_planner_color(agent: PdfCreateAgent) -> 
     html = result.steps[0].parameters.html_content  # type: ignore[union-attr]
     assert "evil.test" not in html
     assert "url(" not in html
-
-
-@pytest.mark.anyio
-async def test_orchestrate_caps_section_count(agent: PdfCreateAgent, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Sections beyond _MAX_SECTIONS are capped before writing."""
-    captured: dict[str, int] = {}
-    original_make_chunks = pdf_create_agent._make_chunks
-
-    def _spy(sections: list[PlannedSection]) -> list[pdf_create_agent._Chunk]:
-        captured["count"] = len(sections)
-        return original_make_chunks(sections)
-
-    monkeypatch.setattr(pdf_create_agent, "_make_chunks", _spy)
-
-    meta = DocumentMeta(title="Huge", tone_brief="Professional.")
-    many = DocumentSections(
-        sections=[
-            PlannedSection(
-                heading=f"Section {i}",
-                type=SectionType.TEXT,
-                depth=SectionDepth.BRIEF,
-                key_points=["point"],
-            )
-            for i in range(pdf_create_agent._MAX_SECTIONS + 10)
-        ]
-    )
-    written = _written_sections()
-
-    with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
-        agent._sections_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=many.model_dump_json())
-        ),
-        agent._writer.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=written.model_dump_json())),
-    ):
-        result = await agent.orchestrate(_orchestrator_request("make a huge document"))
-
-    assert isinstance(result, EditPlanResponse)
-    assert captured["count"] == pdf_create_agent._MAX_SECTIONS

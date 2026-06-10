@@ -12,14 +12,13 @@ from stirling.agents.pdf_create import PdfCreateAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
-from stirling.agents.pdf_to_markdown import PdfToMarkdownAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftWorkflowResponse,
+    ConvertMarkdownResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
-    PageLayoutArtifact,
     PdfEditResponse,
     PdfQuestionOrchestrateResponse,
     PdfReviewOrchestrateResponse,
@@ -29,7 +28,6 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
-from stirling.contracts.pdf_to_markdown import PdfToMarkdownOrchestrateResponse
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -74,9 +72,11 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
-                    self.delegate_pdf_to_markdown,
-                    name="delegate_pdf_to_markdown",
-                    description=("Delegate requests to reconstruct a PDF as a Markdown document."),
+                    self.delegate_pdf_ingest,
+                    name="delegate_pdf_ingest",
+                    description=(
+                        "Delegate requests to convert a PDF to Markdown or extract its content as readable text."
+                    ),
                 ),
                 ToolOutput(
                     self.delegate_pdf_create,
@@ -104,10 +104,10 @@ class OrchestratorAgent:
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
-                "Use delegate_pdf_to_markdown for any request to convert a PDF to Markdown "
-                "or reconstruct its content as readable text. "
                 "Use delegate_pdf_create when the user wants to generate a new document from"
                 " scratch with no input file — invoices, reports, letters, contracts, etc. "
+                "Use delegate_pdf_ingest for any request to convert a PDF to Markdown "
+                "or extract its content as readable text. "
                 "Use unsupported_capability when the user asks about the assistant itself "
                 "or when none of the other outputs fit; supply a helpful message."
             ),
@@ -147,8 +147,6 @@ class OrchestratorAgent:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
-            case SupportedCapability.PDF_TO_MARKDOWN:
-                return await self._run_pdf_to_markdown(request)
             case SupportedCapability.PDF_CREATE:
                 return await self._run_pdf_create(request)
             case (
@@ -179,11 +177,12 @@ class OrchestratorAgent:
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
         return await UserSpecAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_to_markdown(self, ctx: RunContext[OrchestratorDeps]) -> PdfToMarkdownOrchestrateResponse:
-        return await self._run_pdf_to_markdown(ctx.deps.request)
-
-    async def _run_pdf_to_markdown(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
-        return await PdfToMarkdownAgent(self.runtime).orchestrate(request)
+    async def delegate_pdf_ingest(self, ctx: RunContext[OrchestratorDeps]) -> ConvertMarkdownResponse:
+        request = ctx.deps.request
+        return ConvertMarkdownResponse(
+            reason="PDF to Markdown requested — Java converts deterministically.",
+            files_to_ingest=request.files,
+        )
 
     async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> PdfReviewOrchestrateResponse:
         return await self._run_pdf_review(ctx.deps.request)
@@ -225,11 +224,6 @@ class OrchestratorAgent:
                 total_pages = sum(len(f.pages) for f in artifact.files)
                 file_names = [f.file_name for f in artifact.files]
                 descriptions.append(f"- extracted_text: {total_pages} pages from {file_names}")
-                continue
-            if isinstance(artifact, PageLayoutArtifact):
-                total_pages = sum(len(f.pages) for f in artifact.files)
-                file_names = [f.file_name for f in artifact.files]
-                descriptions.append(f"- page_layout: {total_pages} pages from {file_names}")
                 continue
             descriptions.append("- unknown artifact")
         return "\n".join(descriptions)

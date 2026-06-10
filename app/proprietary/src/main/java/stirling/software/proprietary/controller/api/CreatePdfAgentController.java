@@ -70,7 +70,9 @@ public class CreatePdfAgentController {
         return false;
     }
 
-    @PostMapping(value = "/create-pdf-from-html", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(
+            value = "/create-pdf-from-html-agent",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Convert AI-generated HTML to a PDF",
             description =
@@ -96,7 +98,6 @@ public class CreatePdfAgentController {
             command.add("-e");
             command.add("utf-8");
             command.add("-v");
-            command.add("--pdf-forms");
             // SSRF: the HTML is self-contained and the engine validates style colours, so no
             // external url() reaches WeasyPrint. For full isolation, run it network-isolated.
             command.add(htmlFile.getAbsolutePath());

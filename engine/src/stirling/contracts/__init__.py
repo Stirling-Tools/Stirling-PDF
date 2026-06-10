@@ -13,6 +13,7 @@ from .common import (
     AiFile,
     ArtifactKind,
     ConversationMessage,
+    ConvertMarkdownResponse,
     ExtractedFileText,
     GenerateFileResponse,
     MathAuditorToolReportArtifact,
@@ -88,9 +89,6 @@ from .pdf_create import (
     PdfCreateResponse,
     PdfCreateSuccessResponse,
 )
-from .pdf_create import (
-    DocumentStyle as DocumentStyle,
-)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -108,17 +106,6 @@ from .pdf_questions import (
     PdfQuestionTerminalResponse,
 )
 from .pdf_review import PdfReviewOrchestrateResponse
-from .pdf_to_markdown import (
-    LayoutFragment,
-    LayoutLine,
-    PageLayout,
-    PageLayoutArtifact,
-    PageLayoutFileEntry,
-    PdfToMarkdownCannotDoResponse,
-    PdfToMarkdownOrchestrateResponse,
-    PdfToMarkdownRequest,
-    PdfToMarkdownResponse,
-)
 from .progress import (
     ProgressEvent,
     WholeDocCompressionRound,
@@ -151,14 +138,9 @@ __all__ = [
     "ConversationMessage",
     "DeleteDocumentResponse",
     "PurgeOwnerResponse",
-    "PdfToMarkdownCannotDoResponse",
-    "PdfToMarkdownOrchestrateResponse",
-    "PdfToMarkdownRequest",
-    "PdfToMarkdownResponse",
     "Discrepancy",
     "DocumentMeta",
     "DocumentSections",
-    "DocumentStyle",
     "DiscrepancyKind",
     "EditCannotDoResponse",
     "EditClarificationRequest",
@@ -181,15 +163,11 @@ __all__ = [
     "NeedContentFileRequest",
     "NeedContentResponse",
     "NeedIngestResponse",
+    "ConvertMarkdownResponse",
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",
-    "LayoutFragment",
-    "LayoutLine",
     "Page",
-    "PageLayout",
-    "PageLayoutArtifact",
-    "PageLayoutFileEntry",
     "PageRange",
     "PageText",
     "PdfCommentInstruction",

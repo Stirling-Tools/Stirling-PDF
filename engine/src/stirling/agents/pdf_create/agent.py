@@ -65,8 +65,9 @@ _DEPTH_TOKENS: dict[SectionDepth, int] = {
 # Maximum output tokens per writer call. Stays well below the quality cliff (~4k).
 _CHUNK_CEILING = 3000
 
-# Caps the writer fan-out and render size so a "5000-section report" can't exhaust the box.
-_MAX_SECTIONS = 50
+# Cap on simultaneous writer calls so a large document doesn't open a burst of LLM
+# connections and trip provider rate limits.
+_MAX_PARALLEL_WRITERS = 10
 
 # ── Chunk dataclass ───────────────────────────────────────────────────────────────────────────────
 
@@ -369,14 +370,6 @@ class PdfCreateAgent:
 
         plan = DocumentPlan.assemble(meta, planned_sections)
 
-        if len(plan.sections) > _MAX_SECTIONS:
-            logger.warning(
-                "[pdf-create] planner produced %d sections; capping at %d",
-                len(plan.sections),
-                _MAX_SECTIONS,
-            )
-            plan.sections = plan.sections[:_MAX_SECTIONS]
-
         # ── Phase 3: chunk ─────────────────────────────────────────────────────
         chunks = _make_chunks(plan.sections)
         logger.info(
@@ -385,11 +378,12 @@ class PdfCreateAgent:
             len(chunks),
         )
 
-        # ── Phase 4: write in parallel ─────────────────────────────────────────
+        # ── Phase 4: write in parallel, bounded ────────────────────────────────
         logger.info("[pdf-create] phase 4/6: writing %d chunk(s) in parallel", len(chunks))
         total_chunks = len(chunks)
+        semaphore = asyncio.Semaphore(_MAX_PARALLEL_WRITERS)
         written_chunks: list[WrittenSections] = await asyncio.gather(
-            *[self._write_chunk(plan, chunk, total_chunks) for chunk in chunks]
+            *[self._write_chunk(plan, chunk, total_chunks, semaphore) for chunk in chunks]
         )
 
         # ── Phase 5: assemble in plan order (gather preserves insertion order) ──
@@ -430,9 +424,12 @@ class PdfCreateAgent:
             ],
         )
 
-    async def _write_chunk(self, plan: DocumentPlan, chunk: _Chunk, total_chunks: int) -> WrittenSections:
-        prompt = _build_writer_prompt(plan, chunk)
-        result = await self._writer.run(prompt)
+    async def _write_chunk(
+        self, plan: DocumentPlan, chunk: _Chunk, total_chunks: int, semaphore: asyncio.Semaphore
+    ) -> WrittenSections:
+        async with semaphore:
+            prompt = _build_writer_prompt(plan, chunk)
+            result = await self._writer.run(prompt)
         logger.info(
             "[pdf-create] chunk %d/%d wrote %d sections",
             chunk.index + 1,
