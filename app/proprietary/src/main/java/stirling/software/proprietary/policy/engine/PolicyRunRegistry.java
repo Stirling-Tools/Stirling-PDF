@@ -9,13 +9,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.PolicyRun;
 
 /**
@@ -24,9 +24,9 @@ import stirling.software.proprietary.policy.model.PolicyRun;
  * TaskManager}.
  *
  * <p>Finished runs are evicted on a fixed interval once they age past {@code
- * stirling.policies.runExpiryMinutes}, mirroring the job-result expiry in {@code TaskManager} so a
- * run's rich in-memory state does not outlive the process. Only terminal runs are evicted; active
- * and paused ({@code WAITING_FOR_INPUT}) runs are retained regardless of age. Result files are not
+ * policies.runExpiryMinutes}, mirroring the job-result expiry in {@code TaskManager} so a run's
+ * rich in-memory state does not outlive the process. Only terminal runs are evicted; active and
+ * paused ({@code WAITING_FOR_INPUT}) runs are retained regardless of age. Result files are not
  * touched here: a run shares its runId with a {@code TaskManager} job, which owns file-lifecycle
  * cleanup, so eviction only frees this map's entry.
  */
@@ -41,8 +41,8 @@ public class PolicyRunRegistry {
             Executors.newSingleThreadScheduledExecutor(
                     Thread.ofVirtual().name("policy-run-cleanup-", 0).factory());
 
-    public PolicyRunRegistry(
-            @Value("${stirling.policies.runExpiryMinutes:30}") int runExpiryMinutes) {
+    public PolicyRunRegistry(ApplicationProperties applicationProperties) {
+        int runExpiryMinutes = applicationProperties.getPolicies().getRunExpiryMinutes();
         this.runExpiry = Duration.ofMinutes(runExpiryMinutes);
         cleanupExecutor.scheduleAtFixedRate(this::evictExpiredRuns, 10, 10, TimeUnit.MINUTES);
         log.debug(
