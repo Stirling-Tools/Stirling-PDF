@@ -2700,6 +2700,13 @@ whole_doc_compression_round = "Consolidating notes..."
 whole_doc_read_done = "Finished reading the document..."
 whole_doc_read_started = "Reading the document..."
 whole_doc_slice_done = "Reading the document... ({{percent}}% complete)"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
 
 [chat.quickActions]
 browseYourFiles = "Browse your files"
