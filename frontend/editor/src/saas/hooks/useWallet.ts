@@ -45,6 +45,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import apiClient from "@app/services/apiClient";
+import { supabase } from "@app/auth/supabase";
 
 // ─── Public types ───────────────────────────────────────────────────────
 
@@ -201,18 +202,15 @@ export interface UseWalletResult {
   ) => Promise<SubCapUpdateResult>;
   /**
    * Mint a Stripe Customer Portal session and navigate to it. Calls
-   * {@code POST /api/v1/payg/portal-session} (which proxies to a Supabase
-   * edge function) and assigns {@code window.location} to the returned URL
-   * — same-tab redirect, matching the sibling {@code ManageBillingButton}.
+   * the {@code create-customer-portal-session} Supabase edge function
+   * directly with the user's JWT (same pattern as checkout — no backend
+   * proxy; the function's RPC enforces team membership) and assigns
+   * {@code window.location} to the returned URL — same-tab redirect.
    * We do not use {@code window.open(...,"_blank")} after an {@code await}
    * because browsers treat it as non-user-gesture and silently popup-block
    * it; the portal is a full-page experience anyway and Stripe redirects
-   * back to {@code returnUrl} on close. Throws on backend error so the
-   * caller can show a friendly toast — notably 503
-   * {@code PORTAL_NOT_CONFIGURED} (Supabase unavailable in local dev) and
-   * 404 (team not yet subscribed). The HTTP request passes
-   * {@code suppressErrorToast: true} so the global response interceptor
-   * doesn't show a generic toast on top of the caller's friendly one.
+   * back to {@code return_url} on close. Throws on error so the caller can
+   * show a friendly toast — notably 404 {@code team_not_subscribed}.
    */
   openPortal: () => Promise<void>;
 }
@@ -528,26 +526,35 @@ export function useWallet(): UseWalletResult {
       window.location.assign("https://billing.stripe.com/p/login/mock");
       return;
     }
-    // suppressErrorToast: true — the StripePortalLink caller shows a
-    // friendly toast on failure (notably 404 / 503 PORTAL_NOT_CONFIGURED);
-    // without this the global interceptor's generic toast would stack on
-    // top. Matches saas/services/userManagementService.ts pattern.
-    const res = await apiClient.post<{ url: string }>(
-      "/api/v1/payg/portal-session",
-      { returnUrl: window.location.href },
-      { suppressErrorToast: true },
-    );
-    if (!res.data?.url) {
-      throw new Error("Portal session response missing url");
+    // Direct edge-fn invocation with the user's JWT — same pattern as
+    // create-checkout-session. The payg_get_checkout_context RPC inside the
+    // fn enforces team membership, so no backend proxy is needed; team_id
+    // must be a NUMBER (the fn type-checks and rejects strings).
+    const teamId = wallet?.teamId;
+    if (teamId == null) {
+      throw new Error("No team resolved yet");
     }
-    // Same-tab navigation rather than window.open(...,"_blank"). The
-    // sibling ManageBillingButton uses the same approach: Stripe's
+    const { data, error: invokeError } = await supabase.functions.invoke<{
+      url?: string;
+      error?: string;
+    }>("create-customer-portal-session", {
+      body: { team_id: teamId, return_url: window.location.href },
+    });
+    if (invokeError) {
+      // FunctionsHttpError etc. — the StripePortalLink caller catches and
+      // shows a friendly toast (404 team_not_subscribed, 403, outage).
+      throw invokeError;
+    }
+    if (!data?.url) {
+      throw new Error(data?.error ?? "Portal session response missing url");
+    }
+    // Same-tab navigation rather than window.open(...,"_blank"): Stripe's
     // customer portal is a full-page experience and brings the user back
-    // via returnUrl, so a popup buys us nothing — and window.open after
+    // via return_url, so a popup buys us nothing — and window.open after
     // an awaited promise is treated as non-user-gesture and silently
     // popup-blocked by most browsers.
-    window.location.assign(res.data.url);
-  }, [devPreview]);
+    window.location.assign(data.url);
+  }, [devPreview, wallet?.teamId]);
 
   return {
     wallet,
