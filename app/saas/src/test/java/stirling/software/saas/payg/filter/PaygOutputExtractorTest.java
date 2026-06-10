@@ -44,6 +44,15 @@ class PaygOutputExtractorTest {
     }
 
     @Test
+    void pdfContentType_butBodyMissingPdfMagic_returnsEmpty(@TempDir Path tmp) throws IOException {
+        // Tool sets application/pdf but writes a non-PDF payload — we should NOT record it as
+        // OUTPUT lineage. Mirrors the magic-byte gate already enforced on the ZIP branch.
+        Path body = tmp.resolve("misleading.pdf");
+        Files.write(body, "this is not actually a pdf".getBytes(StandardCharsets.UTF_8));
+        assertThat(extractor.extract("application/pdf", body)).isEmpty();
+    }
+
+    @Test
     void zipContentType_extractsOnlyPdfEntriesWithValidMagicBytes(@TempDir Path tmp)
             throws IOException {
         Path zip = tmp.resolve("out.zip");
@@ -100,6 +109,61 @@ class PaygOutputExtractorTest {
             // no entries
         }
         assertThat(extractor.extract("application/zip", zip)).isEmpty();
+    }
+
+    @Test
+    void octetStreamWithPdfMagic_treatedAsPdf(@TempDir Path tmp) throws IOException {
+        // Stirling tool endpoints sometimes set Content-Type to
+        // application/octet-stream for streamed responses even when the body
+        // is a real PDF. The extractor must sniff magic bytes when the
+        // declared Content-Type is generic.
+        Path body = tmp.resolve("body.bin");
+        Files.write(body, pdfBytes("real-pdf-content"));
+        List<PaygOutputExtractor.ExtractedPdf> out =
+                extractor.extract("application/octet-stream", body);
+        assertThat(out).hasSize(1);
+        assertThat(out.get(0).path()).isEqualTo(body);
+    }
+
+    @Test
+    void octetStreamWithZipMagic_unpackedAsZip(@TempDir Path tmp) throws IOException {
+        Path zip = tmp.resolve("body.bin");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            writeEntry(zos, "page1.pdf", pdfBytes("a"));
+            writeEntry(zos, "page2.pdf", pdfBytes("b"));
+        }
+        List<PaygOutputExtractor.ExtractedPdf> out =
+                extractor.extract("application/octet-stream", zip);
+        try {
+            assertThat(out).hasSize(2);
+        } finally {
+            for (PaygOutputExtractor.ExtractedPdf p : out) {
+                p.close();
+            }
+        }
+    }
+
+    @Test
+    void nullContentTypeWithZipMagic_unpackedAsZip(@TempDir Path tmp) throws IOException {
+        Path zip = tmp.resolve("body.bin");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            writeEntry(zos, "page1.pdf", pdfBytes("a"));
+        }
+        List<PaygOutputExtractor.ExtractedPdf> out = extractor.extract(null, zip);
+        try {
+            assertThat(out).hasSize(1);
+        } finally {
+            for (PaygOutputExtractor.ExtractedPdf p : out) {
+                p.close();
+            }
+        }
+    }
+
+    @Test
+    void octetStreamWithoutMagic_returnsEmpty(@TempDir Path tmp) throws IOException {
+        Path body = tmp.resolve("body.bin");
+        Files.write(body, "neither pdf nor zip".getBytes(StandardCharsets.UTF_8));
+        assertThat(extractor.extract("application/octet-stream", body)).isEmpty();
     }
 
     private static void writeEntry(ZipOutputStream zos, String name, byte[] data)
