@@ -196,7 +196,7 @@ export default function McpSection() {
             <Text size="sm">
               {t(
                 "config.mcp.tip",
-                "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly.",
+                "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation.",
               )}
             </Text>
             <Button

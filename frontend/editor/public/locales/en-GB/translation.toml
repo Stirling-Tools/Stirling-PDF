@@ -3057,7 +3057,7 @@ warning = "⚠️ Warning: This action will generate new API keys and make your 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
 navLabel = "MCP Server"
-tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation."
 title = "MCP Server"
 viewApiKeys = "View API keys"
 
