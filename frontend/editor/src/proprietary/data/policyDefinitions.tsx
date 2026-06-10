@@ -180,10 +180,23 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         parameters: {
           mode: "automatic",
           useRegex: true,
+          // Text-based redaction (no rasterization) — keeps runs fast.
+          convertPDFToImage: false,
           wordsToRedact: DEFAULT_PII_PATTERNS,
         },
       },
-      { operation: "sanitize", parameters: {} },
+      {
+        // Sanitize is fixed to JavaScript removal only (no per-policy config).
+        operation: "sanitize",
+        parameters: {
+          removeJavaScript: true,
+          removeEmbeddedFiles: false,
+          removeMetadata: false,
+          removeLinks: false,
+          removeFonts: false,
+          removeXMPMetadata: false,
+        },
+      },
     ],
     scopeLabel: "All PDFs on this device",
     // Policy-level controls only — detection/encryption/signing/watermark are
