@@ -6,7 +6,6 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import type { DocumentStyleSelection } from "@app/components/chat/DocumentStylePicker";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { generateId } from "@app/utils/generateId";
 import apiClient from "@app/services/apiClient";
@@ -302,10 +301,7 @@ interface ChatContextValue {
   progress: AiWorkflowProgress | null;
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
-  sendMessage: (
-    content: string,
-    documentStyle?: DocumentStyleSelection,
-  ) => Promise<void>;
+  sendMessage: (content: string) => Promise<void>;
   cancelMessage: () => void;
 }
 
@@ -415,7 +411,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendMessage = useCallback(
-    async (content: string, documentStyle?: DocumentStyleSelection) => {
+    async (content: string) => {
       // Abort any in-flight request
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -443,24 +439,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].role`, message.role);
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
-        if (documentStyle?.primaryColor) {
-          formData.append(
-            "documentStyle.primaryColor",
-            documentStyle.primaryColor,
-          );
-        }
-        if (documentStyle?.backgroundColor) {
-          formData.append(
-            "documentStyle.backgroundColor",
-            documentStyle.backgroundColor,
-          );
-        }
-        if (documentStyle?.bodyTextColor) {
-          formData.append(
-            "documentStyle.bodyTextColor",
-            documentStyle.bodyTextColor,
-          );
-        }
 
         const response = await fetch("/api/v1/ai/orchestrate/stream", {
           method: "POST",

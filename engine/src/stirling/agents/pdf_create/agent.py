@@ -65,6 +65,9 @@ _DEPTH_TOKENS: dict[SectionDepth, int] = {
 # Maximum output tokens per writer call. Stays well below the quality cliff (~4k).
 _CHUNK_CEILING = 3000
 
+# Caps the writer fan-out and render size so a "5000-section report" can't exhaust the box.
+_MAX_SECTIONS = 50
+
 # ── Chunk dataclass ───────────────────────────────────────────────────────────────────────────────
 
 
@@ -365,6 +368,14 @@ class PdfCreateAgent:
             return EditCannotDoResponse(reason="No document sections could be planned from the request.")
 
         plan = DocumentPlan.assemble(meta, planned_sections)
+
+        if len(plan.sections) > _MAX_SECTIONS:
+            logger.warning(
+                "[pdf-create] planner produced %d sections; capping at %d",
+                len(plan.sections),
+                _MAX_SECTIONS,
+            )
+            plan.sections = plan.sections[:_MAX_SECTIONS]
 
         # ── Phase 3: chunk ─────────────────────────────────────────────────────
         chunks = _make_chunks(plan.sections)

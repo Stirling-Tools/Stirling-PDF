@@ -97,6 +97,8 @@ public class CreatePdfAgentController {
             command.add("utf-8");
             command.add("-v");
             command.add("--pdf-forms");
+            // SSRF: the HTML is self-contained and the engine validates style colours, so no
+            // external url() reaches WeasyPrint. For full isolation, run it network-isolated.
             command.add(htmlFile.getAbsolutePath());
             command.add(pdfFile.getAbsolutePath());
 

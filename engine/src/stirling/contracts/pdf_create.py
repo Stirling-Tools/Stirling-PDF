@@ -13,10 +13,11 @@ Pipeline:
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from stirling.models import ApiModel
 
@@ -80,18 +81,25 @@ type DocumentSection = Annotated[
 ]
 
 
-class DocumentStyle(ApiModel):
-    """Visual style that crosses the Java↔Python boundary.
+# Named colour or hex only — anything else is dropped so a colour can't inject CSS into the
+# <style> block (which would let WeasyPrint fetch an attacker-controlled url() → SSRF).
+_SAFE_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{3,8}$|^[a-zA-Z]{1,30}$")
 
-    Uses camelCase aliases so it round-trips correctly between the Java service layer
-    and the Python engine without transformation. The UI picker sets this explicitly;
-    the meta planner infers it from the user's message when no UI style is provided.
-    UI fields take priority where set; planner-inferred values fill any gaps.
-    """
+
+class DocumentStyle(ApiModel):
+    """Document colours, inferred by the meta planner and rendered into the engine's Jinja
+    template (never sent to Java). Unsafe colours are dropped to ``None``."""
 
     primary_color: str | None = Field(default=None)
     background_color: str | None = Field(default=None)
     body_text_color: str | None = Field(default=None)
+
+    @field_validator("primary_color", "background_color", "body_text_color", mode="after")
+    @classmethod
+    def _drop_unsafe_color(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value if _SAFE_COLOR_RE.fullmatch(value) else None
 
 
 class GeneratedDocument(ApiModel):

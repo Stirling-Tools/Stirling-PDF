@@ -1,7 +1,7 @@
 """Agent tool IDs, parameter models, and registry.
 
-tool_models.py is auto-generated from the Java OpenAPI spec. This file is its
-manually-maintained counterpart for tools backed by AI agent pipelines.
+Hand-maintained counterpart to the generated tool_models.py, for engine-emitted tools
+hidden from the OpenAPI spec: AI-backed agents and deterministic conversions like HTML-to-PDF.
 """
 
 from __future__ import annotations
