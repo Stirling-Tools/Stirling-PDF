@@ -12,7 +12,6 @@ cancel = "Annuler"
 changedCredsMessage = "Les identifiants ont été mis à jour !"
 chooseFile = "Choisir un fichier"
 close = "Fermer"
-color = "Couleur"
 comingSoon = "Bientôt disponible"
 confirm = "Confirmer"
 confirmClose = "Confirmer la fermeture"
@@ -90,6 +89,7 @@ nothingToUndo = "Rien à annuler"
 noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
 noValidFiles = "Aucun fichier valide à traiter"
 oops = "Oups !"
+openInNewWindow = "Ouvrir dans une nouvelle fenêtre"
 openInViewer = "Ouvrir dans le lecteur"
 operationCancelled = "Opération annulée"
 page = "Page"
@@ -198,6 +198,10 @@ ssoDescription = "L'authentification à deux facteurs est gérée par votre four
 ssoManaged = "Configurez la MFA via votre fournisseur d'identité."
 title = "Authentification à deux facteurs"
 
+[account.overview]
+logOut = "Se déconnecter"
+signedInAs = "Connecté en tant que : {{email}}"
+
 [add-page-numbers]
 tags = "paginer,numéros,étiqueter,paginate,label,organize,index"
 
@@ -224,6 +228,9 @@ title = "Ce que fait l’outil"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "À propos de l’ajout de pièces jointes"
+
+[addFileCard]
+upload = "Téléverser"
 
 [addImage]
 applySignatures = "Appliquer les images"
@@ -494,6 +501,11 @@ title = "Ajuster l’échelle de page"
 [adjustPageScale.error]
 failed = "Une erreur est survenue lors de l’ajustement de l’échelle de page."
 
+[adjustPageScale.orientation]
+label = "Orientation de la page"
+landscape = "Paysage"
+portrait = "Portrait"
+
 [adjustPageScale.pageSize]
 keep = "Conserver la taille d’origine"
 label = "Taille de page cible"
@@ -600,6 +612,7 @@ label = "Gestion des fichiers temporaires"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Répertoire de base pour les fichiers temporaires (laisser vide pour la valeur par défaut : java.io.tmpdir/stirling-pdf)"
 label = "Répertoire temporaire de base"
+placeholder = "Par défaut : java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Fréquence d’exécution du nettoyage (en minutes)"
@@ -612,6 +625,7 @@ label = "Nettoyer le temporaire système"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Répertoire des fichiers temporaires LibreOffice (laisser vide pour la valeur par défaut : baseTmpDir/libreoffice)"
 label = "Répertoire temporaire LibreOffice"
+placeholder = "Par défaut : baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Âge maximal en heures avant le nettoyage des fichiers temporaires"
@@ -628,6 +642,7 @@ label = "Nettoyage au démarrage"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Répertoire temporaire système à nettoyer (utilisé uniquement si cleanupSystemTemp est activé)"
 label = "Répertoire temporaire système"
+placeholder = "Chemin du répertoire temporaire système"
 
 [admin.settings.advanced.tessdataDir]
 description = "Chemin vers le répertoire tessdata pour les fichiers de langue OCR"
@@ -833,6 +848,7 @@ label = "Nom de la base"
 [admin.settings.database.password]
 description = "Mot de passe pour l’authentification à la base de données"
 label = "Mot de passe"
+placeholder = "Saisir le mot de passe de la base de données"
 
 [admin.settings.database.port]
 description = "Port du serveur de base de données (non utilisé si une URL personnalisée est fournie)"
@@ -864,10 +880,12 @@ label = "Masquer par défaut les outils indisponibles"
 [admin.settings.endpoints.groupsToRemove]
 description = "Sélectionner les groupes de points de terminaison à désactiver"
 label = "Groupes de points de terminaison désactivés"
+placeholder = "Sélectionner les groupes à désactiver"
 
 [admin.settings.endpoints.toRemove]
 description = "Sélectionner les points de terminaison individuels à désactiver"
 label = "Points de terminaison désactivés"
+placeholder = "Sélectionner les endpoints à désactiver"
 
 [admin.settings.enterpriseRequired]
 message = "Une licence Entreprise est requise pour accéder à {{featureName}}. Vous consultez des données de démonstration à titre de référence."
@@ -1082,6 +1100,7 @@ label = "Hôte SMTP"
 [admin.settings.mail.password]
 description = "Mot de passe pour l’authentification SMTP"
 label = "Mot de passe SMTP"
+placeholder = "Saisir le mot de passe SMTP"
 
 [admin.settings.mail.port]
 description = "Numéro de port pour la connexion SMTP (généralement 25, 465 ou 587)"
@@ -1090,6 +1109,10 @@ label = "Port SMTP"
 [admin.settings.mail.username]
 description = "Nom d’utilisateur pour l’authentification SMTP"
 label = "Nom d’utilisateur SMTP"
+
+[admin.settings.plan.noData]
+message = "Les données des offres ne sont pas disponibles pour le moment."
+title = "Aucune donnée disponible"
 
 [admin.settings.premium]
 description = "Configurer votre clé de licence Premium ou Enterprise."
@@ -1137,6 +1160,9 @@ info = "Si vous avez une clé de licence ou un fichier de certificat suite à un
 toggle = "Vous avez une clé de licence ou un fichier de certificat ?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Journalisation d'audit</0> (ENTERPRISE) - Sécurité"
+customMetadata = "<0>Métadonnées personnalisées</0> (PRO) - Général"
+databaseConfiguration = "<0>Configuration de base de données</0> (ENTERPRISE) - Base de données"
 message = "Les fonctionnalités Premium et Enterprise sont désormais organisées dans leurs sections respectives :"
 title = "Fonctionnalités Premium réparties"
 
@@ -1512,6 +1538,33 @@ user = "Utilisateur"
 usernameInfo = "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et les caractères spéciaux suivants @._+- ou doit être une adresse e-mail valide."
 webOnlyUser = "Utilisateur Web uniquement"
 
+[agents]
+auto_redaction_description = "Expurger automatiquement les données personnelles (PII)"
+auto_redaction_name = "Expurgation automatique"
+back_to_tools = "Retour aux outils"
+coming_soon = "Bientôt disponible"
+compliance_description = "Auditer les documents pour la conformité"
+compliance_name = "Vérification de conformité"
+data_extraction_description = "Extraire des tableaux et des données structurées"
+data_extraction_name = "Extraction de données"
+doc_summary_description = "Résumer de longs documents"
+doc_summary_name = "Résumé"
+form_filler_description = "Remplir intelligemment les formulaires PDF"
+form_filler_name = "Remplisseur de formulaires"
+fullscreen_title = "Agents Stirling"
+pdf_to_markdown_description = "Convertir des PDF en Markdown propre"
+pdf_to_markdown_name = "PDF vers Markdown"
+section_title = "Agents"
+show_less = "Afficher moins"
+start_chat = "Démarrer la discussion"
+stirling_description = "Votre assistant PDF polyvalent"
+stirling_full_name = "Agent général Stirling"
+stirling_long_description = "Assistant PDF polyvalent capable d'exécuter des outils, de créer des PDF et d'extraire des informations de vos documents."
+stirling_name = "Stirling"
+stirling_running = "En cours d'exécution..."
+stirling_tooltip = "Agent Stirling"
+view_all = "Voir tous les agents"
+
 [analytics]
 disable = "Désactiver les analyses"
 enable = "Activer les analyses"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Vous n'avez pas l'autorisation d'effectuer cette acti
 pleaseLoginAgain = "Veuillez vous reconnecter."
 sessionExpired = "Session expirée"
 
+[auth.displayName]
+guest = "Invité"
+user = "Utilisateur"
+
 [auto-rename]
 description = "Trouve automatiquement le titre dans le contenu de votre PDF et l’utilise comme nom de fichier."
 header = "Renommer automatiquement"
@@ -1862,6 +1919,13 @@ label = "Ouvrir le menu pour {{title}}"
 
 [automate.files]
 placeholder = "Sélectionnez des fichiers à traiter avec cette automatisation"
+
+[automate.folderScanWarning]
+advice = "Vous pouvez toujours télécharger le fichier (par exemple pour l’inspecter ou le modifier à la main), mais les étapes non prises en charge devront être supprimées avant que le backend puisse l’exécuter."
+cancel = "Annuler"
+confirm = "Exporter quand même"
+intro = "L’analyse de dossiers s’exécute sur le backend, elle ne peut donc exécuter que les outils disposant d’un endpoint backend. Les étapes suivantes de cette automatisation n’en ont pas et échoueront lors de l’exécution du pipeline :"
+title = "Certaines étapes ne peuvent pas s’exécuter lors de l’analyse de dossiers"
 
 [automate.importModal]
 cancel = "Annuler"
@@ -2094,11 +2158,31 @@ placeholder = "Nombre de pages"
 title = "Dernières N pages"
 
 [bulkSelection.operators]
-and = "ET : & ou « and » — exige les deux conditions (p. ex. : 1-50 & even)"
-comma = "Virgule : , ou | — combine les sélections (p. ex. : 1-10, 20)"
-not = "NON : ! ou « not » — exclut des pages (p. ex. : 3n & not 30)"
 text = "ET a une priorité plus élevée que la virgule. NON s’applique dans l’intervalle du document."
 title = "Opérateurs"
+
+[bulkSelection.operators.and]
+title = "Combiner les sélections (les deux conditions doivent être vraies)"
+
+[bulkSelection.operators.descriptions]
+and = "ET : & ou \"and\" - nécessite les deux conditions (p. ex., 1-50 & even)"
+comma = "Virgule : , ou | - combine les sélections (p. ex., 1-10, 20)"
+not = "NON : ! ou \"not\" - exclut des pages (p. ex., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Sélectionner toutes les pages paires (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Exclure de la sélection"
+
+[bulkSelection.operators.odd]
+title = "Sélectionner toutes les pages impaires (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Ajouter à la sélection (l’une ou l’autre condition peut être vraie)"
+
+[bulkSelection.pageSelection]
+title = "Sélection de pages"
 
 [bulkSelection.range]
 fromPlaceholder = "De"
@@ -2684,6 +2768,22 @@ title = "Modifier les permissions"
 [changePermissions.tooltip.warning]
 text = "Pour rendre ces permissions non modifiables, utilisez l’outil Ajouter un mot de passe pour définir un mot de passe propriétaire."
 
+[chat]
+resize = "Redimensionner le panneau de discussion"
+
+[chat.actions]
+copy = "Copier le message"
+
+[chat.header]
+agentMenu = "Options de l’agent Stirling"
+clearChat = "Effacer la discussion"
+settings = "Paramètres de l’agent"
+
+[chat.input]
+attach = "Joindre des fichiers"
+placeholder = "Que voulez-vous faire ?"
+send = "Envoyer le message"
+
 [chat.progress]
 analyzing = "Analyse de votre demande..."
 calling_engine = "L'IA réfléchit..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Lecture du document terminée..."
 whole_doc_read_started = "Lecture du document..."
 whole_doc_slice_done = "Lecture du document... ({{percent}} % terminé)"
 
+[chat.quickActions]
+browseYourFiles = "Parcourir vos fichiers"
+compressMany = "Compresser ces documents"
+compressOne = "Compresser ce document"
+convertMany = "Convertir ces documents en PDF"
+convertOne = "Convertir ce document en PDF"
+fileSummary_one = "1 fichier dans le plan de travail ({{types}})"
+fileSummary_other = "{{count}} fichiers dans le plan de travail ({{types}})"
+heading = "Pour commencer"
+mergeMany = "Fusionner ces {{count}} documents en 1"
+moreFiles = "+{{count}} autres"
+openFromComputer = "Ouvrir depuis l’ordinateur"
+removeFile = "Retirer {{name}}"
+rotateMany = "Pivoter ces documents"
+rotateOne = "Pivoter ce document"
+splitOne = "Diviser ce document"
+
+[chat.responses]
+cannot_continue = "Un problème est survenu et je ne peux pas continuer."
+cannot_do = "Je ne peux pas faire cela."
+done = "Terminé."
+need_clarification = "Pouvez-vous préciser votre demande ?"
+not_found = "Je n’ai pas trouvé l’information demandée."
+processing = "Traitement ({{outcome}})..."
+unsupported_capability = "Fonctionnalité non prise en charge : {{capability}}"
+
 [chat.toolsUsed]
 summary = "{{count}} outils exécutés"
 summary_one = "1 outil exécuté"
@@ -2707,6 +2833,9 @@ unknownTool = "Outil inconnu"
 
 [cloudBadge]
 tooltip = "Cette opération utilisera vos crédits cloud"
+
+[color.eyeDropper]
+tooltip = "Prélever une couleur à l’écran"
 
 [colorPicker]
 title = "Choisir la couleur"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Sélectionnez d’abord le PDF d’origine"
 filesMissing = "Impossible de localiser les fichiers sélectionnés. Veuillez les sélectionner à nouveau."
 generic = "Impossible de comparer ces fichiers."
 selectRequired = "Sélectionnez un document original et un document modifié."
+title = "Échec de la comparaison"
 
 [compare.large.file]
 message = "Un ou les deux documents fournis sont trop volumineux pour être traités"
@@ -2864,6 +2994,7 @@ title = "Toujours en cours…"
 
 [compare.status]
 complete = "Comparaison prête"
+error = "La comparaison a échoué"
 extracting = "Extraction du texte…"
 processing = "Analyse des différences…"
 
@@ -2929,6 +3060,10 @@ title = "Méthode de compression"
 [compress.selectText.1]
 1 = "1-3 compression PDF,</br> 4-6 compression d'image légère,</br> 7-9 compression d'image intense qui réduira considérablement la qualité de l'image"
 _value = "Paramètres de compression"
+
+[compress.settings]
+desiredSize = "Taille de fichier souhaitée"
+desiredSizePlaceholder = "Saisir la taille"
 
 [compress.tooltip.description]
 text = "La compression est un moyen simple de réduire la taille de votre fichier. Choisissez Taille de fichier pour saisir une taille cible et nous ajusterons la qualité pour vous. Choisissez Qualité pour régler manuellement la force de compression."
@@ -3404,6 +3539,29 @@ title = "Paramètres ouverts"
 message = "Stirling PDF est désormais votre éditeur PDF par défaut"
 title = "Application par défaut définie"
 
+[desktopUpdate]
+downloading = "Téléchargement de la mise à jour..."
+installing = "Installation de la mise à jour..."
+installingWarning = "L’application se fermera automatiquement pour terminer l’installation."
+installNow = "Installer maintenant"
+readyToRestart = "Mise à jour prête"
+restartMessage = "La mise à jour a été installée. Redémarrez l’application pour terminer."
+restartNow = "Redémarrer maintenant"
+updateFailed = "Échec de la mise à jour"
+updateFailedMessage = "Échec du téléchargement ou de l’installation de la mise à jour."
+
+[desktopUpdate.blocked]
+docsLink = "Voir la documentation d’installation"
+message = "Stirling-PDF n’a pas l’autorisation de se mettre à jour sur cette machine."
+title = "Autorisations administrateur requises"
+
+[dropdownList]
+searchPlaceholder = "Rechercher..."
+
+[editableSecretField]
+edit = "Modifier"
+editSecretValue = "Modifier la valeur secrète"
+
 [editTableOfContents]
 submit = "Appliquer la table des matières"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Espace de travail du plan"
 [editTableOfContents.workbench.empty]
 description = "Sélectionnez l’outil Modifier la table des matières pour charger son espace de travail."
 title = "Ouvrez l’outil pour commencer l’édition"
+
+[emptyFilesState]
+upload = "Téléverser"
 
 [encryptedPdfUnlock]
 description = "Ce PDF est protégé par mot de passe. Saisissez le mot de passe pour continuer à travailler dessus."
@@ -3605,6 +3766,10 @@ title = "Paramètres"
 [extractPages.tooltip]
 description = "Extrait les pages sélectionnées dans un nouveau PDF, en conservant l’ordre."
 
+[fileCard]
+openInFileEditor = "Ouvrir dans l’éditeur de fichiers"
+viewInViewer = "Afficher dans la visionneuse"
+
 [fileChooser]
 click = "Cliquez"
 dragAndDrop = "Glisser & Déposer"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Glisser & Déposer un PDF"
 extractPDF = "Extraction en cours..."
 hoveredDragAndDrop = "Glisser & Déposer le(s) fichier(s) ici"
 or = "ou"
+
+[fileDropdownMenu]
+closeFile = "Fermer le fichier"
 
 [fileEditor]
 addFiles = "Ajouter des fichiers"
@@ -3771,12 +3939,250 @@ expand = "Développer la barre latérale"
 files = "Fichiers"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive n’est pas configuré"
+leaveMyFiles = "Quitter Mes fichiers"
+myFiles = "Mes fichiers"
 noFiles = "Aucun fichier pour le moment"
 openFileManager = "Ouvrir le gestionnaire de fichiers"
 openFromComputer = "Ouvrir depuis l’ordinateur"
 openSettings = "Ouvrir les paramètres"
 search = "Rechercher"
 searchPlaceholder = "Rechercher des fichiers..."
+
+[fileSidebar.fileItem]
+closeViewer = "Fermer la visionneuse"
+openInViewer = "Ouvrir dans la visionneuse"
+
+[filesPage]
+addToWorkspace = "Ajouter à l’espace de travail"
+addToWorkspaceCount = "Ajouter {{count}} à l’espace de travail"
+allFiles = "Tous les fichiers"
+back = "Retour"
+backToFolder = "Retour à {{folder}}"
+backToMyFiles = "Retour à Mes fichiers"
+breadcrumbs = "Chemin du dossier"
+cancel = "Annuler"
+clearSearch = "Effacer la recherche"
+clearSelection = "Effacer la sélection"
+closeDetails = "Fermer les détails"
+create = "Créer"
+cycleBlocked = "Impossible de déplacer un dossier dans l’un de ses sous-dossiers."
+delete = "Supprimer"
+deleteFolder = "Supprimer le dossier"
+deleteFolderBody = "Supprimer le dossier « {{name}} » ?"
+deleteFolderConfirm = "Supprimer le dossier « {{name}} » ? Les fichiers à l’intérieur seront déplacés vers Tous les fichiers. {{count}} fichier(s) concerné(s)."
+deleteFolderContents = "Supprimer également {{count}} fichier(s) dans le dossier"
+deleteFolderContentsWarning = "Les fichiers seront définitivement supprimés et ne pourront pas être récupérés."
+deleteFolderError = "Impossible de supprimer le dossier. Réessayez."
+deleteFolderKeepHint = "Les fichiers à l’intérieur seront déplacés vers Tous les fichiers."
+deleteFolderTitle = "Supprimer le dossier ?"
+deselectAll = "Effacer la sélection"
+details = "Détails"
+detailsCount = "{{count}} fichiers sélectionnés"
+dismissError = "Fermer"
+download = "Télécharger"
+downloadAll = "Tout télécharger"
+downloadVersion = "Télécharger cette version"
+dropOverlay = "Déposez les fichiers pour téléverser"
+dropOverlaySub = "Les fichiers commencent en Local. Utilisez « Déplacer vers » ou « Enregistrer dans le cloud » pour les organiser dans un dossier."
+file = "Fichier"
+fileMenu = "Actions sur le fichier"
+folder = "Dossier"
+folderItems = "{{count}} éléments"
+folderMenu = "Actions sur le dossier"
+inPath = "dans {{path}}"
+inWorkspace = "Ouvrir"
+inWorkspaceAria = "Déjà dans l’espace de travail"
+loading = "Chargement…"
+localFoldersUnavailable = "Les dossiers sont réservés au Cloud - enregistrez un fichier dans le cloud pour l’organiser."
+moreActions = "Plus d’actions sur le dossier"
+moveLocalToCloudBlocked = "Les fichiers uniquement locaux ne peuvent pas être déplacés dans des dossiers cloud. Enregistrez-les d’abord dans le cloud."
+moveSkippedRemote = "{{count}} fichier(s) n’ont pas pu être déplacés sur le serveur (pas d’autorisation ou déjà supprimés)."
+moveTo = "Déplacer vers…"
+myFiles = "Mes fichiers"
+newFolder = "Nouveau dossier"
+newFolderStorageDisabled = "Le stockage des dossiers sur le serveur n’est pas activé. Demandez à votre administrateur de l’activer."
+newFolderTabUnavailable = "Passez à Tous ou Cloud pour créer des dossiers."
+newRootFolder = "Nouveau dossier à la racine"
+offlineNoFolderEdits = "Synchronisation des dossiers serveur indisponible - les modifications des dossiers sont désactivées. Vérifiez votre connexion et la configuration du stockage."
+open = "Ouvrir"
+openInWorkbench = "Ouvrir dans le plan de travail"
+openVersionInWorkspace = "Ouvrir dans l’espace de travail"
+originFilter = "Filtrer par source"
+quickView = "Aperçu rapide"
+refresh = "Actualiser depuis le serveur"
+remove = "Supprimer"
+removeConfirm = "Supprimer {{count}} fichier(s) ? Cette action est irréversible."
+removeVersion = "Supprimer cette version"
+rename = "Renommer"
+renameFolder = "Renommer le dossier"
+resizeFolderTree = "Redimensionner l’arborescence des dossiers (touches fléchées, Maj pour des pas plus grands ; double-clic pour ajuster automatiquement)"
+save = "Enregistrer"
+saveToServer = "Enregistrer sur le serveur"
+saveToServerDisabledHint = "L’enregistrement sur le serveur n’est pas activé sur ce serveur. Demandez à votre administrateur de l’activer."
+search = "Rechercher"
+searchPlaceholder = "Rechercher dans ce dossier et les sous-dossiers"
+selectAll = "Tout sélectionner"
+selectAllHint = "Cliquez pour tout sélectionner. Astuce : maintenez Ctrl (ou Cmd) pour ajouter des fichiers un par un, Maj pour sélectionner une plage."
+selectedCount = "{{count}} sélectionné(s)"
+selectFile = "Sélectionner le fichier {{name}}"
+shareDisabledHint = "Le partage de fichiers n’est pas activé sur ce serveur. Demandez à votre administrateur de l’activer."
+shareManage = "Gérer le partage"
+showDetails = "Afficher les détails"
+summary = "{{count}} éléments"
+syncFailed = "Échec de la synchronisation du dossier : {{message}}"
+syncPartial = "Synchronisation partielle : {{failed}} sur {{total}} dossiers n’ont pas pu être fusionnés."
+tree = "Dossiers"
+upload = "Téléverser"
+uploadedToLocal = "Les fichiers téléversés commencent en Local. Utilisez « Enregistrer dans le cloud » pour les placer dans un dossier."
+uploadFromMobile = "Téléverser depuis un mobile"
+versionActions = "Actions sur la version"
+versionCollapse = "Réduire les versions intermédiaires"
+versionOrigin = "Téléversement d’origine"
+versionsCount = "{{count}} versions"
+versionShowHidden = "Afficher {{count}} versions antérieures"
+viewVersion = "Afficher cette version"
+
+[filesPage.appearance]
+colour = "Couleur"
+icon = "Icône"
+title = "Apparence"
+useColour = "Utiliser la couleur {{c}}"
+
+[filesPage.column]
+modified = "Modifié"
+name = "Nom"
+size = "Taille"
+type = "Type"
+
+[filesPage.empty]
+hint = "Déposez des PDF n’importe où sur cette page pour téléverser, ou utilisez le bouton Nouveau dossier pour organiser vos fichiers."
+newFolderCta = "Créer un dossier"
+title = "Ce dossier est vide"
+uploadCta = "Téléverser des fichiers"
+
+[filesPage.empty.cloud]
+hint = "Téléversez un fichier pour commencer, ou créez un dossier pour organiser."
+offlineHint = "Reconnectez-vous pour charger votre bibliothèque cloud."
+offlineTitle = "Aucun fichier cloud en cache"
+title = "Pas encore de fichiers cloud"
+
+[filesPage.empty.local]
+hint = "Les fichiers enregistrés sans téléversement restent ici. Déposez un fichier pour en ajouter un."
+title = "Aucun fichier local uniquement"
+
+[filesPage.empty.recent]
+hint = "Les fichiers que vous ouvrez ou modifiez apparaîtront ici."
+title = "Aucune modification pour l’instant"
+
+[filesPage.empty.shared]
+hint = "Quand quelqu’un partage un fichier via un lien, il apparaît ici."
+title = "Rien n’est partagé avec vous"
+
+[filesPage.empty.sharedByMe]
+hint = "Créez un lien de partage ou invitez un coéquipier depuis l’un de vos fichiers pour le voir ici."
+title = "Vous n’avez encore partagé aucun fichier"
+
+[filesPage.error]
+actionFailed = "Impossible de {{action}}."
+actionFailedDetail = "Impossible de {{action}} : {{message}}"
+deleteFolderFailed = "Impossible de supprimer le dossier."
+deleteFolderFailedDetail = "Impossible de supprimer le dossier : {{message}}"
+folderAppearanceFailed = "Impossible de mettre à jour l’apparence du dossier."
+folderAppearanceFailedDetail = "Impossible de mettre à jour l’apparence du dossier : {{message}}"
+moveFilesFailed = "Impossible de déplacer les fichiers."
+moveFilesFailedDetail = "Impossible de déplacer les fichiers : {{message}}"
+moveFolderFailed = "Impossible de déplacer le dossier."
+moveFolderFailedDetail = "Impossible de déplacer le dossier : {{message}}"
+removeFilesFailed = "Impossible de supprimer les fichiers."
+removeFilesFailedDetail = "Impossible de supprimer les fichiers : {{message}}"
+uploadFilesFailed = "Impossible de téléverser les fichiers."
+uploadFilesFailedDetail = "Impossible de téléverser les fichiers : {{message}}"
+
+[filesPage.field]
+added = "Ajouté"
+count = "Fichiers"
+folder = "Dossier"
+modified = "Modifié"
+name = "Nom"
+size = "Taille"
+toolHistory = "Historique des outils"
+toolHistoryAtVersion = "Chaîne d’outils cumulative"
+totalSize = "Taille totale"
+type = "Type"
+versionHistory = "Parcours de version"
+
+[filesPage.folderName]
+cancel = "Annuler"
+error = "Impossible d’enregistrer le dossier. Réessayez."
+label = "Nom du dossier"
+placeholder = "Nom du dossier"
+
+[filesPage.moveDialog]
+cancel = "Annuler"
+confirm = "Déplacer ici"
+error = "Impossible de déplacer. Réessayez."
+hint = "Choisissez un dossier de destination. Astuce : vous pouvez aussi glisser-déposer des fichiers sur les dossiers dans l’arborescence à gauche."
+newFolderCancel = "Annuler"
+newFolderCreate = "Créer"
+newFolderError = "Impossible de créer le dossier. Réessayez."
+newFolderLabel = "Nom du nouveau dossier"
+newFolderPlaceholder = "Nom du dossier"
+newFolderToggle = "Créer un nouveau dossier…"
+title = "Déplacer vers le dossier"
+
+[filesPage.origin]
+all = "Toutes les sources"
+cloud = "Cloud"
+cloudHint = "Stocké sur le serveur Stirling"
+local = "Local"
+localHint = "Stocké uniquement dans ce navigateur"
+shared = "Partagé"
+sharedHint = "Partagé avec vous via un lien"
+
+[filesPage.sort]
+modifiedAsc = "Plus ancien d’abord"
+modifiedDesc = "Plus récent d’abord"
+nameAsc = "Nom A→Z"
+nameDesc = "Nom Z→A"
+sizeAsc = "Plus petit d’abord"
+sizeDesc = "Plus grand d’abord"
+
+[filesPage.syncError]
+client = "Échec de la synchronisation du dossier."
+network = "Impossible d’atteindre le serveur."
+server = "Erreur serveur lors de la synchronisation du dossier."
+
+[filesPage.tabName]
+local = "Local"
+recent = "Récents"
+shared = "Partagés avec moi"
+sharedByMe = "Partagés par moi"
+
+[filesPage.tabs]
+all = "Tous"
+ariaLabel = "Vues de fichiers"
+cloud = "Cloud"
+local = "Local"
+recent = "Récents"
+shared = "Partagés avec moi"
+sharedByMe = "Partagés par moi"
+
+[filesPage.treeMenu]
+actions = "Actions sur le dossier {{name}}"
+collapse = "Réduire le dossier"
+delete = "Supprimer le dossier"
+expand = "Développer le dossier"
+newSubfolder = "Nouveau sous-dossier"
+rename = "Renommer"
+
+[filesPage.typeFilter]
+allTypes = "Tous les types"
+label = "Filtrer par type"
+
+[filesPage.viewMode]
+grid = "Vue en grille"
+label = "Mode d’affichage"
+list = "Vue en liste"
 
 [fileToPDF]
 credit = "Ce service utilise LibreOffice et Unoconv pour la conversion de fichiers."
@@ -3891,6 +4297,15 @@ title = "À propos de l’aplatissement des PDF"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Aplatir après remplissage"
+rescanFields = "Réanalyser les champs"
+rescanFormFields = "Réanalyser les champs du formulaire"
+save = "Enregistrer"
+
+[formFill.sidebar]
+close = "Fermer la barre latérale"
 
 [getPdfInfo]
 downloadJson = "Télécharger le JSON"
@@ -4451,6 +4866,11 @@ tags = "html,markup,contenu Web,transformation,convert"
 title = "HTML en PDF"
 zoom = "Niveau de zoom pour l'affichage du site web."
 
+[image.upload]
+hint = "Téléversez une image PNG, JPG, SVG ou autre à placer sur le PDF. Les fichiers SVG seront convertis en PNG pour la compatibilité."
+label = "Téléverser une image"
+placeholder = "Sélectionner un fichier image"
+
 [imageToPdf]
 tags = "pdf,conversion,img,jpg,image,photo"
 
@@ -4468,6 +4888,9 @@ title = "Image en PDF"
 3 = "Logique multi-fichiers (uniquement activée si vous travaillez avec plusieurs images)"
 4 = "Fusionner en un seul PDF"
 5 = "Convertir en PDF séparés"
+
+[infoBanner]
+dismiss = "Fermer"
 
 [invite]
 acceptError = "Échec de la création du compte"
@@ -4804,6 +5227,7 @@ failed = "Échec de l’opération d’OCR"
 
 [ocr.languagePicker]
 additionalLanguages = "Vous cherchez d’autres langues ?"
+loading = "Chargement des langues disponibles..."
 viewSetupGuide = "Voir le guide d’installation →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "{{days}} jour restant"
 title = "Votre période d'essai Pro de 30 jours"
 trialEnds = "La période d'essai fini le {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Code d’authentification"
+qrCodeLoading = "Génération de votre code QR…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Une fois le mode connexion activé, vous pourrez gérer les utilisateurs, configurer les paramètres et surveiller la santé du serveur. Les <strong>{{freeTierLimit}}</strong> premières personnes sur votre serveur utilisent Stirling gratuitement."
 adminBodyLoginEnabled = "En tant qu’admin, vous pouvez gérer les utilisateurs, configurer les paramètres et surveiller la santé du serveur. Les <strong>{{freeTierLimit}}</strong> premières personnes sur votre serveur utilisent Stirling gratuitement."
@@ -4949,6 +5377,9 @@ userTitle = "Aperçu du plan"
 
 [onboarding.securityCheck]
 message = "L’application a subi des changements importants récemment. L’attention de l’administrateur du serveur peut être requise. Veuillez confirmer votre rôle pour continuer."
+roleAdmin = "Administrateur"
+rolePlaceholder = "Confirmez votre rôle"
+roleUser = "Utilisateur"
 
 [onboarding.serverLicense]
 freeBody = "Notre licence <strong>Open-Core</strong> autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Pour évoluer sans interruption et accéder en avant-première à notre nouvel <strong>outil d’édition de texte PDF</strong>, nous recommandons le plan Stirling Server — édition complète et <strong>places illimitées</strong> pour 99 $/serveur/mois."
@@ -5074,6 +5505,17 @@ title = "Éditeur de pages"
 zoomIn = "Zoom avant"
 zoomOut = "Zoom arrière"
 
+[pageEditor.emptyState]
+body = "Ajoutez des fichiers pour commencer à modifier les pages"
+title = "Aucun fichier PDF chargé"
+
+[pageEditor.toolbar]
+delete = "Supprimer la sélection"
+redo = "Rétablir"
+rotateLeft = "Pivoter la sélection vers la gauche"
+rotateRight = "Pivoter la sélection vers la droite"
+undo = "Annuler"
+
 [pageExtracter]
 header = "Extraire des pages"
 placeholder = "(par exemple : 1,2,8 ou 4,7,12-16 ou 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Ajouter des bordures"
 borderWidth = "Épaisseur de la bordure"
 bottom = "Marge inférieure"
 cols = "Colonnes"
+colsPlaceholder = "Saisir le nombre de colonnes"
 header = "Fusionner des pages"
 innerMargin = "Marge intérieure"
 left = "Marge gauche"
 pagesPerSheet = "Pages par feuille"
 right = "Marge droite"
 rows = "Lignes"
+rowsPlaceholder = "Saisir le nombre de lignes"
 submit = "Fusionner"
 tags = "fusionner,merge,composite,single-view,organize"
 title = "Fusionner des pages"
@@ -5131,6 +5575,14 @@ failed = "Une erreur s’est produite lors de la création de la mise en page mu
 innerMarginTooLarge = "La marge intérieure est trop grande pour la mise en page sélectionnée."
 outerHorizontalMarginsTooLarge = "Les marges gauche/droite sont trop grandes pour ce format de page."
 outerVerticalMarginsTooLarge = "Les marges supérieure/inférieure sont trop grandes pour ce format de page."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Saisir l’épaisseur de bordure"
+bottomPlaceholder = "Saisir la marge inférieure"
+innerPlaceholder = "Saisir la marge intérieure"
+leftPlaceholder = "Saisir la marge gauche"
+rightPlaceholder = "Saisir la marge droite"
+topPlaceholder = "Saisir la marge supérieure"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Activez les bordures pour tracer des lignes autour de chaque page placée. Cela peut aider à la séparation visuelle ou à la découpe."
@@ -5785,6 +6237,26 @@ pdfTools = "Outils PDF de base"
 priority = "Support prioritaire"
 title = "Fonctionnalité"
 
+[plan.features]
+allPdfOperations = "Toutes les opérations PDF"
+auditing = "Audit"
+communitySupport = "Assistance communautaire"
+customPdfMetadata = "Métadonnées PDF personnalisées"
+editingTextInPdfs = "Modification de texte dans les PDF"
+externalDatabase = "Base de données externe"
+googleDriveIntegration = "Intégration Google Drive"
+prometheusSupport = "Prise en charge de Prometheus"
+regularUpdates = "Mises à jour régulières"
+saml = "SAML"
+secureLoginSupport = "Prise en charge de la connexion sécurisée"
+selfHostedDeployment = "Déploiement auto-hébergé"
+sso = "SSO"
+unlimitedUsers = "Utilisateurs illimités"
+upToFiveUsers = "Jusqu’à 5 utilisateurs"
+upToFiveUsersLowercase = "jusqu’à 5 utilisateurs"
+usageTracking = "Suivi d’utilisation"
+usersLimitedToSeats = "Utilisateurs limités au nombre de sièges"
+
 [plan.free]
 forever = "Gratuit pour toujours"
 highlight1 = "Utilisation des outils limitée par semaine"
@@ -5792,6 +6264,22 @@ highlight2 = "Accès à tous les outils"
 highlight3 = "Support communautaire"
 included = "Inclus"
 name = "Gratuit"
+
+[plan.highlights]
+advancedIntegrations = "Intégrations avancées"
+allBasicFeatures = "Toutes les fonctionnalités de base"
+cancelAnytime = "Résiliable à tout moment"
+customPdfMetadata = "Métadonnées PDF personnalisées"
+editingTextInPdfsCaps = "Modification de texte dans les PDF"
+enterpriseFeatures = "Fonctionnalités Entreprise (SAML, Audit)"
+perSeatLicensing = "Licence par siège"
+saveWithAnnualBilling = "Économisez avec la facturation annuelle"
+selfHosted = "Auto-hébergé"
+selfHostedOnInfrastructure = "Auto-hébergé sur votre infrastructure"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Utilisateurs illimités"
+upToFiveUsers = "Jusqu’à 5 utilisateurs"
+usageTrackingPrometheus = "Suivi d’utilisation et Prometheus"
 
 [plan.licenseWarning]
 body = "Vous avez {{total}} utilisateurs, mais le niveau gratuit ne prend en charge que {{limit}} par serveur. Mettez à niveau pour que Stirling PDF continue de fonctionner correctement."
@@ -6103,6 +6591,7 @@ allSessions = "Toutes les sessions"
 allTools = "Outils"
 automate = "Auto"
 back = "Retour"
+backToAllTools = "Retour à tous les outils"
 certSign = "Signature avec certificat"
 completedSessions = "Sessions terminées"
 completedTab = "Terminées"
@@ -6772,6 +7261,9 @@ bullet3 = "Critique pour les flux d’approbation et les chaînes de conservatio
 description = "L’ordre que vous spécifiez lors de la création de la session détermine qui signe en premier."
 title = "Ordre des signatures"
 
+[settings]
+close = "Fermer"
+
 [settings.configuration]
 advanced = "Avancé"
 database = "Base de données"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Rechercher des mises à jour et voir les informations de version"
 latestVersion = "Dernière version"
+managedByAdmin = "Géré par l’administrateur"
+modeAuto = "Installer automatiquement les mises à jour"
+modeDisabled = "Ne pas rechercher des mises à jour"
+modePrompt = "Me demander avant d’installer les mises à jour"
 serverNeedsUpdate = "Le serveur doit être mis à jour par l’administrateur"
 title = "Mises à jour logicielles"
+updateBehavior = "Comportement de mise à jour"
+updateBehaviorDescription = "Choisissez de demander avant d’installer les mises à jour, de les installer automatiquement ou d’ignorer complètement la vérification des mises à jour."
+updateBehaviorError = "Impossible de modifier le comportement de mise à jour"
+updateBehaviorErrorLocked = "Ce paramètre est verrouillé par votre administrateur."
+updateBehaviorLockedDescription = "Votre administrateur a configuré la manière dont Stirling-PDF gère les mises à jour sur cette machine. Contactez-le pour modifier cela."
+updateBehaviorSaved = "Comportement de mise à jour enregistré."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Voir les détails"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Tous les utilisateurs peuvent voir et utiliser ces signatur
 sharedHeading = "Signatures partagées"
 tempStorageDescription = "Les signatures sont stockées uniquement dans votre navigateur. Elles seront perdues si vous effacez les données du navigateur ou si vous changez de navigateur."
 tempStorageTitle = "Stockage temporaire du navigateur"
+use = "Utiliser la signature"
 
 [sign.saved.status]
 saved = "Enregistré"
@@ -7695,6 +8198,7 @@ bulkTitle = "Téléverser les fichiers sélectionnés"
 description = "Cela téléverse le fichier actuel vers le stockage du serveur pour votre accès personnel."
 errorTitle = "Échec du téléversement"
 failure = "Échec du téléversement. Veuillez vérifier votre connexion et vos paramètres de stockage."
+featureDisabled = "L’enregistrement sur le serveur n’est pas activé sur ce serveur."
 fileCount = "{{count}} fichiers sélectionnés"
 fileLabel = "Fichier"
 hint = "Les liens publics et les modes d’accès sont contrôlés par les paramètres de votre serveur."
@@ -7823,8 +8327,17 @@ center = "Centre"
 left = "Gauche"
 right = "Droite"
 
+[textInput]
+clear = "Effacer la saisie"
+
 [theme]
 toggle = "Changer de thème"
+
+[time.relative]
+daysAgo = "il y a {{count}} j"
+hoursAgo = "il y a {{count}} h"
+justNow = "à l’instant"
+minutesAgo = "il y a {{count}} min"
 
 [timestampPdf]
 completed = "PDF horodaté avec succès"
@@ -7852,6 +8365,10 @@ label = "Sélectionner un serveur TSA"
 [timestampPdf.steps]
 settings = "Paramètres"
 
+[toast]
+dismiss = "Fermer"
+toggleDetails = "Afficher/Masquer les détails"
+
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."
 endpointUnavailableClickable = "Not available in this mode. Click to sign in."
@@ -7868,13 +8385,18 @@ viewerMode = "Passez à l'éditeur de fichiers pour sélectionner plusieurs fich
 [toolPanel]
 allTools = "Tous les outils"
 alpha = "Alpha"
+backToAllTools = "Retour à tous les outils"
+backToDefault = "Retour"
 backToTools = "Retour aux outils"
 collapse = "Réduire le panneau"
 comingSoon = "Bientôt disponible :"
 expand = "Développer le panneau"
+goBack = "Revenir en arrière"
 placeholder = "Choisissez un outil pour commencer"
 premiumFeature = "Fonctionnalité Premium :"
 search = "Rechercher des outils"
+toolsHeader = "Outils"
+viewAllTools = "Voir tous les outils"
 
 [toolPanel.fullscreen]
 comingSoon = "Bientôt disponible :"
@@ -7933,6 +8455,9 @@ verification = "Vérification"
 noSearchResults = "Aucun outil trouvé"
 noTools = "Aucun outil disponible"
 
+[tooltip]
+close = "Fermer l’infobulle"
+
 [unlockPDFForms]
 description = "Cet outil supprimera les restrictions en lecture seule des champs de formulaires PDF, les rendant modifiables et remplissables."
 filenamePrefix = "formulaires_déverrouillés"
@@ -7951,29 +8476,42 @@ placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commence
 title = "Résultats des formulaires déverrouillés"
 
 [update]
+allReleases = "Toutes les versions"
 availableUpdates = "Mises à jour disponibles"
+breaking = "Incompatible"
 breakingChanges = "Modifications majeures"
 breakingChangesDefault = "Cette version contient des modifications majeures."
 breakingChangesDetected = "Modifications majeures détectées"
 breakingChangesMessage = "Certaines versions contiennent des modifications majeures. Veuillez consulter les guides de migration ci-dessous avant de mettre à jour."
 close = "Fermer"
+closeModal = "Fermer la fenêtre de mise à jour"
 current = "Version actuelle"
+defaultRecommendation = "Cette mise à jour contient des correctifs et des améliorations importants."
 downloadLatest = "Télécharger la dernière version"
+later = "Plus tard"
 latest = "Dernière version"
 latestStable = "Dernière version stable"
 loadingDetailedInfo = "Chargement des informations détaillées…"
 migrationGuide = "Guide de migration"
 migrationGuides = "Guides de migration"
+migrationGuidesDesc = "Passez en revue les changements importants avant la mise à jour."
+modalSubtitle = "Une nouvelle version de Stirling PDF est prête à être installée."
 modalTitle = "Mise à jour disponible"
+notes = "Notes"
 priorityLabel = "Priorité"
 recommendedAction = "Action recommandée"
 releaseNotes = "Notes de version"
+showLess = "Afficher moins de versions"
+showMore = "Afficher toutes les {{count}} versions"
+stable = "STABLE"
 unableToLoadDetails = "Impossible de charger les informations détaillées."
 updateAvailable = "Mise à jour disponible"
 urgentUpdateAvailable = "Mise à jour urgente"
 version = "Version"
+versionHistory = "Historique des versions"
 viewAllReleases = "Voir toutes les versions"
 viewGuide = "Voir le guide"
+whatsNewIn = "Nouveautés de"
 
 [update.priority]
 low = "Faible"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Activer le filtre sombre"
 enableSepiaFilter = "Activer le filtre sépia"
 firstPage = "Première page"
 lastPage = "Dernière page"
+moreOptions = "Plus"
 nextPage = "Page suivante"
 onlyPdfSupported = "Le visualiseur prend uniquement en charge les fichiers PDF. Ce fichier semble être d’un autre format."
+pageNavigation = "Navigation dans les pages"
 previousPage = "Page précédente"
 resetZoom = "Réinitialiser le zoom"
 singlePageView = "Vue page unique"
 unknownFile = "Fichier inconnu"
+view = "Affichage"
+zoom = "Zoom"
 zoomIn = "Zoom avant"
 zoomOut = "Zoom arrière"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Insérer du text"
 typeReplaceText = "Remplacer le commentaire"
 viewComment = "Voir le commentaire"
 
+[viewer.error]
+noFileProvided = "Erreur : Aucun fichier fourni à la visionneuse"
+
 [viewer.formBar]
 apply = "Appliquer les modifications"
 dismiss = "Fermer"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Ce PDF contient des champs remplissables"
 title = "Champs de formulaire"
 unsavedBadge = "Non enregistré"
 unsavedDesc = "Vous avez des modifications non enregistrées"
+
+[viewer.link]
+delete = "Supprimer le lien"
 
 [viewer.nonPdf]
 columnDefault = "Colonne {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Chargement…"
 renderMarkdown = "Afficher le markdown"
 sortedBy = "Trié par : {{column}}"
 textStats = "{{lines}} lignes · {{size}}"
+
+[viewer.redaction]
+removeMark = "Supprimer cette marque"
+
+[viewer.search]
+clear = "Effacer la recherche"
+close = "Fermer la recherche"
+next = "Résultat suivant"
+previous = "Résultat précédent"
+resultsOf = "sur {{total}}"
+
+[viewer.signature]
+delete = "Supprimer la signature"
 
 [viewPdf]
 header = "Visualiser un PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Basculer les calques"
 toggleSidebar = "Basculer la barre latérale"
 toggleTheme = "Basculer le thème"
 viewer = "Visionneuse"
+
+[workflow.participant]
+accessExpired = "Votre accès à ce document a expiré."
+certificateFile = "Fichier de certificat"
+certificateFilePlaceholder = "Sélectionner un fichier de certificat"
+certificatePassword = "Mot de passe du certificat"
+certificateType = "Type de certificat"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "Certificat P12/PKCS12"
+certTypeServer = "Certificat serveur (si disponible)"
+completedDeclined = "Vous avez refusé ce document."
+completedSigned = "Vous avez signé ce document."
+decline = "Refuser"
+downloadDocument = "Télécharger le document"
+dueDate = "Date d’échéance : {{date}}"
+errorTitle = "Erreur"
+from = "De : {{name}}"
+loadingSession = "Chargement de la session..."
+location = "Emplacement"
+locationPlaceholder = "p. ex., San Francisco, CA"
+pageNumber = "Numéro de page (facultatif)"
+reason = "Motif"
+reasonPlaceholder = "p. ex. : Approbation du document"
+sessionNotFound = "Session introuvable ou accès refusé."
+signDocument = "Signer le document"
+statusDeclined = "Refusé"
+statusNotified = "Notifié"
+statusPending = "En attente"
+statusSigned = "Signé"
+statusViewed = "Vu"
+submitSignature = "Envoyer la signature"
 
 [workspace]
 title = "Espace de travail"

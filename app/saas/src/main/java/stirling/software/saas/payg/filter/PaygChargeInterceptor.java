@@ -20,6 +20,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
+import org.springframework.web.servlet.HandlerMapping;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -82,6 +83,17 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
 
     private static final String AUTOMATION_HEADER = "X-Stirling-Automation";
 
+    /**
+     * Optional header the Tauri desktop shell sets so saas-side traffic from the embedded client
+     * can be classified as {@link JobSource#DESKTOP_APP} instead of {@code WEB}. No anti-spoof —
+     * V12 step limits for DESKTOP_APP and WEB are identical, so the worst-case abuse value is zero
+     * today. Tighten if/when their limits diverge.
+     */
+    private static final String DESKTOP_CLIENT_HEADER = "X-Stirling-Client";
+
+    /** Matches {@code processing_job_step.tool_id} column width (VARCHAR(128)). */
+    private static final int TOOL_ID_MAX_LENGTH = 128;
+
     private final JobChargeService chargeService;
     private final JobService jobService;
     private final UserRepository userRepository;
@@ -94,7 +106,12 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     private final Counter callsJoined;
     private final Counter callsShortCircuit;
     private final Counter refundsCounter;
-    private final Timer durationTimer;
+
+    /** preHandle wall-clock per request. Separate from afterCompletion — different populations. */
+    private final Timer preHandleTimer;
+
+    /** afterCompletion wall-clock per request. Includes response hashing + step append + refund. */
+    private final Timer afterCompletionTimer;
 
     public PaygChargeInterceptor(
             JobChargeService chargeService,
@@ -131,9 +148,15 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 Counter.builder("payg.filter.refunds")
                         .description("First-step 5xx refunds applied to shadow rows")
                         .register(meterRegistry);
-        this.durationTimer =
+        this.preHandleTimer =
                 Timer.builder("payg.filter.duration")
-                        .description("preHandle + afterCompletion wall-clock per request")
+                        .tag("phase", "preHandle")
+                        .description("preHandle wall-clock per request")
+                        .register(meterRegistry);
+        this.afterCompletionTimer =
+                Timer.builder("payg.filter.duration")
+                        .tag("phase", "afterCompletion")
+                        .description("afterCompletion wall-clock per request")
                         .register(meterRegistry);
     }
 
@@ -160,7 +183,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             }
             return true;
         } finally {
-            sample.stop(durationTimer);
+            sample.stop(preHandleTimer);
         }
     }
 
@@ -218,7 +241,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         // async-dispatch), and (b) hard-fails any future caller that tries to mutate it.
         request.setAttribute(ATTR_INPUT_TEMP_FILES, Collections.unmodifiableList(tempFiles));
         request.setAttribute(ATTR_INPUT_BYTES, totalInputBytes);
-        request.setAttribute(ATTR_TOOL_ID, request.getRequestURI());
+        request.setAttribute(ATTR_TOOL_ID, resolveToolId(request));
 
         ChargeContext ctx =
                 new ChargeContext(
@@ -274,7 +297,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 closeWrapper(request);
             }
         } finally {
-            sample.stop(durationTimer);
+            sample.stop(afterCompletionTimer);
         }
     }
 
@@ -412,9 +435,42 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
             return JobSource.PIPELINE;
         }
+        String desktopHeader = request.getHeader(DESKTOP_CLIENT_HEADER);
+        if (desktopHeader != null && "desktop".equalsIgnoreCase(desktopHeader.trim())) {
+            return JobSource.DESKTOP_APP;
+        }
         if (auth instanceof ApiKeyAuthenticationToken) {
             return JobSource.API;
         }
         return JobSource.WEB;
+    }
+
+    /**
+     * Resolves the {@code tool_id} value stored on {@code processing_job_step}. Prefers the route
+     * pattern (e.g. {@code /api/v1/security/add-password}) over the raw URI so audit rollups
+     * aggregate by endpoint rather than by request — path variables, query strings, and matrix
+     * params don't pollute the column. Falls back to the raw URI when the pattern isn't available
+     * (non-Spring-MVC dispatches, async re-dispatch edges).
+     *
+     * <p>Truncates to {@link #TOOL_ID_MAX_LENGTH} to match the column's {@code VARCHAR(128)} width.
+     * Logs at WARN + increments {@link #errorsCounter} when truncation actually happens so support
+     * notices the {@code tool_id} they expected isn't what we stored.
+     */
+    private String resolveToolId(HttpServletRequest request) {
+        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        String value = pattern instanceof String s ? s : request.getRequestURI();
+        if (value == null) {
+            return "unknown";
+        }
+        if (value.length() <= TOOL_ID_MAX_LENGTH) {
+            return value;
+        }
+        log.warn(
+                "tool_id length {} exceeds column max {}; truncating. value='{}'",
+                value.length(),
+                TOOL_ID_MAX_LENGTH,
+                value);
+        errorsCounter.increment();
+        return value.substring(0, TOOL_ID_MAX_LENGTH);
     }
 }
