@@ -84,6 +84,7 @@ def test_app_settings_accepts_model_configuration() -> None:
         fast_model_name="claude-haiku-4-5-20251001",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
+        model_max_concurrency=32,
         rag_backend=RagBackend.SQLITE,
         rag_embedding_model="voyageai:voyage-4",
         rag_store_path=Path(":memory:"),

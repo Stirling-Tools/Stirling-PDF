@@ -23,6 +23,7 @@ def build_app_settings() -> AppSettings:
         fast_model_name="test",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
+        model_max_concurrency=32,
         rag_backend=RagBackend.SQLITE,
         rag_embedding_model="voyageai:voyage-4",
         rag_store_path=Path(":memory:"),

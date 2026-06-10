@@ -27,6 +27,11 @@ class AppSettings(BaseSettings):
     fast_model_name: str = Field(validation_alias="STIRLING_FAST_MODEL")
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
+    # Process-wide ceiling on concurrent model API calls, shared by both model
+    # tiers. Per-request fan-outs (chunked reasoner, contradiction detection)
+    # carry their own per-request caps, but those multiply under concurrent
+    # traffic; this is the global backstop.
+    model_max_concurrency: int = Field(validation_alias="STIRLING_MODEL_MAX_CONCURRENCY")
 
     # RAG settings — always on; the backend picks between embedded sqlite-vec and external pgvector.
     rag_backend: RagBackend = Field(validation_alias="STIRLING_RAG_BACKEND")

@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import asyncio
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import assert_never
+from typing import Any, assert_never
 
 import httpx
-from pydantic_ai.models import Model, infer_model
+from pydantic_ai import RunContext
+from pydantic_ai.messages import ModelMessage, ModelResponse
+from pydantic_ai.models import Model, ModelRequestParameters, StreamedResponse, infer_model
 from pydantic_ai.models.anthropic import AnthropicModel
+from pydantic_ai.models.wrapper import WrapperModel
 from pydantic_ai.providers.anthropic import AnthropicProvider
 from pydantic_ai.settings import ModelSettings
 
@@ -38,6 +44,37 @@ def _build_anthropic_http_client() -> httpx.AsyncClient:
     on 2026-05-06 for the concrete failure mode this addresses.
     """
     return httpx.AsyncClient(limits=httpx.Limits(max_keepalive_connections=0))
+
+
+class ConcurrencyLimitedModel(WrapperModel):
+    """Caps in-flight model API calls with a semaphore shared across the process."""
+
+    def __init__(self, wrapped: Model, semaphore: asyncio.Semaphore) -> None:
+        super().__init__(wrapped)
+        self._semaphore = semaphore
+
+    async def request(
+        self,
+        messages: list[ModelMessage],
+        model_settings: ModelSettings | None,
+        model_request_parameters: ModelRequestParameters,
+    ) -> ModelResponse:
+        async with self._semaphore:
+            return await super().request(messages, model_settings, model_request_parameters)
+
+    @asynccontextmanager
+    async def request_stream(
+        self,
+        messages: list[ModelMessage],
+        model_settings: ModelSettings | None,
+        model_request_parameters: ModelRequestParameters,
+        run_context: RunContext[Any] | None = None,
+    ) -> AsyncIterator[StreamedResponse]:
+        async with self._semaphore:
+            async with super().request_stream(
+                messages, model_settings, model_request_parameters, run_context
+            ) as response_stream:
+                yield response_stream
 
 
 @dataclass(frozen=True)
@@ -109,10 +146,13 @@ def build_runtime(settings: AppSettings) -> AppRuntime:
     validate_structured_output_support(fast_model, settings.fast_model_name)
     validate_structured_output_support(smart_model, settings.smart_model_name)
 
+    # One semaphore across both tiers: the cap protects the provider account
+    # and process resources, which the tiers share.
+    model_semaphore = asyncio.Semaphore(settings.model_max_concurrency)
     return AppRuntime(
         settings=settings,
-        fast_model=fast_model,
-        smart_model=smart_model,
+        fast_model=ConcurrencyLimitedModel(fast_model, model_semaphore),
+        smart_model=ConcurrencyLimitedModel(smart_model, model_semaphore),
         documents=_build_documents(settings),
     )
 
