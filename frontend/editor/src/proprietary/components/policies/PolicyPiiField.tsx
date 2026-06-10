@@ -1,40 +1,5 @@
 import { MultiSelect } from "@mantine/core";
-
-/**
- * Friendly PII presets for the redact step. Each maps to the regex the
- * /auto-redact endpoint matches (via `wordsToRedact` + `useRegex`), so users
- * pick "Social Security numbers" instead of typing `\b\d{3}-\d{2}-\d{4}\b`.
- * The SSN/card/account patterns match DEFAULT_PII_PATTERNS so seeded policies
- * show those presets pre-selected.
- */
-export const PII_PRESETS: { value: string; label: string; pattern: string }[] =
-  [
-    {
-      value: "ssn",
-      label: "Social Security numbers",
-      pattern: "\\b\\d{3}-\\d{2}-\\d{4}\\b",
-    },
-    {
-      value: "card",
-      label: "Credit / debit cards",
-      pattern: "\\b(?:\\d[ -]*?){13,16}\\b",
-    },
-    {
-      value: "account",
-      label: "Bank account numbers",
-      pattern: "\\b\\d{8,17}\\b",
-    },
-    {
-      value: "email",
-      label: "Email addresses",
-      pattern: "[\\w.+-]+@[\\w-]+\\.[\\w.-]+",
-    },
-    {
-      value: "phone",
-      label: "Phone numbers",
-      pattern: "\\b\\(?\\d{3}\\)?[-. ]?\\d{3}[-. ]?\\d{4}\\b",
-    },
-  ];
+import { PII_PRESETS } from "@app/data/policyDefinitions";
 
 /** The set of preset regexes — used to separate preset words from custom ones. */
 export const PRESET_PATTERNS = new Set(PII_PRESETS.map((p) => p.pattern));

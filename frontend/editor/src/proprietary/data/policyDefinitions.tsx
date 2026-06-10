@@ -66,15 +66,75 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
 ];
 
 /**
- * Default PII regexes a fresh Security policy redacts out of the box — the
- * high-risk set (SSN, payment-card, bank-account numbers) pre-selected per the
- * design. They seed the redact step's `wordsToRedact` (with `useRegex`); users
- * edit them in the Redact tool's settings.
+ * PII presets for the redact step: a label + the regex the /auto-redact endpoint
+ * matches (via `wordsToRedact` + `useRegex`). Patterns are precise — validated
+ * (SSN areas, card IINs, ABA prefixes), context- or separator-anchored — to keep
+ * false positives down and avoid the backtracking the old broad patterns risked.
+ */
+export const PII_PRESETS: { value: string; label: string; pattern: string }[] =
+  [
+    {
+      value: "ssn",
+      label: "Social Security numbers",
+      // 123-45-6789 or 123 45 6789; rejects invalid areas (000/666/9xx),
+      // group 00, serial 0000, and mixed separators (backreference).
+      pattern:
+        "\\b(?!000|666|9\\d{2})\\d{3}([- ])(?!00)\\d{2}\\1(?!0000)\\d{4}\\b",
+    },
+    {
+      value: "card",
+      label: "Credit / debit cards",
+      // Solid runs anchored to real IINs (Visa 13/16, MC 51–55 + 2221–2720,
+      // Amex 34/37, Discover 6011/65xx) + grouped 4-4-4-4 and Amex 4-6-5
+      // with a consistent separator enforced by backreference.
+      pattern:
+        "\\b(?:4\\d{12}(?:\\d{3})?|5[1-5]\\d{14}|(?:222[1-9]|22[3-9]\\d|2[3-6]\\d{2}|27[01]\\d|2720)\\d{12}|3[47]\\d{13}|6(?:011|5\\d{2})\\d{12}|[2-6]\\d{3}([ -])\\d{4}\\1\\d{4}\\1\\d{4}|3[47]\\d{2}([ -])\\d{6}\\2\\d{5})\\b",
+    },
+    {
+      value: "iban",
+      label: "IBANs",
+      // Solid (GB29NWBK…) or space-grouped (GB29 NWBK 6016 …) form.
+      pattern:
+        "\\b[A-Z]{2}\\d{2}(?:[A-Z0-9]{11,30}|(?: [A-Z0-9]{4}){2,7}(?: [A-Z0-9]{1,4})?)\\b",
+    },
+    {
+      value: "routing",
+      label: "US routing numbers (ABA)",
+      // 9 digits constrained to valid Federal Reserve prefix ranges.
+      pattern: "\\b(?:0[1-9]|1[0-2]|2[1-9]|3[0-2]|6[1-9]|7[0-2]|80)\\d{7}\\b",
+    },
+    {
+      value: "account",
+      label: "Account numbers (labelled)",
+      // Context-anchored: only digits preceded by Account / Acct / A/C.
+      pattern:
+        "\\b(?:[Aa]cc(?:oun)?t|[Aa]/[Cc])(?:\\s+(?:[Nn]o\\.?|[Nn]umber|#))?\\s*[:#]?\\s*\\d{6,17}\\b",
+    },
+    {
+      value: "email",
+      label: "Email addresses",
+      // Requires a real TLD (≥2 letters); won't swallow a sentence-ending period.
+      pattern:
+        "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}\\b",
+    },
+    {
+      value: "phone",
+      label: "Phone numbers",
+      // (555) 123-4567 · 555-123-4567 (consistent separator) · +E.164 solid or
+      // grouped · UK 0-prefixed grouped formats. Bare 10-digit runs excluded.
+      pattern:
+        "\\(\\d{3}\\)[ .-]?\\d{3}[ .-]?\\d{4}\\b|\\b\\d{3}([ .-])\\d{3}\\1\\d{4}\\b|\\+\\d{1,3}[ .-]?\\d{6,12}\\b|\\+\\d{1,3}(?:[ .-]\\d{2,4}){2,5}\\b|\\b0\\d{2,4}[ -]\\d{3,4}[ -]?\\d{3,4}\\b",
+    },
+  ];
+
+/**
+ * Defaults seeded into a fresh Security policy's redact step — only the two
+ * strictest, precise patterns (SSN + cards). Users add the rest (IBAN, routing,
+ * account, email, phone) from the PII dropdown.
  */
 export const DEFAULT_PII_PATTERNS: string[] = [
-  "\\b\\d{3}-\\d{2}-\\d{4}\\b", // US Social Security number
-  "\\b(?:\\d[ -]*?){13,16}\\b", // payment-card numbers (13–16 digits)
-  "\\b\\d{8,17}\\b", // bank account numbers (8–17 digits)
+  PII_PRESETS[0].pattern, // SSN
+  PII_PRESETS[1].pattern, // cards
 ];
 
 /** Per-category narrative + editable fields (from the prototype's POLICY_CONFIG). */
