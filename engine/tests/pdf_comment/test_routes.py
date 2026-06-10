@@ -51,6 +51,7 @@ class StubSettingsProvider:
             chunked_reasoner_notes_char_budget=250_000,
             max_pages=100,
             max_characters=100_000,
+            require_user_id=False,
             posthog_enabled=False,
             posthog_api_key="",
             posthog_host="https://eu.i.posthog.com",

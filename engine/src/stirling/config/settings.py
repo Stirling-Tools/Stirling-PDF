@@ -90,6 +90,12 @@ class AppSettings(BaseSettings):
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
 
+    # When true, API routes reject requests that lack an X-User-Id header at
+    # the boundary. Self-hosted deployments with security disabled have no
+    # user identity and leave this off; multi-tenant deployments turn it on so
+    # user-scoped work is never processed without a tenant attached.
+    require_user_id: bool = Field(validation_alias="STIRLING_REQUIRE_USER_ID")
+
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
     # When true, raises httpx + httpcore logger levels so every outgoing

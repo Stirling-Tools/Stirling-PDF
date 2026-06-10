@@ -100,6 +100,7 @@ def test_app_settings_accepts_model_configuration() -> None:
         chunked_reasoner_notes_char_budget=250_000,
         max_pages=200,
         max_characters=200_000,
+        require_user_id=False,
         posthog_enabled=False,
         posthog_api_key="",
         posthog_host="https://eu.i.posthog.com",

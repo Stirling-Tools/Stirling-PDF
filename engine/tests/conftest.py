@@ -43,6 +43,7 @@ def build_app_settings() -> AppSettings:
         contradiction_canonicaliser_batch_size=500,
         max_pages=200,
         max_characters=200_000,
+        require_user_id=False,
         posthog_enabled=False,
         posthog_api_key="",
         posthog_host="https://eu.i.posthog.com",
