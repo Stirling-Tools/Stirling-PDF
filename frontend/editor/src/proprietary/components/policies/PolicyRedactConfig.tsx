@@ -8,6 +8,10 @@ import {
 } from "@mantine/core";
 import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import {
+  PolicyPiiField,
+  PRESET_PATTERNS,
+} from "@app/components/policies/PolicyPiiField";
 
 interface PolicyRedactConfigProps {
   parameters: Record<string, unknown>;
@@ -16,11 +20,13 @@ interface PolicyRedactConfigProps {
 }
 
 /**
- * Redact configuration for a policy. The user manages their own list of words /
- * regexes to redact (seeded with the default PII patterns, all editable). Regex
- * matching is always on — a plain word is just a literal regex — so the
- * Use-Regex toggle is intentionally omitted. Mode stays automatic since policies
- * run headless and manual redaction needs the canvas.
+ * Redact configuration for a policy: a PII preset dropdown plus a separate field
+ * for the user's own words / regexes, then the advanced redact options. The two
+ * lists are kept disjoint — the dropdown owns the preset patterns, the custom
+ * field owns everything else — so selecting presets and typing custom patterns
+ * don't clobber each other. Regex matching is always on (a plain word is a
+ * literal regex), so the Use-Regex toggle is omitted. Mode stays automatic since
+ * policies run headless and manual redaction needs the canvas.
  */
 export function PolicyRedactConfig({
   parameters,
@@ -30,6 +36,11 @@ export function PolicyRedactConfig({
   const words = Array.isArray(parameters.wordsToRedact)
     ? (parameters.wordsToRedact as string[])
     : [];
+  // Split the stored list: presets are driven by the dropdown, the rest by the
+  // custom field below. Each editor only ever rewrites its own half.
+  const presetWords = words.filter((w) => PRESET_PATTERNS.has(w));
+  const customWords = words.filter((w) => !PRESET_PATTERNS.has(w));
+
   const redactColor =
     typeof parameters.redactColor === "string"
       ? parameters.redactColor
@@ -55,9 +66,19 @@ export function PolicyRedactConfig({
 
   return (
     <Stack gap="md">
+      <PolicyPiiField
+        parameters={parameters}
+        onChange={onChange}
+        disabled={disabled}
+      />
+
+      <Divider />
+
       <WordsToRedactInput
-        wordsToRedact={words}
-        onWordsChange={(next) => patch({ wordsToRedact: next })}
+        wordsToRedact={customWords}
+        onWordsChange={(next) =>
+          patch({ wordsToRedact: [...presetWords, ...next] })
+        }
         disabled={disabled}
       />
 

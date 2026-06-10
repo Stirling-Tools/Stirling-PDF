@@ -64,8 +64,8 @@ export function PolicyToolConfig({
             </div>
             {tool.enabled &&
               (tool.operation === "redact" ? (
-                // Redact has a bespoke config: the editable word/regex list +
-                // advanced options, with mode + regex locked on for policies.
+                // Redact has a bespoke config: PII preset dropdown + a custom
+                // word/regex field + advanced options, mode + regex locked on.
                 <div className="pol-tool-body">
                   <PolicyRedactConfig
                     parameters={tool.parameters}
