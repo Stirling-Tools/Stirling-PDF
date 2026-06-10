@@ -27,6 +27,9 @@ import stirling.software.saas.payg.meter.PaygMeterReportingService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
+import stirling.software.saas.payg.model.LedgerBucket;
+import stirling.software.saas.payg.model.LedgerEntryType;
+import stirling.software.saas.payg.model.ReferenceType;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.policy.PricingPolicy;
@@ -34,7 +37,9 @@ import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.ProcessingJobRepository;
+import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
+import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
 /**
  * Orchestrates a tool call's open-process decision: look up the team's effective policy, resolve
@@ -63,6 +68,7 @@ public class JobChargeService {
     private final ProcessingJobRepository jobRepository;
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
     private final PaygMeterReportingService meterReportingService;
+    private final WalletLedgerRepository ledgerRepository;
 
     public JobChargeService(
             JobService jobService,
@@ -71,7 +77,8 @@ public class JobChargeService {
             PaygShadowChargeRepository shadowRepository,
             ProcessingJobRepository jobRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
-            PaygMeterReportingService meterReportingService) {
+            PaygMeterReportingService meterReportingService,
+            WalletLedgerRepository ledgerRepository) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -81,6 +88,7 @@ public class JobChargeService {
                 Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
         this.meterReportingService =
                 Objects.requireNonNull(meterReportingService, "meterReportingService");
+        this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
     }
 
     /**
@@ -119,8 +127,37 @@ public class JobChargeService {
         result.job().setDocUnits(units);
 
         recordShadowRow(ctx, result.job().getId(), policy.getId(), units);
+        recordLedgerDebit(ctx, result.job().getId(), policy.getId(), units);
 
         return new ChargeOutcome(result.job().getId(), units, ChargeOutcome.Disposition.OPENED);
+    }
+
+    /**
+     * The live spend record. Everything the customer-facing side reads — the wallet endpoint's
+     * {@code spendUnitsThisPeriod}, the per-category breakdown ({@code wallet_category_summary}
+     * view), and the cap evaluator's period sum — derives from {@code wallet_ledger} DEBITs. Shadow
+     * rows are the comparison audit trail; this row is what actually counts.
+     *
+     * <p>Sign convention: debits are stored NEGATIVE (the entitlement snapshot negates the sum).
+     * Skipped for {@code BYPASSED} / uncategorised calls — manual UI work is never billed.
+     */
+    private void recordLedgerDebit(
+            ChargeContext ctx, java.util.UUID jobId, Long policyId, int units) {
+        BillingCategory category = ctx.billingCategory();
+        if (category == null || category == BillingCategory.BYPASSED) {
+            return;
+        }
+        WalletLedgerEntry entry = new WalletLedgerEntry();
+        entry.setTeamId(ctx.ownerTeamId());
+        entry.setActorUserId(ctx.ownerUserId());
+        entry.setEntryType(LedgerEntryType.DEBIT);
+        entry.setBucket(LedgerBucket.CYCLE);
+        entry.setAmountUnits(-units);
+        entry.setReferenceType(ReferenceType.JOB);
+        entry.setReferenceId(jobId.toString());
+        entry.setPolicyId(policyId);
+        entry.setBillingCategory(category);
+        ledgerRepository.save(entry);
     }
 
     private int resolveStepLimit(PricingPolicy policy, JobSource source) {
@@ -200,6 +237,23 @@ public class JobChargeService {
                 row.setRefundedAt(now);
                 row.setRefundReason(trimReason(refundReason));
                 shadowRepository.save(row);
+                // Compensate the live ledger DEBIT written at openProcess so the period spend
+                // nets to zero for the failed work. Positive amount mirrors the negative debit;
+                // same JOB reference ties the pair together. The idempotency guard above (only
+                // on the CHARGED→REFUNDED transition) prevents double-credits on re-invocation.
+                BillingCategory category = row.getBillingCategory();
+                if (category != null && category != BillingCategory.BYPASSED) {
+                    WalletLedgerEntry refund = new WalletLedgerEntry();
+                    refund.setTeamId(row.getTeamId());
+                    refund.setEntryType(LedgerEntryType.REFUND);
+                    refund.setBucket(LedgerBucket.CYCLE);
+                    refund.setAmountUnits(row.getPaygUnits());
+                    refund.setReferenceType(ReferenceType.JOB);
+                    refund.setReferenceId(jobId.toString());
+                    refund.setPolicyId(row.getPolicyId());
+                    refund.setBillingCategory(category);
+                    ledgerRepository.save(refund);
+                }
             }
         }
 

@@ -41,7 +41,10 @@ import stirling.software.saas.payg.meter.PaygMeterReportingService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
+import stirling.software.saas.payg.model.LedgerBucket;
+import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.model.ProcessType;
+import stirling.software.saas.payg.model.ReferenceType;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.policy.PricingPolicy;
@@ -49,7 +52,9 @@ import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.ProcessingJobRepository;
+import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
+import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
 /**
  * Exercises {@link JobChargeService} as an orchestrator: policy lookup, step-limit resolution,
@@ -64,6 +69,7 @@ class JobChargeServiceTest {
     private ProcessingJobRepository jobRepo;
     private PaygTeamExtensionsRepository teamExtRepo;
     private PaygMeterReportingService meterReporter;
+    private WalletLedgerRepository ledgerRepo;
     private JobChargeService service;
 
     @BeforeEach
@@ -75,6 +81,7 @@ class JobChargeServiceTest {
         jobRepo = Mockito.mock(ProcessingJobRepository.class);
         teamExtRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
         meterReporter = Mockito.mock(PaygMeterReportingService.class);
+        ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
         service =
                 new JobChargeService(
                         jobService,
@@ -83,7 +90,8 @@ class JobChargeServiceTest {
                         shadowRepo,
                         jobRepo,
                         teamExtRepo,
-                        meterReporter);
+                        meterReporter,
+                        ledgerRepo);
     }
 
     @AfterEach
@@ -123,6 +131,7 @@ class JobChargeServiceTest {
         verify(classifier, never()).classify(any(MultipartFile.class), any());
         verify(classifier, never()).classify(anyList(), any());
         verify(shadowRepo, never()).save(any());
+        verify(ledgerRepo, never()).save(any());
     }
 
     @Test
@@ -172,6 +181,48 @@ class JobChargeServiceTest {
 
         // Job entity carries the classified docUnits so close-time receipts can render correctly.
         assertThat(newJob.getDocUnits()).isEqualTo(4);
+
+        // Live ledger DEBIT mirrors the shadow row: same units, stored NEGATIVE per the
+        // wallet_ledger sign convention, tied back to the job via reference.
+        ArgumentCaptor<WalletLedgerEntry> ledgerCaptor =
+                ArgumentCaptor.forClass(WalletLedgerEntry.class);
+        verify(ledgerRepo).save(ledgerCaptor.capture());
+        WalletLedgerEntry debit = ledgerCaptor.getValue();
+        assertThat(debit.getTeamId()).isEqualTo(100L);
+        assertThat(debit.getActorUserId()).isEqualTo(42L);
+        assertThat(debit.getEntryType()).isEqualTo(LedgerEntryType.DEBIT);
+        assertThat(debit.getBucket()).isEqualTo(LedgerBucket.CYCLE);
+        assertThat(debit.getAmountUnits()).isEqualTo(-4);
+        assertThat(debit.getReferenceType()).isEqualTo(ReferenceType.JOB);
+        assertThat(debit.getReferenceId()).isEqualTo(newJob.getId().toString());
+        assertThat(debit.getPolicyId()).isEqualTo(policy.getId());
+        assertThat(debit.getBillingCategory()).isEqualTo(BillingCategory.API);
+    }
+
+    @Test
+    void openProcess_bypassedCategory_writesShadowRowButNoLedgerDebit(@TempDir Path tmp)
+            throws IOException {
+        // Manual UI work is never billed: the shadow row still lands (comparison audit trail)
+        // but the live wallet_ledger must stay untouched.
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.WEB,
+                        ProcessType.SINGLE_TOOL,
+                        BillingCategory.BYPASSED),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        verify(shadowRepo).save(any(PaygShadowCharge.class));
+        verify(ledgerRepo, never()).save(any());
     }
 
     @Test
@@ -328,9 +379,8 @@ class JobChargeServiceTest {
     @Test
     void markFirstStepFailed_flipsShadowRowAndClosesProcess() {
         UUID jobId = UUID.randomUUID();
-        PaygShadowCharge row = new PaygShadowCharge();
-        row.setJobId(jobId);
-        row.setStatus(ShadowChargeStatus.CHARGED);
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        row.setPolicyId(7L);
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
         ProcessingJob job = openJob(jobId);
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
@@ -344,6 +394,21 @@ class JobChargeServiceTest {
         assertThat(job.getClosedAt()).isNotNull();
         verify(shadowRepo).save(row);
         verify(jobRepo).save(job);
+
+        // Compensating REFUND entry: positive amount mirroring the openProcess debit, same JOB
+        // reference so the pair nets to zero for the period.
+        ArgumentCaptor<WalletLedgerEntry> ledgerCaptor =
+                ArgumentCaptor.forClass(WalletLedgerEntry.class);
+        verify(ledgerRepo).save(ledgerCaptor.capture());
+        WalletLedgerEntry refund = ledgerCaptor.getValue();
+        assertThat(refund.getTeamId()).isEqualTo(100L);
+        assertThat(refund.getEntryType()).isEqualTo(LedgerEntryType.REFUND);
+        assertThat(refund.getBucket()).isEqualTo(LedgerBucket.CYCLE);
+        assertThat(refund.getAmountUnits()).isEqualTo(4);
+        assertThat(refund.getReferenceType()).isEqualTo(ReferenceType.JOB);
+        assertThat(refund.getReferenceId()).isEqualTo(jobId.toString());
+        assertThat(refund.getPolicyId()).isEqualTo(7L);
+        assertThat(refund.getBillingCategory()).isEqualTo(BillingCategory.API);
     }
 
     @Test
@@ -361,6 +426,8 @@ class JobChargeServiceTest {
 
         verify(shadowRepo, never()).save(any());
         verify(jobRepo, never()).save(any());
+        // No double-credit: the REFUND ledger entry only accompanies the CHARGED→REFUNDED flip.
+        verify(ledgerRepo, never()).save(any());
     }
 
     @Test
