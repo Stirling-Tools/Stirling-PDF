@@ -348,10 +348,36 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
         if (status >= 400) {
             // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
+            // Still a successful-from-billing-standpoint OPENED process — meter it below.
+            meterIfOpened(jobId, disposition);
             return;
         }
 
+        // Success: this is the moment the billable work finished, so this is when we tell Stripe.
+        // Only the OPENED request meters — JOINED follow-up steps (chained tools on the same
+        // document) added no units and must not re-meter. The process stays OPEN for further
+        // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
+        // idempotency key. metering is best-effort and must never break the response teardown.
+        meterIfOpened(jobId, disposition);
         recordOutputs(request, response, jobId);
+    }
+
+    /**
+     * Fire the Stripe meter for a just-finished process, but only when this request OPENED it. Runs
+     * on the request-teardown thread (the response is already flushed to the client); {@code
+     * meterJobUsage} is best-effort and swallows its own failures, but we still guard here so a
+     * meter hiccup can't disturb lineage/cleanup that follows.
+     */
+    private void meterIfOpened(UUID jobId, ChargeOutcome.Disposition disposition) {
+        if (disposition != ChargeOutcome.Disposition.OPENED) {
+            return;
+        }
+        try {
+            chargeService.meterJobUsage(jobId);
+        } catch (RuntimeException e) {
+            log.warn("Meter-on-completion failed for job {}: {}", jobId, e.getMessage());
+            errorsCounter.increment();
+        }
     }
 
     private void recordOutputs(

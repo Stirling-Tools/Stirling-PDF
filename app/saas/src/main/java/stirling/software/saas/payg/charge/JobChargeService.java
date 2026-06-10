@@ -275,25 +275,17 @@ public class JobChargeService {
     }
 
     /**
-     * Closes a process and — for paid teams — pushes a Stripe meter event for the units captured on
-     * the originating shadow row. Idempotent w.r.t. process state (delegates to {@link
-     * JobService#close(UUID)}, which silently no-ops on an already-closed row).
+     * Closes a process and — as a fallback — meters its usage. The primary meter trigger is the
+     * charge interceptor's {@code afterCompletion} on a successful request (see {@link
+     * #meterJobUsage(UUID)}); this close-time meter exists to catch processes that were never
+     * cleanly completed (request thread died before {@code afterCompletion}) and are swept up later
+     * by {@code StaleJobCloser}. The deterministic idempotency key means a job already metered at
+     * completion is deduped here at Stripe, so the two paths never double-bill.
      *
-     * <p>The meter POST runs in an {@code afterCommit} hook so we only tell Stripe about work that
-     * actually committed to our ledger (the customer's bill is authoritative — Stripe is the
-     * downstream invoice). A failed POST does not roll back the close; the reconciliation backfill
-     * (separate chunk) is the durability mechanism.
-     *
-     * <p>Skipped paths — no meter event fired:
-     *
-     * <ul>
-     *   <li>{@code BillingCategory.BYPASSED} on the shadow row (manual UI tool — defensive; the
-     *       interceptor never opens a process for these).
-     *   <li>Refunded shadow row (the customer was credited; nothing to bill).
-     *   <li>Team has no {@link PaygTeamExtensions#getStripeCustomerId() stripe_customer_id} (free
-     *       tier; ledger entry suffices).
-     *   <li>No shadow row at all (job opened outside the shadow path, e.g. legacy import).
-     * </ul>
+     * <p>Idempotent w.r.t. process state (delegates to {@link JobService#close(UUID)}, which
+     * silently no-ops on an already-closed row). The meter POST runs in an {@code afterCommit} hook
+     * so a failed POST does not roll back the close; the reconciliation backfill (separate chunk)
+     * is the durability mechanism.
      */
     @Transactional
     public ProcessingJob close(UUID jobId) {
@@ -314,7 +306,7 @@ public class JobChargeService {
                     @Override
                     public void afterCommit() {
                         try {
-                            postMeterEventForClose(jobId);
+                            meterJobUsage(jobId);
                         } catch (RuntimeException e) {
                             // PaygMeterReportingService should already swallow; defence in depth so
                             // a thrown exception out of afterCommit doesn't leak past the
@@ -330,7 +322,24 @@ public class JobChargeService {
         return closed;
     }
 
-    private void postMeterEventForClose(UUID jobId) {
+    /**
+     * Post this job's billable usage to Stripe. The primary caller is the charge interceptor's
+     * {@code afterCompletion} on a successful OPENED request — i.e. the moment the work finishes —
+     * so the meter moves promptly. {@link #close(UUID)} also calls this from its {@code
+     * afterCommit} hook as the fallback for processes that were never cleanly completed (e.g. the
+     * request thread died); the deterministic idempotency key ({@code process:<id>:close}) makes
+     * the two paths dedup at Stripe, so a job metered at completion isn't billed again when it's
+     * later stale-closed.
+     *
+     * <p>Safe to call outside a transaction: it only reads (the job's openProcess DEBIT is already
+     * committed by the time either caller runs) and the POST is best-effort. Never throws — see
+     * {@link PaygMeterReportingService}.
+     *
+     * <p>Skips: no shadow row (not PAYG-tracked), REFUNDED row (first-step failure — never billed),
+     * BYPASSED/uncategorised, zero units, free-tier team (no Stripe customer), or usage still
+     * within the app-side free allowance.
+     */
+    public void meterJobUsage(UUID jobId) {
         Optional<PaygShadowCharge> rowOpt = shadowRepository.findFirstByJobIdOrderByIdAsc(jobId);
         if (rowOpt.isEmpty()) {
             // No shadow row → not a PAYG-tracked job; nothing to meter.

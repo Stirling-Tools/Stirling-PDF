@@ -205,6 +205,28 @@ class PaygChargeInterceptorTest {
         verify(jobService).recordOutput(eq(jobId), any());
         verify(chargeService, never()).markFirstStepFailed(any(), any());
         verify(chargeService, never()).decrementStepCount(any());
+        // Success on an OPENED process is the primary meter trigger — fires now, not at close.
+        verify(chargeService).meterJobUsage(jobId);
+    }
+
+    @Test
+    void afterCompletion_2xx_joined_doesNotMeter() throws Exception {
+        // A JOINED follow-up step (chained tool on the same document) added no units when it
+        // joined — it must not re-meter; the OPENED step already did.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(200);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
@@ -228,6 +250,8 @@ class PaygChargeInterceptorTest {
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("503"));
         assertThat(meterRegistry.counter("payg.filter.refunds").count()).isEqualTo(1.0);
+        // First-step failure refunds — never meter it.
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
@@ -269,6 +293,8 @@ class PaygChargeInterceptorTest {
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("422"));
+        // 4xx is a full charge (customer paid for the attempt), so it still meters.
+        verify(chargeService).meterJobUsage(jobId);
     }
 
     @Test
