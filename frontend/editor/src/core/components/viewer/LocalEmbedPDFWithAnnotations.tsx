@@ -238,7 +238,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       [signaturePreviews],
     );
 
-     // Convert File to URL if needed
+    // Convert File to URL if needed
     useEffect(() => {
       if (url) {
         setPdfUrl(url);
@@ -346,9 +346,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
     // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
     const { engine, isLoading, error } = usePdfiumEngine({
       wasmUrl: pdfiumWasmUrl,
-      worker: false,
+      worker: true,
       encoderPoolSize: 2,
-      fontFallback: { fonts: {} },
+      fontFallback: null,
     });
 
     // Early return if no file or URL provided

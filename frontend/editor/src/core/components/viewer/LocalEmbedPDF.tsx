@@ -153,8 +153,7 @@ const ANNOTATION_TOOLS: LooseAnnotationTool[] = [
     interaction: { exclusive: true, cursor: "crosshair" },
     matchScore: (annotation: PdfAnnotationObject) =>
       annotation.type === PdfAnnotationSubtype.INK &&
-      (annotation.strokeColor === "#ffd54f" ||
-        annotation.color === "#ffd54f")
+      (annotation.strokeColor === "#ffd54f" || annotation.color === "#ffd54f")
         ? 8
         : 0,
     defaults: {
@@ -605,7 +604,7 @@ export function LocalEmbedPDF({
     wasmUrl: pdfiumWasmUrl,
     worker: true,
     encoderPoolSize: 2,
-    fontFallback: { fonts: {} },
+    fontFallback: null,
   });
 
   // Early return if no file or URL provided
