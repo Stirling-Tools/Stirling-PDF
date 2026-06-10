@@ -16,6 +16,31 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
 
     List<WalletLedgerEntry> findByTeamIdOrderByOccurredAtDesc(Long teamId);
 
+    /** Most recent entries for the Plan page activity feed. */
+    List<WalletLedgerEntry> findTop20ByTeamIdOrderByIdDesc(Long teamId);
+
+    /**
+     * Per-category debit totals over an arbitrary window, as positive units. Replaces the
+     * calendar-month {@code wallet_category_summary} view on the wallet endpoint — subscribed
+     * teams' billing windows are anchored to the Stripe subscription period, not month starts. Rows
+     * with {@code NULL} category (system entries) are excluded; BYPASSED never reaches the ledger
+     * by construction.
+     */
+    @Query(
+            "SELECT e.billingCategory AS category, COALESCE(SUM(-e.amountUnits), 0) AS units"
+                    + " FROM WalletLedgerEntry e"
+                    + " WHERE e.teamId = :teamId"
+                    + " AND e.entryType = :entryType"
+                    + " AND e.billingCategory IS NOT NULL"
+                    + " AND e.occurredAt >= :periodStart"
+                    + " AND e.occurredAt < :periodEnd"
+                    + " GROUP BY e.billingCategory")
+    List<Object[]> sumPeriodAmountByCategory(
+            @Param("teamId") Long teamId,
+            @Param("entryType") LedgerEntryType entryType,
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd);
+
     /** Sum of signed amounts over a team's entries — the wallet's current balance in units. */
     @Query(
             "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e WHERE e.teamId = :teamId")

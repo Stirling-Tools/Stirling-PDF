@@ -31,6 +31,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.saas.payg.billing.TeamBillingContext;
+import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -70,6 +72,7 @@ class JobChargeServiceTest {
     private PaygTeamExtensionsRepository teamExtRepo;
     private PaygMeterReportingService meterReporter;
     private WalletLedgerRepository ledgerRepo;
+    private TeamBillingService billingService;
     private JobChargeService service;
 
     @BeforeEach
@@ -82,6 +85,12 @@ class JobChargeServiceTest {
         teamExtRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
         meterReporter = Mockito.mock(PaygMeterReportingService.class);
         ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
+        billingService = Mockito.mock(TeamBillingService.class);
+        // Default: no free allowance, so existing meter expectations stay 1:1 with row units.
+        // The free-allowance clamp tests override this per-test.
+        when(billingService.forTeam(any())).thenReturn(billingContext(0L));
+        when(billingService.billableUnitsForMeter(any(), Mockito.anyLong(), Mockito.anyInt()))
+                .thenCallRealMethod();
         service =
                 new JobChargeService(
                         jobService,
@@ -91,7 +100,22 @@ class JobChargeServiceTest {
                         jobRepo,
                         teamExtRepo,
                         meterReporter,
-                        ledgerRepo);
+                        ledgerRepo,
+                        billingService);
+    }
+
+    /** Subscribed-shaped billing context with the given free allowance and a fixed window. */
+    private static TeamBillingContext billingContext(long freeAllowance) {
+        return new TeamBillingContext(
+                true,
+                "sub_test",
+                LocalDateTime.of(2026, 6, 1, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0),
+                freeAllowance,
+                java.math.BigDecimal.valueOf(2),
+                "usd",
+                null,
+                null);
     }
 
     @AfterEach
@@ -506,6 +530,11 @@ class JobChargeServiceTest {
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+        // Period spend including this job's 4 units; allowance 0 → all 4 meter.
+        when(ledgerRepo.sumPeriodAmount(
+                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
+                        any(), any()))
+                .thenReturn(-4L);
 
         withTransactionSynchronization(
                 () -> {
@@ -520,6 +549,63 @@ class JobChargeServiceTest {
                         "cus_subscribed",
                         4,
                         BillingCategory.API,
+                        "process:" + jobId + ":close");
+    }
+
+    @Test
+    void close_spendWithinFreeAllowance_doesNotPostMeterEvent() {
+        // Stripe has no free tier on the Price — the allowance is withheld here. 4 units spent,
+        // 500 free → nothing to meter; the ledger DEBIT alone records the usage.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(100L)).thenReturn(billingContext(500L));
+        when(ledgerRepo.sumPeriodAmount(
+                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
+                        any(), any()))
+                .thenReturn(-4L);
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+    }
+
+    @Test
+    void close_spendStraddlingFreeAllowance_metersOnlyThePaidPortion() {
+        // Allowance 500, period spend 510 including this 20-unit job → 10 free, 10 metered.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 20, BillingCategory.AUTOMATION);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(100L)).thenReturn(billingContext(500L));
+        when(ledgerRepo.sumPeriodAmount(
+                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
+                        any(), any()))
+                .thenReturn(-510L);
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        verify(meterReporter)
+                .recordUsage(
+                        100L,
+                        "cus_subscribed",
+                        10,
+                        BillingCategory.AUTOMATION,
                         "process:" + jobId + ":close");
     }
 
@@ -621,6 +707,10 @@ class JobChargeServiceTest {
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+        when(ledgerRepo.sumPeriodAmount(
+                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
+                        any(), any()))
+                .thenReturn(-4L);
 
         Mockito.doThrow(new RuntimeException("simulated meter failure"))
                 .when(meterReporter)

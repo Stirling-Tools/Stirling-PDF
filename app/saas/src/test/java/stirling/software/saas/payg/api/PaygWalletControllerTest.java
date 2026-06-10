@@ -9,9 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,15 +43,17 @@ import stirling.software.saas.payg.api.PaygWalletController.PortalSessionRequest
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateSubCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
+import stirling.software.saas.payg.billing.TeamBillingContext;
+import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
+import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
-import stirling.software.saas.payg.repository.WalletCategorySummaryDao;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
@@ -72,11 +74,11 @@ class PaygWalletControllerTest {
     private static final String PORTAL_ALLOWED_HOSTS = "app.example,staging.example";
 
     @Mock private EntitlementService entitlementService;
+    @Mock private TeamBillingService billingService;
     @Mock private TeamMembershipRepository memberRepo;
     @Mock private PaygTeamExtensionsRepository extRepo;
     @Mock private WalletPolicyRepository policyRepo;
     @Mock private WalletLedgerRepository ledgerRepo;
-    @Mock private WalletCategorySummaryDao categorySummaryDao;
     @Mock private UserRepository userRepository;
     @Mock private RestTemplate restTemplate;
 
@@ -91,16 +93,54 @@ class PaygWalletControllerTest {
             String portalEndpoint, String portalToken, String allowedHosts) {
         return new PaygWalletController(
                 entitlementService,
+                billingService,
                 memberRepo,
                 extRepo,
                 policyRepo,
                 ledgerRepo,
-                categorySummaryDao,
                 userRepository,
                 restTemplate,
                 portalEndpoint,
                 portalToken,
                 allowedHosts);
+    }
+
+    /** Free-team billing context: cap == free allowance, no subscription facts. */
+    private static TeamBillingContext freeBilling(long teamFreeAllowance) {
+        LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        return new TeamBillingContext(
+                false,
+                null,
+                start,
+                start.plusMonths(1),
+                teamFreeAllowance,
+                null,
+                null,
+                null,
+                teamFreeAllowance);
+    }
+
+    /** Subscribed billing context with a money cap (minor units) and a known per-doc rate. */
+    private static TeamBillingContext subscribedBilling(
+            String subscriptionId, Long capMoneyMinor, Long docCap) {
+        LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        return new TeamBillingContext(
+                true,
+                subscriptionId,
+                start,
+                start.plusMonths(1),
+                500L,
+                BigDecimal.valueOf(2),
+                "usd",
+                capMoneyMinor,
+                docCap);
+    }
+
+    private void stubEmptyLedgerReads(long teamId) {
+        when(ledgerRepo.sumPeriodAmountByCategory(
+                        eq(teamId), eq(LedgerEntryType.DEBIT), any(), any()))
+                .thenReturn(List.of());
+        when(ledgerRepo.findTop20ByTeamIdOrderByIdDesc(teamId)).thenReturn(List.of());
     }
 
     // -----------------------------------------------------------------------------------------
@@ -114,11 +154,9 @@ class PaygWalletControllerTest {
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
         when(memberRepo.findPrimaryMembership(7L))
                 .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
-        when(extRepo.findById(42L)).thenReturn(Optional.empty());
-        when(policyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(entitlementService.getSnapshot(42L)).thenReturn(snapshot(0L, null));
-        when(categorySummaryDao.sumByCategory(eq(42L), any(LocalDate.class)))
-                .thenReturn(emptyCategoryMap());
+        when(billingService.forTeam(42L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(42L);
 
         ResponseEntity<WalletSnapshotResponse> resp =
                 controller.getWallet(jwtAuth(user.getSupabaseId()));
@@ -133,6 +171,10 @@ class PaygWalletControllerTest {
         assertThat(body.noCap()).isFalse();
         assertThat(body.billableUsed()).isZero();
         assertThat(body.billableLimit()).isEqualTo(500);
+        assertThat(body.freeAllowance()).isEqualTo(500);
+        assertThat(body.pricePerDocMinor()).isNull();
+        assertThat(body.currency()).isNull();
+        assertThat(body.estimatedBillMinor()).isNull();
         assertThat(body.members()).isEmpty();
         assertThat(body.recent()).isEmpty();
         assertThat(body.categoryBreakdown().api()).isZero();
@@ -141,29 +183,24 @@ class PaygWalletControllerTest {
     }
 
     @Test
-    void getWallet_subscribedMember_returnsCapInUsdAndEmptyMembers() {
+    void getWallet_subscribedMember_returnsCapAndBreakdownFromLedger() {
         User user = userWithId(8L, UUID.randomUUID());
         Team team = teamWithId(99L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
         when(memberRepo.findPrimaryMembership(8L))
                 .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
-        // stripeCustomerId present → "subscribed" (until PR #6532's payg_subscription_id lands)
-        PaygTeamExtensions ext = new PaygTeamExtensions();
-        ext.setTeamId(99L);
-        ext.setStripeCustomerId("cus_test_123");
-        when(extRepo.findById(99L)).thenReturn(Optional.of(ext));
-
-        WalletPolicy policy = new WalletPolicy();
-        policy.setTeamId(99L);
-        policy.setCapUnits(2500L); // == $25 at 100 units / $
-        when(policyRepo.findByTeamId(99L)).thenReturn(Optional.of(policy));
-
-        when(entitlementService.getSnapshot(99L)).thenReturn(snapshot(312L, 2500L));
-        Map<BillingCategory, Long> byCat = emptyCategoryMap();
-        byCat.put(BillingCategory.API, 110L);
-        byCat.put(BillingCategory.AI, 200L);
-        byCat.put(BillingCategory.AUTOMATION, 2L);
-        when(categorySummaryDao.sumByCategory(eq(99L), any(LocalDate.class))).thenReturn(byCat);
+        // $25 cap (2500 minor) at $0.02/doc → 500 free + 1250 paid = 1750 docs.
+        when(billingService.forTeam(99L))
+                .thenReturn(subscribedBilling("sub_test_99", 2500L, 1750L));
+        when(billingService.estimateBillMinor(any(), eq(312L))).thenReturn(Optional.of(0L));
+        when(entitlementService.getSnapshot(99L)).thenReturn(snapshot(312L, 1750L));
+        when(ledgerRepo.sumPeriodAmountByCategory(eq(99L), eq(LedgerEntryType.DEBIT), any(), any()))
+                .thenReturn(
+                        List.of(
+                                new Object[] {BillingCategory.API, 110L},
+                                new Object[] {BillingCategory.AI, 200L},
+                                new Object[] {BillingCategory.AUTOMATION, 2L}));
+        when(ledgerRepo.findTop20ByTeamIdOrderByIdDesc(99L)).thenReturn(List.of());
 
         ResponseEntity<WalletSnapshotResponse> resp =
                 controller.getWallet(jwtAuth(user.getSupabaseId()));
@@ -175,34 +212,30 @@ class PaygWalletControllerTest {
         assertThat(body.noCap()).isFalse();
         assertThat(body.billableUsed()).isEqualTo(312);
         assertThat(body.spendUnitsThisPeriod()).isEqualTo(312);
+        assertThat(body.billableLimit()).isEqualTo(1750);
+        assertThat(body.freeAllowance()).isEqualTo(500);
+        assertThat(body.pricePerDocMinor()).isEqualByComparingTo(BigDecimal.valueOf(2));
+        assertThat(body.currency()).isEqualTo("usd");
+        assertThat(body.estimatedBillMinor()).isZero();
         assertThat(body.members()).isEmpty();
         assertThat(body.categoryBreakdown().api()).isEqualTo(110);
         assertThat(body.categoryBreakdown().ai()).isEqualTo(200);
         assertThat(body.categoryBreakdown().automation()).isEqualTo(2);
-        // stripeSubscriptionId still null until #6532 lands.
-        assertThat(body.stripeSubscriptionId()).isNull();
+        assertThat(body.stripeSubscriptionId()).isEqualTo("sub_test_99");
         // Member role → ledger never queried per-user.
         verify(ledgerRepo, never()).sumPeriodAmountForMember(any(), any(), any(), any(), any());
     }
 
     @Test
-    void getWallet_subscribedNoCap_returnsNoCapTrueAndNullCapUsd() {
+    void getWallet_subscribedNoCap_returnsNoCapTrueAndNullLimit() {
         User user = userWithId(9L, UUID.randomUUID());
         Team team = teamWithId(11L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
         when(memberRepo.findPrimaryMembership(9L))
                 .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
-        PaygTeamExtensions ext = new PaygTeamExtensions();
-        ext.setTeamId(11L);
-        ext.setStripeCustomerId("cus_nocap");
-        when(extRepo.findById(11L)).thenReturn(Optional.of(ext));
-        WalletPolicy policy = new WalletPolicy();
-        policy.setTeamId(11L);
-        policy.setCapUnits(null); // explicit no-cap
-        when(policyRepo.findByTeamId(11L)).thenReturn(Optional.of(policy));
+        when(billingService.forTeam(11L)).thenReturn(subscribedBilling("sub_nocap", null, null));
         when(entitlementService.getSnapshot(11L)).thenReturn(snapshot(50L, null));
-        when(categorySummaryDao.sumByCategory(eq(11L), any(LocalDate.class)))
-                .thenReturn(emptyCategoryMap());
+        stubEmptyLedgerReads(11L);
         when(memberRepo.findByTeamId(11L)).thenReturn(List.of());
 
         ResponseEntity<WalletSnapshotResponse> resp =
@@ -213,6 +246,8 @@ class PaygWalletControllerTest {
         assertThat(body.role()).isEqualTo("leader");
         assertThat(body.capUsd()).isNull();
         assertThat(body.noCap()).isTrue();
+        // Uncapped → no document ceiling to draw a bar against.
+        assertThat(body.billableLimit()).isNull();
     }
 
     @Test
@@ -228,11 +263,9 @@ class PaygWalletControllerTest {
 
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
         when(memberRepo.findPrimaryMembership(10L)).thenReturn(List.of(leaderRow));
-        when(extRepo.findById(77L)).thenReturn(Optional.empty());
-        when(policyRepo.findByTeamId(77L)).thenReturn(Optional.empty());
-        when(entitlementService.getSnapshot(77L)).thenReturn(snapshot(0L, null));
-        when(categorySummaryDao.sumByCategory(eq(77L), any(LocalDate.class)))
-                .thenReturn(emptyCategoryMap());
+        when(billingService.forTeam(77L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(77L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(77L);
         when(memberRepo.findByTeamId(77L)).thenReturn(List.of(leaderRow, memberRow));
         // Ledger returns signed (negative) debits.
         when(ledgerRepo.sumPeriodAmountForMember(eq(77L), any(), any(), any(), any()))
@@ -267,8 +300,7 @@ class PaygWalletControllerTest {
         // AuthenticationUtils.getCurrentUser throws SecurityException for "anonymousUser" since it
         // has no Supabase id and is not a User principal — the controller maps that to 401.
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        verifyNoInteractions(
-                entitlementService, memberRepo, extRepo, policyRepo, categorySummaryDao);
+        verifyNoInteractions(entitlementService, billingService, memberRepo, extRepo, policyRepo);
     }
 
     @Test
@@ -307,9 +339,36 @@ class PaygWalletControllerTest {
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         ArgumentCaptor<WalletPolicy> saved = ArgumentCaptor.forClass(WalletPolicy.class);
         verify(policyRepo).save(saved.capture());
+        // Rate unknown in this test (docCapForMoney → empty) → legacy conversion fallback so
+        // the cap stays enforced rather than silently lifting.
         assertThat(saved.getValue().getCapUnits()).isEqualTo(4000L); // 40 USD * 100 units/USD
         assertThat(saved.getValue().getCapSourceMoney()).isEqualTo(4000L); // 40 USD == 4000 cents
         verify(entitlementService, times(1)).invalidate(33L);
+    }
+
+    @Test
+    void updateCap_withKnownRate_storesDerivedDocCap() {
+        User leader = userWithId(24L, UUID.randomUUID());
+        Team team = teamWithId(36L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
+        when(memberRepo.findPrimaryMembership(24L))
+                .thenReturn(List.of(membership(team, leader, TeamRole.LEADER)));
+        when(policyRepo.findByTeamId(36L)).thenReturn(Optional.empty());
+        TeamBillingContext billing = subscribedBilling("sub_36", null, null);
+        when(billingService.forTeam(36L)).thenReturn(billing);
+        // $28 cap at $0.02/doc → 500 free + 1400 paid = 1900 documents.
+        when(billingService.docCapForMoney(billing, 2800L)).thenReturn(Optional.of(1900L));
+
+        ResponseEntity<Void> resp =
+                controller.updateCap(
+                        new UpdateCapRequest(28, false), jwtAuth(leader.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        ArgumentCaptor<WalletPolicy> saved = ArgumentCaptor.forClass(WalletPolicy.class);
+        verify(policyRepo).save(saved.capture());
+        assertThat(saved.getValue().getCapSourceMoney()).isEqualTo(2800L);
+        assertThat(saved.getValue().getCapUnits()).isEqualTo(1900L);
+        verify(entitlementService).invalidate(36L);
     }
 
     @Test
@@ -621,11 +680,12 @@ class PaygWalletControllerTest {
         HttpEntity<?> sent = captor.getValue();
         // Bearer service-role header forwarded so the edge fn can authorise.
         assertThat(sent.getHeaders().getFirst("Authorization")).isEqualTo("Bearer " + PORTAL_TOKEN);
-        // Body carries team_id (string) + the optional return_url.
+        // Body carries team_id as a JSON NUMBER (the edge fn ignores string team_ids, which with
+        // a service-role bearer would fall back to the first team in the table) + return_url.
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) sent.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.get("team_id")).isEqualTo("80");
+        assertThat(body.get("team_id")).isEqualTo(80L);
         assertThat(body.get("return_url")).isEqualTo("https://app.example/return");
     }
 
@@ -794,7 +854,7 @@ class PaygWalletControllerTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> sentBody = (Map<String, Object>) captor.getValue().getBody();
         assertThat(sentBody).doesNotContainKey("return_url");
-        assertThat(sentBody.get("team_id")).isEqualTo("84");
+        assertThat(sentBody.get("team_id")).isEqualTo(84L);
     }
 
     @Test
@@ -886,14 +946,6 @@ class PaygWalletControllerTest {
                 cap,
                 start,
                 end);
-    }
-
-    private static Map<BillingCategory, Long> emptyCategoryMap() {
-        EnumMap<BillingCategory, Long> m = new EnumMap<>(BillingCategory.class);
-        for (BillingCategory c : BillingCategory.values()) {
-            m.put(c, 0L);
-        }
-        return m;
     }
 
     private static Authentication jwtAuth(UUID supabaseId) {

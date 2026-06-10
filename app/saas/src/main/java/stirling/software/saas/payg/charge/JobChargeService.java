@@ -17,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.saas.payg.billing.TeamBillingContext;
+import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -69,6 +71,7 @@ public class JobChargeService {
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
     private final PaygMeterReportingService meterReportingService;
     private final WalletLedgerRepository ledgerRepository;
+    private final TeamBillingService teamBillingService;
 
     public JobChargeService(
             JobService jobService,
@@ -78,7 +81,8 @@ public class JobChargeService {
             ProcessingJobRepository jobRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
             PaygMeterReportingService meterReportingService,
-            WalletLedgerRepository ledgerRepository) {
+            WalletLedgerRepository ledgerRepository,
+            TeamBillingService teamBillingService) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -89,6 +93,7 @@ public class JobChargeService {
         this.meterReportingService =
                 Objects.requireNonNull(meterReportingService, "meterReportingService");
         this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
+        this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
     }
 
     /**
@@ -363,9 +368,29 @@ public class JobChargeService {
                     teamId);
             return;
         }
+
+        // The free allowance is app-side only — Stripe's Prices are plain per-unit with no free
+        // tier — so withhold the free portion here. Period spend already includes this job's
+        // DEBIT (written at openProcess, committed before this afterCommit hook runs).
+        TeamBillingContext billing = teamBillingService.forTeam(teamId);
+        long signedDebitSum =
+                ledgerRepository.sumPeriodAmount(
+                        teamId, LedgerEntryType.DEBIT, billing.periodStart(), billing.periodEnd());
+        long periodSpend = signedDebitSum < 0 ? -signedDebitSum : 0L;
+        int billableUnits = teamBillingService.billableUnitsForMeter(billing, periodSpend, units);
+        if (billableUnits <= 0) {
+            log.debug(
+                    "close({}): {} units fall within the free allowance ({} of {}) → no meter"
+                            + " event",
+                    jobId,
+                    units,
+                    periodSpend,
+                    billing.freeAllowanceUnits());
+            return;
+        }
         String idempotencyKey = "process:" + jobId + ":close";
         meterReportingService.recordUsage(
-                teamId, stripeCustomerId, units, category, idempotencyKey);
+                teamId, stripeCustomerId, billableUnits, category, idempotencyKey);
     }
 
     /**
