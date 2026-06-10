@@ -134,6 +134,25 @@
   text-overflow: ellipsis;
 }
 
+/* ---- Policy activity badges (a shield per policy that has run on the file) ---- */
+.file-sidebar-policy-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.file-sidebar-policy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  /* `color` is set inline to the policy's accent; the tint follows it. */
+  color: var(--text-secondary);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+
 /* ---- Folder membership tags ---- */
 .file-sidebar-folder-tags {
   display: flex;

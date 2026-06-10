@@ -8193,6 +8193,9 @@ confirm = "Extract"
 message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
 
+[policies]
+sidebarTitle = "Policies"
+
 [watchedFolders]
 alreadyInFolder = "Already in this folder"
 deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
