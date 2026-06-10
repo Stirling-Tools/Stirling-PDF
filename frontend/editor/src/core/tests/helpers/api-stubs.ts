@@ -248,6 +248,14 @@ export async function mockAppApis(
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),
   );
+
+  // Policies (proprietary): the reconcile fires GET /api/v1/policies on app
+  // load. Return an empty list so the stubbed (backend-free) env stays clean —
+  // no failed request polluting the console, and the auto-run controller has
+  // nothing to dispatch.
+  await page.route("**/api/v1/policies", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
 }
 
 /**
