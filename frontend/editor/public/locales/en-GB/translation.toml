@@ -2736,6 +2736,10 @@ unsupported_capability = "Unsupported capability: {{capability}}"
 summary = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 

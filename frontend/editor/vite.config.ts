@@ -233,6 +233,11 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     },
+    resolve: {
+      alias: {
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
     },
