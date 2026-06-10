@@ -1,0 +1,144 @@
+.chat-fab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: none;
+  background: var(--color-blue, #3b82f6);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+  transition:
+    transform 180ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 180ms ease;
+  position: relative;
+  outline-offset: 3px;
+  flex-shrink: 0;
+}
+
+.chat-fab-btn:hover {
+  transform: scale(1.09);
+  box-shadow: 0 6px 22px rgba(59, 130, 246, 0.52);
+}
+
+.chat-fab-btn:active {
+  transform: scale(0.96);
+  transition-duration: 90ms;
+}
+
+/* Animated logo paths when the agent is actively working */
+.chat-fab-btn--loading svg path:first-child {
+  animation: chat-fab-logo-right 2s ease-in-out infinite;
+}
+
+.chat-fab-btn--loading svg path:last-child {
+  animation: chat-fab-logo-left 2s ease-in-out infinite;
+}
+
+@keyframes chat-fab-logo-right {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translate(-1px, -5px);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-6px, 0);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translate(-1px, 5px);
+    opacity: 0.55;
+  }
+}
+
+@keyframes chat-fab-logo-left {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(1px, 5px);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(6px, 0);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(1px, -5px);
+    opacity: 0.85;
+  }
+}
+
+/* Green pulse dot when the agent is actively working */
+.chat-fab-btn__pulse {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: chat-fab-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes chat-fab-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.65;
+  }
+}
+
+/* Tick badge shown when there's an unread result */
+.chat-fab-btn__tick {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: chat-fab-tick-in 220ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes chat-fab-tick-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-fab-btn {
+    transition: none;
+  }
+  .chat-fab-btn__pulse {
+    animation: none;
+  }
+  .chat-fab-btn--loading svg path:first-child,
+  .chat-fab-btn--loading svg path:last-child {
+    animation: none;
+  }
+  .chat-fab-btn__tick {
+    animation: none;
+  }
+}
