@@ -316,6 +316,69 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
+    void preHandle_desktopClientHeader_setsJobSourceDesktopApp() throws Exception {
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Client", "desktop");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().source())
+                .isEqualTo(stirling.software.saas.payg.model.JobSource.DESKTOP_APP);
+    }
+
+    @Test
+    void preHandle_toolId_prefersBestMatchingPattern() throws Exception {
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        // Raw URI contains a path variable; the matched pattern is what audit rollups want.
+        req.setRequestURI("/api/v1/security/add-password/extra/segment");
+        req.setAttribute(
+                org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
+                "/api/v1/security/add-password");
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        assertThat(req.getAttribute(PaygChargeInterceptor.ATTR_TOOL_ID))
+                .isEqualTo("/api/v1/security/add-password");
+    }
+
+    @Test
+    void preHandle_toolId_truncatesAndCountsWhenLongerThan128() throws Exception {
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        String oversized = "/api/v1/" + "x".repeat(200);
+        req.setRequestURI(oversized);
+        // No matching pattern attribute — falls back to URI.
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        Object stored = req.getAttribute(PaygChargeInterceptor.ATTR_TOOL_ID);
+        assertThat(stored).isInstanceOf(String.class);
+        assertThat(((String) stored)).hasSize(128);
+        assertThat(meterRegistry.counter("payg.filter.errors").count()).isEqualTo(1.0);
+    }
+
+    @Test
     void preHandle_pipelineHeader_setsJobSourcePipeline() throws Exception {
         authenticateWithUser(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
