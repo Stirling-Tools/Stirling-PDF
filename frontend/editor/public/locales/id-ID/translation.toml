@@ -12,7 +12,6 @@ cancel = "Batal"
 changedCredsMessage = "Kredensial berubah!!"
 chooseFile = "Pilih File"
 close = "Tutup"
-color = "Warna"
 comingSoon = "Segera hadir"
 confirm = "Konfirmasi"
 confirmClose = "Konfirmasi Penutupan"
@@ -90,6 +89,7 @@ nothingToUndo = "Tidak ada yang bisa diurungkan"
 noticeTopUpOrPlan = "Kredit tidak mencukupi, silakan isi ulang atau upgrade ke paket"
 noValidFiles = "Tidak ada file valid untuk diproses"
 oops = "Ups!"
+openInNewWindow = "Buka di jendela baru"
 openInViewer = "Buka di Penampil"
 operationCancelled = "Operasi dibatalkan"
 page = "Halaman"
@@ -198,6 +198,10 @@ ssoDescription = "Autentikasi dua faktor dikelola oleh penyedia identitas Anda u
 ssoManaged = "Konfigurasikan MFA melalui penyedia identitas Anda."
 title = "Autentikasi dua faktor"
 
+[account.overview]
+logOut = "Keluar"
+signedInAs = "Masuk sebagai: {{email}}"
+
 [add-page-numbers]
 tags = "beri halaman, beri label, atur, indeks"
 
@@ -224,6 +228,9 @@ title = "Fungsinya"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Tentang Tambah Lampiran"
+
+[addFileCard]
+upload = "Unggah"
 
 [addImage]
 applySignatures = "Terapkan Gambar"
@@ -494,6 +501,11 @@ title = "Sesuaikan Skala Halaman"
 [adjustPageScale.error]
 failed = "Terjadi kesalahan saat menyesuaikan skala halaman."
 
+[adjustPageScale.orientation]
+label = "Orientasi halaman"
+landscape = "Lanskap"
+portrait = "Potret"
+
 [adjustPageScale.pageSize]
 keep = "Pertahankan Ukuran Asli"
 label = "Ukuran Halaman Target"
@@ -600,6 +612,7 @@ label = "Manajemen File Temp"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Direktori dasar untuk file sementara (biarkan kosong untuk default: java.io.tmpdir/stirling-pdf)"
 label = "Direktori Temp Dasar"
+placeholder = "Bawaan: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Seberapa sering menjalankan pembersihan (dalam menit)"
@@ -612,6 +625,7 @@ label = "Bersihkan Temp Sistem"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Direktori untuk file temp LibreOffice (biarkan kosong untuk default: baseTmpDir/libreoffice)"
 label = "Direktori Temp LibreOffice"
+placeholder = "Bawaan: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Usia maksimum dalam jam sebelum file temp dibersihkan"
@@ -628,6 +642,7 @@ label = "Pembersihan Saat Mulai"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Direktori temp sistem yang akan dibersihkan (hanya digunakan jika cleanupSystemTemp diaktifkan)"
 label = "Direktori Temp Sistem"
+placeholder = "Jalur direktori sementara sistem"
 
 [admin.settings.advanced.tessdataDir]
 description = "Path ke direktori tessdata untuk file bahasa OCR"
@@ -833,6 +848,7 @@ label = "Nama Database"
 [admin.settings.database.password]
 description = "Kata sandi autentikasi database"
 label = "Kata Sandi"
+placeholder = "Masukkan kata sandi database"
 
 [admin.settings.database.port]
 description = "Port server database (tidak digunakan jika URL kustom disediakan)"
@@ -864,10 +880,12 @@ label = "Sembunyikan alat yang tidak tersedia secara bawaan"
 [admin.settings.endpoints.groupsToRemove]
 description = "Pilih grup endpoint untuk dinonaktifkan"
 label = "Grup Endpoint Dinonaktifkan"
+placeholder = "Pilih grup untuk dinonaktifkan"
 
 [admin.settings.endpoints.toRemove]
 description = "Pilih endpoint individual untuk dinonaktifkan"
 label = "Endpoint Dinonaktifkan"
+placeholder = "Pilih endpoint untuk dinonaktifkan"
 
 [admin.settings.enterpriseRequired]
 message = "Lisensi Enterprise diperlukan untuk mengakses {{featureName}}. Anda sedang melihat data demo sebagai referensi."
@@ -1082,6 +1100,7 @@ label = "Host SMTP"
 [admin.settings.mail.password]
 description = "Kata sandi untuk autentikasi SMTP"
 label = "Kata Sandi SMTP"
+placeholder = "Masukkan kata sandi SMTP"
 
 [admin.settings.mail.port]
 description = "Nomor port untuk koneksi SMTP (biasanya 25, 465, atau 587)"
@@ -1090,6 +1109,10 @@ label = "Port SMTP"
 [admin.settings.mail.username]
 description = "Nama pengguna untuk autentikasi SMTP"
 label = "Nama Pengguna SMTP"
+
+[admin.settings.plan.noData]
+message = "Data paket tidak tersedia saat ini."
+title = "Tidak ada data"
 
 [admin.settings.premium]
 description = "Konfigurasikan kunci lisensi premium atau enterprise Anda."
@@ -1137,6 +1160,9 @@ info = "Jika Anda memiliki kunci lisensi atau file sertifikat dari pembelian lan
 toggle = "Punya kunci lisensi atau file sertifikat?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Pencatatan Audit</0> (ENTERPRISE) - Keamanan"
+customMetadata = "<0>Metadata Kustom</0> (PRO) - Umum"
+databaseConfiguration = "<0>Konfigurasi Database</0> (ENTERPRISE) - Database"
 message = "Fitur Premium dan Enterprise kini diatur dalam bagiannya masing-masing:"
 title = "Fitur Premium Didistribusikan"
 
@@ -1512,6 +1538,33 @@ user = "Pengguna"
 usernameInfo = "Nama pengguna hanya boleh mengandung huruf, angka, dan karakter khusus berikut @._+- atau harus berupa alamat email yang valid."
 webOnlyUser = "Pengguna Khusus Web"
 
+[agents]
+auto_redaction_description = "Meredaksi PII secara otomatis"
+auto_redaction_name = "Redaksi Otomatis"
+back_to_tools = "Kembali ke alat"
+coming_soon = "Segera hadir"
+compliance_description = "Audit dokumen untuk kepatuhan"
+compliance_name = "Pemeriksaan Kepatuhan"
+data_extraction_description = "Ekstrak tabel & data terstruktur"
+data_extraction_name = "Ekstraksi Data"
+doc_summary_description = "Meringkas dokumen panjang"
+doc_summary_name = "Peringkas"
+form_filler_description = "Mengisi formulir PDF secara cerdas"
+form_filler_name = "Pengisi Formulir"
+fullscreen_title = "Agen Stirling"
+pdf_to_markdown_description = "Konversi PDF ke Markdown yang rapi"
+pdf_to_markdown_name = "PDF ke Markdown"
+section_title = "Agen"
+show_less = "Tampilkan lebih sedikit"
+start_chat = "Mulai mengobrol"
+stirling_description = "Asisten PDF serbaguna Anda"
+stirling_full_name = "Agen Umum Stirling"
+stirling_long_description = "Asisten PDF serbaguna yang dapat menjalankan alat, membuat PDF, dan mengekstrak wawasan dari dokumen Anda."
+stirling_name = "Stirling"
+stirling_running = "Sedang berjalan..."
+stirling_tooltip = "Agen Stirling"
+view_all = "Lihat semua agen"
+
 [analytics]
 disable = "Nonaktifkan analitik"
 enable = "Aktifkan analitik"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Anda tidak memiliki izin untuk melakukan tindakan ini
 pleaseLoginAgain = "Silakan login lagi."
 sessionExpired = "Sesi berakhir"
 
+[auth.displayName]
+guest = "Tamu"
+user = "Pengguna"
+
 [auto-rename]
 description = "Secara otomatis menemukan judul dari konten PDF Anda dan menggunakannya sebagai nama file."
 header = "Ganti Nama PDF Otomatis"
@@ -1862,6 +1919,13 @@ label = "Buka menu untuk {{title}}"
 
 [automate.files]
 placeholder = "Pilih file untuk diproses dengan otomatisasi ini"
+
+[automate.folderScanWarning]
+advice = "Anda masih dapat mengunduh file (mis. untuk memeriksa atau mengedit manual), tetapi langkah yang tidak didukung perlu dihapus sebelum backend dapat menjalankannya."
+cancel = "Batal"
+confirm = "Tetap ekspor"
+intro = "Pemindaian folder berjalan di backend, jadi hanya dapat menjalankan alat yang memiliki endpoint backend. Langkah berikut dalam otomatisasi ini tidak memilikinya, dan akan gagal saat pipeline berjalan:"
+title = "Beberapa langkah tidak dapat dijalankan dalam pemindaian folder"
 
 [automate.importModal]
 cancel = "Batal"
@@ -2094,11 +2158,31 @@ placeholder = "Jumlah halaman"
 title = "N Halaman Terakhir"
 
 [bulkSelection.operators]
-and = "AND: & atau \"and\" — mengharuskan kedua kondisi (mis., 1-50 & even)"
-comma = "Koma: , atau | — menggabungkan pilihan (mis., 1-10, 20)"
-not = "NOT: ! atau \"not\" — mengecualikan halaman (mis., 3n & not 30)"
 text = "AND memiliki prioritas lebih tinggi daripada koma. NOT berlaku dalam rentang dokumen."
 title = "Operator"
+
+[bulkSelection.operators.and]
+title = "Gabungkan pilihan (keduanya harus benar)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & atau \"and\" - memerlukan kedua kondisi (contoh, 1-50 & even)"
+comma = "Koma: , atau | - gabungkan pilihan (contoh, 1-10, 20)"
+not = "NOT: ! atau \"not\" - kecualikan halaman (contoh, 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Pilih semua halaman genap (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Kecualikan dari pilihan"
+
+[bulkSelection.operators.odd]
+title = "Pilih semua halaman ganjil (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Tambahkan ke pilihan (salah satu kondisi bisa benar)"
+
+[bulkSelection.pageSelection]
+title = "Pemilihan Halaman"
 
 [bulkSelection.range]
 fromPlaceholder = "Dari"
@@ -2684,6 +2768,22 @@ title = "Ganti Perizinan"
 [changePermissions.tooltip.warning]
 text = "Agar izin ini tidak dapat diubah, gunakan alat Tambah Kata Sandi untuk menetapkan kata sandi pemilik."
 
+[chat]
+resize = "Ubah ukuran panel obrolan"
+
+[chat.actions]
+copy = "Salin pesan"
+
+[chat.header]
+agentMenu = "Opsi agen Stirling"
+clearChat = "Hapus obrolan"
+settings = "Pengaturan agen"
+
+[chat.input]
+attach = "Lampirkan file"
+placeholder = "Apa yang ingin Anda lakukan?"
+send = "Kirim pesan"
+
 [chat.progress]
 analyzing = "Menganalisis permintaan Anda..."
 calling_engine = "AI sedang berpikir..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Selesai membaca dokumen..."
 whole_doc_read_started = "Membaca dokumen..."
 whole_doc_slice_done = "Membaca dokumen... ({{percent}}% selesai)"
 
+[chat.quickActions]
+browseYourFiles = "Jelajahi file Anda"
+compressMany = "Kompres dokumen ini"
+compressOne = "Kompres dokumen ini"
+convertMany = "Konversi dokumen ini ke PDF"
+convertOne = "Konversi dokumen ini ke PDF"
+fileSummary_one = "1 file di Workbench ({{types}})"
+fileSummary_other = "{{count}} file di Workbench ({{types}})"
+heading = "Mulai"
+mergeMany = "Gabungkan {{count}} dokumen ini menjadi 1"
+moreFiles = "+{{count}} lainnya"
+openFromComputer = "Buka dari komputer"
+removeFile = "Hapus {{name}}"
+rotateMany = "Putar dokumen ini"
+rotateOne = "Putar dokumen ini"
+splitOne = "Pisahkan dokumen ini"
+
+[chat.responses]
+cannot_continue = "Terjadi kesalahan dan saya tidak dapat melanjutkan."
+cannot_do = "Saya tidak dapat melakukan itu."
+done = "Selesai."
+need_clarification = "Bisakah Anda memperjelas permintaan Anda?"
+not_found = "Saya tidak dapat menemukan informasi yang diminta."
+processing = "Memproses ({{outcome}})..."
+unsupported_capability = "Kemampuan tidak didukung: {{capability}}"
+
 [chat.toolsUsed]
 summary = "Menjalankan {{count}} alat"
 summary_one = "Menjalankan 1 alat"
@@ -2707,6 +2833,9 @@ unknownTool = "Alat tidak dikenal"
 
 [cloudBadge]
 tooltip = "Operasi ini akan menggunakan kredit cloud Anda"
+
+[color.eyeDropper]
+tooltip = "Pilih warna dari layar"
 
 [colorPicker]
 title = "Pilih warna"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Pilih PDF asli terlebih dahulu"
 filesMissing = "Tidak dapat menemukan berkas yang dipilih. Silakan pilih kembali."
 generic = "Tidak dapat membandingkan berkas ini."
 selectRequired = "Pilih dokumen asli dan yang diedit."
+title = "Perbandingan gagal"
 
 [compare.large.file]
 message = "Satu atau Kedua dokumen yang disediakan terlalu besar untuk diproses"
@@ -2864,6 +2994,7 @@ title = "Masih memproses…"
 
 [compare.status]
 complete = "Perbandingan siap"
+error = "Perbandingan gagal"
 extracting = "Mengekstrak teks..."
 processing = "Menganalisis perbedaan..."
 
@@ -2929,6 +3060,10 @@ title = "Metode Kompresi"
 [compress.selectText.1]
 1 = "1-3 kompresi PDF,</br> 4-6 kompresi gambar ringan,</br> 7-9 kompresi gambar intens akan sangat mengurangi kualitas gambar"
 _value = "Pengaturan Kompresi"
+
+[compress.settings]
+desiredSize = "Ukuran file yang diinginkan"
+desiredSizePlaceholder = "Masukkan ukuran"
 
 [compress.tooltip.description]
 text = "Kompresi adalah cara mudah untuk mengurangi ukuran file. Pilih Ukuran File untuk memasukkan ukuran target dan biarkan kami menyesuaikan kualitas untuk Anda. Pilih Kualitas untuk mengatur kekuatan kompresi secara manual."
@@ -3404,6 +3539,29 @@ title = "Pengaturan Dibuka"
 message = "Stirling PDF sekarang adalah editor PDF default Anda"
 title = "Aplikasi Default Disetel"
 
+[desktopUpdate]
+downloading = "Mengunduh pembaruan..."
+installing = "Memasang pembaruan..."
+installingWarning = "Aplikasi akan menutup otomatis untuk menyelesaikan pemasangan."
+installNow = "Pasang sekarang"
+readyToRestart = "Pembaruan siap"
+restartMessage = "Pembaruan telah dipasang. Mulai ulang aplikasi untuk menyelesaikan."
+restartNow = "Mulai ulang sekarang"
+updateFailed = "Pembaruan gagal"
+updateFailedMessage = "Gagal mengunduh atau memasang pembaruan."
+
+[desktopUpdate.blocked]
+docsLink = "Lihat dokumentasi instalasi"
+message = "Stirling-PDF tidak memiliki izin untuk memperbarui dirinya di mesin ini."
+title = "Izin administrator diperlukan"
+
+[dropdownList]
+searchPlaceholder = "Cari..."
+
+[editableSecretField]
+edit = "Edit"
+editSecretValue = "Edit nilai rahasia"
+
 [editTableOfContents]
 submit = "Terapkan table of contents"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Workspace outline"
 [editTableOfContents.workbench.empty]
 description = "Pilih alat Edit Table of Contents untuk memuat ruang kerjanya."
 title = "Buka alat untuk mulai mengedit"
+
+[emptyFilesState]
+upload = "Unggah"
 
 [encryptedPdfUnlock]
 description = "PDF ini dilindungi sandi. Masukkan sandi agar Anda dapat melanjutkan bekerja dengannya."
@@ -3605,6 +3766,10 @@ title = "Pengaturan"
 [extractPages.tooltip]
 description = "Mengekstrak halaman yang dipilih ke PDF baru, mempertahankan urutan."
 
+[fileCard]
+openInFileEditor = "Buka di Editor File"
+viewInViewer = "Lihat di Penampil"
+
 [fileChooser]
 click = "Klik"
 dragAndDrop = "Seret & Letakkan"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Seret & Letakkan file PDF"
 extractPDF = "Mengekstrak..."
 hoveredDragAndDrop = "Seret & Letakkan file di sini"
 or = "atau"
+
+[fileDropdownMenu]
+closeFile = "Tutup file"
 
 [fileEditor]
 addFiles = "Tambahkan File"
@@ -3771,12 +3939,250 @@ expand = "Perluas bilah samping"
 files = "File"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive belum dikonfigurasi"
+leaveMyFiles = "Keluar dari File Saya"
+myFiles = "File Saya"
 noFiles = "Belum ada file"
 openFileManager = "Buka pengelola file"
 openFromComputer = "Buka dari komputer"
 openSettings = "Buka pengaturan"
 search = "Cari"
 searchPlaceholder = "Cari file..."
+
+[fileSidebar.fileItem]
+closeViewer = "Tutup penampil"
+openInViewer = "Buka di penampil"
+
+[filesPage]
+addToWorkspace = "Tambahkan ke ruang kerja"
+addToWorkspaceCount = "Tambahkan {{count}} ke ruang kerja"
+allFiles = "Semua file"
+back = "Kembali"
+backToFolder = "Kembali ke {{folder}}"
+backToMyFiles = "Kembali ke File Saya"
+breadcrumbs = "Jalur folder"
+cancel = "Batal"
+clearSearch = "Hapus pencarian"
+clearSelection = "Hapus pilihan"
+closeDetails = "Tutup detail"
+create = "Buat"
+cycleBlocked = "Tidak dapat memindahkan folder ke salah satu subfoldernya sendiri."
+delete = "Hapus"
+deleteFolder = "Hapus folder"
+deleteFolderBody = "Hapus folder \"{{name}}\"?"
+deleteFolderConfirm = "Hapus folder \"{{name}}\"? File di dalamnya akan dipindahkan ke Semua file. {{count}} file terpengaruh."
+deleteFolderContents = "Juga hapus {{count}} file di dalam folder"
+deleteFolderContentsWarning = "File akan dihapus permanen dan tidak dapat dipulihkan."
+deleteFolderError = "Tidak dapat menghapus folder. Coba lagi."
+deleteFolderKeepHint = "File di dalamnya akan dipindahkan ke Semua file."
+deleteFolderTitle = "Hapus folder?"
+deselectAll = "Hapus pilihan"
+details = "Detail"
+detailsCount = "{{count}} file dipilih"
+dismissError = "Tutup"
+download = "Unduh"
+downloadAll = "Unduh semua"
+downloadVersion = "Unduh versi ini"
+dropOverlay = "Lepaskan file untuk mengunggah"
+dropOverlaySub = "File dimulai di Lokal. Gunakan 'Pindahkan ke' atau 'Simpan ke cloud' untuk mengaturnya ke dalam folder."
+file = "File"
+fileMenu = "Tindakan file"
+folder = "Folder"
+folderItems = "{{count}} item"
+folderMenu = "Tindakan folder"
+inPath = "di {{path}}"
+inWorkspace = "Buka"
+inWorkspaceAria = "Sudah di ruang kerja"
+loading = "Memuat…"
+localFoldersUnavailable = "Folder hanya tersedia di cloud - simpan file ke cloud untuk mengaturnya."
+moreActions = "Tindakan folder lainnya"
+moveLocalToCloudBlocked = "File khusus lokal tidak dapat dipindahkan ke folder cloud. Simpan ke cloud terlebih dahulu."
+moveSkippedRemote = "{{count}} file tidak dapat dipindahkan di server (tidak ada izin atau sudah dihapus)."
+moveTo = "Pindahkan ke…"
+myFiles = "File Saya"
+newFolder = "Folder baru"
+newFolderStorageDisabled = "Penyimpanan folder server tidak diaktifkan. Minta administrator Anda untuk menyalakannya."
+newFolderTabUnavailable = "Beralih ke Semua atau Cloud untuk membuat folder."
+newRootFolder = "Folder baru di root"
+offlineNoFolderEdits = "Sinkronisasi folder server tidak tersedia - perubahan folder dinonaktifkan. Periksa status masuk dan konfigurasi penyimpanan."
+open = "Buka"
+openInWorkbench = "Buka di Workbench"
+openVersionInWorkspace = "Buka di ruang kerja"
+originFilter = "Filter menurut sumber"
+quickView = "Pratinjau cepat"
+refresh = "Segarkan dari server"
+remove = "Hapus"
+removeConfirm = "Hapus {{count}} file? Tindakan ini tidak dapat dibatalkan."
+removeVersion = "Hapus versi ini"
+rename = "Ganti nama"
+renameFolder = "Ganti nama folder"
+resizeFolderTree = "Ubah ukuran pohon folder (tombol panah, Shift untuk langkah lebih besar; klik ganda untuk menyesuaikan otomatis)"
+save = "Simpan"
+saveToServer = "Simpan ke server"
+saveToServerDisabledHint = "Menyimpan ke server tidak diaktifkan di server ini. Minta administrator Anda untuk mengaktifkannya."
+search = "Cari"
+searchPlaceholder = "Cari folder ini & subfoldernya"
+selectAll = "Pilih semua"
+selectAllHint = "Klik untuk memilih semua. Tip: tahan Ctrl (atau Cmd) untuk menambah file satu per satu, Shift untuk memilih rentang."
+selectedCount = "{{count}} dipilih"
+selectFile = "Pilih file {{name}}"
+shareDisabledHint = "Berbagi file tidak diaktifkan di server ini. Minta administrator Anda untuk mengaktifkannya."
+shareManage = "Kelola berbagi"
+showDetails = "Tampilkan detail"
+summary = "{{count}} item"
+syncFailed = "Sinkronisasi folder gagal: {{message}}"
+syncPartial = "Sinkronisasi folder sebagian: {{failed}} dari {{total}} folder tidak dapat digabung."
+tree = "Folder"
+upload = "Unggah"
+uploadedToLocal = "File yang diunggah dimulai di Lokal. Gunakan 'Simpan ke cloud' untuk menempatkannya dalam folder."
+uploadFromMobile = "Unggah dari Ponsel"
+versionActions = "Tindakan versi"
+versionCollapse = "Ciutkan versi tengah"
+versionOrigin = "Unggahan asli"
+versionsCount = "{{count}} versi"
+versionShowHidden = "Tampilkan {{count}} versi sebelumnya"
+viewVersion = "Lihat versi ini"
+
+[filesPage.appearance]
+colour = "Warna"
+icon = "Ikon"
+title = "Tampilan"
+useColour = "Gunakan warna {{c}}"
+
+[filesPage.column]
+modified = "Diubah"
+name = "Nama"
+size = "Ukuran"
+type = "Jenis"
+
+[filesPage.empty]
+hint = "Lepaskan PDF di mana saja pada halaman ini untuk mengunggah, atau gunakan tombol Folder baru untuk mengatur file Anda."
+newFolderCta = "Buat folder"
+title = "Folder ini kosong"
+uploadCta = "Unggah file"
+
+[filesPage.empty.cloud]
+hint = "Unggah file untuk memulai, atau buat folder untuk mengatur."
+offlineHint = "Sambungkan kembali untuk memuat pustaka cloud Anda."
+offlineTitle = "Tidak ada file cloud yang di-cache"
+title = "Belum ada file cloud"
+
+[filesPage.empty.local]
+hint = "File yang disimpan tanpa mengunggah tetap di sini. Lepaskan file untuk menambahkannya."
+title = "Tidak ada file khusus lokal"
+
+[filesPage.empty.recent]
+hint = "File yang Anda buka atau edit akan muncul di sini."
+title = "Belum ada yang diubah"
+
+[filesPage.empty.shared]
+hint = "Saat seseorang membagikan file melalui tautan, file akan muncul di sini."
+title = "Tidak ada yang dibagikan kepada Anda"
+
+[filesPage.empty.sharedByMe]
+hint = "Buat tautan berbagi atau undang rekan dari salah satu file Anda untuk melihatnya di sini."
+title = "Anda belum membagikan file apa pun"
+
+[filesPage.error]
+actionFailed = "Tidak dapat {{action}}."
+actionFailedDetail = "Tidak dapat {{action}}: {{message}}"
+deleteFolderFailed = "Tidak dapat menghapus folder."
+deleteFolderFailedDetail = "Tidak dapat menghapus folder: {{message}}"
+folderAppearanceFailed = "Tidak dapat memperbarui tampilan folder."
+folderAppearanceFailedDetail = "Tidak dapat memperbarui tampilan folder: {{message}}"
+moveFilesFailed = "Tidak dapat memindahkan file."
+moveFilesFailedDetail = "Tidak dapat memindahkan file: {{message}}"
+moveFolderFailed = "Tidak dapat memindahkan folder."
+moveFolderFailedDetail = "Tidak dapat memindahkan folder: {{message}}"
+removeFilesFailed = "Tidak dapat menghapus file."
+removeFilesFailedDetail = "Tidak dapat menghapus file: {{message}}"
+uploadFilesFailed = "Tidak dapat mengunggah file."
+uploadFilesFailedDetail = "Tidak dapat mengunggah file: {{message}}"
+
+[filesPage.field]
+added = "Ditambahkan"
+count = "File"
+folder = "Folder"
+modified = "Diubah"
+name = "Nama"
+size = "Ukuran"
+toolHistory = "Riwayat alat"
+toolHistoryAtVersion = "Rangkaian alat kumulatif"
+totalSize = "Total ukuran"
+type = "Jenis"
+versionHistory = "Perjalanan versi"
+
+[filesPage.folderName]
+cancel = "Batal"
+error = "Tidak dapat menyimpan folder. Coba lagi."
+label = "Nama folder"
+placeholder = "Nama folder"
+
+[filesPage.moveDialog]
+cancel = "Batal"
+confirm = "Pindahkan ke sini"
+error = "Tidak dapat memindahkan. Coba lagi."
+hint = "Pilih folder tujuan. Tip: Anda juga dapat menyeret dan melepaskan file ke folder di pohon di sebelah kiri."
+newFolderCancel = "Batalkan"
+newFolderCreate = "Buat"
+newFolderError = "Tidak dapat membuat folder. Coba lagi."
+newFolderLabel = "Nama folder baru"
+newFolderPlaceholder = "Nama folder"
+newFolderToggle = "Buat folder baru…"
+title = "Pindahkan ke folder"
+
+[filesPage.origin]
+all = "Semua sumber"
+cloud = "Cloud"
+cloudHint = "Disimpan di server Stirling"
+local = "Lokal"
+localHint = "Hanya disimpan di peramban ini"
+shared = "Dibagikan"
+sharedHint = "Dibagikan kepada Anda melalui tautan"
+
+[filesPage.sort]
+modifiedAsc = "Terlama dulu"
+modifiedDesc = "Terbaru dulu"
+nameAsc = "Nama A→Z"
+nameDesc = "Nama Z→A"
+sizeAsc = "Terkecil dulu"
+sizeDesc = "Terbesar dulu"
+
+[filesPage.syncError]
+client = "Sinkronisasi folder gagal."
+network = "Tidak dapat menjangkau server."
+server = "Kesalahan server saat sinkronisasi folder."
+
+[filesPage.tabName]
+local = "Lokal"
+recent = "Terbaru"
+shared = "Dibagikan kepada saya"
+sharedByMe = "Dibagikan oleh saya"
+
+[filesPage.tabs]
+all = "Semua"
+ariaLabel = "Tampilan file"
+cloud = "Cloud"
+local = "Lokal"
+recent = "Terbaru"
+shared = "Dibagikan kepada saya"
+sharedByMe = "Dibagikan oleh saya"
+
+[filesPage.treeMenu]
+actions = "Tindakan folder untuk {{name}}"
+collapse = "Ciutkan folder"
+delete = "Hapus folder"
+expand = "Bentangkan folder"
+newSubfolder = "Subfolder baru"
+rename = "Ganti nama"
+
+[filesPage.typeFilter]
+allTypes = "Semua jenis"
+label = "Filter menurut jenis"
+
+[filesPage.viewMode]
+grid = "Tampilan kisi"
+label = "Mode tampilan"
+list = "Tampilan daftar"
 
 [fileToPDF]
 credit = "Layanan ini menggunakan LibreOffice dan Unoconv untuk konversi berkas."
@@ -3891,6 +4297,15 @@ title = "Tentang Meratakan PDF"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Ratakan setelah mengisi"
+rescanFields = "Pindai ulang bidang"
+rescanFormFields = "Pindai ulang bidang formulir"
+save = "Simpan"
+
+[formFill.sidebar]
+close = "Tutup bilah sisi"
 
 [getPdfInfo]
 downloadJson = "Unduh JSON"
@@ -4451,6 +4866,11 @@ tags = "markup, konten web, transformasi, konversi"
 title = "HTML Ke PDF"
 zoom = "Tingkat perbersan untuk menampilkan situs web."
 
+[image.upload]
+hint = "Unggah file PNG, JPG, SVG, atau gambar lain untuk ditempatkan pada PDF. File SVG akan dikonversi ke PNG untuk kompatibilitas."
+label = "Unggah Gambar"
+placeholder = "Pilih file gambar"
+
 [imageToPdf]
 tags = "konversi,img,jpg,gambar,foto"
 
@@ -4468,6 +4888,9 @@ title = "Gambar ke PDF"
 3 = "Logika multi berkas (Hanya diaktifkan jika bekerja dengan banyak gambar)"
 4 = "Gabungkan menjadi satu PDF"
 5 = "Mengonversi ke PDF yang terpisah"
+
+[infoBanner]
+dismiss = "Tutup"
 
 [invite]
 acceptError = "Gagal membuat akun"
@@ -4804,6 +5227,7 @@ failed = "Operasi OCR gagal"
 
 [ocr.languagePicker]
 additionalLanguages = "Mencari bahasa tambahan?"
+loading = "Memuat bahasa yang tersedia..."
 viewSetupGuide = "Lihat panduan penyiapan →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "Tersisa {{days}} hari"
 title = "Uji Coba Pro 30 Hari Anda"
 trialEnds = "Uji coba berakhir {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Kode autentikasi"
+qrCodeLoading = "Membuat kode QR Anda…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Setelah Anda mengaktifkan mode login, Anda dapat mengelola pengguna, mengonfigurasi pengaturan, dan memantau kesehatan server. <strong>{{freeTierLimit}}</strong> orang pertama di server Anda dapat menggunakan Stirling gratis."
 adminBodyLoginEnabled = "Sebagai admin, Anda dapat mengelola pengguna, mengonfigurasi pengaturan, dan memantau kesehatan server. <strong>{{freeTierLimit}}</strong> orang pertama di server Anda dapat menggunakan Stirling gratis."
@@ -4949,6 +5377,9 @@ userTitle = "Ringkasan Paket"
 
 [onboarding.securityCheck]
 message = "Aplikasi telah mengalami perubahan signifikan baru-baru ini. Perhatian admin server Anda mungkin diperlukan. Harap konfirmasi peran Anda untuk melanjutkan."
+roleAdmin = "Admin"
+rolePlaceholder = "Konfirmasi peran Anda"
+roleUser = "Pengguna"
 
 [onboarding.serverLicense]
 freeBody = "Lisensi <strong>Open-Core</strong> kami mengizinkan hingga <strong>{{freeTierLimit}}</strong> pengguna gratis per server. Untuk skala tanpa hambatan dan mendapatkan akses awal ke <strong>alat pengeditan teks PDF</strong> baru kami, kami sarankan paket Stirling Server - pengeditan penuh dan <strong>kursi tanpa batas</strong> seharga $99/server/bulan."
@@ -5074,6 +5505,17 @@ title = "Editor Halaman"
 zoomIn = "Perbesar"
 zoomOut = "Perkecil"
 
+[pageEditor.emptyState]
+body = "Tambahkan file untuk mulai mengedit halaman"
+title = "Tidak ada file PDF dimuat"
+
+[pageEditor.toolbar]
+delete = "Hapus yang dipilih"
+redo = "Ulangi"
+rotateLeft = "Putar yang dipilih ke kiri"
+rotateRight = "Putar yang dipilih ke kanan"
+undo = "Urungkan"
+
 [pageExtracter]
 header = "Ekstrak Halaman"
 placeholder = "(misalnya 1,2,8 atau 4,7,12-16 atau 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Menambahkan Batas"
 borderWidth = "Ketebalan Batas"
 bottom = "Margin Bawah"
 cols = "Kolom"
+colsPlaceholder = "Masukkan kolom"
 header = "Tata Letak Multi Halaman"
 innerMargin = "Margin Dalam"
 left = "Margin Kiri"
 pagesPerSheet = "Halaman per lembar:"
 right = "Margin Kanan"
 rows = "Baris"
+rowsPlaceholder = "Masukkan baris"
 submit = "Kirim"
 tags = "menggabungkan, komposit, tampilan tunggal, mengatur"
 title = "Tata Letak Multi Halaman"
@@ -5131,6 +5575,14 @@ failed = "Terjadi kesalahan saat membuat tata letak multi-halaman."
 innerMarginTooLarge = "Margin dalam terlalu besar untuk tata letak yang dipilih."
 outerHorizontalMarginsTooLarge = "Margin Kiri/Kanan terlalu besar untuk ukuran halaman ini."
 outerVerticalMarginsTooLarge = "Margin Atas/Bawah terlalu besar untuk ukuran halaman ini."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Masukkan ketebalan batas"
+bottomPlaceholder = "Masukkan margin bawah"
+innerPlaceholder = "Masukkan margin dalam"
+leftPlaceholder = "Masukkan margin kiri"
+rightPlaceholder = "Masukkan margin kanan"
+topPlaceholder = "Masukkan margin atas"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Aktifkan batas untuk menggambar garis di sekitar setiap halaman yang ditempatkan. Ini dapat membantu pemisahan visual atau pemangkasan."
@@ -5785,6 +6237,26 @@ pdfTools = "Alat PDF Dasar"
 priority = "Dukungan Prioritas"
 title = "Fitur"
 
+[plan.features]
+allPdfOperations = "Semua operasi PDF"
+auditing = "Audit"
+communitySupport = "Dukungan komunitas"
+customPdfMetadata = "Metadata PDF khusus"
+editingTextInPdfs = "Mengedit teks dalam PDF"
+externalDatabase = "Database eksternal"
+googleDriveIntegration = "Integrasi Google Drive"
+prometheusSupport = "Dukungan Prometheus"
+regularUpdates = "Pembaruan rutin"
+saml = "SAML"
+secureLoginSupport = "Dukungan login aman"
+selfHostedDeployment = "Penerapan self-hosted"
+sso = "SSO"
+unlimitedUsers = "Pengguna tanpa batas"
+upToFiveUsers = "Hingga 5 pengguna"
+upToFiveUsersLowercase = "hingga 5 pengguna"
+usageTracking = "Pelacakan penggunaan"
+usersLimitedToSeats = "Pengguna dibatasi sesuai jumlah kursi"
+
 [plan.free]
 forever = "Gratis selamanya"
 highlight1 = "Penggunaan Alat Terbatas per minggu"
@@ -5792,6 +6264,22 @@ highlight2 = "Akses ke semua alat"
 highlight3 = "Dukungan komunitas"
 included = "Termasuk"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Integrasi lanjutan"
+allBasicFeatures = "Semua fitur dasar"
+cancelAnytime = "Batalkan kapan saja"
+customPdfMetadata = "Metadata PDF khusus"
+editingTextInPdfsCaps = "Mengedit teks dalam PDF"
+enterpriseFeatures = "Fitur enterprise (SAML, Audit)"
+perSeatLicensing = "Lisensi per kursi"
+saveWithAnnualBilling = "Hemat dengan penagihan tahunan"
+selfHosted = "Self-hosted"
+selfHostedOnInfrastructure = "Self-hosted pada infrastruktur Anda"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Pengguna tanpa batas"
+upToFiveUsers = "Hingga 5 pengguna"
+usageTrackingPrometheus = "Pelacakan penggunaan & Prometheus"
 
 [plan.licenseWarning]
 body = "Anda memiliki {{total}} pengguna tetapi level gratis hanya mendukung {{limit}} per server. Upgrade agar Stirling PDF tetap berjalan lancar."
@@ -6103,6 +6591,7 @@ allSessions = "Semua Sesi"
 allTools = "All Tools"
 automate = "Otomasi"
 back = "Kembali"
+backToAllTools = "Kembali ke semua alat"
 certSign = "Tanda Tangan Sertifikat"
 completedSessions = "Sesi Selesai"
 completedTab = "Selesai"
@@ -6772,6 +7261,9 @@ bullet3 = "Kritis untuk alur persetujuan dan rantai penjagaan hukum"
 description = "Urutan yang Anda tentukan saat membuat sesi menentukan siapa yang menandatangani terlebih dahulu."
 title = "Urutan Tanda Tangan"
 
+[settings]
+close = "Tutup"
+
 [settings.configuration]
 advanced = "Lanjutan"
 database = "Database"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Periksa pembaruan dan lihat informasi versi"
 latestVersion = "Versi Terbaru"
+managedByAdmin = "Dikelola oleh administrator"
+modeAuto = "Instal pembaruan secara otomatis"
+modeDisabled = "Jangan periksa pembaruan"
+modePrompt = "Tanya saya sebelum memasang pembaruan"
 serverNeedsUpdate = "Server perlu diperbarui oleh administrator"
 title = "Pembaruan Software"
+updateBehavior = "Perilaku pembaruan"
+updateBehaviorDescription = "Pilih apakah akan meminta konfirmasi sebelum memasang pembaruan, memasangnya secara otomatis, atau melewati pemeriksaan pembaruan sepenuhnya."
+updateBehaviorError = "Tidak dapat mengubah perilaku pembaruan"
+updateBehaviorErrorLocked = "Pengaturan ini dikunci oleh administrator Anda."
+updateBehaviorLockedDescription = "Administrator Anda telah mengonfigurasi bagaimana Stirling-PDF menangani pembaruan di mesin ini. Hubungi mereka untuk mengubahnya."
+updateBehaviorSaved = "Perilaku pembaruan disimpan."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Lihat Detail"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Semua pengguna dapat melihat dan menggunakan tanda tangan i
 sharedHeading = "Tanda Tangan Bersama"
 tempStorageDescription = "Tanda tangan disimpan hanya di browser Anda. Data akan hilang jika Anda membersihkan data browser atau berpindah browser."
 tempStorageTitle = "Penyimpanan browser sementara"
+use = "Gunakan tanda tangan"
 
 [sign.saved.status]
 saved = "Tersimpan"
@@ -7695,6 +8198,7 @@ bulkTitle = "Unggah file yang dipilih"
 description = "Ini mengunggah file saat ini ke penyimpanan server untuk akses Anda sendiri."
 errorTitle = "Gagal mengunggah"
 failure = "Gagal mengunggah. Harap periksa login dan pengaturan penyimpanan Anda."
+featureDisabled = "Menyimpan ke server tidak diaktifkan di server ini."
 fileCount = "{{count}} file dipilih"
 fileLabel = "File"
 hint = "Tautan publik dan mode akses dikendalikan oleh pengaturan server Anda."
@@ -7823,8 +8327,17 @@ center = "Tengah"
 left = "Kiri"
 right = "Kanan"
 
+[textInput]
+clear = "Bersihkan masukan"
+
 [theme]
 toggle = "Alihkan Tema"
+
+[time.relative]
+daysAgo = "{{count}} hari yang lalu"
+hoursAgo = "{{count}} jam yang lalu"
+justNow = "baru saja"
+minutesAgo = "{{count}} menit yang lalu"
 
 [timestampPdf]
 completed = "PDF berhasil diberi cap waktu"
@@ -7852,6 +8365,10 @@ label = "Pilih server TSA"
 [timestampPdf.steps]
 settings = "Pengaturan"
 
+[toast]
+dismiss = "Tutup"
+toggleDetails = "Alihkan detail"
+
 [tool]
 endpointUnavailable = "Alat ini tidak tersedia di server Anda."
 endpointUnavailableClickable = "Tidak tersedia dalam mode ini. Klik untuk masuk."
@@ -7868,13 +8385,18 @@ viewerMode = "Beralih ke editor file untuk memilih beberapa file."
 [toolPanel]
 allTools = "Semua alat"
 alpha = "Alpha"
+backToAllTools = "Kembali ke semua alat"
+backToDefault = "Kembali"
 backToTools = "Kembali ke alat"
 collapse = "Ciutkan panel"
 comingSoon = "Segera hadir:"
 expand = "Perluas panel"
+goBack = "Kembali"
 placeholder = "Pilih alat untuk memulai"
 premiumFeature = "Fitur premium:"
 search = "Cari alat"
+toolsHeader = "Alat"
+viewAllTools = "Lihat semua alat"
 
 [toolPanel.fullscreen]
 comingSoon = "Segera hadir:"
@@ -7933,6 +8455,9 @@ verification = "Verifikasi"
 noSearchResults = "Tidak ada alat ditemukan"
 noTools = "Tidak ada alat tersedia"
 
+[tooltip]
+close = "Tutup tooltip"
+
 [unlockPDFForms]
 description = "Alat ini akan menghapus pembatasan hanya baca dari bidang formulir PDF, sehingga dapat diedit dan diisi."
 filenamePrefix = "formulir_dibuka"
@@ -7951,29 +8476,42 @@ placeholder = "Pilih berkas PDF di tampilan utama untuk memulai"
 title = "Hasil Formulir yang Dibuka"
 
 [update]
+allReleases = "Semua Rilis"
 availableUpdates = "Pembaruan Tersedia"
+breaking = "Perubahan besar"
 breakingChanges = "Perubahan Signifikan"
 breakingChangesDefault = "Versi ini berisi perubahan yang memutus kompatibilitas."
 breakingChangesDetected = "Perubahan Signifikan Terdeteksi"
 breakingChangesMessage = "Beberapa versi berisi perubahan yang memutus kompatibilitas. Harap tinjau panduan migrasi di bawah sebelum memperbarui."
 close = "Tutup"
+closeModal = "Tutup modal pembaruan"
 current = "Versi Saat Ini"
+defaultRecommendation = "Pembaruan ini berisi perbaikan dan peningkatan penting."
 downloadLatest = "Unduh Terbaru"
+later = "Nanti"
 latest = "Versi Terbaru"
 latestStable = "Stabil Terbaru"
 loadingDetailedInfo = "Memuat informasi detail..."
 migrationGuide = "Panduan Migrasi"
 migrationGuides = "Panduan Migrasi"
+migrationGuidesDesc = "Tinjau perubahan penting sebelum memperbarui."
+modalSubtitle = "Versi baru Stirling PDF siap dipasang."
 modalTitle = "Pembaruan Tersedia"
+notes = "Catatan"
 priorityLabel = "Prioritas"
 recommendedAction = "Tindakan yang Disarankan"
 releaseNotes = "Catatan Rilis"
+showLess = "Tampilkan lebih sedikit versi"
+showMore = "Tampilkan semua {{count}} versi"
+stable = "STABLE"
 unableToLoadDetails = "Tidak dapat memuat informasi detail."
 updateAvailable = "Pembaruan Tersedia"
 urgentUpdateAvailable = "Pembaruan Mendesak"
 version = "Versi"
+versionHistory = "Riwayat Versi"
 viewAllReleases = "Lihat Semua Rilis"
 viewGuide = "Lihat Panduan"
+whatsNewIn = "Apa yang baru di"
 
 [update.priority]
 low = "Rendah"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Aktifkan Filter Gelap"
 enableSepiaFilter = "Aktifkan Filter Sepia"
 firstPage = "Halaman Pertama"
 lastPage = "Halaman Terakhir"
+moreOptions = "Lainnya"
 nextPage = "Halaman Berikutnya"
 onlyPdfSupported = "Penampil hanya mendukung file PDF. File ini tampaknya memiliki format yang berbeda."
+pageNavigation = "Navigasi halaman"
 previousPage = "Halaman Sebelumnya"
 resetZoom = "Setel ulang zoom"
 singlePageView = "Tampilan Satu Halaman"
 unknownFile = "File tidak dikenal"
+view = "Tampilan"
+zoom = "Zoom"
 zoomIn = "Perbesar"
 zoomOut = "Perkecil"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Sisipkan Teks"
 typeReplaceText = "Ganti Teks"
 viewComment = "Lihat komentar"
 
+[viewer.error]
+noFileProvided = "Kesalahan: Tidak ada file yang diberikan ke penampil"
+
 [viewer.formBar]
 apply = "Terapkan Perubahan"
 dismiss = "Abaikan"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "PDF ini berisi bidang yang dapat diisi"
 title = "Bidang Formulir"
 unsavedBadge = "Belum Disimpan"
 unsavedDesc = "Anda memiliki perubahan yang belum disimpan"
+
+[viewer.link]
+delete = "Hapus tautan"
 
 [viewer.nonPdf]
 columnDefault = "Kolom {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Memuat..."
 renderMarkdown = "Render markdown"
 sortedBy = "Diurutkan menurut: {{column}}"
 textStats = "{{lines}} baris · {{size}}"
+
+[viewer.redaction]
+removeMark = "Hapus tanda ini"
+
+[viewer.search]
+clear = "Hapus pencarian"
+close = "Tutup pencarian"
+next = "Hasil berikutnya"
+previous = "Hasil sebelumnya"
+resultsOf = "dari {{total}}"
+
+[viewer.signature]
+delete = "Hapus tanda tangan"
 
 [viewPdf]
 header = "Lihat PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Tampilkan/Sembunyikan Lapisan"
 toggleSidebar = "Tampilkan/Sembunyikan Bilah Samping"
 toggleTheme = "Beralih Tema"
 viewer = "Penampil"
+
+[workflow.participant]
+accessExpired = "Akses Anda ke dokumen ini telah kedaluwarsa."
+certificateFile = "File Sertifikat"
+certificateFilePlaceholder = "Pilih file sertifikat"
+certificatePassword = "Kata Sandi Sertifikat"
+certificateType = "Jenis Sertifikat"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "Sertifikat P12/PKCS12"
+certTypeServer = "Sertifikat Server (jika tersedia)"
+completedDeclined = "Anda telah menolak dokumen ini."
+completedSigned = "Anda telah menandatangani dokumen ini."
+decline = "Tolak"
+downloadDocument = "Unduh Dokumen"
+dueDate = "Batas Waktu: {{date}}"
+errorTitle = "Kesalahan"
+from = "Dari: {{name}}"
+loadingSession = "Memuat sesi..."
+location = "Lokasi"
+locationPlaceholder = "mis., San Francisco, CA"
+pageNumber = "Nomor Halaman (opsional)"
+reason = "Alasan"
+reasonPlaceholder = "mis., Persetujuan dokumen"
+sessionNotFound = "Sesi tidak ditemukan atau akses ditolak."
+signDocument = "Tandatangani Dokumen"
+statusDeclined = "Ditolak"
+statusNotified = "Diberi tahu"
+statusPending = "Tertunda"
+statusSigned = "Ditandatangani"
+statusViewed = "Dilihat"
+submitSignature = "Kirim Tanda Tangan"
 
 [workspace]
 title = "Ruang Kerja"
