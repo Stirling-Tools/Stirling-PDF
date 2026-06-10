@@ -116,7 +116,10 @@ const publicEndpoints = [
   "/api/v1/config/app-config",
   "/api/v1/info/status",
   "/api/v1/config/public-config",
-  "/api/v1/config/endpoints-enabled",
+  // Both real endpoint-config routes (an earlier entry here said
+  // "endpoints-enabled", which matches neither and silently guarded nothing).
+  "/api/v1/config/endpoints-availability",
+  "/api/v1/config/endpoint-enabled",
 ];
 
 // De-duplicate concurrent token refreshes.
@@ -250,6 +253,20 @@ apiClient.interceptors.response.use(
     if (status === 401 && isPublicEndpoint) {
       console.debug(
         "[API Client] 401 on public endpoint, continuing without auth:",
+        originalRequest.url,
+      );
+      originalRequest.skipAuthRedirect = true;
+    }
+
+    // If a request was already retried with a freshly refreshed token and the
+    // backend STILL returned 401, the session is not the problem — the backend
+    // is rejecting a valid token (authorization bug, wrong API origin, etc.).
+    // Redirecting to /login cannot fix that: the login page sees the valid
+    // Supabase session and bounces straight back, producing an infinite
+    // login -> / -> login loop. Keep the error toast, skip the redirect.
+    if (status === 401 && originalRequest._retry && !isPublicEndpoint) {
+      console.warn(
+        "[API Client] 401 persisted after token refresh; backend rejected a valid session — not redirecting to login:",
         originalRequest.url,
       );
       originalRequest.skipAuthRedirect = true;

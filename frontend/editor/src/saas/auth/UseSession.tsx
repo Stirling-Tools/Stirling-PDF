@@ -161,7 +161,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "[Auth Debug] Fetching credits for user:",
           currentSession.user.id,
         );
-        const response = await apiClient.get<ApiCredits>("/api/v1/credits");
+        // Fired automatically on session init and TOKEN_REFRESHED. If the
+        // backend rejects it (deploy skew, authz bug) the failure must stay
+        // local — the global 401 handler would hard-redirect to /login and,
+        // with a valid session, loop login -> / -> login forever.
+        const response = await apiClient.get<ApiCredits>("/api/v1/credits", {
+          suppressErrorToast: true,
+          skipAuthRedirect: true,
+        });
         const apiCredits = response.data;
 
         // Map server payload to app CreditSummary

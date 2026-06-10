@@ -46,6 +46,39 @@ function stashPostLoginRedirect(path: string): void {
   }
 }
 
+// Loop breaker for the 401 hard-redirect below. If the backend persistently
+// 401s an automatic call while the auth session is actually valid, the
+// redirect lands on /login, the login page sees the valid session and bounces
+// back, the call 401s again and we redirect again — forever. sessionStorage
+// survives the full-page navigations of that cycle (per tab), so a second
+// redirect within the window means we're looping, not expiring.
+const LOGIN_REDIRECT_THROTTLE_KEY = "stirling_last_401_redirect";
+const LOGIN_REDIRECT_THROTTLE_MS = 10_000;
+
+function loginRedirectRecentlyFired(): boolean {
+  try {
+    const last = Number(
+      window.sessionStorage.getItem(LOGIN_REDIRECT_THROTTLE_KEY),
+    );
+    return (
+      Number.isFinite(last) && Date.now() - last < LOGIN_REDIRECT_THROTTLE_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+function markLoginRedirectFired(): void {
+  try {
+    window.sessionStorage.setItem(
+      LOGIN_REDIRECT_THROTTLE_KEY,
+      String(Date.now()),
+    );
+  } catch {
+    // sessionStorage unavailable — fail open
+  }
+}
+
 /**
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise
@@ -71,6 +104,13 @@ export async function handleHttpError(error: any): Promise<boolean> {
 
     // If not on auth page, redirect to login with expired session message
     if (!isAuthPage && !skipAuthRedirect) {
+      if (loginRedirectRecentlyFired()) {
+        console.warn(
+          "[httpErrorHandler] 401 redirect already fired moments ago — suppressing repeat to avoid a login loop:",
+          error?.config?.url,
+        );
+        return true;
+      }
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
       // Spring 302-strips the ?from= query from /login, so stash the return
       // path in sessionStorage (AuthCallback reads it after SSO round-trip).
@@ -83,6 +123,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
         // ignore storage access failures
       }
       const expiredPrefix = hadStoredJwt ? "expired=true&" : "";
+      markLoginRedirectFired();
       window.location.href = `${withBasePath("/login")}?${expiredPrefix}from=${encodeURIComponent(currentLocation)}`;
       return true; // Suppress toast since we're redirecting
     }
