@@ -98,8 +98,8 @@ export function PoliciesSection({
 
   if (!POLICIES_ENABLED) return null;
 
-  // Match the prototype: the header tally counts every CONFIGURED policy
-  // (active + paused), not just the active ones.
+  // The header tally counts every CONFIGURED policy (active + paused), not just
+  // the active ones.
   const configuredCount = categories.filter(
     (c) => pol.policies[c.id]?.configured,
   ).length;
@@ -274,8 +274,7 @@ export function PolicyDetailTakeover() {
       setPolicyDetailView("detail");
     });
 
-  // Setup: the shared wizard in create mode. The wizard embeds the tool step, so
-  // it's only rendered here, not in the rail tests (which mock that step).
+  // Setup: the shared wizard in create mode.
   if (!state.configured) {
     return (
       <PolicySetupWizard
@@ -286,8 +285,8 @@ export function PolicyDetailTakeover() {
         sources={sources}
         docTypes={docTypes}
         canConfigure={pol.canConfigure}
-        // The prototype always offers "Set up Classification" in step 2 — there
-        // is no standalone classification policy that would flip this on.
+        // No standalone classification policy exists yet to enable doc-type
+        // narrowing, so it stays off for this release.
         classificationEnabled={false}
         mode="create"
         onCancel={() => closePolicy()}

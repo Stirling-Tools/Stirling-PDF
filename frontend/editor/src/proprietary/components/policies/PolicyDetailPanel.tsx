@@ -222,8 +222,8 @@ export function PolicyDetailPanel({
           )}
         </div>
 
-        {/* Stats — one grouped card with divided columns, matching the
-            prototype's quiet summary footer (intentionally unlabelled). */}
+        {/* Stats — one grouped card with divided columns, intentionally
+            unlabelled for a quiet summary footer. */}
         <Card padding="none">
           <div className="pol-stats">
             <div className="pol-stat">

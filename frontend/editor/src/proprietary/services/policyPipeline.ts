@@ -1,6 +1,6 @@
 /**
- * Bridge between the frontend automation model and the backend Policies engine
- * (PR #6527). "Backend automation" = send the whole pipeline + files to
+ * Bridge between the frontend automation model and the backend Policies engine.
+ * "Backend automation" = send the whole pipeline + files to
  * `/api/v1/policies/run` and let the server orchestrate the steps, instead of
  * the browser running them one-by-one via executeAutomationSequence.
  *
@@ -273,8 +273,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (trigger.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
-      outputMode:
-        output.mode === "new_version" ? "new_version" : "new_file",
+      outputMode: output.mode === "new_version" ? "new_version" : "new_file",
       outputName: str(output.name),
       outputNamePosition:
         output.position === "suffix"

@@ -218,7 +218,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-4);
-  /* Bottom gap so the label doesn't hug its card/chips (prototype mb-2.5). */
+  /* Bottom gap so the label doesn't hug its card/chips. */
   margin: 0 0 var(--space-2);
 }
 
@@ -341,8 +341,7 @@
   color: var(--color-text-4);
 }
 
-/* ---- Stats: one grouped card with three divided columns, matching the
-        prototype's quiet summary footer (grid-cols-3 divide-x). ---- */
+/* ---- Stats: one grouped card with three divided columns. ---- */
 .pol-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

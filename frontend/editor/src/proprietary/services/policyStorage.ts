@@ -28,8 +28,9 @@ function defaultState(): PolicyState {
   };
 }
 
-/** The removed mock user's email, scrubbed from any persisted state on read. */
-const STALE_MOCK_REVIEWER = "matt@stirlingpdf.com";
+/** An obsolete reviewer email from earlier development, scrubbed from persisted
+ *  state on read so it can re-default to the real signed-in user. */
+const STALE_REVIEWER_EMAIL = "matt@stirlingpdf.com";
 
 /** Read the full policy state, seeding + healing any missing categories. */
 export function loadPolicies(): PoliciesByCategory {
@@ -48,9 +49,10 @@ export function loadPolicies(): PoliciesByCategory {
   const out: PoliciesByCategory = {};
   for (const cat of loadPolicyCatalog().categories) {
     const merged = { ...defaultState(), ...(parsed[cat.id] ?? {}) };
-    // Migration: scrub the removed mock user's email so the reviewer re-defaults
-    // to the real signed-in user instead of the persisted "matt@stirlingpdf.com".
-    if (merged.reviewerEmail === STALE_MOCK_REVIEWER) merged.reviewerEmail = "";
+    // Migration: clear the obsolete persisted reviewer email so it re-defaults
+    // to the real signed-in user.
+    if (merged.reviewerEmail === STALE_REVIEWER_EMAIL)
+      merged.reviewerEmail = "";
     out[cat.id] = merged;
   }
   return out;

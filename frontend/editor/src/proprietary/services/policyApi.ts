@@ -1,5 +1,5 @@
 /**
- * Client for the backend Policies engine (PR #6527, `/api/v1/policies`). Runs a
+ * Client for the backend Policies engine (`/api/v1/policies`). Runs a
  * pipeline on the server — the "backend automation" path — and polls its status.
  * Outputs are downloaded via the existing `/api/v1/general/files/{id}` endpoint
  * using the file ids in the run view.
@@ -21,7 +21,9 @@ interface JobResponse {
 // --- Policy config persistence (server-side store, JPA-backed) ---
 
 /** Create or update a policy; the backend assigns a blank id and returns it. */
-export async function savePolicy(policy: BackendPolicy): Promise<BackendPolicy> {
+export async function savePolicy(
+  policy: BackendPolicy,
+): Promise<BackendPolicy> {
   const res = await apiClient.post<BackendPolicy>("/api/v1/policies", policy);
   return res.data;
 }
@@ -73,11 +75,9 @@ export async function runPolicyPipeline(
   const form = new FormData();
   for (const file of files) form.append("fileInput", file);
   form.append("json", JSON.stringify(definition));
-  const res = await apiClient.post<JobResponse>(
-    "/api/v1/policies/run",
-    form,
-    { headers: { "Content-Type": "multipart/form-data" } },
-  );
+  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data.jobId;
 }
 
