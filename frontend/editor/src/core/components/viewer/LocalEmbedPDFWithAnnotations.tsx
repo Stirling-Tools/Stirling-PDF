@@ -346,7 +346,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
     // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
     const { engine, isLoading, error } = usePdfiumEngine({
       wasmUrl: pdfiumWasmUrl,
-      worker: true,
+      worker: false,
       encoderPoolSize: 2,
       fontFallback: { fonts: {} },
     });
