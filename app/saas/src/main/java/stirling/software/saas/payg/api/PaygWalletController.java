@@ -116,7 +116,14 @@ public class PaygWalletController {
     private final UserRepository userRepository;
     private final RestTemplate saasRestTemplate;
     private final String portalEndpoint;
-    private final String portalServiceRoleToken;
+
+    /**
+     * Bearer for the edge-fn call — the backend↔edge-fn shared secret ({@code
+     * SUPABASE_EDGE_FUNCTION_SECRET}), NOT the Supabase service-role key. The edge fn treats it as
+     * the trusted-backend marker; the backend never holds an RLS-bypassing credential.
+     */
+    private final String portalAuthToken;
+
     private final Set<String> portalReturnUrlAllowedHosts;
 
     public PaygWalletController(
@@ -129,7 +136,7 @@ public class PaygWalletController {
             UserRepository userRepository,
             RestTemplate saasRestTemplate,
             @Value("${payg.portal.endpoint:}") String portalEndpoint,
-            @Value("${payg.portal.service-role-token:}") String portalServiceRoleToken,
+            @Value("${payg.portal.auth-token:}") String portalAuthToken,
             @Value("${payg.portal.allowed-return-hosts:}") String portalReturnUrlAllowedHostsCsv) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
@@ -140,7 +147,7 @@ public class PaygWalletController {
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
         this.saasRestTemplate = Objects.requireNonNull(saasRestTemplate, "saasRestTemplate");
         this.portalEndpoint = portalEndpoint == null ? "" : portalEndpoint;
-        this.portalServiceRoleToken = portalServiceRoleToken == null ? "" : portalServiceRoleToken;
+        this.portalAuthToken = portalAuthToken == null ? "" : portalAuthToken;
         this.portalReturnUrlAllowedHosts = parseHostAllowlist(portalReturnUrlAllowedHostsCsv);
     }
 
@@ -535,8 +542,8 @@ public class PaygWalletController {
         Long teamId = ctx.teamId();
         try {
             HttpHeaders headers = new HttpHeaders();
-            if (!portalServiceRoleToken.isBlank()) {
-                headers.setBearerAuth(portalServiceRoleToken);
+            if (!portalAuthToken.isBlank()) {
+                headers.setBearerAuth(portalAuthToken);
             }
             headers.setContentType(MediaType.APPLICATION_JSON);
 

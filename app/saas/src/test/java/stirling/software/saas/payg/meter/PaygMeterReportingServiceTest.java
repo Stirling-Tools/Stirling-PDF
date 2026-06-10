@@ -76,7 +76,8 @@ class PaygMeterReportingServiceTest {
         HttpEntity<Map<String, Object>> sent = entityCaptor.getValue();
         Map<String, Object> body = sent.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.get("team_id")).isEqualTo("100");
+        // JSON number — the edge fn type-checks team_id and ignores strings.
+        assertThat(body.get("team_id")).isEqualTo(100L);
         assertThat(body.get("stripe_customer_id")).isEqualTo("cus_abc");
         assertThat(body.get("units")).isEqualTo(5);
         assertThat(body.get("idempotency_key")).isEqualTo("process:job1:close");

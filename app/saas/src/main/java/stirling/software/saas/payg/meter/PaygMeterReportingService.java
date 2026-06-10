@@ -43,17 +43,17 @@ import stirling.software.saas.payg.model.BillingCategory;
 public class PaygMeterReportingService {
 
     private final String endpoint;
-    private final String serviceRoleToken;
+    private final String authToken;
     private final RestTemplate restTemplate;
     private final Counter errorsCounter;
 
     public PaygMeterReportingService(
             @Value("${payg.meter.endpoint:}") String endpoint,
-            @Value("${payg.meter.service-role-token:}") String serviceRoleToken,
+            @Value("${payg.meter.auth-token:}") String authToken,
             RestTemplate saasRestTemplate,
             MeterRegistry meterRegistry) {
         this.endpoint = endpoint;
-        this.serviceRoleToken = serviceRoleToken;
+        this.authToken = authToken;
         this.restTemplate = saasRestTemplate;
         this.errorsCounter =
                 Counter.builder("payg.meter.errors")
@@ -94,15 +94,16 @@ public class PaygMeterReportingService {
         }
         try {
             HttpHeaders headers = new HttpHeaders();
-            if (serviceRoleToken != null && !serviceRoleToken.isBlank()) {
-                headers.setBearerAuth(serviceRoleToken);
+            if (authToken != null && !authToken.isBlank()) {
+                headers.setBearerAuth(authToken);
             }
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             Map<String, Object> body =
                     Map.of(
                             "team_id",
-                            teamId == null ? "" : teamId.toString(),
+                            // JSON number — the edge fn type-checks and ignores strings.
+                            teamId == null ? -1L : teamId,
                             "stripe_customer_id",
                             stripeCustomerId == null ? "" : stripeCustomerId,
                             "units",
