@@ -155,9 +155,17 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
             User user = getOrCreateUser(jwt);
 
+            // Attach the resolved User as the token principal for full accounts so shared
+            // `principal instanceof User` authorization (storage services, account data)
+            // works under JWT auth. Anonymous sessions keep the raw Jwt principal and stay
+            // locked out of those User-gated APIs, matching pre-existing behaviour.
             EnhancedJwtAuthenticationToken authToken =
                     new EnhancedJwtAuthenticationToken(
-                            jwt, user.getAuthorities(), user.getUsername(), supabaseId);
+                            jwt,
+                            user.getAuthorities(),
+                            user.getUsername(),
+                            supabaseId,
+                            isAnonymous(jwt) ? null : user);
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
             // Hot path: runs on every authenticated request (>10 per page on a typical SPA),
