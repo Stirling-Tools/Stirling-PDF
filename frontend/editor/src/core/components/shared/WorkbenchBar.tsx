@@ -411,7 +411,7 @@ export default function WorkbenchBar({
             <div className="workbench-bar-divider" />
           </>
         )}
-        {hasFiles &&
+        {(hasFiles || isCustomView) &&
           viewOptions.map((opt) => (
             <button
               key={opt.value}
@@ -468,28 +468,30 @@ export default function WorkbenchBar({
             t("workbenchBar.print", "Print PDF"),
           )}
 
-        {/* Download */}
-        {renderWithTooltip(
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="workbench-bar-action-icon"
-            onClick={() => handleExportAll()}
-            disabled={
-              disableForFullscreen || totalItems === 0 || allButtonsDisabled
-            }
-          >
-            <LocalIcon
-              icon={icons.downloadIconName}
-              width="1rem"
-              height="1rem"
-            />
-          </ActionIcon>,
-          downloadTooltip,
-        )}
+        {/* Download (file-level action — not relevant in custom views) */}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll()}
+              disabled={
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+              }
+            >
+              <LocalIcon
+                icon={icons.downloadIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            downloadTooltip,
+          )}
 
         {/* Save As */}
-        {icons.saveAsIconName &&
+        {!isCustomView &&
+          icons.saveAsIconName &&
           renderWithTooltip(
             <ActionIcon
               variant="subtle"
