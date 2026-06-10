@@ -44,6 +44,15 @@ class PaygOutputExtractorTest {
     }
 
     @Test
+    void pdfContentType_butBodyMissingPdfMagic_returnsEmpty(@TempDir Path tmp) throws IOException {
+        // Tool sets application/pdf but writes a non-PDF payload — we should NOT record it as
+        // OUTPUT lineage. Mirrors the magic-byte gate already enforced on the ZIP branch.
+        Path body = tmp.resolve("misleading.pdf");
+        Files.write(body, "this is not actually a pdf".getBytes(StandardCharsets.UTF_8));
+        assertThat(extractor.extract("application/pdf", body)).isEmpty();
+    }
+
+    @Test
     void zipContentType_extractsOnlyPdfEntriesWithValidMagicBytes(@TempDir Path tmp)
             throws IOException {
         Path zip = tmp.resolve("out.zip");

@@ -327,19 +327,19 @@ tasks:
 
   test:
     desc: "Run tests"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx vitest run --root editor
 
   test:watch:
     desc: "Run tests in watch mode"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx vitest --watch --root editor
 
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
-    deps: [install]
+    deps: [prepare]
     cmds:
       # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
       # mode). Explicit reporter list because v8 + json-summary is what the
