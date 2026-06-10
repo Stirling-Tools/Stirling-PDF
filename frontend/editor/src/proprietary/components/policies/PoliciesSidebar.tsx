@@ -116,7 +116,7 @@ export function PoliciesSection({
           onToggle={toggleExpanded}
         />
         <AppTooltip
-          content="A policy automatically runs a fixed set of tools on every document you add (e.g. redacting PII), so enforcement happens with no manual steps."
+          content="A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
           sidebarTooltip
           pinOnClick
         >
