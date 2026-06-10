@@ -1110,6 +1110,66 @@ label = "SMTP Port"
 description = "Username for SMTP authentication"
 label = "SMTP Username"
 
+[admin.settings.mcp]
+apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
+description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+title = "MCP Server"
+
+[admin.settings.mcp.allowedOps]
+description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
+label = "Allowed tools"
+
+[admin.settings.mcp.blockedOps]
+description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
+label = "Blocked tools"
+
+[admin.settings.mcp.enabled]
+description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
+label = "Enable MCP Server"
+
+[admin.settings.mcp.guide]
+step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
+step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
+step2 = "In your MCP client add a"
+step2b = "server pointing at:"
+step3 = "The client auto-discovers OAuth from:"
+step3ApiKey = "Send the key in an"
+step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
+step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
+step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
+tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
+tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
+title = "Connect an MCP client"
+
+[admin.settings.mcp.issuerUri]
+description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
+label = "OAuth Issuer URL"
+
+[admin.settings.mcp.jwksUri]
+description = "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL."
+label = "JWKS URL (optional)"
+placeholder = "Auto-discovered from issuer"
+
+[admin.settings.mcp.mode]
+description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
+label = "Authentication mode"
+
+[admin.settings.mcp.requireAccount]
+description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
+label = "Require an existing Stirling account"
+
+[admin.settings.mcp.resourceId]
+description = "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected."
+label = "Resource ID"
+
+[admin.settings.mcp.scopes]
+description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
+label = "Enforce OAuth scopes"
+
+[admin.settings.mcp.usernameClaim]
+description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
+label = "Username claim"
+
 [admin.settings.plan.noData]
 message = "Plans data is not available at the moment."
 title = "No data available"
@@ -7219,6 +7279,7 @@ advanced = "Advanced"
 database = "Database"
 endpoints = "Endpoints"
 features = "Features"
+mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 title = "Configuration"
