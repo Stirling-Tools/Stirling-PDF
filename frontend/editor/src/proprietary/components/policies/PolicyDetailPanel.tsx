@@ -198,13 +198,13 @@ export function PolicyDetailPanel({
                   meta={item.time}
                   trailing={
                     item.status === "flagged" && onRetry ? (
-                      <button
-                        type="button"
-                        className="pol-retry-btn"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onRetry(item)}
                       >
                         Retry
-                      </button>
+                      </Button>
                     ) : undefined
                   }
                 />

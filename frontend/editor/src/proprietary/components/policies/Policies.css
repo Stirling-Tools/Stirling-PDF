@@ -95,19 +95,6 @@
 }
 
 /* Retry button on a failed activity row. */
-.pol-retry-btn {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--color-blue);
-  padding: 0.125rem 0.4rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.pol-retry-btn:hover {
-  background: var(--color-bg-hover);
-}
-
 /* Expandable error text in the activity feed — long backend errors are clamped
    and collapsed by default so they don't blow up the row. */
 .pol-activity-error {
