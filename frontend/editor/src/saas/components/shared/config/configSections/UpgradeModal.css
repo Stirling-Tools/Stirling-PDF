@@ -55,12 +55,16 @@
   border: 1px solid var(--upm-border);
   border-radius: var(--upm-radius);
   width: 100%;
-  /* 800px gives Stripe Embedded Checkout its recommended 750px content area after
-     subtracting the 22px body padding on each side (= 756px). Narrower than this
-     and the iframe's card-detail form forces internal scroll. Cap step + confirm
-     step don't need this width but read fine at it — their internal text widths
-     are already capped (see upm-confirm__body, upm-section-help). */
-  max-width: 800px;
+  /* 960px gives the live Stripe Embedded Checkout a ~916px content area (after the
+     22px body padding each side, with the live mount's own padding removed — see
+     .upm-stripe-mount[data-state="live"]). That clears the width Stripe needs to
+     render its two-column "horizontal" layout (summary beside the payment form)
+     with headroom. Because the frame stays width:100% under this cap, narrow
+     windows shrink it and Stripe falls back to single column — horizontal when it
+     fits, vertical when it doesn't. Cap + confirm steps read fine at this width
+     (their internal text is already capped — see upm-confirm__body,
+     upm-section-help). */
+  max-width: 960px;
   max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
@@ -348,6 +352,9 @@
   background: rgba(10, 139, 255, 0.12);
 }
 
+/* Placeholder card for the loading / error / mock states — a dashed, centered
+   box with helper text. The live Stripe iframe is NOT meant to wear this chrome;
+   it gets a full-width reset below (data-state="live"). */
 .upm-stripe-mount {
   min-height: 220px;
   border: 1.5px dashed var(--upm-divider);
@@ -361,6 +368,18 @@
   gap: 8px;
   color: var(--upm-muted);
   font-size: 0.875rem;
+}
+
+/* Live Stripe Embedded Checkout — strip the placeholder card chrome so the
+   iframe spans the full body width and Stripe renders its two-column
+   "horizontal" layout. Without this the dashed border + 24px padding + centering
+   above box the iframe ~48px narrower, dropping it back to single column. */
+.upm-stripe-mount[data-state="live"] {
+  display: block;
+  border: none;
+  padding: 0;
+  min-height: 0;
+  text-align: left;
 }
 .upm-stripe-mount__title {
   font-weight: 700;
