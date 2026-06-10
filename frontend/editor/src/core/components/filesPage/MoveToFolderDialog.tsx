@@ -191,6 +191,7 @@ export function MoveToFolderDialog({
             return creatingFolder ? (
               <Group gap="xs" align="flex-end" wrap="nowrap">
                 <TextInput
+                  data-testid="move-dialog-new-folder-name"
                   label={t(
                     "filesPage.moveDialog.newFolderLabel",
                     "New folder name",
@@ -251,6 +252,7 @@ export function MoveToFolderDialog({
                   setNewFolderName("");
                 }}
                 styles={{ root: { alignSelf: "flex-start" } }}
+                data-testid="move-dialog-create-folder-toggle"
               >
                 {t(
                   "filesPage.moveDialog.newFolderToggle",
