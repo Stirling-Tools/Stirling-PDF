@@ -1,5 +1,4 @@
 accessInvite = "Inviter"
-addToDoc = "Ajouter au Document"
 alphabet = "Alphabet"
 apply = "Appliquer"
 applyAndContinue = "Appliquer et continuer"
@@ -7,9 +6,7 @@ areYouSure = "Voulez-vous vraiment quitter ?"
 back = "Retour"
 black = "Noir"
 blue = "Bleu"
-bored = "Marre d'attendre ?"
 cancel = "Annuler"
-changedCredsMessage = "Les identifiants ont été mis à jour !"
 chooseFile = "Choisir un fichier"
 close = "Fermer"
 comingSoon = "Bientôt disponible"
@@ -24,22 +21,13 @@ confirmCloseSaveFailed = "Enregistré avec des erreurs. Enregistrement impossibl
 confirmCloseSaveFailedTitle = "Échec de l’enregistrement"
 confirmCloseUnsaved = "Ce fichier contient des modifications non enregistrées."
 confirmCloseUnsavedList = "Vous avez {{count}} fichier{{plural}} avec des modifications non enregistrées.\n\n{{fileList}}"
-confirmPasswordErrorMessage = "Le nouveau mot de passe et sa confirmation doivent être identiques."
 custom = "Personnalisé…"
 customPosition = "Position personnalisée"
 customTextTooltip = "Format personnalisé facultatif pour les numéros de page. Utilisez {n} comme espace réservé pour le numéro. Exemple : \"Page {n}\" affichera \"Page 1\", \"Page 2\", etc."
 delete = "Supprimer"
-deleteCurrentUserMessage = "Impossible de supprimer l'utilisateur actuellement connecté."
-deleteUsernameExistsMessage = "Le nom d'utilisateur n'existe pas et ne peut pas être supprimé."
 details = "Détails"
-disabledCurrentUserMessage = "L'utilisateur actuel ne peut pas être désactivé"
 discardChanges = "Ignorer les modifications"
-discardRedactions = "Ignorer et quitter"
-donate = "Faire un don"
-downgradeCurrentUserLongMessage = "Impossible de rétrograder le rôle de l'utilisateur actuel. Par conséquent, l'utilisateur actuel ne sera pas affiché."
-downgradeCurrentUserMessage = "Impossible de rétrograder le rôle de l'utilisateur actuel."
 download = "Télécharger"
-downloadComplete = "Téléchargement terminé"
 downloadPdf = "Télécharger le PDF"
 downloadUnavailable = "Téléchargement indisponible pour cet élément"
 edit = "Modifier"
@@ -57,18 +45,13 @@ font = "Police"
 fontSizeTooltip = "Taille du texte du numéro de page en points. Une valeur plus élevée crée un texte plus grand."
 fontTypeTooltip = "Famille de police pour les numéros de page. Choisissez selon le style de votre document."
 genericSubmit = "Envoyer"
-goHomepage = "Aller à la page d'accueil"
-goToPage = "Aller"
 green = "Vert"
 help = "Aide"
 imgPrompt = "Choisir une image"
 incorrectPasswordMessage = "Le mot de passe actuel est incorrect."
 info = "Informations"
 insufficientCredits = "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}"
-invalidPasswordMessage = "Le mot de passe ne peut pas être vide et ne doit pas contenir d'espaces au début ou à la fin."
 invalidUndoData = "Impossible d’annuler : données d’opération invalides"
-invalidUsernameMessage = "Nom d'utilisateur invalide, le nom d'utilisateur ne peut contenir que des lettres, des chiffres et les caractères spéciaux suivants @._+- ou doit être une adresse e-mail valide."
-joinDiscord = "Rejoignez notre serveur Discord"
 keepWorking = "Continuer à travailler"
 loading = "Chargement..."
 loadingCredits = "Checking credits..."
@@ -76,15 +59,12 @@ loadingProStatus = "Checking subscription status..."
 logOut = "Se déconnecter"
 marginTooltip = "Distance entre le numéro de page et le bord de la page."
 moreOptions = "Plus d’options"
-multiPdfDropPrompt = "Sélectionnez (ou glissez-déposez) tous les PDF dont vous avez besoin"
 multiPdfPrompt = "Sélectionnez les PDF"
 never = "Jamais"
 no = "Non"
-noFavourites = "Aucun favori ajouté"
 noFileSelected = "Aucun fichier sélectionné. Veuillez en télécharger un."
 noFilesToUndo = "Impossible d’annuler : aucun fichier n’a été traité lors de la dernière opération"
 noOperationToUndo = "Aucune opération à annuler"
-notAuthenticatedMessage = "Utilisateur non authentifié."
 nothingToUndo = "Rien à annuler"
 noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
 noValidFiles = "Aucun fichier valide à traiter"
@@ -99,26 +79,18 @@ pages = "Pages"
 pageSelectionPrompt = "Sélection des pages (entrez une liste de numéros de page séparés par des virgules ou des fonctions telles que 2n+1) :"
 password = "Mot de passe"
 pdfPrompt = "Sélectionnez le(s) PDF"
-pendingRedactions = "Vous avez des caviardages non appliqués qui seront perdus."
-pendingRedactionsTitle = "Caviardages non appliqués"
 pin = "Épingler le fichier (le garder actif après l’exécution de l’outil)"
-poweredBy = "Propulsé par"
 pro = "Pro"
 processingComplete = "Votre fichier est prêt."
 processingCompleteMultiple = "{{count}} fichiers sont prêts."
-processTimeWarning = "Attention, ce processus peut prendre jusqu'à une minute en fonction de la taille du fichier."
 property = "Propriété"
 quickPosition = "Position rapide"
 red = "Rouge"
 reset = "Réinitialiser"
 review = "Examiner"
 save = "Enregistrer"
-saveToBrowser = "Enregistrer dans le navigateur"
 saveUnavailable = "Enregistrement indisponible pour cet élément"
-seeDockerHub = "Consulter le Docker Hub"
-selectFillter = "-- Sélectionnez --"
 size = "Taille"
-sponsor = "Sponsoriser"
 startingNumberTooltip = "Premier numéro à afficher. Les pages suivantes incrémentent à partir de ce nombre."
 submit = "Valider"
 success = "Succès"
@@ -137,18 +109,9 @@ unpin = "Désépingler le fichier (remplacer après l’exécution de l’outil)
 unsavedChanges = "Vous avez des modifications non enregistrées sur votre PDF. Que souhaitez-vous faire ?"
 unsavedChangesTitle = "Modifications non enregistrées"
 unsupported = "Non pris en charge"
-uploadLimit = "Taille maximale du fichier :"
-uploadLimitExceededPlural = "sont trop grands. La taille maximale autorisée est de"
-uploadLimitExceededSingular = "est trop grand. La taille maximale autorisée est de"
-userAlreadyExistsOAuthMessage = "L'utilisateur existe déjà en tant qu'utilisateur OAuth2."
-userAlreadyExistsWebMessage = "L'utilisateur existe déjà en tant qu'utilisateur Web."
 username = "Nom d'utilisateur"
-usernameExistsMessage = "Le nouveau nom d'utilisateur existe déjà."
-userNotFoundMessage = "Utilisateur non trouvé."
-visitGithub = "Visiter le dépôt Github"
 welcome = "Bienvenue"
 white = "Blanc"
-WorkInProgess = "En cours de développement, merci de nous remonter les problèmes que vous pourriez constater!"
 yes = "Oui"
 
 [account]
@@ -205,6 +168,9 @@ signedInAs = "Connecté en tant que : {{email}}"
 [add-page-numbers]
 tags = "paginer,numéros,étiqueter,paginate,label,organize,index"
 
+[addAttachments]
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+
 [addAttachments.error]
 failed = "Une erreur s’est produite lors de l’ajout de pièces jointes au PDF."
 
@@ -214,7 +180,6 @@ attachments = "Sélectionner des pièces jointes"
 info = "Sélectionnez des fichiers à joindre à votre PDF. Ces fichiers seront intégrés et accessibles via le panneau des pièces jointes du PDF."
 placeholder = "Choisir des fichiers…"
 selectedFiles = "Fichiers sélectionnés"
-selectFiles = "Sélectionner des fichiers à joindre"
 submit = "Ajouter les pièces jointes"
 
 [AddAttachmentsRequest.error]
@@ -237,6 +202,9 @@ applySignatures = "Appliquer les images"
 header = "Ajouter une image"
 tags = "img,jpg,image,photo"
 title = "Ajouter une image"
+
+[addImage.canvas]
+colorPickerTitle = "Choose stroke colour"
 
 [addImage.error]
 failed = "Une erreur est survenue lors de l’ajout de l’image au PDF."
@@ -264,8 +232,26 @@ resume = "Reprendre le placement"
 title = "Résultats de l’ajout d’image"
 
 [addImage.saved]
+defaultCanvasLabel = "Drawing signature"
 defaultImageLabel = "Image téléversée"
 defaultLabel = "Image"
+defaultTextLabel = "Typed signature"
+delete = "Remove"
+emptyTitle = "No saved signatures yet"
+heading = "Saved signatures"
+label = "Label"
+limitTitle = "Limit reached"
+next = "Next"
+personalHeading = "Personal Signatures"
+prev = "Previous"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
+sharedHeading = "Shared Signatures"
+
+[addImage.saved.type]
+canvas = "Drawing"
+image = "Upload"
+text = "Text"
 
 [addImage.step]
 createDesc = "Téléversez l’image à ajouter"
@@ -275,20 +261,31 @@ placeDesc = "Cliquez sur le PDF pour ajouter votre image"
 [addImage.steps]
 configure = "Configurer l’image"
 
+[addImage.text]
+colorLabel = "Text colour"
+fontLabel = "Font"
+fontSizeLabel = "Font size"
+name = "Text"
+placeholder = "Enter text"
+
+[addImage.type]
+canvas = "Canvas"
+image = "Image"
+saved = "Saved"
+text = "Text"
+
 [addPageNumbers]
-configuration = "Configuration"
 customize = "Personnaliser l’apparence"
 customNumberDesc = "La valeur par défaut est '{n}', accepte également 'Page {n} sur {total}', 'Texte-{n}', '{filename}-{n}'"
-customTextDesc = "Texte personnalisé"
 fontName = "Nom de la Police"
 fontSize = "Taille de Police"
-header = "Ajouter des numéros de page"
 numberPagesDesc = "Quelles pages numéroter, par défaut 'all' (toutes les pages), accepte également 1-5 ou 2,5,9, etc."
 pagesAndStarting = "Pages et numéro de départ"
 positionAndPages = "Position et pages"
 preview = "Sélection de la position"
 previewDisclaimer = "L’aperçu est approximatif. Le résultat final peut varier en raison des métriques de police du PDF."
 submit = "Ajouter les numéros de page"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Ajouter des numéros de page"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -300,18 +297,15 @@ failed = "Échec de l’ajout des numéros de page"
 title = "Résultats des numéros de page"
 
 [addPageNumbers.selectText]
-1 = "Sélectionnez le fichier PDF"
 2 = "Taille de la marge"
-3 = "Position"
 4 = "Numéro de départ"
 5 = "Pages à numéroter"
 6 = "Texte personnalisé"
 
 [addPassword]
-completed = "Protection par mot de passe appliquée"
 desc = "Chiffrez votre document PDF avec un mot de passe."
-filenamePrefix = "chiffré"
 submit = "Chiffrer"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Ajouter un mot de passe"
 
 [addPassword.encryption.keyLength]
@@ -324,7 +318,6 @@ label = "Longueur de clé de chiffrement"
 failed = "Une erreur est survenue lors du chiffrement du PDF."
 
 [addPassword.passwords]
-completed = "Mots de passe configurés"
 stepTitle = "Mots de passe & chiffrement"
 
 [addPassword.passwords.owner]
@@ -358,12 +351,14 @@ title = "Types de mots de passe"
 text = "Ces permissions contrôlent ce que les utilisateurs peuvent faire avec le PDF. Le plus efficace lorsqu’elles sont combinées avec un mot de passe propriétaire."
 title = "Modifier les permissions"
 
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+
 [AddStampRequest]
 alphabet = "Alphabet"
 clickToExpand = "Click to expand"
 customColor = "Couleur de texte personnalisée"
 customDateDesc = "Custom format"
-customMargin = "Marge personnalisée"
 customPosition = "Faites glisser le tampon à l’endroit souhaité dans la fenêtre d’aperçu."
 dateDesc = "Current date"
 datetimeDesc = "Date and time combined"
@@ -374,7 +369,6 @@ filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
 fileVars = "File Information"
 fontSize = "Taille de fonte/image"
-header = "Tampon PDF"
 imageSize = "Taille de l’image"
 margin = "Marge"
 metadataDesc = "From PDF document properties"
@@ -383,8 +377,6 @@ multiLine = "multi-line"
 noStampSelected = "Aucun tampon sélectionné. Retour à l’étape 1."
 opacity = "Opacité"
 otherVars = "Other"
-overrideX = "Définir coordonnées X"
-overrideY = "Définir coordonnées Y"
 pageNumberDesc = "Current page number"
 pageVars = "Page Information"
 position = "Position"
@@ -393,7 +385,6 @@ preview = "Preview:"
 quickPosition = "Sélectionnez une position sur la page pour placer le tampon."
 rotation = "Rotation"
 selectTemplate = "Select a template..."
-stampImage = "Tampon image"
 stampSetup = "Configuration du tampon"
 stampText = "Tampon texte"
 stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
@@ -433,6 +424,9 @@ header = "Ajouter du texte aux PDF"
 tags = "texte,annotation,étiquette"
 title = "Ajouter du texte"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addText.error]
 failed = "Une erreur est survenue lors de l'ajout de texte au PDF."
 
@@ -452,6 +446,28 @@ resume = "Reprendre le placement"
 [addText.results]
 title = "Résultats de l'ajout de texte"
 
+[addText.saved]
+defaultCanvasLabel = "Drawing signature"
+defaultImageLabel = "Uploaded signature"
+defaultLabel = "Signature"
+defaultTextLabel = "Typed signature"
+delete = "Remove"
+emptyTitle = "No saved signatures yet"
+heading = "Saved signatures"
+label = "Label"
+limitTitle = "Limit reached"
+next = "Next"
+personalHeading = "Personal Signatures"
+prev = "Previous"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
+sharedHeading = "Shared Signatures"
+
+[addText.saved.type]
+canvas = "Drawing"
+image = "Upload"
+text = "Text"
+
 [addText.step]
 createDesc = "Saisissez le texte à ajouter"
 place = "Placer le texte"
@@ -468,6 +484,12 @@ fontSizePlaceholder = "Saisissez ou sélectionnez une taille (8-200)"
 name = "Contenu du texte"
 placeholder = "Saisissez le texte à ajouter"
 
+[addText.type]
+canvas = "Canvas"
+image = "Image"
+saved = "Saved"
+text = "Text"
+
 [adjust-contrast]
 tags = "ajuster,couleurs,amélioration,color-correction,tune,modify,enhance"
 
@@ -478,12 +500,11 @@ blue = "Bleu"
 brightness = "Luminosité"
 confirm = "Confirmer"
 contrast = "Contraste"
-download = "Télécharger"
 green = "Vert"
-header = "Ajuster les couleurs"
 noPreview = "Sélectionnez un PDF pour l’aperçu"
 red = "Rouge"
 saturation = "Saturation"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Ajuster les couleurs"
 
 [adjustContrast.error]
@@ -493,7 +514,6 @@ failed = "Échec de l’ajustement des couleurs/du contraste"
 title = "PDF ajusté"
 
 [adjustPageScale]
-header = "Ajuster l’échelle de page"
 submit = "Ajuster l’échelle de page"
 tags = "redimensionner,modifier,dimension,adapter"
 title = "Ajuster l’échelle de page"
@@ -537,7 +557,6 @@ title = "Facteur d’échelle"
 close = "Fermer"
 error = "Erreur"
 expand = "Développer"
-success = "Succès"
 
 [admin.settings]
 discard = "Ignorer"
@@ -1110,6 +1129,66 @@ label = "Port SMTP"
 description = "Nom d’utilisateur pour l’authentification SMTP"
 label = "Nom d’utilisateur SMTP"
 
+[admin.settings.mcp]
+apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
+description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+title = "MCP Server"
+
+[admin.settings.mcp.allowedOps]
+description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
+label = "Allowed tools"
+
+[admin.settings.mcp.blockedOps]
+description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
+label = "Blocked tools"
+
+[admin.settings.mcp.enabled]
+description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
+label = "Enable MCP Server"
+
+[admin.settings.mcp.guide]
+step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
+step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
+step2 = "In your MCP client add a"
+step2b = "server pointing at:"
+step3 = "The client auto-discovers OAuth from:"
+step3ApiKey = "Send the key in an"
+step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
+step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
+step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
+tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
+tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
+title = "Connect an MCP client"
+
+[admin.settings.mcp.issuerUri]
+description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
+label = "OAuth Issuer URL"
+
+[admin.settings.mcp.jwksUri]
+description = "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL."
+label = "JWKS URL (optional)"
+placeholder = "Auto-discovered from issuer"
+
+[admin.settings.mcp.mode]
+description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
+label = "Authentication mode"
+
+[admin.settings.mcp.requireAccount]
+description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
+label = "Require an existing Stirling account"
+
+[admin.settings.mcp.resourceId]
+description = "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected."
+label = "Resource ID"
+
+[admin.settings.mcp.scopes]
+description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
+label = "Enforce OAuth scopes"
+
+[admin.settings.mcp.usernameClaim]
+description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
+label = "Username claim"
+
 [admin.settings.plan.noData]
 message = "Les données des offres ne sont pas disponibles pour le moment."
 title = "Aucune donnée disponible"
@@ -1492,10 +1571,6 @@ hint = "Vous avez des modifications non enregistrées"
 message = "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
 title = "Modifications non enregistrées"
 
-[admin.status]
-active = "Actif"
-inactive = "Inactif"
-
 [adminOnboarding]
 adminTools = "Enfin, nous disposons d’outils d’administration avancés comme <strong>l’Audit</strong> pour suivre l’activité du système et <strong>l’Analyse d’utilisation</strong> pour surveiller la façon dont vos utilisateurs interagissent avec la plateforme."
 configButton = "Cliquez sur le bouton <strong>Config</strong> pour accéder à tous les paramètres système et aux contrôles d’administration."
@@ -1508,35 +1583,8 @@ welcome = "Bienvenue dans la <strong>Visite Admin</strong> ! Explorons les puiss
 wrapUp = "C’est la visite admin ! Vous avez vu les fonctionnalités d’entreprise qui font de Stirling PDF une solution puissante et personnalisable pour les organisations. Accédez à cette visite à tout moment depuis le menu <strong>Aide</strong>."
 
 [adminUserSettings]
-actions = "Actions"
-activeUsers = "Utilisateurs actifs :"
-addUser = "Ajouter un utilisateur"
 admin = "Administrateur"
-apiUser = "Utilisateur API limité"
-authenticated = "Authentifié"
-changeUserRole = "Changer le rôle de l'utilisateur"
-confirmChangeUserStatus = "Voulez-vous vraiment désactiver/réactiver l'utilisateur ?"
-confirmDeleteUser = "Voulez-vous vraiment supprimer l'utilisateur ?"
-deleteUser = "Supprimer l'utilisateur"
-demoUser = "Demo User (Paramètres par défaut)"
-disabledUser = "Utilisateur désactivé"
-disabledUsers = "Utilisateurs désactivés :"
-editOwnProfil = "Éditer son propre profil"
-enabledUser = "Utilisateur activé"
-extraApiUser = "Utilisateur limité supplémentaire de l'API"
-forceChange = "Forcer l'utilisateur à changer son nom d'utilisateur/mot de passe lors de la connexion"
-header = "Administration des paramètres des utilisateurs"
-internalApiUser = "Utilisateur de l'API interne"
-lastRequest = "Dernière requête"
-role = "Rôle"
-roles = "Rôles"
-submit = "Ajouter"
 title = "Administration des paramètres des utilisateurs"
-totalUsers = "Utilisateurs au total :"
-usage = "Voir l'utilisation"
-user = "Utilisateur"
-usernameInfo = "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et les caractères spéciaux suivants @._+- ou doit être une adresse e-mail valide."
-webOnlyUser = "Utilisateur Web uniquement"
 
 [agents]
 auto_redaction_description = "Expurger automatiquement les données personnelles (PII)"
@@ -1551,7 +1599,6 @@ doc_summary_description = "Résumer de longs documents"
 doc_summary_name = "Résumé"
 form_filler_description = "Remplir intelligemment les formulaires PDF"
 form_filler_name = "Remplisseur de formulaires"
-fullscreen_title = "Agents Stirling"
 pdf_to_markdown_description = "Convertir des PDF en Markdown propre"
 pdf_to_markdown_name = "PDF vers Markdown"
 section_title = "Agents"
@@ -1566,18 +1613,16 @@ stirling_tooltip = "Agent Stirling"
 view_all = "Voir tous les agents"
 
 [analytics]
-disable = "Désactiver les analyses"
-enable = "Activer les analyses"
 learnMore = "En savoir plus"
 paragraph1 = "Stirling PDF utilise des analyses volontaires pour nous aider à améliorer le produit. Nous ne suivons aucune information personnelle ni le contenu des fichiers."
 paragraph2 = "Veuillez envisager d'activer les analyses pour aider Stirling-PDF à se développer et pour nous permettre de mieux comprendre nos utilisateurs."
-privacyAssurance = "Nous ne suivons aucune information personnelle ni le contenu de vos fichiers."
-settings = "Vous pouvez modifier les paramètres des analyses dans le fichier config/settings.yml"
 title = "Souhaitez-vous améliorer Stirling PDF ?"
+
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
 annotationStyle = "Style d'annotation"
-applyChanges = "Appliquer les modifications"
 backgroundColor = "Couleur d’arrière-plan"
 borderOff = "Bordure : désactivée"
 borderOn = "Bordure : activée"
@@ -1590,36 +1635,20 @@ comment = "Commentaire"
 comments = "Commentaires"
 contents = "Texte"
 delete = "Supprimer"
-desc = "Utilisez surlignage, stylo, texte et notes. Les modifications restent actives—aucun aplatissement requis."
 drawing = "Dessin"
-duplicate = "Dupliquer"
-editCircle = "Modifier le cercle"
-editInk = "Modifier le stylo"
-editLine = "Modifier la ligne"
-editNote = "Modifier la note"
-editPolygon = "Modifier le polygone"
 editSelectDescription = "Cliquez une annotation existante pour en modifier la couleur, l’opacité, le texte ou la taille."
-editSelected = "Modifier l’annotation"
-editSquare = "Modifier le carré"
-editStampHint = "Pour changer l’image, supprimez ce tampon et ajoutez-en un nouveau."
-editSwitchToSelect = "Basculez sur Sélectionner et modifier pour modifier cette annotation."
 editText = "Modifier la zone de texte"
-editTextMarkup = "Modifier le marquage de texte"
-ellipse = "Ellipse"
-exit = "Quitter le mode d’annotation"
 fillColor = "Couleur de remplissage"
 fillOpacity = "Opacité de remplissage"
 fontSize = "Taille de police"
 freehandHighlighter = "Surligneur à main levée"
 highlight = "Surligner"
 imagePreview = "Aperçu"
-inkHighlighter = "Surligneur à main levée"
 insertText = "Insérer du texte"
 line = "Ligne"
 lineArrow = "Flèche"
 noBackground = "Sans arrière-plan"
 note = "Note"
-noteIcon = "Icône de note"
 notesStamps = "Notes et tampons"
 opacity = "Opacité"
 pen = "Stylo"
@@ -1627,12 +1656,8 @@ polygon = "Polygone"
 polyline = "Ligne brisée"
 properties = "Propriétés"
 rectangle = "Rectangle"
-redo = "Rétablir"
 replaceText = "Remplacer le texte"
 saveChanges = "Enregistrer les modifications"
-saveFailed = "Impossible d’enregistrer une copie"
-saveReady = "Téléchargement prêt"
-savingCopy = "Préparation du téléchargement..."
 select = "Sélectionner"
 selectAndMove = "Sélectionner et modifier"
 settings = "Paramètres"
@@ -1650,24 +1675,17 @@ textAlignment = "Alignement du texte"
 textMarkup = "Marquage de texte"
 title = "Annoter"
 underline = "Souligner"
-undo = "Annuler"
-unsupportedType = "Ce type d’annotation n’est pas entièrement pris en charge pour l’édition."
 width = "Largeur"
 
 [app]
 description = "L’alternative gratuite à Adobe Acrobat (10M+ téléchargements)"
 
 [attachments]
-add = "Ajouter une pièce jointe"
 convertToPdfA3b = "Convertir en PDF/A-3b"
 convertToPdfA3bDescription = "Crée un PDF d’archivage avec pièces jointes intégrées"
 convertToPdfA3bTooltip = "PDF/A-3b est un format d’archivage garantissant une conservation à long terme. Il permet d’intégrer des formats de fichiers arbitraires en tant que pièces jointes. La conversion nécessite Ghostscript et peut être plus longue pour les gros fichiers."
 convertToPdfA3bTooltipHeader = "À propos de la conversion PDF/A-3b"
 convertToPdfA3bTooltipTitle = "Ce que cela fait"
-embed = "Intégrer la pièce jointe"
-header = "Ajouter des pièces jointes"
-remove = "Supprimer la pièce jointe"
-submit = "Ajouter des pièces jointes"
 tags = "intégrer,joindre,fichier,pièce,jointe,embed,attach,file,attachment,attachments"
 title = "Ajouter des pièces jointes"
 
@@ -1683,12 +1701,10 @@ notAvailable = "Système d’audit non disponible"
 notAvailableMessage = "Le système d’audit n’est pas configuré ou n’est pas disponible."
 
 [audit.charts]
-byTool = "Outils les plus utilisés"
 byType = "Événements par type"
 byUser = "Événements par utilisateur"
 day = "Jour"
 error = "Erreur lors du chargement des graphiques"
-hourlyActivity = "Activité horaire"
 month = "Mois"
 noData = "Aucune donnée pour cette période"
 overTime = "Événements dans le temps"
@@ -1725,17 +1741,12 @@ documentName = "Document"
 endDate = "Date de fin"
 error = "Erreur lors du chargement des événements"
 eventDetails = "Détails de l’événement"
-failure = "Échec"
 fileHash = "Hachage de fichier"
 filterByType = "Filtrer par type"
 filterByUser = "Filtrer par utilisateur"
 ipAddress = "Adresse IP"
 noEvents = "Aucun événement trouvé"
-outcome = "Statut"
-sortAsc = "Trier par ordre croissant"
-sortDesc = "Trier par ordre décroissant"
 startDate = "Date de début"
-success = "Succès"
 timestamp = "Horodatage"
 title = "Événements d’audit"
 type = "Type"
@@ -1743,9 +1754,7 @@ user = "Utilisateur"
 viewDetails = "Voir les détails"
 
 [audit.export]
-clearFilters = "Effacer"
 description = "Exporter les événements d’audit au format CSV ou JSON. Utilisez des filtres pour limiter les données exportées."
-endDate = "Date de fin"
 error = "Échec de l’export des données"
 exportButton = "Exporter les données"
 fieldAuthor = "Auteur (depuis le PDF)"
@@ -1757,23 +1766,15 @@ fieldOperationResults = "Résultats de l’opération"
 fieldOutcome = "Résultat (Succès/Échec)"
 fieldTool = "Outil"
 fieldUsername = "Nom d’utilisateur"
-filterByType = "Filtrer par type"
-filterByUser = "Filtrer par utilisateur"
 filters = "Filtres (facultatif)"
 format = "Format d’export"
 selectFields = "Sélectionner les champs à inclure"
-startDate = "Date de début"
 title = "Exporter les données d’audit"
-verboseRequired = "Nécessite le niveau d’audit VERBOSE"
 
 [audit.filters]
-allOutcomes = "Tous"
-failureOnly = "Échecs uniquement"
 last30Days = "30 derniers jours"
 last7Days = "7 derniers jours"
-outcomeFilter = "Résultat"
 quickPresets = "Filtres rapides"
-successOnly = "Succès uniquement"
 thisMonth = "Ce mois-ci"
 today = "Aujourd’hui"
 
@@ -1782,18 +1783,14 @@ activeUsers = "Utilisateurs actifs"
 attention = "Attention requise"
 avgLatency = "Latence moyenne"
 error = "Erreur de chargement des statistiques"
-errorLoadingStats = "Échec du chargement des statistiques"
 excellent = "Excellent"
 good = "Bon"
 noData = "N/A"
 successRate = "Taux de réussite"
-title = "Résumé"
 totalEvents = "Nombre total d’événements"
 vsLastPeriod = "par rapport à la période précédente"
 
 [audit.systemStatus]
-autoRefresh = "Actualisation automatique"
-autoRefreshLabel = "Actualisation automatique toutes les 30 s"
 captureBySettings = "Activer dans les paramètres"
 capturedFields = "Champs capturés"
 date = "Date"
@@ -1810,7 +1807,6 @@ title = "État du système"
 tool = "Outil"
 totalEvents = "Nombre total d’événements"
 username = "Nom d’utilisateur"
-verboseOnly = "VERBOSE uniquement"
 
 [audit.tabs]
 clearData = "Effacer les données"
@@ -1821,8 +1817,6 @@ export = "Exporter"
 [auth]
 accessDenied = "Accès refusé"
 insufficientPermissions = "Vous n'avez pas l'autorisation d'effectuer cette action."
-pleaseLoginAgain = "Veuillez vous reconnecter."
-sessionExpired = "Session expirée"
 
 [auth.displayName]
 guest = "Invité"
@@ -1830,16 +1824,12 @@ user = "Utilisateur"
 
 [auto-rename]
 description = "Trouve automatiquement le titre dans le contenu de votre PDF et l’utilise comme nom de fichier."
-header = "Renommer automatiquement"
 submit = "Renommer automatiquement"
 tags = "renommer,détection automatique,réétiqueter,auto-detect,header-based,organize,relabel"
 title = "Renommer automatiquement"
 
 [auto-rename.error]
 failed = "Une erreur est survenue lors du renommage automatique du PDF."
-
-[auto-rename.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
 
 [auto-rename.results]
 title = "Résultats du renommage automatique"
@@ -1857,7 +1847,6 @@ title = "Fonctionnement du renommage automatique"
 bullet1 = "Recherche du texte ressemblant à un titre ou un en-tête"
 bullet2 = "Crée un nom de fichier propre et valide à partir du titre détecté"
 bullet3 = "Conserve le nom d’origine si aucun titre adapté n’est trouvé"
-text = "Trouve automatiquement le titre dans votre contenu PDF et l’utilise comme nom de fichier."
 title = "Renommage intelligent"
 
 [automate]
@@ -1870,12 +1859,12 @@ importPartialSuccess = "Importé avec {{count}} opération(s) non associée(s) :
 importSuccess = "Automatisation importée : {{name}}"
 invalidStep = "Étape invalide"
 reviewTitle = "Résultats de l’automatisation"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automatiser"
 
 [automate.config]
 cancel = "Annuler"
 description = "Configurez les paramètres de cet outil. Ils seront appliqués lors de l’exécution de l’automatisation."
-loading = "Chargement de la configuration de l’outil…"
 noSettings = "Cet outil n’a pas de paramètres configurables."
 save = "Enregistrer la configuration"
 title = "Configurer {{toolName}}"
@@ -1916,16 +1905,6 @@ title = "Modifications non enregistrées"
 
 [automate.entryMenu]
 label = "Ouvrir le menu pour {{title}}"
-
-[automate.files]
-placeholder = "Sélectionnez des fichiers à traiter avec cette automatisation"
-
-[automate.folderScanWarning]
-advice = "Vous pouvez toujours télécharger le fichier (par exemple pour l’inspecter ou le modifier à la main), mais les étapes non prises en charge devront être supprimées avant que le backend puisse l’exécuter."
-cancel = "Annuler"
-confirm = "Exporter quand même"
-intro = "L’analyse de dossiers s’exécute sur le backend, elle ne peut donc exécuter que les outils disposant d’un endpoint backend. Les étapes suivantes de cette automatisation n’en ont pas et échoueront lors de l’exécution du pipeline :"
-title = "Certaines étapes ne peuvent pas s’exécuter lors de l’analyse de dossiers"
 
 [automate.importModal]
 cancel = "Annuler"
@@ -1979,25 +1958,16 @@ secureWorkflowDesc = "Sécurise les documents PDF en supprimant les contenus pot
 
 [autoRename]
 description = "Cet outil renommera automatiquement les fichiers PDF en fonction de leur contenu. Il analyse le document pour trouver le titre le plus approprié à partir du texte."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf, découpage, document, organisation"
 
 [autoSplitPDF]
-description = "Imprimez, insérez, numérisez, téléchargez et laissez-nous séparer automatiquement vos documents. Aucun travail de tri manuel nécessaire."
 dividerDownload2 = "Auto Splitter Divider (with instructions).pdf"
 duplexMode = "Mode recto-verso"
-formPrompt = "PDF contenant des feuilles de séparation de Stirling PDF :"
-header = "Séparer automatiquement les pages"
-submit = "Séparer"
 tags = "séparer,QR-based,separate,scan-segment,organize"
 title = "Séparer automatiquement les pages"
-
-[autoSplitPDF.selectText]
-1 = "Imprimez des feuilles de séparation ci-dessous (le mode noir et blanc convient)."
-2 = "Numérisez tous vos documents en une seule fois en insérant les feuilles intercalaires entre eux."
-3 = "Téléchargez le fichier PDF numérisé et laissez Stirling PDF s'occuper du reste."
-4 = "Les feuilles de séparation sont automatiquement détectées et supprimées, garantissant un document final soigné."
 
 [backendHealth]
 checking = "Vérification de l’état du backend..."
@@ -2035,7 +2005,6 @@ whatHappensNext = "Et ensuite ?"
 error = "Échec de l’ouverture du portail de facturation"
 
 [bookletImposition]
-header = "Imposition en livret"
 paperSizeNote = "La taille du papier est automatiquement dérivée de votre première page."
 submit = "Créer le livret"
 tags = "livret,imposition,impression,reliure,pliage,signature"
@@ -2081,11 +2050,6 @@ title = "Mode duplex manuel"
 [bookletImposition.rtlBinding]
 label = "Reliure de droite à gauche"
 tooltip = "Pour l’arabe, l’hébreu ou d’autres langues RTL"
-
-[bookletImposition.spineLocation]
-label = "Position de la reliure"
-left = "Gauche (standard)"
-right = "Droite (RTL)"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Reliure de droite à gauche : pour les langues RTL"
@@ -2226,7 +2190,6 @@ description = "Utilisez votre propre fichier de certificat PKCS#12. Offre un con
 title = "Téléverser un P12 personnalisé"
 
 [certSign]
-allSigned = "Tous les participants ont signé. Prêt à finaliser."
 awaitingSignatures = "En attente de signatures"
 chooseCertificate = "Choisir le fichier de certificat"
 chooseJksFile = "Choisir le fichier JKS"
@@ -2235,7 +2198,6 @@ choosePfxFile = "Choisir le fichier PFX"
 choosePrivateKey = "Choisir le fichier de clé privée"
 declined = "Refusé"
 fetchFailed = "Échec du chargement des données de signature"
-filenamePrefix = "signé"
 finalized = "Finalisé"
 location = "Emplacement"
 logoTitle = "Logo"
@@ -2243,7 +2205,6 @@ name = "Nom"
 noLogo = "Pas de logo"
 notified = "En attente"
 pageNumber = "Numéro de page"
-partialNote = "Vous pouvez finaliser plus tôt avec les signatures actuelles. Les participants non signataires seront exclus."
 password = "Mot de passe du certificat"
 passwordOptional = "Laissez vide si aucun mot de passe"
 pending = "En attente"
@@ -2311,12 +2272,8 @@ stepTitle = "Format du certificat"
 
 [certSign.collab.addParticipants]
 add = "Ajouter {{count}} participant(s)"
-back = "Retour"
-configureSignatures = "Configurer les paramètres de signature"
-continue = "Continuer vers les paramètres de signature"
 reasonHelp = "Préconfigurer une raison de signature pour ces participants (optionnel, ils peuvent la modifier lors de la signature)"
 reasonPlaceholder = "ex. : Approbation, Vérification…"
-selectUsers = "Sélectionner des utilisateurs"
 
 [certSign.collab.finalize]
 button = "Finaliser et charger le PDF signé"
@@ -2335,7 +2292,6 @@ includeSummaryPage = "Inclure une page de synthèse des signatures"
 includeSummaryPageHelp = "Une page récapitulative sera ajoutée à la fin avec toutes les métadonnées de signature. Les cadres de signature du certificat numérique sur les pages individuelles seront supprimés (les signatures manuscrites ne sont pas affectées)."
 
 [certSign.collab.sessionDetail]
-addButton = "Ajouter des participants"
 addParticipants = "Ajouter des participants"
 addParticipantsError = "Échec de l’ajout des participants"
 backToList = "Retour aux sessions"
@@ -2348,7 +2304,6 @@ finalizeError = "Échec de la finalisation de la session"
 loadPdfError = "Échec du chargement du PDF signé"
 loadSignedPdf = "Charger le PDF signé dans les fichiers actifs"
 messageLabel = "Message"
-noAdditionalInfo = "Aucune information supplémentaire"
 owner = "Propriétaire"
 participantRemoved = "Participant supprimé"
 participants = "Participants"
@@ -2369,7 +2324,6 @@ title = "Apparence des signatures"
 
 [certSign.collab.signRequest]
 addedToFiles = "Document ajouté aux fichiers actifs"
-addSignature = "Ajouter votre signature"
 addToFiles = "Ajouter aux fichiers actifs"
 advancedSettings = "Paramètres avancés"
 backToList = "Retour aux demandes de signature"
@@ -2382,35 +2336,27 @@ decline = "Refuser la demande"
 declineButton = "Refuser"
 deleteSelected = "Supprimer la signature sélectionnée"
 drawSignature = "Dessinez votre signature ci-dessous"
-dueDate = "Date d’échéance"
 fileTooLarge = "La taille du fichier doit être inférieure à 5 Mo"
 fontFamily = "Famille de police"
 fontSize = "Taille de police : {{size}}px"
 fontSizePlaceholder = "Taille"
 from = "De"
-invalidCertFile = "Veuillez sélectionner un fichier de certificat P12 ou PFX"
 invalidFileType = "Veuillez sélectionner un fichier image"
 location = "Emplacement (facultatif)"
 locationPlaceholder = "D’où signez-vous ?"
-message = "Message"
 noCertificate = "Veuillez sélectionner un fichier de certificat"
 noSignatures = "Veuillez placer au moins une signature sur le PDF"
 p12File = "Fichier de certificat P12/PFX"
 password = "Mot de passe du certificat"
-passwordPlaceholder = "Saisissez le mot de passe…"
 penColor = "Couleur du trait"
 penSize = "Taille du trait : {{size}}px"
-placementActive = "Cliquez sur le PDF pour placer"
-placeSignatureButton = "Placer la signature sur le PDF"
 reason = "Raison (facultatif)"
 reasonPlaceholder = "Pourquoi signez-vous ?"
-removeCertFile = "Supprimer le fichier"
 removeImage = "Supprimer l’image"
 savedSignatures = "Signatures enregistrées"
 selectFile = "Sélectionner un fichier image"
 selectSignatureTitle = "Sélectionner ou créer une signature"
 signatureInfo = "Ces paramètres sont configurés par le propriétaire du document"
-signaturePlaced = "Signature placée sur la page"
 signatureSettings = "Paramètres de signature"
 signatureText = "Texte de la signature"
 signatureTextPlaceholder = "Saisissez votre nom…"
@@ -2442,9 +2388,6 @@ description = "Vous avez placé {{count}} signature(s). Choisissez votre certifi
 sign = "Signer le document"
 title = "Configurer le certificat"
 
-[certSign.collab.signRequest.image]
-hint = "Téléversez une image PNG ou JPG de votre signature"
-
 [certSign.collab.signRequest.mode]
 move = "Déplacer la signature"
 place = "Placer la signature"
@@ -2454,10 +2397,6 @@ title = "Mode signature ou déplacement"
 draw = "Dessiner"
 image = "Téléverser"
 text = "Saisir"
-
-[certSign.collab.signRequest.placeSignature]
-message = "Cliquez sur le PDF pour placer votre signature"
-title = "Placer la signature"
 
 [certSign.collab.signRequest.preview]
 imageAlt = "Signature sélectionnée"
@@ -2588,24 +2527,20 @@ text = "Lors de la vérification des signatures, l’outil indique si elles sont
 title = "Vérification des signatures"
 
 [changeCreds]
-changePassword = "Vous utilisez les identifiants de connexion par défaut. Veuillez saisir un nouveau mot de passe"
 changeUsername = "Mettre à jour votre nom d’utilisateur. Vous serez déconnecté après la mise à jour."
-confirmNewPassword = "Confirmer le nouveau mot de passe"
 credsUpdated = "Compte mis à jour"
 description = "Modifications enregistrées. Veuillez vous reconnecter."
 error = "Impossible de mettre à jour le nom d’utilisateur. Veuillez vérifier votre mot de passe et réessayer."
 header = "Mettez à jour vos identifiants de connexion"
-newPassword = "Nouveau mot de passe"
 newUsername = "Nouveau nom d'utilisateur"
 oldPassword = "Mot de passe actuel"
 ssoManaged = "Votre compte est géré par votre fournisseur d’identité."
-submit = "Soumettre les modifications"
 title = "Modifiez vos identifiants"
 
 [changeMetadata]
 filenamePrefix = "métadonnées"
-header = "Modifier les métadonnées"
 submit = "Modifier"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Options avancées"
@@ -2657,9 +2592,6 @@ placeholder = "Producteur du document"
 [changeMetadata.results]
 title = "PDF mis à jour"
 
-[changeMetadata.settings]
-title = "Paramètres des métadonnées"
-
 [changeMetadata.standardFields]
 title = "Champs standard"
 
@@ -2698,16 +2630,6 @@ title = "Champs de date"
 text = "Suppression complète des métadonnées pour garantir la confidentialité."
 title = "Supprimer les métadonnées existantes"
 
-[changeMetadata.tooltip.header]
-title = "Aperçu des métadonnées PDF"
-
-[changeMetadata.tooltip.options]
-bullet1 = "Métadonnées personnalisées : ajoutez vos propres paires clé-valeur"
-bullet2 = "État de piégeage : réglage d’impression haute qualité"
-bullet3 = "Tout supprimer : supprime toutes les métadonnées pour la confidentialité"
-text = "Champs personnalisés et contrôles de confidentialité."
-title = "Options supplémentaires"
-
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Titre : nom ou en-tête du document"
 bullet2 = "Auteur : personne ayant créé le document"
@@ -2724,9 +2646,9 @@ true = "Vrai"
 unknown = "Inconnu"
 
 [changePermissions]
-completed = "Permissions modifiées"
 desc = "Modifier les restrictions et permissions du document."
 submit = "Modifier les permissions"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Modifier les permissions"
 
 [changePermissions.error]
@@ -2774,13 +2696,15 @@ resize = "Redimensionner le panneau de discussion"
 [chat.actions]
 copy = "Copier le message"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [chat.header]
 agentMenu = "Options de l’agent Stirling"
 clearChat = "Effacer la discussion"
-settings = "Paramètres de l’agent"
 
 [chat.input]
-attach = "Joindre des fichiers"
 placeholder = "Que voulez-vous faire ?"
 send = "Envoyer le message"
 
@@ -2793,6 +2717,13 @@ executing_tool_single = "Exécution de {{tool}}..."
 executing_tool_step = "Exécution de {{tool}} (étape {{step}} sur {{total}})..."
 extracting_content = "Extraction du contenu de vos documents..."
 processing = "Traitement du contenu extrait..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Réflexion..."
 whole_doc_compression_round = "Consolidation des notes..."
 whole_doc_read_done = "Lecture du document terminée..."
@@ -2805,8 +2736,6 @@ compressMany = "Compresser ces documents"
 compressOne = "Compresser ce document"
 convertMany = "Convertir ces documents en PDF"
 convertOne = "Convertir ce document en PDF"
-fileSummary_one = "1 fichier dans le plan de travail ({{types}})"
-fileSummary_other = "{{count}} fichiers dans le plan de travail ({{types}})"
 heading = "Pour commencer"
 mergeMany = "Fusionner ces {{count}} documents en 1"
 moreFiles = "+{{count}} autres"
@@ -2827,8 +2756,6 @@ unsupported_capability = "Fonctionnalité non prise en charge : {{capability}}"
 
 [chat.toolsUsed]
 summary = "{{count}} outils exécutés"
-summary_one = "1 outil exécuté"
-summary_other = "{{count}} outils exécutés"
 unknownTool = "Outil inconnu"
 
 [cloudBadge]
@@ -2846,7 +2773,6 @@ back = "Retour"
 cancel = "Annuler"
 close = "Fermer"
 collapse = "Réduire"
-collapsed = "réduit"
 continue = "Continuer"
 copied = "Copié !"
 copy = "Copier"
@@ -2854,57 +2780,39 @@ done = "Terminé"
 error = "Erreur"
 expand = "Développer"
 learnMore = "En savoir plus"
-lines = "lignes"
 loading = "Chargement…"
 next = "Suivant"
 operation = "cette opération"
 preview = "Aperçu"
 previous = "Précédent"
 refresh = "Actualiser"
-remaining = "restant"
 retry = "Réessayer"
 save = "Enregistrer"
 used = "utilisé"
 
 [compare]
-addFilesHint = "Ajoutez des PDF à l’étape Fichiers pour activer la sélection."
 clearSelected = "Effacer la sélection"
 clearSlot = "Retirer le fichier"
 cta = "Comparer"
-header = "Comparer"
 loading = "Comparaison en cours…"
 newLine = "nouvelle-ligne"
-noFiles = "Aucun PDF disponible pour le moment"
 pages = "Pages"
 tags = "comparer,analyser,differentiate,contrast,changes,analysis"
 title = "Comparer"
 
 [compare.actions]
 linkScroll = "Lier le défilement"
-linkScrollPan = "Lier défilement et panoramique"
 placeSideBySide = "Aligner côte à côte"
 resetView = "Réinitialiser la vue"
 stackVertically = "Empiler verticalement"
 unlinkScroll = "Dissocier le défilement"
-unlinkScrollPan = "Dissocier défilement et panoramique"
 zoomIn = "Zoomer"
 zoomOut = "Dézoomer"
-
-[compare.base]
-label = "Document original"
-placeholder = "Sélectionnez le PDF original"
 
 [compare.clear]
 confirm = "Effacer et revenir"
 confirmBody = "Cela fermera la comparaison en cours et vous ramènera aux fichiers actifs."
 confirmTitle = "Effacer les PDF sélectionnés ?"
-
-[compare.comparison]
-label = "Document modifié"
-placeholder = "Sélectionnez le PDF modifié"
-
-[compare.complex]
-message = "Un ou les deux documents fournis sont des fichiers volumineux, l'exactitude de la comparaison peut être réduite"
 
 [compare.dropdown]
 additions = "Ajouts ({{count}})"
@@ -2937,15 +2845,12 @@ message = "Un ou les deux documents fournis sont trop volumineux pour être trai
 body = "Ces PDF dépassent ensemble 2 000 pages. Le traitement peut prendre plusieurs minutes."
 title = "Comparaison volumineuse en cours"
 
-[compare.mode]
-pixel = "Comparaison de pixels"
-text = "Comparaison de texte"
-
 [compare.no.text]
 message = "L'un ou les deux documents PDF sélectionnés ne contiennent aucun contenu textuel. Veuillez choisir des documents PDF avec du texte pour la comparaison."
 
 [compare.original]
 label = "PDF original"
+placeholder = "Select the original PDF"
 
 [compare.pixel]
 base = "Original"
@@ -2979,18 +2884,10 @@ pagesRendered = "pages rendues"
 rendering = "rendu"
 
 [compare.review]
-actionsHint = "Examiner la comparaison, inverser les rôles des documents ou exporter le résumé."
-exportSummary = "Exporter le résumé"
-switchOrder = "Inverser l’ordre"
 title = "Résultat de la comparaison"
 
 [compare.selection]
 originalEditedTitle = "Sélectionnez les PDF original et modifié"
-
-[compare.slowOperation]
-body = "Cette comparaison est plus longue que d’habitude. Vous pouvez la laisser continuer ou l’annuler."
-cancel = "Annuler la comparaison"
-title = "Toujours en cours…"
 
 [compare.status]
 complete = "Comparaison prête"
@@ -3017,10 +2914,9 @@ unlinkedTitle = "Défilement et panoramique indépendants activés"
 message = "Ces documents semblent très différents. La comparaison a été arrêtée pour gagner du temps."
 
 [compress]
-credit = "Ce service utilise qpdf pour la compression et l'optimisation des PDF."
 desc = "Compressez les PDF pour réduire leur taille."
-header = "Compresser un PDF (lorsque c'est possible!)"
 submit = "Compresser"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Compresser un PDF"
 
 [compress.compressionLevel]
@@ -3051,15 +2947,6 @@ unavailable = "ImageMagick n’est pas installé ou activé sur ce serveur"
 filesize = "Taille du Fichier"
 quality = "Qualité"
 title = "Méthode de compression"
-
-[compress.selectText]
-2 = "Niveau d'optimisation"
-4 = "Mode automatique – ajuste automatiquement la qualité pour obtenir le PDF à la taille exacte"
-5 = "Taille PDF attendue (par exemple, 25 MB, 10,8 MB, 25 KB)"
-
-[compress.selectText.1]
-1 = "1-3 compression PDF,</br> 4-6 compression d'image légère,</br> 7-9 compression d'image intense qui réduira considérablement la qualité de l'image"
-_value = "Paramètres de compression"
 
 [compress.settings]
 desiredSize = "Taille de fichier souhaitée"
@@ -3166,7 +3053,6 @@ publicKeyAriaLabel = "Clé API publique"
 purchasedCredits = "Crédits achetés"
 refreshAriaLabel = "Actualiser la clé API"
 schemaLink = "Référence du schéma API"
-totalCredits = "Crédits totaux"
 usage = "Incluez cette clé dans l’en-tête X-API-KEY pour toutes les requêtes API."
 
 [config.apiKeys.alert]
@@ -3185,6 +3071,37 @@ impact = "Toute application ou service utilisant actuellement ces clés cessera 
 title = "Actualiser les clés API"
 warning = "⚠️ Avertissement : cette action générera de nouvelles clés API et rendra vos clés précédentes invalides."
 
+[config.mcp]
+description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+navLabel = "MCP Server"
+tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
+viewApiKeys = "View API keys"
+
+[config.mcp.copy]
+configLabel = "Config"
+copied = "Copied"
+copy = "Copy"
+endpointLabel = "Endpoint URL"
+tooltip = "Copy {{label}}"
+tooltipCopied = "{{label}} copied"
+
+[config.mcp.endpoint]
+label = "Your MCP endpoint"
+
+[config.mcp.setup]
+addTo = "Add to"
+hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
+title = "Connect your AI assistant"
+
+[config.mcp.tools]
+ai = "AI"
+convert = "Convert"
+misc = "Misc"
+pages = "Pages"
+security = "Security"
+title = "What your assistant can do"
+
 [config.overview]
 description = "Paramètres actuels de l’application et détails de configuration."
 error = "Erreur"
@@ -3197,14 +3114,6 @@ basic = "Configuration de base"
 integration = "Configuration d'intégration"
 security = "Configuration de sécurité"
 system = "Configuration système"
-
-[connectionMode.status]
-localOffline = "Mode offline"
-localOnline = "Mode offline"
-saas = "Connecté au Cloud Stirling"
-selfhostedChecking = "Connection en cours à un serveur auto-hébergé"
-selfhostedOffline = "Serveur auto-hébergé inaccessible"
-selfhostedOnline = "Connecté à un serveur auto-hébergé"
 
 [convert]
 autoRotate = "Rotation automatique"
@@ -3224,64 +3133,39 @@ combineImages = "Combiner les images"
 combineImagesDescription = "Combiner toutes les images dans un seul PDF, ou créer des PDF séparés pour chaque image"
 combineSvgs = "Combine SVGs into single PDF"
 combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
-conversionCompleted = "Conversion terminée"
 conversionResults = "Résultats de la conversion"
 convertFiles = "Convertir les fichiers"
 convertFrom = "Convertir depuis"
 converting = "Conversion…"
 convertTo = "Convertir vers"
-defaultFilename = "fichier_converti"
 desc = "Convertir des fichiers entre différents formats"
-downloadConverted = "Télécharger le fichier converti"
 downloadHtml = "Télécharger le fichier HTML intermédiaire au lieu du PDF"
 dpi = "DPI"
 ebookToPdf = "eBook → PDF"
 emailOptions = "Options e-mail vers PDF"
 emlToPdf = "Email → PDF"
 errorConversion = "Une erreur s’est produite lors de la conversion du fichier."
-errorNoFiles = "Veuillez sélectionner au moins un fichier à convertir."
-errorNoFormat = "Veuillez sélectionner à la fois les formats source et cible."
-errorNotSupported = "La conversion de {{from}} vers {{to}} n’est pas prise en charge."
-fileFormat = "Format de fichier"
-files = "Fichiers"
 fileToPdf = "Office/Document → PDF"
 fillPage = "Remplir la page"
 fitDocumentToPage = "Ajuster le document à la page"
 fitOption = "Option d’ajustement"
 grayscale = "Niveaux de gris"
-greyscale = "Niveaux de gris"
 imageOptions = "Options d’image"
-images = "Images"
-imagesExt = "Images (JPG, PNG, etc.)"
 includeAllRecipients = "Inclure les destinataires CC et CCI dans l’en-tête"
 includeAttachments = "Inclure les pièces jointes de l’e-mail"
 maintainAspectRatio = "Conserver les proportions"
-markdown = "Markdown"
 maxAttachmentSize = "Taille maximale de pièce jointe (Mo)"
 multiple = "Multiple"
-noFileSelected = "Aucun fichier sélectionné. Utilisez le panneau de fichiers pour ajouter des fichiers."
-odpExt = "Présentation OpenDocument (.odp)"
-odtExt = "Texte OpenDocument (.odt)"
-officeDocs = "Documents Office (Word, Excel, PowerPoint)"
 optimizeForEbook = "Optimiser le PDF pour les liseuses (utilise Ghostscript)"
 output = "Sortie"
 outputFormat = "Format de sortie"
-outputOptions = "Options de sortie"
 pdfaDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
-pdfaFormat = "Format PDF/A"
 pdfaNote = "PDF/A-1b est plus compatible, PDF/A-2b prend en charge davantage de fonctionnalités."
 pdfaOptions = "Options PDF/A"
 pdfOptions = "Options PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
-pdfxDescription = "PDF/X est un sous-ensemble PDF conforme à l'ISO pour une impression fiable et un échange graphique."
-pdfxDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
-pptExt = "PowerPoint (.pptx)"
-results = "Résultats"
-rtfExt = "Rich Text Format (.rtf)"
-selectedFiles = "Fichiers sélectionnés"
-selectFilesPlaceholder = "Sélectionnez des fichiers dans la vue principale pour commencer"
 selectSourceFormatFirst = "Sélectionnez d’abord un format source"
 settings = "Paramètres"
 single = "Unique"
@@ -3291,18 +3175,13 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Format cible"
-textRtf = "Texte/RTF"
 title = "Convertir"
-txtExt = "Texte brut (.txt)"
 webOptions = "Options Web vers PDF"
-wordDoc = "Document Word"
-wordDocExt = "Document Word (.docx)"
 zoomLevel = "Niveau de zoom"
 
 [convert.ebookOptions]
-ebookOptions = "Options eBook vers PDF"
-ebookOptionsDesc = "Options de conversion des eBooks en PDF"
 embedAllFonts = "Incorporer toutes les polices"
 embedAllFontsDesc = "Incorporer toutes les polices de l’eBook dans le PDF généré"
 includePageNumbers = "Inclure les numéros de page"
@@ -3315,8 +3194,6 @@ optimizeForEbookPdfDesc = "Optimiser le PDF pour la lecture d’eBook (taille de
 [convert.epubOptions]
 detectChapters = "Détecter les chapitres"
 detectChaptersDesc = "Détecter les titres ressemblant à des chapitres et insérer des sauts de page EPUB"
-epubOptions = "Options PDF vers eBook"
-epubOptionsDesc = "Options de conversion de PDF vers EPUB/AZW3"
 kindleEink = "Kindle e-Ink (texte optimisé)"
 outputFormat = "Format de sortie"
 outputFormatDesc = "Choisissez le format de sortie de l’eBook"
@@ -3386,7 +3263,6 @@ creditsRemaining = "{{current}} sur {{total}} restants"
 creditsThisMonth = "Crédits mensuels"
 current = "Offre actuelle"
 customPricing = "Personnalisé"
-customSmartFolders = "Dossiers intelligents personnalisés"
 dedicatedSupportSlas = "Support dédié et SLA"
 enterpriseSubscription = "Enterprise"
 everythingInCredits = "Tout ce qui est dans Credits, plus :"
@@ -3429,14 +3305,8 @@ unlimitedApiAccess = "Accès API illimité"
 unlimitedMonthlyCredits = "Licence site"
 unlimitedSeats = "Postes illimités"
 
-[credits.modal.features]
-everythingInCredits = "Tout ce qui est dans Credits, plus :"
-everythingInFree = "Tout ce qui est dans Free, plus :"
-forRegularWork = "Pour un usage PDF régulier :"
-
 [crop]
 autoCrop = "Recadrer automatiquement les marges blanches"
-header = "Redimensionner"
 noFileSelected = "Sélectionnez un fichier PDF pour commencer le recadrage"
 reset = "Réinitialiser au PDF complet"
 submit = "Envoyer"
@@ -3487,39 +3357,10 @@ title = "Comment recadrer des PDF"
 
 [database]
 backupCreated = "Sauvegarde de la base de donnée réussie"
-createBackupFile = "Créer un fichier de sauvegarde"
-creationDate = "Date de Création"
-deleteBackupFile = "Supprimer le fichier de sauvegarde"
-downloadBackupFile = "Télécharger le fichier de sauvegarde"
-failedImportFile = "Échec de l'imporation du fichier"
 fileName = "Nom du Fichier"
-fileNotFound = "Fichier introuvable"
-fileNullOrEmpty = "Fichier ne peut pas être null ou vide"
-fileSize = "Taille du Fichier"
-header = "Import/Export de la Base de Données"
-importBackupFile = "Importer le fichier de sauvegarde"
-importIntoDatabaseSuccessed = "Importation dans la base de données réussie"
-info_1 = "Lors de l'importation des données, il est crucial de garantir la structure correcte. Si vous n'êtes pas sûr de ce que vous faites, sollicitez un avis et un soutien d'un professionnel. Une erreur dans la structure peut entraîner des dysfonctionnements de l'application, allant jusqu'à l'incapacité totale d'exécuter l'application."
-info_2 = "Le nom du fichier ne fait pas de différence lors de l'upload. Il sera renommé ultérieurement selon le format backup_user_yyyyMMddHHmm.sql, assurant ainsi une convention de nommage cohérente."
-notSupported = "Cette fonctionnalité n'est pas supportée avec votre base de donnée"
-submit = "Importer la sauvegarde"
 title = "Import/Export de la Base de Données"
 
-[decrypt]
-cancelled = "Operation annulée pour le PDF: {0}"
-invalidPassword = "Veuillez réessayer avec le bon mot de passe"
-invalidPasswordHeader = "Mauvais mot de passe ou chiffrement non supporté pour le PDF : {0}"
-noPassword = "Pas de mot de passe fourni pour le PDF chiffré : {0}"
-passwordPrompt = "Ce fichier est protégé par un mot de passe. Veuillez saisir le mot de passe :"
-serverError = "Erreur du serveur lors du déchiffrement : {0}"
-success = "Fichier déchiffré avec succès."
-unexpectedError = "Une erreur est survenue lors de traitement du fichier. Veuillez essayer de nouveau."
-
 [defaultApp]
-description = "Vous pourrez modifier ce réglage ultérieurement dans les paramètres système."
-dismiss = "Ignorer"
-message = "Souhaitez-vous définir Stirling PDF comme éditeur PDF par défaut ?"
-notNow = "Pas maintenant"
 setDefault = "Définir par défaut"
 title = "Définir comme application PDF par défaut"
 
@@ -3529,7 +3370,6 @@ title = "Erreur"
 
 [defaultApp.prompt]
 message = "Définissez Stirling PDF comme application par défaut pour ouvrir les fichiers PDF."
-title = "Définir comme éditeur PDF par défaut"
 
 [defaultApp.settingsOpened]
 message = "Veuillez sélectionner Stirling PDF dans vos paramètres système"
@@ -3555,6 +3395,18 @@ docsLink = "Voir la documentation d’installation"
 message = "Stirling-PDF n’a pas l’autorisation de se mettre à jour sur cette machine."
 title = "Autorisations administrateur requises"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Rechercher..."
 
@@ -3564,6 +3416,7 @@ editSecretValue = "Modifier la valeur secrète"
 
 [editTableOfContents]
 submit = "Appliquer la table des matières"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "L’accès au presse-papiers n’est pas disponible dans ce navigateur."
@@ -3638,12 +3491,9 @@ title = "Signets et plan"
 
 [editTableOfContents.workbench]
 changeFile = "Changer de PDF"
-fileLabel = "Les modifications seront appliquées au PDF actuellement sélectionné."
 filePrompt = "Choisissez un PDF de votre bibliothèque ou téléversez-en un nouveau pour commencer."
-noFile = "Aucun PDF sélectionné"
 selectFile = "Sélectionner un PDF"
 subtitle = "Importez des signets, créez des hiérarchies et appliquez le plan sans panneaux latéraux encombrés."
-tabTitle = "Espace de travail du plan"
 
 [editTableOfContents.workbench.empty]
 description = "Sélectionnez l’outil Modifier la table des matières pour charger son espace de travail."
@@ -3676,62 +3526,15 @@ label = "Mot de passe PDF"
 placeholder = "Entrez le mot de passe du PDF"
 
 [endpointStatistics]
-all = "Tout"
-dataTypeAll = "Tous"
-dataTypeApi = "API"
-dataTypeLabel = "Type de données :"
-dataTypeUi = "UI"
-endpoint = "Point de terminaison"
-failedToLoad = "Échec du chargement des données des points de terminaisons. Veuillez réessayer."
-header = "Statistiques des points de terminaison"
-home = "Accueil"
-loading = "Chargement..."
-login = "Connexion"
-numberOfVisits = "Nombre de visites"
-percentage = "Pourcentage"
-refresh = "Rafraîchir"
-retry = "Réessayer"
-selectedVisits = "Visites sélectionnées"
-showing = "Affichage"
 title = "Statistiques des points de terminaison"
-top = "Top"
-top10 = "Top 10"
-top20 = "Top 20"
-totalEndpoints = "Nombre total de points de terminaison"
-totalVisits = "Nombre total de visites"
-visits = "Visites"
-visitsTooltip = "Visites : {0} ({1}% du total)"
-
-[enterpriseEdition]
-button = "Passer à Pro"
-ssoAdvert = "Vous cherchez plus de fonctionnalités de gestion des utilisateurs ? Découvrez Stirling PDF Pro"
-warning = "Cette fonctionnalité est uniquement disponible pour les utilisateurs Pro."
-yamlAdvert = "Stirling PDF Pro prend en charge les fichiers de configuration YAML et d'autres fonctionnalités SSO."
 
 [error]
 _value = "Erreur"
-contactTip = "Si vous avez encore des problèmes, n'hésitez pas à nous contacter pour obtenir de l'aide. Vous pouvez soumettre un ticket sur notre page GitHub ou nous contacter via Discord :"
-copyStack = "Copier la Stack Trace"
-discordSubmit = "Discord - Poster un message de demande d'assistance"
 dismissAllErrors = "Ignorer toutes les erreurs"
-encryptedPdfMustRemovePassword = "Ce PDF est chiffré ou protégé par mot de passe. Veuillez le déverrouiller avant de convertir en PDF/A."
 generic = "Une erreur s’est produite"
-github = "Créer un ticket sur GitHub"
-githubSubmit = "GitHub - Créer un ticket"
-incorrectPasswordProvided = "Le mot de passe du PDF est incorrect ou non fourni."
-needHelp = "Besoin d'aide / Vous avez trouvé un problème ?"
-pdfPassword = "Le document PDF est protégé par un mot de passe qui n'a pas été fourni ou était incorrect"
-showStack = "Afficher la  Stack Trace"
-sorry = "Désolé pour ce problème !"
-
-[error.404]
-1 = "Nous ne parvenons pas à trouver la page que vous recherchez."
-2 = "Quelque chose n'a pas fonctionné"
-head = "404 - Page non trouvée | oups on s'est foiré !"
 
 [extractImages]
 allowDuplicates = "Enregistrer les images dupliquées"
-header = "Extraire les images"
 selectText = "Format d'image dans lequel convertir les images extraites"
 submit = "Extraire"
 tags = "image,photo,save,archive,zip,capture,grab"
@@ -3748,6 +3551,7 @@ tags = "extraire,extract"
 
 [extractPages]
 submit = "Extraire des pages"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Extraire des pages"
 
 [extractPages.error]
@@ -3770,23 +3574,11 @@ description = "Extrait les pages sélectionnées dans un nouveau PDF, en conserv
 openInFileEditor = "Ouvrir dans l’éditeur de fichiers"
 viewInViewer = "Afficher dans la visionneuse"
 
-[fileChooser]
-click = "Cliquez"
-dragAndDrop = "Glisser & Déposer"
-dragAndDropImage = "Glisser & Déposer une image"
-dragAndDropPDF = "Glisser & Déposer un PDF"
-extractPDF = "Extraction en cours..."
-hoveredDragAndDrop = "Glisser & Déposer le(s) fichier(s) ici"
-or = "ou"
-
 [fileDropdownMenu]
 closeFile = "Fermer le fichier"
 
 [fileEditor]
 addFiles = "Ajouter des fichiers"
-pageCount = "{{count}} pages"
-pageCount_one = "{{count}} page"
-pageCount_other = "{{count}} pages"
 
 [fileManager]
 active = "Actif"
@@ -3794,7 +3586,6 @@ addToUpload = "Ajouter au téléversement"
 changesNotUploaded = "Modifications non téléversées"
 clearAll = "Tout effacer"
 clearSelection = "Effacer la sélection"
-clickToUpload = "Cliquez pour téléverser des fichiers"
 closeAllFiles = "Fermer tous les fichiers"
 closeFile = "Fermer le fichier"
 cloudFile = "Fichier cloud"
@@ -3807,10 +3598,7 @@ deselectAll = "Tout déselectionner"
 details = "Détails du fichier"
 download = "Télécharger"
 downloadSelected = "Télécharger la sélection"
-dragDrop = "Glissez-déposez des fichiers ici"
 dropFilesHere = "Déposez les fichiers ici"
-failedToLoad = "Échec du chargement du fichier dans l’ensemble actif."
-failedToOpen = "Échec de l’ouverture du fichier. Il a peut-être été supprimé du stockage."
 fileFormat = "Format"
 fileHistory = "Historique du fichier"
 fileName = "Nom"
@@ -3832,8 +3620,6 @@ leaveShare = "Retirer de ma liste"
 leaveShareFailed = "Impossible de retirer le fichier partagé."
 leaveShareSuccess = "Retiré de votre liste de partages."
 loadingFiles = "Chargement des fichiers..."
-loadingHistory = "Chargement de l’historique…"
-localFiles = "Fichiers locaux"
 localOnly = "Local uniquement"
 makeCopy = "Faire une copie"
 mobileShort = "Mobile"
@@ -3841,7 +3627,6 @@ mobileUpload = "Téléversement mobile"
 mobileUploadNotAvailable = "Téléversement mobile non activé"
 myFiles = "Mes fichiers"
 noFiles = "Aucun fichier disponible"
-noFileSelected = "Aucun fichier sélectionné"
 noFilesFound = "Aucun fichier correspondant à votre recherche"
 noRecentFiles = "Aucun fichier récent trouvé"
 openFile = "Ouvrir le fichier"
@@ -3851,7 +3636,6 @@ openInPageEditor = "Ouvrir dans l’Éditeur de pages"
 owner = "Propriétaire"
 ownerUnknown = "Inconnu"
 recent = "Récents"
-reloadFiles = "Recharger les fichiers"
 removeBoth = "Supprimer des deux"
 removeFilePrompt = "Ce fichier est enregistré sur cet appareil et sur votre serveur. D’où souhaitez-vous le supprimer ?"
 removeFileTitle = "Supprimer le fichier"
@@ -3868,7 +3652,6 @@ saveSelected = "Enregistrer la sélection"
 searchFiles = "Rechercher des fichiers…"
 selectAll = "Tout sélectionner"
 selectedCount = "{{count}} sélectionné(s)"
-selectedFiles = "Fichiers sélectionnés"
 share = "Partager"
 shared = "Partagé"
 sharedByYou = "Partagé par vous"
@@ -3884,20 +3667,13 @@ sortByDate = "Trier par date"
 sortByName = "Trier par nom"
 sortBySize = "Trier par taille"
 storage = "Stockage"
-storageCleared = "Le navigateur a effacé le stockage. Les fichiers ont été supprimés. Veuillez téléverser de nouveau."
-storageError = "Une erreur de stockage est survenue"
-storageLow = "Le stockage est presque plein. Envisagez de supprimer d’anciens fichiers."
 storageState = "Stockage"
-subtitle = "Ajoutez des fichiers à votre stockage pour un accès facile dans tous les outils"
-supportMessage = "Alimenté par le stockage de la base de données du navigateur pour une capacité illimitée"
 synced = "Synchronisé"
 title = "Téléverser des fichiers PDF"
 toolChain = "Outils appliqués"
-totalSelected = "Total sélectionné"
 unsupported = "Non pris en charge"
 unzip = "Décompresser"
 updateOnServer = "Mettre à jour sur le serveur"
-uploadError = "Échec du téléversement de certains fichiers."
 uploadSelected = "Téléverser la sélection"
 uploadToServer = "Téléverser sur le serveur"
 
@@ -3969,7 +3745,6 @@ cycleBlocked = "Impossible de déplacer un dossier dans l’un de ses sous-dossi
 delete = "Supprimer"
 deleteFolder = "Supprimer le dossier"
 deleteFolderBody = "Supprimer le dossier « {{name}} » ?"
-deleteFolderConfirm = "Supprimer le dossier « {{name}} » ? Les fichiers à l’intérieur seront déplacés vers Tous les fichiers. {{count}} fichier(s) concerné(s)."
 deleteFolderContents = "Supprimer également {{count}} fichier(s) dans le dossier"
 deleteFolderContentsWarning = "Les fichiers seront définitivement supprimés et ne pourront pas être récupérés."
 deleteFolderError = "Impossible de supprimer le dossier. Réessayez."
@@ -3994,18 +3769,14 @@ inWorkspace = "Ouvrir"
 inWorkspaceAria = "Déjà dans l’espace de travail"
 loading = "Chargement…"
 localFoldersUnavailable = "Les dossiers sont réservés au Cloud - enregistrez un fichier dans le cloud pour l’organiser."
-moreActions = "Plus d’actions sur le dossier"
-moveLocalToCloudBlocked = "Les fichiers uniquement locaux ne peuvent pas être déplacés dans des dossiers cloud. Enregistrez-les d’abord dans le cloud."
 moveSkippedRemote = "{{count}} fichier(s) n’ont pas pu être déplacés sur le serveur (pas d’autorisation ou déjà supprimés)."
 moveTo = "Déplacer vers…"
 myFiles = "Mes fichiers"
 newFolder = "Nouveau dossier"
 newFolderStorageDisabled = "Le stockage des dossiers sur le serveur n’est pas activé. Demandez à votre administrateur de l’activer."
 newFolderTabUnavailable = "Passez à Tous ou Cloud pour créer des dossiers."
-newRootFolder = "Nouveau dossier à la racine"
 offlineNoFolderEdits = "Synchronisation des dossiers serveur indisponible - les modifications des dossiers sont désactivées. Vérifiez votre connexion et la configuration du stockage."
 open = "Ouvrir"
-openInWorkbench = "Ouvrir dans le plan de travail"
 openVersionInWorkspace = "Ouvrir dans l’espace de travail"
 originFilter = "Filtrer par source"
 quickView = "Aperçu rapide"
@@ -4029,8 +3800,6 @@ shareDisabledHint = "Le partage de fichiers n’est pas activé sur ce serveur. 
 shareManage = "Gérer le partage"
 showDetails = "Afficher les détails"
 summary = "{{count}} éléments"
-syncFailed = "Échec de la synchronisation du dossier : {{message}}"
-syncPartial = "Synchronisation partielle : {{failed}} sur {{total}} dossiers n’ont pas pu être fusionnés."
 tree = "Dossiers"
 upload = "Téléverser"
 uploadedToLocal = "Les fichiers téléversés commencent en Local. Utilisez « Enregistrer dans le cloud » pour les placer dans un dossier."
@@ -4161,17 +3930,13 @@ sharedByMe = "Partagés par moi"
 [filesPage.tabs]
 all = "Tous"
 ariaLabel = "Vues de fichiers"
-cloud = "Cloud"
-local = "Local"
 recent = "Récents"
 shared = "Partagés avec moi"
 sharedByMe = "Partagés par moi"
 
 [filesPage.treeMenu]
 actions = "Actions sur le dossier {{name}}"
-collapse = "Réduire le dossier"
 delete = "Supprimer le dossier"
-expand = "Développer le dossier"
 newSubfolder = "Nouveau sous-dossier"
 rename = "Renommer"
 
@@ -4185,39 +3950,20 @@ label = "Mode d’affichage"
 list = "Vue en liste"
 
 [fileToPDF]
-credit = "Ce service utilise LibreOffice et Unoconv pour la conversion de fichiers."
-header = "Convertir un fichier en PDF"
-submit = "Convertir"
-supportedFileTypes = "Les types de fichiers pris en charge doivent inclure les éléments ci-dessous, mais pour une liste complète et mise à jour des formats pris en charge, veuillez vous reporter à la documentation de LibreOffice."
-supportedFileTypesInfo = "Types de fichiers pris en charge"
 tags = "convertion,transformation,format,document,image,slide,texte,conversion,office,docs,word,excel,powerpoint"
 title = "Fichier en PDF"
 
 [fileUpload]
-addFiles = "Ajouter des fichiers"
-backToTools = "Retour aux outils"
-chooseFromStorage = "Choisissez un fichier depuis le stockage ou téléversez un nouveau PDF"
-chooseFromStorageMultiple = "Choisissez des fichiers depuis le stockage ou téléversez de nouveaux PDF"
-dragFilesInOrClick = "Glissez des fichiers ou cliquez sur « Ajouter des fichiers » pour parcourir"
-dropFileHere = "Déposez un fichier ici ou cliquez pour téléverser"
 dropFilesHere = "Déposez des fichiers ici ou cliquez sur le bouton de téléversement"
 dropFilesHereOpen = "Déposez des fichiers ici ou cliquez sur le bouton Ouvrir"
 filesAvailable = "fichiers disponibles"
 loadFromStorage = "Charger depuis le stockage"
-loading = "Chargement..."
 noFilesInStorage = "Aucun fichier disponible dans le stockage. Téléversez d’abord des fichiers."
 noFilesInStorageOpen = "Aucun fichier disponible dans le stockage. Ouvrez d’abord des fichiers."
 open = "Ouvrir"
 openFile = "Ouvrir un fichier"
 openFiles = "Ouvrir des fichiers"
-or = "ou"
-pdfFilesOnly = "Fichiers PDF uniquement"
-selectFile = "Sélectionner un fichier"
-selectFiles = "Sélectionner des fichiers"
 selectFromStorage = "Sélectionner depuis le stockage"
-selectPdfToEdit = "Sélectionnez un PDF à modifier"
-selectPdfToView = "Sélectionnez un PDF à afficher"
-supportedFileTypes = "Types de fichiers pris en charge"
 upload = "Téléverser"
 uploadFile = "Téléverser un fichier"
 uploadFiles = "Téléverser des fichiers"
@@ -4243,22 +3989,15 @@ welcomeMessage = "Pour des raisons de sécurité, vous devez changer votre mot d
 welcomeTitle = "Bienvenue !"
 
 [flatten]
-filenamePrefix = "aplati"
-flattenOnlyForms = "Aplatir uniquement les formulaires"
-header = "Rendre inerte"
 submit = "Rendre inerte"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Rendre inerte"
 
 [flatten.error]
 failed = "Une erreur est survenue lors de l’aplatissement du PDF."
 
-[flatten.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
-
 [flatten.options]
-note = "L’aplatissement supprime les éléments interactifs du PDF, les rendant non modifiables."
 stepTitle = "Options d’aplatissement"
-title = "Options d’aplatissement"
 
 [flatten.options.flattenOnlyForms]
 desc = "Aplatir uniquement les champs de formulaire, en laissant les autres éléments interactifs intacts"
@@ -4271,9 +4010,6 @@ placeholder = "ex. 150"
 
 [flatten.results]
 title = "Résultats de l’aplatissement"
-
-[flatten.steps]
-settings = "Paramètres"
 
 [flatten.tooltip.description]
 bullet1 = "Les zones de texte deviennent du texte normal (non modifiable)"
@@ -4310,7 +4046,6 @@ close = "Fermer la barre latérale"
 [getPdfInfo]
 downloadJson = "Télécharger le JSON"
 downloads = "Téléchargements"
-header = "Récupérer les informations"
 indexTitle = "Index"
 noneDetected = "Aucun détecté"
 noResults = "Exécutez l'outil pour générer un rapport."
@@ -4321,12 +4056,8 @@ tags = "récupérer,infomation,data,stats,statistics"
 title = "Récupérer les informations"
 
 [getPdfInfo.compliance]
-compliant = "Conforme"
 failed = "Échec"
 failedCount = "échoués"
-nonCompliant = "Non conforme"
-none = "Aucune norme détectée"
-notDetected = "Non détecté"
 noVerification = "Aucune vérification effectuée"
 noVerificationDesc = "La conformité aux normes PDF n'a pas été vérifiée pour ce document."
 passed = "Réussi"
@@ -4354,7 +4085,6 @@ size = "Taille"
 xobjects = "Nombre d'objets XObject"
 
 [getPdfInfo.report]
-entryLabel = "Résumé complet des informations"
 shortTitle = "Informations PDF"
 
 [getPdfInfo.sections]
@@ -4380,7 +4110,6 @@ compliancePassed = "Conforme à {{standards}}"
 created = "Créé"
 documentInfo = "Informations sur le document"
 fileSize = "Taille du fichier"
-hasCompliance = "Respecte des normes de conformité"
 language = "Langue"
 modified = "Modifié"
 noCompliance = "Aucune norme de conformité"
@@ -4490,18 +4219,6 @@ message = "Créez un compte gratuit pour enregistrer votre travail, accéder à 
 signUp = "S’inscrire gratuitement"
 title = "Vous utilisez Stirling PDF en tant qu’invité !"
 
-[home]
-alphabetical = "Alphabétique"
-desc = "Votre application Web hébergée localement pour répondre à tous vos besoins PDF."
-globalPopularity = "Popularité globale"
-hideFavorites = "Cacher les favoris"
-legacyHomepage = "Ancienne Homepage"
-newHomePage = "Essayez notre nouvelle Homepage !"
-searchBar = "Rechercher des fonctionnalités..."
-setFavorites = "Ajouter des favoris"
-showFavorites = "Montrer les favoris"
-sortBy = "Trier par :"
-
 [home.addAttachments]
 desc = "Ajouter ou supprimer des fichiers intégrés (pièces jointes) dans un PDF"
 tags = "intégrer,joindre,inclure"
@@ -4553,12 +4270,10 @@ tags = "détection automatique,basé-en-tête,organiser,renommer"
 title = "Renommer PDF auto"
 
 [home.autoSizeSplitPDF]
-desc = "Séparer un PDF unique en plusieurs documents en fonction de la taille, du nombre de pages ou du nombre de documents."
 tags = "auto,diviser,taille"
 title = "Scinder auto taille/pages"
 
 [home.autoSplitPDF]
-desc = "Séparez automatiquement le PDF numérisé avec le code QR du diviseur de page numérisé."
 tags = "auto,diviser,QR"
 title = "Scinder pages auto"
 
@@ -4652,7 +4367,6 @@ tags = "info,métadonnées,détails"
 title = "Récupérer les informations"
 
 [home.manageCertificates]
-desc = "Importer, exporter ou supprimer des fichiers de certificats numériques utilisés pour signer des PDF."
 tags = "certificats,importer,exporter"
 title = "Gérer les certificats"
 
@@ -4697,7 +4411,6 @@ tags = "AI,agent,commentaire,annoter,note autocollante,révision,retour,notes"
 title = "Ajouter des commentaires IA"
 
 [home.pdfOrganiser]
-desc = "Supprimez ou réorganisez les pages dans n'importe quel ordre."
 tags = "organiser,réorganiser,réordonner"
 title = "Organiser"
 
@@ -4807,17 +4520,14 @@ tags = "diviser,séparer,scinder"
 title = "Diviser"
 
 [home.splitByChapters]
-desc = "Séparez un PDF en fichiers multiples en fonction de sa structure par chapitres."
 tags = "diviser,chapitres,structure"
 title = "Séparer un PDF par chapitres"
 
 [home.splitBySections]
-desc = "Diviser chaque page d’un PDF en plus petites sections horizontales et verticales"
 tags = "diviser,sections,scinder"
 title = "Diviser le PDF par sections"
 
 [home.swagger]
-desc = "Voir la documentation de l’API et tester les points de terminaison"
 tags = "API,documentation,test"
 title = "Documentation de l’API"
 
@@ -4837,7 +4547,6 @@ tags = "valider,vérifier,certificat"
 title = "Valider signature PDF"
 
 [home.viewPdf]
-desc = "Visionner, annoter, ajouter du texte ou des images."
 title = "Visionner/Modifier des PDF"
 
 [home.watermark]
@@ -4846,25 +4555,9 @@ tags = "tampon,marque,superposition"
 title = "Ajouter un filigrane"
 
 [HTMLToPDF]
-credit = "Utilise WeasyPrint."
-cssMediaType = "Modifier le type de média CSS de la page."
-defaultHeader = "Activer l'entête par défaut (Nom et numéro de page)"
 header = "HTML en PDF"
-help = "Accepte les fichiers HTML et les ZIP contenant du HTML, du CSS, des images, etc. (requis)."
-marginBottom = "Marge inférieure de la page en millimètres. (Vide par défaut)"
-marginLeft = "Marge gauche de la page en millimètres. (Vide par défaut)"
-marginRight = "Marge droite de la page en millimètres. (Vide par défaut)"
-marginTop = "Marge supérieure de la page en millimètres. (Vide par défaut)"
-none = "Aucun"
-pageHeight = "Hauteur de la page en centimètres. (Vide par défaut)"
-pageWidth = "Largeur de la page en centimètres. (Vide par défaut)"
-print = "Imprimer"
-printBackground = "Restituer l'image de fond des sites web."
-screen = "Écran"
-submit = "Convertir"
 tags = "html,markup,contenu Web,transformation,convert"
 title = "HTML en PDF"
-zoom = "Niveau de zoom pour l'affichage du site web."
 
 [image.upload]
 hint = "Téléversez une image PNG, JPG, SVG ou autre à placer sur le PDF. Les fichiers SVG seront convertis en PNG pour la compatibilité."
@@ -4875,19 +4568,8 @@ placeholder = "Sélectionner un fichier image"
 tags = "pdf,conversion,img,jpg,image,photo"
 
 [imageToPDF]
-fillPage = "Remplir la page"
-fitDocumentToImage = "Ajuster la page à l'image"
 header = "Image en PDF"
-maintainAspectRatio = "Maintenir les proportions"
-selectLabel = "Options d'ajustement de l'image"
-submit = "Convertir"
 title = "Image en PDF"
-
-[imageToPDF.selectText]
-2 = "Rotation automatique du PDF"
-3 = "Logique multi-fichiers (uniquement activée si vous travaillez avec plusieurs images)"
-4 = "Fusionner en un seul PDF"
-5 = "Convertir en PDF séparés"
 
 [infoBanner]
 dismiss = "Fermer"
@@ -4912,7 +4594,6 @@ linkExpires = "Le lien expire"
 passwordMismatch = "Les mots de passe ne correspondent pas"
 passwordPlaceholder = "Saisissez votre mot de passe"
 passwordRequired = "Le mot de passe est requis"
-passwordTooShort = "Le mot de passe doit comporter au moins 6 caractères"
 signIn = "Se connecter"
 validating = "Validation de l’invitation..."
 validationError = "Échec de la validation du lien d’invitation"
@@ -4941,20 +4622,10 @@ showCookieBanner = "Préférences pour les cookies"
 terms = "Conditions Générales"
 
 [licenses]
-header = "Licences tierces"
-license = "Licence"
-module = "Module"
-nav = "Licences"
 title = "Licences tierces"
-version = "Version"
 
 [localMode]
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
-
-[localMode.banner]
-message = "Sign in to unlock all tools."
-signIn = "Sign In"
-title = "Running locally"
 
 [localMode.toolPicker]
 message = "Sign in to unlock all tools."
@@ -4962,15 +4633,11 @@ signIn = "Sign In"
 
 [login]
 accountCreatedSuccess = "Compte créé avec succès ! Vous pouvez maintenant vous connecter."
-alreadyLoggedIn = "Vous êtes déjà connecté sur"
-alreadyLoggedIn2 = "appareils. Veuillez vous déconnecter des appareils et réessayer."
 backToSignIn = "Retour à la connexion"
-cancel = "Annuler"
 changePasswordWarning = "Veuillez changer votre mot de passe après votre première connexion"
+createAccount = "Create an account"
 credentialsUpdated = "Vos identifiants ont été mis à jour. Veuillez vous reconnecter."
-debug = "Déboguer"
 defaultCredentials = "Identifiants de connexion par défaut"
-dontHaveAccount = "Vous n’avez pas de compte ? Inscrivez-vous"
 email = "E-mail"
 enterEmail = "Saisissez votre e-mail"
 enterEmailForMagicLink = "Saisissez votre e-mail pour le lien magique"
@@ -4979,29 +4646,12 @@ enterPassword = "Saisissez votre mot de passe"
 enterUsername = "Saisissez le nom d’utilisateur"
 failedToSignIn = "Échec de connexion avec {{provider}} : {{message}}"
 forgotPassword = "Mot de passe oublié ?"
-header = "Connexion"
-home = "Accueil"
-invalid = "Nom d'utilisateur ou mot de passe invalide."
-locked = "Votre compte a été verrouillé."
 loggingIn = "Connexion…"
 logIn = "Se connecter"
 login = "Se connecter"
-logoutMessage = "Vous avez été déconnecté."
 magicLinkSent = "Lien magique envoyé à {{email}} ! Consultez votre e-mail et cliquez sur le lien pour vous connecter."
-maxUsersReached = "Nombre maximal d’utilisateurs atteint pour votre licence actuelle. Veuillez contacter l’administrateur pour mettre à niveau votre plan ou ajouter des places."
 mfaCode = "Code d'authentification"
-mfaPromptBody = "Saisissez le code d'authentification provenant de votre application d'authentification pour continuer."
-mfaPromptTitle = "Authentification à deux facteurs"
 mfaRequired = "Code à deux facteurs requis"
-oauth2AccessDenied = "Accès refusé"
-oAuth2AdminBlockedUser = "La création ou l'authentification d'utilisateurs non enregistrés est actuellement bloquée. Veuillez contacter l'administrateur."
-oAuth2AutoCreateDisabled = "OAUTH2 Création automatique d'utilisateur désactivée"
-oauth2InvalidIdToken = "Jeton d'identification invalide"
-oauth2invalidRequest = "Requête invalide"
-oauth2InvalidTokenResponse = "Réponse contenant le jeton est invalide"
-oauth2InvalidUserInfoResponse = "Réponse contenant les informations de l'utilisateur est invalide"
-oauth2RequestNotFound = "Demande d'autorisation introuvable"
-oAuth2RequiresLicense = "La connexion OAuth/SSO nécessite une licence payante (Server ou Enterprise). Veuillez contacter l’administrateur pour mettre à niveau votre plan."
 or = "Ou"
 password = "Mot de passe"
 passwordChangedSuccess = "Mot de passe modifié avec succès ! Veuillez vous connecter avec votre nouveau mot de passe."
@@ -5009,33 +4659,21 @@ passwordResetSent = "Lien de réinitialisation envoyé à {{email}} ! Consultez 
 passwordUpdatedSuccess = "Your password has been updated successfully."
 pleaseEnterBoth = "Veuillez saisir l’e-mail et le mot de passe"
 pleaseEnterEmail = "Veuillez saisir votre adresse e-mail"
-relyingPartyRegistrationNotFound = "Aucun enregistrement de partie de confiance trouvé"
-rememberme = "Se souvenir de moi"
 resetHelp = "Saisissez votre email pour recevoir un lien de réinitialisation de votre mot de passe. Si le lien a expiré, veuillez en demander un nouveau."
 resetYourPassword = "Réinitialisation de mot de passe"
-saml2RequiresLicense = "La connexion SAML nécessite une licence payante (Server ou Enterprise). Veuillez contacter l’administrateur pour mettre à niveau votre plan."
 sending = "Envoi…"
 sendMagicLink = "Envoyer le lien magique"
 sendResetLink = "Envoyer le lien de réinitialisation"
 sessionExpired = "Votre session a expiré. Veuillez vous reconnecter."
 signin = "Connexion"
-signInAnonymously = "S’inscrire en tant qu’invité"
 signingIn = "Connexion en cours…"
-signinTitle = "Veuillez vous connecter"
 signInWith = "Se connecter avec"
-signOut = "Se déconnecter"
-ssoSignIn = "Se connecter via l'authentification unique"
-subtitle = "Se reconnecter à Stirling PDF"
 title = "Connexion"
-toManySessions = "Vous avez trop de sessions actives."
 unexpectedError = "Erreur inattendue : {{message}}"
 updatePassword = "Mise à jour du mot de passe"
 useEmailInstead = "Se connecter avec l’e‑mail"
 useMagicLink = "Utiliser plutôt le lien magique"
-userIsDisabled = "L'utilisateur est désactivé, la connexion est actuellement bloquée avec ce nom d'utilisateur. Veuillez contacter l'administrateur."
 username = "Nom d’utilisateur"
-verifyingMfa = "Vérification..."
-verifyMfa = "Vérifier le code"
 youAreLoggedIn = "Vous êtes connecté !"
 
 [login.slides.edit]
@@ -5060,10 +4698,7 @@ small = "Petite"
 xLarge = "Très grande"
 
 [MarkdownToPDF]
-credit = "Utilise WeasyPrint."
 header = "Markdown en PDF"
-help = "(Travail en cours)."
-submit = "Convertir"
 tags = "markdown,markup,contenu Web,transformation,convert"
 title = "Markdown en PDF"
 
@@ -5114,8 +4749,6 @@ capture = "Prendre la photo"
 chooseMethod = "Choisir la méthode de téléversement"
 chooseMethodDescription = "Sélectionnez comment vous souhaitez scanner et téléverser des documents"
 clearBatch = "Effacer"
-connected = "Connecté"
-connecting = "Connexion..."
 edgeDetection = "Détection des bords"
 fileDescription = "Téléverser des photos ou documents existants depuis votre appareil"
 fileUpload = "Téléversement de fichier"
@@ -5124,7 +4757,6 @@ flashlight = "Lampe torche"
 httpsRequired = "L’accès à la caméra nécessite HTTPS ou localhost. Veuillez utiliser HTTPS ou accéder via localhost."
 noSession = "Session invalide"
 noSessionMessage = "Veuillez scanner un QR code valide pour accéder à cette page."
-preview = "Aperçu"
 processing = "Traitement..."
 retake = "Reprendre"
 selectFilesPrompt = "Sélectionnez des fichiers à téléverser"
@@ -5133,7 +4765,6 @@ sessionExpired = "Cette session a expiré. Veuillez actualiser et réessayer."
 sessionInvalid = "Erreur de session"
 sessionNotFound = "Session introuvable. Veuillez actualiser et réessayer."
 sessionValidationError = "Impossible de vérifier la session. Veuillez réessayer."
-settings = "Paramètres"
 title = "Scanner mobile"
 upload = "Téléverser"
 uploadAll = "Tout téléverser"
@@ -5144,7 +4775,6 @@ uploadSuccessMessage = "Vos images ont été transférées."
 validating = "Validation de la session..."
 
 [mobileUpload]
-connected = "Appareil mobile connecté"
 description = "Scannez pour téléverser des photos. Les images se convertissent automatiquement en PDF."
 descriptionNoConvert = "Scannez pour téléverser des photos depuis votre appareil mobile."
 error = "Erreur de connexion"
@@ -5155,55 +4785,14 @@ instructions = "Scannez avec l’appareil photo de votre téléphone. Les images
 instructionsNoConvert = "Scannez avec l’appareil photo de votre téléphone pour téléverser des fichiers."
 pollingError = "Erreur lors de la vérification des fichiers"
 sessionCreateError = "Échec de création de session"
-sessionId = "ID de session"
 title = "Téléverser depuis un mobile"
 
 [multiTool]
-addFile = "Ajouter un fichier"
-delete = "Supprimer"
-deleteSelected = "Supprimer la sélection"
-deselectAll = "Tout déselectionner"
-downloadAll = "Exporter"
-downloadSelected = "Exporter la sélection"
-dragDropMessage = "Page(s) sélectionnées"
-header = "Outil multifonction PDF"
-insertPageBreak = "Insérer un saut de page"
-moveLeft = "Déplacer vers la gauche"
-moveRight = "Déplacer vers la droite"
-page = "Page"
-redo = "Redo"
-rotateLeft = "Rotation vers la gauche"
-rotateRight = "Rotation vers la droite"
-selectAll = "Tout sélectionner"
-selectedPages = "Pages sélectionnées"
-selectPages = "Sélection des pages"
-split = "Diviser"
 tags = "outil multifonction,opération multifonction,interface utilisateur,glisser déposer,front-end,client side,interactif,intransigeant,déplacer,multi tool"
 title = "Outil multifonction PDF"
-undo = "Undo"
-uploadPrompts = "Nom du fichier"
-
-[multiTool-advert]
-message = "Cette fonctionnalité est aussi disponible dans la <a href=\"{0}\">page de l'outil multifonction</a>. Allez-y pour une interface page par page améliorée et des fonctionnalités additionnelles !"
 
 [navbar]
-allTools = "Outils"
-darkmode = "Mode sombre"
-favorite = "Favoris"
-language = "Langues"
-multiTool = "Outils Multiples"
-recent = "Nouveau et mise à jour"
 search = "Rechercher"
-settings = "Paramètres"
-
-[navbar.sections]
-advance = "Mode avancé"
-convertFrom = "Convertir depuis PDF"
-convertTo = "Convertir en PDF"
-edit = "Voir et modifier"
-organize = "Organisation"
-popular = "Populaire"
-security = "Signature et sécurité"
 
 [oauth.error]
 message = "L'authentification n'a pas abouti. Vous pouvez fermer cette fenêtre et réessayer."
@@ -5214,11 +4803,7 @@ message = "Vous pouvez fermer cette fenêtre et revenir à Stirling PDF."
 title = "Authentification réussie"
 
 [ocr]
-credit = "Ce service utilise qpdf et Tesseract pour l'OCR."
 desc = "Utilisez l'OCR pour analyser et détecter le texte des images d'un PDF et le rajouter en tant que tel."
-header = "OCR (Reconnaissance optique de caractères) / Nettoyage des numérisations"
-help = "Veuillez lire cette documentation pour savoir comment utiliser l'OCR pour d'autres langues ou une utilisation hors Docker :"
-submit = "Traiter"
 tags = "ocr,reconnaissance,texte,image,numérisation,scan,read,identify,detection,editable"
 title = "OCR / Nettoyage des numérisations"
 
@@ -5235,20 +4820,6 @@ submit = "Traiter l’OCR et relire"
 
 [ocr.results]
 title = "Résultats OCR"
-
-[ocr.selectText]
-1 = "Langues à détecter dans le PDF (celles listées sont celles actuellement détectées)"
-10 = "Mode OCR"
-11 = "Supprimer les images après l'OCR (Supprime TOUTES les images, utile uniquement si elles font partie de l'étape de conversion)"
-12 = "Type de rendu (avancé)"
-2 = "Produire un fichier texte contenant le texte détecté à côté du PDF"
-3 = "Corriger les pages qui ont été numérisées à un angle oblique en les remettant en place"
-4 = "Nettoyer la page afin qu'il soit moins probable que l'OCR trouve du texte dans le bruit de fond, sans modifier la sortie"
-5 = "Nettoyer la page afin qu'il soit moins probable que l'OCR trouve du texte dans le bruit de fond, en modifiant la sortie"
-6 = "Ignorer les pages contenant du texte interactif, n'analyser que les pages qui sont des images"
-7 = "Forcer l'OCR, analyser chaque page et supprimer tous les éléments de texte d'origine"
-8 = "Normal (génère une erreur si le PDF contient du texte)"
-9 = "Paramètres additionnels"
 
 [ocr.settings]
 title = "Paramètres"
@@ -5327,18 +4898,11 @@ filesButton = "Le bouton <strong>Fichiers</strong> de la barre d’accès rapide
 fileSources = "Vous pouvez téléverser de nouveaux fichiers ou accéder à des fichiers récents depuis ici. Pour la visite, nous utiliserons un fichier d’exemple."
 finish = "Terminer"
 next = "Suivant"
-pageEditor = "L’<strong>Éditeur de pages</strong> vous permet de réaliser diverses opérations sur les pages de vos PDF, comme réorganiser, faire pivoter et supprimer."
 pinButton = "Vous pouvez utiliser le bouton <strong>Épingler</strong> si vous préférez que vos fichiers restent actifs après l’exécution des outils."
-previous = "Précédent"
 results = "Après l’exécution de l’outil, l’étape de <strong>Revue</strong> affichera un aperçu des résultats dans ce panneau et vous permettra d’annuler l’opération ou de télécharger le fichier."
 runButton = "Une fois l’outil configuré, ce bouton vous permet d’exécuter l’outil sur tous les PDF sélectionnés."
-selectControls = "Le <strong>volet droit</strong> contient des boutons pour sélectionner/désélectionner rapidement tous vos PDF actifs, ainsi que des boutons pour changer le thème ou la langue de l’application."
 selectCropTool = "Sélectionnons l’outil <strong>Rogner</strong> pour montrer comment utiliser l’un des outils."
-startTour = "Commencer la visite"
-startTourDescription = "Suivez une visite guidée des fonctionnalités clés de Stirling PDF"
 toolInterface = "Voici l’interface de l’outil <strong>Rogner</strong>. Comme vous pouvez le voir, il n’y a pas grand-chose pour l’instant car nous n’avons pas encore ajouté de fichiers PDF sur lesquels travailler."
-viewer = "La <strong>Visionneuse</strong> vous permet de lire et d’annoter vos PDF."
-viewSwitcher = "Utilisez ces commandes pour choisir comment afficher vos PDF."
 workbench = "Voici le <strong>Workbench</strong> - la zone principale où vous visualisez et modifiez vos PDF."
 wrapUp = "Tout est prêt ! Vous avez appris les principales zones de l’application et comment les utiliser. Cliquez sur le bouton <strong>Aide</strong> quand vous le souhaitez pour revoir cette visite."
 
@@ -5387,20 +4951,11 @@ freeTitle = "Licence serveur"
 overLimitBody = "Notre licence autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Vous avez <strong>{{overLimitUserCopy}}</strong> utilisateurs Stirling. Pour continuer sans interruption, passez au plan Stirling Server — <strong>places illimitées</strong>, édition de texte PDF et contrôle d’administration complet pour 99 $/serveur/mois."
 overLimitTitle = "Licence serveur requise"
 seePlans = "Voir les offres →"
-skip = "Passer pour l’instant"
 upgrade = "Mettre à niveau maintenant →"
 
 [onboarding.tourOverview]
 body = "Stirling PDF V2 est livré avec des dizaines d’outils et une interface renouvelée. Faites une visite rapide pour voir ce qui a changé et où trouver les fonctionnalités dont vous avez besoin."
 title = "Aperçu de la visite"
-
-[onboarding.welcomeModal]
-description = "Souhaitez-vous suivre une visite guidée d’une minute pour découvrir les fonctionnalités clés et comment démarrer ?"
-dontShowAgain = "Ne plus afficher"
-helpHint = "Vous pouvez toujours accéder à cette visite plus tard via le bouton <strong>Aide</strong> en bas à gauche."
-maybeLater = "Peut-être plus tard"
-startTour = "Commencer la visite"
-title = "Bienvenue dans Stirling PDF !"
 
 [onboarding.welcomeSlide]
 body = "Stirling PDF est désormais prêt pour des équipes de toutes tailles. Cette mise à jour inclut une nouvelle interface, de puissantes fonctionnalités d’administration et notre fonctionnalité la plus demandée — <strong>Modifier le texte</strong>."
@@ -5417,19 +4972,14 @@ wrapUp = "Voilà les nouveautés de la V2. Ouvrez le menu <strong>Visites guidé
 
 [overlay-pdfs]
 desc = "Superposer un PDF sur un autre"
-header = "Incrustation de PDF"
 submit = "Soumettre"
 tags = "Overlay,incrustation"
 title = "Superposer des PDF"
-
-[overlay-pdfs.baseFile]
-label = "Sélectionner le fichier PDF de base"
 
 [overlay-pdfs.counts]
 item = "Nombre pour le fichier"
 label = "Nombre de superpositions (pour le mode de répétition fixe)"
 noFiles = "Ajoutez des fichiers de superposition pour configurer les nombres"
-placeholder = "Compteurs (séparés par des virgules, exemple : 2,3,1)"
 
 [overlay-pdfs.error]
 failed = "Une erreur s’est produite lors de la superposition des PDF."
@@ -5487,23 +5037,7 @@ deselectAll = "Ne rien sélectionner"
 selectAll = "Tout sélectionner"
 
 [pageEditor]
-actualSize = "Taille réelle"
-addFileNotImplemented = "Ajout de fichier non implémenté dans la démo"
-closePdf = "Fermer le PDF"
-deleted = "Supprimé :"
-fitToWidth = "Ajuster à la largeur"
-insertedPageBreak = "Saut de page inséré à :"
-movedLeft = "Déplacé à gauche :"
-movedRight = "Déplacé à droite :"
-noPdfLoaded = "Aucun PDF chargé. Veuillez téléverser un PDF à modifier."
-reset = "Réinitialiser les modifications"
-rotatedLeft = "Tourné à gauche :"
-rotatedRight = "Tourné à droite :"
-save = "Enregistrer les modifications"
-splitAt = "Scindé à :"
 title = "Éditeur de pages"
-zoomIn = "Zoom avant"
-zoomOut = "Zoom arrière"
 
 [pageEditor.emptyState]
 body = "Ajoutez des fichiers pour commencer à modifier les pages"
@@ -5517,9 +5051,6 @@ rotateRight = "Pivoter la sélection vers la droite"
 undo = "Annuler"
 
 [pageExtracter]
-header = "Extraire des pages"
-placeholder = "(par exemple : 1,2,8 ou 4,7,12-16 ou 2n-1)"
-submit = "Extraire"
 title = "Extraire des pages"
 
 [pageLayout]
@@ -5528,7 +5059,6 @@ borderWidth = "Épaisseur de la bordure"
 bottom = "Marge inférieure"
 cols = "Colonnes"
 colsPlaceholder = "Saisir le nombre de colonnes"
-header = "Fusionner des pages"
 innerMargin = "Marge intérieure"
 left = "Marge gauche"
 pagesPerSheet = "Pages par feuille"
@@ -5618,16 +5148,6 @@ label = "Sens de lecture :"
 ltr = "De gauche à droite"
 rtl = "De droite à gauche"
 
-[pageLayout.tooltip.addBorder]
-text = "Trace des lignes de bordure autour de chaque cellule de page pour servir de repères de découpe ou de séparation visuelle."
-title = "Ajouter des bordures"
-
-[pageLayout.tooltip.arrangement]
-bullet1 = "Par lignes : Remplit ligne par ligne (de gauche à droite ou de droite à gauche)."
-bullet2 = "Par colonnes : Remplit de haut en bas, colonne par colonne."
-text = "Contrôle l'ordre dans lequel les pages remplissent la grille :"
-title = "Agencement des pages"
-
 [pageLayout.tooltip.header]
 title = "Guide de mise en page"
 
@@ -5637,12 +5157,6 @@ bullet2 = "Personnalisé : Définissez manuellement les lignes et les colonnes."
 text = "Choisissez la configuration de la grille :"
 title = "Mode"
 
-[pageLayout.tooltip.orientation]
-bullet1 = "Portrait : Plus haut que large."
-bullet2 = "Paysage : Plus large que haut."
-text = "Définit l'orientation de la feuille de sortie :"
-title = "Orientation"
-
 [pageLayout.tooltip.overview]
 text = "Ajustez plusieurs pages sur une seule feuille pour des documents à distribuer ou pour économiser du papier."
 title = "Qu'est-ce que la mise en page ?"
@@ -5651,44 +5165,21 @@ title = "Qu'est-ce que la mise en page ?"
 text = "Choisissez le nombre de pages par feuille (p. ex. 4 → 2×2, 9 → 3×3)."
 title = "Pages par feuille (mode par défaut)"
 
-[pageLayout.tooltip.readingDirection]
-bullet1 = "LTR : De gauche à droite."
-bullet2 = "RTL : De droite à gauche."
-text = "Contrôle l'ordre horizontal des pages :"
-title = "Sens de lecture"
-
 [pageLayout.tooltip.rowsCols]
 text = "Définissez les dimensions exactes de la grille. Nombre total de pages par feuille = lignes × colonnes."
 title = "Lignes et colonnes (mode personnalisé)"
 
 [pageRemover]
-header = "Supprimer des pages"
-pagesToDelete = "Pages à supprimer (entrez une liste de numéros de pages séparés par des virgules) :"
-placeholder = "(par exemple 1,2,6 ou 1-10,15-30)"
-submit = "Supprimer les pages"
 title = "Supprimer des pages"
 
 [pageSelection.tooltip]
 description = "Choisissez les pages à utiliser pour l’opération. Prend en charge les pages simples, les plages, les formules et le mot-clé all."
-
-[pageSelection.tooltip.advanced]
-title = "Fonctionnalités avancées"
-
-[pageSelection.tooltip.basic]
-bullet1 = "Pages individuelles : 1,3,5"
-bullet2 = "Plages de pages : 3-6 ou 10-15"
-bullet3 = "Toutes les pages : all"
-text = "Sélectionnez des pages spécifiques de votre PDF à l’aide d’une syntaxe simple."
-title = "Utilisation de base"
 
 [pageSelection.tooltip.complex]
 bullet1 = "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus les paires"
 bullet2 = "<strong>10-,2n-1</strong> → de la page 10 à la fin + pages impaires"
 description = "Mélanger différents types."
 title = "Combinaisons complexes"
-
-[pageSelection.tooltip.examples]
-title = "Exemples"
 
 [pageSelection.tooltip.header]
 title = "Guide de sélection des pages"
@@ -5707,13 +5198,6 @@ bullet4 = "<strong>4n-1</strong> → pages 3, 7, 11, 15…"
 description = "Utilisez n dans des formules pour définir des motifs."
 title = "Fonctions mathématiques"
 
-[pageSelection.tooltip.operators]
-and = "ET : & ou « and » — exige les deux conditions (p. ex. : 1-50 & even)"
-comma = "Virgule : , ou | — combine les sélections (p. ex. : 1-10, 20)"
-not = "NON : ! ou « not » — exclut des pages (p. ex. : 3n & not 30)"
-text = "ET a une priorité plus élevée que la virgule. NON s’applique dans l’intervalle du document."
-title = "Opérateurs"
-
 [pageSelection.tooltip.ranges]
 bullet1 = "<strong>3-6</strong> → sélectionne les pages 3–6"
 bullet2 = "<strong>10-15</strong> → sélectionne les pages 10–15"
@@ -5725,53 +5209,28 @@ title = "Plages de pages"
 bullet1 = "<strong>all</strong> → sélectionne toutes les pages"
 title = "Mots-clés spéciaux"
 
-[pageSelection.tooltip.syntax]
-text = "Utilisez des nombres, des plages, des mots-clés et des progressions (n commence à 0). Les parenthèses sont prises en charge."
-title = "Principes de base de la syntaxe"
-
-[pageSelection.tooltip.syntax.bullets]
-keywords = "Mots-clés : odd, even"
-numbers = "Nombres/plages : 5, 10-20"
-progressions = "Progressions : 3n, 4n+1"
-
-[pageSelection.tooltip.tips]
-bullet1 = "Les numéros de page commencent à 1 (pas 0)"
-bullet2 = "Les espaces sont automatiquement supprimés"
-bullet3 = "Les expressions invalides sont ignorées"
-text = "Gardez ces consignes à l’esprit :"
-title = "Conseils"
-
 [payment]
 autoClose = "Cette fenêtre se fermera automatiquement..."
-billingPeriod = "Période de facturation"
 canCloseWindow = "Vous pouvez maintenant fermer cette fenêtre."
 checkoutInstructions = "Finalisez votre achat dans la fenêtre de navigateur qui vient de s’ouvrir. Après le paiement, revenez ici et cliquez sur le bouton ci-dessous pour actualiser vos informations de facturation."
 checkoutOpened = "Paiement ouvert dans le navigateur"
 closeLater = "Je le ferai plus tard"
-emailInvalid = "Veuillez saisir une adresse e‑mail valide"
-enterpriseNote = "Les places peuvent être ajustées au paiement (1–1000)."
 error = "Erreur de paiement"
 generatingLicense = "Génération de votre clé de licence…"
-installationId = "ID d’installation"
 licenseActivated = "Licence activée ! Votre clé de licence a été enregistrée. Un e‑mail de confirmation a été envoyé à l’adresse enregistrée."
 licenseDelayed = "Paiement réussi ! Votre licence est en cours de génération. Vous recevrez bientôt un e‑mail avec votre clé de licence. Si vous ne la recevez pas sous 10 minutes, veuillez contacter le support."
 licenseDelayedMessage = "Votre clé de licence est en cours de génération. Veuillez consulter votre e‑mail prochainement ou contacter le support."
 licenseInstructions = "Ceci a été ajouté à votre installation. Vous en recevrez aussi une copie par e‑mail."
 licenseKey = "Votre clé de licence"
-licenseKeyProcessing = "Traitement de la clé de licence"
 licensePollingError = "Paiement réussi mais nous n’avons pas pu récupérer votre clé de licence automatiquement. Veuillez vérifier votre e‑mail ou contacter le support avec votre confirmation de paiement."
 licenseRetrievalError = "Paiement réussi mais l’obtention de la licence a échoué. Vous recevrez votre clé de licence par e‑mail. Veuillez contacter le support si vous ne la recevez pas sous 10 minutes."
 licenseSaveError = "Échec de l’enregistrement de la clé de licence. Veuillez contacter le support avec votre clé pour finaliser l’activation."
 monthly = "Mensuel"
 paymentCanceled = "Le paiement a été annulé. Aucun débit effectué."
-paymentSuccess = "Paiement réussi ! Récupération de votre clé de licence…"
 perMonth = "/mois"
-perYear = "/an"
 preparing = "Préparation de votre paiement..."
 redirecting = "Redirection vers le paiement sécurisé..."
 refreshBilling = "J’ai effectué le paiement - Actualiser la facturation"
-stripeNotConfigured = "Stripe non configuré"
-stripeNotConfiguredMessage = "L’intégration de paiement Stripe n’est pas configurée. Veuillez contacter votre administrateur."
 success = "Paiement réussi !"
 successMessage = "Votre abonnement a été activé avec succès. Vous recevrez un e-mail de confirmation sous peu."
 syncError = "Paiement réussi mais la synchronisation de la licence a échoué. Votre licence sera mise à jour sous peu. Veuillez contacter le support si le problème persiste."
@@ -5788,25 +5247,17 @@ description = "Nous l’utiliserons pour vous envoyer votre clé de licence et v
 emailLabel = "Adresse e‑mail"
 emailPlaceholder = "votre@email.com"
 modalTitle = "Commencer — {{planName}}"
-title = "Entrez votre e‑mail"
 
 [payment.paymentStage]
-backToPlan = "Retour à la sélection du plan"
 modalTitle = "Finaliser le paiement — {{planName}}"
-selectedPlan = "Plan sélectionné"
 
 [payment.planStage]
-basePrice = "Prix de base"
 billedYearly = "Facturé annuellement {{currency}}{{amount}}"
 modalTitle = "Sélectionner la période de facturation — {{planName}}"
 savePercent = "Économisez {{percent}} %"
 savingsAmount = "Vous économisez {{amount}}"
-savingsNote = "Économisez {{percent}} % avec la facturation annuelle"
-seatPrice = "Par place"
 selectMonthly = "Choisir Mensuel"
 selectYearly = "Choisir Annuel"
-title = "Choisissez votre période de facturation"
-totalForSeats = "Total ({{count}} places)"
 
 [pdfCommentAgent]
 submit = "Générer les commentaires"
@@ -5827,24 +5278,9 @@ title = "PDF commenté"
 title = "Consignes de commentaire"
 
 [pdfOrganiser]
-header = "Organiser les pages"
 placeholder = "(par exemple 1,3,2 ou 4-8,2,10-12 ou 2n-1)"
-submit = "Organiser"
 tags = "organiser,recto-verso,duplex,even,odd,sort,move"
 title = "Organiser"
-
-[pdfOrganiser.desc]
-BOOKLET_SORT = "Arranger les pages pour l’impression en livret (dernière, première, deuxième, avant-dernière, …)."
-CUSTOM = "Utiliser une séquence personnalisée de numéros de page ou d’expressions pour définir un nouvel ordre."
-DUPLEX_SORT = "Entrelacer faces avant puis faces arrière comme si un scanner duplex avait scanné toutes les faces avant, puis toutes les faces arrière (1, n, 2, n-1, …)."
-DUPLICATE = "Dupliquer chaque page en fonction du nombre indiqué dans l’ordre personnalisé (p. ex., 4 duplique chaque page 4×)."
-ODD_EVEN_MERGE = "Fusionner deux PDF en alternant les pages : impaires du premier, paires du second."
-ODD_EVEN_SPLIT = "Scinder le document en deux sorties : toutes les pages impaires et toutes les pages paires."
-REMOVE_FIRST = "Supprimer la première page du document."
-REMOVE_FIRST_AND_LAST = "Supprimer la première et la dernière pages du document."
-REMOVE_LAST = "Supprimer la dernière page du document."
-REVERSE_ORDER = "Inverser le document afin que la dernière page devienne la première, et ainsi de suite."
-SIDE_STITCH_BOOKLET_SORT = "Arranger les pages pour l’impression de livret à piqûre latérale (optimisé pour une reliure sur le côté)."
 
 [pdfOrganiser.mode]
 1 = "Ordre des pages personnalisé"
@@ -5881,32 +5317,22 @@ imageLabel = "Image placée"
 noTextOnPage = "Aucun texte modifiable n'a été détecté sur cette page."
 pagePreviewAlt = "Aperçu de la page"
 pageSummary = "Page {{number}} sur {{total}}"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Éditeur JSON de PDF"
 viewLabel = "Éditeur PDF"
 
 [pdfTextEditor.actions]
 applyChanges = "Appliquer les modifications"
 downloadCopy = "Télécharger une copie"
-downloadJson = "Télécharger le JSON"
-generatePdf = "Générer le PDF"
 reset = "Réinitialiser les modifications"
-saveChanges = "Enregistrer les modifications"
 
 [pdfTextEditor.badges]
 earlyAccess = "Accès anticipé"
 modified = "Modifié"
-unsaved = "Modifié"
-
-[pdfTextEditor.disclaimer]
-alpha = "Ce visualiseur alpha évolue encore — certaines polices, couleurs, effets de transparence et détails de mise en page peuvent légèrement varier. Veuillez vérifier le PDF généré avant de le partager."
-heading = "Limites de l'aperçu"
-previewVariance = "Certains éléments visuels (tels que les bordures de tableaux, formes ou apparences d'annotations) peuvent ne pas s'afficher exactement dans l'aperçu. Le PDF exporté conserve les commandes de dessin originales lorsque c'est possible."
-textFocus = "Cet espace de travail se concentre sur l'édition du texte et le repositionnement des images intégrées. Les éléments graphiques complexes, widgets de formulaires et couches sont conservés pour l'export, mais ne sont pas entièrement modifiables ici."
 
 [pdfTextEditor.empty]
 dropzone = "Glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
 dropzoneWithFiles = "Sélectionnez un fichier depuis l'onglet Fichiers, ou glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
-subtitle = "Chargez un fichier PDF ou JSON pour commencer à modifier le texte."
 title = "Aucun document chargé"
 
 [pdfTextEditor.errors]
@@ -5968,12 +5394,13 @@ paragraphDescription = "Regroupe les lignes alignées en boîtes de texte multil
 singleLineDescription = "Conserve chaque ligne de texte du PDF comme une boîte distincte."
 title = "Mode de regroupement du texte"
 
-[pdfTextEditor.options.manualGrouping]
-descriptionInline = "Astuce : Maintenez Ctrl (Cmd) ou Shift pour sélectionner plusieurs boîtes de texte. Une barre d'outils flottante apparaîtra au-dessus de la sélection pour fusionner, dissocier ou ajuster les largeurs."
-
 [pdfTextEditor.pageType]
 paragraph = "Page de paragraphe"
 sparse = "Texte clairsemé"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Cette visionneuse alpha évolue encore—certaines polices, couleurs, effets de transparence et détails de mise en page peuvent légèrement varier. Veuillez vérifier le PDF généré avant de le partager."
@@ -6018,164 +5445,78 @@ title = "Bienvenue dans l'éditeur de texte PDF (accès anticipé)"
 
 [PDFToCSV]
 header = "PDF en CSV"
-prompt = "Choisir la page pour en extraire le tableau"
-submit = "Extrait"
 title = "PDF en CSV"
 
 [PDFToHTML]
-credit = "Ce service utilise pdftohtml pour la conversion de fichiers."
 header = "PDF en HTML"
-submit = "Convertir"
 tags = "html,web content,browser friendly"
 title = "PDF en HTML"
 
 [pdfToImage]
-blackwhite = "Noir et blanc (peut engendrer une perte de données !)"
-color = "Couleur"
-colorType = "Type d'impression"
-grey = "Niveaux de gris"
-header = "PDF en Image"
-info = "Python n’est pas installé. Nécessaire pour la conversion WebP."
-multi = "Plusieurs images"
-placeholder = "(par exemple : 1,2,8 ou 4,7,12-16 ou 2n-1)"
-selectText = "Format d'image"
-single = "Une seule grande image"
-singleOrMultiple = "Type de résultat"
-submit = "Convertir"
 tags = "conversion,img,jpg,image,photo"
 title = "PDF en Image"
 
 [PDFToMarkdown]
 header = "PDF en Markdown"
-submit = "Convertir"
 tags = "markdown,markup,contenu Web,transformation,convert"
 title = "PDF en Markdown"
 
 [pdfToPDFA]
-credit = "Ce service utilise libreoffice pour la conversion en PDF/A."
 header = "PDF en PDF/A"
-outputFormat = "Format de sortie"
-pdfWithDigitalSignature = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
-submit = "Convertir"
 tags = "convertion,archive,long-term,standard,conversion,storage,préservation,preservation"
-tip = "Ne fonctionne actuellement pas pour plusieurs entrées à la fois"
 title = "PDF en PDF/A"
 
 [pdfToPDFX]
-credit = "Ce service utilise Ghostscript pour la conversion PDF/X"
-header = "PDF vers PDF/X"
-outputFormat = "Format de sortie"
-pdfWithDigitalSignature = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
-submit = "Convertir"
 tags = "impression,standard,conversion,production,prépresse,archive"
-tip = "Ne fonctionne actuellement pas avec plusieurs entrées à la fois"
 title = "PDF vers PDF/X"
 
 [PDFToPresentation]
-credit = "Ce service utilise LibreOffice pour la conversion de fichiers."
 header = "PDF en formats de présentation"
-submit = "Convertir"
 tags = "présentation,slides,show,office,microsoft"
 title = "PDF en formats de présentation"
-
-[PDFToPresentation.selectText]
-1 = "Format du fichier de sortie"
 
 [PdfToSinglePage]
 tags = "fusionner,merge,une seule page,single page"
 
 [pdfToSinglePage]
 description = "Cet outil fusionnera toutes les pages de votre PDF en une seule grande page. La largeur restera identique à celle des pages d’origine, mais la hauteur sera la somme de toutes les hauteurs de page."
-filenamePrefix = "page_unique"
-header = "Fusionner les pages"
 submit = "Convertir en une seule page"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "Fusionner les pages"
 
 [pdfToSinglePage.error]
 failed = "Une erreur est survenue lors de la conversion en page unique."
 
-[pdfToSinglePage.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
-
 [pdfToSinglePage.results]
 title = "Résultats page unique"
 
 [PDFToText]
-credit = "Ce service utilise LibreOffice pour la conversion de fichiers."
 header = "PDF en RTF (texte)"
-submit = "Convertir"
 tags = "format riche, format de texte riche, format de texte enrichi"
 title = "PDF en RTF (texte)"
 
-[PDFToText.selectText]
-1 = "Format du fichier de sortie"
-
 [PDFToWord]
-credit = "Ce service utilise LibreOffice pour la conversion de fichiers."
 header = "PDF en Word"
-submit = "Convertir"
 tags = "doc, docx, odt, word, transformation, format, conversion, office, microsoft, docfile"
 title = "PDF en Word"
 
-[PDFToWord.selectText]
-1 = "Format du fichier de sortie"
-
 [PDFToXLSX]
 header = "PDF vers Excel"
-prompt = "Choisissez les pages pour extraire les tableaux"
-submit = "Convertir"
 tags = "feuille de calcul,excel,xlsx,tableau,extraire,convertir"
 title = "PDF vers Excel (XLSX)"
 
 [PDFToXML]
-credit = "Ce service utilise LibreOffice pour la conversion de fichiers."
 header = "PDF en XML"
-submit = "Convertir"
 tags = "xml,extraction de données,contenu structuré,interopérabilité,data-extraction,structured-content,interop,transformation,convert"
 title = "PDF en XML"
 
 [permissions]
-header = "Modifier les permissions"
-submit = "Modifier"
 tags = "permissions,lire,écrire,modifier,imprimer,read,write,edit,print"
 title = "Modifier les permissions"
-warning = "Attention, pour que ces permissions soient immuables il est recommandé de les paramétrer avec un mot de passe via la page Ajouter un mot de passe."
-
-[permissions.selectText]
-1 = "Sélectionnez le PDF"
-10 = "Empêcher l'impression des différents formats"
-2 = "Permissions à définir"
-3 = "Empêcher l'assemblage du document"
-4 = "Empêcher l'extraction de contenu"
-5 = "Empêcher l'extraction pour l'accessibilité"
-6 = "Empêcher de remplir les formulaires"
-7 = "Empêcher la modification"
-8 = "Empêcher la modification des annotations"
-9 = "Empêcher l'impression"
 
 [pipeline]
-configureButton = "Configurer"
-defaultOption = "Personnaliser"
-deletePrompt = "Êtes-vous sûr de vouloir supprimer le pipeline ?"
-header = "Menu Pipeline (Beta)"
-help = "Aide Pipeline"
-scanHelp = "Aide analyse de dossier"
-submitButton = "Soumettre"
 tags = "automatiser,séquencer,automate,sequence,scripted,batch-process"
 title = "Pipeline"
-uploadButton = "Charger une personnalisation"
-
-[pipelineOptions]
-addOperationButton = "Ajouter une opération"
-header = "Configuration du pipeline"
-pipelineHeader = "Pipeline :"
-pipelineNameLabel = "Nom du pipeline"
-pipelineNamePrompt = "Entrez ici le nom du pipeline"
-saveButton = "Télécharger"
-saveForFolderScanning = "Enregistrer pour l'analyse de dossier"
-saveSettings = "Sauvegarder la configuration"
-selectOperation = "Sélectionner une opération"
-validateButton = "Valider"
 
 [plan]
 contact = "Contactez-nous"
@@ -6186,7 +5527,6 @@ featureComparison = "Comparaison des fonctionnalités"
 from = "À partir de"
 hideComparison = "Masquer la comparaison des fonctionnalités"
 included = "Inclus"
-includedInCurrent = "Inclus dans votre plan"
 licensedSeats = "Licences : {{count}} places"
 manage = "Gérer"
 perMonth = "/mois"
@@ -6287,12 +5627,8 @@ cta = "Voir les offres"
 overLimit = "plus de {{limit}}"
 title = "Limite de l’auto‑hébergement gratuit atteinte"
 
-[plan.manageSubscription]
-description = "Gérez votre abonnement, la facturation et les moyens de paiement"
-
 [plan.period]
 month = "mois"
-perUserPerMonth = "/utilisateur/mois"
 
 [plan.pro]
 highlight1 = "Utilisation des outils illimitée"
@@ -6302,16 +5638,10 @@ name = "Pro"
 
 [plan.static]
 activateLicense = "Activer votre licence"
-checkoutInstructions = "Terminez votre achat dans l’onglet Stripe. Après le paiement, revenez ici et actualisez la page pour activer votre licence. Vous recevrez également un e-mail avec votre clé de licence."
-checkoutOpened = "Paiement ouvert"
-contactSales = "Contacter l’équipe commerciale"
 contactToUpgrade = "Contactez-nous pour mettre à niveau ou personnaliser votre forfait"
 getLicense = "Obtenir une licence serveur"
-maxUsers = "Nombre maximal d’utilisateurs"
-message = "La facturation en ligne n’est pas configurée actuellement. Pour mettre à niveau votre forfait ou gérer vos abonnements, veuillez nous contacter directement."
 monthlyBilling = "Facturation mensuelle"
 selectPeriod = "Sélectionner la période de facturation"
-title = "Informations de facturation"
 upgradeToEnterprise = "Passer à l’Enterprise"
 upTo = "Jusqu’à"
 yearlyBilling = "Facturation annuelle"
@@ -6332,7 +5662,6 @@ successMessage = "Votre licence a été activée avec succès. Vous pouvez maint
 
 [plan.team]
 name = "Team"
-siteLicense = "Licence site"
 
 [plan.trial]
 badge = "Trial"
@@ -6349,13 +5678,7 @@ subscriptionScheduled = "Subscription scheduled - starts {{date}}"
 title = "Free Trial Active"
 
 [printFile]
-header = "Imprimer le fichier sur l'imprimante"
-submit = "Imprimer"
 title = "Imprimer le fichier"
-
-[printFile.selectText]
-1 = "Sélectionner le fichier à imprimer"
-2 = "Entrez le nom de l'imprimante"
 
 [provider.googledrive]
 name = "Google Drive"
@@ -6582,12 +5905,9 @@ accessSelectedFile = "Fichier sélectionné"
 accessSendInvite = "Envoyer l’invitation"
 accessTitle = "Accès au document"
 accessYou = "Vous"
-account = "Compte"
 activeSessions = "Sessions actives"
 activeTab = "Actives"
 activity = "Activité"
-adminSettings = "Réglages admin"
-allSessions = "Toutes les sessions"
 allTools = "Outils"
 automate = "Auto"
 back = "Retour"
@@ -6596,7 +5916,6 @@ certSign = "Signature avec certificat"
 completedSessions = "Sessions terminées"
 completedTab = "Terminées"
 config = "Config"
-createNew = "Créer une nouvelle demande"
 createSession = "Créer une demande de signature"
 dueDate = "Date d’échéance (optionnelle)"
 files = "Fichiers"
@@ -6620,7 +5939,6 @@ selectUsers = "Sélectionnez des utilisateurs pour signer"
 selectUsersPlaceholder = "Choisissez des participants…"
 sendingRequest = "Envoi…"
 settings = "Réglages"
-showMeAround = "Faites-moi visiter"
 sign = "Signer"
 signatureRequests = "Demandes de signature"
 signYourself = "Signer vous-même"
@@ -6639,6 +5957,9 @@ whatsNewTourDesc = "Découvrir la nouvelle interface"
 admin = "Visionnez des parcours ici : parcours des outils, parcours de la nouvelle interface V2 et parcours Admin."
 user = "Visionnez des parcours ici : parcours des outils et parcours de la nouvelle interface V2."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Caviarder"
 tags = "Caviarder,Redact,Masquer,noircir,noir,marqueur,caché,rédiger,censurer"
@@ -6648,7 +5969,6 @@ title = "Caviardage manuel"
 colorLabel = "Couleur de la boîte"
 convertPDFToImageLabel = "Convertir le PDF en PDF-image"
 customPaddingLabel = "Marge intérieure personnalisée"
-header = "Occultation automatique"
 useRegexLabel = "Utiliser des regex"
 wholeWordSearchLabel = "Recherche de mots entiers"
 
@@ -6666,54 +5986,17 @@ title = "Mots à occulter"
 failed = "Une erreur est survenue lors de l’occultation du PDF."
 
 [redact.manual]
-activate = "Activer l’outil de rédaction"
-active = "Mode de rédaction actif"
 apply = "Appliquer"
-applyChanges = "Appliquer les modifications"
-applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Application permanente, irréversible, et les données sous-jacentes seront supprimées"
-boxRedaction = "Occultation par boîte dessinée"
 colorLabel = "Couleur de rédaction"
-colourPicker = "Sélecteur de couleur"
 controlsTitle = "Contrôles de caviardage manuel"
-convertPDFToImageLabel = "Convertir le PDF en PDF-image (permet de supprimer le texte derrière la boîte)"
-export = "Exporter"
-findCurrentOutlineItem = "Trouver l’élément actuel du plan"
-header = "Occultation manuelle"
 instructions = "Sélectionnez du texte ou dessinez des zones sur le PDF pour marquer le contenu à caviarder."
-markArea = "Marquer une zone"
-markText = "Marquer du texte"
-nextPage = "Page suivante"
-noMarks = "Aucun marquage de caviardage. Utilisez les outils ci-dessus pour marquer le contenu à caviarder."
-pageBasedRedaction = "Occultation par page"
-pendingLabel = "En attente :"
-previousPage = "Page précédente"
-showAttachments = "Afficher les pièces jointes"
-showDocumentOutline = "Afficher le plan du document (double-cliquez pour tout développer/réduire)"
-showLayers = "Afficher les calques (double-cliquez pour réinitialiser tous les calques à l’état par défaut)"
-showThumbnails = "Afficher les vignettes"
-textBasedRedaction = "Occultation basée sur le texte"
 title = "Outils de caviardage"
-toggleSidebar = "Afficher/masquer la barre latérale"
-upload = "Téléverser"
-zoom = "Zoom"
-zoomIn = "Zoom avant"
-zoomOut = "Zoom arrière"
-
-[redact.manual.pageRedactionNumbers]
-placeholder = "(par exemple : 1,2,8 ou 4,7,12-16 ou 2n-1)"
-title = "Pages"
-
-[redact.manual.redactionColor]
-title = "Couleur d’occultation"
 
 [redact.modeSelector]
 automatic = "Automatique"
-automaticDesc = "Occulter le texte selon des termes de recherche"
 automaticDisabledTooltip = "Sélectionnez des fichiers dans le gestionnaire de fichiers pour caviarder plusieurs fichiers à la fois"
 manual = "Manuel"
-manualComingSoon = "Occultation manuelle bientôt disponible"
-manualDesc = "Cliquez et faites glisser pour occulter des zones spécifiques"
 mode = "Mode"
 title = "Méthode d’occultation"
 
@@ -6784,16 +6067,9 @@ title = "Exemples courants"
 title = "Mots à occulter"
 
 [releases]
-footer = "Versions"
-header = "Notes de version"
-note = "Les notes de version sont uniquement disponibles en anglais"
 title = "Notes de version"
 
-[releases.current]
-version = "Version actuelle"
-
 [removeAnnotations]
-header = "Supprimer les annotations"
 submit = "Supprimer"
 tags = "commentaires,supprimer,annotations,highlight,notes,markup,remove"
 title = "Supprimer les annotations"
@@ -6803,7 +6079,6 @@ failed = "Une erreur est survenue lors de la suppression des annotations du PDF.
 
 [removeAnnotations.info]
 description = "Cet outil supprimera toutes les annotations (commentaires, surlignages, notes, etc.) de vos documents PDF."
-title = "À propos de Supprimer les annotations"
 
 [removeAnnotations.settings]
 title = "Paramètres"
@@ -6815,8 +6090,8 @@ title = "Ce que fait l’outil"
 title = "À propos de la suppression des annotations"
 
 [removeBlanks]
-header = "Supprimer les pages vierges"
 submit = "Supprimer les pages vierges"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Supprimer les pages vierges"
 
 [removeBlanks.error]
@@ -6860,13 +6135,9 @@ title = "Seuil de pourcentage de blanc"
 
 [removeBlanks.whitePercent]
 label = "Seuil de pourcentage de blanc"
-unit = "%"
 
 [removeCertSign]
 description = "Cet outil supprimera les signatures de certificats numériques de votre document PDF."
-filenamePrefix = "non_signé"
-header = "Supprimer le certificat numérique du PDF"
-selectPDF = "Sélectionnez un fichier PDF :"
 submit = "Supprimer la Signature"
 tags = "signer,chiffrer,certificat,authenticate,PEM,P12,official,decrypt"
 title = "Supprimer la Signature de Certificat"
@@ -6874,16 +6145,12 @@ title = "Supprimer la Signature de Certificat"
 [removeCertSign.error]
 failed = "Une erreur est survenue lors de la suppression des signatures de certificat."
 
-[removeCertSign.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
-
 [removeCertSign.results]
 title = "Résultats de suppression des certificats"
 
 [removeImage]
-header = "Supprimer l'image"
-removeImage = "Supprimer l'image"
 submit = "Supprimer l'image"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Supprimer l'image"
 
 [removeImage.error]
@@ -6895,20 +6162,13 @@ title = "Résultats de suppression des images"
 [removeImagePdf]
 tags = "Images,Remove Image,Page operations,Back end,server side"
 
-[removeMetadata]
-submit = "Supprimer les métadonnées"
-
 [removePages]
-filenamePrefix = "pages_supprimées"
 submit = "Supprimer"
 tags = "supprimer,remove,delete"
 title = "Supprimer"
 
 [removePages.error]
 failed = "Une erreur est survenue lors de la suppression des pages."
-
-[removePages.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
 
 [removePages.pageNumbers]
 error = "Format de numéro de page invalide. Utilisez des nombres, des plages (1-5) ou des expressions mathématiques (2n+1)"
@@ -6940,17 +6200,8 @@ bullet4 = "Plages ouvertes : 5- (supprime de la page 5 à la fin)"
 text = "Spécifiez quelles pages supprimer de votre PDF. Vous pouvez sélectionner des pages individuelles, des plages ou utiliser des expressions mathématiques."
 title = "Sélection de pages"
 
-[removePages.tooltip.safety]
-bullet1 = "Prévisualisez toujours votre sélection avant traitement"
-bullet2 = "Conservez une sauvegarde de votre fichier original"
-bullet3 = "Les numéros de page commencent à 1, pas 0"
-bullet4 = "Les numéros de page invalides seront ignorés"
-text = "Points importants à considérer lors de la suppression de pages :"
-title = "Conseils de sécurité"
-
 [removePassword]
 desc = "Supprimez la protection par mot de passe de votre PDF."
-filenamePrefix = "déchiffré"
 submit = "Supprimer"
 tags = "supprimer,sécurité,mot de passe,secure,decrypt,security,unpassword,delete password"
 title = "Supprimer le mot de passe"
@@ -6959,7 +6210,6 @@ title = "Supprimer le mot de passe"
 failed = "Une erreur est survenue lors du retrait du mot de passe du PDF."
 
 [removePassword.password]
-completed = "Mot de passe configuré"
 label = "Mot de passe actuel"
 placeholder = "Saisir le mot de passe actuel"
 stepTitle = "Supprimer le mot de passe"
@@ -6972,6 +6222,7 @@ description = "La suppression de la protection par mot de passe nécessite le mo
 
 [reorganizePages]
 submit = "Réorganiser les pages"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Échec de la réorganisation des pages"
@@ -6984,8 +6235,6 @@ title = "Paramètres"
 
 [repair]
 description = "Cet outil tentera de réparer des fichiers PDF corrompus ou endommagés. Aucun paramètre supplémentaire n’est requis."
-filenamePrefix = "réparé"
-header = "Réparer"
 submit = "Réparer"
 tags = "réparer,restaurer,corriger,récupérer,fix,restore,correction,recover"
 title = "Réparer"
@@ -6993,32 +6242,17 @@ title = "Réparer"
 [repair.error]
 failed = "Une erreur est survenue lors de la réparation du PDF."
 
-[repair.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
-
 [repair.results]
 title = "Résultats de la réparation"
 
 [replace-color]
-previewOverlayOpacity = "Opacité de la superposition d’aperçu"
-previewOverlayTransparency = "Transparence de la superposition d’aperçu"
-previewOverlayVisibility = "Afficher la superposition d’aperçu"
 submit = "Remplacer"
 title = "Remplacer-Inverser-Couleur"
-
-[replace-color.options]
-fill = "Couleur de remplissage"
-gradient = "Dégradé"
 
 [replace-color.selectText]
 1 = "Options pour remplacer ou inverser les couleurs"
 10 = "Choisir la couleur du texte"
 11 = "Choisir la couleur d’arrière-plan"
-12 = "Choisir la couleur de départ"
-13 = "Choisir la couleur d’arrivée"
-2 = "Par défaut (couleurs à fort contraste prédéfinies)"
-3 = "Personnalisé (choisissez vos propres couleurs)"
-4 = "Inversion totale (inverser toutes les couleurs)"
 5 = "Options de couleurs à fort contraste"
 6 = "Texte blanc sur fond noir"
 7 = "Texte noir sur fond blanc"
@@ -7075,6 +6309,7 @@ rotateLeft = "Pivoter dans le sens antihoraire"
 rotateRight = "Pivoter dans le sens horaire"
 selectRotation = "Sélectionnez l’angle de rotation (sens horaire)"
 submit = "Pivoter"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Pivoter"
 
 [rotate.error]
@@ -7094,19 +6329,14 @@ text = "Faites pivoter les pages de votre PDF dans le sens horaire ou antihorair
 title = "Aperçu des paramètres de rotation"
 
 [sanitize]
-completed = "Assainissement effectué avec succès"
 desc = "Supprimer les éléments potentiellement nuisibles des fichiers PDF."
-filenamePrefix = "nettoyé"
 sanitizationResults = "Résultats de l’assainissement"
 submit = "Assainir"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Assainir"
 
 [sanitize.error]
 failed = "Une erreur est survenue lors de l’assainissement du PDF."
-generic = "Échec de l’assainissement"
-
-[sanitize.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
 
 [sanitize.options]
 note = "Sélectionnez les éléments à supprimer du PDF. Au moins une option doit être sélectionnée."
@@ -7137,37 +6367,20 @@ desc = "Supprimer les métadonnées XMP du PDF"
 label = "Supprimer les métadonnées XMP"
 
 [sanitize.steps]
-files = "Fichiers"
-results = "Résultats"
 settings = "Paramètres"
 
 [sanitizePdf]
 tags = "assainir,sécurisé,clean,secure,safe,remove-threats"
 
 [sanitizePDF]
-header = "Assainir"
-submit = "Assainir"
 title = "Assainir"
 
-[sanitizePDF.selectText]
-1 = "Supprimer les actions JavaScript"
-2 = "Supprimer les fichiers intégrés"
-3 = "Supprimer les métadonnées XMP"
-4 = "Supprimer les liens"
-5 = "Supprimer les polices"
-6 = "Supprimer les métadonnées d'information du document"
-
 [scalePages]
-header = "Ajuster la taille ou l'échelle"
-keepPageSize = "Taille d'origine"
-pageSize = "Taille d'une page du document"
-scaleFactor = "Niveau de zoom (recadrage) d'une page"
-submit = "Ajuster"
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Ajuster la taille ou l'échelle"
 
-[ScannerImageSplit]
-info = "Python n'est pas installé. Il est nécessaire pour le fonctionnement."
-tags = "diviser,détecter automatiquement,numériser,separate,auto-detect,scans,multi-photo,organize"
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Seuil de rotation"
@@ -7183,6 +6396,7 @@ tags = "diviser,détecter automatiquement,numériser,separate,auto-detect,scans,
 
 [scannerImageSplit]
 submit = "Extraire les photos scannées"
+tags = "separate,auto-detect,scans,multi-photo,organize"
 title = "Images extraites"
 
 [scannerImageSplit.error]
@@ -7227,7 +6441,6 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 
 [session]
 expired = "Votre session a expiré. Veuillez recharger la page et réessayer."
-refreshPage = "Rafraichir la page"
 
 [sessionManagement.tooltip]
 header = "Gestion des sessions de signature"
@@ -7269,6 +6482,7 @@ advanced = "Avancé"
 database = "Base de données"
 endpoints = "Endpoints"
 features = "Fonctionnalités"
+mcp = "MCP Server"
 storageSharing = "Stockage et partage de fichiers"
 systemSettings = "Paramètres système"
 title = "Configuration"
@@ -7524,31 +6738,13 @@ people = "Personnes"
 teams = "Équipes"
 title = "Espace de travail"
 
-[setup]
-description = "Commencez par choisir comment vous souhaitez utiliser Stirling PDF"
-welcome = "Bienvenue dans Stirling PDF"
-
 [setup.login]
 connectingTo = "Connexion à :"
-hideInstructions = "Masquer les instructions"
-instructions = "Pour activer la connexion sur votre serveur Stirling PDF :"
-instructionsEnvVar = "Définissez la variable d’environnement :"
-instructionsOrYml = "Ou dans settings.yml :"
-instructionsRestart = "Redémarrez ensuite votre serveur pour que les modifications prennent effet."
 oauthPending = "Ouverture du navigateur pour l'authentification..."
 orContinueWith = "Ou continuer avec l’email"
-serverRequirement = "Remarque : le serveur doit avoir la connexion activée."
-showInstructions = "Comment l’activer ?"
-signInWith = "Se connecter avec"
 skipSignIn = "Continue without signing in"
 sso = "Authentification unique"
 submit = "Se connecter"
-subtitle = "Saisissez vos identifiants pour continuer"
-title = "Se connecter"
-
-[setup.login.email]
-label = "Email"
-placeholder = "Saisissez votre email"
 
 [setup.login.error]
 emptyEmail = "Veuillez saisir votre email"
@@ -7556,24 +6752,7 @@ emptyPassword = "Veuillez saisir votre mot de passe"
 emptyUsername = "Veuillez saisir votre nom d'utilisateur"
 oauthFailed = "La connexion OAuth a échoué. Veuillez réessayer."
 
-[setup.login.password]
-label = "Mot de passe"
-placeholder = "Saisissez votre mot de passe"
-
-[setup.login.username]
-label = "Nom d’utilisateur"
-placeholder = "Entrez votre nom d’utilisateur"
-
-[setup.mode.saas]
-description = "Connectez-vous avec votre compte Stirling"
-title = "Stirling Cloud"
-
-[setup.mode.selfhosted]
-description = "Connectez-vous à votre propre serveur Stirling PDF"
-title = "Serveur auto‑hébergé"
-
 [setup.saas]
-subtitle = "Connectez-vous avec votre compte Stirling"
 title = "Se connecter à Stirling"
 
 [setup.selfhosted]
@@ -7585,7 +6764,6 @@ title = "Se connecter au serveur"
 
 [setup.selfhosted.unreachable]
 changeServer = "Se connecter à un autre serveur"
-changeServerLocked = "Votre organisation a limité cette application à un serveur spécifique"
 continueOffline = "Use local tools instead"
 message = "Could not reach {{url}}. Check that the server is running and accessible."
 retry = "Retry"
@@ -7612,42 +6790,20 @@ step2 = "Ou définissez security.enableLogin=true dans settings.yml"
 step3 = "Redémarrez le serveur"
 title = "Connexion non activée"
 
-[setup.server.type]
-saas = "Stirling PDF SaaS"
-selfhosted = "Serveur auto‑hébergé"
-
 [setup.server.url]
 description = "Saisissez l’URL complète de votre serveur Stirling PDF auto‑hébergé"
 label = "URL du serveur"
 
-[setup.step1]
-description = "Hors ligne ou serveur"
-label = "Choisir un mode"
-
-[setup.step2]
-description = "Serveur auto‑hébergé"
-label = "Sélectionner un serveur"
-
-[setup.step3]
-description = "Saisir les identifiants"
-label = "Connexion"
-
 [showJS]
 done = "JavaScript extrait"
-downloadJS = "Télécharger le JavaScript"
-header = "Afficher le JavaScript"
 processing = "Extraction de JavaScript…"
 results = "Résultat"
-singleFileWarning = "Cet outil ne prend en charge qu’un seul fichier à la fois. Veuillez sélectionner un fichier unique."
 submit = "Afficher"
 tags = "JS"
 title = "Afficher le JavaScript"
 
 [showJS.view]
 title = "JavaScript extrait"
-
-[sidebar]
-toggle = "Afficher/masquer la barre latérale"
 
 [sign]
 activate = "Activer le placement de signature"
@@ -7669,6 +6825,7 @@ redo = "Refaire"
 save = "Enregistrer le sceau"
 sharedSigs = "Sceaux partagés"
 submit = "Signer le document"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Signer"
 undo = "Défaire"
 updateAndPlace = "Mettre à jour et placer"
@@ -7843,10 +7000,11 @@ passwordsDoNotMatch = "Les mots de passe ne correspondent pas"
 passwordTooShort = "Le mot de passe doit comporter au moins 6 caractères"
 pleaseFillAllFields = "Veuillez remplir tous les champs"
 signUp = "S’inscrire"
+signUpWith = "Sign up with"
+skip = "Skip"
 subtitle = "Rejoignez Stirling PDF pour commencer"
 title = "Créer un compte"
 unexpectedError = "Erreur inattendue : {{message}}"
-useEmailInstead = "Utiliser l’e‑mail à la place"
 
 [sizes]
 large = "Grand"
@@ -7855,67 +7013,45 @@ small = "Petit"
 x-large = "Très grand"
 
 [split]
-header = "Diviser"
 resultsTitle = "Résultats de la division"
 selectMethod = "Sélectionnez une méthode de division"
 splitPages = "Pages sur lesquelles diviser"
 submit = "Diviser"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Diviser"
-
-[split.desc]
-1 = "Les numéros que vous sélectionnez sont le numéro de page sur lequel vous souhaitez faire une division"
-2 = "Ainsi, la sélection de 1,3,7-9 diviserait un document de 10 pages en 6 PDF distincts avec :"
-3 = "Document n°1 : Page 1"
-4 = "Document #2: Page 2 et 3"
-5 = "Document #3: Page 4, 5, 6 et 7"
-6 = "Document n°4 : Page 8"
-7 = "Document n°5 : Page 9"
-8 = "Document n°6 : Page 10"
 
 [split.error]
 failed = "Une erreur est survenue lors du fractionnement du PDF."
 
-[split.method]
-label = "Choisir la méthode de fractionnement"
-placeholder = "Sélectionnez comment fractionner le PDF"
-
 [split.methods.byChapters]
-desc = "Fractionner aux limites des signets"
 name = "Chapitres"
 tooltip = "Utilise les signets du PDF pour déterminer les points de coupure"
 
 [split.methods.byDocCount]
-desc = "Créer un nombre spécifique de fichiers"
 name = "Nombre de documents"
 tooltip = "Indiquez combien de fichiers vous souhaitez créer"
 
 [split.methods.byPageCount]
-desc = "Nombre fixe de pages par fichier"
 name = "Nombre de pages"
 tooltip = "Saisissez le nombre de pages pour chaque fichier"
 
 [split.methods.byPageDivider]
-desc = "Fractionnement automatique avec feuilles séparatrices"
 name = "Feuille séparatrice"
 tooltip = "Utilisez des feuilles séparatrices QR entre les documents lors de la numérisation"
 
 [split.methods.byPages]
-desc = "Extraire des pages spécifiques (1,3,5-10)"
 name = "Numéros de page"
 tooltip = "Saisissez des numéros de page séparés par des virgules ou des plages avec des tirets"
 
 [split.methods.byPoster]
-desc = "Diviser les grandes pages en formats imprimables"
 name = "Segments imprimables"
 tooltip = "Divisez les pages surdimensionnées en segments plus petits adaptés à l’impression sur papier standard (A4, Letter, etc.)"
 
 [split.methods.bySections]
-desc = "Diviser les pages en sections de grille"
 name = "Sections"
 tooltip = "Scinder chaque page en sections horizontales et verticales"
 
 [split.methods.bySize]
-desc = "Limiter la taille maximale du fichier"
 name = "Taille du Fichier"
 tooltip = "Spécifiez la taille maximale du fichier (p. ex. 10MB, 500KB)"
 
@@ -7963,13 +7099,6 @@ bullet2 = "Inclure les métadonnées : préserver les propriétés du document"
 bullet3 = "Autoriser les doublons : gérer les noms de signets répétés"
 text = "Utilisez les signets du PDF pour fractionner automatiquement aux limites des chapitres. Nécessite des PDF avec une structure de signets."
 title = "Fractionner par chapitres"
-
-[split.tooltip.byCount]
-bullet1 = "Nombre de pages : nombre fixe de pages par fichier"
-bullet2 = "Nombre de documents : nombre fixe de fichiers en sortie"
-bullet3 = "Utile pour des workflows en lot"
-text = "Créez plusieurs PDF avec un nombre spécifique de pages ou de documents chacun."
-title = "Fractionner par comptage"
 
 [split.tooltip.byDocCount]
 bullet1 = "Saisissez le nombre de fichiers de sortie souhaités"
@@ -8023,9 +7152,6 @@ bullet3 = "Le système fractionnera aux limites de page"
 text = "Créez plusieurs PDF qui ne dépassent pas une taille de fichier spécifiée. Idéal pour les limites de taille ou les pièces jointes e-mail."
 title = "Fractionner par taille de fichier"
 
-[split.tooltip.header]
-title = "Aperçu des méthodes de fractionnement"
-
 [split.value.docCount]
 label = "Nombre de fichiers"
 placeholder = "p. ex., 3, 5"
@@ -8039,9 +7165,7 @@ label = "Pages par fichier"
 placeholder = "p. ex., 5, 10"
 
 [split-by-sections]
-header = "Diviser le PDF en sections"
 merge = "Fusionner en un seul PDF"
-submit = "Diviser le PDF"
 tags = "Sections,Diviser,Section Split, Divide, Customize"
 title = "Diviser le PDF en sections"
 
@@ -8067,15 +7191,7 @@ label = "Divisions verticales"
 placeholder = "Entrer le nombre de divisions verticales"
 
 [split-by-size-or-count]
-header = "Séparer le PDF par taille ou par nombre"
-submit = "Séparer"
 title = "Séparer le PDF par taille ou par nombre"
-
-[split-by-size-or-count.type]
-docCount = "Par nombre de documents"
-label = "Sélectionner le type de division"
-pageCount = "Par nombre de pages"
-size = "Par taille"
 
 [split-by-size-or-count.value]
 label = "Entrer la valeur"
@@ -8084,28 +7200,11 @@ placeholder = "Saisir la taille (par exemple, 2MB ou 3KB) ou le nombre (par exem
 [splitByChapters]
 allowDuplicates = "Autoriser les Doublons"
 bookmarkLevel = "Niveau de Signet"
-header = "Diviser un PDF par Chapitres"
 includeMetadata = "Inclure les Métadonnées"
-submit = "Diviser le PDF"
 title = "Diviser un PDF par Chapitres"
-
-[splitByChapters.desc]
-1 = "Cet outil divise un fichier PDF en plusieurs PDF en fonction de sa structure de chapitres."
-2 = "Niveau de Signet : Choisissez le niveau de signets à utiliser pour la division (0 pour le niveau supérieur, 1 pour le deuxième niveau, etc...)."
-3 = "Inclure les Métadonnées : Si coché, les métadonnées du PDF original seront incluses dans chaque PDF divisé."
-4 = "Autoriser les Doublons : Si coché, permet à plusieurs signets sur la même page de créer des PDF séparés."
 
 [splitPdfByChapters]
 tags = "séparer,chapitres,split,chapters,bookmarks,organize"
-
-[storage]
-approximateSize = "Taille approximative"
-fileTooLarge = "Fichier trop volumineux. Taille maximale par fichier :"
-storageFull = "Le stockage est presque plein. Envisagez de supprimer certains fichiers."
-storageLimit = "Limite de stockage"
-storageQuotaExceeded = "Quota de stockage dépassé. Veuillez supprimer des fichiers avant d’en ajouter."
-storageUsed = "Stockage temporaire utilisé"
-temporaryNotice = "Les fichiers sont stockés temporairement dans votre navigateur et peuvent être effacés automatiquement"
 
 [storageShare]
 accessDenied = "Vous n’avez pas accès à ce fichier partagé. Demandez au propriétaire de le partager avec vous."
@@ -8208,43 +7307,11 @@ title = "Téléverser sur le serveur"
 updateButton = "Mettre à jour sur le serveur"
 uploadButton = "Téléverser sur le serveur"
 
-[subscription]
-cancelsOn = "Annulation le {{date}}"
-renewsOn = "Renouvellement le {{date}}"
-
-[subscription.status]
-active = "Actif"
-canceled = "Annulé"
-incomplete = "Incomplet"
-none = "Aucun abonnement"
-pastDue = "En retard de paiement"
-trialing = "Essai"
-
 [survey]
-button = "Répondre à l'enquête"
-changes = "Stirling-PDF a changé depuis la dernière enquête ! Pour en savoir plus, veuillez consulter notre article de blog ici :"
-changes2 = "Avec ces changements, nous obtenons un soutien commercial rémunéré et un financement"
-description = "Stirling-PDF n'a pas de suivi, donc nous voulons entendre nos utilisateurs pour améliorer Stirling-PDF !"
-disabled = "(La fenêtre contextuelle de l'enquête sera désactivée dans les mises à jour suivantes mais sera disponible en bas de page)"
-dontShowAgain = "Ne plus afficher"
 nav = "Enquête"
-please = "Veuillez envisager de répondre à notre enquête !"
 title = "Enquête Stirling-PDF"
 
-[survey.meeting]
-1 = "Si vous utilisez Stirling PDF au travail, nous aimerions en discuter avec vous. Nous offrons des sessions de support technique en échange d'une discussion de 15 minutes pour découvrir nos utilisateurs."
-2 = "C'est l'occasion de :"
-3 = "Obtenir de l'aide pour le déploiement, l'intégration ou résoudre des problèmes"
-4 = "Fournir un retour direct sur les performances, les cas limites, les fonctionnalités demandées"
-5 = "Nous aider à adapter Stirling PDF aux usages réels en entreprise"
-6 = "Si vous êtes intéressé, prenez rendez-vous avec notre équipe (en anglais uniquement)"
-7 = "Nous avons hâte de découvrir vos cas d'usage et d'améliorer encore Stirling PDF !"
-button = "Prendre rendez-vous"
-notInterested = "Vous n'êtes pas une entreprise et/ou n'êtes pas intéressé par une discussion ?"
-
 [swagger]
-desc = "Voir et tester les points de terminaison de l’API Stirling PDF"
-header = "Documentation de l’API"
 tags = "api,documentation,swagger,points de terminaison,développement"
 title = "Documentation de l’API"
 
@@ -8330,9 +7397,6 @@ right = "Droite"
 [textInput]
 clear = "Effacer la saisie"
 
-[theme]
-toggle = "Changer de thème"
-
 [time.relative]
 daysAgo = "il y a {{count}} j"
 hoursAgo = "il y a {{count}} h"
@@ -8340,19 +7404,14 @@ justNow = "à l’instant"
 minutesAgo = "il y a {{count}} min"
 
 [timestampPdf]
-completed = "PDF horodaté avec succès"
 desc = "Ajoutez un horodatage RFC 3161 à votre PDF via un serveur d'autorité d'horodatage (TSA) de confiance."
-filenamePrefix = "horodaté"
 results = "Résultats de l'horodatage"
 submit = "Appliquer l'horodatage"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "Horodater le PDF"
 
 [timestampPdf.error]
 failed = "Une erreur est survenue lors de l'horodatage du PDF."
-generic = "Échec de l'horodatage"
-
-[timestampPdf.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
 
 [timestampPdf.options]
 note = "Seul le hash SHA-256 de votre document est envoyé au serveur TSA ; le fichier PDF lui-même n'est jamais envoyé au serveur TSA."
@@ -8383,18 +7442,13 @@ singleFileScope = "Application uniquement à : {{fileName}}"
 viewerMode = "Passez à l'éditeur de fichiers pour sélectionner plusieurs fichiers."
 
 [toolPanel]
-allTools = "Tous les outils"
 alpha = "Alpha"
 backToAllTools = "Retour à tous les outils"
-backToDefault = "Retour"
-backToTools = "Retour aux outils"
 collapse = "Réduire le panneau"
-comingSoon = "Bientôt disponible :"
 expand = "Développer le panneau"
 goBack = "Revenir en arrière"
 placeholder = "Choisissez un outil pour commencer"
 premiumFeature = "Fonctionnalité Premium :"
-search = "Rechercher des outils"
 toolsHeader = "Outils"
 viewAllTools = "Voir tous les outils"
 
@@ -8422,10 +7476,6 @@ recommended = "Recommandé"
 sidebarDescription = "Gardez les outils à côté de votre espace de travail pour changer rapidement."
 sidebarTitle = "Mode barre latérale"
 title = "Choisissez comment parcourir les outils"
-
-[toolPanel.toggle]
-fullscreen = "Passer en mode plein écran"
-sidebar = "Passer en mode barre latérale"
 
 [toolPicker]
 allTools = "TOUS LES OUTILS"
@@ -8460,8 +7510,6 @@ close = "Fermer l’infobulle"
 
 [unlockPDFForms]
 description = "Cet outil supprimera les restrictions en lecture seule des champs de formulaires PDF, les rendant modifiables et remplissables."
-filenamePrefix = "formulaires_déverrouillés"
-header = "Déverrouiller les formulaires PDF"
 submit = "Remove"
 tags = "supprimer,propriété,déverrouiller,formulaire,champs,lecture,remove,delete,form,field,readonly"
 title = "Supprimer la lecture seule des champs de formulaire"
@@ -8469,15 +7517,11 @@ title = "Supprimer la lecture seule des champs de formulaire"
 [unlockPDFForms.error]
 failed = "Une erreur est survenue lors du déverrouillage des formulaires PDF."
 
-[unlockPDFForms.files]
-placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
-
 [unlockPDFForms.results]
 title = "Résultats des formulaires déverrouillés"
 
 [update]
 allReleases = "Toutes les versions"
-availableUpdates = "Mises à jour disponibles"
 breaking = "Incompatible"
 breakingChanges = "Modifications majeures"
 breakingChangesDefault = "Cette version contient des modifications majeures."
@@ -8490,7 +7534,6 @@ defaultRecommendation = "Cette mise à jour contient des correctifs et des amél
 downloadLatest = "Télécharger la dernière version"
 later = "Plus tard"
 latest = "Dernière version"
-latestStable = "Dernière version stable"
 loadingDetailedInfo = "Chargement des informations détaillées…"
 migrationGuide = "Guide de migration"
 migrationGuides = "Guides de migration"
@@ -8498,18 +7541,14 @@ migrationGuidesDesc = "Passez en revue les changements importants avant la mise 
 modalSubtitle = "Une nouvelle version de Stirling PDF est prête à être installée."
 modalTitle = "Mise à jour disponible"
 notes = "Notes"
-priorityLabel = "Priorité"
-recommendedAction = "Action recommandée"
 releaseNotes = "Notes de version"
 showLess = "Afficher moins de versions"
 showMore = "Afficher toutes les {{count}} versions"
 stable = "STABLE"
-unableToLoadDetails = "Impossible de charger les informations détaillées."
 updateAvailable = "Mise à jour disponible"
 urgentUpdateAvailable = "Mise à jour urgente"
 version = "Version"
 versionHistory = "Historique des versions"
-viewAllReleases = "Voir toutes les versions"
 viewGuide = "Voir le guide"
 whatsNewIn = "Nouveautés de"
 
@@ -8523,16 +7562,12 @@ urgent = "Urgente"
 attentionBody = "Votre administrateur doit se connecter pour voir plus d’informations. Veuillez le contacter immédiatement."
 attentionBodyAdmin = "Vérifiez les exigences de licence pour maintenir ce serveur conforme."
 attentionTitle = "Ce serveur nécessite l’attention d’un administrateur"
-dismiss = "Masquer la bannière"
 message = "Tirez le meilleur parti de Stirling PDF avec des utilisateurs illimités et des fonctionnalités avancées"
 seeInfo = "Voir les infos"
 title = "Passer au plan Server"
 upgradeButton = "Mettre à niveau maintenant"
 
 [URLToPDF]
-credit = "Utilise WeasyPrint."
-header = "URL en PDF"
-submit = "Convertir"
 tags = "pdf,contenu Web,save-page,web-to-doc,archive"
 title = "URL en PDF"
 
@@ -8585,7 +7620,6 @@ downloadCsv = "Télécharger CSV"
 downloadJson = "Télécharger JSON"
 downloadPdf = "Télécharger le rapport PDF"
 finalizing = "Préparation des téléchargements…"
-header = "Valider les signatures numériques"
 location = "Localisation"
 noResults = "Lancez la validation pour générer un rapport."
 noSignatures = "Aucune signature numérique trouvée dans ce document"
@@ -8594,7 +7628,6 @@ processing = "Validation des signatures…"
 reason = "Raison"
 results = "Résultats de la validation"
 selectCustomCert = "Fichier de certificat personnalisé X.509 (Optionnel)"
-selectPDF = "Sélectionnez un fichier PDF signé"
 signatureDate = "Date de signature"
 signer = "Signataire"
 submit = "Valider les signatures"
@@ -8606,21 +7639,15 @@ totalSignatures = "Nombre total de signatures"
 algorithm = "Algorithme"
 bits = "bits"
 details = "Détails du certificat"
-expired = "Le certificat a expiré"
-info = "Détails du certificat"
 issuer = "Émetteur"
 keySize = "Taille de la clé"
 keyUsage = "Usage de la clé"
-revoked = "Le certificat a été révoqué"
 selfSigned = "Auto-signé"
 serialNumber = "Numéro de série"
 subject = "Sujet"
 validFrom = "Valide à partir du"
 validUntil = "Valide jusqu'au"
 version = "Version"
-
-[validateSignature.chain]
-invalid = "La validation de la chaîne de certificats a échoué - impossible de vérifier l'identité du signataire"
 
 [validateSignature.downloadType]
 csv = "CSV"
@@ -8668,22 +7695,11 @@ title = "Paramètres de validation"
 
 [validateSignature.signature]
 _value = "Signature"
-info = "Informations sur la signature"
-mathValid = "La signature est mathématiquement valide MAIS :"
 
 [validateSignature.status]
-_value = "Statut"
 complete = "Validation terminée"
 invalid = "Invalide"
 valid = "Valide"
-
-[validateSignature.trust]
-invalid = "Le certificat n'est pas dans le magasin de confiance - la source ne peut pas être vérifiée"
-
-[view]
-fileManager = "Gestionnaire de fichiers"
-pageEditor = "Éditeur de pages"
-viewer = "Visionneuse"
 
 [viewer]
 cannotPreviewFile = "Impossible d’afficher un aperçu du fichier"
@@ -8730,10 +7746,8 @@ moreActions = "Plus d'actions"
 nComments = "{{count}} commentaires"
 oneComment = "1 commentaire"
 pageLabel = "Page {{page}}"
-placeholder = "Saisissez votre commentaire..."
 removeCommentOnly = "Supprimer seulement le commentaire"
 saveReply = "Sauvegarder la réponse"
-send = "Envoyer"
 title = "Commentaires"
 typeComment = "Commentaire"
 typeInsertText = "Insérer du text"
@@ -8760,7 +7774,6 @@ columnDefault = "Colonne {{index}}"
 convertToPdf = "Convertir en PDF"
 csvStats = "{{rows}} lignes · {{columns}} colonnes · {{size}}"
 emptyFile = "Fichier vide"
-fileTypeBadge = "Fichier {{type}}"
 htmlPreview = "Aperçu HTML"
 htmlPreviewWarning = "Aperçu HTML — les ressources externes peuvent ne pas se charger · {{size}}"
 invalidJson = "JSON invalide — affichage du contenu brut"
@@ -8784,27 +7797,180 @@ resultsOf = "sur {{total}}"
 delete = "Supprimer la signature"
 
 [viewPdf]
-header = "Visualiser un PDF"
 tags = "visualiser,lire,annoter,texte,image"
 title = "Afficher/modifier un PDF"
 
 [warning]
 tooltipTitle = "Avertissement"
 
-[watermark]
-completed = "Filigrane ajouté"
-desc = "Ajouter des filigranes texte ou image aux fichiers PDF"
-filenamePrefix = "filigrané"
-submit = "Ajouter un filigrane"
-title = "Ajouter un filigrane"
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
 
-[watermark.alphabet]
-arabic = "Arabe"
-chinese = "Chinois"
-japanese = "Japonais"
-korean = "Coréen"
-roman = "Romain/latin"
-thai = "Thaï"
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
+[watermark]
+desc = "Ajouter des filigranes texte ou image aux fichiers PDF"
+submit = "Ajouter un filigrane"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+title = "Ajouter un filigrane"
 
 [watermark.error]
 failed = "Une erreur est survenue lors de l’ajout du filigrane au PDF."
@@ -8816,16 +7982,12 @@ title = "Résultats du filigrane"
 alphabet = "Police/langue"
 color = "Couleur du filigrane"
 convertToImage = "Aplatir les pages PDF en images"
-fontSize = "Taille de Police"
 opacity = "Opacité (%)"
 rotation = "Rotation (degrés)"
 size = "Taille"
-type = "Type de filigrane"
 
 [watermark.settings.image]
 choose = "Choisir une image"
-label = "Image de filigrane"
-selected = "Sélectionné : {{filename}}"
 
 [watermark.settings.spacing]
 height = "Espacement en hauteur"
@@ -8834,7 +7996,6 @@ vertical = "Espacement vertical"
 width = "Espacement en largeur"
 
 [watermark.settings.text]
-label = "Texte du filigrane"
 placeholder = "Saisir le texte du filigrane"
 
 [watermark.steps]
@@ -8868,13 +8029,6 @@ bullet3 = "Des images à plus haute résolution conservent mieux la qualité"
 text = "Téléversez une image à utiliser comme filigrane."
 title = "Sélection d’image"
 
-[watermark.tooltip.formatting.appearance]
-bullet1 = "Rotation : -360° à 360° pour des filigranes inclinés"
-bullet2 = "Opacité : 0–100 % pour contrôler la transparence"
-bullet3 = "Une opacité faible crée des filigranes discrets"
-text = "Contrôlez l’apparence de votre filigrane et sa fusion avec le document."
-title = "Paramètres d’apparence"
-
 [watermark.tooltip.formatting.header]
 title = "Mise en forme et disposition"
 
@@ -8890,13 +8044,6 @@ title = "Option de sécurité"
 bullet1 = "Des tailles plus grandes rendent les filigranes plus visibles"
 text = "Ajustez la taille de votre filigrane (texte ou image)."
 title = "Contrôle de la taille"
-
-[watermark.tooltip.formatting.spacing]
-bullet1 = "Espacement horizontal : distance entre les filigranes de gauche à droite"
-bullet2 = "Espacement vertical : distance entre les filigranes de haut en bas"
-bullet3 = "Des valeurs plus élevées créent des motifs plus espacés"
-text = "Ajustez l’espacement entre les filigranes répétés sur la page."
-title = "Contrôle de l’espacement"
 
 [watermark.tooltip.language]
 text = "Choisissez le paramètre de langue approprié pour garantir un rendu correct des polices de votre texte."
@@ -8918,10 +8065,6 @@ title = "Sélection de la couleur"
 
 [watermark.tooltip.textStyle.header]
 title = "Style du texte"
-
-[watermark.tooltip.textStyle.language]
-text = "Choisissez le paramètre de langue approprié pour garantir un rendu correct des polices."
-title = "Prise en charge des langues"
 
 [watermark.tooltip.type.description]
 text = "Sélectionnez des filigranes texte ou image selon vos besoins."
@@ -8992,17 +8135,13 @@ annotations = "Annotations"
 applyRedactionsFirst = "Appliquer d’abord les rédactions"
 closeAll = "Fermer tous les fichiers"
 closePdf = "Fermer le PDF"
-closeSelected = "Fermer les fichiers sélectionnés"
 deleteSelected = "Supprimer les pages sélectionnées"
 deselectAll = "Tout désélectionner"
 downloadAll = "Tout télécharger"
-downloadSelected = "Télécharger les fichiers sélectionnés"
-draw = "Dessiner"
 exitRedaction = "Quitter le mode Rédaction"
 exportAll = "Exporter le PDF"
 exportSelected = "Exporter les pages sélectionnées"
 formFill = "Remplir le formulaire"
-language = "Langue"
 multiTool = "Outil multifonction"
 panMode = "Mode panoramique"
 print = "Imprimer le PDF"
@@ -9021,14 +8160,12 @@ search = "Rechercher dans le PDF"
 selectAll = "Tout sélectionner"
 selectByNumber = "Sélectionner par numéros de pages"
 selectLanguage = "Sélectionner la langue"
-share = "Partager"
 toggleAnnotations = "Basculer la visibilité des annotations"
 toggleAttachments = "Basculer les pièces jointes"
 toggleBookmarks = "Basculer les signets"
 toggleComments = "Commentaires"
 toggleLayers = "Basculer les calques"
 toggleSidebar = "Basculer la barre latérale"
-toggleTheme = "Basculer le thème"
 viewer = "Visionneuse"
 
 [workflow.participant]
@@ -9088,7 +8225,6 @@ member = "Membre"
 noMembersFound = "Aucun membre trouvé"
 role = "Rôle"
 searchMembers = "Rechercher des membres..."
-status = "Statut"
 team = "Équipe"
 title = "Personnes"
 unlockAccount = "Déverrouiller le compte"
@@ -9097,25 +8233,21 @@ unlockUserSuccess = "Compte utilisateur déverrouillé avec succès"
 user = "Utilisateur"
 
 [workspace.people.actions]
-label = "Actions"
 upgrade = "Mettre à niveau"
 
 [workspace.people.addMember]
 authType = "Type d’authentification"
-cancel = "Annuler"
 error = "Échec de la création de l’utilisateur"
 forceMFA = "Forcer la configuration MFA à la prochaine connexion"
 forcePasswordChange = "Forcer le changement de mot de passe à la première connexion"
 password = "Mot de passe"
 passwordPlaceholder = "Saisir le mot de passe"
 passwordRequired = "Le mot de passe est requis"
-passwordTooShort = "Le mot de passe doit comporter au moins 6 caractères"
 role = "Rôle"
 submit = "Ajouter le membre"
 success = "Utilisateur créé avec succès"
 team = "Équipe (facultatif)"
 teamPlaceholder = "Sélectionner une équipe"
-title = "Ajouter un membre"
 username = "Nom d’utilisateur (e-mail)"
 usernamePlaceholder = "user@example.com"
 usernameRequired = "Le nom d’utilisateur et le mot de passe sont obligatoires"
@@ -9151,15 +8283,7 @@ subtitle = "Mettre à jour le mot de passe de"
 success = "Mot de passe mis à jour avec succès"
 title = "Changer le mot de passe"
 
-[workspace.people.delete]
-error = "Échec de la suppression de l’utilisateur"
-success = "Utilisateur supprimé avec succès"
-
-[workspace.people.directInvite]
-tab = "Création directe"
-
 [workspace.people.editMember]
-cancel = "Annuler"
 editing = "Modification :"
 error = "Échec de la mise à jour de l’utilisateur"
 role = "Rôle"
@@ -9171,7 +8295,6 @@ title = "Modifier le membre"
 
 [workspace.people.emailInvite]
 allFailed = "Échec de l’invitation des utilisateurs"
-description = "Saisissez ou collez des adresses e-mail ci-dessous, séparées par des virgules. Les utilisateurs recevront leurs identifiants de connexion par e-mail."
 emails = "Adresses e-mail"
 emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Au moins une adresse e-mail est requise"
@@ -9179,34 +8302,20 @@ error = "Échec de l’envoi des invitations"
 partialFailure = "Certaines invitations ont échoué"
 submit = "Envoyer les invitations"
 success = "Utilisateur(s) invité(s) avec succès"
-tab = "Invitation par e-mail"
 
 [workspace.people.inviteLink]
 copied = "Lien copié dans le presse-papiers"
-description = "Générez un lien sécurisé permettant à l’utilisateur de définir son propre mot de passe"
 email = "Adresse e-mail"
 emailDescription = "Facultatif - laissez vide pour un lien d’invitation général utilisable par n’importe qui"
-emailFailed = "Lien d’invitation généré, mais l’envoi de l’e-mail a échoué"
-emailFailedDetails = "Erreur : {0}. Veuillez partager le lien d’invitation manuellement."
-emailOptional = "Facultatif - laissez vide pour un lien d’invitation général"
 emailPlaceholder = "user@example.com (facultatif)"
-emailRequired = "L’adresse e-mail est requise"
-emailRequiredForSend = "L’adresse e-mail est requise pour envoyer la notification par e-mail"
 emailSent = "Lien d’invitation généré et envoyé par e-mail"
 error = "Échec de la génération du lien d’invitation"
-expiryDescription = "Nombre d’heures avant l’expiration du lien"
 expiryHours = "Heures d’expiration"
 generate = "Générer le lien"
 generated = "Lien d’invitation généré"
 sendEmail = "Envoyer le lien d’invitation par e-mail"
 sendEmailDescription = "Si activé, le lien d’invitation sera envoyé à l’adresse e-mail spécifiée"
-smtpRequired = "SMTP non configuré"
 submit = "Générer un lien d’invitation"
-success = "Lien d’invitation généré avec succès"
-successWithEmail = "Lien d’invitation généré et envoyé par e-mail"
-
-[workspace.people.inviteLinkTab]
-tab = "Lien d’invitation"
 
 [workspace.people.inviteMembers]
 label = "Inviter des membres"
@@ -9219,7 +8328,6 @@ link = "Lien"
 username = "Nom d’utilisateur"
 
 [workspace.people.license]
-availableSlots = "Places disponibles"
 currentUsage = "Utilise actuellement {{current}} sur {{max}} licences utilisateur"
 fromLicense = "de la licence"
 grandfathered = "Droits acquis"
@@ -9243,12 +8351,10 @@ error = "Échec de la mise à jour du statut de l’utilisateur"
 success = "Statut de l’utilisateur mis à jour avec succès"
 
 [workspace.teams]
-actions = "Actions"
 addMember = "Ajouter un membre"
 backToTeams = "Retour aux équipes"
 cannotAddToInternal = "Impossible d’ajouter des membres à l’équipe Internal"
 cannotDeleteInternal = "Impossible de supprimer l’équipe Internal"
-cannotRemoveFromSystemTeam = "Impossible de retirer de l’équipe système"
 cannotRenameInternal = "Impossible de renommer l’équipe Internal"
 confirmDelete = "Voulez-vous vraiment supprimer cette équipe ? Cette équipe doit être vide pour être supprimée."
 confirmRemove = "Retirer l’utilisateur de cette équipe ?"
@@ -9274,7 +8380,6 @@ viewTeam = "Voir l’équipe"
 
 [workspace.teams.addMemberToTeam]
 addingTo = "Ajout à"
-cancel = "Annuler"
 currentlyIn = "actuellement dans"
 error = "Échec de l’ajout du membre à l’équipe"
 selectUser = "Sélectionner un utilisateur"
@@ -9298,7 +8403,6 @@ success = "Équipe changée avec succès"
 title = "Changer d’équipe"
 
 [workspace.teams.createTeam]
-cancel = "Annuler"
 error = "Échec de la création de l’équipe"
 nameRequired = "Le nom de l’équipe est requis"
 submit = "Créer l’équipe"
@@ -9310,10 +8414,8 @@ title = "Créer une nouvelle équipe"
 [workspace.teams.deleteTeam]
 error = "Échec de la suppression de l’équipe. Assurez-vous que l’équipe est vide."
 success = "Équipe supprimée avec succès"
-teamMustBeEmpty = "L’équipe doit être vide avant la suppression"
 
 [workspace.teams.renameTeam]
-cancel = "Annuler"
 error = "Échec du renommage de l’équipe"
 nameRequired = "Le nom de l’équipe est requis"
 newTeamName = "Nouveau nom de l’équipe"
