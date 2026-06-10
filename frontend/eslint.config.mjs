@@ -143,25 +143,25 @@ export default defineConfig(
       ],
     },
   },
-  // Folders that have been cleaned up and are now conformant - stricter rules enforced here
+  // Stricter rules that not all sub-folders are conformant to yet.
+  // Keep this non-type-aware: `parserOptions.project`/`projectService` here OOMs
+  // the lint step (builds the whole TS program); tsc covers type correctness.
   {
-    files: [
-      "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
-      "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
-      "shared/**/*.{js,mjs,jsx,ts,tsx}",
+    files: srcGlobs,
+    ignores: [
+      "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
     ],
-    languageOptions: {
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unnecessary-type-assertion": "error",
     },
   },
   // Config for browser scripts

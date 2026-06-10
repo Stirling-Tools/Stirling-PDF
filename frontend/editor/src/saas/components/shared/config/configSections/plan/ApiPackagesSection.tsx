@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Card, Text, Stack, Flex, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CreditsPack } from "@app/components/shared/StripeCheckoutSaas";
+import type { CreditsPack } from "@app/components/shared/StripeCheckoutSaas";
 
 interface ApiPackage {
   id: string;

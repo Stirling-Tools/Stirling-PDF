@@ -16,7 +16,6 @@ from stirling.documents import (
     DocumentStore,
     EmbeddingService,
     PgVectorStore,
-    RagCapability,
     SqliteVecStore,
 )
 
@@ -47,7 +46,6 @@ class AppRuntime:
     fast_model: Model
     smart_model: Model
     documents: DocumentService
-    rag_capability: RagCapability
 
     @property
     def fast_model_settings(self) -> ModelSettings:
@@ -89,8 +87,8 @@ def _build_document_store(settings: AppSettings) -> DocumentStore:
     assert_never(settings.rag_backend)
 
 
-def _build_documents(settings: AppSettings) -> tuple[DocumentService, RagCapability]:
-    """Build the document service and the RAG-search capability that wraps it."""
+def _build_documents(settings: AppSettings) -> DocumentService:
+    """Build the document service used by per-request RAG capabilities."""
     logger.info("Documents: embedding_model=%s", settings.rag_embedding_model)
     embedder = EmbeddingService(
         model_name=settings.rag_embedding_model,
@@ -98,9 +96,7 @@ def _build_documents(settings: AppSettings) -> tuple[DocumentService, RagCapabil
         chunk_overlap=settings.rag_chunk_overlap,
     )
     store = _build_document_store(settings)
-    service = DocumentService(embedder=embedder, store=store, default_top_k=settings.rag_default_top_k)
-    capability = RagCapability(documents=service, top_k=settings.rag_default_top_k)
-    return service, capability
+    return DocumentService(embedder=embedder, store=store, default_top_k=settings.rag_default_top_k)
 
 
 def build_runtime(settings: AppSettings) -> AppRuntime:
@@ -109,14 +105,11 @@ def build_runtime(settings: AppSettings) -> AppRuntime:
     validate_structured_output_support(fast_model, settings.fast_model_name)
     validate_structured_output_support(smart_model, settings.smart_model_name)
 
-    documents, rag_capability = _build_documents(settings)
-
     return AppRuntime(
         settings=settings,
         fast_model=fast_model,
         smart_model=smart_model,
-        documents=documents,
-        rag_capability=rag_capability,
+        documents=_build_documents(settings),
     )
 
 

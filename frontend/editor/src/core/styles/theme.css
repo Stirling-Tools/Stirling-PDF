@@ -202,6 +202,8 @@
   --icon-sign-color: #ffffff;
   --icon-automate-bg: #a576e3;
   --icon-automate-color: #ffffff;
+  --icon-watchedFolders-bg: #f59e0b;
+  --icon-watchedFolders-color: #ffffff;
   --icon-files-bg: #d3e7f7;
   --icon-files-color: #0a8bff;
   --icon-activity-bg: #d3e7f7;
@@ -515,7 +517,7 @@
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2a2f36;
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-default: #3a4047;
   --border-strong: #4b5563;
   --hover-bg: #374151;
@@ -535,6 +537,8 @@
   --icon-sign-color: #eaeaea;
   --icon-automate-bg: #4b525a;
   --icon-automate-color: #eaeaea;
+  --icon-watchedFolders-bg: #4b525a;
+  --icon-watchedFolders-color: #eaeaea;
   --icon-files-bg: #4b525a;
   --icon-files-color: #eaeaea;
   --icon-activity-bg: #4b525a;

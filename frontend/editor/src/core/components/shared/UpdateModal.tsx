@@ -259,7 +259,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               onClick={onClose}
               size="lg"
               variant="subtle"
-              aria-label="Close update modal"
+              aria-label={t("update.closeModal", "Close update modal")}
             />
           )}
         </Group>
