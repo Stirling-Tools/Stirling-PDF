@@ -23,13 +23,17 @@
   --upm-accent-soft: rgba(10, 139, 255, 0.14);
 }
 
-/* Backdrop locks the page and centres the modal. */
+/* Backdrop locks the page and centres the modal. z-index matches
+   Z_INDEX_OVER_SETTINGS_MODAL (styles/zIndex.ts) — must sit above the
+   AppConfigModal's 1300 (Z_INDEX_OVER_FULLSCREEN_SURFACE). The config modal
+   also hides itself while we're open (appConfig:overlay event), so this is
+   belt-and-braces for the brief overlap during open/close transitions. */
 .upm-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 1400;
   display: flex;
   align-items: center;
   justify-content: center;

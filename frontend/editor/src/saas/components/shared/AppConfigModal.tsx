@@ -61,6 +61,24 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       window.removeEventListener("appConfig:notice", handler as EventListener);
   }, []);
 
+  // Full-screen overlays that live inside our React tree (e.g. the PAYG
+  // UpgradeModal, portal'd to document.body) announce themselves here so we
+  // can hide — not unmount — while they're up. Unmounting would kill the
+  // overlay itself since it's our descendant; hiding keeps all section state
+  // (active tab, scroll, wallet data) intact for when the overlay closes.
+  const [overlayActive, setOverlayActive] = useState(false);
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as
+        | { open?: boolean }
+        | undefined;
+      setOverlayActive(Boolean(detail?.open));
+    };
+    window.addEventListener("appConfig:overlay", handler as EventListener);
+    return () =>
+      window.removeEventListener("appConfig:overlay", handler as EventListener);
+  }, []);
+
   // When the modal opens to Plan, proactively refresh credits and log values
   useEffect(() => {
     if (!opened) return;
@@ -149,6 +167,17 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         overlayProps={{ opacity: 0.35, blur: 2 }}
         padding={0}
         fullScreen={isMobile}
+        // Hidden (not closed) while a child overlay like the PAYG UpgradeModal
+        // is up — see the appConfig:overlay listener above. The focus trap and
+        // escape/outside-close must release too: the trap would steal focus
+        // from the Stripe card iframe, and Escape would close US underneath
+        // the overlay — unmounting the checkout mid-payment.
+        styles={{
+          root: { display: overlayActive ? "none" : undefined },
+        }}
+        trapFocus={!overlayActive}
+        closeOnEscape={!overlayActive}
+        closeOnClickOutside={!overlayActive}
       >
         <div className="modal-container">
           {/* Left navigation */}

@@ -16,13 +16,26 @@
  * <p>Cap state is held locally — nothing reaches the backend until the user
  * commits in step 2. A user who cancels mid-modal leaves no side effects.
  */
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
 // eslint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
+
+/**
+ * Tell the AppConfigModal (or any other full-screen surface listening) that an
+ * upgrade overlay is opening/closing so it can hide itself rather than stack
+ * under us. Same window-event pattern the config modal already uses for
+ * appConfig:navigate / appConfig:notice.
+ */
+function dispatchOverlay(open: boolean) {
+  window.dispatchEvent(
+    new CustomEvent("appConfig:overlay", { detail: { open } }),
+  );
+}
 
 // Lazy-loaded so the @stripe/stripe-js bundle only downloads when the user
 // reaches step 2. See StripeCheckoutPanel.tsx for the full pattern + the
@@ -76,6 +89,15 @@ export default function UpgradeModal({
   const [capUsd, setCapUsd] = useState<number>(25);
   const [noCap, setNoCap] = useState<boolean>(false);
 
+  // The config modal hides itself while we're open (it listens for this event)
+  // so the upgrade flow visually REPLACES it instead of stacking inside it.
+  // Cleanup fires open=false on unmount too, so the config modal can't get
+  // stuck hidden if we unmount without a clean close.
+  useEffect(() => {
+    dispatchOverlay(open);
+    return () => dispatchOverlay(false);
+  }, [open]);
+
   if (!open) {
     return null;
   }
@@ -92,7 +114,11 @@ export default function UpgradeModal({
     onClose();
   };
 
-  return (
+  // Portal to document.body so the overlay escapes the config modal's portal /
+  // stacking context. Without this the fixed-position backdrop layers inside
+  // the Mantine modal (z-index 1300) instead of over the whole page, producing
+  // the modal-in-modal look.
+  return createPortal(
     <div className="upm" role="dialog" aria-modal="true">
       <div className="upm-backdrop" onClick={closeAndReset}>
         <div className="upm-frame" onClick={(e) => e.stopPropagation()}>
@@ -244,7 +270,8 @@ export default function UpgradeModal({
           </footer>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
