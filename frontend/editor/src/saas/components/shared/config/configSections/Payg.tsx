@@ -107,10 +107,13 @@ function gateLabel(
 // ─── Hero usage panel ───────────────────────────────────────────────────────
 
 /**
- * Usage figures straight off the wallet. No spend-vs-cap percent bar and no
- * money-spent estimate: the cap is stored in USD while spend is in units, and
- * the units↔money translation needs stripe.prices via Sync Engine (design
- * §13 / PR-C2). Showing a made-up conversion would be worse than none.
+ * Usage hero — gradient panel with the allowance bar. Both numbers are real:
+ * {@code billableUsed} (wallet_ledger period sum) over {@code billableLimit}
+ * (free-tier allowance for free teams; the USD cap translated to units for
+ * subscribed teams — the backend's resolveBillableLimit does that translation
+ * server-side). The display state (healthy / approaching / reached) derives
+ * from the real percentage at the backend's default thresholds (80/100); the
+ * money-spent estimate stays out until stripe.prices wiring lands (PR-C2).
  */
 function UsageHero({ wallet }: { wallet: Wallet }) {
   const { t } = useTranslation();
@@ -123,8 +126,19 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
   const hasCap = !wallet.noCap && wallet.capUsd != null;
   const breakdown = wallet.categoryBreakdown;
 
+  const hasLimit = wallet.billableLimit > 0;
+  const pct = hasLimit
+    ? Math.min(100, (wallet.billableUsed / wallet.billableLimit) * 100)
+    : 0;
+  const state = pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
+  const stateLabel = {
+    FULL: t("payg.state.full", "Healthy"),
+    WARNED: t("payg.state.warned", "Approaching cap"),
+    DEGRADED: t("payg.state.degraded", "Cap reached"),
+  }[state];
+
   return (
-    <div className="payg-hero">
+    <div className="payg-hero" data-state={state}>
       <div className="payg-hero__inner">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <div>
@@ -133,22 +147,31 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
             </div>
             <div className="payg-hero__figure">
               <span className="payg-hero__spend">
-                {wallet.spendUnitsThisPeriod.toLocaleString()}
+                {wallet.billableUsed.toLocaleString()}
               </span>
-              <span className="payg-hero__cap">
-                {" "}
-                {t("payg.usage.unitsUsed", "units used")}
-              </span>
+              {hasLimit && (
+                <span className="payg-hero__cap">
+                  / {wallet.billableLimit.toLocaleString()}{" "}
+                  {t("payg.usage.units", "units")}
+                </span>
+              )}
             </div>
           </div>
-          <div className="payg-status">
-            {hasCap
-              ? t("payg.usage.capLine", "${{cap}}/mo cap", {
-                  cap: wallet.capUsd,
-                })
-              : t("payg.usage.noCap", "No monthly cap")}
+          <div className="payg-status" data-state={state}>
+            <span className="payg-status__dot" />
+            {stateLabel}
           </div>
         </Group>
+
+        {hasLimit && (
+          <div className="payg-bar">
+            <div
+              className="payg-bar__fill"
+              data-state={state}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        )}
 
         <div className="payg-hero__meta">
           <span>
@@ -161,6 +184,14 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
                 api: breakdown.api.toLocaleString(),
               },
             )}
+          </span>
+          <span className="payg-hero__meta-dot">•</span>
+          <span>
+            {hasCap
+              ? t("payg.usage.capLine", "${{cap}}/mo cap", {
+                  cap: wallet.capUsd,
+                })
+              : t("payg.usage.noCap", "No monthly cap")}
           </span>
           <span className="payg-hero__meta-dot">•</span>
           <span>
