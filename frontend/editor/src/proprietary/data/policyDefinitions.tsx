@@ -180,8 +180,9 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         parameters: {
           mode: "automatic",
           useRegex: true,
-          // Text-based redaction (no rasterization) — keeps runs fast.
-          convertPDFToImage: false,
+          // Flatten to image so redacted text is truly removed, not just hidden
+          // behind a box (heavier, but real redaction).
+          convertPDFToImage: true,
           wordsToRedact: DEFAULT_PII_PATTERNS,
         },
       },

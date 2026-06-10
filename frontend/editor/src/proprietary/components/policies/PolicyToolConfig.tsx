@@ -5,8 +5,7 @@ import { Card } from "@shared/components/Card";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
-import AddWatermarkSingleStepSettings from "@app/components/tools/addWatermark/AddWatermarkSingleStepSettings";
-import type { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { ToolId } from "@app/types/toolId";
 
@@ -110,20 +109,13 @@ export function PolicyToolConfig({
                 // are fixed in the policy preset), so no settings are shown.
                 <></>
               ) : tool.operation === "watermark" ? (
-                // Watermark uses its full settings minus the heavy
-                // "Flatten PDF pages to images" option (hidden for policies).
+                // Watermark: full settings minus the "Flatten PDF pages to
+                // images" toggle (hidden), with flatten forced on.
                 <div className="pol-tool-body">
-                  <AddWatermarkSingleStepSettings
-                    parameters={
-                      tool.parameters as unknown as AddWatermarkParameters
-                    }
-                    onParameterChange={(key, value) =>
-                      patchTool(index, {
-                        parameters: { ...tool.parameters, [key]: value },
-                      })
-                    }
+                  <PolicyWatermarkConfig
+                    parameters={tool.parameters}
+                    onChange={(parameters) => patchTool(index, { parameters })}
                     disabled={!editable}
-                    showFlatten={false}
                   />
                 </div>
               ) : Settings ? (

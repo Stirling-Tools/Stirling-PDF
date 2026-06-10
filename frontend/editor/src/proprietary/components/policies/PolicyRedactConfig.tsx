@@ -9,9 +9,9 @@ interface PolicyRedactConfigProps {
 
 /**
  * Redact configuration for a policy — reduced to just the PII type picker. The
- * runtime params are fixed (mode automatic, regex on, convert-to-image off so
- * runs stay fast) and normalised once on mount; the dropdown only chooses which
- * PII patterns are redacted.
+ * runtime params are fixed (mode automatic, regex on, flatten-to-image on so the
+ * redacted text is truly removed) and normalised once on mount; the dropdown
+ * only chooses which PII patterns are redacted.
  */
 export function PolicyRedactConfig({
   parameters,
@@ -24,13 +24,13 @@ export function PolicyRedactConfig({
     if (
       parameters.mode !== "automatic" ||
       parameters.useRegex !== true ||
-      parameters.convertPDFToImage !== false
+      parameters.convertPDFToImage !== true
     ) {
       onChange({
         ...parameters,
         mode: "automatic",
         useRegex: true,
-        convertPDFToImage: false,
+        convertPDFToImage: true,
       });
     }
   }, []);
