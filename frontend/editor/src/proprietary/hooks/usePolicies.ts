@@ -249,17 +249,35 @@ export function usePolicies() {
   }, []);
 
   /**
-   * Ensure a configured policy has a backing folder (its editable pipeline),
-   * creating one from the preset if missing. Returns the folder id.
+   * Ensure a configured policy has a *valid* backing folder (its editable
+   * pipeline) and return its id. Self-heals a stale `folderId` — one that no
+   * longer resolves to a real folder (cleared storage, or a folder left in an
+   * old IndexedDB after a rename/migration) — which would otherwise hang the
+   * Edit-Settings view on a permanent "Loading…". When recreating, the backend's
+   * stored automation is used if present so the configured pipeline survives;
+   * otherwise it falls back to the preset.
    */
   const ensurePolicyFolder = useCallback(async (id: string) => {
-    const existing = loadPolicies()[id]?.folderId;
-    if (existing) return existing;
+    const state = loadPolicies()[id];
+    const existing = state?.folderId;
+    // A healthy backing folder resolves to an automation; if it does, keep it.
+    if (existing && (await getPolicyAutomation(existing))) return existing;
     const catalog = loadPolicyCatalog();
     const category = catalog.categories.find((c) => c.id === id);
     const config = catalog.configs[id];
     if (!category || !config) return undefined;
-    const folder = await createPolicyFolder(category, config.defaultOperations);
+    // Stale/missing folder → recreate. Prefer the backend's stored automation
+    // (preserves the user's configured steps); else seed from the preset.
+    let operations = config.defaultOperations;
+    if (state?.backendId) {
+      const decoded = await fetchPoliciesByCategory()
+        .then((m) => m.get(id))
+        .catch(() => undefined);
+      if (decoded?.automation?.operations?.length) {
+        operations = decoded.automation.operations;
+      }
+    }
+    const folder = await createPolicyFolder(category, operations);
     updatePolicy(id, { folderId: folder.id });
     return folder.id;
   }, []);
