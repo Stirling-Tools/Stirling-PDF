@@ -46,7 +46,6 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
-import stirling.software.proprietary.model.api.ai.DocumentStyle;
 import stirling.software.proprietary.policy.engine.PolicyExecutionResult;
 import stirling.software.proprietary.policy.engine.PolicyExecutor;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -176,8 +175,6 @@ public class AiWorkflowService {
         initialRequest.setFiles(files);
         initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-        initialRequest.setDocumentStyle(request.getDocumentStyle());
-
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
         WorkflowState state = new WorkflowState.Pending(initialRequest);
@@ -279,7 +276,6 @@ public class AiWorkflowService {
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
             nextRequest.setEnabledEndpoints(request.getEnabledEndpoints());
-            nextRequest.setDocumentStyle(request.getDocumentStyle());
             return new WorkflowState.Pending(nextRequest);
         } finally {
             for (LoadedFile lf : loadedFiles) {
@@ -331,7 +327,6 @@ public class AiWorkflowService {
         nextRequest.setFiles(request.getFiles());
         nextRequest.setConversationHistory(request.getConversationHistory());
         nextRequest.setResumeWith(response.getResumeWith());
-        nextRequest.setDocumentStyle(request.getDocumentStyle());
         return new WorkflowState.Pending(nextRequest);
     }
 
@@ -502,7 +497,6 @@ public class AiWorkflowService {
                                 new PdfContentExtractor.ToolReportArtifact(
                                         result.reportTool(), result.report()));
                 resumeRequest.setResumeWith(resumeWith);
-                resumeRequest.setDocumentStyle(previousRequest.getDocumentStyle());
                 return new WorkflowState.Pending(resumeRequest);
             }
 
@@ -726,8 +720,5 @@ public class AiWorkflowService {
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
         private List<String> enabledEndpoints = new ArrayList<>();
-
-        /** Explicit document style override from the UI. Null if no style was selected. */
-        private DocumentStyle documentStyle;
     }
 }

@@ -5,7 +5,6 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
 import lombok.Data;
@@ -26,8 +25,4 @@ public class AiWorkflowRequest {
                     "Prior chat messages exchanged between the user and the assistant, ordered"
                             + " oldest-first. Excludes the current userMessage.")
     private List<AiConversationMessage> conversationHistory = new ArrayList<>();
-
-    @Valid
-    @Schema(description = "Optional visual style overrides for generated documents")
-    private DocumentStyle documentStyle;
 }

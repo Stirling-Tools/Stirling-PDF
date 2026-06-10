@@ -40,7 +40,6 @@ from stirling.contracts.pdf_create import (
     DocumentPlan,
     DocumentSection,
     DocumentSections,
-    DocumentStyle,
     GeneratedDocument,
     PdfCreateOrchestrateResponse,
     PlannedSection,
@@ -296,15 +295,6 @@ def _build_writer_prompt(plan: DocumentPlan, chunk: _Chunk) -> str:
 # ── Helpers ───────────────────────────────────────────────────────────────────────────────────────
 
 
-def _merge_styles(ui: DocumentStyle, inferred: DocumentStyle | None) -> DocumentStyle:
-    """Merge UI and planner-inferred styles. UI fields win where non-None; planner fills gaps."""
-    return DocumentStyle(
-        primary_color=ui.primary_color or (inferred.primary_color if inferred else None),
-        background_color=ui.background_color or (inferred.background_color if inferred else None),
-        body_text_color=ui.body_text_color or (inferred.body_text_color if inferred else None),
-    )
-
-
 def _build_jinja_env() -> Environment:
     return Environment(
         loader=FileSystemLoader(str(_TEMPLATES_DIR)),
@@ -375,12 +365,6 @@ class PdfCreateAgent:
             return EditCannotDoResponse(reason="No document sections could be planned from the request.")
 
         plan = DocumentPlan.assemble(meta, planned_sections)
-
-        # Resolve style: UI style takes priority where explicitly set; planner inference fills gaps.
-        # An all-None UI DocumentStyle (e.g. no picker selection) is treated the same as absent.
-        ui_style = request.document_style
-        if ui_style is not None and any([ui_style.primary_color, ui_style.background_color, ui_style.body_text_color]):
-            plan = plan.model_copy(update={"style": _merge_styles(ui_style, plan.style)})
 
         # ── Phase 3: chunk ─────────────────────────────────────────────────────
         chunks = _make_chunks(plan.sections)

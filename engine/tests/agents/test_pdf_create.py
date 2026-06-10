@@ -503,43 +503,6 @@ async def test_orchestrate_applies_planner_inferred_style(agent: PdfCreateAgent)
     assert "magenta" in html
 
 
-@pytest.mark.anyio
-async def test_orchestrate_ui_style_overrides_planner_style(agent: PdfCreateAgent) -> None:
-    """An explicit UI document_style takes precedence over the planner-inferred style."""
-    meta = DocumentMeta(
-        title="Override Doc",
-        tone_brief="Professional.",
-        style_primary_color="magenta",
-    )
-    sections = _simple_sections()
-    written = _written_sections()
-
-    request = OrchestratorRequest(
-        user_message="Make an invoice, magenta styling",
-        files=[],
-        conversation_history=[],
-        artifacts=[],
-        enabled_endpoints=[],
-        document_style=DocumentStyle(primary_color="navy"),
-    )
-
-    with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
-        agent._sections_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=sections.model_dump_json())
-        ),
-        agent._writer.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=written.model_dump_json())),
-    ):
-        result = await agent.orchestrate(request)
-
-    assert isinstance(result, EditPlanResponse)
-    html = result.steps[0].parameters.html_content  # type: ignore[union-attr]
-    assert "navy" in html
-    assert "magenta" not in html
-
-
 def test_render_applies_style(agent: PdfCreateAgent) -> None:
     """DocumentStyle fields are injected as CSS custom properties in the rendered HTML."""
     doc = GeneratedDocument(
