@@ -7,7 +7,6 @@ import {
   Group,
   Alert,
   Code,
-  Badge,
   Button,
   CopyButton,
   Tabs,
@@ -110,26 +109,6 @@ export default function McpSection() {
     [mcpUrl],
   );
 
-  const tools: { icon: string; key: string; fallback: string }[] = [
-    {
-      icon: "sync-alt-rounded",
-      key: "config.mcp.tools.convert",
-      fallback: "Convert",
-    },
-    {
-      icon: "description-rounded",
-      key: "config.mcp.tools.pages",
-      fallback: "Pages",
-    },
-    { icon: "lock", key: "config.mcp.tools.security", fallback: "Security" },
-    {
-      icon: "construction-rounded",
-      key: "config.mcp.tools.misc",
-      fallback: "Misc",
-    },
-    { icon: "smart-toy-rounded", key: "config.mcp.tools.ai", fallback: "AI" },
-  ];
-
   return (
     <div className="settings-section-container">
       <Stack gap="md" className="settings-section-content">
@@ -206,29 +185,6 @@ export default function McpSection() {
             </Tabs>
           </Stack>
         </Paper>
-
-        {/* Available tools */}
-        <div>
-          <Text fw={500} size="sm" mb="xs">
-            {t("config.mcp.tools.title", "What your assistant can do")}
-          </Text>
-          <Group gap="xs">
-            {tools.map((tool) => (
-              <Badge
-                key={tool.key}
-                variant="light"
-                color="gray"
-                radius="sm"
-                size="lg"
-                leftSection={
-                  <LocalIcon icon={tool.icon} width={13} height={13} />
-                }
-              >
-                {t(tool.key, tool.fallback)}
-              </Badge>
-            ))}
-          </Group>
-        </div>
 
         {/* Tip / cross-link */}
         <Alert
