@@ -20,8 +20,12 @@ function seedToolParameters(
   presetParams: Record<string, unknown>,
   savedParams: Record<string, unknown>,
 ): Record<string, unknown> {
-  const merged: Record<string, unknown> = { ...registryDefaults, ...presetParams };
-  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const merged: Record<string, unknown> = {
+    ...registryDefaults,
+    ...presetParams,
+  };
+  const eq = (a: unknown, b: unknown) =>
+    JSON.stringify(a) === JSON.stringify(b);
   for (const [key, value] of Object.entries(savedParams)) {
     if (!eq(value, registryDefaults[key])) merged[key] = value;
   }

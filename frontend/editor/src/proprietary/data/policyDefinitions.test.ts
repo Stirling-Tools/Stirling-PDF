@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  POLICY_CATEGORIES,
-  POLICY_CONFIG,
-} from "@app/data/policyDefinitions";
+import { POLICY_CATEGORIES, POLICY_CONFIG } from "@app/data/policyDefinitions";
 
 describe("policy definitions integrity", () => {
   it("every category has a matching config entry", () => {

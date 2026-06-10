@@ -49,7 +49,10 @@ describe("runsToActivity", () => {
       status: "processing",
       action: "Enforcing…",
     });
-    expect(activity[1]).toMatchObject({ doc: "contract.pdf", status: "enforced" });
+    expect(activity[1]).toMatchObject({
+      doc: "contract.pdf",
+      status: "enforced",
+    });
     expect(activity[1].action).toContain("2.0 MB");
     expect(activity[2]).toMatchObject({
       doc: "bad.pdf",

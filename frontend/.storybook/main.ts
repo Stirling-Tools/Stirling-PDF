@@ -46,7 +46,9 @@ const config: StorybookConfig = {
     config.plugins = config.plugins ?? [];
     config.plugins.push(
       tsconfigPaths({
-        projects: [resolve(__dirname, "../editor/tsconfig.proprietary.vite.json")],
+        projects: [
+          resolve(__dirname, "../editor/tsconfig.proprietary.vite.json"),
+        ],
       }),
     );
     return config;

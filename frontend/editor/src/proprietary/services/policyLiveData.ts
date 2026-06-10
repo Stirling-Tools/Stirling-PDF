@@ -47,9 +47,7 @@ function formatBytes(bytes: number): string {
 }
 
 /** Map a run's lifecycle status to an activity row's display status. */
-function activityStatus(
-  run: PolicyRunRecord,
-): PolicyActivityItem["status"] {
+function activityStatus(run: PolicyRunRecord): PolicyActivityItem["status"] {
   if (run.status === "COMPLETED") return "enforced";
   if (run.status === "FAILED" || run.status === "CANCELLED") return "flagged";
   return "processing";

@@ -59,7 +59,9 @@ describe("policyRunStore", () => {
     });
     const run = read("stirling-policy-runs").runs[0];
     expect(run.status).toBe("COMPLETED");
-    expect(run.outputs).toEqual([{ fileId: "out-1", fileName: "redacted.pdf" }]);
+    expect(run.outputs).toEqual([
+      { fileId: "out-1", fileName: "redacted.pdf" },
+    ]);
   });
 
   it("updateRun ignores an unknown run id", () => {

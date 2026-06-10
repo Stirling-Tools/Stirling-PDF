@@ -64,7 +64,10 @@ describe("buildPipelineDefinition", () => {
       redact: {
         operationConfig: {
           endpoint: () => "/api/v1/security/auto-redact",
-          buildFormData: (p: { wordsToRedact?: string[]; useRegex?: boolean }, file: File) => {
+          buildFormData: (
+            p: { wordsToRedact?: string[]; useRegex?: boolean },
+            file: File,
+          ) => {
             const fd = new FormData();
             fd.append("fileInput", file);
             fd.append("listOfText", (p.wordsToRedact ?? []).join("\n"));
@@ -107,9 +110,7 @@ const samplePolicy = {
     createdAt: "",
     updatedAt: "",
   },
-  pipelineSteps: [
-    { operation: "/api/v1/misc/compress-pdf", parameters: {} },
-  ],
+  pipelineSteps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
   sources: ["editor"],
   scopeTypes: ["Contracts"],
   reviewerEmail: "me@x.com",

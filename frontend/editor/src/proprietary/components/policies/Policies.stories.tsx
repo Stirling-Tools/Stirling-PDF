@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PoliciesSection } from "@app/components/policies/PoliciesSidebar";
-import {
-  POLICY_CATEGORIES,
-  POLICY_CONFIG,
-} from "@app/data/policyDefinitions";
+import { POLICY_CATEGORIES, POLICY_CONFIG } from "@app/data/policyDefinitions";
 import type { PolicyActivityItem, PolicyStats } from "@app/types/policies";
 import "@app/components/policies/Policies.css";
 
