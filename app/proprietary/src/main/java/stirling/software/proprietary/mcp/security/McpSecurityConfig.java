@@ -157,7 +157,11 @@ public class McpSecurityConfig {
             throws Exception {
         String metadataPath = "/.well-known/oauth-protected-resource";
         applyCors(http);
-        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath)
+        // RFC 9728 section 3.1: clients derive the metadata URL by inserting the well-known
+        // segment before the resource path, so /mcp is discovered at {metadataPath}/mcp. Claim
+        // the subpaths too; otherwise they fall through to another filter chain whose default
+        // Spring Security metadata filter serves a document without authorization_servers.
+        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath, metadataPath + "/**")
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC resource server
                 // authenticated by OAuth2 Bearer JWTs (Authorization header). No cookies, no
                 // session, no form submissions; CSRF requires browser-attached ambient credentials
@@ -168,7 +172,8 @@ public class McpSecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         a ->
-                                a.requestMatchers(HttpMethod.GET, metadataPath)
+                                a.requestMatchers(
+                                                HttpMethod.GET, metadataPath, metadataPath + "/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -187,7 +192,11 @@ public class McpSecurityConfig {
                 .oauth2ResourceServer(
                         oauth2 ->
                                 oauth2.authenticationEntryPoint(
-                                                new McpAuthenticationEntryPoint(metadataPath))
+                                                // Advertise the path-inserted form; RFC 9728 makes
+                                                // it the canonical location for a resource with a
+                                                // path component.
+                                                new McpAuthenticationEntryPoint(
+                                                        metadataPath + BASE_PATH))
                                         // RFC 9728 protected-resource metadata for OAuth discovery.
                                         .protectedResourceMetadata(
                                                 prm ->
