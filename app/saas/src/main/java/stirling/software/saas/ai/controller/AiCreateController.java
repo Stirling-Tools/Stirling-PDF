@@ -29,6 +29,9 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +53,8 @@ import stirling.software.saas.util.CreditHeaderUtils;
 @RestController
 @Profile("saas")
 @RequestMapping("/api/v1/ai/create")
+@Tag(name = "AI")
+@Hidden
 @RequiredArgsConstructor
 @RequiresFeature(FeatureGate.AI_SUPPORT)
 @Slf4j

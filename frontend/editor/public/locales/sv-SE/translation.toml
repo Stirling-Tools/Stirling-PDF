@@ -12,7 +12,6 @@ cancel = "Avbryt"
 changedCredsMessage = "Inloggningsuppgifter ändrade!"
 chooseFile = "Välj fil"
 close = "Stäng"
-color = "Färg"
 comingSoon = "Kommer snart"
 confirm = "Bekräfta"
 confirmClose = "Bekräfta stängning"
@@ -90,6 +89,7 @@ nothingToUndo = "Inget att ångra"
 noticeTopUpOrPlan = "Inte tillräckligt med krediter, fyll på eller uppgradera till ett abonnemang"
 noValidFiles = "Inga giltiga filer att bearbeta"
 oops = "Hoppsan!"
+openInNewWindow = "Öppna i nytt fönster"
 openInViewer = "Öppna i visaren"
 operationCancelled = "Åtgärd avbruten"
 page = "Sidan"
@@ -198,6 +198,10 @@ ssoDescription = "Tvåfaktorsautentisering hanteras av din identitetsleverantör
 ssoManaged = "Konfigurera MFA via din identitetsleverantör."
 title = "Tvåfaktorsautentisering"
 
+[account.overview]
+logOut = "Logga ut"
+signedInAs = "Inloggad som: {{email}}"
+
 [add-page-numbers]
 tags = "paginera,etikett,organisera,indexera"
 
@@ -224,6 +228,9 @@ title = "Vad det gör"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Om Lägg till bilagor"
+
+[addFileCard]
+upload = "Ladda upp"
 
 [addImage]
 applySignatures = "Använd bilder"
@@ -494,6 +501,11 @@ title = "Justera sidskalning"
 [adjustPageScale.error]
 failed = "Ett fel inträffade vid justering av sidskalningen."
 
+[adjustPageScale.orientation]
+label = "Sidorientering"
+landscape = "Liggande"
+portrait = "Stående"
+
 [adjustPageScale.pageSize]
 keep = "Behåll originalstorlek"
 label = "Målstorlek för sida"
@@ -600,6 +612,7 @@ label = "Hantering av temporära filer"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Baskatalog för temporära filer (lämna tomt för standard: java.io.tmpdir/stirling-pdf)"
 label = "Baskatalog för temporära filer"
+placeholder = "Standard: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Hur ofta rensning ska köras (i minuter)"
@@ -612,6 +625,7 @@ label = "Rensa systemets temp"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Katalog för temporära LibreOffice-filer (lämna tomt för standard: baseTmpDir/libreoffice)"
 label = "LibreOffice-tempkatalog"
+placeholder = "Standard: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximal ålder i timmar innan temporära filer rensas"
@@ -628,6 +642,7 @@ label = "Rensning vid start"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systemets tempkatalog att rensa (används endast om cleanupSystemTemp är aktiverat)"
 label = "Systemets tempkatalog"
+placeholder = "Sökväg till systemets temporära katalog"
 
 [admin.settings.advanced.tessdataDir]
 description = "Sökväg till tessdata-katalogen för OCR-språkfiler"
@@ -833,6 +848,7 @@ label = "Databasnamn"
 [admin.settings.database.password]
 description = "Lösenord för databasauthentisering"
 label = "Lösenord"
+placeholder = "Ange databaslösenord"
 
 [admin.settings.database.port]
 description = "Databasserverns port (används inte om anpassad URL anges)"
@@ -864,10 +880,12 @@ label = "Dölj otillgängliga verktyg som standard"
 [admin.settings.endpoints.groupsToRemove]
 description = "Välj slutpunktsgrupper att inaktivera"
 label = "Inaktiverade slutpunktsgrupper"
+placeholder = "Välj grupper att inaktivera"
 
 [admin.settings.endpoints.toRemove]
 description = "Välj enskilda slutpunkter att inaktivera"
 label = "Inaktiverade slutpunkter"
+placeholder = "Välj slutpunkter att inaktivera"
 
 [admin.settings.enterpriseRequired]
 message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
@@ -1082,6 +1100,7 @@ label = "SMTP-värd"
 [admin.settings.mail.password]
 description = "Lösenord för SMTP-autentisering"
 label = "SMTP-lösenord"
+placeholder = "Ange SMTP-lösenord"
 
 [admin.settings.mail.port]
 description = "Portnummer för SMTP-anslutning (vanligen 25, 465 eller 587)"
@@ -1090,6 +1109,10 @@ label = "SMTP-port"
 [admin.settings.mail.username]
 description = "Användarnamn för SMTP-autentisering"
 label = "SMTP-användarnamn"
+
+[admin.settings.plan.noData]
+message = "Planinformation är inte tillgänglig just nu."
+title = "Inga data tillgängliga"
 
 [admin.settings.premium]
 description = "Konfigurera din premium- eller enterprise-licensnyckel."
@@ -1137,6 +1160,9 @@ info = "Om du har en licensnyckel eller certifikatfil från ett direktköp kan d
 toggle = "Har du en licensnyckel eller certifikatfil?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Granskningsloggning</0> (ENTERPRISE) - Säkerhet"
+customMetadata = "<0>Anpassade metadata</0> (PRO) - Allmänt"
+databaseConfiguration = "<0>Databaskonfiguration</0> (ENTERPRISE) - Databas"
 message = "Premium- och Enterprise-funktioner är nu organiserade i sina respektive sektioner:"
 title = "Premiumfunktioner uppdelade"
 
@@ -1512,6 +1538,33 @@ user = "Användare"
 usernameInfo = "Användarnamn kan endast innehålla bokstäver, siffror och följande specialtecken @._+- eller måste vara en giltig e-postadress."
 webOnlyUser = "Endast webbanvändare"
 
+[agents]
+auto_redaction_description = "Maskera PII automatiskt"
+auto_redaction_name = "Automatisk maskering"
+back_to_tools = "Tillbaka till verktyg"
+coming_soon = "Kommer snart"
+compliance_description = "Granska dokument för regelefterlevnad"
+compliance_name = "Regelefterlevnadskontroll"
+data_extraction_description = "Extrahera tabeller och strukturerad data"
+data_extraction_name = "Dataextrahering"
+doc_summary_description = "Sammanfatta långa dokument"
+doc_summary_name = "Sammanfattare"
+form_filler_description = "Fyll i PDF-formulär smart"
+form_filler_name = "Formulärifyllare"
+fullscreen_title = "Stirling Agents"
+pdf_to_markdown_description = "Konvertera PDF-filer till ren Markdown"
+pdf_to_markdown_name = "PDF till Markdown"
+section_title = "Agenter"
+show_less = "Visa mindre"
+start_chat = "Börja chatta"
+stirling_description = "Din allmänna PDF-assistent"
+stirling_full_name = "Stirling generell agent"
+stirling_long_description = "Allmän PDF-assistent som kan köra verktyg, skapa PDF:er och hämta insikter ur dina dokument."
+stirling_name = "Stirling"
+stirling_running = "Kör..."
+stirling_tooltip = "Stirling-agent"
+view_all = "Visa alla agenter"
+
 [analytics]
 disable = "Avaktivera analys"
 enable = "Aktivera analys"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Du har inte behörighet att utföra denna åtgärd."
 pleaseLoginAgain = "Logga in igen."
 sessionExpired = "Sessionen har gått ut"
 
+[auth.displayName]
+guest = "Gäst"
+user = "Användare"
+
 [auto-rename]
 description = "Hittar automatiskt titeln i innehållet i din PDF och använder den som filnamn."
 header = "Auto-byt namn på PDF"
@@ -1862,6 +1919,13 @@ label = "Öppna meny för {{title}}"
 
 [automate.files]
 placeholder = "Välj filer att bearbeta med denna automatisering"
+
+[automate.folderScanWarning]
+advice = "Du kan fortfarande ladda ner filen (t.ex. för att inspektera eller redigera den manuellt), men de steg som inte stöds måste tas bort innan backend kan köra den."
+cancel = "Avbryt"
+confirm = "Exportera ändå"
+intro = "Mappskanning körs i backend, så den kan bara köra verktyg som har en backend-slutpunkt. Följande steg i denna automatisering har inte det och kommer att misslyckas när pipelinen körs:"
+title = "Vissa steg kan inte köras i mappskanning"
 
 [automate.importModal]
 cancel = "Avbryt"
@@ -2094,11 +2158,31 @@ placeholder = "Antal sidor"
 title = "Sista N sidor"
 
 [bulkSelection.operators]
-and = "AND: & eller \"and\" — kräver båda villkoren (t.ex. 1-50 & even)"
-comma = "Komma: , eller | — kombinerar val (t.ex. 1-10, 20)"
-not = "NOT: ! eller \"not\" — utesluter sidor (t.ex. 3n & not 30)"
 text = "AND har högre prioritet än komma. NOT gäller inom dokumentets sidomfång."
 title = "Operatorer"
+
+[bulkSelection.operators.and]
+title = "Kombinera val (båda villkoren måste vara sanna)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & eller \"and\" - kräver båda villkoren (t.ex. 1-50 & even)"
+comma = "Komma: , eller | - kombinera val (t.ex. 1-10, 20)"
+not = "NOT: ! eller \"not\" - uteslut sidor (t.ex. 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Välj alla jämna sidor (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Uteslut från markering"
+
+[bulkSelection.operators.odd]
+title = "Välj alla udda sidor (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Lägg till i markering (antingen villkor kan vara sant)"
+
+[bulkSelection.pageSelection]
+title = "Sidval"
 
 [bulkSelection.range]
 fromPlaceholder = "Från"
@@ -2684,6 +2768,22 @@ title = "Ändra behörigheter"
 [changePermissions.tooltip.warning]
 text = "För att göra dessa behörigheter oföränderliga, använd verktyget Lägg till lösenord för att ange ett ägarlösenord."
 
+[chat]
+resize = "Ändra storlek på chattpanelen"
+
+[chat.actions]
+copy = "Kopiera meddelande"
+
+[chat.header]
+agentMenu = "Alternativ för Stirling-agent"
+clearChat = "Rensa chatt"
+settings = "Agentinställningar"
+
+[chat.input]
+attach = "Bifoga filer"
+placeholder = "Vad vill du göra?"
+send = "Skicka meddelande"
+
 [chat.progress]
 analyzing = "Analyserar din begäran..."
 calling_engine = "AI:n tänker..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Läste klart dokumentet..."
 whole_doc_read_started = "Läser dokumentet..."
 whole_doc_slice_done = "Läser dokumentet... ({{percent}}% slutfört)"
 
+[chat.quickActions]
+browseYourFiles = "Bläddra bland dina filer"
+compressMany = "Komprimera dessa dokument"
+compressOne = "Komprimera detta dokument"
+convertMany = "Konvertera dessa dokument till PDF"
+convertOne = "Konvertera detta dokument till PDF"
+fileSummary_one = "1 fil i arbetsbänken ({{types}})"
+fileSummary_other = "{{count}} filer i arbetsbänken ({{types}})"
+heading = "Kom igång"
+mergeMany = "Slå samman dessa {{count}} dokument till 1"
+moreFiles = "+{{count}} fler"
+openFromComputer = "Öppna från dator"
+removeFile = "Ta bort {{name}}"
+rotateMany = "Rotera dessa dokument"
+rotateOne = "Rotera detta dokument"
+splitOne = "Dela upp det här dokumentet"
+
+[chat.responses]
+cannot_continue = "Något gick fel och jag kan inte fortsätta."
+cannot_do = "Jag kan inte göra det."
+done = "Klart."
+need_clarification = "Kan du förtydliga din begäran?"
+not_found = "Jag kunde inte hitta den begärda informationen."
+processing = "Bearbetar ({{outcome}})..."
+unsupported_capability = "Funktionen stöds inte: {{capability}}"
+
 [chat.toolsUsed]
 summary = "Körde {{count}} verktyg"
 summary_one = "Körde 1 verktyg"
@@ -2707,6 +2833,9 @@ unknownTool = "Okänt verktyg"
 
 [cloudBadge]
 tooltip = "Denna åtgärd kommer att använda dina molnkrediter"
+
+[color.eyeDropper]
+tooltip = "Välj färg från skärmen"
 
 [colorPicker]
 title = "Välj färg"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Välj ursprunglig PDF först"
 filesMissing = "Kunde inte hitta de valda filerna. Välj dem igen."
 generic = "Kan inte jämföra dessa filer."
 selectRequired = "Välj ett original- och ett redigerat dokument."
+title = "Jämförelse misslyckades"
 
 [compare.large.file]
 message = "En eller båda de angivna dokumenten är för stora att bearbeta"
@@ -2864,6 +2994,7 @@ title = "Arbetar fortfarande…"
 
 [compare.status]
 complete = "Jämförelse klar"
+error = "Jämförelse misslyckades"
 extracting = "Extraherar text..."
 processing = "Analyserar skillnader..."
 
@@ -2929,6 +3060,10 @@ title = "Komprimeringsmetod"
 [compress.selectText.1]
 1 = "1–3 PDF-komprimering,</br> 4–6 lätt bildkomprimering,</br> 7–9 kraftig bildkomprimering Försämrar bildkvaliteten avsevärt"
 _value = "Komprimeringsinställningar"
+
+[compress.settings]
+desiredSize = "Önskad filstorlek"
+desiredSizePlaceholder = "Ange storlek"
 
 [compress.tooltip.description]
 text = "Komprimering är ett enkelt sätt att minska filstorleken. Välj Filstorlek för att ange en målstorlek så justerar vi kvaliteten åt dig. Välj Kvalitet för att ställa in komprimeringsstyrkan manuellt."
@@ -3404,6 +3539,29 @@ title = "Inställningar öppnade"
 message = "Stirling PDF är nu din standard-PDF-redigerare"
 title = "Standardapp angiven"
 
+[desktopUpdate]
+downloading = "Laddar ner uppdatering..."
+installing = "Installerar uppdatering..."
+installingWarning = "Appen stängs automatiskt för att slutföra installationen."
+installNow = "Installera nu"
+readyToRestart = "Uppdatering klar"
+restartMessage = "Uppdateringen har installerats. Starta om appen för att slutföra."
+restartNow = "Starta om nu"
+updateFailed = "Uppdateringen misslyckades"
+updateFailedMessage = "Det gick inte att ladda ner eller installera uppdateringen."
+
+[desktopUpdate.blocked]
+docsLink = "Visa installationsdokumentation"
+message = "Stirling-PDF har inte behörighet att uppdatera sig själv på den här datorn."
+title = "Administratörsbehörighet krävs"
+
+[dropdownList]
+searchPlaceholder = "Sök..."
+
+[editableSecretField]
+edit = "Redigera"
+editSecretValue = "Redigera hemligt värde"
+
 [editTableOfContents]
 submit = "Tillämpa innehållsförteckning"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Arbetsyta för disposition"
 [editTableOfContents.workbench.empty]
 description = "Välj verktyget Redigera innehållsförteckning för att ladda dess arbetsyta."
 title = "Öppna verktyget för att börja redigera"
+
+[emptyFilesState]
+upload = "Ladda upp"
 
 [encryptedPdfUnlock]
 description = "Denna PDF är lösenordsskyddad. Ange lösenordet så att du kan fortsätta arbeta med den."
@@ -3605,6 +3766,10 @@ title = "Inställningar"
 [extractPages.tooltip]
 description = "Extraherar de valda sidorna till en ny PDF och bevarar ordningen."
 
+[fileCard]
+openInFileEditor = "Öppna i filredigerare"
+viewInViewer = "Visa i visaren"
+
 [fileChooser]
 click = "Klicka"
 dragAndDrop = "Dra & Släpp"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Dra & Släpp PDF fil"
 extractPDF = "Extraherar..."
 hoveredDragAndDrop = "Dra & Släpp fil(er) här"
 or = "eller"
+
+[fileDropdownMenu]
+closeFile = "Stäng fil"
 
 [fileEditor]
 addFiles = "Lägg till filer"
@@ -3771,12 +3939,250 @@ expand = "Expandera sidofält"
 files = "Filer"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive är inte konfigurerat"
+leaveMyFiles = "Lämna Mina filer"
+myFiles = "Mina filer"
 noFiles = "Inga filer ännu"
 openFileManager = "Öppna filhanteraren"
 openFromComputer = "Öppna från dator"
 openSettings = "Öppna inställningar"
 search = "Sök"
 searchPlaceholder = "Sök filer..."
+
+[fileSidebar.fileItem]
+closeViewer = "Stäng visare"
+openInViewer = "Öppna i visare"
+
+[filesPage]
+addToWorkspace = "Lägg till i arbetsyta"
+addToWorkspaceCount = "Lägg till {{count}} i arbetsyta"
+allFiles = "Alla filer"
+back = "Tillbaka"
+backToFolder = "Tillbaka till {{folder}}"
+backToMyFiles = "Tillbaka till Mina filer"
+breadcrumbs = "Mappsökväg"
+cancel = "Avbryt"
+clearSearch = "Rensa sökning"
+clearSelection = "Rensa markering"
+closeDetails = "Stäng detaljer"
+create = "Skapa"
+cycleBlocked = "Kan inte flytta en mapp till en av sina egna undermappar."
+delete = "Ta bort"
+deleteFolder = "Ta bort mapp"
+deleteFolderBody = "Ta bort mappen \"{{name}}\"?"
+deleteFolderConfirm = "Ta bort mappen \"{{name}}\"? Filer inuti flyttas till Alla filer. {{count}} fil(er) påverkas."
+deleteFolderContents = "Ta också bort {{count}} fil(er) i mappen"
+deleteFolderContentsWarning = "Filerna tas bort permanent och kan inte återställas."
+deleteFolderError = "Kunde inte ta bort mappen. Försök igen."
+deleteFolderKeepHint = "Filer inuti flyttas till Alla filer."
+deleteFolderTitle = "Ta bort mapp?"
+deselectAll = "Rensa markering"
+details = "Detaljer"
+detailsCount = "{{count}} filer markerade"
+dismissError = "Avfärda"
+download = "Ladda ner"
+downloadAll = "Ladda ner alla"
+downloadVersion = "Ladda ner den här versionen"
+dropOverlay = "Släpp filer för att ladda upp"
+dropOverlaySub = "Filer börjar i Lokalt. Använd 'Flytta till' eller 'Spara till molnet' för att organisera dem i en mapp."
+file = "Fil"
+fileMenu = "Filåtgärder"
+folder = "Mapp"
+folderItems = "{{count}} objekt"
+folderMenu = "Mappåtgärder"
+inPath = "i {{path}}"
+inWorkspace = "Öppna"
+inWorkspaceAria = "Redan i arbetsyta"
+loading = "Läser in…"
+localFoldersUnavailable = "Mappar är endast i molnet – spara en fil till molnet för att organisera den."
+moreActions = "Fler mappåtgärder"
+moveLocalToCloudBlocked = "Lokala filer kan inte flyttas till molnmappar. Spara dem i molnet först."
+moveSkippedRemote = "{{count}} fil(er) kunde inte flyttas på servern (ingen behörighet eller redan borttagen)."
+moveTo = "Flytta till…"
+myFiles = "Mina filer"
+newFolder = "Ny mapp"
+newFolderStorageDisabled = "Servermappslagring är inte aktiverad. Be din administratör att slå på den."
+newFolderTabUnavailable = "Byt till Alla eller Moln för att skapa mappar."
+newRootFolder = "Ny mapp i roten"
+offlineNoFolderEdits = "Serverns mappsynk är inte tillgänglig – mappändringar är inaktiverade. Kontrollera inloggning och lagringskonfiguration."
+open = "Öppna"
+openInWorkbench = "Öppna i arbetsbänken"
+openVersionInWorkspace = "Öppna i arbetsyta"
+originFilter = "Filtrera efter källa"
+quickView = "Snabbvisning"
+refresh = "Uppdatera från servern"
+remove = "Ta bort"
+removeConfirm = "Ta bort {{count}} filer? Detta kan inte ångras."
+removeVersion = "Ta bort den här versionen"
+rename = "Byt namn"
+renameFolder = "Byt namn på mapp"
+resizeFolderTree = "Ändra storlek på mappträdet (piltangenter, Skift för större steg; dubbelklicka för att autoanpassa)"
+save = "Spara"
+saveToServer = "Spara till servern"
+saveToServerDisabledHint = "Spara till servern är inte aktiverat på denna server. Be din administratör att aktivera det."
+search = "Sök"
+searchPlaceholder = "Sök i den här mappen och undermappar"
+selectAll = "Markera alla"
+selectAllHint = "Klicka för att markera alla. Tips: håll Ctrl (eller Cmd) för att lägga till filer en i taget, Skift för att markera ett intervall."
+selectedCount = "{{count}} markerade"
+selectFile = "Välj fil {{name}}"
+shareDisabledHint = "Fildelning är inte aktiverad på denna server. Be din administratör att aktivera den."
+shareManage = "Hantera delning"
+showDetails = "Visa detaljer"
+summary = "{{count}} objekt"
+syncFailed = "Mappsynkronisering misslyckades: {{message}}"
+syncPartial = "Delvis mappsynk: {{failed}} av {{total}} mappar kunde inte slås samman."
+tree = "Mappar"
+upload = "Ladda upp"
+uploadedToLocal = "Uppladdade filer börjar i Lokalt. Använd 'Spara till molnet' för att lägga dem i en mapp."
+uploadFromMobile = "Ladda upp från mobil"
+versionActions = "Versionsåtgärder"
+versionCollapse = "Fäll ihop mellanliggande versioner"
+versionOrigin = "Ursprunglig uppladdning"
+versionsCount = "{{count}} versioner"
+versionShowHidden = "Visa {{count}} tidigare versioner"
+viewVersion = "Visa den här versionen"
+
+[filesPage.appearance]
+colour = "Färg"
+icon = "Ikon"
+title = "Utseende"
+useColour = "Använd färgen {{c}}"
+
+[filesPage.column]
+modified = "Ändrad"
+name = "Namn"
+size = "Storlek"
+type = "Typ"
+
+[filesPage.empty]
+hint = "Släpp PDF-filer var som helst på denna sida för att ladda upp, eller använd knappen Ny mapp för att organisera dina filer."
+newFolderCta = "Skapa mapp"
+title = "Denna mapp är tom"
+uploadCta = "Ladda upp filer"
+
+[filesPage.empty.cloud]
+hint = "Ladda upp en fil för att börja, eller skapa en mapp för att organisera."
+offlineHint = "Återanslut för att läsa in ditt molnbibliotek."
+offlineTitle = "Inga cachade molnfiler"
+title = "Inga molnfiler ännu"
+
+[filesPage.empty.local]
+hint = "Filer som sparas utan uppladdning stannar här. Släpp en fil för att lägga till en."
+title = "Inga lokala filer"
+
+[filesPage.empty.recent]
+hint = "Filer du öppnar eller redigerar visas här."
+title = "Inget ändrat ännu"
+
+[filesPage.empty.shared]
+hint = "När någon delar en fil via länk visas den här."
+title = "Inget delat med dig"
+
+[filesPage.empty.sharedByMe]
+hint = "Skapa en delningslänk eller bjud in en kollega från någon av dina filer för att se den här."
+title = "Du har inte delat några filer ännu"
+
+[filesPage.error]
+actionFailed = "Kunde inte {{action}}."
+actionFailedDetail = "Kunde inte {{action}}: {{message}}"
+deleteFolderFailed = "Kunde inte ta bort mappen."
+deleteFolderFailedDetail = "Kunde inte ta bort mappen: {{message}}"
+folderAppearanceFailed = "Kunde inte uppdatera mappens utseende."
+folderAppearanceFailedDetail = "Kunde inte uppdatera mappens utseende: {{message}}"
+moveFilesFailed = "Kunde inte flytta filer."
+moveFilesFailedDetail = "Kunde inte flytta filer: {{message}}"
+moveFolderFailed = "Kunde inte flytta mappen."
+moveFolderFailedDetail = "Kunde inte flytta mappen: {{message}}"
+removeFilesFailed = "Kunde inte ta bort filer."
+removeFilesFailedDetail = "Kunde inte ta bort filer: {{message}}"
+uploadFilesFailed = "Kunde inte ladda upp filer."
+uploadFilesFailedDetail = "Kunde inte ladda upp filer: {{message}}"
+
+[filesPage.field]
+added = "Tillagd"
+count = "Filer"
+folder = "Mapp"
+modified = "Ändrad"
+name = "Namn"
+size = "Storlek"
+toolHistory = "Verktygshistorik"
+toolHistoryAtVersion = "Samlad verktygskedja"
+totalSize = "Total storlek"
+type = "Typ"
+versionHistory = "Versionsresa"
+
+[filesPage.folderName]
+cancel = "Avbryt"
+error = "Kunde inte spara mappen. Försök igen."
+label = "Mappnamn"
+placeholder = "Mappnamn"
+
+[filesPage.moveDialog]
+cancel = "Avbryt"
+confirm = "Flytta hit"
+error = "Kunde inte flytta. Försök igen."
+hint = "Välj en målmappe. Tips: du kan också dra och släppa filer på mappar i trädet till vänster."
+newFolderCancel = "Förkasta"
+newFolderCreate = "Skapa"
+newFolderError = "Kunde inte skapa mappen. Försök igen."
+newFolderLabel = "Nytt mappnamn"
+newFolderPlaceholder = "Mappnamn"
+newFolderToggle = "Skapa ny mapp…"
+title = "Flytta till mapp"
+
+[filesPage.origin]
+all = "Alla källor"
+cloud = "Moln"
+cloudHint = "Lagrad på Stirling-servern"
+local = "Lokalt"
+localHint = "Endast lagrad i denna webbläsare"
+shared = "Delad"
+sharedHint = "Delad med dig via länk"
+
+[filesPage.sort]
+modifiedAsc = "Äldst först"
+modifiedDesc = "Senaste först"
+nameAsc = "Namn A→Ö"
+nameDesc = "Namn Ö→A"
+sizeAsc = "Minst först"
+sizeDesc = "Störst först"
+
+[filesPage.syncError]
+client = "Mappsynkronisering misslyckades."
+network = "Kunde inte nå servern."
+server = "Serverfel under mappsynkronisering."
+
+[filesPage.tabName]
+local = "Lokalt"
+recent = "Senaste"
+shared = "Delat med mig"
+sharedByMe = "Delat av mig"
+
+[filesPage.tabs]
+all = "Alla"
+ariaLabel = "Filvyer"
+cloud = "Moln"
+local = "Lokalt"
+recent = "Senaste"
+shared = "Delat med mig"
+sharedByMe = "Delat av mig"
+
+[filesPage.treeMenu]
+actions = "Mappåtgärder för {{name}}"
+collapse = "Fäll ihop mapp"
+delete = "Ta bort mapp"
+expand = "Expandera mapp"
+newSubfolder = "Ny undermapp"
+rename = "Byt namn"
+
+[filesPage.typeFilter]
+allTypes = "Alla typer"
+label = "Filtrera efter typ"
+
+[filesPage.viewMode]
+grid = "Rutnätsvy"
+label = "Visningsläge"
+list = "Listvy"
 
 [fileToPDF]
 credit = "Denna tjänst använder LibreOffice och Unoconv för filkonvertering."
@@ -3891,6 +4297,15 @@ title = "Om att platta ut PDF:er"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Platta ut efter ifyllning"
+rescanFields = "Skanna fält igen"
+rescanFormFields = "Skanna formulärfält igen"
+save = "Spara"
+
+[formFill.sidebar]
+close = "Stäng sidofält"
 
 [getPdfInfo]
 downloadJson = "Ladda ner JSON"
@@ -4451,6 +4866,11 @@ tags = "markup,webbinnehåll,transformation,konvertera"
 title = "HTML till PDF"
 zoom = "Zoomnivå för visning av webbplatsen."
 
+[image.upload]
+hint = "Ladda upp en PNG, JPG, SVG eller annan bildfil att placera på PDF:en. SVG-filer konverteras till PNG för kompatibilitet."
+label = "Ladda upp bild"
+placeholder = "Välj bildfil"
+
 [imageToPdf]
 tags = "konvertering,img,jpg,bild,foto"
 
@@ -4468,6 +4888,9 @@ title = "Bild till PDF"
 3 = "Multifillogik (Endast aktiverad om man arbetar med flera bilder)"
 4 = "Slå samman till en enda PDF"
 5 = "Konvertera till separata PDF-filer"
+
+[infoBanner]
+dismiss = "Avfärda"
 
 [invite]
 acceptError = "Misslyckades med att skapa konto"
@@ -4804,6 +5227,7 @@ failed = "OCR-åtgärden misslyckades"
 
 [ocr.languagePicker]
 additionalLanguages = "Letar du efter fler språk?"
+loading = "Läser in tillgängliga språk..."
 viewSetupGuide = "Visa installationsguide →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "{{days}} dag kvar"
 title = "Din 30-dagars Pro-provperiod"
 trialEnds = "Provperioden slutar {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Autentiseringskod"
+qrCodeLoading = "Genererar din QR-kod…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "När du aktiverar inloggningsläge kan du hantera användare, konfigurera inställningar och övervaka serverhälsa. De första <strong>{{freeTierLimit}}</strong> personerna på din server får använda Stirling gratis."
 adminBodyLoginEnabled = "Som admin kan du hantera användare, konfigurera inställningar och övervaka serverhälsa. De första <strong>{{freeTierLimit}}</strong> personerna på din server får använda Stirling gratis."
@@ -4949,6 +5377,9 @@ userTitle = "Planöversikt"
 
 [onboarding.securityCheck]
 message = "Applikationen har nyligen genomgått stora förändringar. Din serveradmins uppmärksamhet kan krävas. Bekräfta din roll för att fortsätta."
+roleAdmin = "Administratör"
+rolePlaceholder = "Bekräfta din roll"
+roleUser = "Användare"
 
 [onboarding.serverLicense]
 freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
@@ -5074,6 +5505,17 @@ title = "Sidredigerare"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
+[pageEditor.emptyState]
+body = "Lägg till filer för att börja redigera sidor"
+title = "Inga PDF-filer inlästa"
+
+[pageEditor.toolbar]
+delete = "Ta bort markerade"
+redo = "Gör om"
+rotateLeft = "Rotera markerade åt vänster"
+rotateRight = "Rotera markerade åt höger"
+undo = "Ångra"
+
 [pageExtracter]
 header = "Extrahera sidor"
 placeholder = "(t.ex. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Lägg till kanter"
 borderWidth = "Kantlinjetjocklek"
 bottom = "Nedre marginal"
 cols = "Kolumner"
+colsPlaceholder = "Ange kolumner"
 header = "Flersidigt layout"
 innerMargin = "Inre marginal"
 left = "Vänster marginal"
 pagesPerSheet = "Sidor per ark:"
 right = "Höger marginal"
 rows = "Rader"
+rowsPlaceholder = "Ange rader"
 submit = "Skicka"
 tags = "slå samman,sammansatt,enkel-vy,organisera"
 title = "Flersidigt layout"
@@ -5131,6 +5575,14 @@ failed = "Ett fel inträffade vid skapandet av layouten med flera sidor."
 innerMarginTooLarge = "Den inre marginalen är för stor för den valda layouten."
 outerHorizontalMarginsTooLarge = "Vänster/högermarginalerna är för stora för denna pappersstorlek."
 outerVerticalMarginsTooLarge = "Övre/nedre marginalerna är för stora för denna pappersstorlek."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Ange kanttjocklek"
+bottomPlaceholder = "Ange nedre marginal"
+innerPlaceholder = "Ange innermarginal"
+leftPlaceholder = "Ange vänster marginal"
+rightPlaceholder = "Ange höger marginal"
+topPlaceholder = "Ange övre marginal"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Aktivera kantlinjer för att rita linjer runt varje placerad sida. Detta kan hjälpa visuell åtskillnad eller trimning."
@@ -5785,6 +6237,26 @@ pdfTools = "Grundläggande PDF-verktyg"
 priority = "Prioriterad support"
 title = "Funktion"
 
+[plan.features]
+allPdfOperations = "Alla PDF-operationer"
+auditing = "Granskning"
+communitySupport = "Gemenskapsstöd"
+customPdfMetadata = "Anpassade PDF-metadata"
+editingTextInPdfs = "Redigera text i PDF:er"
+externalDatabase = "Extern databas"
+googleDriveIntegration = "Google Drive-integration"
+prometheusSupport = "Stöd för Prometheus"
+regularUpdates = "Regelbundna uppdateringar"
+saml = "SAML"
+secureLoginSupport = "Stöd för säker inloggning"
+selfHostedDeployment = "Självhostad distribution"
+sso = "SSO"
+unlimitedUsers = "Obegränsat antal användare"
+upToFiveUsers = "Upp till 5 användare"
+upToFiveUsersLowercase = "upp till 5 användare"
+usageTracking = "Användningsspårning"
+usersLimitedToSeats = "Användare begränsade till licensplatser"
+
 [plan.free]
 forever = "Gratis för alltid"
 highlight1 = "Begränsad verktygsanvändning per vecka"
@@ -5792,6 +6264,22 @@ highlight2 = "Tillgång till alla verktyg"
 highlight3 = "Community-stöd"
 included = "Ingår"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Avancerade integrationer"
+allBasicFeatures = "Alla grundläggande funktioner"
+cancelAnytime = "Avsluta när som helst"
+customPdfMetadata = "Anpassade PDF-metadata"
+editingTextInPdfsCaps = "Redigera text i PDF:er"
+enterpriseFeatures = "Företagsfunktioner (SAML, granskning)"
+perSeatLicensing = "Licens per plats"
+saveWithAnnualBilling = "Spara med årlig fakturering"
+selfHosted = "Självhostad"
+selfHostedOnInfrastructure = "Självhostad på din infrastruktur"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Obegränsat antal användare"
+upToFiveUsers = "Upp till 5 användare"
+usageTrackingPrometheus = "Användningsspårning & Prometheus"
 
 [plan.licenseWarning]
 body = "Du har {{total}} användare men gratisnivån stöder endast {{limit}} per server. Uppgradera för att hålla Stirling PDF igång smidigt."
@@ -6103,6 +6591,7 @@ allSessions = "Alla sessioner"
 allTools = "All Tools"
 automate = "Automatisera"
 back = "Tillbaka"
+backToAllTools = "Tillbaka till alla verktyg"
 certSign = "Certifikatsignering"
 completedSessions = "Slutförda sessioner"
 completedTab = "Slutförda"
@@ -6772,6 +7261,9 @@ bullet3 = "Kritiskt för godkännandeprocesser och juridisk spårbarhet"
 description = "Den ordning du anger när du skapar sessionen avgör vem som signerar först."
 title = "Signeringsordning"
 
+[settings]
+close = "Stäng"
+
 [settings.configuration]
 advanced = "Avancerat"
 database = "Databas"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Sök efter uppdateringar och visa versionsinfo"
 latestVersion = "Senaste version"
+managedByAdmin = "Hanteras av administratör"
+modeAuto = "Installera uppdateringar automatiskt"
+modeDisabled = "Sök inte efter uppdateringar"
+modePrompt = "Fråga mig innan uppdateringar installeras"
 serverNeedsUpdate = "Servern måste uppdateras av administratören"
 title = "Programuppdateringar"
+updateBehavior = "Uppdateringsbeteende"
+updateBehaviorDescription = "Välj om du vill bli tillfrågad innan uppdateringar installeras, installera dem automatiskt eller hoppa över uppdateringskontroller helt."
+updateBehaviorError = "Kunde inte ändra uppdateringsbeteende"
+updateBehaviorErrorLocked = "Den här inställningen är låst av din administratör."
+updateBehaviorLockedDescription = "Din administratör har konfigurerat hur Stirling-PDF hanterar uppdateringar på den här datorn. Kontakta dem för att ändra detta."
+updateBehaviorSaved = "Uppdateringsbeteende sparat."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Visa detaljer"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Alla användare kan se och använda dessa signaturer."
 sharedHeading = "Delade signaturer"
 tempStorageDescription = "Signaturer lagras endast i din webbläsare. De går förlorade om du rensar webbläsardata eller byter webbläsare."
 tempStorageTitle = "Tillfällig lagring i webbläsaren"
+use = "Använd signatur"
 
 [sign.saved.status]
 saved = "Sparad"
@@ -7695,6 +8198,7 @@ bulkTitle = "Ladda upp markerade filer"
 description = "Detta laddar upp den aktuella filen till serverlagring för din egen åtkomst."
 errorTitle = "Uppladdning misslyckades"
 failure = "Uppladdning misslyckades. Kontrollera din inloggning och dina lagringsinställningar."
+featureDisabled = "Spara till servern är inte aktiverat på denna server."
 fileCount = "{{count}} filer markerade"
 fileLabel = "Fil"
 hint = "Offentliga länkar och åtkomstlägen styrs av dina serverinställningar."
@@ -7823,8 +8327,17 @@ center = "Centrerat"
 left = "Vänster"
 right = "Höger"
 
+[textInput]
+clear = "Rensa inmatning"
+
 [theme]
 toggle = "Växla tema"
+
+[time.relative]
+daysAgo = "{{count}}d sedan"
+hoursAgo = "{{count}}h sedan"
+justNow = "nyss"
+minutesAgo = "{{count}}m sedan"
 
 [timestampPdf]
 completed = "PDF har tidsstämplats"
@@ -7852,6 +8365,10 @@ label = "Välj en TSA-server"
 [timestampPdf.steps]
 settings = "Inställningar"
 
+[toast]
+dismiss = "Avfärda"
+toggleDetails = "Växla detaljer"
+
 [tool]
 endpointUnavailable = "Detta verktyg är inte tillgängligt på din server."
 endpointUnavailableClickable = "Inte tillgängligt i detta läge. Klicka för att logga in."
@@ -7868,13 +8385,18 @@ viewerMode = "Byt till filredigeraren för att välja flera filer."
 [toolPanel]
 allTools = "Alla verktyg"
 alpha = "Alfa"
+backToAllTools = "Tillbaka till alla verktyg"
+backToDefault = "Tillbaka"
 backToTools = "Tillbaka till verktyg"
 collapse = "Fäll ihop panel"
 comingSoon = "Kommer snart:"
 expand = "Expandera panel"
+goBack = "Gå tillbaka"
 placeholder = "Välj ett verktyg för att komma igång"
 premiumFeature = "Premiumfunktion:"
 search = "Sök verktyg"
+toolsHeader = "Verktyg"
+viewAllTools = "Visa alla verktyg"
 
 [toolPanel.fullscreen]
 comingSoon = "Kommer snart:"
@@ -7933,6 +8455,9 @@ verification = "Verifiering"
 noSearchResults = "Inga verktyg hittades"
 noTools = "Inga verktyg tillgängliga"
 
+[tooltip]
+close = "Stäng verktygstips"
+
 [unlockPDFForms]
 description = "Detta verktyg tar bort skrivskyddsbegränsningar från PDF-formulärfält så att de blir redigerbara och ifyllbara."
 filenamePrefix = "upplåsta_formulär"
@@ -7951,29 +8476,42 @@ placeholder = "Välj en PDF-fil i huvudvyn för att börja"
 title = "Resultat för upplåsta formulär"
 
 [update]
+allReleases = "Alla utgåvor"
 availableUpdates = "Tillgängliga uppdateringar"
+breaking = "Brytande"
 breakingChanges = "Brytande ändringar"
 breakingChangesDefault = "Denna version innehåller brytande ändringar."
 breakingChangesDetected = "Brytande ändringar upptäckta"
 breakingChangesMessage = "Vissa versioner innehåller brytande ändringar. Läs migreringsguiderna nedan innan du uppdaterar."
 close = "Stäng"
+closeModal = "Stäng uppdateringsfönster"
 current = "Aktuell version"
+defaultRecommendation = "Denna uppdatering innehåller viktiga korrigeringar och förbättringar."
 downloadLatest = "Hämta senaste"
+later = "Senare"
 latest = "Senaste version"
 latestStable = "Senaste stabila"
 loadingDetailedInfo = "Laddar detaljerad information..."
 migrationGuide = "Migreringsguide"
 migrationGuides = "Migreringsguider"
+migrationGuidesDesc = "Granska viktiga ändringar innan du uppdaterar."
+modalSubtitle = "En ny version av Stirling PDF är redo att installeras."
 modalTitle = "Uppdatering tillgänglig"
+notes = "Anteckningar"
 priorityLabel = "Prioritet"
 recommendedAction = "Rekommenderad åtgärd"
 releaseNotes = "Versionsnyheter"
+showLess = "Visa färre versioner"
+showMore = "Visa alla {{count}} versioner"
+stable = "STABLE"
 unableToLoadDetails = "Det går inte att ladda detaljerad information."
 updateAvailable = "Uppdatering tillgänglig"
 urgentUpdateAvailable = "Brådskande uppdatering"
 version = "Version"
+versionHistory = "Versionshistorik"
 viewAllReleases = "Visa alla utgåvor"
 viewGuide = "Visa guide"
+whatsNewIn = "Nyheter i"
 
 [update.priority]
 low = "Låg"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Aktivera mörkt filter"
 enableSepiaFilter = "Aktivera sepiafilter"
 firstPage = "Första sidan"
 lastPage = "Sista sidan"
+moreOptions = "Mer"
 nextPage = "Nästa sida"
 onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
+pageNavigation = "Sidnavigering"
 previousPage = "Föregående sida"
 resetZoom = "Återställ zoom"
 singlePageView = "Ensidig vy"
 unknownFile = "Okänd fil"
+view = "Visa"
+zoom = "Zooma"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Infoga text"
 typeReplaceText = "Ersätt text"
 viewComment = "Visa kommentar"
 
+[viewer.error]
+noFileProvided = "Fel: Ingen fil angavs till visaren"
+
 [viewer.formBar]
 apply = "Verkställ ändringar"
 dismiss = "Avfärda"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
 title = "Formulärfält"
 unsavedBadge = "Ej sparat"
 unsavedDesc = "Du har osparade ändringar"
+
+[viewer.link]
+delete = "Ta bort länk"
 
 [viewer.nonPdf]
 columnDefault = "Kolumn {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Läser in..."
 renderMarkdown = "Rendera markdown"
 sortedBy = "Sorterad efter: {{column}}"
 textStats = "{{lines}} rader · {{size}}"
+
+[viewer.redaction]
+removeMark = "Ta bort denna markering"
+
+[viewer.search]
+clear = "Rensa sökning"
+close = "Stäng sökning"
+next = "Nästa resultat"
+previous = "Föregående resultat"
+resultsOf = "av {{total}}"
+
+[viewer.signature]
+delete = "Ta bort signatur"
 
 [viewPdf]
 header = "Visa PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Visa/dölj lager"
 toggleSidebar = "Visa/dölj sidofält"
 toggleTheme = "Växla tema"
 viewer = "Visare"
+
+[workflow.participant]
+accessExpired = "Din åtkomst till detta dokument har löpt ut."
+certificateFile = "Certifikatfil"
+certificateFilePlaceholder = "Välj certifikatfil"
+certificatePassword = "Certifikatlösenord"
+certificateType = "Certifikattyp"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12-certifikat"
+certTypeServer = "Servercertifikat (om tillgängligt)"
+completedDeclined = "Du har avböjt detta dokument."
+completedSigned = "Du har signerat detta dokument."
+decline = "Avböj"
+downloadDocument = "Ladda ner dokument"
+dueDate = "Förfallodatum: {{date}}"
+errorTitle = "Fel"
+from = "Från: {{name}}"
+loadingSession = "Läser in session..."
+location = "Plats"
+locationPlaceholder = "t.ex. San Francisco, CA"
+pageNumber = "Sidnummer (valfritt)"
+reason = "Orsak"
+reasonPlaceholder = "t.ex. Dokumentgodkännande"
+sessionNotFound = "Session hittades inte eller åtkomst nekades."
+signDocument = "Signera dokument"
+statusDeclined = "Avböjd"
+statusNotified = "Notifierad"
+statusPending = "Väntar"
+statusSigned = "Signerad"
+statusViewed = "Visad"
+submitSignature = "Skicka signatur"
 
 [workspace]
 title = "Arbetsyta"
