@@ -91,7 +91,18 @@ const OperationButton = ({
       color={color}
       data-testid={dataTestId}
       data-tour={dataTour}
-      style={{ minHeight: "2.5rem", position: "relative" }}
+      style={{ minHeight: "2.5rem", height: "auto", position: "relative" }}
+      styles={{
+        label: {
+          whiteSpace: "normal",
+          textAlign: "center",
+          lineHeight: 1.2,
+        },
+        inner: {
+          paddingTop: "0.25rem",
+          paddingBottom: "0.25rem",
+        },
+      }}
     >
       {isLoading
         ? loadingText || t("loading", "Loading...")
