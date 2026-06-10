@@ -1,5 +1,6 @@
 package stirling.software.saas.payg.filter;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -274,9 +275,16 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
         bytesWritten += len;
     }
 
+    /** Spill stream buffer size — coalesces Tomcat's per-chunk syscalls into 64 KiB writes. */
+    private static final int SPILL_BUFFER_SIZE = 64 * 1024;
+
     private void spillToDisk() throws IOException {
         spillFile = tempFileManager.createManagedTempFile(".body");
-        spillStream = Files.newOutputStream(spillFile.getPath());
+        // Wrap in BufferedOutputStream — without this every Tomcat chunk (default 8 KiB) was a
+        // separate syscall to the temp file, which dominates wall-clock on big spilled responses.
+        spillStream =
+                new BufferedOutputStream(
+                        Files.newOutputStream(spillFile.getPath()), SPILL_BUFFER_SIZE);
         memoryBuffer.writeTo(spillStream);
         memoryBuffer = null; // help GC of potentially large buffer
         spilled = true;
