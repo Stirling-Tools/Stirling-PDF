@@ -84,7 +84,7 @@ export const useToolOperation = <TParams>(
     useFileContext();
   const { actions: navActions } = useNavigationActions();
   const viewerContext = useContext(ViewerContext);
-  const setActiveFileId = viewerContext?.setActiveFileId ?? (() => { });
+  const setActiveFileId = viewerContext?.setActiveFileId ?? (() => {});
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -458,8 +458,8 @@ export const useToolOperation = <TParams>(
                 (file, thumbnail, metadata, index) =>
                   createChildStub(
                     successInputStubs[index] ||
-                    inputStirlingFileStubs[index] ||
-                    inputStirlingFileStubs[0],
+                      inputStirlingFileStubs[index] ||
+                      inputStirlingFileStubs[0],
                     newToolOperation,
                     file,
                     metadata?.thumbnailUrl || thumbnail,
