@@ -37,6 +37,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
+                        policy.sources(),
                         policy.steps(),
                         policy.output());
 
@@ -45,7 +46,7 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setName(stored.name());
         entity.setOwner(stored.owner());
         entity.setEnabled(stored.enabled());
-        entity.setTriggerType(stored.trigger().type());
+        entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
         repository.save(entity);
         return stored;
