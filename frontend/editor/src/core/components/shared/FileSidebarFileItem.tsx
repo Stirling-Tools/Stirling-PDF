@@ -119,7 +119,7 @@ function getSidebarFileIcon(ext: string): React.ReactElement {
   return <FileDocIcon className={cls} variant={getFileDocVariant(ext)} />;
 }
 
-/** A Watch Folder this file currently belongs to, used for the membership dots. */
+/** A Watched Folder this file currently belongs to, used for the membership dots. */
 export interface FileItemFolderRef {
   id: string;
   name: string;
@@ -145,10 +145,10 @@ export interface FileItemProps {
   thumbnailUrl?: string;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
-  /** When true, the row can be dragged (e.g. onto a Watch Folder). */
+  /** When true, the row can be dragged (e.g. onto a Watched Folder). */
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent, fileId: FileId) => void;
-  /** Watch Folders this file is in — rendered as small accent dots. */
+  /** Watched Folders this file is in — rendered as small accent dots. */
   folders?: FileItemFolderRef[];
   /** Clicking a membership dot opens that folder. */
   onFolderClick?: (folderId: string) => void;

@@ -40,22 +40,22 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
-import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
+import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import {
-  setWatchFolderDraggedFileIds,
-  clearWatchFolderDraggedFileIds,
-} from "@app/components/smartFolders/watchFolderDragState";
-import { WATCH_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+  setWatchedFolderDraggedFileIds,
+  clearWatchedFolderDraggedFileIds,
+} from "@app/components/watchedFolders/watchedFolderDragState";
+import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
 const COLLAPSED_WIDTH = "3.5rem";
 const EXPANDED_WIDTH = "16.25rem"; // ~260px
 
-// Inlined to avoid a circular import with SmartFoldersRegistration.
-const SMART_FOLDER_VIEW_ID = "smartFolder";
-const SMART_FOLDER_WORKBENCH_ID = "custom:smartFolder";
+// Inlined to avoid a circular import with WatchedFoldersRegistration.
+const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
+const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
 
 export interface FileSidebarProps {
   collapsed?: boolean;
@@ -119,51 +119,52 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { setCustomWorkbenchViewData, customWorkbenchViews } =
       useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
-    const isWatchFoldersActive = currentWorkbench === SMART_FOLDER_WORKBENCH_ID;
-    // The folder currently open in the Watch Folders view (null = folder list/home).
-    const activeWatchFolderId = (customWorkbenchViews.find(
-      (v) => v.id === SMART_FOLDER_VIEW_ID,
+    const isWatchedFoldersActive =
+      currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
+    // The folder currently open in the Watched Folders view (null = folder list/home).
+    const activeWatchedFolderId = (customWorkbenchViews.find(
+      (v) => v.id === WATCHED_FOLDER_VIEW_ID,
     )?.data?.folderId ?? null) as string | null;
-    // fileId → folderId[] across all watch folders. In the Watch Folders view the
+    // fileId → folderId[] across all watch folders. In the Watched Folders view the
     // sidebar tick reflects "already in the open folder" instead of workbench
     // membership (which is meaningless there - a click sends to the folder, not
     // the workbench). The same map drives the per-file membership dots.
     const folderMembership = useFolderMembership();
-    const allFolders = useAllSmartFolders();
+    const allFolders = useAllWatchedFolders();
     const policyFileBadges = usePolicyFileBadges();
     const folderById = useMemo(
       () => new Map(allFolders.map((f) => [f.id, f])),
       [allFolders],
     );
 
-    const openWatchFolders = useCallback(() => {
+    const openWatchedFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
-      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
-      navActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+      setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
 
     // Clicking a file's membership dot jumps straight into that folder.
-    const openWatchFolder = useCallback(
+    const openWatchedFolder = useCallback(
       (folderId: string) => {
         if (collapsed && onToggleCollapse) onToggleCollapse();
-        setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
-        navActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID as any);
+        setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
+        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
       },
       [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
     );
 
-    // In Watch Folders view, sidebar files can be dragged onto a folder card / drop
-    // zone (which read the watchFolderFileId dataTransfer key).
-    const handleWatchFolderDragStart = useCallback(
+    // In Watched Folders view, sidebar files can be dragged onto a folder card / drop
+    // zone (which read the watchedFolderFileId dataTransfer key).
+    const handleWatchedFolderDragStart = useCallback(
       (e: React.DragEvent, fileId: FileId) => {
-        e.dataTransfer.setData("watchFolderFileId", String(fileId));
+        e.dataTransfer.setData("watchedFolderFileId", String(fileId));
         e.dataTransfer.effectAllowed = "copy";
         // Publish the id so drop targets can detect "already in folder" during
         // dragover (dataTransfer values are unreadable then). Clear on dragend
         // regardless of whether the drag ended in a drop or was cancelled.
-        setWatchFolderDraggedFileIds([String(fileId)]);
+        setWatchedFolderDraggedFileIds([String(fileId)]);
         const clear = () => {
-          clearWatchFolderDraggedFileIds();
+          clearWatchedFolderDraggedFileIds();
           document.removeEventListener("dragend", clear);
         };
         document.addEventListener("dragend", clear);
@@ -310,13 +311,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
 
-        // In the Watch Folders view a click sends the file into the open folder
+        // In the Watched Folders view a click sends the file into the open folder
         // (mirrors how a click toggles a file into the active workbench elsewhere).
         // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
-        if (isWatchFoldersActive) {
-          if (activeWatchFolderId) {
-            setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, {
-              folderId: activeWatchFolderId,
+        if (isWatchedFoldersActive) {
+          if (activeWatchedFolderId) {
+            setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
+              folderId: activeWatchedFolderId,
               pendingFileId: stub.id,
             });
           }
@@ -372,8 +373,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         activeFileId,
         requestNavigation,
         isMultiTool,
-        isWatchFoldersActive,
-        activeWatchFolderId,
+        isWatchedFoldersActive,
+        activeWatchedFolderId,
         setCustomWorkbenchViewData,
       ],
     );
@@ -760,19 +761,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </Tooltip>
             )}
 
-            {/* Watch Folders entry */}
-            {WATCH_FOLDERS_ENABLED && (
+            {/* Watched Folders entry */}
+            {WATCHED_FOLDERS_ENABLED && (
               <div
                 className="file-sidebar-action-row"
-                data-testid="watchFolders-button"
-                data-active={isWatchFoldersActive}
-                onClick={openWatchFolders}
+                data-testid="watchedFolders-button"
+                data-active={isWatchedFoldersActive}
+                onClick={openWatchedFolders}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && openWatchFolders()}
-                aria-label={t("smartFolders.sidebarTitle", "Watch Folders")}
+                onKeyDown={(e) => e.key === "Enter" && openWatchedFolders()}
+                aria-label={t("watchedFolders.sidebarTitle", "Watched Folders")}
                 style={
-                  isWatchFoldersActive
+                  isWatchedFoldersActive
                     ? { backgroundColor: "var(--active-bg)" }
                     : undefined
                 }
@@ -780,7 +781,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <FolderSpecialIcon className="file-sidebar-action-icon" />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("smartFolders.sidebarTitle", "Watch Folders")}
+                    {t("watchedFolders.sidebarTitle", "Watched Folders")}
                   </span>
                 )}
               </div>
@@ -826,24 +827,24 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         (id) => (id as string) === (stub.id as string),
                       );
                       const isInWorkbench = !!workbenchFileId;
-                      // On Watch Folders, the tick means "this file is already in
+                      // On Watched Folders, the tick means "this file is already in
                       // the open folder"; on the folder home (no folder open) a
                       // click is a no-op, so show no tick at all.
-                      const isSelected = isWatchFoldersActive
-                        ? activeWatchFolderId != null &&
+                      const isSelected = isWatchedFoldersActive
+                        ? activeWatchedFolderId != null &&
                           (folderMembership
                             .get(stub.id as string)
-                            ?.includes(activeWatchFolderId) ??
+                            ?.includes(activeWatchedFolderId) ??
                             false)
                         : isInWorkbench;
-                      // Membership dots only on the Watch Folders home (the folder
+                      // Membership dots only on the Watched Folders home (the folder
                       // grid, no folder open). Inside a specific folder the tick
                       // already shows "in this folder"; in other views they'd just
                       // be noise.
                       const showFolderDots =
-                        WATCH_FOLDERS_ENABLED &&
-                        isWatchFoldersActive &&
-                        activeWatchFolderId === null;
+                        WATCHED_FOLDERS_ENABLED &&
+                        isWatchedFoldersActive &&
+                        activeWatchedFolderId === null;
                       const memberFolders = showFolderDots
                         ? (folderMembership.get(stub.id as string) ?? [])
                             .map((fid) => folderById.get(fid))
@@ -883,11 +884,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           thumbnailUrl={thumbnailUrl}
                           onClick={handleFileClick}
                           onEyeClick={handleEyeClick}
-                          draggable={isWatchFoldersActive}
-                          onDragStart={handleWatchFolderDragStart}
+                          draggable={isWatchedFoldersActive}
+                          onDragStart={handleWatchedFolderDragStart}
                           folders={memberFolders}
-                          onFolderClick={openWatchFolder}
-                          policies={policyFileBadges.get(stub.id as string) ?? []}
+                          onFolderClick={openWatchedFolder}
+                          policies={
+                            policyFileBadges.get(stub.id as string) ?? []
+                          }
                         />
                       );
                     })}

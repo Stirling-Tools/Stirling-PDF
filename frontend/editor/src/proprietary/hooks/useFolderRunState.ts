@@ -1,20 +1,22 @@
 /**
- * Hook for managing Smart Folder run state (recent run entries)
+ * Hook for managing Watched Folder run state (recent run entries)
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { SmartFolderRunEntry } from "@app/types/smartFolders";
+import { WatchedFolderRunEntry } from "@app/types/watchedFolders";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 
 interface UseFolderRunStateReturn {
-  recentRuns: SmartFolderRunEntry[];
-  setRecentRuns: (runs: SmartFolderRunEntry[]) => Promise<void>;
+  recentRuns: WatchedFolderRunEntry[];
+  setRecentRuns: (runs: WatchedFolderRunEntry[]) => Promise<void>;
   clearRecentRuns: () => Promise<void>;
   isLoading: boolean;
 }
 
 export function useFolderRunState(folderId: string): UseFolderRunStateReturn {
-  const [recentRuns, setRecentRunsState] = useState<SmartFolderRunEntry[]>([]);
+  const [recentRuns, setRecentRunsState] = useState<WatchedFolderRunEntry[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   // Subscribe before loading to close the race window between load completing
@@ -40,7 +42,7 @@ export function useFolderRunState(folderId: string): UseFolderRunStateReturn {
   }, [folderId]);
 
   const setRecentRuns = useCallback(
-    async (runs: SmartFolderRunEntry[]) => {
+    async (runs: WatchedFolderRunEntry[]) => {
       await folderRunStateStorage.setFolderRunState(folderId, runs);
       setRecentRunsState(runs);
     },

@@ -1,5 +1,5 @@
 /**
- * Persistent retry schedule for Watch Folder automation.
+ * Persistent retry schedule for Watched Folder automation.
  *
  * Stores pending retries in IndexedDB so they survive page close.
  * The service worker reads this store to schedule timers; the main thread

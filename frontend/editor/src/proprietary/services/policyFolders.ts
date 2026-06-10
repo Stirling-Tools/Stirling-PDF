@@ -1,27 +1,24 @@
 /**
  * Backing-folder layer for Policies. A configured policy's folder trigger,
- * editable steps, output and run-state all live in a Watch Folders
- * {@link SmartFolder} (+ its {@link AutomationConfig}) — the policy reuses the
- * Watch Folders engine rather than re-implementing execution. This module is
+ * editable steps, output and run-state all live in a Watched Folders
+ * {@link WatchedFolder} (+ its {@link AutomationConfig}) — the policy reuses the
+ * Watched Folders engine rather than re-implementing execution. This module is
  * the seam that creates and manages that backing record.
  *
- * The folder is tagged with `policyCategoryId` so the Watch Folders UI can
+ * The folder is tagged with `policyCategoryId` so the Watched Folders UI can
  * filter it out (it's owned by Policies). The backing automation also rides
  * along to the backend (in the saved policy's output.options) for round-trip;
  * this folder remains the locally-editable copy.
  */
 
 import { automationStorage } from "@app/services/automationStorage";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 import type {
   AutomationConfig,
   AutomationOperation,
 } from "@app/types/automation";
-import type { SmartFolder } from "@app/types/smartFolders";
-import type {
-  PolicyCategory,
-  PolicyFolderSettings,
-} from "@app/types/policies";
+import type { WatchedFolder } from "@app/types/watchedFolders";
+import type { PolicyCategory, PolicyFolderSettings } from "@app/types/policies";
 
 /** Folder icon (a name string) used for each policy category's backing folder. */
 const CATEGORY_FOLDER_ICON: Record<string, string> = {
@@ -36,19 +33,19 @@ const POLICY_FOLDER_ACCENT = "#3b82f6";
 
 /**
  * Create the backing folder for a policy: persist an automation from the given
- * steps, then a SmartFolder (the folder trigger) referencing it, tagged with
+ * steps, then a WatchedFolder (the folder trigger) referencing it, tagged with
  * the policy's category id. Returns the created folder.
  */
 export async function createPolicyFolder(
   category: PolicyCategory,
   operations: AutomationOperation[],
-): Promise<SmartFolder> {
+): Promise<WatchedFolder> {
   const automation = await automationStorage.saveAutomation({
     name: `${category.label} Policy`,
     description: `Pipeline for the ${category.label} policy`,
     operations,
   });
-  return smartFolderStorage.createFolder({
+  return watchedFolderStorage.createFolder({
     name: `${category.label} Policy`,
     description: category.desc,
     automationId: automation.id,
@@ -67,8 +64,8 @@ export async function createPolicyFolder(
 export async function createPolicyFolderForAutomation(
   category: PolicyCategory,
   automationId: string,
-): Promise<SmartFolder> {
-  return smartFolderStorage.createFolder({
+): Promise<WatchedFolder> {
+  return watchedFolderStorage.createFolder({
     name: `${category.label} Policy`,
     description: category.desc,
     automationId,
@@ -83,7 +80,7 @@ export async function createPolicyFolderForAutomation(
 export async function getPolicyOperations(
   folderId: string,
 ): Promise<AutomationOperation[]> {
-  const folder = await smartFolderStorage.getFolder(folderId);
+  const folder = await watchedFolderStorage.getFolder(folderId);
   if (!folder) return [];
   const automation = await automationStorage.getAutomation(folder.automationId);
   return automation?.operations ?? [];
@@ -93,7 +90,7 @@ export async function getPolicyOperations(
 export async function getPolicyAutomation(
   folderId: string,
 ): Promise<AutomationConfig | null> {
-  const folder = await smartFolderStorage.getFolder(folderId);
+  const folder = await watchedFolderStorage.getFolder(folderId);
   if (!folder) return null;
   return automationStorage.getAutomation(folder.automationId);
 }
@@ -103,7 +100,7 @@ export async function updatePolicyOperations(
   folderId: string,
   operations: AutomationOperation[],
 ): Promise<void> {
-  const folder = await smartFolderStorage.getFolder(folderId);
+  const folder = await watchedFolderStorage.getFolder(folderId);
   if (!folder) return;
   const automation = await automationStorage.getAutomation(folder.automationId);
   if (!automation) return;
@@ -115,9 +112,9 @@ export async function updatePolicyFolderSettings(
   folderId: string,
   settings: PolicyFolderSettings,
 ): Promise<void> {
-  const folder = await smartFolderStorage.getFolder(folderId);
+  const folder = await watchedFolderStorage.getFolder(folderId);
   if (!folder) return;
-  await smartFolderStorage.updateFolder({ ...folder, ...settings });
+  await watchedFolderStorage.updateFolder({ ...folder, ...settings });
 }
 
 /** Pause/resume the policy by toggling its backing folder's paused flag. */
@@ -125,16 +122,16 @@ export async function setPolicyFolderPaused(
   folderId: string,
   paused: boolean,
 ): Promise<void> {
-  const folder = await smartFolderStorage.getFolder(folderId);
+  const folder = await watchedFolderStorage.getFolder(folderId);
   if (!folder) return;
-  await smartFolderStorage.updateFolder({ ...folder, isPaused: paused });
+  await watchedFolderStorage.updateFolder({ ...folder, isPaused: paused });
 }
 
 /** Delete the policy's backing folder and its automation. */
 export async function deletePolicyFolder(folderId: string): Promise<void> {
-  const folder = await smartFolderStorage.getFolder(folderId);
+  const folder = await watchedFolderStorage.getFolder(folderId);
   if (folder) {
     await automationStorage.deleteAutomation(folder.automationId);
   }
-  await smartFolderStorage.deleteFolder(folderId);
+  await watchedFolderStorage.deleteFolder(folderId);
 }

@@ -1,10 +1,10 @@
 /**
- * Hook for reading and managing files within a Smart Folder
+ * Hook for reading and managing files within a Watched Folder
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { FolderFileMetadata, FolderRecord } from "@app/types/smartFolders";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
+import { FolderFileMetadata, FolderRecord } from "@app/types/watchedFolders";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
 
 interface UseFolderDataReturn {
   folderRecord: FolderRecord | null;
@@ -33,7 +33,7 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
   const refresh = useCallback(async () => {
     if (!folderId) return;
     try {
-      const record = await watchFolderFileStorage.getFolderData(folderId);
+      const record = await watchedFolderFileStorage.getFolderData(folderId);
       setFolderRecord(record);
     } catch (error) {
       console.error("Failed to load folder data:", error);
@@ -45,7 +45,7 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
   }, [refresh]);
 
   useEffect(() => {
-    const unsubscribe = watchFolderFileStorage.onFolderChange(
+    const unsubscribe = watchedFolderFileStorage.onFolderChange(
       (changedFolderId) => {
         if (changedFolderId === folderId) {
           refresh();
@@ -72,21 +72,25 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
 
   const addFile = useCallback(
     async (fileId: string, metadata?: Partial<FolderFileMetadata>) => {
-      await watchFolderFileStorage.addFileToFolder(folderId, fileId, metadata);
+      await watchedFolderFileStorage.addFileToFolder(
+        folderId,
+        fileId,
+        metadata,
+      );
     },
     [folderId],
   );
 
   const removeFile = useCallback(
     async (fileId: string) => {
-      await watchFolderFileStorage.removeFileFromFolder(folderId, fileId);
+      await watchedFolderFileStorage.removeFileFromFolder(folderId, fileId);
     },
     [folderId],
   );
 
   const updateFileMetadata = useCallback(
     async (fileId: string, updates: Partial<FolderFileMetadata>) => {
-      await watchFolderFileStorage.updateFileMetadata(
+      await watchedFolderFileStorage.updateFileMetadata(
         folderId,
         fileId,
         updates,
@@ -96,7 +100,7 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
   );
 
   const clearFolder = useCallback(async () => {
-    await watchFolderFileStorage.clearFolder(folderId);
+    await watchedFolderFileStorage.clearFolder(folderId);
   }, [folderId]);
 
   const getFileMetadata = useCallback(

@@ -1,5 +1,5 @@
 /**
- * Service worker for Watch Folder retry scheduling.
+ * Service worker for Watched Folder retry scheduling.
  *
  * Reads the earliest pending retry from IndexedDB and sets a setTimeout for it.
  * When the timer fires it posts PROCESS_DUE_RETRIES to all window clients so

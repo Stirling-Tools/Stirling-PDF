@@ -41,8 +41,8 @@ vi.mock("@app/services/policyApi", () => ({
   getPolicyRun: vi.fn(),
 }));
 
-// Enabling a policy creates its backing Watch Folders SmartFolder (IndexedDB);
-// jsdom's crypto lacks randomUUID, which smartFolderStorage uses for folder ids.
+// Enabling a policy creates its backing Watched Folders WatchedFolder (IndexedDB);
+// jsdom's crypto lacks randomUUID, which watchedFolderStorage uses for folder ids.
 if (typeof globalThis.crypto?.randomUUID !== "function") {
   const orig = globalThis.crypto;
   vi.stubGlobal("crypto", {

@@ -771,6 +771,7 @@ function FileCard({
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
+              data-testid="file-card-actions"
             >
               <MoreVertIcon fontSize="small" />
             </ActionIcon>
@@ -801,6 +802,7 @@ function FileCard({
                 e.stopPropagation();
                 onMove();
               }}
+              data-testid="file-menu-move-to"
             >
               {t("filesPage.moveTo", "Move to…")}
             </Menu.Item>
@@ -1360,6 +1362,7 @@ function FileRow({
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.fileMenu", "File actions")}
+            data-testid="file-card-actions"
           >
             <MoreVertIcon fontSize="small" />
           </ActionIcon>

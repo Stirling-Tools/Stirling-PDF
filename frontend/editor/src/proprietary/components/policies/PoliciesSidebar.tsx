@@ -18,7 +18,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
 import { getPolicyAutomation } from "@app/services/policyFolders";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 import { runsToActivity, runsToStats } from "@app/services/policyLiveData";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import { runPolicyOnFile } from "@app/components/policies/usePolicyAutoRun";
@@ -27,7 +27,7 @@ import type {
   AutomationConfig,
   AutomationOperation,
 } from "@app/types/automation";
-import type { SmartFolder } from "@app/types/smartFolders";
+import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { IconBadge } from "@shared/components/IconBadge";
@@ -208,7 +208,9 @@ export function PolicyDetailTakeover() {
   // reflects the new steps. Falls back to the preset's rules when unconfigured.
   const folderId = selectedId ? pol.policies[selectedId]?.folderId : undefined;
   const [steps, setSteps] = useState<AutomationOperation[]>([]);
-  const [backingFolder, setBackingFolder] = useState<SmartFolder | null>(null);
+  const [backingFolder, setBackingFolder] = useState<WatchedFolder | null>(
+    null,
+  );
   const [backingAutomation, setBackingAutomation] =
     useState<AutomationConfig | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -223,7 +225,7 @@ export function PolicyDetailTakeover() {
     let cancelled = false;
     void (async () => {
       const [folder, automation] = await Promise.all([
-        smartFolderStorage.getFolder(folderId),
+        watchedFolderStorage.getFolder(folderId),
         getPolicyAutomation(folderId),
       ]);
       if (cancelled) return;

@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
-// Enable/delete create + remove the backing Watch Folders SmartFolder
+// Enable/delete create + remove the backing Watched Folders WatchedFolder
 // (IndexedDB); jsdom's crypto lacks randomUUID, used for folder ids.
 if (typeof globalThis.crypto?.randomUUID !== "function") {
   const orig = globalThis.crypto;
@@ -58,9 +58,7 @@ const wizardResult = {
     maxRetries: 3,
     retryDelayMinutes: 5,
   },
-  pipelineSteps: [
-    { operation: "/api/v1/misc/compress-pdf", parameters: {} },
-  ],
+  pipelineSteps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
   unresolvedOps: [],
 };
 
@@ -71,8 +69,10 @@ describe("usePolicies", () => {
     api.seq = 0;
   });
 
-  it("starts with every category unconfigured (no seed)", () => {
+  it("starts with every category unconfigured (no seed)", async () => {
     const { result } = renderHook(() => usePolicies());
+    // Flush the async mount reconcile (empty backend ⇒ all stay unconfigured).
+    await act(async () => {});
     expect(result.current.policies.ingestion.configured).toBe(false);
     expect(result.current.policies.security.configured).toBe(false);
   });

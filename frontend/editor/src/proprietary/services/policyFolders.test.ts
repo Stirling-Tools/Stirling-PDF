@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// jsdom's crypto has no randomUUID, which smartFolderStorage uses for folder ids.
+// jsdom's crypto has no randomUUID, which watchedFolderStorage uses for folder ids.
 if (typeof globalThis.crypto?.randomUUID !== "function") {
   const orig = globalThis.crypto;
   vi.stubGlobal("crypto", {
@@ -18,7 +18,7 @@ import {
   setPolicyFolderPaused,
   deletePolicyFolder,
 } from "@app/services/policyFolders";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 import { automationStorage } from "@app/services/automationStorage";
 import type { PolicyCategory } from "@app/types/policies";
 
@@ -37,8 +37,8 @@ const steps = [
 describe("policyFolders backing-folder layer", () => {
   beforeEach(async () => {
     // Clean slate between tests (fake-indexeddb persists within a run).
-    for (const f of await smartFolderStorage.getAllFolders()) {
-      await smartFolderStorage.deleteFolder(f.id);
+    for (const f of await watchedFolderStorage.getAllFolders()) {
+      await watchedFolderStorage.deleteFolder(f.id);
     }
     for (const a of await automationStorage.getAllAutomations()) {
       await automationStorage.deleteAutomation(a.id);
@@ -66,9 +66,11 @@ describe("policyFolders backing-folder layer", () => {
   it("pauses/resumes via the backing folder flag", async () => {
     const folder = await createPolicyFolder(category, steps);
     await setPolicyFolderPaused(folder.id, true);
-    expect((await smartFolderStorage.getFolder(folder.id))?.isPaused).toBe(true);
+    expect((await watchedFolderStorage.getFolder(folder.id))?.isPaused).toBe(
+      true,
+    );
     await setPolicyFolderPaused(folder.id, false);
-    expect((await smartFolderStorage.getFolder(folder.id))?.isPaused).toBe(
+    expect((await watchedFolderStorage.getFolder(folder.id))?.isPaused).toBe(
       false,
     );
   });
@@ -77,7 +79,7 @@ describe("policyFolders backing-folder layer", () => {
     const folder = await createPolicyFolder(category, steps);
     const automationId = folder.automationId;
     await deletePolicyFolder(folder.id);
-    expect(await smartFolderStorage.getFolder(folder.id)).toBeNull();
+    expect(await watchedFolderStorage.getFolder(folder.id)).toBeNull();
     expect(await automationStorage.getAutomation(automationId)).toBeNull();
   });
 });

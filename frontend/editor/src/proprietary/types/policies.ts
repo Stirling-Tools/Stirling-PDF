@@ -126,10 +126,10 @@ export interface PolicyState {
   /** Saved field values, keyed by field key (overrides the definition default). */
   fieldValues: Record<string, boolean | string | string[]>;
   /**
-   * The backing folder-trigger record (a Watch Folders `SmartFolder`) that holds
-   * this policy's editable steps (its automation), output config and run state.
-   * Present once the policy is configured. The folder trigger reuses the Watch
-   * Folders engine; this is the link to it. Maps to the backend's
+   * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that
+   * holds this policy's editable steps (its automation), output config and run
+   * state. Present once the policy is configured. The folder trigger reuses the
+   * Watched Folders engine; this is the link to it. Maps to the backend's
    * `Policy.trigger` (folder) + `steps` + `output`.
    */
   folderId?: string;

@@ -28,7 +28,7 @@ import type {
   AutomationOperation,
 } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
-import type { SmartFolder } from "@app/types/smartFolders";
+import type { WatchedFolder } from "@app/types/watchedFolders";
 import { buildPipelineDefinition } from "@app/services/policyPipeline";
 import { useAuth } from "@app/auth/UseSession";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
@@ -61,7 +61,7 @@ interface PolicySetupWizardProps {
   /** The backing automation to edit (edit mode). */
   existingAutomation?: AutomationConfig;
   /** The backing folder, to pre-fill output + retry settings (edit mode). */
-  initialFolder?: SmartFolder;
+  initialFolder?: WatchedFolder;
   onCancel: () => void;
   /**
    * Fires on submit with the saved workflow + collected settings. May be async;
@@ -170,7 +170,8 @@ export function PolicySetupWizard({
     );
   }
 
-  const back = () => (step > 1 ? setStep((s) => Math.max(1, s - 1)) : onCancel());
+  const back = () =>
+    step > 1 ? setStep((s) => Math.max(1, s - 1)) : onCancel();
 
   const toggleSource = (id: string) =>
     setSources((prev) =>
@@ -390,10 +391,7 @@ export function PolicySetupWizard({
                       value={outputNamePosition}
                       onChange={(e) =>
                         setOutputNamePosition(
-                          e.target.value as
-                            | "prefix"
-                            | "suffix"
-                            | "auto-number",
+                          e.target.value as "prefix" | "suffix" | "auto-number",
                         )
                       }
                       aria-label="Name position"

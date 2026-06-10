@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Text, Alert, Loader, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { loadStripe } from "@stripe/stripe-js";
@@ -9,7 +9,7 @@ import {
 import { supabase } from "@app/auth/supabase";
 import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 export type PurchaseType = "subscription" | "credits";
 export type CreditsPack = "xsmall" | "small" | "medium" | "large" | null;
@@ -68,6 +68,11 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<CheckoutState>({ status: "idle" });
+  // Load Stripe.js lazily, only when this checkout component mounts. Loading
+  // at module scope pulled the Stripe script into every page that imports
+  // this file, which triggered the dev "HTTPS required" warning on every
+  // non-payment route.
+  const stripePromise = useMemo(() => loadStripe(STRIPE_KEY), []);
 
   const createCheckoutSession = async () => {
     try {

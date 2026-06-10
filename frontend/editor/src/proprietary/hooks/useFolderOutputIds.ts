@@ -1,14 +1,14 @@
 /**
- * Returns the set of file IDs that are outputs produced by any watch folder automation.
+ * Returns the set of file IDs that are outputs produced by any watched folder automation.
  * Reactive: re-evaluates whenever folder records change.
  */
 
 import { useState, useEffect } from "react";
-import { watchFolderFileStorage } from "@app/services/watchFolderFileStorage";
-import { useAllSmartFolders } from "@app/hooks/useAllSmartFolders";
+import { watchedFolderFileStorage } from "@app/services/watchedFolderFileStorage";
+import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 
 export function useFolderOutputIds(): Set<string> {
-  const folders = useAllSmartFolders();
+  const folders = useAllWatchedFolders();
   const [outputIds, setOutputIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -21,7 +21,9 @@ export function useFolderOutputIds(): Set<string> {
       const ids = new Set<string>();
       for (const folder of folders) {
         try {
-          const record = await watchFolderFileStorage.getFolderData(folder.id);
+          const record = await watchedFolderFileStorage.getFolderData(
+            folder.id,
+          );
           if (record) {
             Object.values(record.files).forEach((meta) => {
               const oids =
@@ -38,7 +40,7 @@ export function useFolderOutputIds(): Set<string> {
     };
 
     load();
-    return watchFolderFileStorage.onFolderChange(load);
+    return watchedFolderFileStorage.onFolderChange(load);
   }, [folders]);
 
   return outputIds;
