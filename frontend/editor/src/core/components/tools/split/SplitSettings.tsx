@@ -35,7 +35,6 @@ const SplitSettings = ({
       value={parameters.pages}
       onChange={(e) => onParameterChange("pages", e.target.value)}
       disabled={disabled}
-      data-testid="split-pages-input"
     />
   );
 
