@@ -440,6 +440,35 @@ class AiWorkflowServiceTest {
     }
 
     @Test
+    void convertMarkdownRunsDeterministicConversionAndReturnsMdFile() throws IOException {
+        MockMultipartFile input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
+        when(fileIdStrategy.idFor(any())).thenReturn("doc-1");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"convert_markdown",
+                  "reason":"PDF to Markdown requested.",
+                  "filesToIngest":[{"id":"doc-1","name":"multi-column-test_lorem.pdf"}]
+                }
+                """);
+        when(toolMetadataService.shouldUnpackZipResponse("/api/v1/convert/pdf/markdown"))
+                .thenReturn(false);
+        stubEndpoint(
+                "/api/v1/convert/pdf/markdown",
+                pdfResource("# Title", "multi-column-test_lorem.md"));
+        AtomicInteger ids = stubFileStorage();
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "convert to markdown"));
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        assertEquals(1, result.getResultFiles().size());
+        // Extension changes (pdf -> md), so the converter's response filename wins.
+        assertEquals("multi-column-test_lorem.md", result.getResultFiles().get(0).getFileName());
+        assertEquals(1, ids.get());
+        verify(internalApiClient, times(1)).post(eq("/api/v1/convert/pdf/markdown"), any());
+    }
+
+    @Test
     void toolCallWithoutEndpointFallsBackToCannotContinue() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator("{\"outcome\":\"tool_call\",\"parameters\":{}}");
