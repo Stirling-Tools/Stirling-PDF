@@ -62,8 +62,21 @@ function toFolderRecord(dto: ServerFolder): FolderRecord {
 
 export const folderSyncService = {
   async list(): Promise<FolderRecord[]> {
+    // Background sync fired automatically by the global FolderProvider on
+    // every (non-auth-route) load. If the backend rejects the request with a
+    // 401 - e.g. the storage API doesn't accept this deployment's session
+    // token - the error must NOT reach the global 401 handler: that handler
+    // hard-redirects to /login, the login page sees a valid session and
+    // bounces back to /, FolderProvider pulls again, and the app loops
+    // login->/->login forever. FolderContext.pullFromServer already handles
+    // 4xx locally (flips serverReachable, no banner), so fail silently here -
+    // mirroring fileSyncService's /api/v1/storage/files pull.
     const response = await apiClient.get<ServerFolder[]>(
       "/api/v1/storage/folders",
+      {
+        suppressErrorToast: true,
+        skipAuthRedirect: true,
+      },
     );
     return (response.data ?? []).map(toFolderRecord);
   },
