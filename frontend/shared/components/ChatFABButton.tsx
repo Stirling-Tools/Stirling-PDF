@@ -32,7 +32,6 @@ export function ChatFABButton({
         viewBox="0 0 192 192"
         fill="currentColor"
         aria-hidden="true"
-
       >
         <path
           d="M68.48 102.4 L184.73 6.45 L184.73 96.05 L68.48 192 Z"

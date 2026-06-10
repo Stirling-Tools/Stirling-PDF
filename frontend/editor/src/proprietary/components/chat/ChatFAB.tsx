@@ -73,7 +73,10 @@ export function ChatFAB() {
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const [rndPos, setRndPos] = useState<{ x: number; y: number } | null>(null);
-  const [rndSize, setRndSize] = useState({ width: PANEL_WIDTH_PX, height: PANEL_HEIGHT_PX });
+  const [rndSize, setRndSize] = useState({
+    width: PANEL_WIDTH_PX,
+    height: PANEL_HEIGHT_PX,
+  });
   const [isAnimatingReset, setIsAnimatingReset] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
