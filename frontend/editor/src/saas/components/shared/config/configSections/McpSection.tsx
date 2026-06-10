@@ -7,9 +7,10 @@ import {
   Group,
   Alert,
   Code,
-  List,
+  Badge,
   Button,
   CopyButton,
+  Tabs,
   Tooltip,
   ThemeIcon,
 } from "@mantine/core";
@@ -52,10 +53,9 @@ function CopyInline({ value, label }: { value: string; label: string }) {
 /**
  * SaaS user-facing guide for the MCP (Model Context Protocol) server.
  *
- * Unlike the admin section that toggles MCP on/off, this tab is purely
- * informational: it appears only when the server reports MCP is enabled
- * ({@code config.mcpEnabled}) and explains how an end user points their AI
- * assistant at the OAuth-protected {@code /mcp} endpoint.
+ * MCP is always enabled in SaaS, so this tab always shows. It is purely
+ * informational: it explains how an end user points their AI assistant at the
+ * OAuth-protected {@code /mcp} endpoint, with copy-paste config per client.
  */
 export default function McpSection() {
   const { t } = useTranslation();
@@ -69,56 +69,64 @@ export default function McpSection() {
   }, [config?.baseUrl]);
 
   const mcpUrl = `${baseUrl}/mcp`;
-  const metadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
 
-  const claudeConfig = useMemo(
-    () =>
-      JSON.stringify(
-        {
-          mcpServers: {
-            "stirling-pdf": {
-              type: "http",
-              url: mcpUrl,
-            },
-          },
-        },
-        null,
-        2,
-      ),
+  // Per-client connection snippets. Each tab shows where the file lives plus a
+  // copy-paste config block pointing at this deployment's /mcp endpoint.
+  const clients = useMemo(
+    () => [
+      {
+        value: "claude",
+        label: "Claude Desktop",
+        file: "claude_desktop_config.json",
+        config: JSON.stringify(
+          { mcpServers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
+          null,
+          2,
+        ),
+      },
+      {
+        value: "codex",
+        label: "Codex CLI",
+        file: "~/.codex/config.toml",
+        config: `[mcp_servers.stirling-pdf]\nurl = "${mcpUrl}"`,
+      },
+      {
+        value: "vscode",
+        label: "VS Code",
+        file: ".vscode/mcp.json",
+        config: JSON.stringify(
+          { servers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
+          null,
+          2,
+        ),
+      },
+    ],
     [mcpUrl],
   );
 
-  const toolCategories: { icon: string; key: string; fallback: string }[] = [
+  const tools: { icon: string; key: string; fallback: string }[] = [
     {
       icon: "sync-alt-rounded",
       key: "config.mcp.tools.convert",
-      fallback: "Convert - PDF to/from Office, images, HTML and more",
+      fallback: "Convert",
     },
     {
       icon: "description-rounded",
       key: "config.mcp.tools.pages",
-      fallback: "Pages - merge, split, rotate, reorder and remove pages",
+      fallback: "Pages",
     },
-    {
-      icon: "lock",
-      key: "config.mcp.tools.security",
-      fallback: "Security - add/remove passwords, watermark, redact, sign",
-    },
+    { icon: "lock", key: "config.mcp.tools.security", fallback: "Security" },
     {
       icon: "construction-rounded",
       key: "config.mcp.tools.misc",
-      fallback: "Misc - compress, OCR, flatten, repair and metadata",
+      fallback: "Misc",
     },
-    {
-      icon: "smart-toy-rounded",
-      key: "config.mcp.tools.ai",
-      fallback: "AI - run Stirling's AI-powered document operations",
-    },
+    { icon: "smart-toy-rounded", key: "config.mcp.tools.ai", fallback: "AI" },
   ];
 
   return (
     <div className="settings-section-container">
-      <Stack gap="lg" className="settings-section-content">
+      <Stack gap="md" className="settings-section-content">
         <div>
           <Group gap="sm" align="center">
             <ThemeIcon variant="light" size="lg" radius="md">
@@ -137,97 +145,78 @@ export default function McpSection() {
         </div>
 
         {/* Endpoint */}
-        <Paper withBorder p="md" radius="md">
-          <Stack gap="xs">
-            <Text fw={500} size="sm">
-              {t("config.mcp.endpoint.label", "Your MCP endpoint")}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "config.mcp.endpoint.description",
-                "Add this as a streamable-HTTP server in your MCP client.",
-              )}
-            </Text>
-            <Group gap="xs" wrap="nowrap" align="center">
-              <Code style={{ flex: 1, overflowX: "auto" }}>{mcpUrl}</Code>
-              <CopyInline value={mcpUrl} label="Endpoint URL" />
-            </Group>
-          </Stack>
-        </Paper>
-
-        {/* Connect steps (OAuth) */}
-        <Paper withBorder p="md" radius="md">
-          <Stack gap="sm">
-            <Text fw={500} size="sm">
-              {t("config.mcp.connect.title", "Connect your AI assistant")}
-            </Text>
-            <List size="sm" type="ordered" spacing="xs">
-              <List.Item>
-                {t("config.mcp.connect.step1", "In your MCP client, add a")}{" "}
-                <b>{t("config.mcp.connect.step1Type", "streamable-HTTP")}</b>{" "}
-                {t("config.mcp.connect.step1b", "server pointing at:")}{" "}
-                <Code>{mcpUrl}</Code>
-              </List.Item>
-              <List.Item>
-                {t(
-                  "config.mcp.connect.step2",
-                  "The client discovers sign-in automatically from:",
-                )}{" "}
-                <Code>{metadataUrl}</Code>
-              </List.Item>
-              <List.Item>
-                {t(
-                  "config.mcp.connect.step3",
-                  "Approve the sign-in with your Stirling account. The client retries with a token - no keys to copy or paste.",
-                )}
-              </List.Item>
-              <List.Item>
-                {t(
-                  "config.mcp.connect.step4",
-                  "Your tools appear in the assistant, grouped by category. You're ready to go.",
-                )}
-              </List.Item>
-            </List>
-          </Stack>
-        </Paper>
-
-        {/* Example client config */}
-        <Paper withBorder p="md" radius="md">
-          <Stack gap="xs">
-            <Group justify="space-between" align="center" wrap="nowrap">
+        <Paper withBorder p="sm" radius="md">
+          <Group gap="xs" wrap="nowrap" align="center">
+            <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
-                {t("config.mcp.example.title", "Example: Claude Desktop")}
+                {t("config.mcp.endpoint.label", "Your MCP endpoint")}
               </Text>
-              <CopyInline value={claudeConfig} label="Config" />
-            </Group>
+              <Code style={{ overflowX: "auto" }}>{mcpUrl}</Code>
+            </Stack>
+            <CopyInline value={mcpUrl} label="Endpoint URL" />
+          </Group>
+        </Paper>
+
+        {/* Per-client setup */}
+        <Paper withBorder p="sm" radius="md">
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              {t("config.mcp.setup.title", "Connect your AI assistant")}
+            </Text>
             <Text size="xs" c="dimmed">
               {t(
-                "config.mcp.example.description",
-                "Add this to your client's MCP config, then restart it. On first use you'll be asked to sign in.",
+                "config.mcp.setup.hint",
+                "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy.",
               )}
             </Text>
-            <Code block>{claudeConfig}</Code>
+            <Tabs defaultValue="claude" variant="pills" radius="md" mt={4}>
+              <Tabs.List>
+                {clients.map((c) => (
+                  <Tabs.Tab key={c.value} value={c.value}>
+                    {c.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+              {clients.map((c) => (
+                <Tabs.Panel key={c.value} value={c.value} pt="sm">
+                  <Stack gap="xs">
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                      <Text size="xs" c="dimmed">
+                        {t("config.mcp.setup.addTo", "Add to")}{" "}
+                        <Code>{c.file}</Code>
+                      </Text>
+                      <CopyInline value={c.config} label="Config" />
+                    </Group>
+                    <Code block>{c.config}</Code>
+                  </Stack>
+                </Tabs.Panel>
+              ))}
+            </Tabs>
           </Stack>
         </Paper>
 
         {/* Available tools */}
-        <Paper withBorder p="md" radius="md">
-          <Stack gap="sm">
-            <Text fw={500} size="sm">
-              {t("config.mcp.tools.title", "What your assistant can do")}
-            </Text>
-            <Stack gap="xs">
-              {toolCategories.map((cat) => (
-                <Group key={cat.key} gap="sm" align="center" wrap="nowrap">
-                  <ThemeIcon variant="light" size="md" radius="md" color="gray">
-                    <LocalIcon icon={cat.icon} width={18} height={18} />
-                  </ThemeIcon>
-                  <Text size="sm">{t(cat.key, cat.fallback)}</Text>
-                </Group>
-              ))}
-            </Stack>
-          </Stack>
-        </Paper>
+        <div>
+          <Text fw={500} size="sm" mb="xs">
+            {t("config.mcp.tools.title", "What your assistant can do")}
+          </Text>
+          <Group gap="xs">
+            {tools.map((tool) => (
+              <Badge
+                key={tool.key}
+                variant="light"
+                color="gray"
+                radius="sm"
+                size="lg"
+                leftSection={
+                  <LocalIcon icon={tool.icon} width={13} height={13} />
+                }
+              >
+                {t(tool.key, tool.fallback)}
+              </Badge>
+            ))}
+          </Group>
+        </div>
 
         {/* Tip / cross-link */}
         <Alert
@@ -235,26 +224,25 @@ export default function McpSection() {
           color="blue"
           icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
         >
-          <Stack gap="xs">
+          <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
             <Text size="sm">
               {t(
                 "config.mcp.tip",
                 "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly.",
               )}
             </Text>
-            <Group gap="xs">
-              <Button
-                size="xs"
-                variant="light"
-                leftSection={
-                  <LocalIcon icon="key-rounded" width={14} height={14} />
-                }
-                onClick={() => openAppSettings("api-keys")}
-              >
-                {t("config.mcp.viewApiKeys", "View API keys")}
-              </Button>
-            </Group>
-          </Stack>
+            <Button
+              size="xs"
+              variant="light"
+              style={{ flexShrink: 0 }}
+              leftSection={
+                <LocalIcon icon="key-rounded" width={14} height={14} />
+              }
+              onClick={() => openAppSettings("api-keys")}
+            >
+              {t("config.mcp.viewApiKeys", "View API keys")}
+            </Button>
+          </Group>
         </Alert>
       </Stack>
     </div>

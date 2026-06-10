@@ -3049,29 +3049,20 @@ tip = "Every action your assistant runs is performed as your account and counts 
 title = "MCP Server"
 viewApiKeys = "View API keys"
 
-[config.mcp.connect]
-step1 = "In your MCP client, add a"
-step1b = "server pointing at:"
-step1Type = "streamable-HTTP"
-step2 = "The client discovers sign-in automatically from:"
-step3 = "Approve the sign-in with your Stirling account. The client retries with a token - no keys to copy or paste."
-step4 = "Your tools appear in the assistant, grouped by category. You're ready to go."
-title = "Connect your AI assistant"
-
 [config.mcp.endpoint]
-description = "Add this as a streamable-HTTP server in your MCP client."
 label = "Your MCP endpoint"
 
-[config.mcp.example]
-description = "Add this to your client's MCP config, then restart it. On first use you'll be asked to sign in."
-title = "Example: Claude Desktop"
+[config.mcp.setup]
+addTo = "Add to"
+hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
+title = "Connect your AI assistant"
 
 [config.mcp.tools]
-ai = "AI - run Stirling's AI-powered document operations"
-convert = "Convert - PDF to/from Office, images, HTML and more"
-misc = "Misc - compress, OCR, flatten, repair and metadata"
-pages = "Pages - merge, split, rotate, reorder and remove pages"
-security = "Security - add/remove passwords, watermark, redact, sign"
+ai = "AI"
+convert = "Convert"
+misc = "Misc"
+pages = "Pages"
+security = "Security"
 title = "What your assistant can do"
 
 [config.overview]

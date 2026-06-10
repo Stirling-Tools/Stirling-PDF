@@ -8,7 +8,6 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { NavKey } from "@app/components/shared/config/types";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { withBasePath } from "@app/constants/app";
 import "@app/components/shared/AppConfigModal.css";
 import {
@@ -25,8 +24,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
   const { signOut, user, creditBalance, refreshCredits } = useAuth();
-  const { config } = useAppConfig();
-  const mcpEnabled = config?.mcpEnabled ?? false;
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
@@ -115,10 +112,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       createSaasConfigNavSections(Overview, openLogoutConfirm, {
         isDev,
         isAnonymous,
-        mcpEnabled,
         t,
       }),
-    [openLogoutConfirm, isDev, isAnonymous, mcpEnabled, t],
+    [openLogoutConfirm, isDev, isAnonymous, t],
   );
 
   const activeLabel = useMemo(() => {

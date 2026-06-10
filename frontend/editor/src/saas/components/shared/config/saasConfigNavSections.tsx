@@ -16,8 +16,6 @@ type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 interface CreateSaasConfigNavSectionsOptions {
   isDev?: boolean;
   isAnonymous?: boolean;
-  /** When the server reports MCP is enabled, surface the MCP integration tab. */
-  mcpEnabled?: boolean;
   t: TFunction<"translation", undefined>;
 }
 
@@ -112,10 +110,10 @@ function appendBillingSection(
 }
 
 /**
- * When MCP is enabled on the server, add an "MCP Server" tab next to API Keys
- * in the Developer section (falling back to its own section if Developer is
- * somehow absent). The tab is purely informational - how to connect an AI
- * assistant - so it shows for anonymous users too.
+ * Add an "MCP Server" tab next to API Keys in the Developer section (falling
+ * back to its own section if Developer is somehow absent). MCP is always on in
+ * SaaS, so the tab always shows; it is purely informational - how to connect an
+ * AI assistant - so it shows for anonymous users too.
  */
 function appendMcpSection(
   sections: ConfigNavSection[],
@@ -159,12 +157,7 @@ function appendMcpSection(
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
-  {
-    isDev = false,
-    isAnonymous = false,
-    mcpEnabled = false,
-    t,
-  }: CreateSaasConfigNavSectionsOptions,
+  { isDev = false, isAnonymous = false, t }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   const baseSections = createCoreConfigNavSections(false, false, false);
 
@@ -204,10 +197,7 @@ export function createSaasConfigNavSections(
 
   sections = ensurePreferencesSection(sections);
   sections = appendDeveloperSection(sections);
-
-  if (mcpEnabled) {
-    sections = appendMcpSection(sections, t);
-  }
+  sections = appendMcpSection(sections, t);
 
   if (!isAnonymous) {
     sections = appendBillingSection(sections, t);
