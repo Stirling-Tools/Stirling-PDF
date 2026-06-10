@@ -2819,6 +2819,10 @@ summary_one = "Ran 1 tool"
 summary_other = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 

@@ -17,6 +17,7 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import { ChatFAB } from "@app/components/chat/ChatFAB";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -220,6 +221,9 @@ export default function Workbench() {
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
+
+      {/* Floating AI chat button + panel */}
+      <ChatFAB />
 
       {/* Main content area */}
       <Box
