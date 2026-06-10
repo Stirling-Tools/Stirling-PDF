@@ -26,6 +26,9 @@ import stirling.software.saas.payg.model.FeatureSet;
  *     wallet_policy.cap_units} for subscribed teams. {@code null} means uncapped.
  * @param periodStart inclusive start of the current cap period.
  * @param periodEnd exclusive end of the current cap period.
+ * @param subscribed whether the team has an active PAYG subscription. Drives the messaging when a
+ *     billable call is hard-stopped: an un-subscribed team is told to subscribe; a subscribed team
+ *     that hit its self-set spending cap is told to raise it.
  */
 public record EntitlementSnapshot(
         EntitlementState state,
@@ -34,7 +37,8 @@ public record EntitlementSnapshot(
         long periodSpendUnits,
         Long periodCapUnits,
         LocalDateTime periodStart,
-        LocalDateTime periodEnd) {
+        LocalDateTime periodEnd,
+        boolean subscribed) {
 
     public boolean isDegraded() {
         return state == EntitlementState.DEGRADED;

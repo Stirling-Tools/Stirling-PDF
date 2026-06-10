@@ -653,7 +653,8 @@ class PaygWalletControllerTest {
                 spend,
                 cap,
                 start,
-                end);
+                end,
+                false);
     }
 
     private static Authentication jwtAuth(UUID supabaseId) {

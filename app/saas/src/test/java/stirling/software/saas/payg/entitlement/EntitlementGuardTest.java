@@ -37,6 +37,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.EntitlementState;
@@ -305,6 +306,88 @@ class EntitlementGuardTest {
     }
 
     // ---------------------------------------------------------------------------------------
+    // API-key calls: billable, hard-stop when degraded (allowance/cap reached)
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    void apiKeyCall_degradedFreeTeam_returns402AndAdvisesSubscribe() throws Exception {
+        // A plain server tool (OFFSITE_PROCESSING) reached via API key: the gate survives DEGRADED,
+        // so the gate loop would wave it through — but API usage is billable and must hard-stop
+        // once the free allowance is spent.
+        SecurityContextHolder.getContext().setAuthentication(apiKeyAuth(42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot(false));
+
+        HandlerMethod hm = handlerFor("manualTool"); // OFFSITE default gate
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("PAYG_LIMIT_REACHED");
+        assertThat(body.get("subscribed").asBoolean()).isFalse();
+        assertThat(body.get("message").asText()).contains("Subscribe");
+    }
+
+    @Test
+    void apiKeyCall_degradedSubscribedTeam_returns402AndAdvisesCap() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(apiKeyAuth(42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot(true));
+
+        HandlerMethod hm = handlerFor("manualTool");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("PAYG_LIMIT_REACHED");
+        assertThat(body.get("subscribed").asBoolean()).isTrue();
+        assertThat(body.get("message").asText()).contains("cap");
+    }
+
+    @Test
+    void apiKeyCall_withinAllowance_passes() throws Exception {
+        // Not degraded → API usage under the free allowance proceeds normally.
+        SecurityContextHolder.getContext().setAuthentication(apiKeyAuth(42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(fullSnapshot());
+
+        HandlerMethod hm = handlerFor("manualTool");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void jwtWebManualTool_degraded_stillPasses() throws Exception {
+        // The "allow JWT web tool usage" guarantee: a web (JWT) user running an everyday server
+        // tool (OFFSITE_PROCESSING) is NOT blocked when the team is over allowance — only billable
+        // API/AI/automation calls hard-stop. (Web manual calls are BillingCategory.BYPASSED.)
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(jwtAuth(supabaseId));
+        when(userRepository.findBySupabaseId(supabaseId))
+                .thenReturn(Optional.of(userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot(false));
+
+        HandlerMethod hm = handlerFor("manualTool"); // OFFSITE — survives DEGRADED
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
+    }
+
+    // ---------------------------------------------------------------------------------------
     // Fail-open
     // ---------------------------------------------------------------------------------------
 
@@ -380,10 +463,15 @@ class EntitlementGuardTest {
                 0L,
                 500L,
                 LocalDateTime.of(2026, 6, 1, 0, 0),
-                LocalDateTime.of(2026, 7, 1, 0, 0));
+                LocalDateTime.of(2026, 7, 1, 0, 0),
+                false);
     }
 
     private static EntitlementSnapshot degradedSnapshot() {
+        return degradedSnapshot(false);
+    }
+
+    private static EntitlementSnapshot degradedSnapshot(boolean subscribed) {
         return new EntitlementSnapshot(
                 EntitlementState.DEGRADED,
                 FeatureSet.MINIMAL,
@@ -391,7 +479,14 @@ class EntitlementGuardTest {
                 500L,
                 500L,
                 LocalDateTime.of(2026, 6, 1, 0, 0),
-                LocalDateTime.of(2026, 7, 1, 0, 0));
+                LocalDateTime.of(2026, 7, 1, 0, 0),
+                subscribed);
+    }
+
+    private static ApiKeyAuthenticationToken apiKeyAuth(long teamId) {
+        User u = userWithTeam(99L, teamId);
+        return new ApiKeyAuthenticationToken(
+                u, "sk-test", List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
     private static User userWithTeam(long userId, long teamId) {

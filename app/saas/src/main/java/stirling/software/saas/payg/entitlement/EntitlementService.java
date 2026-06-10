@@ -144,7 +144,8 @@ public class EntitlementService {
                 spendUnits,
                 capUnits,
                 periodStart,
-                periodEnd);
+                periodEnd,
+                billing.subscribed());
     }
 
     /**
@@ -178,6 +179,7 @@ public class EntitlementService {
                 0L,
                 null,
                 w[0],
-                w[1]);
+                w[1],
+                false);
     }
 }

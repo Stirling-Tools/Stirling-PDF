@@ -75,6 +75,7 @@ public class EntitlementGuard implements HandlerInterceptor {
 
     private final Counter passCounter;
     private final Counter deniedDegradedCounter;
+    private final Counter deniedPaygLimitCounter;
     private final Counter deniedSignupRequiredCounter;
     private final Counter errorsCounter;
     private final Counter skippedNoAnnotationCounter;
@@ -94,6 +95,10 @@ public class EntitlementGuard implements HandlerInterceptor {
         this.deniedDegradedCounter =
                 Counter.builder("payg.entitlement.guard")
                         .tag("outcome", "denied_degraded")
+                        .register(meterRegistry);
+        this.deniedPaygLimitCounter =
+                Counter.builder("payg.entitlement.guard")
+                        .tag("outcome", "denied_payg_limit")
                         .register(meterRegistry);
         this.deniedSignupRequiredCounter =
                 Counter.builder("payg.entitlement.guard")
@@ -173,6 +178,17 @@ public class EntitlementGuard implements HandlerInterceptor {
             return true;
         }
 
+        // API-key calls are always billable usage (BillingCategory.API) — there is no "free
+        // manual" path for a programmatic client the way there is for a JWT/web user, whose
+        // everyday tool calls are BYPASSED and never reach a gate. So once the team is over its
+        // free allowance / spending cap (DEGRADED), every API-key call hard-stops, regardless of
+        // which gate the route declares. The gate loop below would otherwise wave through an API
+        // call to a plain server tool (it needs only OFFSITE_PROCESSING, which survives DEGRADED),
+        // letting an unsubscribed team keep consuming the API for free past its allowance.
+        if (auth instanceof ApiKeyAuthenticationToken && snapshot.isDegraded()) {
+            return write402PaygLimitReached(response, snapshot);
+        }
+
         List<FeatureGate> enabled = snapshot.enabledGates();
         for (FeatureGate gate : required) {
             if (enabled == null || !enabled.contains(gate)) {
@@ -239,6 +255,36 @@ public class EntitlementGuard implements HandlerInterceptor {
         body.put("error", "SIGNUP_REQUIRED");
         body.put("category", inferCategory(required));
         writeJson(response, HttpStatus.UNAUTHORIZED, body);
+        return false;
+    }
+
+    /**
+     * 402 for a billable API-key call once the team is over its allowance / cap. The message is
+     * tailored by subscription state: an un-subscribed team is told to subscribe (their free
+     * allowance is spent); a subscribed team is told it hit its own spending cap. Programmatic
+     * clients get a stable {@code error} code plus the spend/cap numbers so they can surface
+     * something actionable.
+     */
+    private boolean write402PaygLimitReached(
+            HttpServletResponse response, EntitlementSnapshot snapshot) {
+        deniedPaygLimitCounter.increment();
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", "PAYG_LIMIT_REACHED");
+        body.put("subscribed", snapshot.subscribed());
+        body.put(
+                "message",
+                snapshot.subscribed()
+                        ? "Your team has reached its monthly spending cap. Raise the cap to"
+                                + " continue, or wait for it to reset next billing period."
+                        : "Your team has used its free document allowance for this period."
+                                + " Subscribe to continue using the API.");
+        body.put("state", snapshot.state().name());
+        body.put("spendUnits", snapshot.periodSpendUnits());
+        body.put("capUnits", snapshot.periodCapUnits());
+        body.put(
+                "periodEnd",
+                Optional.ofNullable(snapshot.periodEnd()).map(Object::toString).orElse(null));
+        writeJson(response, HttpStatus.PAYMENT_REQUIRED, body);
         return false;
     }
 
