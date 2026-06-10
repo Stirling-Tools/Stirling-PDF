@@ -25,10 +25,20 @@ function trimTrailingSlash(url: string): string {
 
 /** A small copy-to-clipboard button that sits inline next to a URL/snippet. */
 function CopyInline({ value, label }: { value: string; label: string }) {
+  const { t } = useTranslation();
   return (
     <CopyButton value={value} timeout={1500}>
       {({ copied, copy }) => (
-        <Tooltip label={copied ? label + " copied" : "Copy " + label} withArrow>
+        <Tooltip
+          label={
+            copied
+              ? t("config.mcp.copy.tooltipCopied", "{{label}} copied", {
+                  label,
+                })
+              : t("config.mcp.copy.tooltip", "Copy {{label}}", { label })
+          }
+          withArrow
+        >
           <Button
             size="compact-xs"
             variant="subtle"
@@ -42,7 +52,9 @@ function CopyInline({ value, label }: { value: string; label: string }) {
               />
             }
           >
-            {copied ? "Copied" : "Copy"}
+            {copied
+              ? t("config.mcp.copy.copied", "Copied")
+              : t("config.mcp.copy.copy", "Copy")}
           </Button>
         </Tooltip>
       )}
@@ -147,7 +159,10 @@ export default function McpSection() {
               </Text>
               <Code style={{ overflowX: "auto" }}>{mcpUrl}</Code>
             </Stack>
-            <CopyInline value={mcpUrl} label="Endpoint URL" />
+            <CopyInline
+              value={mcpUrl}
+              label={t("config.mcp.copy.endpointLabel", "Endpoint URL")}
+            />
           </Group>
         </Paper>
 
@@ -179,7 +194,10 @@ export default function McpSection() {
                         {t("config.mcp.setup.addTo", "Add to")}{" "}
                         <Code>{c.file}</Code>
                       </Text>
-                      <CopyInline value={c.config} label="Config" />
+                      <CopyInline
+                        value={c.config}
+                        label={t("config.mcp.copy.configLabel", "Config")}
+                      />
                     </Group>
                     <Code block>{c.config}</Code>
                   </Stack>

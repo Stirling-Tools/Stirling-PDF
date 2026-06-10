@@ -3049,6 +3049,14 @@ tip = "Every action your assistant runs is performed as your account and counts 
 title = "MCP Server"
 viewApiKeys = "View API keys"
 
+[config.mcp.copy]
+configLabel = "Config"
+copied = "Copied"
+copy = "Copy"
+endpointLabel = "Endpoint URL"
+tooltip = "Copy {{label}}"
+tooltipCopied = "{{label}} copied"
+
 [config.mcp.endpoint]
 label = "Your MCP endpoint"
 
