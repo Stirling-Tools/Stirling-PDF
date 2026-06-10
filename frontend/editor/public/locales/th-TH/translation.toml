@@ -47,8 +47,8 @@ downloadUnavailable = "ไม่สามารถดาวน์โหลดร
 edit = "แก้ไข"
 editSecret = "แก้ไขค่านี้"
 editYourNewFiles = "แก้ไขไฟล์ใหม่ของคุณ"
-encryptedFileBlocked = "ไฟล์ถูกป้องกันด้วยรหัสผ่าน โปรดปลดล็อกก่อน"
-encryptedFilesBlocked_one = "{{count}} file are password-protected. Unlock them first."
+encryptedFilesBlocked_one = "ไฟล์ถูกป้องกันด้วยรหัสผ่าน โปรดปลดล็อกก่อน"
+
 encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "ส่งออกและทำต่อ"
 false = "เท็จ"

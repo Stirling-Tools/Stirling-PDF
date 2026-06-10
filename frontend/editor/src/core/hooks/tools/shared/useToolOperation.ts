@@ -84,7 +84,7 @@ export const useToolOperation = <TParams>(
     useFileContext();
   const { actions: navActions } = useNavigationActions();
   const viewerContext = useContext(ViewerContext);
-  const setActiveFileId = viewerContext?.setActiveFileId ?? (() => {});
+  const setActiveFileId = viewerContext?.setActiveFileId ?? (() => { });
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -155,18 +155,13 @@ export const useToolOperation = <TParams>(
           fileActions.openEncryptedUnlockPrompt(ef.fileId);
         }
         actions.setError(
-          encryptedFiles.length === 1
-            ? t(
-                "encryptedFileBlocked",
-                "File is password-protected. Unlock it first.",
-              )
-            : t(
-                "encryptedFilesBlocked",
-                "{{count}} files are password-protected. Unlock them first.",
-                {
-                  count: encryptedFiles.length,
-                },
-              ),
+          t(
+            "encryptedFilesBlocked",
+            "{{count}} files are password-protected. Unlock them first.",
+            {
+              count: encryptedFiles.length,
+            },
+          ),
         );
         return;
       }
@@ -463,8 +458,8 @@ export const useToolOperation = <TParams>(
                 (file, thumbnail, metadata, index) =>
                   createChildStub(
                     successInputStubs[index] ||
-                      inputStirlingFileStubs[index] ||
-                      inputStirlingFileStubs[0],
+                    inputStirlingFileStubs[index] ||
+                    inputStirlingFileStubs[0],
                     newToolOperation,
                     file,
                     metadata?.thumbnailUrl || thumbnail,

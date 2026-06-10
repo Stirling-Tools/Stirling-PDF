@@ -47,8 +47,8 @@ downloadUnavailable = "ഈ ഇനത്തിന് ഡൗൺലോഡ് ലഭ
 edit = "തിരുത്തുക"
 editSecret = "ഈ മൂല്യം തിരുത്തുക"
 editYourNewFiles = "നിങ്ങളുടെ പുതിയ ഫയൽ(കൾ) തിരുത്തുക"
-encryptedFileBlocked = "ഫയൽ പാസ്‌വേഡിനാൽ സംരക്ഷിച്ചിരിക്കുന്നു. ആദ്യം അത് അൺലോക്ക് ചെയ്യുക."
-encryptedFilesBlocked_one = "{{count}} file are password-protected. Unlock them first."
+encryptedFilesBlocked_one = "ഫയൽ പാസ്‌വേഡിനാൽ സംരക്ഷിച്ചിരിക്കുന്നു. ആദ്യം അത് അൺലോക്ക് ചെയ്യുക."
+
 encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "എക്സ്പോർട്ട് ചെയ്ത് തുടരുക"
 false = "തെറ്റ്"

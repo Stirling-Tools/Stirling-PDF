@@ -47,8 +47,8 @@ downloadUnavailable = "Завантаження недоступне для ць
 edit = "Редагувати"
 editSecret = "Редагувати це значення"
 editYourNewFiles = "Редагувати нові файли"
-encryptedFileBlocked = "Файл захищено паролем. Спочатку розблокуйте його."
-encryptedFilesBlocked_one = "{{count}} file are password-protected. Unlock them first."
+encryptedFilesBlocked_one = "Файл захищено паролем. Спочатку розблокуйте його."
+
 encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Експортувати й продовжити"
 false = "Брехня"

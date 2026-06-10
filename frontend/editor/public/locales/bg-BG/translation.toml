@@ -47,8 +47,8 @@ downloadUnavailable = "Изтеглянето не е налично за тоз
 edit = "Редактиране"
 editSecret = "Редактирайте тази стойност"
 editYourNewFiles = "Редактирайте новия/новите си файлове"
-encryptedFileBlocked = "Файлът е защитен с парола. Първо го отключете."
-encryptedFilesBlocked_one = "{{count}} file are password-protected. Unlock them first."
+encryptedFilesBlocked_one = "Файлът е защитен с парола. Първо го отключете."
+
 encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Експортирай и продължи"
 false = "Невярно"

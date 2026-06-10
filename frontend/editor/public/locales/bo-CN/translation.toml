@@ -47,8 +47,8 @@ downloadUnavailable = "དངོས་པོ་འདི་ཕབ་ལེན་
 edit = "རྩོམ་སྒྲིག"
 editSecret = "གནས་གོང་འདི་རྩོམ་སྒྲིག"
 editYourNewFiles = "ཁྱེད་རང་གི་ཡིག་ཆ་གསར་པ་རྩོམ་སྒྲིག་བྱེད་དགོས།"
-encryptedFileBlocked = "ཡིག་ཆ་འདི་གསང་ཨང་བདམས་པ་ཡིན། དང་པོ་གསང་ཨང་ཕྱིར་འདོར་དགོས།"
-encryptedFilesBlocked_one = "{{count}} file are password-protected. Unlock them first."
+encryptedFilesBlocked_one = "ཡིག་ཆ་འདི་གསང་ཨང་བདམས་པ་ཡིན། དང་པོ་གསང་ཨང་ཕྱིར་འདོར་དགོས།"
+
 encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "ཕྱིར་གཏོང་དང་མུ་མཐུད་པ།"
 false = "ནོར་འཁྲུལ"
