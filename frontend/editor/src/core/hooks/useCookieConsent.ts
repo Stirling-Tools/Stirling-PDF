@@ -36,14 +36,14 @@ export const useCookieConsent = ({
 
     const mainCSS = document.createElement("link");
     mainCSS.rel = "stylesheet";
-    mainCSS.href = `${BASE_PATH}css/cookieconsent.css`;
+    mainCSS.href = `${BASE_PATH}/css/cookieconsent.css`;
     if (!document.querySelector(`link[href="${mainCSS.href}"]`)) {
       document.head.appendChild(mainCSS);
     }
 
     const customCSS = document.createElement("link");
     customCSS.rel = "stylesheet";
-    customCSS.href = `${BASE_PATH}css/cookieconsentCustomisation.css`;
+    customCSS.href = `${BASE_PATH}/css/cookieconsentCustomisation.css`;
     if (!document.querySelector(`link[href="${customCSS.href}"]`)) {
       document.head.appendChild(customCSS);
     }
@@ -57,7 +57,7 @@ export const useCookieConsent = ({
     }
 
     const script = document.createElement("script");
-    script.src = `${BASE_PATH}js/thirdParty/cookieconsent.umd.js`;
+    script.src = `${BASE_PATH}/js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
       setTimeout(() => {
         const detectTheme = () => {

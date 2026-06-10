@@ -20,6 +20,7 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAuth } from "@app/auth/UseSession";
+import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
 import {
   useIndexedDB,
   useIndexedDBRevision,
@@ -185,6 +186,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [accountUsername, setAccountUsername] = useState<string | null>(null);
     const displayName =
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
+
+    const profilePictureUrl = useProfilePictureUrl();
+    const [pictureFailed, setPictureFailed] = useState(false);
+    useEffect(() => setPictureFailed(false), [profilePictureUrl]);
+    const showProfilePicture = !!profilePictureUrl && !pictureFailed;
 
     useEffect(() => {
       if (!config?.enableLogin) {
@@ -943,10 +949,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             style={onOpenSettings ? { cursor: "pointer" } : undefined}
           >
             <div
-              className="file-sidebar-bottom-avatar"
+              className={`file-sidebar-bottom-avatar${
+                showProfilePicture ? " file-sidebar-bottom-avatar--picture" : ""
+              }`}
               aria-label={displayName}
             >
-              {displayName.charAt(0).toUpperCase()}
+              {showProfilePicture ? (
+                <img
+                  src={profilePictureUrl}
+                  alt=""
+                  className="file-sidebar-bottom-avatar-img"
+                  onError={() => setPictureFailed(true)}
+                />
+              ) : (
+                displayName.charAt(0).toUpperCase()
+              )}
             </div>
             {!collapsed && (
               <span className="file-sidebar-bottom-name sidebar-content-fade">

@@ -128,10 +128,14 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           "[useEndpointConfig] Fetching all endpoint statuses from server",
         );
 
-        // Fetch all endpoints at once - no query params needed
+        // Fetch all endpoints at once; auto-fires on app load, so a 401 must
+        // fail silently instead of triggering the global login redirect.
         const response = await apiClient.get<
           Record<string, EndpointAvailabilityDetails>
-        >(`/api/v1/config/endpoints-availability`);
+        >(`/api/v1/config/endpoints-availability`, {
+          suppressErrorToast: true,
+          skipAuthRedirect: true,
+        });
 
         // Populate global cache with all results
         Object.entries(response.data).forEach(([endpoint, details]) => {

@@ -2960,6 +2960,7 @@ tags = "squish,small,tiny"
 
 [config]
 plan = "Plan"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Delete My Account"

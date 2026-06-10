@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { springAuth } from "@app/auth/springAuthClient";
 import { clearPlatformAuthOnLoginInit } from "@app/extensions/authSessionCleanup";
+import { stripBasePath } from "@app/constants/app";
 import type {
   Session,
   User,
@@ -167,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Clear any platform-specific cached auth on login page init.
         if (
           typeof window !== "undefined" &&
-          window.location.pathname.startsWith("/login")
+          stripBasePath(window.location.pathname).startsWith("/login")
         ) {
           await clearPlatformAuthOnLoginInit();
         }
