@@ -272,6 +272,36 @@
   background: linear-gradient(90deg, #dc2626, #f87171);
 }
 
+/* ── Cap editor preset chips ────────────────────────────────────────── */
+.payg-cap-chip {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--payg-card-border);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.payg-cap-chip:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.payg-cap-chip[data-selected="true"] {
+  background: rgba(10, 139, 255, 0.14);
+  border-color: #0a8bff;
+  color: #0a8bff;
+}
+[data-mantine-color-scheme="dark"] .payg-cap-chip[data-selected="true"] {
+  color: #66b8ff;
+}
+.payg-cap-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 /* ── "What counts as a document?" expandable help ───────────────────── */
 .payg-help {
   margin-top: 12px;

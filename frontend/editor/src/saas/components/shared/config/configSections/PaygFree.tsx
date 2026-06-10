@@ -67,7 +67,9 @@ function useFreeSnapshot(): FreeSnapshot {
         billingPeriodStart: wallet.billingPeriodStart,
         billingPeriodEnd: wallet.billingPeriodEnd,
         billableUsed: wallet.billableUsed,
-        billableLimit: wallet.billableLimit,
+        // The free view's ceiling IS the allowance (for free teams the
+        // backend's billableLimit equals it, but freeAllowance is never null).
+        billableLimit: wallet.freeAllowance,
       };
     }
     const now = new Date();

@@ -93,14 +93,40 @@ export interface Wallet {
   teamId: number | null;
   status: WalletStatus;
   role: WalletRole;
-  /** ISO yyyy-mm-dd. */
+  /**
+   * ISO yyyy-mm-dd. The Stripe subscription's current period when subscribed;
+   * the calendar month for free teams.
+   */
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  /** Automation + AI + API operations used this cycle. */
+  /** Documents processed by automation + AI + API this cycle. */
   billableUsed: number;
-  /** Free-tier ceiling. 500 in V1. */
-  billableLimit: number;
-  /** USD cap when subscribed; null when noCap or status=='free'. */
+  /**
+   * The team's document ceiling this period: the free allowance for free
+   * teams; freeAllowance + floor(cap / perDocRate) for capped subscribed
+   * teams; null when subscribed with no cap (uncapped).
+   */
+  billableLimit: number | null;
+  /**
+   * Documents per cycle that are free before paid billing starts
+   * (pricing_policy.free_tier_units_per_cycle).
+   */
+  freeAllowance: number;
+  /**
+   * Paid per-document rate in minor units of {@link Wallet#currency} (may be
+   * fractional); null when the rate can't be resolved — render "unknown",
+   * never substitute.
+   */
+  pricePerDocMinor: number | null;
+  /** Lower-case ISO 4217 currency of the subscription's Stripe Price; null when unknown. */
+  currency: string | null;
+  /**
+   * Estimated charges so far this period in minor units of currency:
+   * max(0, used − freeAllowance) × rate. Informational — the Stripe invoice
+   * is authoritative. Null when the rate is unknown.
+   */
+  estimatedBillMinor: number | null;
+  /** Monthly cap in major currency units when subscribed; null when noCap or status=='free'. */
   capUsd: number | null;
   /** Only meaningful when status=='subscribed'. */
   noCap: boolean;
@@ -213,11 +239,18 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.billingPeriodEnd !== next.billingPeriodEnd ||
     prev.billableUsed !== next.billableUsed ||
     prev.billableLimit !== next.billableLimit ||
+    prev.freeAllowance !== next.freeAllowance ||
+    prev.pricePerDocMinor !== next.pricePerDocMinor ||
+    prev.currency !== next.currency ||
+    prev.estimatedBillMinor !== next.estimatedBillMinor ||
     prev.capUsd !== next.capUsd ||
     prev.noCap !== next.noCap ||
     prev.stripeSubscriptionId !== next.stripeSubscriptionId ||
     prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod
   ) {
+    return next;
+  }
+  if (prev.recent.length !== next.recent.length) {
     return next;
   }
   if (
@@ -277,7 +310,11 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     billingPeriodStart: isoDay(periodStart),
     billingPeriodEnd: isoDay(periodEnd),
     billableUsed: 62,
-    billableLimit: 500,
+    billableLimit: subscribed ? 1750 : 500,
+    freeAllowance: 500,
+    pricePerDocMinor: subscribed ? 2 : null,
+    currency: subscribed ? "usd" : null,
+    estimatedBillMinor: subscribed ? 0 : null,
     capUsd: subscribed ? 25 : null,
     noCap: false,
     stripeSubscriptionId: subscribed ? "sub_devpreview" : null,

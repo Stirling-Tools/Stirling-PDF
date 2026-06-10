@@ -169,13 +169,44 @@ export function DocHelp() {
 // ─── Hero usage panel ───────────────────────────────────────────────────────
 
 /**
- * Usage hero — gradient panel with the allowance bar. Both numbers are real:
- * {@code billableUsed} (wallet_ledger period sum) over {@code billableLimit}
- * (free-tier allowance for free teams; the USD cap translated to units for
- * subscribed teams — the backend's resolveBillableLimit does that translation
- * server-side). The display state (healthy / approaching / reached) derives
- * from the real percentage at the backend's default thresholds (80/100); the
- * money-spent estimate stays out until stripe.prices wiring lands (PR-C2).
+ * Format minor units of an ISO currency for display ("$2.24", "£0.40"). Only
+ * called when the backend resolved the rate — currency is always present
+ * alongside a non-null money amount.
+ */
+function formatMinor(minor: number, currency: string | null): string {
+  const code = (currency ?? "usd").toUpperCase();
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+    }).format(minor / 100);
+  } catch {
+    return `${(minor / 100).toFixed(2)} ${code}`;
+  }
+}
+
+/** Currency symbol for compact inline use; falls back to the ISO code. */
+function currencySymbol(currency: string | null): string {
+  switch ((currency ?? "").toLowerCase()) {
+    case "usd":
+      return "$";
+    case "eur":
+      return "€";
+    case "gbp":
+      return "£";
+    default:
+      return currency ? currency.toUpperCase() + " " : "$";
+  }
+}
+
+/**
+ * Usage hero — gradient panel with the allowance bar. Every number is real:
+ * {@code billableUsed} is the ledger's period sum over the team's actual
+ * billing window (the Stripe subscription period); {@code billableLimit} is
+ * the backend-derived document ceiling (free allowance + what the money cap
+ * buys at the subscription Price's per-document rate, null when uncapped);
+ * {@code estimatedBillMinor} is spend beyond the allowance at that rate.
+ * Fields the backend couldn't resolve are null and simply not rendered.
  */
 function UsageHero({ wallet }: { wallet: Wallet }) {
   const { t } = useTranslation();
@@ -188,11 +219,18 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
   const hasCap = !wallet.noCap && wallet.capUsd != null;
   const breakdown = wallet.categoryBreakdown;
 
-  const hasLimit = wallet.billableLimit > 0;
+  const limit = wallet.billableLimit;
+  const hasLimit = limit != null && limit > 0;
   const pct = hasLimit
-    ? Math.min(100, (wallet.billableUsed / wallet.billableLimit) * 100)
+    ? Math.min(100, (wallet.billableUsed / limit) * 100)
     : 0;
-  const state = pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
+  const state = hasLimit
+    ? pct >= 100
+      ? "DEGRADED"
+      : pct >= 80
+        ? "WARNED"
+        : "FULL"
+    : "FULL";
   const stateLabel = {
     FULL: t("payg.state.full", "Healthy"),
     WARNED: t("payg.state.warned", "Approaching cap"),
@@ -211,12 +249,15 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
               <span className="payg-hero__spend">
                 {wallet.billableUsed.toLocaleString()}
               </span>
-              {hasLimit && (
-                <span className="payg-hero__cap">
-                  / {wallet.billableLimit.toLocaleString()}{" "}
-                  {t("payg.usage.documents", "documents")}
-                </span>
-              )}
+              <span className="payg-hero__cap">
+                {hasLimit
+                  ? t(
+                      "payg.usage.ofLimitProcessed",
+                      "/ {{limit}} documents processed",
+                      { limit: limit.toLocaleString() },
+                    )
+                  : t("payg.usage.processed", "documents processed")}
+              </span>
             </div>
           </div>
           <div className="payg-status" data-state={state}>
@@ -237,21 +278,28 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
 
         <div className="payg-hero__meta">
           <span>
-            {t(
-              "payg.usage.breakdown",
-              "AI {{ai}} • Automation {{automation}} • API {{api}}",
-              {
-                ai: breakdown.ai.toLocaleString(),
-                automation: breakdown.automation.toLocaleString(),
-                api: breakdown.api.toLocaleString(),
-              },
-            )}
+            {t("payg.usage.firstFree", "First {{free}} free", {
+              free: wallet.freeAllowance.toLocaleString(),
+            })}
           </span>
+          {wallet.estimatedBillMinor != null && (
+            <>
+              <span className="payg-hero__meta-dot">•</span>
+              <span>
+                {t("payg.usage.estBill", "≈ {{amount}} so far this period", {
+                  amount: formatMinor(
+                    wallet.estimatedBillMinor,
+                    wallet.currency,
+                  ),
+                })}
+              </span>
+            </>
+          )}
           <span className="payg-hero__meta-dot">•</span>
           <span>
             {hasCap
-              ? t("payg.usage.capLine", "${{cap}}/mo cap", {
-                  cap: wallet.capUsd,
+              ? t("payg.usage.capLine", "{{cap}}/mo cap", {
+                  cap: `${currencySymbol(wallet.currency)}${wallet.capUsd}`,
                 })
               : t("payg.usage.noCap", "No monthly cap")}
           </span>
@@ -265,6 +313,20 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
           </span>
         </div>
 
+        <div className="payg-hero__meta" style={{ marginTop: 6 }}>
+          <span>
+            {t(
+              "payg.usage.breakdown",
+              "AI {{ai}} • Automation {{automation}} • API {{api}}",
+              {
+                ai: breakdown.ai.toLocaleString(),
+                automation: breakdown.automation.toLocaleString(),
+                api: breakdown.api.toLocaleString(),
+              },
+            )}
+          </span>
+        </div>
+
         <DocHelp />
       </div>
     </div>
@@ -274,25 +336,41 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
 // ─── Cap editor ─────────────────────────────────────────────────────────────
 
 interface CapEditorProps {
-  /** Current cap in whole USD; null = no cap set. */
+  /** Current cap in major currency units; null = no cap set. */
   capUsd: number | null;
   /** True when the leader explicitly disabled the cap. */
   noCap: boolean;
+  /** Free allowance in documents/month (pricing policy). */
+  freeAllowance: number;
+  /** Per-document rate in minor units; null when unknown — preview hides. */
+  pricePerDocMinor: number | null;
+  /** Currency of the rate; pairs with {@link CapEditorProps#pricePerDocMinor}. */
+  currency: string | null;
   /**
-   * Persist the cap change. Receives whole USD (matches the backend's
+   * Persist the cap change. Receives whole major units (matches the backend's
    * {@code PATCH /api/v1/payg/cap} body) or null for no-cap.
    */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
 }
 
+// Same quick amounts the checkout flow offers — recognition over recall.
+const CAP_PRESETS = [10, 25, 50, 100] as const;
+
 /**
- * Edits exactly what the backend stores: a USD cap + a no-cap flag. The
- * units↔money preview and warn/degrade threshold editors from the original
- * design need backend surfaces that don't exist yet (cap-preview via
- * stripe.prices, PATCH support for wallet_policy thresholds) and will return
- * with PR-C2 — until then the editor doesn't render controls it can't save.
+ * Single-row cap editor: preset chips + custom amount + a compact no-cap
+ * toggle, with a live "≈ N documents/month" preview computed from the same
+ * free-allowance + per-document rate the backend enforces. Save-only (the
+ * controls themselves show the pending state; abandoning the card abandons
+ * the edit).
  */
-function CapEditor({ capUsd, noCap, onSaveCap }: CapEditorProps) {
+function CapEditor({
+  capUsd,
+  noCap,
+  freeAllowance,
+  pricePerDocMinor,
+  currency,
+  onSaveCap,
+}: CapEditorProps) {
   const { t } = useTranslation();
   const [money, setMoney] = useState<number>(capUsd ?? 25);
   const [uncapped, setUncapped] = useState<boolean>(noCap || capUsd == null);
@@ -302,64 +380,68 @@ function CapEditor({ capUsd, noCap, onSaveCap }: CapEditorProps) {
     uncapped !== (noCap || capUsd == null) ||
     (!uncapped && money !== (capUsd ?? 25));
 
+  const sym = currencySymbol(currency);
+  // Mirror of the backend's docCapForMoney: free + floor(capMinor / rate).
+  const previewDocs =
+    !uncapped && pricePerDocMinor != null && pricePerDocMinor > 0
+      ? freeAllowance + Math.floor((money * 100) / pricePerDocMinor)
+      : null;
+
   return (
     <div className="payg-card">
-      <Stack gap="lg">
+      <Stack gap="sm">
         <div>
           <div className="payg-card__title">
             {t("payg.cap.title", "Monthly spending cap")}
           </div>
           <div className="payg-card__subtitle">
             {t(
-              "payg.cap.subtitleUsd",
-              "Set the maximum your team can spend per month. Usage pauses at the cap and resumes next period.",
+              "payg.cap.subtitle",
+              "The most your team can spend per month. Billable processing pauses at the cap and resumes next period.",
             )}
           </div>
         </div>
 
-        <Group align="flex-end" gap="sm" wrap="nowrap">
+        <Group gap="xs" align="center" wrap="wrap">
+          {CAP_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              className="payg-cap-chip"
+              data-selected={!uncapped && money === preset}
+              disabled={uncapped}
+              onClick={() => {
+                setUncapped(false);
+                setMoney(preset);
+              }}
+            >
+              {sym}
+              {preset}
+            </button>
+          ))}
           <NumberInput
-            label={t("payg.cap.amount", "Cap amount")}
             value={money}
             onChange={(v) => setMoney(typeof v === "number" ? v : 0)}
             min={0}
             step={5}
             decimalScale={0}
-            prefix="$"
-            size="md"
-            style={{ flex: 1 }}
+            prefix={sym}
+            size="xs"
+            w={110}
             disabled={uncapped}
+            aria-label={t("payg.cap.amount", "Cap amount")}
           />
-          <Text size="sm" pb={10} c="dimmed">
-            {t("payg.cap.perMonth", "/ month")}
-          </Text>
-        </Group>
-
-        <Switch
-          checked={uncapped}
-          onChange={(e) => setUncapped(e.currentTarget.checked)}
-          label={t("payg.cap.noCapLabel", "No monthly cap")}
-          description={t(
-            "payg.cap.noCapDesc",
-            "Usage is billed without an upper limit. You can re-enable a cap at any time.",
-          )}
-        />
-
-        <Group justify="flex-end" gap="sm">
+          <Switch
+            size="sm"
+            checked={uncapped}
+            onChange={(e) => setUncapped(e.currentTarget.checked)}
+            label={t("payg.cap.noCapLabel", "No cap")}
+            styles={{ label: { paddingInlineStart: 6 } }}
+          />
           <Button
             variant="default"
             size="xs"
-            disabled={!dirty}
-            onClick={() => {
-              setMoney(capUsd ?? 25);
-              setUncapped(noCap || capUsd == null);
-            }}
-          >
-            {t("common.cancel", "Cancel")}
-          </Button>
-          <Button
-            variant="default"
-            size="xs"
+            ml="auto"
             disabled={!dirty || saving}
             loading={saving}
             leftSection={<LocalIcon icon="check-rounded" />}
@@ -376,6 +458,29 @@ function CapEditor({ capUsd, noCap, onSaveCap }: CapEditorProps) {
             {t("payg.cap.save", "Update cap")}
           </Button>
         </Group>
+
+        {previewDocs != null && (
+          <Text size="sm" c="dimmed">
+            {t(
+              "payg.cap.docsPreview",
+              "≈ {{docs}} documents/month ({{free}} free + {{paid}} at {{rate}}/document)",
+              {
+                docs: previewDocs.toLocaleString(),
+                free: freeAllowance.toLocaleString(),
+                paid: (previewDocs - freeAllowance).toLocaleString(),
+                rate: formatMinor(pricePerDocMinor ?? 0, currency),
+              },
+            )}
+          </Text>
+        )}
+        {uncapped && (
+          <Text size="sm" c="dimmed">
+            {t(
+              "payg.cap.noCapDesc",
+              "Usage is billed without an upper limit. You can re-enable a cap at any time.",
+            )}
+          </Text>
+        )}
       </Stack>
     </div>
   );
@@ -846,7 +951,7 @@ const Payg: React.FC<PaygProps> = ({
           <div className="payg-header__subtitle">
             {t(
               "payg.subtitle",
-              "Pay-as-you-go — you only pay for what you process. Billing period {{start}} – {{end}}.",
+              "Manual editing is always free — you only pay for documents processed by automation, AI, and the API. Billing period {{start}} – {{end}}.",
               {
                 start: fmt(wallet.billingPeriodStart),
                 end: fmt(wallet.billingPeriodEnd),
@@ -866,6 +971,9 @@ const Payg: React.FC<PaygProps> = ({
           <CapEditor
             capUsd={wallet.capUsd}
             noCap={wallet.noCap}
+            freeAllowance={wallet.freeAllowance}
+            pricePerDocMinor={wallet.pricePerDocMinor}
+            currency={wallet.currency}
             onSaveCap={onSaveCap}
           />
         ) : (
