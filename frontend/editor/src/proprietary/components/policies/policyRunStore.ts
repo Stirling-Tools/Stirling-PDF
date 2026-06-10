@@ -21,8 +21,11 @@ export interface PolicyRunRecord {
   status: PolicyRunStatus;
   /** Output files (downloadable via /api/v1/general/files/{id}) once done. */
   outputs: { fileId: string; fileName: string }[];
-  /** True once the outputs have been imported into the workspace (added once). */
+  /** True once ALL outputs have been imported into the workspace. */
   imported?: boolean;
+  /** Output fileIds already imported — tracked per-file so a partial failure
+   *  retries only the missing ones and never re-adds the ones that succeeded. */
+  importedFileIds?: string[];
   error: string | null;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
@@ -52,6 +55,9 @@ function read(): RunState {
           ? parsed.runs.map((r) => ({
               ...r,
               outputs: Array.isArray(r.outputs) ? r.outputs : [],
+              importedFileIds: Array.isArray(r.importedFileIds)
+                ? r.importedFileIds
+                : [],
             }))
           : [],
         dispatched: Array.isArray(parsed.dispatched) ? parsed.dispatched : [],

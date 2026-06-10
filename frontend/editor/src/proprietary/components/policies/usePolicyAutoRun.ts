@@ -83,8 +83,8 @@ export function usePolicyAutoRun(): void {
     }
   }, [runs]);
 
-  // Import each completed run's outputs into the workspace (once per run), so the
-  // enforced file actually appears in the app rather than only on the backend.
+  // Import each completed run's outputs into the workspace (each output once),
+  // so the enforced file appears in the app rather than only on the backend.
   useEffect(() => {
     if (!POLICIES_ENABLED) return;
     for (const run of runs) {
@@ -104,25 +104,51 @@ export function usePolicyAutoRun(): void {
   }, [runs, addFiles]);
 }
 
-/** Fetch a completed run's output files and add them to the workspace. */
+/**
+ * Fetch a completed run's not-yet-imported output files and add them to the
+ * workspace. Per-output, via allSettled: each output is tracked once imported,
+ * so a partial failure retries only the missing files on a later tick and the
+ * ones that succeeded are never added twice. `imported` flips true only once
+ * every output has landed.
+ */
 async function importOutputs(
   run: PolicyRunRecord,
   addFiles: (files: File[]) => Promise<unknown>,
 ): Promise<void> {
-  try {
-    const files = await Promise.all(
-      run.outputs.map(async (out) => {
-        const blob = await downloadPolicyOutput(out.fileId);
-        return new File([blob], out.fileName || run.fileName, {
-          type: blob.type || "application/pdf",
-        });
-      }),
-    );
-    if (files.length > 0) await addFiles(files);
+  const done = new Set(run.importedFileIds ?? []);
+  const pending = run.outputs.filter((out) => !done.has(out.fileId));
+  if (pending.length === 0) {
     updateRun(run.runId, { imported: true });
-  } catch {
-    // Leave imported=false so it retries on a later tick (transient failure).
+    return;
   }
+
+  const results = await Promise.allSettled(
+    pending.map(async (out) => {
+      const blob = await downloadPolicyOutput(out.fileId);
+      return {
+        fileId: out.fileId,
+        file: new File([blob], out.fileName || run.fileName, {
+          type: blob.type || "application/pdf",
+        }),
+      };
+    }),
+  );
+  const fetched = results
+    .filter(
+      (r): r is PromiseFulfilledResult<{ fileId: string; file: File }> =>
+        r.status === "fulfilled",
+    )
+    .map((r) => r.value);
+  if (fetched.length === 0) return; // all failed — retry the lot on a later tick
+
+  // Add the freshly-fetched files, then mark exactly those imported. If addFiles
+  // throws we don't mark them, so they retry (without having been added).
+  await addFiles(fetched.map((f) => f.file));
+  const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
+  updateRun(run.runId, {
+    importedFileIds,
+    imported: run.outputs.every((out) => importedFileIds.includes(out.fileId)),
+  });
 }
 
 /**
