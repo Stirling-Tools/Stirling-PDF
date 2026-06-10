@@ -85,10 +85,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         progress: normalizeProgress(options.progressBarPercentage),
         justCompleted: false,
         expandable: hasButton ? false : options.expandable !== false,
-        // Start collapsed whenever the toast can collapse — including errors,
-        // whose bodies are often long. Only toasts that can't collapse (those
-        // with an action button, or explicitly non-expandable) open up-front.
-        isExpanded: hasButton || options.expandable === false,
+        isExpanded: hasButton
+          ? true
+          : options.expandable === false
+            ? true
+            : options.alertType === "error"
+              ? true
+              : false,
         createdAt: Date.now(),
       } as ToastInstance;
       setToasts((prev) => {
