@@ -137,10 +137,7 @@ function appendMcpSection(
   );
 
   if (developerIndex === -1) {
-    return [
-      ...sections,
-      { title: "Developer", items: [mcpItem] },
-    ];
+    return [...sections, { title: "Developer", items: [mcpItem] }];
   }
 
   return sections.map((section, index) =>
