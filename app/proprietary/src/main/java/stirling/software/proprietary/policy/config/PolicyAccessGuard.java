@@ -11,17 +11,9 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Decides who may see and act on a stored {@link Policy}. A policy is owned by the user who created
- * it; only that owner and global administrators may view, edit, delete, or run it. There is no
- * separate edit-vs-run capability: access is all-or-nothing.
- *
- * <p>Ownership is only enforced when login is enabled. On a single-user deployment (login disabled,
- * e.g. desktop) there is one local operator who owns everything, so every check passes and new
- * policies are stored without an owner.
- *
- * <p>The owner is always assigned server-side from the authenticated principal via {@link
- * #ownerForNewPolicy()}; it is never taken from client input, which would let a caller forge
- * ownership.
+ * Decides who may act on a stored {@link Policy}: its owner and global admins only, with no
+ * separate view/edit/run capability. Enforced only when login is enabled; single-user deployments
+ * pass every check. The owner is assigned server-side, never from client input.
  */
 @Component
 @RequiredArgsConstructor
@@ -30,9 +22,7 @@ public class PolicyAccessGuard {
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
 
-    /**
-     * The owner to stamp on a newly created policy, or {@code null} when ownership is not enforced.
-     */
+    /** Owner for a new policy: the current user, or {@code null} when login is disabled. */
     public String ownerForNewPolicy() {
         return enforced() ? userService.getCurrentUsername() : null;
     }
