@@ -364,6 +364,24 @@ aiEngine:
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
+# Model Context Protocol (MCP) server. Exposes Stirling's PDF tools (grouped by namespace)
+# plus the AI agents to MCP clients (Inspector, Claude Desktop, custom). OAuth-protected.
+# Disabled by default - enable explicitly per deployment after configuring mcp.auth.
+mcp:
+  enabled: false # Master switch. 'false' (default) means no /mcp endpoint, no metadata, no beans wired.
+  scopesEnabled: true # Enforce mcp.tools.read / mcp.tools.write scopes derived from operation category
+  allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
+  blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
+  auth:
+    mode: oauth # 'oauth' (full OAuth2 resource server) or 'apikey' (Stirling per-user API key via X-API-KEY header; no external IdP needed - the low-friction self-host option)
+    issuerUri: "" # OAuth2 issuer URI (e.g. http://localhost:9000). Required when mode=oauth.
+    jwksUri: "" # JWKS URI. Blank -> derived from issuer's /.well-known/openid-configuration.
+    resourceId: "" # RFC 8707 resource identifier of THIS MCP server (e.g. http://localhost:8080/mcp).
+                   # Required: tokens must list this id in `aud` or the request is rejected.
+    usernameClaim: sub # JWT claim matched against a Stirling username (e.g. 'sub', 'email', 'preferred_username')
+    requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
+  engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
+
 # Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
 cluster:
   enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.

@@ -1,6 +1,7 @@
 import type { AxiosInstance } from "axios";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // Exercise the error-interceptor logic against a hand-rolled axios-like
 // client; transitive imports are mocked out so this is a pure unit test.
@@ -120,6 +121,7 @@ describe("desktop apiClientSetup - 401 silent-path", () => {
   });
 
   test("POST 401 without Authorization dispatches sign-in modal event", async () => {
+    expectConsole.warn(/\[apiClientSetup\] 401 on path/);
     const { client, handlers } = makeMockClient();
     setupApiInterceptors(client as unknown as AxiosInstance);
     await triggerErrorInterceptor(handlers, {
@@ -135,6 +137,7 @@ describe("desktop apiClientSetup - 401 silent-path", () => {
   });
 
   test("GET 401 without Authorization stays silent (background probe)", async () => {
+    expectConsole.warn(/\[apiClientSetup\] 401 on path/);
     const { client, handlers } = makeMockClient();
     setupApiInterceptors(client as unknown as AxiosInstance);
     await triggerErrorInterceptor(handlers, {
@@ -159,6 +162,7 @@ describe("desktop apiClientSetup - 401 silent-path", () => {
   });
 
   test("401 with skipAuthRedirect set never dispatches the modal", async () => {
+    expectConsole.warn(/\[apiClientSetup\] 401 on path/);
     const { client, handlers } = makeMockClient();
     setupApiInterceptors(client as unknown as AxiosInstance);
     await triggerErrorInterceptor(handlers, {

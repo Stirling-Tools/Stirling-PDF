@@ -11,7 +11,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@app/services/licenseService";
-import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from "@app/constants/planConstants";
+import {
+  usePlanFeatures,
+  usePlanHighlights,
+} from "@app/constants/planConstants";
 import FeatureComparisonTable from "@app/components/shared/config/configSections/plan/FeatureComparisonTable";
 import StaticCheckoutModal from "@app/components/shared/config/configSections/plan/StaticCheckoutModal";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
@@ -32,6 +35,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
   currentLicenseInfo,
 }) => {
   const { t } = useTranslation();
+  const planFeatures = usePlanFeatures();
+  const planHighlights = usePlanHighlights();
   const [showComparison, setShowComparison] = useState(false);
 
   // Static checkout modal state
@@ -88,8 +93,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       price: 0,
       currency: "£",
       period: "",
-      highlights: PLAN_HIGHLIGHTS.FREE,
-      features: PLAN_FEATURES.FREE,
+      highlights: planHighlights.FREE,
+      features: planFeatures.FREE,
       maxUsers: 5,
     },
     {
@@ -99,8 +104,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       currency: "",
       period: "",
       popular: false,
-      highlights: PLAN_HIGHLIGHTS.SERVER_MONTHLY,
-      features: PLAN_FEATURES.SERVER,
+      highlights: planHighlights.SERVER_MONTHLY,
+      features: planFeatures.SERVER,
       maxUsers: "Unlimited users",
     },
     {
@@ -109,8 +114,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       price: 0,
       currency: "",
       period: "",
-      highlights: PLAN_HIGHLIGHTS.ENTERPRISE_MONTHLY,
-      features: PLAN_FEATURES.ENTERPRISE,
+      highlights: planHighlights.ENTERPRISE_MONTHLY,
+      features: planFeatures.ENTERPRISE,
       maxUsers: "Custom",
     },
   ];
