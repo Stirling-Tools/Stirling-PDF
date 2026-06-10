@@ -12,7 +12,6 @@ cancel = "Odustani"
 changedCredsMessage = "Podaci za prijavu uspješno promijenjeni!"
 chooseFile = "Odaberi datoteku"
 close = "Zatvori"
-color = "Boja"
 comingSoon = "Uskoro"
 confirm = "Potvrdi"
 confirmClose = "Potvrdi zatvaranje"
@@ -90,6 +89,7 @@ nothingToUndo = "Nema ništa za poništiti"
 noticeTopUpOrPlan = "Nedovoljno kredita, nadoplatite ili nadogradite na plan"
 noValidFiles = "Nema valjanih datoteka za obradu"
 oops = "Ups!"
+openInNewWindow = "Otvori u novom prozoru"
 openInViewer = "Otvori u pregledniku"
 operationCancelled = "Radnja otkazana"
 page = "Stranica"
@@ -198,6 +198,10 @@ ssoDescription = "Za račune s jedinstvenom prijavom dvofaktorskom autentikacijo
 ssoManaged = "Konfigurirajte MFA putem svojeg davatelja identiteta."
 title = "Dvofaktorska autentikacija"
 
+[account.overview]
+logOut = "Odjava"
+signedInAs = "Prijavljeni kao: {{email}}"
+
 [add-page-numbers]
 tags = "paginirati, označiti, organizirati, indeksirati"
 
@@ -224,6 +228,9 @@ title = "Što radi"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "O alatu Dodaj privitke"
+
+[addFileCard]
+upload = "Prenesi"
 
 [addImage]
 applySignatures = "Primijeni slike"
@@ -494,6 +501,11 @@ title = "Prilagodi skalu stranice"
 [adjustPageScale.error]
 failed = "Došlo je do pogreške pri prilagodbi skale stranice."
 
+[adjustPageScale.orientation]
+label = "Orijentacija stranice"
+landscape = "Pejzažno"
+portrait = "Portretno"
+
 [adjustPageScale.pageSize]
 keep = "Zadrži izvornu veličinu"
 label = "Ciljna veličina stranice"
@@ -600,6 +612,7 @@ label = "Upravljanje privremenim datotekama"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Osnovni direktorij za privremene datoteke (ostavite prazno za zadano: java.io.tmpdir/stirling-pdf)"
 label = "Osnovni direktorij za privremene datoteke"
+placeholder = "Zadano: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Koliko često pokretati čišćenje (u minutama)"
@@ -612,6 +625,7 @@ label = "Čišćenje sistemskog privremenog direktorija"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Direktorij za privremene datoteke LibreOfficea (ostavite prazno za zadano: baseTmpDir/libreoffice)"
 label = "Privremeni direktorij LibreOfficea"
+placeholder = "Zadano: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maksimalna starost u satima prije čišćenja privremenih datoteka"
@@ -628,6 +642,7 @@ label = "Čišćenje pri pokretanju"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Sistemski privremeni direktorij za čišćenje (koristi se samo ako je omogućeno cleanupSystemTemp)"
 label = "Sistemski privremeni direktorij"
+placeholder = "Putanja sustavskog privremenog direktorija"
 
 [admin.settings.advanced.tessdataDir]
 description = "Put do direktorija tessdata za OCR jezične datoteke"
@@ -833,6 +848,7 @@ label = "Naziv baze podataka"
 [admin.settings.database.password]
 description = "Lozinka za autentikaciju na bazu podataka"
 label = "Lozinka"
+placeholder = "Unesite lozinku baze podataka"
 
 [admin.settings.database.port]
 description = "Port poslužitelja baze podataka (ne koristi se ako je naveden prilagođeni URL)"
@@ -864,10 +880,12 @@ label = "Po zadanom sakrij nedostupne alate"
 [admin.settings.endpoints.groupsToRemove]
 description = "Odaberite grupe krajnjih točaka za onemogućavanje"
 label = "Onemogućene grupe krajnjih točaka"
+placeholder = "Odaberite grupe za onemogućavanje"
 
 [admin.settings.endpoints.toRemove]
 description = "Odaberite pojedinačne krajnje točke za onemogućavanje"
 label = "Onemogućene krajnje točke"
+placeholder = "Odaberite krajnje točke za onemogućavanje"
 
 [admin.settings.enterpriseRequired]
 message = "Za pristup {{featureName}} potrebna je Enterprise licenca. Prikazuju se ogledni podaci radi reference."
@@ -1082,6 +1100,7 @@ label = "SMTP host"
 [admin.settings.mail.password]
 description = "Lozinka za SMTP autentikaciju"
 label = "SMTP lozinka"
+placeholder = "Unesite SMTP lozinku"
 
 [admin.settings.mail.port]
 description = "Broj porta za SMTP vezu (obično 25, 465 ili 587)"
@@ -1090,6 +1109,10 @@ label = "SMTP port"
 [admin.settings.mail.username]
 description = "Korisničko ime za SMTP autentikaciju"
 label = "SMTP korisničko ime"
+
+[admin.settings.plan.noData]
+message = "Podaci o planovima trenutno nisu dostupni."
+title = "Nema dostupnih podataka"
 
 [admin.settings.premium]
 description = "Konfigurirajte svoj premium ili enterprise licencni ključ."
@@ -1137,6 +1160,9 @@ info = "Ako imate licencni ključ ili datoteku certifikata iz izravne kupnje, mo
 toggle = "Imate licencni ključ ili datoteku certifikata?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Revizijsko zapisivanje</0> (ENTERPRISE) - Sigurnost"
+customMetadata = "<0>Prilagođeni metapodaci</0> (PRO) - Općenito"
+databaseConfiguration = "<0>Konfiguracija baze podataka</0> (ENTERPRISE) - Baza podataka"
 message = "Premium i Enterprise značajke sada su organizirane u svojim odgovarajućim odjeljcima:"
 title = "Premium značajke raspoređene"
 
@@ -1512,6 +1538,33 @@ user = "Korisnik"
 usernameInfo = "Korisničko ime može sadržavati samo slova, brojke i sljedeće posebne znakove @._+- ili mora biti važeća adresa e-pošte."
 webOnlyUser = "Web Korisnik"
 
+[agents]
+auto_redaction_description = "Automatski redigiraj PII"
+auto_redaction_name = "Automatsko redigiranje"
+back_to_tools = "Natrag na alate"
+coming_soon = "Uskoro"
+compliance_description = "Provjeri dokumente radi usklađenosti"
+compliance_name = "Provjera usklađenosti"
+data_extraction_description = "Izdvoji tablice i strukturirane podatke"
+data_extraction_name = "Izdvajanje podataka"
+doc_summary_description = "Sažmi duge dokumente"
+doc_summary_name = "Sažimač"
+form_filler_description = "Inteligentno ispunjavaj PDF obrasce"
+form_filler_name = "Ispunjivač obrazaca"
+fullscreen_title = "Stirling agenti"
+pdf_to_markdown_description = "Pretvori PDF-ove u čisti Markdown"
+pdf_to_markdown_name = "PDF u Markdown"
+section_title = "Agenti"
+show_less = "Prikaži manje"
+start_chat = "Započni razgovor"
+stirling_description = "Vaš svestrani PDF asistent"
+stirling_full_name = "Stirling opći agent"
+stirling_long_description = "Svestrani PDF asistent koji može pokretati alate, stvarati PDF-ove i izdvajati uvide iz vaših dokumenata."
+stirling_name = "Stirling"
+stirling_running = "U tijeku..."
+stirling_tooltip = "Stirling agent"
+view_all = "Prikaži sve agente"
+
 [analytics]
 disable = "Onemogući analitike"
 enable = "Omogući analitike"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Nemate dopuštenje za ovu radnju."
 pleaseLoginAgain = "Prijavite se ponovno."
 sessionExpired = "Sesija je istekla"
 
+[auth.displayName]
+guest = "Gost"
+user = "Korisnik"
+
 [auto-rename]
 description = "Automatski pronalazi naslov iz sadržaja vašeg PDF-a i koristi ga kao naziv datoteke."
 header = "Automatski preimenuj PDF"
@@ -1862,6 +1919,13 @@ label = "Otvori izbornik za {{title}}"
 
 [automate.files]
 placeholder = "Odaberite datoteke za obradu ovom automatizacijom"
+
+[automate.folderScanWarning]
+advice = "I dalje možete preuzeti datoteku (npr. za pregled ili ručno uređivanje), ali nepodržane korake treba ukloniti prije nego što ih poslužiteljski dio može izvršiti."
+cancel = "Odustani"
+confirm = "Svejedno izvezi"
+intro = "Skeniranje mapa izvodi se na poslužiteljskom dijelu, stoga može izvršavati samo alate koji imaju poslužiteljsku krajnju točku. Sljedeći koraci u ovoj automatizaciji to nemaju i neće uspjeti pri pokretanju cjevovoda:"
+title = "Neki se koraci ne mogu izvesti pri skeniranju mapa"
 
 [automate.importModal]
 cancel = "Odustani"
@@ -2094,11 +2158,31 @@ placeholder = "Broj stranica"
 title = "Zadnjih N stranica"
 
 [bulkSelection.operators]
-and = "AND: & ili \"and\" — zahtijevaju oba uvjeta (npr., 1-50 & even)"
-comma = "Zarez: , ili | — kombinira odabire (npr., 1-10, 20)"
-not = "NOT: ! ili \"not\" — isključuje stranice (npr., 3n & not 30)"
 text = "AND ima viši prioritet od zareza. NOT se primjenjuje unutar raspona dokumenta."
 title = "Operatori"
+
+[bulkSelection.operators.and]
+title = "Kombiniraj odabire (oba uvjeta moraju biti istinita)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & ili \"and\" - zahtijeva oba uvjeta (npr. 1-50 & even)"
+comma = "Zarez: , ili | - kombinira odabire (npr. 1-10, 20)"
+not = "NOT: ! ili \"not\" - isključuje stranice (npr. 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Odaberi sve parne stranice (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Izuzmi iz odabira"
+
+[bulkSelection.operators.odd]
+title = "Odaberi sve neparne stranice (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Dodaj u odabir (bilo koji uvjet može biti istinit)"
+
+[bulkSelection.pageSelection]
+title = "Odabir stranica"
 
 [bulkSelection.range]
 fromPlaceholder = "Od"
@@ -2684,6 +2768,22 @@ title = "Promjena dopuštenja"
 [changePermissions.tooltip.warning]
 text = "Kako bi ove dozvole bile nepromjenjive, upotrijebite alat Dodaj lozinku za postavljanje vlasničke lozinke."
 
+[chat]
+resize = "Promijeni veličinu panela chata"
+
+[chat.actions]
+copy = "Kopiraj poruku"
+
+[chat.header]
+agentMenu = "Opcije Stirling agenta"
+clearChat = "Obriši chat"
+settings = "Postavke agenta"
+
+[chat.input]
+attach = "Priloži datoteke"
+placeholder = "Što želite učiniti?"
+send = "Pošalji poruku"
+
 [chat.progress]
 analyzing = "Analiziram vaš zahtjev..."
 calling_engine = "AI razmišlja..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Završeno čitanje dokumenta..."
 whole_doc_read_started = "Čitanje dokumenta..."
 whole_doc_slice_done = "Čitanje dokumenta... ({{percent}}% dovršeno)"
 
+[chat.quickActions]
+browseYourFiles = "Pregledaj svoje datoteke"
+compressMany = "Komprimiraj ove dokumente"
+compressOne = "Komprimiraj ovaj dokument"
+convertMany = "Pretvori ove dokumente u PDF"
+convertOne = "Pretvori ovaj dokument u PDF"
+fileSummary_one = "1 datoteka u radnom prostoru ({{types}})"
+fileSummary_other = "{{count}} datoteka u radnom prostoru ({{types}})"
+heading = "Za početak"
+mergeMany = "Spoji ovih {{count}} dokumenata u 1"
+moreFiles = "+{{count}} više"
+openFromComputer = "Otvori s računala"
+removeFile = "Ukloni {{name}}"
+rotateMany = "Rotiraj ove dokumente"
+rotateOne = "Rotiraj ovaj dokument"
+splitOne = "Podijeli ovaj dokument"
+
+[chat.responses]
+cannot_continue = "Nešto je pošlo po zlu i ne mogu nastaviti."
+cannot_do = "To ne mogu učiniti."
+done = "Gotovo."
+need_clarification = "Možete li pojasniti svoj zahtjev?"
+not_found = "Nisam uspio pronaći tražene informacije."
+processing = "Obrađujem ({{outcome}})..."
+unsupported_capability = "Nepodržana mogućnost: {{capability}}"
+
 [chat.toolsUsed]
 summary = "Pokrenuto {{count}} alata"
 summary_one = "Pokrenut 1 alat"
@@ -2707,6 +2833,9 @@ unknownTool = "Nepoznat alat"
 
 [cloudBadge]
 tooltip = "Ova radnja će iskoristiti vaše kredite u oblaku"
+
+[color.eyeDropper]
+tooltip = "Odaberi boju sa zaslona"
 
 [colorPicker]
 title = "Odaberite boju"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Najprije odaberite izvorni PDF"
 filesMissing = "Nije moguće locirati odabrane datoteke. Molimo ponovno ih odaberite."
 generic = "Nije moguće usporediti ove datoteke."
 selectRequired = "Odaberite izvorni i uređeni dokument."
+title = "Usporedba nije uspjela"
 
 [compare.large.file]
 message = "Jedan ili oba unesena dokumenta su prevelike za obradu"
@@ -2864,6 +2994,7 @@ title = "Još radimo…"
 
 [compare.status]
 complete = "Usporedba spremna"
+error = "Usporedba nije uspjela"
 extracting = "Izdvajanje teksta..."
 processing = "Analiza razlika..."
 
@@ -2929,6 +3060,10 @@ title = "Metoda kompresije"
 [compress.selectText.1]
 1 = "1-3 PDF kompresija,</br> 4-6 blaga kompresija slika,</br> 7-9 jaka kompresija slika značajno će smanjiti kvalitetu slike"
 _value = "Postavke kompresije"
+
+[compress.settings]
+desiredSize = "Željena veličina datoteke"
+desiredSizePlaceholder = "Unesite veličinu"
 
 [compress.tooltip.description]
 text = "Kompresija je jednostavan način smanjenja veličine datoteke. Odaberite Veličinu datoteke za unos ciljne veličine i da mi prilagodimo kvalitetu umjesto vas. Odaberite Kvaliteta za ručno postavljanje jačine kompresije."
@@ -3404,6 +3539,29 @@ title = "Otvorene postavke"
 message = "Stirling PDF je sada vaš zadani PDF uređivač"
 title = "Zadana aplikacija postavljena"
 
+[desktopUpdate]
+downloading = "Preuzimanje ažuriranja..."
+installing = "Instaliranje ažuriranja..."
+installingWarning = "Aplikacija će se automatski zatvoriti kako bi dovršila instalaciju."
+installNow = "Instaliraj sada"
+readyToRestart = "Ažuriranje spremno"
+restartMessage = "Ažuriranje je instalirano. Ponovno pokrenite aplikaciju za dovršetak."
+restartNow = "Ponovno pokreni sada"
+updateFailed = "Ažuriranje nije uspjelo"
+updateFailedMessage = "Nije uspjelo preuzimanje ili instalacija ažuriranja."
+
+[desktopUpdate.blocked]
+docsLink = "Pogledaj dokumentaciju za instalaciju"
+message = "Stirling-PDF nema dopuštenje za samostalno ažuriranje na ovom računalu."
+title = "Potrebna su administratorska dopuštenja"
+
+[dropdownList]
+searchPlaceholder = "Pretraži..."
+
+[editableSecretField]
+edit = "Uredi"
+editSecretValue = "Uredi tajnu vrijednost"
+
 [editTableOfContents]
 submit = "Primijeni sadržaj"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Radni prostor strukture"
 [editTableOfContents.workbench.empty]
 description = "Odaberite alat Uredi sadržaj za učitavanje radnog prostora."
 title = "Otvorite alat za početak uređivanja"
+
+[emptyFilesState]
+upload = "Prenesi"
 
 [encryptedPdfUnlock]
 description = "Ovaj PDF je zaštićen lozinkom. Unesite lozinku kako biste mogli nastaviti raditi s njim."
@@ -3605,6 +3766,10 @@ title = "Postavke"
 [extractPages.tooltip]
 description = "Izdvaja odabrane stranice u novi PDF, zadržavajući redoslijed."
 
+[fileCard]
+openInFileEditor = "Otvori u uređivaču datoteka"
+viewInViewer = "Prikaži u pregledniku"
+
 [fileChooser]
 click = "Kliknite"
 dragAndDrop = "Povucite i ispustite"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Povucite i ispustite PDF datoteku"
 extractPDF = "Izdvajanje..."
 hoveredDragAndDrop = "Povucite i ispustite datoteke ovdje"
 or = "ili"
+
+[fileDropdownMenu]
+closeFile = "Zatvori datoteku"
 
 [fileEditor]
 addFiles = "Dodaj datoteke"
@@ -3771,12 +3939,250 @@ expand = "Proširi bočnu traku"
 files = "Datoteke"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive nije konfiguriran"
+leaveMyFiles = "Napusti Moje datoteke"
+myFiles = "Moje datoteke"
 noFiles = "Još nema datoteka"
 openFileManager = "Otvori upravitelj datoteka"
 openFromComputer = "Otvori s računala"
 openSettings = "Otvori postavke"
 search = "Pretraži"
 searchPlaceholder = "Pretraži datoteke..."
+
+[fileSidebar.fileItem]
+closeViewer = "Zatvori preglednik"
+openInViewer = "Otvori u pregledniku"
+
+[filesPage]
+addToWorkspace = "Dodaj u radni prostor"
+addToWorkspaceCount = "Dodaj {{count}} u radni prostor"
+allFiles = "Sve datoteke"
+back = "Natrag"
+backToFolder = "Natrag na {{folder}}"
+backToMyFiles = "Natrag na Moje datoteke"
+breadcrumbs = "Putanja mape"
+cancel = "Odustani"
+clearSearch = "Očisti pretragu"
+clearSelection = "Poništi odabir"
+closeDetails = "Zatvori detalje"
+create = "Stvori"
+cycleBlocked = "Mapu nije moguće premjestiti u jednu od njezinih podmapa."
+delete = "Izbriši"
+deleteFolder = "Izbriši mapu"
+deleteFolderBody = "Izbrisati mapu \"{{name}}\"?"
+deleteFolderConfirm = "Izbrisati mapu \"{{name}}\"? Datoteke unutar nje bit će premještene u Sve datoteke. Zahvaćeno: {{count}} datoteka."
+deleteFolderContents = "Također izbriši {{count}} datoteka unutar mape"
+deleteFolderContentsWarning = "Datoteke će biti trajno uklonjene i nije ih moguće oporaviti."
+deleteFolderError = "Nije moguće izbrisati mapu. Pokušajte ponovno."
+deleteFolderKeepHint = "Datoteke unutar mape bit će premještene u Sve datoteke."
+deleteFolderTitle = "Izbrisati mapu?"
+deselectAll = "Poništi odabir"
+details = "Detalji"
+detailsCount = "{{count}} datoteka odabrano"
+dismissError = "Odbaci"
+download = "Preuzmi"
+downloadAll = "Preuzmi sve"
+downloadVersion = "Preuzmi ovu verziju"
+dropOverlay = "Ispusti datoteke za prijenos"
+dropOverlaySub = "Datoteke započinju u Lokalno. Upotrijebite 'Premjesti u' ili 'Spremi u oblak' da ih organizirate u mapu."
+file = "Datoteka"
+fileMenu = "Radnje nad datotekom"
+folder = "Mapa"
+folderItems = "{{count}} stavki"
+folderMenu = "Radnje nad mapom"
+inPath = "u {{path}}"
+inWorkspace = "Otvoreno"
+inWorkspaceAria = "Već u radnom prostoru"
+loading = "Učitavanje…"
+localFoldersUnavailable = "Mape su samo u oblaku – spremite datoteku u oblak kako biste je organizirali."
+moreActions = "Više radnji nad mapom"
+moveLocalToCloudBlocked = "Datoteke samo lokalno nije moguće premjestiti u mape u oblaku. Najprije ih spremite u oblak."
+moveSkippedRemote = "{{count}} datoteka nije se moglo premjestiti na poslužitelju (nema dopuštenja ili je već izbrisana)."
+moveTo = "Premjesti u…"
+myFiles = "Moje datoteke"
+newFolder = "Nova mapa"
+newFolderStorageDisabled = "Spremanje mapa na poslužitelju nije omogućeno. Zamolite administratora da ga uključi."
+newFolderTabUnavailable = "Prebacite se na Sve ili Oblak da biste stvorili mape."
+newRootFolder = "Nova mapa u korijenu"
+offlineNoFolderEdits = "Sinkronizacija mapa s poslužiteljem nije dostupna – promjene mapa su onemogućene. Provjerite prijavu i konfiguraciju pohrane."
+open = "Otvori"
+openInWorkbench = "Otvori u radnom prostoru"
+openVersionInWorkspace = "Otvori u radnom prostoru"
+originFilter = "Filtriraj po izvoru"
+quickView = "Brzi prikaz"
+refresh = "Osvježi s poslužitelja"
+remove = "Izbriši"
+removeConfirm = "Izbrisati {{count}} datoteka? Ovo se ne može poništiti."
+removeVersion = "Ukloni ovu verziju"
+rename = "Preimenuj"
+renameFolder = "Preimenuj mapu"
+resizeFolderTree = "Promijeni veličinu stabla mapa (strelice, Shift za veće korake; dvoklik za automatsko prilagođavanje)"
+save = "Spremi"
+saveToServer = "Spremi na poslužitelj"
+saveToServerDisabledHint = "Spremanje na poslužitelj nije omogućeno na ovom poslužitelju. Zamolite administratora da to omogući."
+search = "Pretraži"
+searchPlaceholder = "Pretraži ovu mapu i podmape"
+selectAll = "Odaberi sve"
+selectAllHint = "Kliknite za odabir svega. Savjet: držite Ctrl (ili Cmd) za dodavanje datoteka jednu po jednu, Shift za odabir raspona."
+selectedCount = "{{count}} odabrano"
+selectFile = "Odaberi datoteku {{name}}"
+shareDisabledHint = "Dijeljenje datoteka nije omogućeno na ovom poslužitelju. Zamolite administratora da to omogući."
+shareManage = "Upravljaj dijeljenjem"
+showDetails = "Prikaži detalje"
+summary = "{{count}} stavki"
+syncFailed = "Sinkronizacija mape nije uspjela: {{message}}"
+syncPartial = "Djelomična sinkronizacija mapa: {{failed}} od {{total}} mapa nije se moglo spojiti."
+tree = "Mape"
+upload = "Prenesi"
+uploadedToLocal = "Prenesene datoteke počinju u Lokalno. Upotrijebite 'Spremi u oblak' da ih smjestite u mapu."
+uploadFromMobile = "Prenesi s mobilnog uređaja"
+versionActions = "Radnje verzije"
+versionCollapse = "Sažmi srednje verzije"
+versionOrigin = "Izvorni prijenos"
+versionsCount = "{{count}} verzija"
+versionShowHidden = "Prikaži {{count}} ranijih verzija"
+viewVersion = "Pogledaj ovu verziju"
+
+[filesPage.appearance]
+colour = "Boja"
+icon = "Ikona"
+title = "Izgled"
+useColour = "Upotrijebi boju {{c}}"
+
+[filesPage.column]
+modified = "Izmijenjeno"
+name = "Naziv"
+size = "Veličina"
+type = "Vrsta"
+
+[filesPage.empty]
+hint = "Ispustite PDF-ove bilo gdje na ovoj stranici za prijenos ili upotrijebite gumb 'Nova mapa' za organiziranje datoteka."
+newFolderCta = "Stvori mapu"
+title = "Ova mapa je prazna"
+uploadCta = "Prenesi datoteke"
+
+[filesPage.empty.cloud]
+hint = "Prenesite datoteku za početak ili stvorite mapu za organiziranje."
+offlineHint = "Ponovno se povežite za učitavanje svoje biblioteke u oblaku."
+offlineTitle = "Nema predmemoriranih datoteka iz oblaka"
+title = "Još nema datoteka u oblaku"
+
+[filesPage.empty.local]
+hint = "Datoteke spremljene bez prijenosa ostaju ovdje. Ispustite datoteku da biste je dodali."
+title = "Nema lokalnih datoteka"
+
+[filesPage.empty.recent]
+hint = "Datoteke koje otvorite ili uredite pojavit će se ovdje."
+title = "Još ništa nije izmijenjeno"
+
+[filesPage.empty.shared]
+hint = "Kada vam netko podijeli datoteku putem veze, pojavit će se ovdje."
+title = "Ništa nije s vama podijeljeno"
+
+[filesPage.empty.sharedByMe]
+hint = "Stvorite vezu za dijeljenje ili pozovite suradnika iz bilo koje svoje datoteke da bi se ovdje prikazala."
+title = "Još niste podijelili nijednu datoteku"
+
+[filesPage.error]
+actionFailed = "Nije moguće {{action}}."
+actionFailedDetail = "Nije moguće {{action}}: {{message}}"
+deleteFolderFailed = "Nije moguće izbrisati mapu."
+deleteFolderFailedDetail = "Nije moguće izbrisati mapu: {{message}}"
+folderAppearanceFailed = "Nije moguće ažurirati izgled mape."
+folderAppearanceFailedDetail = "Nije moguće ažurirati izgled mape: {{message}}"
+moveFilesFailed = "Nije moguće premjestiti datoteke."
+moveFilesFailedDetail = "Nije moguće premjestiti datoteke: {{message}}"
+moveFolderFailed = "Nije moguće premjestiti mapu."
+moveFolderFailedDetail = "Nije moguće premjestiti mapu: {{message}}"
+removeFilesFailed = "Nije moguće ukloniti datoteke."
+removeFilesFailedDetail = "Nije moguće ukloniti datoteke: {{message}}"
+uploadFilesFailed = "Nije moguće prenijeti datoteke."
+uploadFilesFailedDetail = "Nije moguće prenijeti datoteke: {{message}}"
+
+[filesPage.field]
+added = "Dodano"
+count = "Datoteke"
+folder = "Mapa"
+modified = "Izmijenjeno"
+name = "Naziv"
+size = "Veličina"
+toolHistory = "Povijest alata"
+toolHistoryAtVersion = "Kumulativni lanac alata"
+totalSize = "Ukupna veličina"
+type = "Vrsta"
+versionHistory = "Povijest verzija"
+
+[filesPage.folderName]
+cancel = "Odustani"
+error = "Nije moguće spremiti mapu. Pokušajte ponovno."
+label = "Naziv mape"
+placeholder = "Naziv mape"
+
+[filesPage.moveDialog]
+cancel = "Odustani"
+confirm = "Premjesti ovdje"
+error = "Nije moguće premjestiti. Pokušajte ponovno."
+hint = "Odaberite odredišnu mapu. Savjet: datoteke možete i povući i ispustiti na mape u stablu s lijeve strane."
+newFolderCancel = "Odbaci"
+newFolderCreate = "Stvori"
+newFolderError = "Nije moguće stvoriti mapu. Pokušajte ponovno."
+newFolderLabel = "Naziv nove mape"
+newFolderPlaceholder = "Naziv mape"
+newFolderToggle = "Stvori novu mapu…"
+title = "Premjesti u mapu"
+
+[filesPage.origin]
+all = "Svi izvori"
+cloud = "Oblak"
+cloudHint = "Pohranjeno na Stirling poslužitelju"
+local = "Lokalno"
+localHint = "Pohranjeno samo u ovom pregledniku"
+shared = "Dijeljeno"
+sharedHint = "Podijeljeno s vama putem veze"
+
+[filesPage.sort]
+modifiedAsc = "Najstarije prvo"
+modifiedDesc = "Najnovije prvo"
+nameAsc = "Naziv A→Ž"
+nameDesc = "Naziv Ž→A"
+sizeAsc = "Najmanje prvo"
+sizeDesc = "Najveće prvo"
+
+[filesPage.syncError]
+client = "Sinkronizacija mape nije uspjela."
+network = "Nije moguće doći do poslužitelja."
+server = "Poslužiteljska pogreška tijekom sinkronizacije mape."
+
+[filesPage.tabName]
+local = "Lokalno"
+recent = "Nedavno"
+shared = "Sa mnom dijeljeno"
+sharedByMe = "Moja dijeljenja"
+
+[filesPage.tabs]
+all = "Sve"
+ariaLabel = "Prikazi datoteka"
+cloud = "Oblak"
+local = "Lokalno"
+recent = "Nedavno"
+shared = "Sa mnom dijeljeno"
+sharedByMe = "Moja dijeljenja"
+
+[filesPage.treeMenu]
+actions = "Radnje nad mapom za {{name}}"
+collapse = "Sažmi mapu"
+delete = "Izbriši mapu"
+expand = "Proširi mapu"
+newSubfolder = "Nova podmapa"
+rename = "Preimenuj"
+
+[filesPage.typeFilter]
+allTypes = "Sve vrste"
+label = "Filtriraj po vrsti"
+
+[filesPage.viewMode]
+grid = "Mrežni prikaz"
+label = "Način prikaza"
+list = "Popisni prikaz"
 
 [fileToPDF]
 credit = "Ova usluga koristi LibreOffice i Unoconv za pretvaranje datoteka."
@@ -3891,6 +4297,15 @@ title = "O spljoštavanju PDF-ova"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Izravnaj nakon ispunjavanja"
+rescanFields = "Ponovno skeniraj polja"
+rescanFormFields = "Ponovno skeniraj polja obrasca"
+save = "Spremi"
+
+[formFill.sidebar]
+close = "Zatvori bočnu traku"
 
 [getPdfInfo]
 downloadJson = "Preuzmite JSON"
@@ -4451,6 +4866,11 @@ tags = "oznake,web-sadržaj,transformacija,konvertiranje"
 title = "HTML u PDF"
 zoom = "Razina zumiranja za prikaz web stranice."
 
+[image.upload]
+hint = "Prenesite PNG, JPG, SVG ili drugu slikovnu datoteku za postavljanje na PDF. SVG datoteke bit će pretvorene u PNG radi kompatibilnosti."
+label = "Prenesi sliku"
+placeholder = "Odaberite slikovnu datoteku"
+
 [imageToPdf]
 tags = "konverzija,pretvaranje,img,jpg,slika,foto"
 
@@ -4468,6 +4888,9 @@ title = "Slika u PDF"
 3 = "Logika više datoteka (omogućeno samo ako radite s više slika)"
 4 = "Spojite u jedan PDF"
 5 = "Pretvori u zasebne PDF-ove"
+
+[infoBanner]
+dismiss = "Odbaci"
 
 [invite]
 acceptError = "Neuspjelo stvaranje računa"
@@ -4804,6 +5227,7 @@ failed = "OCR operacija nije uspjela"
 
 [ocr.languagePicker]
 additionalLanguages = "Tražite dodatne jezike?"
+loading = "Učitavanje dostupnih jezika..."
 viewSetupGuide = "Pogledaj vodič za postavljanje →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "Preostao {{days}} dan"
 title = "Vaše 30-dnevno probno razdoblje Pro"
 trialEnds = "Probno razdoblje završava {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Autentifikacijski kod"
+qrCodeLoading = "Generiranje vašeg QR koda…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Kad omogućite način prijave, moći ćete upravljati korisnicima, konfigurirati postavke i nadzirati zdravlje poslužitelja. Prvih <strong>{{freeTierLimit}}</strong> osoba na vašem poslužitelju koristi Stirling besplatno."
 adminBodyLoginEnabled = "Kao administrator možete upravljati korisnicima, konfigurirati postavke i nadzirati zdravlje poslužitelja. Prvih <strong>{{freeTierLimit}}</strong> osoba na vašem poslužitelju koristi Stirling besplatno."
@@ -4949,6 +5377,9 @@ userTitle = "Pregled plana"
 
 [onboarding.securityCheck]
 message = "Aplikacija je nedavno pretrpjela značajne promjene. Možda je potrebna pažnja vašeg administratora poslužitelja. Potvrdite svoju ulogu za nastavak."
+roleAdmin = "Administrator"
+rolePlaceholder = "Potvrdite svoju ulogu"
+roleUser = "Korisnik"
 
 [onboarding.serverLicense]
 freeBody = "Naše <strong>Open-Core</strong> licenciranje dopušta do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Za nesmetano skaliranje i rani pristup našem novom <strong>alatu za uređivanje teksta u PDF-u</strong>, preporučujemo Stirling Server plan - potpuno uređivanje i <strong>neograničena mjesta</strong> za $99/server/mo."
@@ -5074,6 +5505,17 @@ title = "Uređivač stranica"
 zoomIn = "Povećaj"
 zoomOut = "Umanji"
 
+[pageEditor.emptyState]
+body = "Dodajte datoteke za početak uređivanja stranica"
+title = "Nema učitanih PDF datoteka"
+
+[pageEditor.toolbar]
+delete = "Izbriši odabrano"
+redo = "Ponovi"
+rotateLeft = "Rotiraj odabrano ulijevo"
+rotateRight = "Rotiraj odabrano udesno"
+undo = "Poništi"
+
 [pageExtracter]
 header = "Izdvojiti stranice"
 placeholder = "(t.j. 1,2,8 ili 4,7,12-16 ili 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Dodajte granice dokumenta"
 borderWidth = "Debljina obruba"
 bottom = "Donja margina"
 cols = "Stupci"
+colsPlaceholder = "Unesite stupce"
 header = "Izgled s više stranica"
 innerMargin = "Unutarnja margina"
 left = "Lijeva margina"
 pagesPerSheet = "Broj stranica po listu:"
 right = "Desna margina"
 rows = "Redci"
+rowsPlaceholder = "Unesite retke"
 submit = "Potvrdi"
 tags = "spajanje,kompozitni,pojedinačan-prikaz,organizacija"
 title = "Izgled s više stranica"
@@ -5131,6 +5575,14 @@ failed = "Došlo je do pogreške pri izradi rasporeda s više stranica."
 innerMarginTooLarge = "Unutarnja margina prevelika je za odabrani raspored."
 outerHorizontalMarginsTooLarge = "Lijeva/desna margina prevelike su za ovu veličinu stranice."
 outerVerticalMarginsTooLarge = "Gornje/donje margine prevelike su za ovu veličinu stranice."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Unesite debljinu obruba"
+bottomPlaceholder = "Unesite donju marginu"
+innerPlaceholder = "Unesite unutarnju marginu"
+leftPlaceholder = "Unesite lijevu marginu"
+rightPlaceholder = "Unesite desnu marginu"
+topPlaceholder = "Unesite gornju marginu"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Omogućite obrube za crtanje linija oko svake postavljene stranice. To može pomoći vizualnom razdvajanju ili obrezivanju."
@@ -5785,6 +6237,26 @@ pdfTools = "Osnovni PDF alati"
 priority = "Prioritetna podrška"
 title = "Značajka"
 
+[plan.features]
+allPdfOperations = "Sve PDF operacije"
+auditing = "Revizija"
+communitySupport = "Podrška zajednice"
+customPdfMetadata = "Prilagođeni PDF metapodaci"
+editingTextInPdfs = "Uređivanje teksta u PDF-ovima"
+externalDatabase = "Vanjska baza podataka"
+googleDriveIntegration = "Integracija s Google Drive"
+prometheusSupport = "Podrška za Prometheus"
+regularUpdates = "Redovita ažuriranja"
+saml = "SAML"
+secureLoginSupport = "Podrška za sigurno prijavljivanje"
+selfHostedDeployment = "Samostalno hostirana implementacija"
+sso = "SSO"
+unlimitedUsers = "Neograničen broj korisnika"
+upToFiveUsers = "Do 5 korisnika"
+upToFiveUsersLowercase = "do 5 korisnika"
+usageTracking = "Praćenje upotrebe"
+usersLimitedToSeats = "Korisnici ograničeni na broj mjesta"
+
 [plan.free]
 forever = "Zauvijek besplatno"
 highlight1 = "Ograničena upotreba alata tjedno"
@@ -5792,6 +6264,22 @@ highlight2 = "Pristup svim alatima"
 highlight3 = "Podrška zajednice"
 included = "Uključeno"
 name = "Besplatno"
+
+[plan.highlights]
+advancedIntegrations = "Napredne integracije"
+allBasicFeatures = "Sve osnovne značajke"
+cancelAnytime = "Otkažite u bilo kojem trenutku"
+customPdfMetadata = "Prilagođeni PDF metapodaci"
+editingTextInPdfsCaps = "Uređivanje teksta u PDF-ovima"
+enterpriseFeatures = "Enterprise značajke (SAML, revizija)"
+perSeatLicensing = "Licenciranje po mjestu"
+saveWithAnnualBilling = "Uštedite s godišnjom naplatom"
+selfHosted = "Samostalno hostirano"
+selfHostedOnInfrastructure = "Samostalno hostirano na vašoj infrastrukturi"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Neograničen broj korisnika"
+upToFiveUsers = "Do 5 korisnika"
+usageTrackingPrometheus = "Praćenje upotrebe i Prometheus"
 
 [plan.licenseWarning]
 body = "Imate {{total}} korisnika, ali besplatni sloj podržava samo {{limit}} po poslužitelju. Nadogradite kako bi Stirling PDF radio bez problema."
@@ -6103,6 +6591,7 @@ allSessions = "Sve sesije"
 allTools = "All Tools"
 automate = "Auto"
 back = "Natrag"
+backToAllTools = "Natrag na sve alate"
 certSign = "Potpis certifikatom"
 completedSessions = "Dovršene sesije"
 completedTab = "Dovršeno"
@@ -6772,6 +7261,9 @@ bullet3 = "Ključno za tijekove odobravanja i pravne lance čuvanja"
 description = "Redoslijed koji odredite pri stvaranju sesije definira tko potpisuje prvi."
 title = "Redoslijed potpisa"
 
+[settings]
+close = "Zatvori"
+
 [settings.configuration]
 advanced = "Napredno"
 database = "Baza podataka"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Provjerite ažuriranja i pogledajte informacije o verziji"
 latestVersion = "Najnovija verzija"
+managedByAdmin = "Upravlja administrator"
+modeAuto = "Automatski instaliraj ažuriranja"
+modeDisabled = "Ne provjeravaj ažuriranja"
+modePrompt = "Pitaj me prije instalacije ažuriranja"
 serverNeedsUpdate = "Administrator treba ažurirati poslužitelj"
 title = "Ažuriranja softvera"
+updateBehavior = "Način ažuriranja"
+updateBehaviorDescription = "Odaberite želite li upit prije instalacije ažuriranja, automatsku instalaciju ili potpuno preskočiti provjere ažuriranja."
+updateBehaviorError = "Nije moguće promijeniti način ažuriranja"
+updateBehaviorErrorLocked = "Ovu je postavku zaključao vaš administrator."
+updateBehaviorLockedDescription = "Vaš je administrator konfigurirao kako Stirling-PDF obrađuje ažuriranja na ovom računalu. Obratite im se za promjenu."
+updateBehaviorSaved = "Način ažuriranja spremljen."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Prikaži detalje"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Svi korisnici mogu vidjeti i koristiti ove potpise."
 sharedHeading = "Dijeljeni potpisi"
 tempStorageDescription = "Potpisi se pohranjuju samo u vašem pregledniku. Izgubit će se ako očistite podatke preglednika ili promijenite preglednik."
 tempStorageTitle = "Privremena pohrana u pregledniku"
+use = "Upotrijebi potpis"
 
 [sign.saved.status]
 saved = "Spremljeno"
@@ -7695,6 +8198,7 @@ bulkTitle = "Prenesi odabrane datoteke"
 description = "Ovo prenosi trenutačnu datoteku u pohranu na poslužitelju za vaš vlastiti pristup."
 errorTitle = "Prijenos nije uspio"
 failure = "Prijenos nije uspio. Provjerite svoje postavke prijave i pohrane."
+featureDisabled = "Spremanje na poslužitelj nije omogućeno na ovom poslužitelju."
 fileCount = "{{count}} datoteka odabrano"
 fileLabel = "Datoteka"
 hint = "Javnim poveznicama i načinima pristupa upravljaju postavke vašeg poslužitelja."
@@ -7823,8 +8327,17 @@ center = "Centar"
 left = "Lijevo"
 right = "Desno"
 
+[textInput]
+clear = "Očisti unos"
+
 [theme]
 toggle = "Prebaci temu"
+
+[time.relative]
+daysAgo = "prije {{count}} d"
+hoursAgo = "prije {{count}} h"
+justNow = "upravo sada"
+minutesAgo = "prije {{count}} m"
 
 [timestampPdf]
 completed = "PDF je uspješno vremenski označen"
@@ -7852,6 +8365,10 @@ label = "Odaberite TSA poslužitelj"
 [timestampPdf.steps]
 settings = "Postavke"
 
+[toast]
+dismiss = "Odbaci"
+toggleDetails = "Prikaži/sakrij detalje"
+
 [tool]
 endpointUnavailable = "Ovaj alat nije dostupan na vašem poslužitelju."
 endpointUnavailableClickable = "Nije dostupno u ovom načinu. Kliknite za prijavu."
@@ -7868,13 +8385,18 @@ viewerMode = "Prebacite se u uređivač datoteka da biste odabrali više datotek
 [toolPanel]
 allTools = "Svi alati"
 alpha = "Alfa"
+backToAllTools = "Natrag na sve alate"
+backToDefault = "Natrag"
 backToTools = "Natrag na alate"
 collapse = "Sažmi panel"
 comingSoon = "Uskoro:"
 expand = "Proširi panel"
+goBack = "Vrati se"
 placeholder = "Odaberite alat za početak"
 premiumFeature = "Premium značajka:"
 search = "Pretraži alate"
+toolsHeader = "Alati"
+viewAllTools = "Prikaži sve alate"
 
 [toolPanel.fullscreen]
 comingSoon = "Uskoro:"
@@ -7933,6 +8455,9 @@ verification = "Provjera"
 noSearchResults = "Nije pronađen nijedan alat"
 noTools = "Nema dostupnih alata"
 
+[tooltip]
+close = "Zatvori opis"
+
 [unlockPDFForms]
 description = "Ovaj alat će ukloniti read-only ograničenja s polja PDF obrazaca, čineći ih uredivima i ispunjivima."
 filenamePrefix = "otključani_obrasci"
@@ -7951,29 +8476,42 @@ placeholder = "Odaberite PDF datoteku u glavnom prikazu za početak"
 title = "Rezultati otključavanja obrazaca"
 
 [update]
+allReleases = "Sva izdanja"
 availableUpdates = "Dostupna ažuriranja"
+breaking = "Nekompatibilno"
 breakingChanges = "Nekompatibilne promjene"
 breakingChangesDefault = "Ova verzija sadrži nekompatibilne promjene."
 breakingChangesDetected = "Otkrivene nekompatibilne promjene"
 breakingChangesMessage = "Neke verzije sadrže nekompatibilne promjene. Prije ažuriranja pregledajte vodiče za migraciju u nastavku."
 close = "Zatvori"
+closeModal = "Zatvori prozor ažuriranja"
 current = "Trenutačna verzija"
+defaultRecommendation = "Ovo ažuriranje sadrži važne ispravke i poboljšanja."
 downloadLatest = "Preuzmi najnovije"
+later = "Kasnije"
 latest = "Najnovija verzija"
 latestStable = "Najnovija stabilna"
 loadingDetailedInfo = "Učitavanje detaljnih informacija..."
 migrationGuide = "Vodič za migraciju"
 migrationGuides = "Vodiči za migraciju"
+migrationGuidesDesc = "Pregledajte važne promjene prije ažuriranja."
+modalSubtitle = "Nova verzija Stirling PDF-a spremna je za instalaciju."
 modalTitle = "Dostupno ažuriranje"
+notes = "Bilješke"
 priorityLabel = "Prioritet"
 recommendedAction = "Preporučena radnja"
 releaseNotes = "Napomene uz izdanje"
+showLess = "Prikaži manje verzija"
+showMore = "Prikaži svih {{count}} verzija"
+stable = "STABILNO"
 unableToLoadDetails = "Nije moguće učitati detaljne informacije."
 updateAvailable = "Dostupno ažuriranje"
 urgentUpdateAvailable = "Hitno ažuriranje"
 version = "Verzija"
+versionHistory = "Povijest verzija"
 viewAllReleases = "Pogledaj sva izdanja"
 viewGuide = "Prikaži vodič"
+whatsNewIn = "Što je novo u"
 
 [update.priority]
 low = "Nizak"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Omogući tamni filtar"
 enableSepiaFilter = "Omogući sepija filtar"
 firstPage = "Prva stranica"
 lastPage = "Zadnja stranica"
+moreOptions = "Više"
 nextPage = "Sljedeća stranica"
 onlyPdfSupported = "Preglednik podržava samo PDF datoteke. Čini se da je ova datoteka u drugačijem formatu."
+pageNavigation = "Navigacija po stranicama"
 previousPage = "Prethodna stranica"
 resetZoom = "Poništi zum"
 singlePageView = "Prikaz jedne stranice"
 unknownFile = "Nepoznata datoteka"
+view = "Prikaz"
+zoom = "Zumiranje"
 zoomIn = "Povećaj"
 zoomOut = "Umanji"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Umetni tekst"
 typeReplaceText = "Zamijeni tekst"
 viewComment = "Prikaži komentar"
 
+[viewer.error]
+noFileProvided = "Pogreška: Nije dostavljena datoteka pregledniku"
+
 [viewer.formBar]
 apply = "Primijeni promjene"
 dismiss = "Odbaci"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Ovaj PDF sadrži polja koja je moguće ispuniti"
 title = "Polja obrasca"
 unsavedBadge = "Nespremljeno"
 unsavedDesc = "Imate nespremljene promjene"
+
+[viewer.link]
+delete = "Izbriši poveznicu"
 
 [viewer.nonPdf]
 columnDefault = "Stupac {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Učitavanje..."
 renderMarkdown = "Prikaži Markdown"
 sortedBy = "Sortirano po: {{column}}"
 textStats = "{{lines}} redaka · {{size}}"
+
+[viewer.redaction]
+removeMark = "Ukloni ovu oznaku"
+
+[viewer.search]
+clear = "Očisti pretragu"
+close = "Zatvori pretragu"
+next = "Sljedeći rezultat"
+previous = "Prethodni rezultat"
+resultsOf = "od {{total}}"
+
+[viewer.signature]
+delete = "Izbriši potpis"
 
 [viewPdf]
 header = "Pogledaj PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Uključi/isključi slojeve"
 toggleSidebar = "Uključi/isključi bočnu traku"
 toggleTheme = "Uključi/isključi temu"
 viewer = "Preglednik"
+
+[workflow.participant]
+accessExpired = "Vaš pristup ovom dokumentu je istekao."
+certificateFile = "Datoteka certifikata"
+certificateFilePlaceholder = "Odaberite datoteku certifikata"
+certificatePassword = "Lozinka certifikata"
+certificateType = "Vrsta certifikata"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12 certifikat"
+certTypeServer = "Poslužiteljski certifikat (ako je dostupan)"
+completedDeclined = "Odbili ste ovaj dokument."
+completedSigned = "Potpisali ste ovaj dokument."
+decline = "Odbij"
+downloadDocument = "Preuzmi dokument"
+dueDate = "Rok: {{date}}"
+errorTitle = "Pogreška"
+from = "Od: {{name}}"
+loadingSession = "Učitavanje sesije..."
+location = "Lokacija"
+locationPlaceholder = "npr., San Francisco, CA"
+pageNumber = "Broj stranice (neobavezno)"
+reason = "Razlog"
+reasonPlaceholder = "npr., Odobrenje dokumenta"
+sessionNotFound = "Sesija nije pronađena ili je pristup odbijen."
+signDocument = "Potpiši dokument"
+statusDeclined = "Odbijeno"
+statusNotified = "Obaviješteno"
+statusPending = "Na čekanju"
+statusSigned = "Potpisano"
+statusViewed = "Pregledano"
+submitSignature = "Pošalji potpis"
 
 [workspace]
 title = "Radni prostor"

@@ -12,7 +12,6 @@ cancel = "Zrušiť"
 changedCredsMessage = "Údaje zmenené!"
 chooseFile = "Vybrať súbor"
 close = "Zatvoriť"
-color = "Farba"
 comingSoon = "Už čoskoro"
 confirm = "Potvrdiť"
 confirmClose = "Potvrdiť zatvorenie"
@@ -90,6 +89,7 @@ nothingToUndo = "Nič na vrátenie späť"
 noticeTopUpOrPlan = "Nedostatok kreditov, dobiť alebo prejsť na plán"
 noValidFiles = "Žiadne platné súbory na spracovanie"
 oops = "Ups!"
+openInNewWindow = "Otvoriť v novom okne"
 openInViewer = "Otvoriť v prehliadači"
 operationCancelled = "Operácia zrušená"
 page = "Strana"
@@ -198,6 +198,10 @@ ssoDescription = "Dvojfaktorové overenie je spravované vaším poskytovateľom
 ssoManaged = "Nastavte MFA cez svojho poskytovateľa identity."
 title = "Dvojfaktorové overenie"
 
+[account.overview]
+logOut = "Odhlásiť sa"
+signedInAs = "Prihlásený ako: {{email}}"
+
 [add-page-numbers]
 tags = "číslovať,označiť,organizovať,indexovať"
 
@@ -224,6 +228,9 @@ title = "Čo robí"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "O nástroji Pridať prílohy"
+
+[addFileCard]
+upload = "Nahrať"
 
 [addImage]
 applySignatures = "Použiť obrázky"
@@ -494,6 +501,11 @@ title = "Upraviť mierku strany"
 [adjustPageScale.error]
 failed = "Počas upravovania mierky strany došlo k chybe."
 
+[adjustPageScale.orientation]
+label = "Orientácia strany"
+landscape = "Na šírku"
+portrait = "Na výšku"
+
 [adjustPageScale.pageSize]
 keep = "Ponechať pôvodnú veľkosť"
 label = "Cieľová veľkosť strany"
@@ -600,6 +612,7 @@ label = "Správa dočasných súborov"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Základný adresár pre dočasné súbory (ponechajte prázdne pre predvolené: java.io.tmpdir/stirling-pdf)"
 label = "Základný dočasný adresár"
+placeholder = "Predvolené: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Ako často spúšťať čistenie (v minútach)"
@@ -612,6 +625,7 @@ label = "Čistenie systémového dočasného adresára"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Adresár pre dočasné súbory LibreOffice (ponechajte prázdne pre predvolené: baseTmpDir/libreoffice)"
 label = "Dočasný adresár LibreOffice"
+placeholder = "Predvolené: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximálny vek v hodinách pred vyčistením dočasných súborov"
@@ -628,6 +642,7 @@ label = "Čistenie pri štarte"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systémový dočasný adresár na čistenie (používa sa len, ak je povolené cleanupSystemTemp)"
 label = "Systémový dočasný adresár"
+placeholder = "Cesta k systémovému dočasnému priečinku"
 
 [admin.settings.advanced.tessdataDir]
 description = "Cesta k adresáru tessdata pre jazykové súbory OCR"
@@ -833,6 +848,7 @@ label = "Názov databázy"
 [admin.settings.database.password]
 description = "Heslo na overenie v databáze"
 label = "Heslo"
+placeholder = "Zadajte heslo databázy"
 
 [admin.settings.database.port]
 description = "Port databázového servera (nepoužíva sa, ak je zadaná vlastná URL)"
@@ -864,10 +880,12 @@ label = "Predvolene skryť nedostupné nástroje"
 [admin.settings.endpoints.groupsToRemove]
 description = "Vyberte skupiny endpointov na zakázanie"
 label = "Zakázané skupiny endpointov"
+placeholder = "Vyberte skupiny na deaktiváciu"
 
 [admin.settings.endpoints.toRemove]
 description = "Vyberte jednotlivé endpointy na zakázanie"
 label = "Zakázané endpointy"
+placeholder = "Vyberte koncové body na deaktiváciu"
 
 [admin.settings.enterpriseRequired]
 message = "Na prístup k {{featureName}} sa vyžaduje podniková licencia. Prezeráte si ukážkové údaje."
@@ -1082,6 +1100,7 @@ label = "SMTP hostiteľ"
 [admin.settings.mail.password]
 description = "Heslo pre overenie SMTP"
 label = "SMTP heslo"
+placeholder = "Zadajte heslo SMTP"
 
 [admin.settings.mail.port]
 description = "Číslo portu pre pripojenie SMTP (zvyčajne 25, 465 alebo 587)"
@@ -1090,6 +1109,10 @@ label = "SMTP port"
 [admin.settings.mail.username]
 description = "Používateľské meno pre overenie SMTP"
 label = "SMTP používateľské meno"
+
+[admin.settings.plan.noData]
+message = "Údaje o plánoch momentálne nie sú k dispozícii."
+title = "Žiadne údaje k dispozícii"
 
 [admin.settings.premium]
 description = "Nakonfigurujte svoj Premium alebo Enterprise licenčný kľúč."
@@ -1137,6 +1160,9 @@ info = "Ak máte licenčný kľúč alebo súbor certifikátu z priameho nákupu
 toggle = "Máte licenčný kľúč alebo súbor certifikátu?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Auditné záznamy</0> (ENTERPRISE) - Zabezpečenie"
+customMetadata = "<0>Vlastné metadáta</0> (PRO) - Všeobecné"
+databaseConfiguration = "<0>Konfigurácia databázy</0> (ENTERPRISE) - Databáza"
 message = "Premium a Enterprise funkcie sú teraz usporiadané vo svojich príslušných sekciách:"
 title = "Prémiové funkcie rozdelené"
 
@@ -1512,6 +1538,33 @@ user = "Používateľ"
 usernameInfo = "Používateľské meno musí obsahovať iba písmená a čísla, žiadne medzery alebo špeciálne znaky."
 webOnlyUser = "Používateľ iba pre web"
 
+[agents]
+auto_redaction_description = "Automaticky začierniť osobné údaje"
+auto_redaction_name = "Automatické začierňovanie"
+back_to_tools = "Späť na nástroje"
+coming_soon = "Už čoskoro"
+compliance_description = "Skontrolovať dokumenty z hľadiska súladu"
+compliance_name = "Kontrola súladu"
+data_extraction_description = "Extrahovať tabuľky a štruktúrované údaje"
+data_extraction_name = "Extrakcia údajov"
+doc_summary_description = "Zhrnúť dlhé dokumenty"
+doc_summary_name = "Zhrnutie"
+form_filler_description = "Inteligentne vypĺňať PDF formuláre"
+form_filler_name = "Vyplňovanie formulárov"
+fullscreen_title = "Agenti Stirling"
+pdf_to_markdown_description = "Konvertovať PDF do čistého Markdownu"
+pdf_to_markdown_name = "PDF na Markdown"
+section_title = "Agenti"
+show_less = "Zobraziť menej"
+start_chat = "Začať chatovať"
+stirling_description = "Váš univerzálny PDF asistent"
+stirling_full_name = "Všeobecný agent Stirling"
+stirling_long_description = "Univerzálny PDF asistent, ktorý dokáže spúšťať nástroje, vytvárať PDF a získavať poznatky z vašich dokumentov."
+stirling_name = "Stirling"
+stirling_running = "Prebieha..."
+stirling_tooltip = "Agent Stirling"
+view_all = "Zobraziť všetkých agentov"
+
 [analytics]
 disable = "Zakázať analytiku"
 enable = "Povoliť analytiku"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Nemáte oprávnenie vykonať túto akciu."
 pleaseLoginAgain = "Prosím, prihláste sa znova."
 sessionExpired = "Relácia vypršala"
 
+[auth.displayName]
+guest = "Hosť"
+user = "Používateľ"
+
 [auto-rename]
 description = "Automaticky nájde názov z obsahu vášho PDF a použije ho ako názov súboru."
 header = "Automatické premenovanie PDF"
@@ -1862,6 +1919,13 @@ label = "Otvoriť ponuku pre {{title}}"
 
 [automate.files]
 placeholder = "Vyberte súbory na spracovanie touto automatizáciou"
+
+[automate.folderScanWarning]
+advice = "Súbor si môžete stále stiahnuť (napr. na kontrolu alebo ručnú úpravu), ale nepodporované kroky treba odstrániť, aby to backend vedel spustiť."
+cancel = "Zrušiť"
+confirm = "Napriek tomu exportovať"
+intro = "Skenovanie priečinka beží na backende, takže dokáže spúšťať iba nástroje, ktoré majú backend endpoint. Nasledujúce kroky v tejto automatizácii ho nemajú a pri spustení pipeline zlyhajú:"
+title = "Niektoré kroky nemožno spustiť pri skenovaní priečinka"
 
 [automate.importModal]
 cancel = "Zrušiť"
@@ -2094,11 +2158,31 @@ placeholder = "Počet strán"
 title = "Posledných N strán"
 
 [bulkSelection.operators]
-and = "AND: & alebo \"and\" — vyžadujú obe podmienky (napr. 1-50 & even)"
-comma = "Čiarka: , alebo | — spája výbery (napr. 1-10, 20)"
-not = "NOT: ! alebo \"not\" — vylúči strany (napr. 3n & not 30)"
 text = "AND má vyššiu prioritu ako čiarka. NOT sa uplatňuje v rámci rozsahu dokumentu."
 title = "Operátory"
+
+[bulkSelection.operators.and]
+title = "Kombinovať výbery (obe podmienky musia platiť)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & alebo \"and\" - vyžaduje obe podmienky (napr., 1-50 & even)"
+comma = "Čiarka: , alebo | - kombinuje výbery (napr., 1-10, 20)"
+not = "NOT: ! alebo \"not\" - vylúčiť stránky (napr., 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Vybrať všetky párne strany (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Vylúčiť z výberu"
+
+[bulkSelection.operators.odd]
+title = "Vybrať všetky nepárne strany (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Pridať do výberu (stačí jedna podmienka)"
+
+[bulkSelection.pageSelection]
+title = "Výber strán"
 
 [bulkSelection.range]
 fromPlaceholder = "Od"
@@ -2684,6 +2768,22 @@ title = "Zmeniť povolenia"
 [changePermissions.tooltip.warning]
 text = "Aby boli tieto povolenia nezmeniteľné, použite nástroj Add Password na nastavenie hesla vlastníka."
 
+[chat]
+resize = "Zmeniť veľkosť panela chatu"
+
+[chat.actions]
+copy = "Kopírovať správu"
+
+[chat.header]
+agentMenu = "Možnosti agenta Stirling"
+clearChat = "Vyčistiť chat"
+settings = "Nastavenia agenta"
+
+[chat.input]
+attach = "Priložiť súbory"
+placeholder = "Čo chcete urobiť?"
+send = "Odoslať správu"
+
 [chat.progress]
 analyzing = "Analyzujem vašu požiadavku..."
 calling_engine = "AI premýšľa..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Dokončené čítanie dokumentu..."
 whole_doc_read_started = "Čítanie dokumentu..."
 whole_doc_slice_done = "Čítanie dokumentu... ({{percent}}% dokončené)"
 
+[chat.quickActions]
+browseYourFiles = "Prehľadať svoje súbory"
+compressMany = "Komprimovať tieto dokumenty"
+compressOne = "Komprimovať tento dokument"
+convertMany = "Konvertovať tieto dokumenty do PDF"
+convertOne = "Konvertovať tento dokument do PDF"
+fileSummary_one = "1 súbor v pracovnom priestore ({{types}})"
+fileSummary_other = "{{count}} súborov v pracovnom priestore ({{types}})"
+heading = "Začíname"
+mergeMany = "Zlúčiť týchto {{count}} dokumentov do jedného"
+moreFiles = "+{{count}} viac"
+openFromComputer = "Otvoriť z počítača"
+removeFile = "Odstrániť {{name}}"
+rotateMany = "Otočiť tieto dokumenty"
+rotateOne = "Otočiť tento dokument"
+splitOne = "Rozdeliť tento dokument"
+
+[chat.responses]
+cannot_continue = "Niečo sa pokazilo a nemôžem pokračovať."
+cannot_do = "Toto nedokážem vykonať."
+done = "Hotovo."
+need_clarification = "Môžete upresniť svoju požiadavku?"
+not_found = "Nepodarilo sa nájsť požadované informácie."
+processing = "Spracúvam ({{outcome}})..."
+unsupported_capability = "Nepodporovaná schopnosť: {{capability}}"
+
 [chat.toolsUsed]
 summary = "Spustených {{count}} nástrojov"
 summary_one = "Spustený 1 nástroj"
@@ -2707,6 +2833,9 @@ unknownTool = "Neznámy nástroj"
 
 [cloudBadge]
 tooltip = "Táto operácia použije vaše cloudové kredity"
+
+[color.eyeDropper]
+tooltip = "Vybrať farbu z obrazovky"
 
 [colorPicker]
 title = "Vyberte farbu"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Najprv vyberte pôvodný súbor PDF"
 filesMissing = "Nepodarilo sa nájsť vybrané súbory. Vyberte ich znova."
 generic = "Nie je možné porovnať tieto súbory."
 selectRequired = "Vyberte pôvodný a upravený dokument."
+title = "Porovnanie zlyhalo"
 
 [compare.large.file]
 message = "Jeden alebo oba poskytnuté dokumenty sú príliš veľké na spracovanie"
@@ -2864,6 +2994,7 @@ title = "Stále pracujeme…"
 
 [compare.status]
 complete = "Porovnanie pripravené"
+error = "Porovnanie zlyhalo"
 extracting = "Extrahovanie textu..."
 processing = "Analýza rozdielov..."
 
@@ -2929,6 +3060,10 @@ title = "Metóda kompresie"
 [compress.selectText.1]
 1 = "1–3 kompresia PDF,</br> 4–6 mierna kompresia obrázkov,</br> 7–9 silná kompresia obrázkov výrazne zníži kvalitu obrázkov"
 _value = "Nastavenia kompresie"
+
+[compress.settings]
+desiredSize = "Požadovaná veľkosť súboru"
+desiredSizePlaceholder = "Zadajte veľkosť"
 
 [compress.tooltip.description]
 text = "Kompresia je jednoduchý spôsob, ako zmenšiť veľkosť súboru. Zvoľte Veľkosť súboru a zadajte cieľovú veľkosť, pričom kvalitu upravíme za vás. Zvoľte Kvalita a nastavte silu kompresie manuálne."
@@ -3404,6 +3539,29 @@ title = "Nastavenia otvorené"
 message = "Stirling PDF je teraz váš predvolený editor PDF"
 title = "Predvolená aplikácia nastavená"
 
+[desktopUpdate]
+downloading = "Preberanie aktualizácie..."
+installing = "Inštalácia aktualizácie..."
+installingWarning = "Aplikácia sa automaticky zavrie na dokončenie inštalácie."
+installNow = "Nainštalovať teraz"
+readyToRestart = "Aktualizácia pripravená"
+restartMessage = "Aktualizácia bola nainštalovaná. Reštartujte aplikáciu na dokončenie."
+restartNow = "Reštartovať teraz"
+updateFailed = "Aktualizácia zlyhala"
+updateFailedMessage = "Zlyhalo preberanie alebo inštalácia aktualizácie."
+
+[desktopUpdate.blocked]
+docsLink = "Zobraziť dokumentáciu k inštalácii"
+message = "Stirling-PDF nemá povolenie aktualizovať sa na tomto počítači."
+title = "Vyžadujú sa oprávnenia správcu"
+
+[dropdownList]
+searchPlaceholder = "Hľadať..."
+
+[editableSecretField]
+edit = "Upraviť"
+editSecretValue = "Upraviť tajnú hodnotu"
+
 [editTableOfContents]
 submit = "Použiť obsah"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Pracovný priestor osnovy"
 [editTableOfContents.workbench.empty]
 description = "Vyberte nástroj Upraviť obsah na načítanie pracovného priestoru."
 title = "Otvorte nástroj a začnite upravovať"
+
+[emptyFilesState]
+upload = "Nahrať"
 
 [encryptedPdfUnlock]
 description = "Toto PDF je chránené heslom. Zadajte heslo, aby ste mohli pokračovať v práci."
@@ -3605,6 +3766,10 @@ title = "Nastavenia"
 [extractPages.tooltip]
 description = "Extrahuje vybrané strany do nového PDF so zachovaním poradia."
 
+[fileCard]
+openInFileEditor = "Otvoriť v editore súborov"
+viewInViewer = "Zobraziť v prehliadači"
+
 [fileChooser]
 click = "Kliknite"
 dragAndDrop = "Potiahnite a pustite"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Potiahnite a pustite súbor PDF"
 extractPDF = "Extrahuje sa..."
 hoveredDragAndDrop = "Potiahnite a pustite súbory sem"
 or = "alebo"
+
+[fileDropdownMenu]
+closeFile = "Zavrieť súbor"
 
 [fileEditor]
 addFiles = "Pridať súbory"
@@ -3771,12 +3939,250 @@ expand = "Rozbaliť bočný panel"
 files = "Súbory"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive nie je nakonfigurovaný"
+leaveMyFiles = "Opustiť Moje súbory"
+myFiles = "Moje súbory"
 noFiles = "Zatiaľ žiadne súbory"
 openFileManager = "Otvoriť správcu súborov"
 openFromComputer = "Otvoriť z počítača"
 openSettings = "Otvoriť nastavenia"
 search = "Hľadať"
 searchPlaceholder = "Hľadať súbory..."
+
+[fileSidebar.fileItem]
+closeViewer = "Zavrieť prehliadač"
+openInViewer = "Otvoriť v prehliadači"
+
+[filesPage]
+addToWorkspace = "Pridať do pracovného priestoru"
+addToWorkspaceCount = "Pridať {{count}} do pracovného priestoru"
+allFiles = "Všetky súbory"
+back = "Späť"
+backToFolder = "Späť do {{folder}}"
+backToMyFiles = "Späť na Moje súbory"
+breadcrumbs = "Cesta k priečinku"
+cancel = "Zrušiť"
+clearSearch = "Vymazať vyhľadávanie"
+clearSelection = "Zrušiť výber"
+closeDetails = "Zavrieť podrobnosti"
+create = "Vytvoriť"
+cycleBlocked = "Priečinok nemožno presunúť do jedného zo svojich podpriečinkov."
+delete = "Odstrániť"
+deleteFolder = "Odstrániť priečinok"
+deleteFolderBody = "Odstrániť priečinok „{{name}}“?"
+deleteFolderConfirm = "Odstrániť priečinok „{{name}}“? Súbory vo vnútri budú presunuté do Všetky súbory. {{count}} súbor(ov) bude ovplyvnených."
+deleteFolderContents = "Odstrániť aj {{count}} súbor(ov) v priečinku"
+deleteFolderContentsWarning = "Súbory budú natrvalo odstránené a nemožno ich obnoviť."
+deleteFolderError = "Priečinok sa nepodarilo odstrániť. Skúste znova."
+deleteFolderKeepHint = "Súbory vo vnútri budú presunuté do Všetky súbory."
+deleteFolderTitle = "Odstrániť priečinok?"
+deselectAll = "Zrušiť výber"
+details = "Podrobnosti"
+detailsCount = "{{count}} vybraných súborov"
+dismissError = "Zavrieť"
+download = "Stiahnuť"
+downloadAll = "Stiahnuť všetko"
+downloadVersion = "Stiahnuť túto verziu"
+dropOverlay = "Pustite súbory sem na nahratie"
+dropOverlaySub = "Súbory začnú v Lokálne. Použite 'Presunúť do' alebo 'Uložiť do cloudu' na ich usporiadanie do priečinka."
+file = "Súbor"
+fileMenu = "Akcie súboru"
+folder = "Priečinok"
+folderItems = "{{count}} položiek"
+folderMenu = "Akcie priečinka"
+inPath = "v {{path}}"
+inWorkspace = "Otvorené"
+inWorkspaceAria = "Už v pracovnom priestore"
+loading = "Načítava sa…"
+localFoldersUnavailable = "Priečinky sú iba v cloude - uložte súbor do cloudu, aby ste ich mohli usporiadať."
+moreActions = "Ďalšie akcie priečinka"
+moveLocalToCloudBlocked = "Len lokálne súbory nemožno presunúť do cloudových priečinkov. Najprv ich uložte do cloudu."
+moveSkippedRemote = "{{count}} súbor(ov) sa nepodarilo presunúť na serveri (bez oprávnenia alebo už odstránené)."
+moveTo = "Presunúť do…"
+myFiles = "Moje súbory"
+newFolder = "Nový priečinok"
+newFolderStorageDisabled = "Ukladanie priečinkov na serveri nie je povolené. Požiadajte správcu, aby ho zapol."
+newFolderTabUnavailable = "Prepnite na Všetky alebo Cloud na vytváranie priečinkov."
+newRootFolder = "Nový priečinok v koreňovom adresári"
+offlineNoFolderEdits = "Synchronizácia priečinkov so serverom nie je k dispozícii - zmeny priečinkov sú zakázané. Skontrolujte prihlásenie a konfiguráciu úložiska."
+open = "Otvoriť"
+openInWorkbench = "Otvoriť v pracovnom priestore"
+openVersionInWorkspace = "Otvoriť v pracovnom priestore"
+originFilter = "Filtrovať podľa zdroja"
+quickView = "Rýchly náhľad"
+refresh = "Obnoviť zo servera"
+remove = "Odstrániť"
+removeConfirm = "Odstrániť {{count}} súbor(ov)? Toto nemožno vrátiť späť."
+removeVersion = "Odstrániť túto verziu"
+rename = "Premenovať"
+renameFolder = "Premenovať priečinok"
+resizeFolderTree = "Zmeniť veľkosť stromu priečinkov (šípkami, Shift pre väčšie kroky; dvojklik pre automatické prispôsobenie)"
+save = "Uložiť"
+saveToServer = "Uložiť na server"
+saveToServerDisabledHint = "Ukladanie na server nie je na tomto serveri povolené. Požiadajte správcu, aby ho povolil."
+search = "Hľadať"
+searchPlaceholder = "Hľadať v tomto priečinku a podpriečinkoch"
+selectAll = "Vybrať všetko"
+selectAllHint = "Kliknutím vyberiete všetko. Tip: podržte Ctrl (alebo Cmd) na pridávanie súborov po jednom, Shift na výber rozsahu."
+selectedCount = "Vybrané: {{count}}"
+selectFile = "Vybrať súbor {{name}}"
+shareDisabledHint = "Zdieľanie súborov nie je na tomto serveri povolené. Požiadajte správcu, aby ho povolil."
+shareManage = "Spravovať zdieľanie"
+showDetails = "Zobraziť podrobnosti"
+summary = "{{count}} položiek"
+syncFailed = "Synchronizácia priečinka zlyhala: {{message}}"
+syncPartial = "Čiastočná synchronizácia priečinka: {{failed}} z {{total}} priečinkov sa nepodarilo zlúčiť."
+tree = "Priečinky"
+upload = "Nahrať"
+uploadedToLocal = "Nahrané súbory začínajú v Lokálne. Použite 'Uložiť do cloudu' na ich vloženie do priečinka."
+uploadFromMobile = "Nahrať z mobilu"
+versionActions = "Akcie verzie"
+versionCollapse = "Zbaliť prostredné verzie"
+versionOrigin = "Pôvodné nahratie"
+versionsCount = "{{count}} verzií"
+versionShowHidden = "Zobraziť {{count}} staršie verzie"
+viewVersion = "Zobraziť túto verziu"
+
+[filesPage.appearance]
+colour = "Farba"
+icon = "Ikona"
+title = "Vzhľad"
+useColour = "Použiť farbu {{c}}"
+
+[filesPage.column]
+modified = "Zmenené"
+name = "Názov"
+size = "Veľkosť"
+type = "Typ"
+
+[filesPage.empty]
+hint = "Pretiahnite PDF kdekoľvek na túto stránku a nahrajte ich, alebo použite tlačidlo Nový priečinok na usporiadanie súborov."
+newFolderCta = "Vytvoriť priečinok"
+title = "Tento priečinok je prázdny"
+uploadCta = "Nahrať súbory"
+
+[filesPage.empty.cloud]
+hint = "Najprv nahrajte súbor alebo vytvorte priečinok na usporiadanie."
+offlineHint = "Znova sa pripojte na načítanie cloudovej knižnice."
+offlineTitle = "Žiadne cloudové súbory vo vyrovnávacej pamäti"
+title = "Zatiaľ žiadne cloudové súbory"
+
+[filesPage.empty.local]
+hint = "Súbory uložené bez nahrania zostanú tu. Pretiahnite súbor, aby ste pridali nový."
+title = "Žiadne iba lokálne súbory"
+
+[filesPage.empty.recent]
+hint = "Súbory, ktoré otvoríte alebo upravíte, sa zobrazia tu."
+title = "Zatiaľ nič upravené"
+
+[filesPage.empty.shared]
+hint = "Keď niekto zdieľa súbor cez odkaz, objaví sa tu."
+title = "Nič nie je s vami zdieľané"
+
+[filesPage.empty.sharedByMe]
+hint = "Vytvorte odkaz na zdieľanie alebo pozvite kolegu z ktoréhokoľvek zo svojich súborov, aby sa zobrazil tu."
+title = "Zatiaľ ste nezdieľali žiadne súbory"
+
+[filesPage.error]
+actionFailed = "Nepodarilo sa {{action}}."
+actionFailedDetail = "Nepodarilo sa {{action}}: {{message}}"
+deleteFolderFailed = "Priečinok sa nepodarilo odstrániť."
+deleteFolderFailedDetail = "Priečinok sa nepodarilo odstrániť: {{message}}"
+folderAppearanceFailed = "Nepodarilo sa aktualizovať vzhľad priečinka."
+folderAppearanceFailedDetail = "Nepodarilo sa aktualizovať vzhľad priečinka: {{message}}"
+moveFilesFailed = "Nepodarilo sa presunúť súbory."
+moveFilesFailedDetail = "Nepodarilo sa presunúť súbory: {{message}}"
+moveFolderFailed = "Nepodarilo sa presunúť priečinok."
+moveFolderFailedDetail = "Nepodarilo sa presunúť priečinok: {{message}}"
+removeFilesFailed = "Nepodarilo sa odstrániť súbory."
+removeFilesFailedDetail = "Nepodarilo sa odstrániť súbory: {{message}}"
+uploadFilesFailed = "Nepodarilo sa nahrať súbory."
+uploadFilesFailedDetail = "Nepodarilo sa nahrať súbory: {{message}}"
+
+[filesPage.field]
+added = "Pridané"
+count = "Súbory"
+folder = "Priečinok"
+modified = "Zmenené"
+name = "Názov"
+size = "Veľkosť"
+toolHistory = "História nástrojov"
+toolHistoryAtVersion = "Kumulatívny reťazec nástrojov"
+totalSize = "Celková veľkosť"
+type = "Typ"
+versionHistory = "Vývoj verzií"
+
+[filesPage.folderName]
+cancel = "Zrušiť"
+error = "Priečinok sa nepodarilo uložiť. Skúste znova."
+label = "Názov priečinka"
+placeholder = "Názov priečinka"
+
+[filesPage.moveDialog]
+cancel = "Zrušiť"
+confirm = "Presunúť sem"
+error = "Nepodarilo sa presunúť. Skúste znova."
+hint = "Vyberte cieľový priečinok. Tip: môžete tiež presúvať súbory na priečinky v strome vľavo potiahnutím a pustením."
+newFolderCancel = "Zahodiť"
+newFolderCreate = "Vytvoriť"
+newFolderError = "Nepodarilo sa vytvoriť priečinok. Skúste znova."
+newFolderLabel = "Názov nového priečinka"
+newFolderPlaceholder = "Názov priečinka"
+newFolderToggle = "Vytvoriť nový priečinok…"
+title = "Presunúť do priečinka"
+
+[filesPage.origin]
+all = "Všetky zdroje"
+cloud = "Cloud"
+cloudHint = "Uložené na serveri Stirling"
+local = "Lokálne"
+localHint = "Uložené len v tomto prehliadači"
+shared = "Zdieľané"
+sharedHint = "Zdieľané s vami cez odkaz"
+
+[filesPage.sort]
+modifiedAsc = "Najstaršie ako prvé"
+modifiedDesc = "Najnovšie ako prvé"
+nameAsc = "Názov A→Z"
+nameDesc = "Názov Z→A"
+sizeAsc = "Najmenšie ako prvé"
+sizeDesc = "Najväčšie ako prvé"
+
+[filesPage.syncError]
+client = "Synchronizácia priečinka zlyhala."
+network = "Nepodarilo sa kontaktovať server."
+server = "Chyba servera počas synchronizácie priečinka."
+
+[filesPage.tabName]
+local = "Lokálne"
+recent = "Nedávne"
+shared = "Zdieľané so mnou"
+sharedByMe = "Zdieľané mnou"
+
+[filesPage.tabs]
+all = "Všetky"
+ariaLabel = "Zobrazenia súborov"
+cloud = "Cloud"
+local = "Lokálne"
+recent = "Nedávne"
+shared = "Zdieľané so mnou"
+sharedByMe = "Zdieľané mnou"
+
+[filesPage.treeMenu]
+actions = "Akcie priečinka pre {{name}}"
+collapse = "Zbaliť priečinok"
+delete = "Odstrániť priečinok"
+expand = "Rozbaliť priečinok"
+newSubfolder = "Nový podpriečinok"
+rename = "Premenovať"
+
+[filesPage.typeFilter]
+allTypes = "Všetky typy"
+label = "Filtrovať podľa typu"
+
+[filesPage.viewMode]
+grid = "Zobrazenie mriežky"
+label = "Režim zobrazenia"
+list = "Zobrazenie zoznamu"
 
 [fileToPDF]
 credit = "Táto služba používa LibreOffice a Unoconv pre konverziu súborov."
@@ -3891,6 +4297,15 @@ title = "O splošťovaní PDF"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Spľoštiť po vyplnení"
+rescanFields = "Znovu naskenovať polia"
+rescanFormFields = "Znovu naskenovať polia formulára"
+save = "Uložiť"
+
+[formFill.sidebar]
+close = "Zavrieť bočný panel"
 
 [getPdfInfo]
 downloadJson = "Stiahnuť JSON"
@@ -4451,6 +4866,11 @@ tags = "markup, webový obsah, transformácia, konvertovať"
 title = "HTML do PDF"
 zoom = "Úroveň priblíženia pre zobrazenie webstránky."
 
+[image.upload]
+hint = "Nahrajte PNG, JPG, SVG alebo iný obrázkový súbor, ktorý umiestnite do PDF. Súbory SVG budú pre kompatibilitu skonvertované na PNG."
+label = "Nahrať obrázok"
+placeholder = "Vybrať súbor s obrázkom"
+
 [imageToPdf]
 tags = "konverzia,img,jpg,obrázok,fotografia"
 
@@ -4468,6 +4888,9 @@ title = "Obrázok na PDF"
 3 = "Logika pre viac súborov (Povolí sa len, ak pracujete s viacerými obrázkami)"
 4 = "Zlúčiť do jedného PDF"
 5 = "Konvertovať na samostatné PDF"
+
+[infoBanner]
+dismiss = "Zavrieť"
 
 [invite]
 acceptError = "Nepodarilo sa vytvoriť účet"
@@ -4804,6 +5227,7 @@ failed = "Operácia OCR zlyhala"
 
 [ocr.languagePicker]
 additionalLanguages = "Hľadáte ďalšie jazyky?"
+loading = "Načítavajú sa dostupné jazyky..."
 viewSetupGuide = "Zobraziť príručku nastavenia →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "Zostáva {{days}} deň"
 title = "Vaše 30‑dňové Pro skúšobné obdobie"
 trialEnds = "Skúšobné obdobie končí {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Overovací kód"
+qrCodeLoading = "Generuje sa váš QR kód…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Keď zapnete režim prihlásenia, môžete spravovať používateľov, konfigurovať nastavenia a monitorovať stav servera. Prvých <strong>{{freeTierLimit}}</strong> ľudí na vašom serveri môže používať Stirling bezplatne."
 adminBodyLoginEnabled = "Ako admin môžete spravovať používateľov, konfigurovať nastavenia a monitorovať stav servera. Prvých <strong>{{freeTierLimit}}</strong> ľudí na vašom serveri môže používať Stirling bezplatne."
@@ -4949,6 +5377,9 @@ userTitle = "Prehľad plánu"
 
 [onboarding.securityCheck]
 message = "Aplikácia prešla nedávno významnými zmenami. Môže byť potrebná pozornosť vášho správcu servera. Potvrďte svoju rolu, aby ste pokračovali."
+roleAdmin = "Administrátor"
+rolePlaceholder = "Potvrďte svoju rolu"
+roleUser = "Používateľ"
 
 [onboarding.serverLicense]
 freeBody = "Naše licencovanie <strong>Open-Core</strong> povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Ak chcete škálovať bez prerušenia a získať skorý prístup k nášmu novému <strong>nástroju na úpravu textu PDF</strong>, odporúčame plán Stirling Server - plné úpravy a <strong>neobmedzené miesta</strong> za $99/server/mo."
@@ -5074,6 +5505,17 @@ title = "Editor strán"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
 
+[pageEditor.emptyState]
+body = "Pridajte súbory na začatie úprav strán"
+title = "Nie sú načítané žiadne PDF súbory"
+
+[pageEditor.toolbar]
+delete = "Odstrániť vybrané"
+redo = "Znova"
+rotateLeft = "Otočiť vybrané doľava"
+rotateRight = "Otočiť vybrané doprava"
+undo = "Späť"
+
 [pageExtracter]
 header = "Extrahovať stránky"
 placeholder = "(napr. 1,2,8 alebo 4,7,12-16 alebo 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Pridať okraje"
 borderWidth = "Hrúbka orámovania"
 bottom = "Spodný okraj"
 cols = "Stĺpce"
+colsPlaceholder = "Zadajte počet stĺpcov"
 header = "Viacstranové usporiadanie"
 innerMargin = "Vnútorný okraj"
 left = "Ľavý okraj"
 pagesPerSheet = "Stránky na list:"
 right = "Pravý okraj"
 rows = "Riadky"
+rowsPlaceholder = "Zadajte počet riadkov"
 submit = "Odoslať"
 tags = "zlúčiť,zjednotiť,jednostranový pohľad,organizovať"
 title = "Viacstranové usporiadanie"
@@ -5131,6 +5575,14 @@ failed = "Počas vytvárania viacstranového rozloženia došlo k chybe."
 innerMarginTooLarge = "Vnútorný okraj je pre zvolené rozloženie príliš veľký."
 outerHorizontalMarginsTooLarge = "Ľavé/pravé okraje sú pre túto veľkosť strany príliš veľké."
 outerVerticalMarginsTooLarge = "Horné/spodné okraje sú pre túto veľkosť strany príliš veľké."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Zadajte hrúbku okraja"
+bottomPlaceholder = "Zadajte spodný okraj"
+innerPlaceholder = "Zadajte vnútorný okraj"
+leftPlaceholder = "Zadajte ľavý okraj"
+rightPlaceholder = "Zadajte pravý okraj"
+topPlaceholder = "Zadajte horný okraj"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Zapnite orámovanie na kreslenie čiar okolo každej umiestnenej strany. Pomáha to s vizuálnym oddelením alebo orezávaním."
@@ -5785,6 +6237,26 @@ pdfTools = "Základné PDF nástroje"
 priority = "Prioritná podpora"
 title = "Funkcia"
 
+[plan.features]
+allPdfOperations = "Všetky PDF operácie"
+auditing = "Audit"
+communitySupport = "Podpora komunity"
+customPdfMetadata = "Vlastné PDF metadáta"
+editingTextInPdfs = "Úpravy textu v PDF"
+externalDatabase = "Externá databáza"
+googleDriveIntegration = "Integrácia Google Drive"
+prometheusSupport = "Podpora Prometheus"
+regularUpdates = "Pravidelné aktualizácie"
+saml = "SAML"
+secureLoginSupport = "Podpora zabezpečeného prihlásenia"
+selfHostedDeployment = "Samohostované nasadenie"
+sso = "SSO"
+unlimitedUsers = "Neobmedzený počet používateľov"
+upToFiveUsers = "Až 5 používateľov"
+upToFiveUsersLowercase = "až 5 používateľov"
+usageTracking = "Sledovanie používania"
+usersLimitedToSeats = "Používatelia obmedzení počtom miest"
+
 [plan.free]
 forever = "Navždy zadarmo"
 highlight1 = "Obmedzené používanie nástrojov za týždeň"
@@ -5792,6 +6264,22 @@ highlight2 = "Prístup ku všetkým nástrojom"
 highlight3 = "Podpora komunity"
 included = "Zahrnuté"
 name = "Bezplatný"
+
+[plan.highlights]
+advancedIntegrations = "Pokročilé integrácie"
+allBasicFeatures = "Všetky základné funkcie"
+cancelAnytime = "Zrušenie kedykoľvek"
+customPdfMetadata = "Vlastné PDF metadáta"
+editingTextInPdfsCaps = "Úpravy textu v PDF"
+enterpriseFeatures = "Podnikové funkcie (SAML, audit)"
+perSeatLicensing = "Licencovanie podľa miest"
+saveWithAnnualBilling = "Ušetrite s ročným fakturovaním"
+selfHosted = "Samohostované"
+selfHostedOnInfrastructure = "Samohostované na vašej infraštruktúre"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Neobmedzený počet používateľov"
+upToFiveUsers = "Až 5 používateľov"
+usageTrackingPrometheus = "Sledovanie používania a Prometheus"
 
 [plan.licenseWarning]
 body = "Máte {{total}} používateľov, ale bezplatná úroveň podporuje len {{limit}} na server. Upgradujte, aby Stirling PDF bežal hladko."
@@ -6103,6 +6591,7 @@ allSessions = "Všetky relácie"
 allTools = "All Tools"
 automate = "Auto"
 back = "Späť"
+backToAllTools = "Späť na všetky nástroje"
 certSign = "Podpis certifikátom"
 completedSessions = "Dokončené relácie"
 completedTab = "Dokončené"
@@ -6772,6 +7261,9 @@ bullet3 = "Kritické pre schvaľovacie postupy a právny reťazec držby"
 description = "Poradie, ktoré určíte pri vytváraní relácie, určuje, kto podpisuje ako prvý."
 title = "Poradie podpisov"
 
+[settings]
+close = "Zavrieť"
+
 [settings.configuration]
 advanced = "Pokročilé"
 database = "Databáza"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Skontrolujte aktualizácie a zobrazte informácie o verzii"
 latestVersion = "Najnovšia verzia"
+managedByAdmin = "Spravuje správca"
+modeAuto = "Inštalovať aktualizácie automaticky"
+modeDisabled = "Nekontrolovať aktualizácie"
+modePrompt = "Spýtať sa pred inštaláciou aktualizácií"
 serverNeedsUpdate = "Server musí aktualizovať administrátor"
 title = "Aktualizácie softvéru"
+updateBehavior = "Spôsob aktualizácií"
+updateBehaviorDescription = "Vyberte, či sa má pýtať pred inštaláciou aktualizácií, inštalovať ich automaticky alebo úplne preskočiť kontroly aktualizácií."
+updateBehaviorError = "Nepodarilo sa zmeniť spôsob aktualizácií"
+updateBehaviorErrorLocked = "Toto nastavenie je uzamknuté vaším správcom."
+updateBehaviorLockedDescription = "Váš správca nastavil, ako Stirling-PDF narába s aktualizáciami na tomto počítači. Kontaktujte ho na zmenu."
+updateBehaviorSaved = "Spôsob aktualizácií bol uložený."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Zobraziť podrobnosti"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Všetci používatelia môžu tieto podpisy vidieť a použ
 sharedHeading = "Zdieľané podpisy"
 tempStorageDescription = "Podpisy sú uložené iba vo vašom prehliadači. Pri vymazaní údajov prehliadača alebo pri zmene prehliadača sa stratia."
 tempStorageTitle = "Dočasné úložisko prehliadača"
+use = "Použiť podpis"
 
 [sign.saved.status]
 saved = "Uložené"
@@ -7695,6 +8198,7 @@ bulkTitle = "Nahrať vybrané súbory"
 description = "Týmto nahráte aktuálny súbor do serverového úložiska pre vlastný prístup."
 errorTitle = "Nahrávanie zlyhalo"
 failure = "Nahrávanie zlyhalo. Skontrolujte svoje prihlásenie a nastavenia úložiska."
+featureDisabled = "Ukladanie na server nie je na tomto serveri povolené."
 fileCount = "{{count}} vybraných súborov"
 fileLabel = "Súbor"
 hint = "Verejné odkazy a režimy prístupu sú riadené nastaveniami vášho servera."
@@ -7823,8 +8327,17 @@ center = "Na stred"
 left = "Vľavo"
 right = "Vpravo"
 
+[textInput]
+clear = "Vymazať vstup"
+
 [theme]
 toggle = "Prepnúť tému"
+
+[time.relative]
+daysAgo = "pred {{count}} d"
+hoursAgo = "pred {{count}} h"
+justNow = "práve teraz"
+minutesAgo = "pred {{count}} m"
 
 [timestampPdf]
 completed = "Súbor PDF bol úspešne označený časovou pečiatkou"
@@ -7852,6 +8365,10 @@ label = "Vyberte server TSA"
 [timestampPdf.steps]
 settings = "Nastavenia"
 
+[toast]
+dismiss = "Zavrieť"
+toggleDetails = "Prepnúť podrobnosti"
+
 [tool]
 endpointUnavailable = "Tento nástroj nie je na vašom serveri dostupný."
 endpointUnavailableClickable = "V tomto režime nie je k dispozícii. Kliknite pre prihlásenie."
@@ -7868,13 +8385,18 @@ viewerMode = "Ak chcete vybrať viac súborov, prepnite do editora súborov."
 [toolPanel]
 allTools = "Všetky nástroje"
 alpha = "Alfa"
+backToAllTools = "Späť na všetky nástroje"
+backToDefault = "Späť"
 backToTools = "Späť na nástroje"
 collapse = "Zbaliť panel"
 comingSoon = "Už čoskoro:"
 expand = "Rozbaliť panel"
+goBack = "Prejsť späť"
 placeholder = "Vyberte nástroj, aby ste začali"
 premiumFeature = "Prémiová funkcia:"
 search = "Hľadať nástroje"
+toolsHeader = "Nástroje"
+viewAllTools = "Zobraziť všetky nástroje"
 
 [toolPanel.fullscreen]
 comingSoon = "Už čoskoro:"
@@ -7933,6 +8455,9 @@ verification = "Overovanie"
 noSearchResults = "Nenašli sa žiadne nástroje"
 noTools = "Nie sú dostupné žiadne nástroje"
 
+[tooltip]
+close = "Zavrieť tooltip"
+
 [unlockPDFForms]
 description = "Tento nástroj odstráni obmedzenia len na čítanie z polí PDF formulárov, čím ich sprístupní na úpravu a vypĺňanie."
 filenamePrefix = "odomknuté_formuláre"
@@ -7951,29 +8476,42 @@ placeholder = "Vyberte súbor PDF v hlavnom zobrazení, aby ste mohli začať"
 title = "Výsledky odomknutia formulárov"
 
 [update]
+allReleases = "Všetky vydania"
 availableUpdates = "Dostupné aktualizácie"
+breaking = "Nezlučiteľné"
 breakingChanges = "Nezlučiteľné zmeny"
 breakingChangesDefault = "Táto verzia obsahuje nezlučiteľné zmeny."
 breakingChangesDetected = "Zistené nezlučiteľné zmeny"
 breakingChangesMessage = "Niektoré verzie obsahujú nezlučiteľné zmeny. Pred aktualizáciou si pozrite migračné príručky nižšie."
 close = "Zavrieť"
+closeModal = "Zavrieť okno aktualizácie"
 current = "Aktuálna verzia"
+defaultRecommendation = "Táto aktualizácia obsahuje dôležité opravy a vylepšenia."
 downloadLatest = "Stiahnuť najnovšie"
+later = "Neskôr"
 latest = "Najnovšia verzia"
 latestStable = "Najnovšia stabilná"
 loadingDetailedInfo = "Načítavajú sa podrobné informácie..."
 migrationGuide = "Migračná príručka"
 migrationGuides = "Migračné príručky"
+migrationGuidesDesc = "Pred aktualizáciou si preštudujte dôležité zmeny."
+modalSubtitle = "Nová verzia Stirling PDF je pripravená na inštaláciu."
 modalTitle = "Dostupná aktualizácia"
+notes = "Poznámky"
 priorityLabel = "Priorita"
 recommendedAction = "Odporúčaná akcia"
 releaseNotes = "Poznámky k vydaniu"
+showLess = "Zobraziť menej verzií"
+showMore = "Zobraziť všetky verzie ({{count}})"
+stable = "STABLE"
 unableToLoadDetails = "Nedá sa načítať podrobné informácie."
 updateAvailable = "Dostupná aktualizácia"
 urgentUpdateAvailable = "Urgentná aktualizácia"
 version = "Verzia"
+versionHistory = "História verzií"
 viewAllReleases = "Zobraziť všetky vydania"
 viewGuide = "Zobraziť príručku"
+whatsNewIn = "Čo je nové v"
 
 [update.priority]
 low = "Nízka"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Povoliť tmavý filter"
 enableSepiaFilter = "Povoliť sépiový filter"
 firstPage = "Prvá strana"
 lastPage = "Posledná strana"
+moreOptions = "Viac"
 nextPage = "Nasledujúca strana"
 onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
+pageNavigation = "Navigácia strán"
 previousPage = "Predchádzajúca strana"
 resetZoom = "Obnoviť priblíženie"
 singlePageView = "Zobrazenie jednej strany"
 unknownFile = "Neznámy súbor"
+view = "Zobrazenie"
+zoom = "Priblíženie"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Vložiť text"
 typeReplaceText = "Nahradiť text"
 viewComment = "Zobraziť komentár"
 
+[viewer.error]
+noFileProvided = "Chyba: Prehliadaču nebol poskytnutý žiadny súbor"
+
 [viewer.formBar]
 apply = "Použiť zmeny"
 dismiss = "Zavrieť"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Toto PDF obsahuje vyplniteľné polia"
 title = "Polia formulára"
 unsavedBadge = "Neuložené"
 unsavedDesc = "Máte neuložené zmeny"
+
+[viewer.link]
+delete = "Odstrániť odkaz"
 
 [viewer.nonPdf]
 columnDefault = "Stĺpec {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Načítava sa..."
 renderMarkdown = "Zobraziť Markdown"
 sortedBy = "Zoradené podľa: {{column}}"
 textStats = "{{lines}} riadkov · {{size}}"
+
+[viewer.redaction]
+removeMark = "Odstrániť toto označenie"
+
+[viewer.search]
+clear = "Vymazať vyhľadávanie"
+close = "Zavrieť vyhľadávanie"
+next = "Ďalší výsledok"
+previous = "Predchádzajúci výsledok"
+resultsOf = "z {{total}}"
+
+[viewer.signature]
+delete = "Odstrániť podpis"
 
 [viewPdf]
 header = "Zobraziť PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Prepnúť vrstvy"
 toggleSidebar = "Prepnúť bočný panel"
 toggleTheme = "Prepnúť tému"
 viewer = "Prehliadač"
+
+[workflow.participant]
+accessExpired = "Váš prístup k tomuto dokumentu vypršal."
+certificateFile = "Súbor certifikátu"
+certificateFilePlaceholder = "Vybrať súbor certifikátu"
+certificatePassword = "Heslo certifikátu"
+certificateType = "Typ certifikátu"
+certTypeJks = "Úložisko JKS"
+certTypeP12 = "Certifikát P12/PKCS12"
+certTypeServer = "Serverový certifikát (ak je k dispozícii)"
+completedDeclined = "Tento dokument ste odmietli."
+completedSigned = "Tento dokument ste podpísali."
+decline = "Odmietnuť"
+downloadDocument = "Stiahnuť dokument"
+dueDate = "Termín: {{date}}"
+errorTitle = "Chyba"
+from = "Od: {{name}}"
+loadingSession = "Načítava sa relácia..."
+location = "Poloha"
+locationPlaceholder = "napr. San Francisco, CA"
+pageNumber = "Číslo strany (voliteľné)"
+reason = "Dôvod"
+reasonPlaceholder = "napr. Schválenie dokumentu"
+sessionNotFound = "Relácia nebola nájdená alebo prístup bol zamietnutý."
+signDocument = "Podpísať dokument"
+statusDeclined = "Odmietnuté"
+statusNotified = "Upovedomené"
+statusPending = "Čakajúce"
+statusSigned = "Podpísané"
+statusViewed = "Zobrazené"
+submitSignature = "Odoslať podpis"
 
 [workspace]
 title = "Pracovný priestor"

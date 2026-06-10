@@ -486,12 +486,13 @@ test.describe("Files page screenshots", () => {
     const card = page
       .locator(".files-page-card:not(.is-folder)")
       .filter({ hasText: "alpha.pdf" });
-    await card.getByRole("button", { name: /File actions/i }).click();
-    await page.getByRole("menuitem", { name: /Move to/i }).click();
-    await page.getByRole("button", { name: /Create new folder/i }).click();
-    await expect(
-      page.getByRole("textbox", { name: /New folder name/i }),
-    ).toBeVisible();
+    // Locate by stable test ids, not translated accessible names: this test
+    // runs in Arabic (enableRtl), so English-text locators break once the
+    // ar-AR strings are actually translated.
+    await card.getByTestId("file-card-actions").click();
+    await page.getByTestId("file-menu-move-to").click();
+    await page.getByTestId("move-dialog-create-folder-toggle").click();
+    await expect(page.getByTestId("move-dialog-new-folder-name")).toBeVisible();
     await settle(page);
     await page.screenshot({
       path: shotPath("17_rtl_move_dialog_create_folder"),
