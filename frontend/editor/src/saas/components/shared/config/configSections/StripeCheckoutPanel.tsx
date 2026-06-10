@@ -59,6 +59,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@app/auth/supabase";
+import { useAuth } from "@app/auth/UseSession";
 
 // Eager static imports here are OK because this whole module is itself lazy-
 // imported by the modal. They land in the same lazy chunk.
@@ -122,10 +123,17 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   onError,
 }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isMock, setIsMock] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Billing email for the Stripe Checkout Session. Passing customer_email to
+  // Stripe prefills the email field AND locks it (Stripe's own behaviour for
+  // sessions created with customer_email or an attached customer) — the user
+  // can't bill a different address than the account they're signed in with.
+  const billingEmail = user?.email ?? null;
 
   // Stable ref for the error callback so we don't have to include it in the
   // effect deps.
@@ -187,6 +195,11 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
                 currency,
                 success_url: returnUrl,
                 cancel_url: returnUrl,
+                // Maps to Stripe's customer_email when the team has no Stripe
+                // customer yet — prefills + locks the email field in Checkout.
+                // Teams with an existing customer get the email locked from the
+                // customer record instead; this field is ignored for them.
+                ...(billingEmail ? { billing_owner_email: billingEmail } : {}),
               },
             },
           );
@@ -218,7 +231,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [teamId, currency, devPreview]);
+  }, [teamId, currency, devPreview, billingEmail]);
 
   if (loading) {
     return (
