@@ -512,7 +512,7 @@ function FolderCard({
         <div className="files-page-card-meta">
           {fileCount === 0
             ? t("filesPage.folder", "Folder")
-            : t("filesPage.folderItems", "{{count}} item(s)", {
+            : t("filesPage.folderItems", "{{count}} items", {
                 count: fileCount,
               })}
         </div>
@@ -743,6 +743,7 @@ function FileCard({
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
+              data-testid="file-card-actions"
             >
               <MoreVertIcon fontSize="small" />
             </ActionIcon>
@@ -773,6 +774,7 @@ function FileCard({
                 e.stopPropagation();
                 onMove();
               }}
+              data-testid="file-menu-move-to"
             >
               {t("filesPage.moveTo", "Move to…")}
             </Menu.Item>
@@ -1103,9 +1105,7 @@ function FolderRow({
       <span>
         {fileCount === 0
           ? "-"
-          : t("filesPage.folderItems", "{{count}} item(s)", {
-              count: fileCount,
-            })}
+          : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
       </span>
       <span>{getFileDate({ lastModified: folder.updatedAt })}</span>
       <Menu shadow="md" position="bottom-end" withinPortal>
@@ -1333,6 +1333,7 @@ function FileRow({
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.fileMenu", "File actions")}
+            data-testid="file-card-actions"
           >
             <MoreVertIcon fontSize="small" />
           </ActionIcon>
