@@ -130,7 +130,8 @@ class PaygChargeInterceptorTest {
 
     @Test
     void preHandle_openedDisposition_stashesJobIdAndDisposition() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        // API-key auth → BillingCategory.API → billable path engaged.
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 4, ChargeOutcome.Disposition.OPENED));
@@ -153,7 +154,8 @@ class PaygChargeInterceptorTest {
 
     @Test
     void preHandle_chargeServiceThrows_failsOpenAndIncrementsErrorCounter() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        // API-key auth → API category → reaches openProcess so the throw can be observed.
+        authenticateWithApiKey(makeUser(7L, 42L));
         when(chargeService.openProcess(any(), anyList())).thenThrow(new RuntimeException("boom"));
 
         MockMultipartHttpServletRequest req = newMultipart();
@@ -170,7 +172,7 @@ class PaygChargeInterceptorTest {
 
     @Test
     void afterCompletion_2xx_appendsStepAndRecordsOutputs() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -203,11 +205,33 @@ class PaygChargeInterceptorTest {
         verify(jobService).recordOutput(eq(jobId), any());
         verify(chargeService, never()).markFirstStepFailed(any(), any());
         verify(chargeService, never()).decrementStepCount(any());
+        // Success on an OPENED process is the primary meter trigger — fires now, not at close.
+        verify(chargeService).meterJobUsage(jobId);
+    }
+
+    @Test
+    void afterCompletion_2xx_joined_doesNotMeter() throws Exception {
+        // A JOINED follow-up step (chained tool on the same document) added no units when it
+        // joined — it must not re-meter; the OPENED step already did.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(200);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
     void afterCompletion_5xx_opened_callsMarkFirstStepFailed() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -226,11 +250,13 @@ class PaygChargeInterceptorTest {
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("503"));
         assertThat(meterRegistry.counter("payg.filter.refunds").count()).isEqualTo(1.0);
+        // First-step failure refunds — never meter it.
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
     void afterCompletion_5xx_joined_callsDecrementStepCount() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
@@ -249,7 +275,7 @@ class PaygChargeInterceptorTest {
 
     @Test
     void afterCompletion_4xx_appendsFailedStepNoRefundNoOutputs() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -267,6 +293,8 @@ class PaygChargeInterceptorTest {
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("422"));
+        // 4xx is a full charge (customer paid for the attempt), so it still meters.
+        verify(chargeService).meterJobUsage(jobId);
     }
 
     @Test
@@ -293,7 +321,7 @@ class PaygChargeInterceptorTest {
     @Test
     void afterCompletion_maxBytesExceeded_skipsOutputRecording() throws Exception {
         properties.getResponse().setMaxBytes(2L);
-        authenticateWithUser(makeUser(7L, 42L));
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -317,7 +345,10 @@ class PaygChargeInterceptorTest {
 
     @Test
     void preHandle_desktopClientHeader_setsJobSourceDesktopApp() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        // API-key (billable) so the call reaches openProcess; the desktop header still wins the
+        // source mapping (checked before the API-key branch in determineSource). A manual JWT call
+        // is BYPASSED and never opens a process, so source wouldn't be recorded.
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -338,7 +369,9 @@ class PaygChargeInterceptorTest {
 
     @Test
     void preHandle_toolId_prefersBestMatchingPattern() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        // API-key (billable) so doPreHandle runs and records tool_id; a manual JWT call is
+        // BYPASSED before that point, so no tool_id is stored.
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -359,7 +392,9 @@ class PaygChargeInterceptorTest {
 
     @Test
     void preHandle_toolId_truncatesAndCountsWhenLongerThan128() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        // API-key (billable) so doPreHandle runs and records tool_id (a manual JWT call is
+        // BYPASSED).
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -380,7 +415,7 @@ class PaygChargeInterceptorTest {
 
     @Test
     void preHandle_pipelineHeader_setsJobSourcePipeline() throws Exception {
-        authenticateWithUser(makeUser(7L, 42L));
+        authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
@@ -397,6 +432,184 @@ class PaygChargeInterceptorTest {
         verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
         assertThat(ctxCaptor.getValue().source())
                 .isEqualTo(stirling.software.saas.payg.model.JobSource.PIPELINE);
+    }
+
+    // --- BillingCategory categorisation + bypass fast-path -------------------------------------
+
+    @Test
+    void preHandle_manualToolJwt_isBypassedAndSkipsOpenProcess() throws Exception {
+        // JWT-authenticated, plain @AutoJobPostMapping endpoint, no automation header → BYPASSED.
+        // The interceptor must skip openProcess entirely (no temp files, no DB writes) and bump
+        // the payg.filter.bypassed counter.
+        authenticateWithUser(makeUser(7L, 42L));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        boolean cont =
+                interceptor.preHandle(
+                        req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        assertThat(cont).isTrue();
+        verify(chargeService, never()).openProcess(any(), anyList());
+        assertThat(req.getAttribute(PaygChargeInterceptor.ATTR_JOB_ID)).isNull();
+        assertThat(req.getAttribute(PaygChargeInterceptor.ATTR_INPUT_TEMP_FILES)).isNull();
+        assertThat(meterRegistry.counter("payg.filter.bypassed").count()).isEqualTo(1.0);
+    }
+
+    @Test
+    void preHandle_apiKeyAuth_setsBillingCategoryApi() throws Exception {
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.API);
+    }
+
+    @Test
+    void preHandle_requiresFeatureAutomation_setsBillingCategoryAutomation() throws Exception {
+        // JWT auth on a @RequiresFeature(AUTOMATION) endpoint → AUTOMATION category.
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForAutomation());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AUTOMATION);
+    }
+
+    @Test
+    void preHandle_requiresFeatureAiSupport_setsBillingCategoryAi() throws Exception {
+        // JWT auth on a @RequiresFeature(AI_SUPPORT) endpoint → AI category.
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForAi());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AI);
+    }
+
+    @Test
+    void preHandle_requiresFeatureWithoutAutoJobPostMapping_reachesCategoryGate() throws Exception {
+        // Regression: AI controllers carry @RequiresFeature but NO @AutoJobPostMapping. They must
+        // still flow past the short-circuit gate so determineCategory runs (and so future
+        // multipart-bearing @RequiresFeature routes bill correctly). API-key auth +
+        // @RequiresFeature
+        // — even without multipart inputs — should land in the BillingCategory.API branch via
+        // determineCategory's auth check, then short-circuit inside doPreHandle because there are
+        // no multipart parts.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        MockMultipartHttpServletRequest req = newMultipart();
+        // No file parts — emulates a JSON-bodied AI controller request that happens to be wrapped
+        // as multipart. doPreHandle short-circuits with no openProcess call.
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", new byte[0]));
+
+        boolean cont =
+                interceptor.preHandle(
+                        req, new MockHttpServletResponse(), handlerMethodForAiNoAutoJob());
+
+        assertThat(cont).isTrue();
+        verify(chargeService, never()).openProcess(any(), anyList());
+        // Importantly: not counted as BYPASSED — the AI category was determined correctly.
+        assertThat(meterRegistry.counter("payg.filter.bypassed").count()).isEqualTo(0.0);
+    }
+
+    @Test
+    void preHandle_aiEndpointWithoutAutoJobPostMapping_categoryIsAi() throws Exception {
+        // With multipart parts present + @RequiresFeature(AI_SUPPORT) but no @AutoJobPostMapping:
+        // the interceptor must run determineCategory and tag the ChargeContext as AI.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForAiNoAutoJob());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AI);
+    }
+
+    @Test
+    void preHandle_classLevelRequiresFeatureOnly_isInScope() throws Exception {
+        // Mirrors AiCreateController shape: @RequiresFeature on the @RestController class.
+        // The interceptor must resolve it via beanType lookup and not short-circuit as
+        // "no annotation".
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForClassLevelAi());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AI);
+    }
+
+    @Test
+    void preHandle_aiEndpointWithAutomationHeader_automationWinsByPrecedence() throws Exception {
+        // X-Stirling-Automation: true on an @RequiresFeature(AI_SUPPORT) endpoint → AUTOMATION
+        // (header beats annotation by design — pipeline-driven AI counts as automation usage).
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForAi());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AUTOMATION);
     }
 
     // --- helpers --------------------------------------------------------------------------------
@@ -459,11 +672,78 @@ class PaygChargeInterceptorTest {
         }
     }
 
+    private static HandlerMethod handlerMethodForAutomation() {
+        try {
+            Method m = FakeController.class.getDeclaredMethod("handleAutomation");
+            return new HandlerMethod(new FakeController(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static HandlerMethod handlerMethodForAi() {
+        try {
+            Method m = FakeController.class.getDeclaredMethod("handleAi");
+            return new HandlerMethod(new FakeController(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static HandlerMethod handlerMethodForAiNoAutoJob() {
+        try {
+            Method m = FakeController.class.getDeclaredMethod("handleAiNoAutoJob");
+            return new HandlerMethod(new FakeController(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static HandlerMethod handlerMethodForClassLevelAi() {
+        try {
+            Method m = ClassLevelAiController.class.getDeclaredMethod("classLevelAi");
+            return new HandlerMethod(new ClassLevelAiController(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void authenticateWithApiKey(User user) {
+        stirling.software.proprietary.security.model.ApiKeyAuthenticationToken token =
+                new stirling.software.proprietary.security.model.ApiKeyAuthenticationToken(
+                        user, "test-api-key", List.of(new SimpleGrantedAuthority("ROLE_API")));
+        SecurityContextHolder.getContext().setAuthentication(token);
+    }
+
     static class FakeController {
         @AutoJobPostMapping(value = "/x", resourceWeight = 1)
         public void handleAuto() {}
 
         public void handlePlain() {}
+
+        @AutoJobPostMapping(value = "/auto", resourceWeight = 1)
+        @stirling.software.saas.payg.cap.RequiresFeature(
+                stirling.software.saas.payg.model.FeatureGate.AUTOMATION)
+        public void handleAutomation() {}
+
+        @AutoJobPostMapping(value = "/ai", resourceWeight = 1)
+        @stirling.software.saas.payg.cap.RequiresFeature(
+                stirling.software.saas.payg.model.FeatureGate.AI_SUPPORT)
+        public void handleAi() {}
+
+        /**
+         * AI-controller shape: @RequiresFeature without @AutoJobPostMapping (JSON body / proxy).
+         */
+        @stirling.software.saas.payg.cap.RequiresFeature(
+                stirling.software.saas.payg.model.FeatureGate.AI_SUPPORT)
+        public void handleAiNoAutoJob() {}
+    }
+
+    /** Mirrors AiCreateController layout: @RequiresFeature on the class, plain methods. */
+    @stirling.software.saas.payg.cap.RequiresFeature(
+            stirling.software.saas.payg.model.FeatureGate.AI_SUPPORT)
+    static class ClassLevelAiController {
+        public void classLevelAi() {}
     }
 
     /** Placeholder so AutoCloseable resources flow in some helper methods. */

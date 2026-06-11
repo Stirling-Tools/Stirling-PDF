@@ -31,6 +31,7 @@ export const VALID_NAV_KEYS = [
   "adminStorageSharing",
   "adminMcp",
   "help",
+  "payg",
 ] as const;
 
 // Derive the type from the array

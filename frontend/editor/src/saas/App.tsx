@@ -15,6 +15,7 @@ import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
+import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -43,6 +44,7 @@ function NonAuthBootstraps() {
     <>
       <OnboardingBootstrap />
       <TrialExpiredBootstrap />
+      <SignupRequiredBootstrap />
     </>
   );
 }

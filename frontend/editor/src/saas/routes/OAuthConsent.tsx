@@ -299,41 +299,60 @@ export default function OAuthConsent() {
         })}
       </p>
 
-      {scopes.length > 0 && (
-        <div
+      {/* Be explicit about what connecting actually grants. The OAuth scopes
+          (openid/email) only cover identity; the real power is that the issued
+          token lets the app drive the MCP endpoint - i.e. run any Stirling PDF
+          tool as this user, audited as them and counted against their usage. */}
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: "0.5rem",
+          padding: "1rem 1.25rem",
+          marginBottom: "1.5rem",
+          background: "#ffffff",
+        }}
+      >
+        <p
           style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: "0.5rem",
-            padding: "1rem 1.25rem",
-            marginBottom: "1.5rem",
-            background: "#ffffff",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            margin: "0 0 0.5rem",
+            color: "#111827",
           }}
         >
-          <p
-            style={{
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              margin: "0 0 0.5rem",
-              color: "#111827",
-            }}
-          >
-            {t("oauthConsent.scopesIntro", {
+          {t("oauthConsent.scopesIntro", {
+            app: appName,
+            defaultValue: `This will allow ${appName} to:`,
+          })}
+        </p>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: "1.25rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem",
+          }}
+        >
+          <li style={{ fontSize: "0.875rem", color: "#374151" }}>
+            {t("oauthConsent.access.tools", {
               app: appName,
-              defaultValue: `This will allow ${appName} to:`,
+              defaultValue: `Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents`,
             })}
-          </p>
-          <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
-            {scopes.map((scope) => (
-              <li
-                key={scope}
-                style={{ fontSize: "0.875rem", color: "#374151" }}
-              >
-                {scopeDescription(scope)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          </li>
+          <li style={{ fontSize: "0.875rem", color: "#374151" }}>
+            {t("oauthConsent.access.actAsYou", {
+              app: appName,
+              defaultValue: `Act as you - everything ${appName} does runs under your account and counts towards your usage`,
+            })}
+          </li>
+          {scopes.map((scope) => (
+            <li key={scope} style={{ fontSize: "0.875rem", color: "#374151" }}>
+              {scopeDescription(scope)}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <ErrorMessage error={error} />
 
