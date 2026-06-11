@@ -98,6 +98,7 @@ const FileThumbnail = ({
       void downloadFile({
         data: maybeFile,
         filename: maybeFile.name || file.name || "download",
+        fileId: file.id,
       });
       return;
     }
