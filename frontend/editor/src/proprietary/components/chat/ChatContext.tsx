@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { generateId } from "@app/utils/generateId";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
+import { getApiBaseUrl } from "@app/services/apiClientConfig";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
@@ -510,13 +511,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
 
-        const response = await fetch("/api/v1/ai/orchestrate/stream", {
-          method: "POST",
-          body: formData,
-          headers: getAuthHeaders(),
-          credentials: "include",
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `${getApiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          {
+            method: "POST",
+            body: formData,
+            headers: await getAuthHeaders(),
+            credentials: "include",
+            signal: controller.signal,
+          },
+        );
 
         if (!response.ok) {
           let detail: string | undefined;

@@ -20,14 +20,8 @@ import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 
 /**
- * Runs policies, and is the one place that knows how to turn a policy's configured {@link InputSpec
- * sources} into actual runs. Triggers (schedule, and future webhook/folder-watch) decide
- * <em>when</em> to run and call {@link #run(Policy)}; they never touch sources themselves. The
- * controller uses the supplied-input and ad-hoc entry points for on-demand work.
- *
- * <p>This is the seam that keeps triggers and sources independent: a trigger depends on the runner,
- * the runner depends on the {@link InputSource} beans, and a source depends on neither - it just
- * yields {@link ResolvedInput units of work}, each carrying its own completion hook.
+ * Turns a policy's configured {@link InputSpec sources} into runs. Triggers decide <em>when</em>
+ * and call {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points.
  */
 @Slf4j
 @Service
@@ -38,10 +32,9 @@ public class PolicyRunner {
     private final List<InputSource> inputSources;
 
     /**
-     * Run a policy by pulling from every source it configures: each source yields zero or more
-     * units of work, and each unit becomes its own run so one failure does not affect the others. A
-     * policy with no sources runs once with no input files (a generator pipeline). Used by
-     * automatic triggers.
+     * Trigger entry point. Pulls every configured source; each yielded unit becomes its own run so
+     * one failure does not affect the others. No sources means one run with no input (generator
+     * pipeline).
      */
     public void run(Policy policy) {
         List<InputSpec> sources = policy.sources();
@@ -54,11 +47,7 @@ public class PolicyRunner {
         }
     }
 
-    /**
-     * Run a stored policy on files supplied directly by the caller (e.g. a manual run with
-     * uploads), bypassing its configured sources. Returns the run handle so callers can stream
-     * progress.
-     */
+    /** Run a stored policy on caller-supplied files (e.g. manual upload), bypassing its sources. */
     public PolicyRunHandle runWith(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
         return policyEngine.runPolicy(policy, inputs, listener);

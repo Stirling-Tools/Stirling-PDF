@@ -10,23 +10,7 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# The OSS repo's root Taskfile.yml expects engine tasks to run from ./engine/
-# (configured via `includes.engine.dir: engine`). The OSS-clone-build workflow
-# copies the root Taskfile.yml + .taskfiles/ into the engine build context, then
-# this Dockerfile copies them into the image. To match the Taskfile's expectations
-# at runtime, engine source must live at /app/engine/ — not flattened to /app/ —
-# so `task engine:run` can chdir there successfully and uv resolves
-# scripts/setup_env.py to /app/engine/scripts/setup_env.py.
-#
-# Layout:
-#   /app/Taskfile.yml          ← workflow-copied root Taskfile
-#   /app/.taskfiles/           ← workflow-copied .taskfiles
-#   /app/engine/pyproject.toml
-#   /app/engine/uv.lock
-#   /app/engine/.env
-#   /app/engine/scripts/       ← scripts/setup_env.py here
-#   /app/engine/src/           ← uvicorn entrypoint dir
-#   /app/engine/.venv/         ← uv-managed venv
+# Source under /app/engine/ to match root Taskfile's `includes.engine.dir: engine`.
 WORKDIR /app/engine
 
 COPY pyproject.toml uv.lock .env ./
@@ -36,9 +20,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY src/ ./src/
 
-# Task definitions live at /app/ — root Taskfile + included .taskfiles — because
-# the root Taskfile's `includes.engine.dir: engine` is resolved relative to the
-# Taskfile's own location, so it must sit one level above engine/.
 WORKDIR /app
 COPY Taskfile.yml ./
 COPY .taskfiles/ ./.taskfiles/

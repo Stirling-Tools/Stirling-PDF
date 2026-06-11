@@ -3,6 +3,7 @@ import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import { alert } from "@app/components/toast";
 import { openPlanSettings } from "@app/utils/appSettings";
+import { withBasePath } from "@app/constants/app";
 
 // Global credit update callback - will be set by the AuthProvider
 let globalCreditUpdateCallback: ((credits: number) => void) | null = null;
@@ -110,12 +111,26 @@ apiClient.interceptors.request.use(
   },
 );
 
-// Endpoints whose 401s must never trigger the hard redirect to /login. The
-// refresh-failure branch below already treats /api/v1/info/ and /api/v1/config/
-// as public; without the same prefixes here, a background ping like
-// /api/v1/info/wau firing before session hydration bounces the user off pages
-// that manage their own auth state (e.g. /oauth/consent) and loses URL state.
+// Endpoints whose 401s must never trigger the hard redirect to /login. Prefix
+// matching covers the whole public surface (/api/v1/config/* and /api/v1/info/*
+// are permitAll on the backend), and crucially includes background pings like
+// /api/v1/info/wau that fire before session hydration - without this they bounce
+// the user off pages that manage their own auth state (e.g. /oauth/consent) and
+// lose URL state.
 const publicEndpoints = ["/api/v1/config/", "/api/v1/info/"];
+
+// Share one in-flight refresh: Supabase rotates the refresh token on first
+// use, so concurrent refreshSession() calls fail with "Already Used".
+let inFlightRefresh: ReturnType<typeof supabase.auth.refreshSession> | null =
+  null;
+function refreshSessionOnce(): ReturnType<typeof supabase.auth.refreshSession> {
+  if (!inFlightRefresh) {
+    inFlightRefresh = supabase.auth.refreshSession().finally(() => {
+      inFlightRefresh = null;
+    });
+  }
+  return inFlightRefresh;
+}
 
 // Response interceptor for handling token refresh and credit updates
 apiClient.interceptors.response.use(
@@ -152,17 +167,15 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
+    const status = error.response?.status;
     const isPublicEndpoint = publicEndpoints.some((endpoint) =>
       originalRequest.url?.includes(endpoint),
     );
 
-    // If we get a 401 and haven't already tried to refresh, and it's not a public endpoint
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !isPublicEndpoint
-    ) {
+    // On a first 401, refresh and retry — public endpoints included, since an
+    // expired Bearer token is rejected on any route during cold load.
+    if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
@@ -176,19 +189,15 @@ apiClient.interceptors.response.use(
           const {
             data: { session: refreshedSession },
             error: refreshError,
-          } = await supabase.auth.refreshSession();
+          } = await refreshSessionOnce();
 
           if (refreshError) {
             console.error("[API Client] Token refresh failed:", refreshError);
 
-            // Only redirect to login for protected endpoints, not public ones
-            const isPublicEndpoint =
-              originalRequest.url?.includes("/api/v1/config/") ||
-              originalRequest.url?.includes("/api/v1/info/");
-
+            // The session genuinely can't be recovered. Send protected requests
+            // to login; public ones just fail quietly (no redirect).
             if (!isPublicEndpoint) {
-              // Redirect to login only for protected endpoints
-              window.location.href = "/login";
+              window.location.href = withBasePath("/login");
             }
 
             return Promise.reject(error);
@@ -203,28 +212,42 @@ apiClient.interceptors.response.use(
             // Retry the original request with the new token
             return apiClient(originalRequest);
           }
-        } else {
-          // No session exists, only redirect if not already on login page
+        } else if (!isPublicEndpoint) {
+          // No session exists on a protected endpoint, only redirect if not
+          // already on the login page.
           console.debug(
             "[API Client] No session to refresh, 401 on protected endpoint",
           );
-          if (window.location.pathname !== "/login") {
-            window.location.href = "/login";
+          const loginPath = withBasePath("/login");
+          if (window.location.pathname !== loginPath) {
+            window.location.href = loginPath;
           }
+          return Promise.reject(error);
         }
       } catch (refreshError) {
         console.error("[API Client] Error during token refresh:", refreshError);
       }
     }
 
-    // For public endpoints with 401, just log and continue (don't redirect)
-    if (isPublicEndpoint && error.response?.status === 401) {
+    // Public-endpoint 401s must never trigger the global login redirect
+    // (e.g. transient 401s while Supabase is still restoring the session).
+    if (status === 401 && isPublicEndpoint) {
       console.debug(
         "[API Client] 401 on public endpoint, continuing without auth:",
         originalRequest.url,
       );
+      originalRequest.skipAuthRedirect = true;
     }
-    const status = error.response?.status;
+
+    // A 401 that survived refresh-and-retry means the backend rejected a
+    // valid token; redirecting to /login would only bounce back and loop.
+    if (status === 401 && originalRequest._retry && !isPublicEndpoint) {
+      console.warn(
+        "[API Client] 401 persisted after token refresh; backend rejected a valid session — not redirecting to login:",
+        originalRequest.url,
+      );
+      originalRequest.skipAuthRedirect = true;
+    }
     const url = error.config?.url;
     const method = error.config?.method?.toUpperCase();
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
 import { createFolderId, FolderId, FolderRecord } from "@app/types/folder";
@@ -110,9 +111,11 @@ function axiosError(status: number, message = "rejected"): Error {
 
 async function renderAndWaitForPull(): Promise<void> {
   render(
-    <FolderProvider>
-      <Probe />
-    </FolderProvider>,
+    <MemoryRouter>
+      <FolderProvider>
+        <Probe />
+      </FolderProvider>
+    </MemoryRouter>,
   );
   // The pull is fired from a mount effect; wait until it has resolved by
   // observing that `mockList` was called at least once and a tick has
@@ -241,9 +244,11 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockList.mockResolvedValueOnce(initial);
     const apiRef: { current: ProbeApi | null } = { current: null };
     render(
-      <FolderProvider>
-        <ApiProbe onReady={(api) => (apiRef.current = api)} />
-      </FolderProvider>,
+      <MemoryRouter>
+        <FolderProvider>
+          <ApiProbe onReady={(api) => (apiRef.current = api)} />
+        </FolderProvider>
+      </MemoryRouter>,
     );
     await waitFor(() =>
       expect(screen.getByTestId("count").textContent).toBe(
