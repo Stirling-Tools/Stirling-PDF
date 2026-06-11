@@ -1,6 +1,8 @@
 package stirling.software.saas.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -91,6 +93,18 @@ class TeamSecurityExpressionsTest {
     void userWithoutTeamIsNotLeader() {
         authenticateAsUserWithTeam(false);
         assertFalse(expressions().isCurrentUserTeamLeader());
+    }
+
+    @Test
+    void currentUserTeamIdReturnsTheUsersTeam() {
+        authenticateAsUserWithTeam(true);
+        assertEquals(TEAM_ID, expressions().currentUserTeamId());
+    }
+
+    @Test
+    void currentUserTeamIdIsNullWithoutTeam() {
+        authenticateAsUserWithTeam(false);
+        assertNull(expressions().currentUserTeamId());
     }
 
     @Test

@@ -1,13 +1,22 @@
 package stirling.software.proprietary.policy.config;
 
 /**
- * The elevated role that may manage <em>any</em> stored policy (view, edit, delete, run), beyond a
- * user's own. Pluggable per deployment so the policy layer (proprietary) needn't know the team
- * model: self-hosted treats a global admin as elevated; SaaS treats the leader of the user's team
- * as elevated (a SaaS deployment has only a single global admin, so admin is the wrong gate there).
+ * The current user's policy context, pluggable per deployment so the policy layer (proprietary)
+ * needn't know the team model. SaaS: a user may edit policies only if they lead their team, and
+ * every user is scoped to their own team. Self-hosted: a global admin may edit, scoped to their
+ * (typically single) team. Policies are isolated per team — nobody, admins included, sees or edits
+ * another team's policies.
  */
 public interface PolicyManagementAuthority {
 
-    /** Whether the current user holds the elevated, manage-all-policies role. */
-    boolean canManageAllPolicies();
+    /** Whether the current user may create, edit, or delete policies (for their own team). */
+    boolean canEditPolicies();
+
+    /**
+     * The team that scopes the current user's policies — the team a new policy is stamped with and
+     * the only team whose policies the user may see/run/edit. {@code null} when it can't be
+     * resolved (e.g. login disabled / no team), in which case access falls back to the unteamed
+     * ({@code null}-team) policies.
+     */
+    Long currentUserTeamId();
 }

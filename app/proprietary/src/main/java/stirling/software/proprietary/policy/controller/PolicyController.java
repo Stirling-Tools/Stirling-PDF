@@ -165,23 +165,29 @@ public class PolicyController {
     }
 
     /**
-     * Assign the owner: create stamps the current user; update preserves the existing owner — so
-     * the client can neither forge ownership on create nor reassign it on update. Editing is gated
-     * to admins by {@link #requirePolicyEditingAllowed}; policies are org-wide, so there is no
-     * per-owner access check here.
+     * Assign owner + owning team server-side. Create stamps the current user and their team; update
+     * preserves the existing owner and team after verifying the policy belongs to the caller's team
+     * — so the client can neither forge ownership/team on create nor reach across teams on update
+     * (a policy in another team reads as not-found).
      */
     private Policy resolveOwnership(Policy incoming) {
         String id = incoming.id();
         if (id != null && !id.isBlank()) {
             Policy existing = policyStore.get(id).orElse(null);
             if (existing != null) {
-                return withOwner(incoming, existing.owner());
+                if (!policyAccessGuard.canAccess(existing)) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
+                }
+                return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
             }
         }
-        return withOwner(incoming, policyAccessGuard.ownerForNewPolicy());
+        return withOwnerAndTeam(
+                incoming,
+                policyAccessGuard.ownerForNewPolicy(),
+                policyAccessGuard.teamForNewPolicy());
     }
 
-    private static Policy withOwner(Policy policy, String owner) {
+    private static Policy withOwnerAndTeam(Policy policy, String owner, Long teamId) {
         return new Policy(
                 policy.id(),
                 policy.name(),
@@ -190,23 +196,25 @@ public class PolicyController {
                 policy.trigger(),
                 policy.sources(),
                 policy.steps(),
-                policy.output());
+                policy.output(),
+                teamId);
     }
 
     /**
-     * Creating, editing, pausing/resuming, and deleting policies is restricted to whoever holds the
-     * manage-all role on multi-user deployments — a team leader on SaaS, a global admin self-hosted
-     * (see {@link PolicyManagementAuthority}). Every mutation routes through {@link #savePolicy}
-     * (pause/resume re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so
-     * gating those two covers them all; runs ({@code /run}) stay open. Single-user deployments
-     * (login disabled) have no such role, so they trust the local operator. The path allowlist for
-     * folder sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
+     * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
+     * caller's team — a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
+     * admin gets no say on SaaS. Team scoping (which team's policies) is enforced separately by
+     * {@link PolicyAccessGuard}. Every mutation routes through {@link #savePolicy} (pause/resume
+     * re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two
+     * covers them all; runs ({@code /run}) stay open to the team. Single-user deployments (login
+     * disabled) have no such role, so they trust the local operator. The path allowlist for folder
+     * sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
      */
     private void requirePolicyEditingAllowed() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
             return;
         }
-        if (!policyManagementAuthority.canManageAllPolicies()) {
+        if (!policyManagementAuthority.canEditPolicies()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Policies may only be created or modified by a team leader");
@@ -216,7 +224,7 @@ public class PolicyController {
     @GetMapping
     @Operation(
             summary = "List policies",
-            description = "Lists all policies (org-wide; every user sees them all).")
+            description = "Lists the policies belonging to the caller's team.")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visible(policyStore.all());
     }
@@ -226,6 +234,7 @@ public class PolicyController {
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
+                .filter(policyAccessGuard::canAccess)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -234,7 +243,10 @@ public class PolicyController {
     @Operation(summary = "Delete a policy by id")
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
-        if (policyStore.get(policyId).isPresent() && policyStore.delete(policyId)) {
+        // Scope to the caller's team: a policy in another team reads as not-found.
+        boolean accessible =
+                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+        if (accessible && policyStore.delete(policyId)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
@@ -254,6 +266,7 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
+                        .filter(policyAccessGuard::canAccess)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(

@@ -56,6 +56,15 @@ public class TeamSecurityExpressions {
                 .orElse(false);
     }
 
+    /** The current authenticated user's team id, or {@code null} if unauthenticated / teamless. */
+    public Long currentUserTeamId() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null || currentUser.getTeam() == null) {
+            return null;
+        }
+        return currentUser.getTeam().getId();
+    }
+
     /** Whether the current authenticated user is any kind of member of the given team. */
     public boolean isTeamMember(Long teamId) {
         User currentUser = getCurrentUser();

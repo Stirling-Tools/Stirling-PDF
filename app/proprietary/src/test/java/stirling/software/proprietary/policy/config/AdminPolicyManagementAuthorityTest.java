@@ -1,31 +1,58 @@
 package stirling.software.proprietary.policy.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.UserService;
 
-/** Self-hosted: the manage-all-policies role is a global admin. */
+/** Self-hosted policy context: a global admin may edit; scoping uses the current user's team. */
 @ExtendWith(MockitoExtension.class)
 class AdminPolicyManagementAuthorityTest {
 
-    @Mock private UserServiceInterface userService;
+    @Mock private UserService userService;
+
+    private AdminPolicyManagementAuthority authority() {
+        return new AdminPolicyManagementAuthority(userService);
+    }
 
     @Test
-    void adminMayManageAllPolicies() {
+    void adminMayEditPolicies() {
         when(userService.isCurrentUserAdmin()).thenReturn(true);
-        assertTrue(new AdminPolicyManagementAuthority(userService).canManageAllPolicies());
+        assertTrue(authority().canEditPolicies());
     }
 
     @Test
     void nonAdminMayNot() {
         when(userService.isCurrentUserAdmin()).thenReturn(false);
-        assertFalse(new AdminPolicyManagementAuthority(userService).canManageAllPolicies());
+        assertFalse(authority().canEditPolicies());
+    }
+
+    @Test
+    void currentUserTeamIdResolvesFromTheCurrentUsersTeam() {
+        Team team = new Team();
+        team.setId(42L);
+        User user = new User();
+        user.setTeam(team);
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        when(userService.findByUsername("alice")).thenReturn(Optional.of(user));
+        assertEquals(42L, authority().currentUserTeamId());
+    }
+
+    @Test
+    void currentUserTeamIdIsNullWhenNoCurrentUser() {
+        when(userService.getCurrentUsername()).thenReturn(null);
+        assertNull(authority().currentUserTeamId());
     }
 }
