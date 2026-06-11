@@ -29,6 +29,7 @@ export const VALID_NAV_KEYS = [
   "adminUsage",
   "adminEndpoints",
   "adminStorageSharing",
+  "adminMcp",
   "help",
   "payg",
 ] as const;

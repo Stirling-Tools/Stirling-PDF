@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -53,7 +54,8 @@ class JpaPolicyStoreTest {
                                 "compress incoming",
                                 "alice",
                                 true,
-                                new TriggerConfig("folder", Map.of("path", "/in")),
+                                new TriggerConfig("schedule", Map.of()),
+                                List.of(InputSpec.folder("/in")),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 OutputSpec.inline()));
 
@@ -62,7 +64,7 @@ class JpaPolicyStoreTest {
         verify(repository).save(captor.capture());
         PolicyEntity entity = captor.getValue();
         assertEquals(saved.id(), entity.getId());
-        assertEquals("folder", entity.getTriggerType());
+        assertEquals("schedule", entity.getTriggerType());
         assertTrue(entity.isEnabled());
         // The stored JSON round-trips back to an equal policy.
         assertEquals(saved, objectMapper.readValue(entity.getPolicyJson(), Policy.class));
@@ -76,7 +78,7 @@ class JpaPolicyStoreTest {
                         "rotate",
                         "alice",
                         true,
-                        TriggerConfig.manual(),
+                        null, // manual-only: no automatic trigger
                         List.of(
                                 new PipelineStep(
                                         "/api/v1/general/rotate-pdf", Map.of("angle", 90))),
@@ -94,16 +96,16 @@ class JpaPolicyStoreTest {
                         "watch",
                         "alice",
                         true,
-                        new TriggerConfig("folder", Map.of()),
+                        new TriggerConfig("schedule", Map.of()),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline());
-        when(repository.findByTriggerTypeAndEnabledTrue("folder"))
+        when(repository.findByTriggerTypeAndEnabledTrue("schedule"))
                 .thenReturn(List.of(entityFor(policy)));
 
-        List<Policy> folder = store.findByTriggerType("folder");
+        List<Policy> scheduled = store.findByTriggerType("schedule");
 
-        assertEquals(1, folder.size());
-        assertEquals("p1", folder.get(0).id());
+        assertEquals(1, scheduled.size());
+        assertEquals("p1", scheduled.get(0).id());
     }
 
     @Test
@@ -122,7 +124,7 @@ class JpaPolicyStoreTest {
         entity.setName(policy.name());
         entity.setOwner(policy.owner());
         entity.setEnabled(policy.enabled());
-        entity.setTriggerType(policy.trigger().type());
+        entity.setTriggerType(policy.trigger() == null ? null : policy.trigger().type());
         entity.setPolicyJson(objectMapper.writeValueAsString(policy));
         return entity;
     }

@@ -24,6 +24,12 @@ public interface PolicyOutputSink {
     boolean supports(OutputSpec spec);
 
     /**
+     * Check that an output spec is usable, throwing {@link IllegalArgumentException} if not. Called
+     * when a policy is saved so misconfiguration fails fast rather than at run time.
+     */
+    default void validate(OutputSpec spec) {}
+
+    /**
      * Persist/deliver the output files and return their descriptors.
      *
      * @param runId the run these outputs belong to
