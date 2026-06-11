@@ -59,7 +59,10 @@ const Plan: React.FC = () => {
 
   if (error || !wallet) {
     return (
-      <Alert color="red" title={t("payg.error.title", "Couldn't load your plan")}>
+      <Alert
+        color="red"
+        title={t("payg.error.title", "Couldn't load your plan")}
+      >
         {error ??
           t(
             "payg.error.body",

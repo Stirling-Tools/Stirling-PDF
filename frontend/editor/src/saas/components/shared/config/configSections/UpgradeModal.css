@@ -112,7 +112,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 120ms ease, color 120ms ease;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
 }
 .upm-header__close:hover {
   background: var(--upm-divider);
@@ -141,7 +143,9 @@
   justify-content: center;
   flex-shrink: 0;
   margin-left: -6px;
-  transition: background 120ms ease, color 120ms ease;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
 }
 .upm-header__back:hover {
   background: var(--upm-divider);
@@ -177,7 +181,10 @@
   justify-content: center;
   font-size: 0.7rem;
   font-weight: 700;
-  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
 }
 .upm-step[data-state="active"] {
   color: var(--upm-text);

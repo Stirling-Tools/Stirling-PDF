@@ -80,7 +80,10 @@ function useFreeSnapshot(): FreeSnapshot {
 type MeterState = "FULL" | "WARNED" | "DEGRADED";
 
 /** Warn/degrade band for the one-time grant meter (mirrors the BE thresholds). */
-function meterState(used: number, limit: number): { state: MeterState; pct: number } {
+function meterState(
+  used: number,
+  limit: number,
+): { state: MeterState; pct: number } {
   const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
   const state: MeterState =
     pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
@@ -113,7 +116,10 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
           />
           {t("payg.free.editor.eyebrow", "Editor plan · Always free")}
         </span>
-        <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
+        <span
+          className="payg-role-pill"
+          data-leader={leader ? "true" : "false"}
+        >
           {pill}
         </span>
       </div>
@@ -240,7 +246,9 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
             <li>
               <CheckIcon className="paygf-cta__check" fontSize="small" />
               <span>
-                <strong>{t("payg.free.cta.benefit3Title", "API access")}</strong>
+                <strong>
+                  {t("payg.free.cta.benefit3Title", "API access")}
+                </strong>
                 {": "}
                 {t(
                   "payg.free.cta.benefit3Body",

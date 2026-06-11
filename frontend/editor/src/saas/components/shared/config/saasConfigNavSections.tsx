@@ -182,11 +182,7 @@ function appendLegalSection(
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
-  {
-    isDev = false,
-    isAnonymous = false,
-    t,
-  }: CreateSaasConfigNavSectionsOptions,
+  { isDev = false, isAnonymous = false, t }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   const baseSections = createCoreConfigNavSections(false, false, false);
 

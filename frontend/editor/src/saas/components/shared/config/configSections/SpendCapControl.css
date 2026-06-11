@@ -53,7 +53,10 @@
   font-weight: 600;
   cursor: pointer;
   font-variant-numeric: tabular-nums;
-  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
 .scc-chip:hover:not(:disabled) {
   color: var(--text-primary);
@@ -82,7 +85,9 @@
   border: 1px dashed var(--scc-chip-border);
   background: transparent;
   cursor: text;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
 .scc-custom:hover {
   border-color: var(--border-strong);

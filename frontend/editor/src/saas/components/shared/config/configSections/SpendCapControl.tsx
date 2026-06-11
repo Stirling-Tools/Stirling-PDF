@@ -62,7 +62,10 @@ export interface SpendCapControlProps {
 }
 
 /** Format minor units of an ISO currency ("$2.24", "£0.40"). */
-function formatMinor(minor: number, currency: string | null | undefined): string {
+function formatMinor(
+  minor: number,
+  currency: string | null | undefined,
+): string {
   const code = (currency ?? "usd").toUpperCase();
   try {
     return new Intl.NumberFormat(undefined, {
@@ -212,7 +215,10 @@ const SpendCapControl: React.FC<SpendCapControlProps> = ({
 
       {previewDocs != null && (
         <div className="scc-estimate">
-          <DescriptionIcon className="scc-estimate__icon" sx={{ fontSize: 22 }} />
+          <DescriptionIcon
+            className="scc-estimate__icon"
+            sx={{ fontSize: 22 }}
+          />
           <div>
             <div className="scc-estimate__main">
               {t("payg.cap.docsEstimate", "≈ {{docs}} processed PDFs / month", {
