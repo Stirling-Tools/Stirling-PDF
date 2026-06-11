@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, useEffect, ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { useRainbowTheme } from "@app/hooks/useRainbowTheme";
 import { mantineTheme } from "@app/theme/mantineTheme";
@@ -7,6 +7,10 @@ import { ToastProvider } from "@app/components/toast";
 import ToastRenderer from "@app/components/toast/ToastRenderer";
 import { ToastPortalBinder } from "@app/components/toast";
 import type { ThemeMode } from "@app/constants/theme";
+// SUI shared design-system tokens (used by @shared/components). Additive — its
+// var names don't clash with the editor's own theme.css. The effect below
+// bridges Mantine's color scheme to the `data-theme` attribute SUI keys on.
+import "@shared/tokens/tokens.css";
 
 interface RainbowThemeContextType {
   themeMode: ThemeMode;
@@ -39,6 +43,16 @@ export function RainbowThemeProvider({ children }: RainbowThemeProviderProps) {
   // Determine the Mantine color scheme
   const mantineColorScheme =
     rainbowTheme.themeMode === "rainbow" ? "dark" : rainbowTheme.themeMode;
+
+  // Bridge the resolved scheme to the `data-theme` attribute SUI's tokens.css
+  // keys its dark palette on (the editor otherwise only sets Mantine's
+  // data-mantine-color-scheme), so @shared/components theme correctly.
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      mantineColorScheme === "dark" ? "dark" : "light",
+    );
+  }, [mantineColorScheme]);
 
   return (
     <RainbowThemeContext.Provider value={rainbowTheme}>

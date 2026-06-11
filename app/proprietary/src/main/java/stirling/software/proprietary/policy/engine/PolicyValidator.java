@@ -15,12 +15,9 @@ import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 
 /**
- * Validates a policy's trigger, sources, and output configuration by delegating each facet to the
- * bean that handles its type. Called when a policy is saved so a misconfigured schedule, missing
- * folder directory, or unknown type fails fast instead of silently misbehaving at run time.
- *
- * <p>The trigger is optional (a {@code null} trigger is a manual-only policy and needs no
- * validation); every configured source is validated.
+ * Validates a policy at save time by delegating each facet (trigger, sources, output) to the bean
+ * that handles its type, so a misconfiguration fails fast rather than at run time. A null trigger
+ * is a manual-only policy and skips trigger validation.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,8 +28,7 @@ public class PolicyValidator {
     private final List<PolicyOutputSink> outputSinks;
 
     /**
-     * @throws IllegalArgumentException if any facet's type is unknown or its configuration is
-     *     invalid
+     * @throws IllegalArgumentException if any facet's type is unknown or its config is invalid
      */
     public void validate(Policy policy) {
         if (policy.trigger() != null) {

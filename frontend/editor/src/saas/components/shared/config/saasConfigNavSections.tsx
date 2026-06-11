@@ -11,6 +11,7 @@ import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import Plan from "@app/components/shared/config/configSections/Plan";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
 import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import TeamSection from "@app/components/shared/config/configSections/TeamSection";
 
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
@@ -203,6 +204,15 @@ export function createSaasConfigNavSections(
       },
     ],
   };
+
+  if (!isAnonymous) {
+    accountSection.items.push({
+      key: "teams",
+      label: t("config.team", "Team"),
+      icon: "groups-rounded",
+      component: <TeamSection />,
+    });
+  }
 
   let sections = [accountSection, ...baseSections];
 
