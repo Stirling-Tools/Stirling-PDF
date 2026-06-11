@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
@@ -98,6 +99,7 @@ export function PolicySetupWizard({
   onCommitConfig,
   onSetupClassification,
 }: PolicySetupWizardProps) {
+  const { t } = useTranslation();
   const isEdit = mode === "edit";
   // Preset (tool-chain) policies render the locked tool config as their Workflow
   // step instead of the add/remove builder.
@@ -158,13 +160,27 @@ export function PolicySetupWizard({
         <PanelHeader
           icon={category.icon}
           iconAccent={ROW_ACCENT[category.id] ?? "blue"}
-          title={`${isEdit ? "Edit" : "Set up"} ${category.label} Policy`}
+          title={
+            isEdit
+              ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
+                  label: t(`policies.catalog.${category.id}`, category.label),
+                })
+              : t("policies.wizard.setupTitle", "Set up {{label}} Policy", {
+                  label: t(`policies.catalog.${category.id}`, category.label),
+                })
+          }
           onBack={onCancel}
         />
         <div className="pol-scroll">
           <EmptyState
-            title="Managed by your organization"
-            description="Contact an admin to change this policy."
+            title={t(
+              "policies.wizard.lockedTitle",
+              "Managed by your organization",
+            )}
+            description={t(
+              "policies.wizard.lockedDescription",
+              "Contact an admin to change this policy.",
+            )}
           />
         </div>
       </div>
@@ -212,7 +228,12 @@ export function PolicySetupWizard({
       }),
     ).catch(() => {
       setSubmitting(false);
-      setSaveError("Couldn't save the policy. Please try again.");
+      setSaveError(
+        t(
+          "policies.wizard.saveError",
+          "Couldn't save the policy. Please try again.",
+        ),
+      );
     });
   };
 
@@ -243,7 +264,12 @@ export function PolicySetupWizard({
       }),
     ).catch(() => {
       setSubmitting(false);
-      setSaveError("Couldn't save the policy. Please try again.");
+      setSaveError(
+        t(
+          "policies.wizard.saveError",
+          "Couldn't save the policy. Please try again.",
+        ),
+      );
     });
   };
 
@@ -260,7 +286,12 @@ export function PolicySetupWizard({
   // the user back to the Workflow step to fix it.
   const handleSaveFailed = () => {
     setSubmitting(false);
-    setSaveError("Add at least one configured tool to the workflow first.");
+    setSaveError(
+      t(
+        "policies.wizard.noToolsError",
+        "Add at least one configured tool to the workflow first.",
+      ),
+    );
     setStep(1);
   };
 
@@ -269,14 +300,25 @@ export function PolicySetupWizard({
       <PanelHeader
         icon={category.icon}
         iconAccent={ROW_ACCENT[category.id] ?? "blue"}
-        title={`${isEdit ? "Edit" : "Set up"} ${category.label} Policy`}
-        subtitle={`Step ${step} of ${TOTAL_STEPS}`}
+        title={
+          isEdit
+            ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
+                label: t(`policies.catalog.${category.id}`, category.label),
+              })
+            : t("policies.wizard.setupTitle", "Set up {{label}} Policy", {
+                label: t(`policies.catalog.${category.id}`, category.label),
+              })
+        }
+        subtitle={t("policies.wizard.stepOf", "Step {{step}} of {{total}}", {
+          step,
+          total: TOTAL_STEPS,
+        })}
         onBack={back}
         actions={
           <Button
             variant="ghost"
             size="sm"
-            aria-label="Cancel"
+            aria-label={t("cancel", "Cancel")}
             onClick={onCancel}
             leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
           />
@@ -302,7 +344,10 @@ export function PolicySetupWizard({
           {toolChain ? (
             <>
               <p className="pol-desc">
-                Configure the tools this policy runs on each document.
+                {t(
+                  "policies.wizard.toolChainDesc",
+                  "Configure the tools this policy runs on each document.",
+                )}
               </p>
               <PolicyToolConfigStep
                 chainIds={toolChain}
@@ -318,7 +363,10 @@ export function PolicySetupWizard({
           ) : (
             <>
               <p className="pol-desc">
-                Build the sequence of tools this policy runs on each document.
+                {t(
+                  "policies.wizard.builderDesc",
+                  "Build the sequence of tools this policy runs on each document.",
+                )}
               </p>
               <PolicyWorkflowStep
                 automation={seedAutomation}
@@ -351,14 +399,18 @@ export function PolicySetupWizard({
             )}
 
             {/* Real, working output + retry settings (applied by the engine). */}
-            <p className="pol-section-label">Output &amp; retries</p>
+            <p className="pol-section-label">
+              {t("policies.wizard.outputRetriesLabel", "Output & retries")}
+            </p>
             <Card padding="none">
               {/* The editor event the policy runs on: input on upload, or
                   output on export (enforced before the file is exported). */}
-              <div className="pol-subhead">Run on</div>
+              <div className="pol-subhead">
+                {t("policies.wizard.runOnSubhead", "Run on")}
+              </div>
               <div className="pol-field" data-first>
                 <SettingsRow
-                  label="Run on"
+                  label={t("policies.wizard.runOnLabel", "Run on")}
                   control={
                     <Select
                       inputSize="sm"
@@ -366,19 +418,27 @@ export function PolicySetupWizard({
                       onChange={(e) =>
                         setRunOn(e.target.value as "upload" | "export")
                       }
-                      aria-label="Run on"
+                      aria-label={t("policies.wizard.runOnLabel", "Run on")}
                       options={[
-                        { value: "upload", label: "Upload" },
-                        { value: "export", label: "Export" },
+                        {
+                          value: "upload",
+                          label: t("policies.wizard.runOnUpload", "Upload"),
+                        },
+                        {
+                          value: "export",
+                          label: t("policies.wizard.runOnExport", "Export"),
+                        },
                       ]}
                     />
                   }
                 />
               </div>
-              <div className="pol-subhead">Output</div>
+              <div className="pol-subhead">
+                {t("policies.wizard.outputSubhead", "Output")}
+              </div>
               <div className="pol-field" data-first>
                 <SettingsRow
-                  label="Output as"
+                  label={t("policies.wizard.outputAsLabel", "Output as")}
                   control={
                     <Select
                       inputSize="sm"
@@ -397,17 +457,31 @@ export function PolicySetupWizard({
                           setOutputNamePosition("suffix");
                         }
                       }}
-                      aria-label="Output mode"
+                      aria-label={t(
+                        "policies.wizard.outputModeAria",
+                        "Output mode",
+                      )}
                       options={[
-                        { value: "new_file", label: "New file" },
-                        { value: "new_version", label: "New version" },
+                        {
+                          value: "new_file",
+                          label: t("policies.wizard.outputNewFile", "New file"),
+                        },
+                        {
+                          value: "new_version",
+                          label: t(
+                            "policies.wizard.outputNewVersion",
+                            "New version",
+                          ),
+                        },
                       ]}
                     />
                   }
                 />
               </div>
               {/* Output filename: position + custom text together as one row. */}
-              <div className="pol-subhead">Output filename</div>
+              <div className="pol-subhead">
+                {t("policies.wizard.outputFilenameSubhead", "Output filename")}
+              </div>
               <div className="pol-field" data-first>
                 <div className="pol-name-row">
                   <Select
@@ -418,13 +492,30 @@ export function PolicySetupWizard({
                         e.target.value as "prefix" | "suffix" | "auto-number",
                       )
                     }
-                    aria-label="Filename position"
+                    aria-label={t(
+                      "policies.wizard.filenamePositionAria",
+                      "Filename position",
+                    )}
                     options={[
-                      { value: "prefix", label: "Prefix" },
-                      { value: "suffix", label: "Suffix" },
+                      {
+                        value: "prefix",
+                        label: t("policies.wizard.filenamePrefix", "Prefix"),
+                      },
+                      {
+                        value: "suffix",
+                        label: t("policies.wizard.filenameSuffix", "Suffix"),
+                      },
                       // Auto-number only makes sense for separate new files.
                       ...(outputMode === "new_file"
-                        ? [{ value: "auto-number", label: "Auto-number" }]
+                        ? [
+                            {
+                              value: "auto-number",
+                              label: t(
+                                "policies.wizard.filenameAutoNumber",
+                                "Auto-number",
+                              ),
+                            },
+                          ]
                         : []),
                     ]}
                   />
@@ -435,15 +526,21 @@ export function PolicySetupWizard({
                       inputSize="sm"
                       value={outputName}
                       onChange={(e) => setOutputName(e.target.value)}
-                      placeholder="Text to add (optional)"
-                      aria-label="Filename text"
+                      placeholder={t(
+                        "policies.wizard.filenameTextPlaceholder",
+                        "Text to add (optional)",
+                      )}
+                      aria-label={t(
+                        "policies.wizard.filenameTextAria",
+                        "Filename text",
+                      )}
                     />
                   )}
                 </div>
               </div>
               <div className="pol-field">
                 <SettingsRow
-                  label="Max retries"
+                  label={t("policies.wizard.maxRetriesLabel", "Max retries")}
                   control={
                     <Input
                       type="number"
@@ -452,14 +549,20 @@ export function PolicySetupWizard({
                       onChange={(e) =>
                         setMaxRetries(Math.max(0, Number(e.target.value) || 0))
                       }
-                      aria-label="Max retries"
+                      aria-label={t(
+                        "policies.wizard.maxRetriesLabel",
+                        "Max retries",
+                      )}
                     />
                   }
                 />
               </div>
               <div className="pol-field">
                 <SettingsRow
-                  label="Retry delay (min)"
+                  label={t(
+                    "policies.wizard.retryDelayLabel",
+                    "Retry delay (min)",
+                  )}
                   control={
                     <Input
                       type="number"
@@ -470,7 +573,10 @@ export function PolicySetupWizard({
                           Math.max(0, Number(e.target.value) || 0),
                         )
                       }
-                      aria-label="Retry delay minutes"
+                      aria-label={t(
+                        "policies.wizard.retryDelayAria",
+                        "Retry delay minutes",
+                      )}
                     />
                   }
                 />
@@ -484,10 +590,14 @@ export function PolicySetupWizard({
         {SOURCES_IN_FLOW && step === 3 && (
           <>
             <p className="pol-desc">
-              Choose where this policy runs and which document types it applies
-              to.
+              {t(
+                "policies.wizard.sourcesDesc",
+                "Choose where this policy runs and which document types it applies to.",
+              )}
             </p>
-            <p className="pol-section-label">Sources</p>
+            <p className="pol-section-label">
+              {t("policies.wizard.sourcesLabel", "Sources")}
+            </p>
             <Card padding="none">
               {sourceDefs.map((src, i) => (
                 <div
@@ -506,20 +616,31 @@ export function PolicySetupWizard({
               ))}
             </Card>
 
-            <p className="pol-section-label">Document types</p>
+            <p className="pol-section-label">
+              {t("policies.wizard.docTypesLabel", "Document types")}
+            </p>
             {!classificationEnabled ? (
               <Banner
                 tone="warning"
                 icon={<InfoOutlinedIcon sx={{ fontSize: "1rem" }} />}
-                title="All document types"
-                description="Enable the Classification policy to filter by document type."
+                title={t(
+                  "policies.wizard.allDocTypesTitle",
+                  "All document types",
+                )}
+                description={t(
+                  "policies.wizard.allDocTypesDescription",
+                  "Enable the Classification policy to filter by document type.",
+                )}
                 action={
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={onSetupClassification}
                   >
-                    Set up Classification
+                    {t(
+                      "policies.wizard.setupClassification",
+                      "Set up Classification",
+                    )}
                   </Button>
                 }
               />
@@ -528,14 +649,23 @@ export function PolicySetupWizard({
                 <div className="pol-doctypes-head">
                   <span className="pol-field-label">
                     {scopeTypes.length === 0
-                      ? "All document types"
-                      : `${scopeTypes.length} types selected`}
+                      ? t(
+                          "policies.wizard.allDocTypesTitle",
+                          "All document types",
+                        )
+                      : t(
+                          "policies.wizard.typesSelected",
+                          "{{count}} types selected",
+                          { count: scopeTypes.length },
+                        )}
                   </span>
                   <button
                     className="pol-link"
                     onClick={() => setScopeNarrow((v) => !v)}
                   >
-                    {scopeNarrow ? "Clear" : "Edit"}
+                    {scopeNarrow
+                      ? t("policies.wizard.clear", "Clear")
+                      : t("policies.wizard.edit", "Edit")}
                   </button>
                 </div>
                 {scopeNarrow && (
@@ -564,7 +694,9 @@ export function PolicySetupWizard({
 
       <div className="pol-footer">
         <Button variant="ghost" size="sm" onClick={back}>
-          {step > 1 ? "Back" : "Cancel"}
+          {step > 1
+            ? t("policies.wizard.back", "Back")
+            : t("cancel", "Cancel")}
         </Button>
         {step < TOTAL_STEPS ? (
           <Button
@@ -573,7 +705,7 @@ export function PolicySetupWizard({
             style={{ marginLeft: "auto" }}
             onClick={() => setStep((s) => Math.min(TOTAL_STEPS, s + 1))}
           >
-            Continue
+            {t("policies.wizard.continue", "Continue")}
           </Button>
         ) : (
           <Button
@@ -583,7 +715,9 @@ export function PolicySetupWizard({
             onClick={submit}
             disabled={submitting}
           >
-            {isEdit ? "Save Changes" : "Enable Policy"}
+            {isEdit
+              ? t("policies.wizard.saveChanges", "Save Changes")
+              : t("policies.wizard.enablePolicy", "Enable Policy")}
           </Button>
         )}
       </div>

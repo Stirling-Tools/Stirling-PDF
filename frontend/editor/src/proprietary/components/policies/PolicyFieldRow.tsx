@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import { Select } from "@shared/components/Select";
 import { Input } from "@shared/components/Input";
@@ -25,6 +26,11 @@ export function PolicyFieldRow({
   onChange,
   first,
 }: PolicyFieldRowProps) {
+  const { t } = useTranslation();
+  // Field labels and option labels come from the policy catalog data, so they're
+  // wrapped at the render site with data-keyed ids (English stays the fallback).
+  const fieldLabel = t(`policies.field.${field.key}`, field.label);
+
   if (field.type === "chips") {
     const selected = Array.isArray(value) ? value : [];
     const toggle = (opt: string) =>
@@ -36,8 +42,12 @@ export function PolicyFieldRow({
     return (
       <div className="pol-field" data-first={first || undefined}>
         <div className="pol-field-chips-head">
-          <span className="pol-field-label">{field.label}</span>
-          <span className="pol-field-count">{selected.length} selected</span>
+          <span className="pol-field-label">{fieldLabel}</span>
+          <span className="pol-field-count">
+            {t("policies.fields.selectedCount", "{{count}} selected", {
+              count: selected.length,
+            })}
+          </span>
         </div>
         <div className="pol-field-chips">
           {(field.options ?? []).map((opt) => (
@@ -47,7 +57,7 @@ export function PolicyFieldRow({
               size="sm"
               onClick={() => toggle(opt)}
             >
-              {opt}
+              {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
             </Chip>
           ))}
         </div>
@@ -61,28 +71,31 @@ export function PolicyFieldRow({
         size="sm"
         checked={Boolean(value)}
         onChange={(checked) => onChange(checked)}
-        aria-label={field.label}
+        aria-label={fieldLabel}
       />
     ) : field.type === "select" ? (
       <Select
         inputSize="sm"
-        options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
+        options={(field.options ?? []).map((o) => ({
+          value: o,
+          label: t(`policies.fieldOption.${field.key}.${o}`, o),
+        }))}
         value={typeof value === "string" ? value : ""}
         onChange={(e) => onChange(e.target.value)}
-        aria-label={field.label}
+        aria-label={fieldLabel}
       />
     ) : (
       <Input
         inputSize="sm"
         value={typeof value === "string" ? value : ""}
         onChange={(e) => onChange(e.target.value)}
-        aria-label={field.label}
+        aria-label={fieldLabel}
       />
     );
 
   return (
     <div className="pol-field" data-first={first || undefined}>
-      <SettingsRow label={field.label} control={control} />
+      <SettingsRow label={fieldLabel} control={control} />
     </div>
   );
 }
