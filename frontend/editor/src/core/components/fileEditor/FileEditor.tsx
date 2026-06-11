@@ -256,6 +256,7 @@ const FileEditor = ({
           data: file,
           filename: file.name,
           localPath: record.localFilePath,
+          fileId,
         });
         console.log("[FileEditor] Download complete, checking dirty state:", {
           localFilePath: record.localFilePath,

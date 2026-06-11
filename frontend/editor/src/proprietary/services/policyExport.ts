@@ -173,6 +173,7 @@ export async function enforceExportPolicies(
       title: "Exported without full enforcement",
       body: `${failures} of ${files.length} file(s) couldn't be processed and were exported as-is.`,
       isPersistentPopup: false,
+      glowColor: undefined, // only the in-progress toast glows, not the result.
     });
   } else {
     updateToast(toastId, {
@@ -180,6 +181,7 @@ export async function enforceExportPolicies(
       title: `${names} applied`,
       body: "Enforced before export.",
       isPersistentPopup: false,
+      glowColor: undefined, // only the in-progress toast glows, not the result.
     });
   }
   // The toast holds while running (persistent); fade it out a few seconds after

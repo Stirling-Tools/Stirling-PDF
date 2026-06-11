@@ -248,6 +248,7 @@ const FileEditorThumbnail = ({
           data: fileToSave,
           filename: file.name,
           localPath: file.localFilePath,
+          fileId: file.id,
         });
         if (!result.cancelled && result.savedPath) {
           fileActions.updateStirlingFileStub(file.id, {
