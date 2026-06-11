@@ -116,6 +116,7 @@ const samplePolicy = {
   reviewerEmail: "me@x.com",
   fieldValues: { minConfidence: "80%" },
   folder: {
+    runOn: "export" as const,
     outputMode: "new_version" as const,
     outputName: "secured",
     outputNamePosition: "suffix" as const,

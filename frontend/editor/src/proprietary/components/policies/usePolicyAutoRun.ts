@@ -73,7 +73,13 @@ export function usePolicyAutoRun(): void {
   useEffect(() => {
     if (!POLICIES_ENABLED) return;
     const active = Object.entries(policies).filter(
-      ([, s]) => s.configured && s.status === "active" && s.backendId,
+      ([, s]) =>
+        s.configured &&
+        s.status === "active" &&
+        s.backendId &&
+        // Only auto-run on upload when the policy is set to run on upload
+        // (export-triggered policies enforce at export time instead).
+        (s.runOn ?? "upload") === "upload",
     );
     for (const [categoryId, s] of active) {
       for (const stub of fileStubs) {
