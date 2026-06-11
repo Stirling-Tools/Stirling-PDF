@@ -604,6 +604,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "jinja2" },
     { name = "opentelemetry-sdk" },
     { name = "pgvector" },
     { name = "posthog" },
@@ -630,6 +631,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.0" },
+    { name = "jinja2", specifier = ">=3.1.0" },
     { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
     { name = "pgvector", specifier = ">=0.3.6" },
     { name = "posthog", specifier = ">=3.0.0" },

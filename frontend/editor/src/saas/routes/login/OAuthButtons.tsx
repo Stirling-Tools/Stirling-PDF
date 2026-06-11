@@ -17,6 +17,7 @@ interface OAuthButtonsProps {
   isSubmitting: boolean;
   layout?: "vertical" | "grid" | "icons" | "fullwidth";
   enabledProviders?: string[]; // List of enabled provider IDs from backend
+  labelPrefix?: string;
 }
 
 export default function OAuthButtons({
@@ -24,6 +25,7 @@ export default function OAuthButtons({
   isSubmitting,
   layout = "vertical",
   enabledProviders: _enabledProviders = [],
+  labelPrefix = "",
 }: OAuthButtonsProps) {
   const { t } = useTranslation();
 
@@ -92,12 +94,18 @@ export default function OAuthButtons({
             className="oauth-button-fullwidth"
             title={p.label}
           >
-            <img
-              src={withBasePath(`/Login/${p.file}`)}
-              alt={p.label}
-              className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
-            />
-            {p.label}
+            <span className="oauth-btn-group">
+              <img
+                src={withBasePath(`/Login/${p.file}`)}
+                alt={p.label}
+                className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
+                style={{ marginRight: "0.5rem", flexShrink: 0 }}
+              />
+              <span className="oauth-btn-label">
+                {labelPrefix}
+                {p.label}
+              </span>
+            </span>
           </button>
         ))}
       </div>

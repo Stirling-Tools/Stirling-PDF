@@ -102,6 +102,11 @@ class AppSettings(BaseSettings):
     posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
     posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
 
+    # Shared secret enforced by EngineSharedSecretMiddleware. Empty disables enforcement
+    # unless engine_require_auth is set, in which case the engine fails closed (503).
+    engine_shared_secret: str = Field(default="", validation_alias="STIRLING_ENGINE_SHARED_SECRET")
+    engine_require_auth: bool = Field(default=False, validation_alias="STIRLING_ENGINE_REQUIRE_AUTH")
+
 
 def _configure_logging(level_name: str, log_file: str, http_debug: bool) -> None:
     """Configure the ``stirling`` logger hierarchy."""
