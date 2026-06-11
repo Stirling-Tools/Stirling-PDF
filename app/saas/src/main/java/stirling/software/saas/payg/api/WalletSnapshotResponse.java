@@ -81,11 +81,11 @@ public record WalletSnapshotResponse(
     public record CategoryBreakdown(int api, int ai, int automation) {}
 
     /**
-     * One row of the team-members table on the leader's Plan page. {@code capUnits} is the
-     * per-member sub-cap (null = bounded only by the team cap).
+     * One row of the team-members table on the leader's Plan page — display-only per-member usage.
+     * (Per-member sub-caps aren't enforced yet; see the follow-ups note. When they ship, a cap
+     * field returns here.)
      */
-    public record MemberRow(
-            String userId, String name, String email, Integer capUnits, int spendUnits) {}
+    public record MemberRow(String userId, String name, String email, int spendUnits) {}
 
     /**
      * One wallet-ledger entry shaped for the FE activity feed.

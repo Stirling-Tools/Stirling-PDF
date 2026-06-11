@@ -19,7 +19,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,7 +60,7 @@ import stirling.software.saas.util.AuthenticationUtils;
  * a fully-populated {@link WalletSnapshotResponse} — derived from {@link EntitlementService} (for
  * spend / cap / period), {@link PaygTeamExtensions} (for subscription state), and the {@code
  * wallet_category_summary} view (for the per-category breakdown widget). Leader callers also get a
- * roster of team members + their sub-caps; member callers see an empty roster.
+ * roster of team members + their per-member usage; member callers see an empty roster.
  *
  * <p>{@code PATCH /api/v1/payg/cap} updates {@code wallet_policy.cap_units} (no Stripe call — the
  * cap is enforced application-side via the entitlement guard) and invalidates the team's snapshot
@@ -330,95 +329,6 @@ public class PaygWalletController {
     public record UpdateCapRequest(@Min(0) int capUsd, boolean noCap) {}
 
     // ---------------------------------------------------------------------------------------
-    // PATCH /sub-caps/{userId} — leader sets a per-member sub-cap inside the team wallet
-    // ---------------------------------------------------------------------------------------
-
-    /**
-     * Updates {@code team_memberships.cap_units} for the given member of the caller's team.
-     *
-     * <p>Authorisation:
-     *
-     * <ul>
-     *   <li>caller must be authenticated (else 401);
-     *   <li>caller must be a {@code LEADER} of a team (else 403);
-     *   <li>the target {@code userId} must be a member of the caller's team (else 404).
-     * </ul>
-     *
-     * <p>Clamp rule (per design): if the requested sub-cap exceeds the team-wide {@code
-     * wallet_policy.cap_units}, the value is silently clamped to the team cap and the response
-     * carries {@code clamped=true}. We do this at save time rather than rejecting so the leader
-     * doesn't see a confusing 4xx when they typed a number bigger than the team's own cap — the
-     * intent ("don't let this member spend more than X") is honoured by setting the effective
-     * maximum, which is the team cap. If the team has no cap (subscribed, no-cap mode), no clamping
-     * applies. A {@code null} {@code capUnits} clears the sub-cap entirely (member is bounded only
-     * by the team cap).
-     */
-    @PatchMapping("/sub-caps/{userId}")
-    @PreAuthorize("isAuthenticated()")
-    @Transactional
-    public ResponseEntity<Map<String, Object>> updateSubCap(
-            @PathVariable Long userId,
-            @Valid @RequestBody UpdateSubCapRequest req,
-            Authentication auth) {
-        User caller;
-        try {
-            caller = AuthenticationUtils.getCurrentUser(auth, userRepository);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Optional<TeamMembership> primary = primaryMembership(caller.getId());
-        if (primary.isEmpty() || primary.get().getRole() != TeamRole.LEADER) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        Long teamId = primary.get().getTeam().getId();
-
-        // Target must be a member of the same team. Anything else (different team, unknown user)
-        // is 404 — leaks no information about other teams.
-        Optional<TeamMembership> targetOpt = memberRepo.findByTeamIdAndUserId(teamId, userId);
-        if (targetOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        TeamMembership target = targetOpt.get();
-
-        // Team cap: null means unlimited (subscribed no-cap). Anything else is a Long ceiling.
-        Long teamCap = policyRepo.findByTeamId(teamId).map(WalletPolicy::getCapUnits).orElse(null);
-
-        Long effective;
-        boolean clamped = false;
-        if (req.capUnits() == null) {
-            effective = null;
-        } else {
-            long requested = req.capUnits().longValue();
-            if (teamCap != null && requested > teamCap) {
-                effective = teamCap;
-                clamped = true;
-            } else {
-                effective = requested;
-            }
-        }
-
-        target.setCapUnits(effective);
-        memberRepo.save(target);
-        entitlementService.invalidate(teamId);
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", true);
-        // Effective value after clamp; null means "no sub-cap" (member bounded by team cap).
-        body.put("capUnits", effective);
-        body.put("clamped", clamped);
-        return ResponseEntity.ok(body);
-    }
-
-    /**
-     * Request body for {@link #updateSubCap}.
-     *
-     * @param capUnits per-member sub-cap in doc units; {@code null} clears the sub-cap so the
-     *     member is bounded only by the team cap.
-     */
-    public record UpdateSubCapRequest(@Min(0) Integer capUnits) {}
-
-    // ---------------------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------------------
 
@@ -460,7 +370,6 @@ public class PaygWalletController {
                             Long.toString(u.getId()),
                             displayName,
                             Optional.ofNullable(u.getEmail()).orElse(""),
-                            tm.getCapUnits() != null ? tm.getCapUnits().intValue() : null,
                             clampToInt(spend)));
         }
         return out;

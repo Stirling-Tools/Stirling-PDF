@@ -54,18 +54,15 @@ export type WalletRole = "leader" | "member";
 
 /**
  * A single team member's billing-relevant info — name + email for the avatar
- * row, {@code spendUnits} for the mini-bar, and {@code capUnits} for the
- * optional per-member sub-cap. Mirrors a row of the backend's {@code members}
- * array on {@code WalletSnapshot} (the {@code wallet_category_summary} view
- * joined with {@code team_memberships}).
+ * row, {@code spendUnits} for their per-member usage display. Mirrors a row of
+ * the backend's {@code members} array on {@code WalletSnapshot} (joined with
+ * {@code team_memberships}).
  */
 export interface WalletMember {
   /** Supabase user id of the member. */
   userId: string;
   name: string;
   email: string;
-  /** Per-member sub-cap, or {@code null} for "no sub-cap". */
-  capUnits: number | null;
   /** Member's current-period billable spend. */
   spendUnits: number;
 }
@@ -167,19 +164,6 @@ export interface Wallet {
   recent: Array<Record<string, unknown>>;
 }
 
-/**
- * Result of a per-member sub-cap update. The backend may clamp the requested
- * value down to the team-level cap (so a member can't be granted more than
- * the team has to spend) — {@code clamped} surfaces that so the UI can show
- * a "Clamped to team cap of $X" toast.
- */
-export interface SubCapUpdateResult {
-  /** The cap units that actually landed on the row (post-clamp). */
-  effective: number;
-  /** {@code true} when the server reduced the request to fit the team cap. */
-  clamped: boolean;
-}
-
 export interface UseWalletResult {
   wallet: Wallet | null;
   loading: boolean;
@@ -200,19 +184,6 @@ export interface UseWalletResult {
    * {@code loading} state can be safely cleared on resolution.
    */
   updateCap: (capUsd: number | null) => Promise<void>;
-  /**
-   * Update a single member's per-seat sub-cap. {@code capUnits === null}
-   * removes the sub-cap (member shares the team budget). Returns the
-   * effective value the server actually stored — clamping happens server-
-   * side because only the server knows the current team cap, and we'd
-   * race the leader's own cap edit if we tried to clamp in the FE.
-   * Refetches the wallet on success so {@code members[]} reflects the
-   * new value.
-   */
-  updateSubCap: (
-    userId: string,
-    capUnits: number | null,
-  ) => Promise<SubCapUpdateResult>;
   /**
    * Mint a Stripe Customer Portal session and navigate to it. Calls
    * the {@code create-customer-portal-session} Supabase edge function
@@ -282,7 +253,6 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
       a.userId !== b.userId ||
       a.name !== b.name ||
       a.email !== b.email ||
-      a.capUnits !== b.capUnits ||
       a.spendUnits !== b.spendUnits
     ) {
       return next;
@@ -510,36 +480,6 @@ export function useWallet(): UseWalletResult {
     [devPreview, refetch],
   );
 
-  const updateSubCap = useCallback(
-    async (
-      userId: string,
-      capUnits: number | null,
-    ): Promise<SubCapUpdateResult> => {
-      if (devPreview) {
-        // Dev preview has no real members; report a successful no-op so the
-        // toast still fires and the inline editor exits its loading state.
-        await refetch();
-        return { effective: capUnits ?? 0, clamped: false };
-      }
-      // suppressErrorToast: true — the MemberRow caller shows a friendly
-      // toast on failure; without this the global interceptor's generic
-      // toast would stack on top. Matches the established pattern in
-      // saas/services/userManagementService.ts.
-      const res = await apiClient.patch<{
-        success: boolean;
-        capUnits: number;
-        clamped: boolean;
-      }>(
-        `/api/v1/payg/sub-caps/${encodeURIComponent(userId)}`,
-        { capUnits },
-        { suppressErrorToast: true },
-      );
-      await refetch();
-      return { effective: res.data.capUnits, clamped: res.data.clamped };
-    },
-    [devPreview, refetch],
-  );
-
   const openPortal = useCallback(async () => {
     if (devPreview) {
       // No real Stripe in dev preview — navigate to a placeholder so the
@@ -584,7 +524,6 @@ export function useWallet(): UseWalletResult {
     refetch,
     markSubscribed,
     updateCap,
-    updateSubCap,
     openPortal,
   };
 }

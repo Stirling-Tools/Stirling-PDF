@@ -16,7 +16,7 @@
  *     V1 — so it shows a real empty state, not fabricated rows
  */
 import React, { useState } from "react";
-import { Button, Group, NumberInput, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockIcon from "@mui/icons-material/LockOutlined";
@@ -32,19 +32,11 @@ import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
-import type { SubCapUpdateResult, Wallet } from "@app/hooks/useWallet";
+import type { Wallet } from "@app/hooks/useWallet";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type Gate = "OFFSITE_PROCESSING" | "AUTOMATION" | "AI_SUPPORT" | "CLIENT_SIDE";
-
-interface MemberSubCap {
-  userId: string;
-  name: string;
-  email: string;
-  capUnits: number | null; // null = no sub-cap
-  spendUnits: number;
-}
 
 interface PaygProps {
   role: "LEADER" | "MEMBER";
@@ -55,13 +47,6 @@ interface PaygProps {
    * leader view; absent on the member view (read-only).
    */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
-  /**
-   * Persist a per-member sub-cap. Same provenance as {@link onSaveCap}.
-   */
-  onSaveSubCap?: (
-    userId: string,
-    capUnits: number | null,
-  ) => Promise<SubCapUpdateResult>;
   /**
    * Open the Stripe Customer Portal. When omitted the Stripe card is hidden.
    * On error the implementation shows a friendly toast and resolves — callers
@@ -495,235 +480,53 @@ function CapReachedHelp() {
   );
 }
 
-// ─── Member sub-caps ────────────────────────────────────────────────────────
+// ─── Per-member usage ────────────────────────────────────────────────────────
 
-interface MemberSubCapsProps {
-  members: MemberSubCap[];
-  /**
-   * Persist a sub-cap edit. Returns the effective (post-clamp) value so the
-   * row can show "Clamped to team cap" when the server reduced the request.
-   */
-  onSaveSubCap?: (
-    userId: string,
-    capUnits: number | null,
-  ) => Promise<SubCapUpdateResult>;
-}
-
-function MemberSubCaps({ members, onSaveSubCap }: MemberSubCapsProps) {
+/**
+ * Leader-only roster of each teammate's billable usage this period. Display-only — per-member
+ * sub-cap enforcement isn't shipped (see the follow-ups note), so there's no cap control here.
+ */
+function MemberUsage({ members }: { members: Wallet["members"] }) {
   const { t } = useTranslation();
-  // Track which row is in edit mode by userId. Only one row is editable at a
-  // time — a second Edit click on a different row swaps the focus rather
-  // than opening a parallel editor. That keeps the table readable and means
-  // the saving spinner can't fight for the same scope.
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
-
   return (
     <div className="payg-card">
       <Stack gap="sm">
         <div>
           <div className="payg-card__title">
-            {t("payg.subcaps.title", "Per-member sub-caps")}
+            {t("payg.members.title", "Team member usage")}
           </div>
           <div className="payg-card__subtitle">
             {t(
-              "payg.subcaps.subtitle",
-              "Optional: cap individual teammates so one person can't drain the team budget.",
+              "payg.members.subtitle",
+              "Billable PDFs each teammate has processed this period.",
             )}
           </div>
         </div>
         <div>
           {members.map((m) => (
-            <MemberRow
-              key={m.userId}
-              member={m}
-              editing={editingUserId === m.userId}
-              onBeginEdit={() => setEditingUserId(m.userId)}
-              onCancelEdit={() => setEditingUserId(null)}
-              onSaveSubCap={onSaveSubCap}
-              onSaved={() => setEditingUserId(null)}
-            />
+            <div className="payg-member" key={m.userId}>
+              <span
+                className="payg-member__avatar"
+                style={{ background: avatarColor(m.userId) }}
+              >
+                {m.name.charAt(0).toUpperCase()}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="payg-member__name">{m.name}</div>
+                <div className="payg-member__email">{m.email}</div>
+              </div>
+              <div className="payg-member__usage">
+                <div className="payg-member__usage-num">
+                  {m.spendUnits.toLocaleString()}{" "}
+                  <Text span size="xs" c="dimmed">
+                    {t("payg.members.docs", "PDFs")}
+                  </Text>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </Stack>
-    </div>
-  );
-}
-
-interface MemberRowProps {
-  member: MemberSubCap;
-  editing: boolean;
-  onBeginEdit: () => void;
-  onCancelEdit: () => void;
-  onSaveSubCap?: (
-    userId: string,
-    capUnits: number | null,
-  ) => Promise<SubCapUpdateResult>;
-  onSaved: () => void;
-}
-
-function MemberRow({
-  member,
-  editing,
-  onBeginEdit,
-  onCancelEdit,
-  onSaveSubCap,
-  onSaved,
-}: MemberRowProps) {
-  const { t } = useTranslation();
-  // Seed the editor with the current value (or 100 as a sensible default
-  // when the member has no cap yet — matches the smallest team-cap tier so
-  // a first-time leader doesn't have to guess at units).
-  const [draft, setDraft] = useState<number>(member.capUnits ?? 100);
-  const [saving, setSaving] = useState(false);
-
-  const subPct =
-    member.capUnits && member.capUnits > 0
-      ? Math.min(100, (member.spendUnits / member.capUnits) * 100)
-      : null;
-
-  const handleSave = async (capUnits: number | null) => {
-    if (!onSaveSubCap) return;
-    setSaving(true);
-    try {
-      const result = await onSaveSubCap(member.userId, capUnits);
-      if (result.clamped) {
-        // Effective < requested: surface that explicitly so the leader
-        // knows the row didn't land at their typed value. Phrasing it as
-        // "Clamped to team cap" rather than just showing the new number
-        // is the difference between "the system did something" and "the
-        // system is broken" in the leader's head.
-        showToast({
-          alertType: "warning",
-          title: t("payg.subcaps.toast.clamped.title", "Sub-cap clamped"),
-          body: t(
-            "payg.subcaps.toast.clamped.body",
-            "Clamped to team cap of {{units}} PDFs.",
-            { units: result.effective.toLocaleString() },
-          ),
-          location: "bottom-right",
-        });
-      } else {
-        showToast({
-          alertType: "success",
-          title: t("payg.subcaps.toast.saved.title", "Sub-cap updated"),
-          location: "bottom-right",
-        });
-      }
-      onSaved();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("[Payg] sub-cap update failed", e);
-      showToast({
-        alertType: "error",
-        title: t("payg.subcaps.toast.error.title", "Couldn't update sub-cap"),
-        body: t(
-          "payg.subcaps.toast.error.body",
-          "Please try again in a moment.",
-        ),
-        location: "bottom-right",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="payg-member">
-      <span
-        className="payg-member__avatar"
-        style={{ background: avatarColor(member.userId) }}
-      >
-        {member.name.charAt(0).toUpperCase()}
-      </span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="payg-member__name">{member.name}</div>
-        <div className="payg-member__email">{member.email}</div>
-      </div>
-      {editing ? (
-        <Group gap="xs" wrap="nowrap" align="center">
-          <NumberInput
-            value={draft}
-            onChange={(v) => setDraft(typeof v === "number" ? v : 0)}
-            min={0}
-            step={50}
-            w={120}
-            size="xs"
-            disabled={saving}
-            suffix={` ${t("payg.member.docs", "docs")}`}
-            aria-label={t(
-              "payg.subcaps.editor.label",
-              "Sub-cap for {{name}}",
-              { name: member.name },
-            )}
-          />
-          <Button
-            size="xs"
-            variant="default"
-            disabled={saving}
-            onClick={onCancelEdit}
-          >
-            {t("common.cancel", "Cancel")}
-          </Button>
-          {member.capUnits !== null && (
-            // Removing an existing sub-cap is a meaningfully different op
-            // from setting one — clearer to give it its own button than
-            // overload "Save" with a null sentinel.
-            <Button
-              size="xs"
-              variant="subtle"
-              color="red"
-              disabled={saving}
-              loading={saving}
-              onClick={() => handleSave(null)}
-            >
-              {t("payg.subcaps.editor.remove", "Remove cap")}
-            </Button>
-          )}
-          <Button
-            size="xs"
-            variant="filled"
-            disabled={saving || draft < 0}
-            loading={saving}
-            onClick={() => handleSave(draft)}
-          >
-            {t("common.save", "Save")}
-          </Button>
-        </Group>
-      ) : (
-        <>
-          <div className="payg-member__usage">
-            <div className="payg-member__usage-num">
-              {member.spendUnits.toLocaleString()}
-              {member.capUnits !== null ? (
-                <> / {member.capUnits.toLocaleString()}</>
-              ) : (
-                <Text span size="xs" c="dimmed">
-                  {" "}
-                  {t("payg.member.noCap", "· no sub-cap")}
-                </Text>
-              )}
-            </div>
-            {subPct !== null && (
-              <div className="payg-member__minibar">
-                <div
-                  className="payg-member__minibar-fill"
-                  style={{ width: `${subPct}%` }}
-                />
-              </div>
-            )}
-          </div>
-          <Button
-            size="xs"
-            variant="default"
-            onClick={onBeginEdit}
-            disabled={!onSaveSubCap}
-          >
-            {member.capUnits === null
-              ? t("payg.member.setCap", "Set cap")
-              : t("payg.member.editCap", "Edit")}
-          </Button>
-        </>
-      )}
     </div>
   );
 }
@@ -860,13 +663,7 @@ function StripePortalLink({ onOpenPortal }: { onOpenPortal: () => Promise<void> 
 
 // ─── Main component ───────────────────────────────────────────────────────
 
-const Payg: React.FC<PaygProps> = ({
-  role,
-  wallet,
-  onSaveCap,
-  onSaveSubCap,
-  onOpenPortal,
-}) => {
+const Payg: React.FC<PaygProps> = ({ role, wallet, onSaveCap, onOpenPortal }) => {
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
@@ -951,10 +748,7 @@ const Payg: React.FC<PaygProps> = ({
         )}
 
         {isLeader && wallet.members.length > 0 && (
-          <MemberSubCaps
-            members={wallet.members}
-            onSaveSubCap={onSaveSubCap}
-          />
+          <MemberUsage members={wallet.members} />
         )}
 
         {SHOW_ACTIVITY_FEED && <ActivityFeed recent={wallet.recent} />}
@@ -975,25 +769,18 @@ export interface PaygLeaderProps {
   wallet: Wallet;
   /** See {@link PaygProps#onSaveCap}. */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
-  /** See {@link PaygProps#onSaveSubCap}. */
-  onSaveSubCap?: (
-    userId: string,
-    capUnits: number | null,
-  ) => Promise<SubCapUpdateResult>;
   /** See {@link PaygProps#onOpenPortal}. */
   onOpenPortal?: () => Promise<void>;
 }
 export const PaygLeader: React.FC<PaygLeaderProps> = ({
   wallet,
   onSaveCap,
-  onSaveSubCap,
   onOpenPortal,
 }) => (
   <Payg
     role="LEADER"
     wallet={wallet}
     onSaveCap={onSaveCap}
-    onSaveSubCap={onSaveSubCap}
     onOpenPortal={onOpenPortal}
   />
 );

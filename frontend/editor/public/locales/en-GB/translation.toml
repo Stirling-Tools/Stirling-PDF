@@ -5810,11 +5810,11 @@ title = "What happens when the cap is reached"
 
 [payg.member]
 askLeader = "Only your team owner can change the cap."
-contactLeader = "Ask team owner to raise cap"
-editCap = "Edit"
-noCap = "· no sub-cap"
-setCap = "Set cap"
-units = "units"
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
 
 [payg.role]
 leader = "Team owner"
@@ -5846,25 +5846,6 @@ title = "Manage billing in Stripe"
 [payg.stripe.toast.unavailable]
 body = "Billing portal isn't available right now. Try again in a moment."
 title = "Billing portal unavailable"
-
-[payg.subcaps]
-subtitle = "Optional: cap individual teammates so one person can't drain the team budget."
-title = "Per-member sub-caps"
-
-[payg.subcaps.editor]
-label = "Sub-cap for {{name}}"
-remove = "Remove cap"
-
-[payg.subcaps.toast.clamped]
-body = "Clamped to team cap of {{units}} PDFs."
-title = "Sub-cap clamped"
-
-[payg.subcaps.toast.error]
-body = "Please try again in a moment."
-title = "Couldn't update sub-cap"
-
-[payg.subcaps.toast.saved]
-title = "Sub-cap updated"
 
 [payg.upgrade]
 closeAria = "Close"

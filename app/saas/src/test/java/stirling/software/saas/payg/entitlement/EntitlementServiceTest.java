@@ -233,19 +233,6 @@ class EntitlementServiceTest {
         assertThat(w[1]).isEqualTo(LocalDateTime.of(2026, 7, 1, 0, 0));
     }
 
-    @Test
-    void anonymousFull_isFullAndUncapped() {
-        EntitlementSnapshot snap = EntitlementService.anonymousFull();
-        assertThat(snap.state()).isEqualTo(EntitlementState.FULL);
-        assertThat(snap.periodCapUnits()).isNull();
-        assertThat(snap.enabledGates())
-                .contains(
-                        FeatureGate.OFFSITE_PROCESSING,
-                        FeatureGate.AUTOMATION,
-                        FeatureGate.AI_SUPPORT,
-                        FeatureGate.CLIENT_SIDE);
-    }
-
     private void stubBilling(Long teamId, TeamBillingContext ctx) {
         when(billingService.forTeam(teamId)).thenReturn(ctx);
     }

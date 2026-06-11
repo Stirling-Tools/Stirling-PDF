@@ -14,8 +14,6 @@ import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 @Repository
 public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry, Long> {
 
-    List<WalletLedgerEntry> findByTeamIdOrderByOccurredAtDesc(Long teamId);
-
     /** Most recent entries for the Plan page activity feed. */
     List<WalletLedgerEntry> findTop20ByTeamIdOrderByIdDesc(Long teamId);
 

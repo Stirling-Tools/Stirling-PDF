@@ -2,9 +2,6 @@ package stirling.software.saas.payg.cap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-import java.util.Set;
-
 import org.junit.jupiter.api.Test;
 
 import stirling.software.saas.payg.cap.CapEvaluator.Evaluation;
@@ -125,81 +122,6 @@ class CapEvaluatorTest {
     }
 
     // ---------------------------------------------------------------------------------------
-    // combineTeamAndMember(): team-wide × member sub-cap combination
-    // ---------------------------------------------------------------------------------------
-
-    @Test
-    void combine_memberNull_teamEvalWins() {
-        Evaluation team = CapEvaluator.evaluate(50L, 100L, 80, 100, FeatureSet.MINIMAL);
-        Evaluation combined = CapEvaluator.combineTeamAndMember(team, null);
-        assertThat(combined).isSameAs(team);
-    }
-
-    @Test
-    void combine_memberDegradedButTeamFull_degradesEffectiveResult() {
-        Evaluation team = CapEvaluator.evaluate(10L, 100L, 80, 100, FeatureSet.MINIMAL);
-        Evaluation member = CapEvaluator.evaluate(50L, 50L, 80, 100, FeatureSet.MINIMAL);
-
-        Evaluation combined = CapEvaluator.combineTeamAndMember(team, member);
-
-        assertThat(combined.state()).isEqualTo(EntitlementState.DEGRADED);
-        assertThat(combined.featureSet()).isEqualTo(FeatureSet.MINIMAL);
-        // Intersection of FULL (4 gates) and MINIMAL (OFFSITE_PROCESSING + CLIENT_SIDE) =
-        // OFFSITE_PROCESSING + CLIENT_SIDE
-        assertThat(combined.enabledGates())
-                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
-    }
-
-    @Test
-    void combine_teamDegradedButMemberFull_stayDegraded() {
-        Evaluation team = CapEvaluator.evaluate(100L, 100L, 80, 100, FeatureSet.MINIMAL);
-        Evaluation member = CapEvaluator.evaluate(10L, 1000L, 80, 100, FeatureSet.MINIMAL);
-
-        Evaluation combined = CapEvaluator.combineTeamAndMember(team, member);
-
-        assertThat(combined.state()).isEqualTo(EntitlementState.DEGRADED);
-        assertThat(combined.featureSet()).isEqualTo(FeatureSet.MINIMAL);
-        assertThat(combined.enabledGates())
-                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
-    }
-
-    @Test
-    void combine_bothWarned_warnedState_butFullFeatureSet() {
-        Evaluation team = CapEvaluator.evaluate(80L, 100L, 80, 100, FeatureSet.MINIMAL);
-        Evaluation member = CapEvaluator.evaluate(85L, 100L, 80, 100, FeatureSet.MINIMAL);
-
-        Evaluation combined = CapEvaluator.combineTeamAndMember(team, member);
-
-        assertThat(combined.state()).isEqualTo(EntitlementState.WARNED);
-        assertThat(combined.featureSet()).isEqualTo(FeatureSet.FULL);
-    }
-
-    @Test
-    void combine_bothFull_returnsFull() {
-        Evaluation team = CapEvaluator.evaluate(10L, 100L, 80, 100, FeatureSet.MINIMAL);
-        Evaluation member = CapEvaluator.evaluate(5L, 50L, 80, 100, FeatureSet.MINIMAL);
-
-        Evaluation combined = CapEvaluator.combineTeamAndMember(team, member);
-
-        assertThat(combined.state()).isEqualTo(EntitlementState.FULL);
-        assertThat(combined.featureSet()).isEqualTo(FeatureSet.FULL);
-    }
-
-    @Test
-    void combine_differentDegradedSets_picksStrictest() {
-        // If team policy says degrade-to-MINIMAL and member's hypothetical sub-policy says
-        // degrade-to-CLIENT_ONLY, the stricter (CLIENT_ONLY) wins. In practice today member
-        // sub-policies use the same set as the team, but the helper is correct in either case.
-        Evaluation team = CapEvaluator.evaluate(100L, 100L, 80, 100, FeatureSet.MINIMAL);
-        Evaluation member = CapEvaluator.evaluate(100L, 100L, 80, 100, FeatureSet.CLIENT_ONLY);
-
-        Evaluation combined = CapEvaluator.combineTeamAndMember(team, member);
-
-        assertThat(combined.state()).isEqualTo(EntitlementState.DEGRADED);
-        assertThat(combined.featureSet()).isEqualTo(FeatureSet.CLIENT_ONLY);
-    }
-
-    // ---------------------------------------------------------------------------------------
     // gatesFor(): mapping FeatureSet → declared gates
     // ---------------------------------------------------------------------------------------
 
@@ -224,38 +146,5 @@ class CapEvaluatorTest {
     @Test
     void gatesFor_null_returnsEmpty() {
         assertThat(CapEvaluator.gatesFor(null)).isEmpty();
-    }
-
-    // ---------------------------------------------------------------------------------------
-    // allEnabled(): the entitlement-guard predicate
-    // ---------------------------------------------------------------------------------------
-
-    @Test
-    void allEnabled_emptyRequired_returnsTrue() {
-        assertThat(CapEvaluator.allEnabled(Set.of(), List.of(FeatureGate.CLIENT_SIDE))).isTrue();
-        assertThat(CapEvaluator.allEnabled(null, List.of(FeatureGate.CLIENT_SIDE))).isTrue();
-    }
-
-    @Test
-    void allEnabled_subsetMatches_returnsTrue() {
-        assertThat(
-                        CapEvaluator.allEnabled(
-                                Set.of(FeatureGate.OFFSITE_PROCESSING),
-                                List.of(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE)))
-                .isTrue();
-    }
-
-    @Test
-    void allEnabled_missingOneOfMany_returnsFalse() {
-        assertThat(
-                        CapEvaluator.allEnabled(
-                                Set.of(FeatureGate.OFFSITE_PROCESSING, FeatureGate.AI_SUPPORT),
-                                List.of(FeatureGate.OFFSITE_PROCESSING)))
-                .isFalse();
-    }
-
-    @Test
-    void allEnabled_nullEnabled_returnsFalseUnlessRequiredEmpty() {
-        assertThat(CapEvaluator.allEnabled(Set.of(FeatureGate.OFFSITE_PROCESSING), null)).isFalse();
     }
 }

@@ -21,7 +21,6 @@ import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.cap.CapEvaluator;
 import stirling.software.saas.payg.cap.CapEvaluator.Evaluation;
 import stirling.software.saas.payg.model.EntitlementState;
-import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
@@ -170,37 +169,14 @@ public class EntitlementService {
     }
 
     /**
-     * Inclusive-start / exclusive-end window for the calendar-month period. Calendar-month is the
-     * only period used at this stage; once {@code BILLING_CYCLE} ships the window resolution moves
-     * to the wallet policy.
+     * Inclusive-start / exclusive-end window for the calendar-month period. Test seam — takes a
+     * clock value so tests don't race the calendar boundary. The live snapshot window comes from
+     * {@link TeamBillingService}; this remains for the forthcoming {@code BILLING_CYCLE} work.
      */
-    static LocalDateTime[] currentMonthWindow() {
-        return currentMonthWindow(LocalDateTime.now());
-    }
-
-    /** Test seam — accepts a clock value so tests don't race the calendar boundary. */
     static LocalDateTime[] currentMonthWindow(LocalDateTime now) {
         YearMonth ym = YearMonth.from(now);
         LocalDateTime start = ym.atDay(1).atStartOfDay();
         LocalDateTime end = ym.plusMonths(1).atDay(1).atStartOfDay();
         return new LocalDateTime[] {start, end};
-    }
-
-    /** Snapshot for an anonymous / null-team request — never billable, never degraded. */
-    public static EntitlementSnapshot anonymousFull() {
-        LocalDateTime[] w = currentMonthWindow();
-        return new EntitlementSnapshot(
-                EntitlementState.FULL,
-                FeatureSet.FULL,
-                List.of(
-                        FeatureGate.OFFSITE_PROCESSING,
-                        FeatureGate.AUTOMATION,
-                        FeatureGate.AI_SUPPORT,
-                        FeatureGate.CLIENT_SIDE),
-                0L,
-                null,
-                w[0],
-                w[1],
-                false);
     }
 }
