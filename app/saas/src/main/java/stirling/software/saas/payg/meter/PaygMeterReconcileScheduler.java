@@ -3,7 +3,9 @@ package stirling.software.saas.payg.meter;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -84,10 +86,18 @@ public class PaygMeterReconcileScheduler {
 
         List<PaygMeterEventLog> retryable =
                 eventLogRepository.findRetryable(cutoff, floor, PageRequest.of(0, batchSize));
+
+        // Batch-fetch this page's team extensions in one query (keyed by team id) rather than a
+        // findById per row — avoids an N+1 when the page spans several teams.
+        List<Long> teamIds =
+                retryable.stream().map(PaygMeterEventLog::getTeamId).distinct().toList();
+        Map<Long, PaygTeamExtensions> extById =
+                teamExtensionsRepository.findAllById(teamIds).stream()
+                        .collect(Collectors.toMap(PaygTeamExtensions::getTeamId, ext -> ext));
+
         int retried = 0;
         for (PaygMeterEventLog row : retryable) {
-            PaygTeamExtensions ext =
-                    teamExtensionsRepository.findById(row.getTeamId()).orElse(null);
+            PaygTeamExtensions ext = extById.get(row.getTeamId());
             if (ext == null) {
                 continue;
             }

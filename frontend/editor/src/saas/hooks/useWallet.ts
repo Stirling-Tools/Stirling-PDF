@@ -258,9 +258,8 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
       return next;
     }
   }
-  if (prev.recent !== next.recent && prev.recent.length !== next.recent.length) {
-    return next;
-  }
+  // recent length-mismatch already returned `next` above; content (Wave 1 = []) is identical
+  // otherwise, so reuse the prior reference for stable child memoisation.
   return prev;
 }
 

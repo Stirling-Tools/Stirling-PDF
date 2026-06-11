@@ -276,7 +276,7 @@ public class EntitlementGuard implements HandlerInterceptor {
                 snapshot.subscribed()
                         ? "Your team has reached its monthly spending cap. Raise the cap to"
                                 + " continue, or wait for it to reset next billing period."
-                        : "Your team has used its free document allowance for this period."
+                        : "Your team has used its free document allowance."
                                 + " Subscribe to continue using the API.");
         body.put("state", snapshot.state().name());
         body.put("spendUnits", snapshot.periodSpendUnits());

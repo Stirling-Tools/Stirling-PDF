@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +77,7 @@ class PaygMeterReconcileSchedulerTest {
         UUID jobId = UUID.randomUUID();
         when(logRepo.findRetryable(any(), any(), any(Pageable.class)))
                 .thenReturn(List.of(row(100L, jobId, "process:" + jobId + ":close", 4)));
-        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext(100L, "cus_live", "sub_live")));
+        when(teamExtRepo.findAllById(any())).thenReturn(List.of(ext(100L, "cus_live", "sub_live")));
 
         scheduler(true).reconcile();
 
@@ -92,7 +91,7 @@ class PaygMeterReconcileSchedulerTest {
         when(logRepo.findRetryable(any(), any(), any(Pageable.class)))
                 .thenReturn(List.of(row(100L, jobId, "process:" + jobId + ":close", 4)));
         // Customer still present but no live subscription → no longer billable.
-        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext(100L, "cus_live", null)));
+        when(teamExtRepo.findAllById(any())).thenReturn(List.of(ext(100L, "cus_live", null)));
 
         scheduler(true).reconcile();
 
@@ -105,7 +104,7 @@ class PaygMeterReconcileSchedulerTest {
         UUID jobId = UUID.randomUUID();
         when(logRepo.findRetryable(any(), any(), any(Pageable.class)))
                 .thenReturn(List.of(row(100L, jobId, "process:" + jobId + ":close", 4)));
-        when(teamExtRepo.findById(100L)).thenReturn(Optional.empty());
+        when(teamExtRepo.findAllById(any())).thenReturn(List.of());
 
         scheduler(true).reconcile();
 

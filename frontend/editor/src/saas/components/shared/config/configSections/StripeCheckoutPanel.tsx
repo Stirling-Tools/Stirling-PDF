@@ -28,7 +28,7 @@
  * <h2>Architecture</h2>
  *
  * Stripe-touching code lives in Supabase edge functions, not the Java
- * backend. This panel invokes {@code create-payg-team-subscription}
+ * backend. This panel invokes {@code create-checkout-session}
  * directly via {@code supabase.functions.invoke()} — same pattern {@link
  * usePlans} already uses for {@code stripe-price-lookup}. The auth JWT is
  * attached automatically by the Supabase client.
@@ -42,8 +42,10 @@
  * <h2>Behaviour</h2>
  *
  * <ol>
- *   <li>On mount: calls {@code supabase.functions.invoke("create-payg-team-subscription", {capUsd, noCap})}
- *       to obtain a {@code client_secret}.
+ *   <li>On mount: calls {@code supabase.functions.invoke("create-checkout-session", {team_id,
+ *       currency, success_url, cancel_url})} to obtain a {@code client_secret}. The spending cap is
+ *       NOT set here — it's an application-layer setting applied via {@code PATCH /payg/cap} after
+ *       the subscription lands.
  *   <li>If no {@code VITE_STRIPE_PUBLISHABLE_KEY} is configured OR the edge
  *       function isn't deployed yet (errors out / returns a {@code cs_mock_}
  *       sentinel), render a clearly-labelled placeholder + "Continue with
@@ -88,8 +90,8 @@ export interface StripeCheckoutPanelProps {
 }
 
 /**
- * Response shape from the {@code create-payg-team-subscription} Supabase edge
- * function. Mirrors what the function returns in SaaS PR #300.
+ * Response shape from the {@code create-checkout-session} Supabase edge
+ * function. Mirrors what the function returns.
  */
 interface CheckoutResponse {
   /** Stripe Checkout Session client_secret. */

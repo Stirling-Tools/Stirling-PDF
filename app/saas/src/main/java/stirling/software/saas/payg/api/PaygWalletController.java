@@ -58,9 +58,9 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>{@code GET /api/v1/payg/wallet} is the single fetch the {@code useWallet} hook calls. Returns
  * a fully-populated {@link WalletSnapshotResponse} — derived from {@link EntitlementService} (for
- * spend / cap / period), {@link PaygTeamExtensions} (for subscription state), and the {@code
- * wallet_category_summary} view (for the per-category breakdown widget). Leader callers also get a
- * roster of team members + their per-member usage; member callers see an empty roster.
+ * spend / cap / period), {@link PaygTeamExtensions} (for subscription state), and {@link
+ * WalletLedgerRepository} (for the per-category breakdown widget). Leader callers also get a roster
+ * of team members + their per-member usage; member callers see an empty roster.
  *
  * <p>{@code PATCH /api/v1/payg/cap} updates {@code wallet_policy.cap_units} (no Stripe call — the
  * cap is enforced application-side via the entitlement guard) and invalidates the team's snapshot
