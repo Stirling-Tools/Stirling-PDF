@@ -91,9 +91,13 @@ export function ChatFAB() {
   };
 
   useLayoutEffect(() => {
+    // The overlay only mounts once the AI engine is enabled (config can load
+    // after first render), so re-measure when that flips true rather than only
+    // on initial mount, otherwise the default position never gets computed.
+    if (!enabled) return;
     const pos = getDefaultPos();
     if (pos) setRndPos(pos);
-  }, []);
+  }, [enabled]);
 
   // Clear the reset timer on unmount to avoid state updates on dead components.
   // Also ensure body user-select is restored if we unmount mid-resize.
@@ -141,6 +145,12 @@ export function ChatFAB() {
       <ChatFABButton
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
         onClick={() => {
+          // Fallback: ensure a position exists before opening, in case the
+          // layout effect measured before the overlay was laid out.
+          if (rndPos === null) {
+            const pos = getDefaultPos();
+            if (pos) setRndPos(pos);
+          }
           setIsOpen(true);
           setHasUnviewedResult(false);
         }}
