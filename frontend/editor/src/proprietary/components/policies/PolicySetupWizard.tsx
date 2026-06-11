@@ -369,21 +369,7 @@ export function PolicySetupWizard({
               </div>
               <div className="pol-field">
                 <SettingsRow
-                  label="Output name"
-                  control={
-                    <Input
-                      inputSize="sm"
-                      value={outputName}
-                      onChange={(e) => setOutputName(e.target.value)}
-                      placeholder="optional"
-                      aria-label="Output name"
-                    />
-                  }
-                />
-              </div>
-              <div className="pol-field">
-                <SettingsRow
-                  label="Name position"
+                  label="Add to filename"
                   control={
                     <Select
                       inputSize="sm"
@@ -393,12 +379,26 @@ export function PolicySetupWizard({
                           e.target.value as "prefix" | "suffix" | "auto-number",
                         )
                       }
-                      aria-label="Name position"
+                      aria-label="Add to filename"
                       options={[
                         { value: "prefix", label: "Prefix" },
                         { value: "suffix", label: "Suffix" },
                         { value: "auto-number", label: "Auto-number" },
                       ]}
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-field">
+                <SettingsRow
+                  label="Text to add"
+                  control={
+                    <Input
+                      inputSize="sm"
+                      value={outputName}
+                      onChange={(e) => setOutputName(e.target.value)}
+                      placeholder="optional"
+                      aria-label="Text to add"
                     />
                   }
                 />

@@ -204,18 +204,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     // per-tool and now live in the Workflow step.
     fields: [
       {
-        label: "Default PII response",
-        key: "defaultResponse",
-        type: "select",
-        value: "Highlight & tag",
-        options: [
-          "Highlight & tag",
-          "Prompt on export",
-          "Auto-redact on export",
-          "Block export",
-        ],
-      },
-      {
         label: "User can override",
         key: "userOverride",
         type: "toggle",
