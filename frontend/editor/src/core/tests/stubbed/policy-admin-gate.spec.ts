@@ -43,7 +43,10 @@ test.describe("Policy editing gate — non-admin (login on)", () => {
 });
 
 test.describe("Policy editing gate — admin (login on)", () => {
-  test.use({ stubOptions: { enableLogin: true, isAdmin: true }, seedJwt: true });
+  test.use({
+    stubOptions: { enableLogin: true, isAdmin: true },
+    seedJwt: true,
+  });
 
   test("admin can reach the setup wizard", async ({ page }) => {
     await openSecurityPolicy(page);
