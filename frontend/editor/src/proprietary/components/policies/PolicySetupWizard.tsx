@@ -369,7 +369,9 @@ export function PolicySetupWizard({
                   }
                 />
               </div>
-              <div className="pol-field">
+              {/* Output-filename subsection: where to add custom text, and the text. */}
+              <div className="pol-subhead">Output filename</div>
+              <div className="pol-field" data-first>
                 <SettingsRow
                   label="Add to filename"
                   control={
