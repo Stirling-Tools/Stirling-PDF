@@ -1,9 +1,7 @@
 package stirling.software.proprietary.policy.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -19,8 +17,9 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Tests for {@link PolicyAccessGuard}: owner-or-admin access, no-op when login is disabled, and
- * server-side owner assignment.
+ * Tests for {@link PolicyAccessGuard}. Policies are org-wide: every user sees them all (no
+ * owner-based filtering). The owner is still assigned server-side — the current user when login is
+ * enabled, {@code null} otherwise — purely for run/usage attribution.
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyAccessGuardTest {
@@ -34,51 +33,28 @@ class PolicyAccessGuardTest {
     }
 
     @Test
-    void loginDisabledAllowsEverythingAndAssignsNoOwner() {
-        PolicyAccessGuard guard = guard(false);
+    void visibleReturnsEveryPolicyWhenLoginEnabled() {
+        // Org-wide: a non-admin sees every policy, not just the ones they own.
+        List<Policy> all = List.of(ownedBy("alice"), ownedBy("bob"), ownedBy("alice"));
+        assertEquals(all, guard(true).visible(all));
+    }
+
+    @Test
+    void visibleReturnsEveryPolicyWhenLoginDisabled() {
         List<Policy> all = List.of(ownedBy("alice"), ownedBy("bob"));
-
-        assertTrue(guard.canAccess(ownedBy("someone-else")));
-        assertNull(guard.ownerForNewPolicy());
-        assertEquals(all, guard.visible(all));
+        assertEquals(all, guard(false).visible(all));
     }
 
     @Test
-    void adminCanAccessAnyPolicy() {
-        when(userService.isCurrentUserAdmin()).thenReturn(true);
-        assertTrue(guard(true).canAccess(ownedBy("alice")));
-    }
-
-    @Test
-    void ownerCanAccessTheirOwnPolicy() {
-        when(userService.isCurrentUserAdmin()).thenReturn(false);
-        when(userService.getCurrentUsername()).thenReturn("alice");
-        assertTrue(guard(true).canAccess(ownedBy("alice")));
-    }
-
-    @Test
-    void nonOwnerNonAdminCannotAccess() {
-        when(userService.isCurrentUserAdmin()).thenReturn(false);
-        when(userService.getCurrentUsername()).thenReturn("bob");
-        assertFalse(guard(true).canAccess(ownedBy("alice")));
-    }
-
-    @Test
-    void visibleFiltersToOwnedPoliciesForANonAdmin() {
-        when(userService.isCurrentUserAdmin()).thenReturn(false);
-        when(userService.getCurrentUsername()).thenReturn("alice");
-
-        List<Policy> visible =
-                guard(true).visible(List.of(ownedBy("alice"), ownedBy("bob"), ownedBy("alice")));
-
-        assertEquals(2, visible.size());
-        assertTrue(visible.stream().allMatch(policy -> "alice".equals(policy.owner())));
-    }
-
-    @Test
-    void ownerForNewPolicyIsTheCurrentUserWhenEnforced() {
+    void ownerForNewPolicyIsTheCurrentUserWhenLoginEnabled() {
         when(userService.getCurrentUsername()).thenReturn("alice");
         assertEquals("alice", guard(true).ownerForNewPolicy());
+    }
+
+    @Test
+    void ownerForNewPolicyIsNullWhenLoginDisabled() {
+        // Single-user deployment: no identity to attribute to.
+        assertNull(guard(false).ownerForNewPolicy());
     }
 
     private static Policy ownedBy(String owner) {

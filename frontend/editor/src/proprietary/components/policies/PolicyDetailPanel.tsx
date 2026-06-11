@@ -249,7 +249,7 @@ export function PolicyDetailPanel({
           <Banner
             tone="neutral"
             icon={<LockIcon sx={{ fontSize: "1rem" }} />}
-            description="Managed by your organization. Contact an admin to change settings."
+            description="Managed by your organization. Contact an admin to change this policy."
           />
         )}
       </div>
