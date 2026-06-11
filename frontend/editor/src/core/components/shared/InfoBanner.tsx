@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { Paper, Group, Text, Button, ActionIcon, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
 type InfoBannerTone = "info" | "warning";
@@ -85,6 +86,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   closeIconColor,
   compact = false,
 }) => {
+  const { t } = useTranslation();
   if (!show) {
     return null;
   }
@@ -192,7 +194,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               color={closeIconColor ? undefined : "gray"}
               size="sm"
               onClick={handleDismiss}
-              aria-label="Dismiss"
+              aria-label={t("infoBanner.dismiss", "Dismiss")}
               style={closeIconColor ? { color: closeIconColor } : undefined}
             >
               <LocalIcon

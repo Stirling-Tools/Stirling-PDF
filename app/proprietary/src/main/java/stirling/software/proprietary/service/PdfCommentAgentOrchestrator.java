@@ -11,18 +11,19 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.comments.AnnotationLocation;
 import stirling.software.common.model.api.comments.StickyNoteSpec;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfAnnotationService;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentEngineRequest;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentEngineResponse;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentInstruction;
@@ -51,7 +52,6 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class PdfCommentAgentOrchestrator {
 
     private static final String GENERATE_PATH = "/api/v1/ai/pdf-comment-agent/generate";
@@ -83,6 +83,26 @@ public class PdfCommentAgentOrchestrator {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final PdfAnnotationService pdfAnnotationService;
+    private final UserServiceInterface userService;
+
+    public PdfCommentAgentOrchestrator(
+            AiEngineClient aiEngineClient,
+            PdfTextChunkExtractor pdfTextChunkExtractor,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            ObjectMapper objectMapper,
+            PdfAnnotationService pdfAnnotationService,
+            @Autowired(required = false) UserServiceInterface userService) {
+        this.aiEngineClient = aiEngineClient;
+        this.pdfTextChunkExtractor = pdfTextChunkExtractor;
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.objectMapper = objectMapper;
+        this.pdfAnnotationService = pdfAnnotationService;
+        this.userService = userService;
+    }
+
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
+    }
 
     /**
      * Run the full PDF comment generation flow.
@@ -167,7 +187,7 @@ public class PdfCommentAgentOrchestrator {
         PdfCommentEngineRequest engineRequest =
                 new PdfCommentEngineRequest(sessionId, prompt, chunks);
         String requestBody = objectMapper.writeValueAsString(engineRequest);
-        String responseBody = aiEngineClient.post(GENERATE_PATH, requestBody);
+        String responseBody = aiEngineClient.post(GENERATE_PATH, requestBody, currentUserId());
         PdfCommentEngineResponse engineResponse =
                 objectMapper.readValue(responseBody, PdfCommentEngineResponse.class);
 

@@ -12,7 +12,6 @@ cancel = "Annuller"
 changedCredsMessage = "Legitimationsoplysninger ændret!"
 chooseFile = "Vælg fil"
 close = "Luk"
-color = "Farve"
 comingSoon = "Kommer snart"
 confirm = "Bekræft"
 confirmClose = "Bekræft lukning"
@@ -90,6 +89,7 @@ nothingToUndo = "Intet at fortryde"
 noticeTopUpOrPlan = "Ikke nok kreditter. Fyld op eller opgrader til et abonnement"
 noValidFiles = "Ingen gyldige filer at behandle"
 oops = "Ups!"
+openInNewWindow = "Åbn i nyt vindue"
 openInViewer = "Åbn i fremviser"
 operationCancelled = "Handling annulleret"
 page = "Sidenummer"
@@ -198,6 +198,10 @@ ssoDescription = "Tofaktorgodkendelse administreres af din identitetsudbyder for
 ssoManaged = "Konfigurer MFA via din identitetsudbyder."
 title = "Tofaktorgodkendelse"
 
+[account.overview]
+logOut = "Log ud"
+signedInAs = "Logget ind som: {{email}}"
+
 [add-page-numbers]
 tags = "nummerér,etiket,organisér,indeks"
 
@@ -224,6 +228,9 @@ title = "Hvad den gør"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Om Tilføj vedhæftede filer"
+
+[addFileCard]
+upload = "Upload"
 
 [addImage]
 applySignatures = "Anvend billeder"
@@ -494,6 +501,11 @@ title = "Juster sideskalering"
 [adjustPageScale.error]
 failed = "Der opstod en fejl under justering af sideskaleringen."
 
+[adjustPageScale.orientation]
+label = "Sideorientering"
+landscape = "Liggende"
+portrait = "Stående"
+
 [adjustPageScale.pageSize]
 keep = "Behold original størrelse"
 label = "Mål-papirstørrelse"
@@ -600,6 +612,7 @@ label = "Håndtering af midlertidige filer"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Basismappe til midlertidige filer (lad tom for standard: java.io.tmpdir/stirling-pdf)"
 label = "Basis-mappe for midlertidige filer"
+placeholder = "Standard: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Hvor ofte oprydning skal køres (i minutter)"
@@ -612,6 +625,7 @@ label = "Ryd systemets temp"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "Mappe til LibreOffice midlertidige filer (lad tom for standard: baseTmpDir/libreoffice)"
 label = "LibreOffice midlertidig mappe"
+placeholder = "Standard: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maksimal alder i timer før midlertidige filer ryddes op"
@@ -628,6 +642,7 @@ label = "Oprydning ved opstart"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Systemets midlertidige mappe der skal ryddes (bruges kun hvis cleanupSystemTemp er aktiveret)"
 label = "Systemets midlertidige mappe"
+placeholder = "Sti til systemets midlertidige mappe"
 
 [admin.settings.advanced.tessdataDir]
 description = "Sti til tessdata-mappen for OCR-sprogfiler"
@@ -833,6 +848,7 @@ label = "Databasenavn"
 [admin.settings.database.password]
 description = "Adgangskode til databasegodkendelse"
 label = "Adgangskode"
+placeholder = "Indtast databaseadgangskode"
 
 [admin.settings.database.port]
 description = "Databaseserverens port (bruges ikke hvis brugerdefineret URL er angivet)"
@@ -864,10 +880,12 @@ label = "Skjul utilgængelige værktøjer som standard"
 [admin.settings.endpoints.groupsToRemove]
 description = "Vælg endpointgrupper, der skal deaktiveres"
 label = "Deaktiverede endpointgrupper"
+placeholder = "Vælg grupper, der skal deaktiveres"
 
 [admin.settings.endpoints.toRemove]
 description = "Vælg individuelle endpoints, der skal deaktiveres"
 label = "Deaktiverede endpoints"
+placeholder = "Vælg endpoints, der skal deaktiveres"
 
 [admin.settings.enterpriseRequired]
 message = "En Enterprise-licens er påkrævet for at få adgang til {{featureName}}. Du ser demodata til reference."
@@ -1082,6 +1100,7 @@ label = "SMTP-vært"
 [admin.settings.mail.password]
 description = "Adgangskode til SMTP-godkendelse"
 label = "SMTP-adgangskode"
+placeholder = "Indtast SMTP-adgangskode"
 
 [admin.settings.mail.port]
 description = "Portnummer til SMTP-forbindelse (typisk 25, 465 eller 587)"
@@ -1090,6 +1109,10 @@ label = "SMTP-port"
 [admin.settings.mail.username]
 description = "Brugernavn til SMTP-godkendelse"
 label = "SMTP-brugernavn"
+
+[admin.settings.plan.noData]
+message = "Planoplysninger er ikke tilgængelige i øjeblikket."
+title = "Ingen data tilgængelige"
 
 [admin.settings.premium]
 description = "Konfigurer din premium- eller enterprise-licensnøgle."
@@ -1137,6 +1160,9 @@ info = "Hvis du har en licensnøgle eller en certifikatfil fra et direkte køb, 
 toggle = "Har du en licensnøgle eller en certifikatfil?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Revisionslogning</0> (ENTERPRISE) - Sikkerhed"
+customMetadata = "<0>Brugerdefinerede metadata</0> (PRO) - Generelt"
+databaseConfiguration = "<0>Databasekonfiguration</0> (ENTERPRISE) - Database"
 message = "Premium- og Enterprise-funktioner er nu organiseret i deres respektive sektioner:"
 title = "Premium-funktioner fordelt"
 
@@ -1512,6 +1538,33 @@ user = "Bruger"
 usernameInfo = "Brugernavn må kun indeholde bogstaver, tal og følgende specialtegn @._+- eller skal være en gyldig e-mailadresse."
 webOnlyUser = "Kun Web-bruger"
 
+[agents]
+auto_redaction_description = "Maskér PII automatisk"
+auto_redaction_name = "Automatisk maskering"
+back_to_tools = "Tilbage til værktøjer"
+coming_soon = "Kommer snart"
+compliance_description = "Revider dokumenter for compliance"
+compliance_name = "Compliance-tjek"
+data_extraction_description = "Udtræk tabeller og strukturerede data"
+data_extraction_name = "Dataudtræk"
+doc_summary_description = "Opsummer lange dokumenter"
+doc_summary_name = "Opsummering"
+form_filler_description = "Udfyld PDF-formularer intelligent"
+form_filler_name = "Formularudfylder"
+fullscreen_title = "Stirling-agenter"
+pdf_to_markdown_description = "Konvertér PDF'er til ren Markdown"
+pdf_to_markdown_name = "PDF til Markdown"
+section_title = "Agenter"
+show_less = "Vis mindre"
+start_chat = "Start chat"
+stirling_description = "Din alsidige PDF-assistent"
+stirling_full_name = "Stirling General Agent"
+stirling_long_description = "Alsidig PDF-assistent, der kan køre værktøjer, oprette PDF'er og udtrække indsigter fra dine dokumenter."
+stirling_name = "Stirling"
+stirling_running = "Kører..."
+stirling_tooltip = "Stirling-agent"
+view_all = "Vis alle agenter"
+
 [analytics]
 disable = "Deaktiver analytics"
 enable = "Aktivér analytics"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Du har ikke tilladelse til at udføre denne handling.
 pleaseLoginAgain = "Log ind igen."
 sessionExpired = "Session udløbet"
 
+[auth.displayName]
+guest = "Gæst"
+user = "Bruger"
+
 [auto-rename]
 description = "Finder automatisk titlen fra dit PDF-indhold og bruger den som filnavn."
 header = "Auto Omdøb PDF"
@@ -1862,6 +1919,13 @@ label = "Åbn menu for {{title}}"
 
 [automate.files]
 placeholder = "Vælg filer, der skal behandles med denne automatisering"
+
+[automate.folderScanWarning]
+advice = "Du kan stadig downloade filen (f.eks. for at inspicere eller redigere den manuelt), men de ikke-understøttede trin skal fjernes, før backend kan køre den."
+cancel = "Annuller"
+confirm = "Eksporter alligevel"
+intro = "Mappegennemsøgning kører på backend, så den kan kun køre værktøjer, der har et backend-endpoint. Følgende trin i denne automatisering har ikke det og vil fejle, når pipelinen kører:"
+title = "Nogle trin kan ikke køre ved mappegennemsøgning"
 
 [automate.importModal]
 cancel = "Annuller"
@@ -2094,11 +2158,31 @@ placeholder = "Antal sider"
 title = "Sidste N sider"
 
 [bulkSelection.operators]
-and = "AND: & eller \"and\" — kræver begge betingelser (f.eks. 1-50 & even)"
-comma = "Komma: , eller | — kombinerer valg (f.eks. 1-10, 20)"
-not = "NOT: ! eller \"not\" — udelukker sider (f.eks. 3n & not 30)"
 text = "AND har højere prioritet end komma. NOT gælder inden for dokumentets område."
 title = "Operatorer"
+
+[bulkSelection.operators.and]
+title = "Kombinér markeringer (begge betingelser skal være opfyldt)"
+
+[bulkSelection.operators.descriptions]
+and = "AND: & eller \"and\" - kræver begge betingelser (f.eks. 1-50 & even)"
+comma = "Komma: , eller | - kombinér markeringer (f.eks. 1-10, 20)"
+not = "NOT: ! eller \"not\" - ekskludér sider (f.eks. 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Vælg alle lige sider (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Ekskludér fra markering"
+
+[bulkSelection.operators.odd]
+title = "Vælg alle ulige sider (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Føj til markering (enten betingelse kan være opfyldt)"
+
+[bulkSelection.pageSelection]
+title = "Sidevalg"
 
 [bulkSelection.range]
 fromPlaceholder = "Fra"
@@ -2684,6 +2768,22 @@ title = "Ændre Tilladelser"
 [changePermissions.tooltip.warning]
 text = "For at gøre disse tilladelser uændrerlige skal du bruge værktøjet Tilføj adgangskode til at sætte en ejeradgangskode."
 
+[chat]
+resize = "Ændr størrelse på chatpanel"
+
+[chat.actions]
+copy = "Kopiér besked"
+
+[chat.header]
+agentMenu = "Stirling-agentindstillinger"
+clearChat = "Ryd chat"
+settings = "Agentindstillinger"
+
+[chat.input]
+attach = "Vedhæft filer"
+placeholder = "Hvad vil du gøre?"
+send = "Send besked"
+
 [chat.progress]
 analyzing = "Analyserer din anmodning..."
 calling_engine = "AI'en tænker..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Færdig med at læse dokumentet..."
 whole_doc_read_started = "Læser dokumentet..."
 whole_doc_slice_done = "Læser dokumentet... ({{percent}}% færdig)"
 
+[chat.quickActions]
+browseYourFiles = "Gennemse dine filer"
+compressMany = "Komprimér disse dokumenter"
+compressOne = "Komprimér dette dokument"
+convertMany = "Konvertér disse dokumenter til PDF"
+convertOne = "Konvertér dette dokument til PDF"
+fileSummary_one = "1 fil i arbejdsområdet ({{types}})"
+fileSummary_other = "{{count}} filer i arbejdsområdet ({{types}})"
+heading = "Kom i gang"
+mergeMany = "Flet disse {{count}} dokumenter til 1"
+moreFiles = "+{{count}} mere"
+openFromComputer = "Åbn fra computer"
+removeFile = "Fjern {{name}}"
+rotateMany = "Rotér disse dokumenter"
+rotateOne = "Rotér dette dokument"
+splitOne = "Opdel dette dokument"
+
+[chat.responses]
+cannot_continue = "Noget gik galt, og jeg kan ikke fortsætte."
+cannot_do = "Det kan jeg ikke gøre."
+done = "Færdig."
+need_clarification = "Vil du præcisere din anmodning?"
+not_found = "Jeg kunne ikke finde de ønskede oplysninger."
+processing = "Behandler ({{outcome}})..."
+unsupported_capability = "Ikke-understøttet funktion: {{capability}}"
+
 [chat.toolsUsed]
 summary = "Kørte {{count}} værktøjer"
 summary_one = "Kørte 1 værktøj"
@@ -2707,6 +2833,9 @@ unknownTool = "Ukendt værktøj"
 
 [cloudBadge]
 tooltip = "Denne handling vil bruge dine cloud-kreditter"
+
+[color.eyeDropper]
+tooltip = "Vælg farve fra skærmen"
 
 [colorPicker]
 title = "Vælg farve"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Vælg først den originale PDF"
 filesMissing = "Kan ikke finde de valgte filer. Vælg dem igen."
 generic = "Kan ikke sammenligne disse filer."
 selectRequired = "Vælg et originalt og et redigeret dokument."
+title = "Sammenligning mislykkedes"
 
 [compare.large.file]
 message = "Et eller Begge af de Angivne Dokumenter Er For Store At Behandle"
@@ -2864,6 +2994,7 @@ title = "Arbejder stadig…"
 
 [compare.status]
 complete = "Sammenligning klar"
+error = "Sammenligning mislykkedes"
 extracting = "Udtrækker tekst..."
 processing = "Analyserer forskelle..."
 
@@ -2929,6 +3060,10 @@ title = "Komprimeringsmetode"
 [compress.selectText.1]
 1 = "1-3 PDF-komprimering,</br> 4-6 let billedkomprimering,</br> 7-9 intens billedkomprimering vil markant reducere billedkvaliteten"
 _value = "Komprimeringsindstillinger"
+
+[compress.settings]
+desiredSize = "Ønsket filstørrelse"
+desiredSizePlaceholder = "Indtast størrelse"
 
 [compress.tooltip.description]
 text = "Komprimering er en nem måde at reducere filstørrelsen på. Vælg filstørrelse for at angive en målstørrelse og lad os justere kvaliteten for dig. Vælg kvalitet for at indstille komprimeringsstyrken manuelt."
@@ -3404,6 +3539,29 @@ title = "Indstillinger åbnet"
 message = "Stirling PDF er nu din standard PDF-editor"
 title = "Standardapp valgt"
 
+[desktopUpdate]
+downloading = "Downloader opdatering..."
+installing = "Installerer opdatering..."
+installingWarning = "Appen lukkes automatisk for at fuldføre installationen."
+installNow = "Installer nu"
+readyToRestart = "Opdatering klar"
+restartMessage = "Opdateringen er installeret. Genstart appen for at afslutte."
+restartNow = "Genstart nu"
+updateFailed = "Opdatering mislykkedes"
+updateFailedMessage = "Kunne ikke downloade eller installere opdateringen."
+
+[desktopUpdate.blocked]
+docsLink = "Se installationsdokumentation"
+message = "Stirling-PDF har ikke tilladelse til at opdatere sig selv på denne maskine."
+title = "Administratorrettigheder påkrævet"
+
+[dropdownList]
+searchPlaceholder = "Søg..."
+
+[editableSecretField]
+edit = "Redigér"
+editSecretValue = "Redigér hemmelig værdi"
+
 [editTableOfContents]
 submit = "Anvend indholdsfortegnelsen"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Oversigtsarbejdsområde"
 [editTableOfContents.workbench.empty]
 description = "Vælg værktøjet Rediger indholdsfortegnelse for at indlæse arbejdsområdet."
 title = "Åbn værktøjet for at begynde at redigere"
+
+[emptyFilesState]
+upload = "Upload"
 
 [encryptedPdfUnlock]
 description = "Denne PDF er beskyttet med adgangskode. Indtast adgangskoden, så du kan fortsætte arbejdet."
@@ -3605,6 +3766,10 @@ title = "Indstillinger"
 [extractPages.tooltip]
 description = "Udtrækker de valgte sider til en ny PDF og bevarer rækkefølgen."
 
+[fileCard]
+openInFileEditor = "Åbn i filredigering"
+viewInViewer = "Vis i fremviser"
+
 [fileChooser]
 click = "Klik"
 dragAndDrop = "Træk & slip"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "Træk & slip PDF-fil"
 extractPDF = "Udtrækker..."
 hoveredDragAndDrop = "Træk & slip fil(er) her"
 or = "eller"
+
+[fileDropdownMenu]
+closeFile = "Luk fil"
 
 [fileEditor]
 addFiles = "Tilføj filer"
@@ -3771,12 +3939,250 @@ expand = "Udvid sidepanel"
 files = "Filer"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive er ikke konfigureret"
+leaveMyFiles = "Forlad Mine filer"
+myFiles = "Mine filer"
 noFiles = "Ingen filer endnu"
 openFileManager = "Åbn filhåndtering"
 openFromComputer = "Åbn fra computer"
 openSettings = "Åbn indstillinger"
 search = "Søg"
 searchPlaceholder = "Søg i filer..."
+
+[fileSidebar.fileItem]
+closeViewer = "Luk fremviser"
+openInViewer = "Åbn i fremviser"
+
+[filesPage]
+addToWorkspace = "Føj til arbejdsområde"
+addToWorkspaceCount = "Føj {{count}} til arbejdsområde"
+allFiles = "Alle filer"
+back = "Tilbage"
+backToFolder = "Tilbage til {{folder}}"
+backToMyFiles = "Tilbage til Mine filer"
+breadcrumbs = "Mappesti"
+cancel = "Annuller"
+clearSearch = "Ryd søgning"
+clearSelection = "Ryd markering"
+closeDetails = "Luk detaljer"
+create = "Opret"
+cycleBlocked = "Kan ikke flytte en mappe ind i en af dens egne undermapper."
+delete = "Slet"
+deleteFolder = "Slet mappe"
+deleteFolderBody = "Slet mappen \"{{name}}\"?"
+deleteFolderConfirm = "Slet mappen \"{{name}}\"? Filerne indeni flyttes til Alle filer. {{count}} fil(er) berørt."
+deleteFolderContents = "Slet også {{count}} fil(er) i mappen"
+deleteFolderContentsWarning = "Filerne vil blive fjernet permanent og kan ikke gendannes."
+deleteFolderError = "Kunne ikke slette mappen. Prøv igen."
+deleteFolderKeepHint = "Filerne indeni flyttes til Alle filer."
+deleteFolderTitle = "Slet mappe?"
+deselectAll = "Ryd markering"
+details = "Detaljer"
+detailsCount = "{{count}} filer valgt"
+dismissError = "Afvis"
+download = "Download"
+downloadAll = "Download alle"
+downloadVersion = "Download denne version"
+dropOverlay = "Slip filer for at uploade"
+dropOverlaySub = "Filer starter i Lokal. Brug 'Flyt til' eller 'Gem til skyen' for at organisere dem i en mappe."
+file = "Fil"
+fileMenu = "Filhandlinger"
+folder = "Mappe"
+folderItems = "{{count}} elementer"
+folderMenu = "Mappehandlinger"
+inPath = "i {{path}}"
+inWorkspace = "Åbn"
+inWorkspaceAria = "Allerede i arbejdsområde"
+loading = "Indlæser…"
+localFoldersUnavailable = "Mapper er kun i skyen – gem en fil i skyen for at organisere den."
+moreActions = "Flere mappehandlinger"
+moveLocalToCloudBlocked = "Filer, der kun er lokale, kan ikke flyttes til sky-mapper. Gem dem først i skyen."
+moveSkippedRemote = "{{count}} fil(er) kunne ikke flyttes på serveren (manglende tilladelse eller allerede slettet)."
+moveTo = "Flyt til…"
+myFiles = "Mine filer"
+newFolder = "Ny mappe"
+newFolderStorageDisabled = "Servermappe-lagring er ikke aktiveret. Bed din admin om at slå det til."
+newFolderTabUnavailable = "Skift til Alle eller Sky for at oprette mapper."
+newRootFolder = "Ny mappe i roden"
+offlineNoFolderEdits = "Serversynkronisering af mapper er ikke tilgængelig – mappeændringer er deaktiveret. Tjek login og lagerkonfiguration."
+open = "Åbn"
+openInWorkbench = "Åbn i arbejdsområde"
+openVersionInWorkspace = "Åbn i arbejdsområde"
+originFilter = "Filtrér efter kilde"
+quickView = "Hurtigvisning"
+refresh = "Opdatér fra server"
+remove = "Slet"
+removeConfirm = "Slet {{count}} fil(er)? Dette kan ikke fortrydes."
+removeVersion = "Fjern denne version"
+rename = "Omdøb"
+renameFolder = "Omdøb mappe"
+resizeFolderTree = "Ændr størrelse på mappetræ (piletaster, Shift for større trin; dobbeltklik for auto-tilpas)"
+save = "Gem"
+saveToServer = "Gem til server"
+saveToServerDisabledHint = "Lagring til serveren er ikke aktiveret på denne server. Bed din administrator om at aktivere det."
+search = "Søg"
+searchPlaceholder = "Søg i denne mappe og undermapper"
+selectAll = "Vælg alle"
+selectAllHint = "Klik for at vælge alle. Tip: hold Ctrl (eller Cmd) for at tilføje filer én ad gangen, Shift for at vælge et område."
+selectedCount = "{{count}} valgt"
+selectFile = "Vælg fil {{name}}"
+shareDisabledHint = "Fildeling er ikke aktiveret på denne server. Bed din administrator om at aktivere det."
+shareManage = "Administrér deling"
+showDetails = "Vis detaljer"
+summary = "{{count}} elementer"
+syncFailed = "Mappesynkronisering mislykkedes: {{message}}"
+syncPartial = "Delvis mappesynkronisering: {{failed}} af {{total}} mapper kunne ikke flettes."
+tree = "Mapper"
+upload = "Upload"
+uploadedToLocal = "Uploadede filer starter i Lokal. Brug 'Gem til skyen' for at placere dem i en mappe."
+uploadFromMobile = "Upload fra mobil"
+versionActions = "Versionshandlinger"
+versionCollapse = "Skjul mellemliggende versioner"
+versionOrigin = "Oprindelig upload"
+versionsCount = "{{count}} versioner"
+versionShowHidden = "Vis {{count}} tidligere versioner"
+viewVersion = "Vis denne version"
+
+[filesPage.appearance]
+colour = "Farve"
+icon = "Ikon"
+title = "Udseende"
+useColour = "Brug farven {{c}}"
+
+[filesPage.column]
+modified = "Ændret"
+name = "Navn"
+size = "Størrelse"
+type = "Type"
+
+[filesPage.empty]
+hint = "Slip PDF'er hvor som helst på denne side for at uploade, eller brug knappen Ny mappe for at organisere dine filer."
+newFolderCta = "Opret mappe"
+title = "Denne mappe er tom"
+uploadCta = "Upload filer"
+
+[filesPage.empty.cloud]
+hint = "Upload en fil for at starte, eller opret en mappe for at organisere."
+offlineHint = "Genopret forbindelsen for at indlæse dit skybibliotek."
+offlineTitle = "Ingen cachede skyfiler"
+title = "Ingen skyfiler endnu"
+
+[filesPage.empty.local]
+hint = "Filer gemt uden upload bliver her. Slip en fil for at tilføje en."
+title = "Ingen filer kun lokale"
+
+[filesPage.empty.recent]
+hint = "Filer, du åbner eller redigerer, vil blive vist her."
+title = "Intet ændret endnu"
+
+[filesPage.empty.shared]
+hint = "Når nogen deler en fil via link, vises den her."
+title = "Intet delt med dig"
+
+[filesPage.empty.sharedByMe]
+hint = "Opret et delingslink eller inviter en kollega fra en af dine filer for at se det her."
+title = "Du har ikke delt nogen filer endnu"
+
+[filesPage.error]
+actionFailed = "Kunne ikke {{action}}."
+actionFailedDetail = "Kunne ikke {{action}}: {{message}}"
+deleteFolderFailed = "Kunne ikke slette mappen."
+deleteFolderFailedDetail = "Kunne ikke slette mappen: {{message}}"
+folderAppearanceFailed = "Kunne ikke opdatere mappens udseende."
+folderAppearanceFailedDetail = "Kunne ikke opdatere mappens udseende: {{message}}"
+moveFilesFailed = "Kunne ikke flytte filer."
+moveFilesFailedDetail = "Kunne ikke flytte filer: {{message}}"
+moveFolderFailed = "Kunne ikke flytte mappen."
+moveFolderFailedDetail = "Kunne ikke flytte mappen: {{message}}"
+removeFilesFailed = "Kunne ikke fjerne filer."
+removeFilesFailedDetail = "Kunne ikke fjerne filer: {{message}}"
+uploadFilesFailed = "Kunne ikke uploade filer."
+uploadFilesFailedDetail = "Kunne ikke uploade filer: {{message}}"
+
+[filesPage.field]
+added = "Tilføjet"
+count = "Filer"
+folder = "Mappe"
+modified = "Ændret"
+name = "Navn"
+size = "Størrelse"
+toolHistory = "Værktøjshistorik"
+toolHistoryAtVersion = "Kumulativ værktøjskæde"
+totalSize = "Samlet størrelse"
+type = "Type"
+versionHistory = "Versionsrejse"
+
+[filesPage.folderName]
+cancel = "Annuller"
+error = "Kunne ikke gemme mappe. Prøv igen."
+label = "Mappenavn"
+placeholder = "Mappenavn"
+
+[filesPage.moveDialog]
+cancel = "Annuller"
+confirm = "Flyt hertil"
+error = "Kunne ikke flytte. Prøv igen."
+hint = "Vælg en destinationsmappe. Tip: Du kan også trække og slippe filer på mapperne i træet til venstre."
+newFolderCancel = "Kassér"
+newFolderCreate = "Opret"
+newFolderError = "Kunne ikke oprette mappe. Prøv igen."
+newFolderLabel = "Nyt mappenavn"
+newFolderPlaceholder = "Mappenavn"
+newFolderToggle = "Opret ny mappe…"
+title = "Flyt til mappe"
+
+[filesPage.origin]
+all = "Alle kilder"
+cloud = "Sky"
+cloudHint = "Gemt på Stirling-serveren"
+local = "Lokal"
+localHint = "Kun gemt i denne browser"
+shared = "Delt"
+sharedHint = "Delt med dig via link"
+
+[filesPage.sort]
+modifiedAsc = "Ældst først"
+modifiedDesc = "Nyest først"
+nameAsc = "Navn A→Z"
+nameDesc = "Navn Z→A"
+sizeAsc = "Mindste først"
+sizeDesc = "Største først"
+
+[filesPage.syncError]
+client = "Mappesynkronisering mislykkedes."
+network = "Kunne ikke nå serveren."
+server = "Serverfejl under mappesynkronisering."
+
+[filesPage.tabName]
+local = "Lokal"
+recent = "Seneste"
+shared = "Delt med mig"
+sharedByMe = "Delt af mig"
+
+[filesPage.tabs]
+all = "Alle"
+ariaLabel = "Filvisninger"
+cloud = "Sky"
+local = "Lokal"
+recent = "Seneste"
+shared = "Delt med mig"
+sharedByMe = "Delt af mig"
+
+[filesPage.treeMenu]
+actions = "Mappehandlinger for {{name}}"
+collapse = "Sammenfold mappe"
+delete = "Slet mappe"
+expand = "Udvid mappe"
+newSubfolder = "Ny undermappe"
+rename = "Omdøb"
+
+[filesPage.typeFilter]
+allTypes = "Alle typer"
+label = "Filtrér efter type"
+
+[filesPage.viewMode]
+grid = "Gittervisning"
+label = "Visningstilstand"
+list = "Listevisning"
 
 [fileToPDF]
 credit = "Denne tjeneste bruger LibreOffice og Unoconv til filkonvertering."
@@ -3891,6 +4297,15 @@ title = "Om udfladning af PDF'er"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Fladgør efter udfyldning"
+rescanFields = "Scan felter igen"
+rescanFormFields = "Scan formularfelter igen"
+save = "Gem"
+
+[formFill.sidebar]
+close = "Luk sidepanel"
 
 [getPdfInfo]
 downloadJson = "Download JSON"
@@ -4451,6 +4866,11 @@ tags = "markup,webindhold,transformation,konvertér"
 title = "HTML Til PDF"
 zoom = "Zoom-niveau for visning af hjemmesiden."
 
+[image.upload]
+hint = "Upload en PNG, JPG, SVG eller anden billedfil for at placere på PDF'en. SVG-filer konverteres til PNG for kompatibilitet."
+label = "Upload billede"
+placeholder = "Vælg billedfil"
+
 [imageToPdf]
 tags = "konvertering,img,jpg,billede,foto"
 
@@ -4468,6 +4888,9 @@ title = "Billede til PDF"
 3 = "Multi-fil logik (Kun aktiveret ved arbejde med flere billeder)"
 4 = "Flet til enkelt PDF"
 5 = "Konvertér til separate PDF'er"
+
+[infoBanner]
+dismiss = "Afvis"
 
 [invite]
 acceptError = "Kunne ikke oprette konto"
@@ -4804,6 +5227,7 @@ failed = "OCR-handlingen mislykkedes"
 
 [ocr.languagePicker]
 additionalLanguages = "Leder du efter flere sprog?"
+loading = "Indlæser tilgængelige sprog..."
 viewSetupGuide = "Se opsætningsvejledning →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "{{days}} dag tilbage"
 title = "Din 30-dages Pro-prøveperiode"
 trialEnds = "Prøveperioden slutter {{date}}"
 
+[onboarding.mfa]
+authenticationCode = "Godkendelseskode"
+qrCodeLoading = "Genererer din QR-kode…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Når du aktiverer login-tilstand, kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis."
 adminBodyLoginEnabled = "Som admin kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis."
@@ -4949,6 +5377,9 @@ userTitle = "Plan-overblik"
 
 [onboarding.securityCheck]
 message = "Applikationen har gennemgået væsentlige ændringer for nylig. Din serveradmins opmærksomhed kan være påkrævet. Bekræft din rolle for at fortsætte."
+roleAdmin = "Admin"
+rolePlaceholder = "Bekræft din rolle"
+roleUser = "Bruger"
 
 [onboarding.serverLicense]
 freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser og få tidlig adgang til vores nye <strong>PDF-tekstredigeringsværktøj</strong> anbefaler vi Stirling Server-planen – fuld redigering og <strong>ubegrænsede pladser</strong> for $99/server/md."
@@ -5074,6 +5505,17 @@ title = "Sideeditor"
 zoomIn = "Zoom ind"
 zoomOut = "Zoom ud"
 
+[pageEditor.emptyState]
+body = "Tilføj filer for at begynde at redigere sider"
+title = "Ingen PDF-filer indlæst"
+
+[pageEditor.toolbar]
+delete = "Slet valgte"
+redo = "Gentag"
+rotateLeft = "Rotér valgte til venstre"
+rotateRight = "Rotér valgte til højre"
+undo = "Fortryd"
+
 [pageExtracter]
 header = "Udtræk Sider"
 placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Tilføj Kanter"
 borderWidth = "Kanttykkelse"
 bottom = "Bundmargen"
 cols = "Kolonner"
+colsPlaceholder = "Indtast kolonner"
 header = "Multi-Side Layout"
 innerMargin = "Indre margen"
 left = "Venstremargen"
 pagesPerSheet = "Sider pr. ark:"
 right = "Højremargen"
 rows = "Rækker"
+rowsPlaceholder = "Indtast rækker"
 submit = "Indsend"
 tags = "flet,sammensæt,enkelt-visning,organisér"
 title = "Multi-Side Layout"
@@ -5131,6 +5575,14 @@ failed = "Der opstod en fejl under oprettelse af flersidelayoutet."
 innerMarginTooLarge = "Den indre margen er for stor til det valgte layout."
 outerHorizontalMarginsTooLarge = "Venstre-/højremargener er for store til denne sidestørrelse."
 outerVerticalMarginsTooLarge = "Top-/bundmargener er for store til denne sidestørrelse."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Indtast kanttykkelse"
+bottomPlaceholder = "Indtast bundmargen"
+innerPlaceholder = "Indtast indre margen"
+leftPlaceholder = "Indtast venstre margen"
+rightPlaceholder = "Indtast højre margen"
+topPlaceholder = "Indtast topmargen"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Aktivér kanter for at tegne linjer rundt om hver placeret side. Dette kan hjælpe med visuel adskillelse eller beskæring."
@@ -5785,6 +6237,26 @@ pdfTools = "Grundlæggende PDF-værktøjer"
 priority = "Prioriteret support"
 title = "Funktion"
 
+[plan.features]
+allPdfOperations = "Alle PDF-handlinger"
+auditing = "Revision"
+communitySupport = "Fællesskabsstøtte"
+customPdfMetadata = "Brugerdefinerede PDF-metadata"
+editingTextInPdfs = "Redigering af tekst i PDF'er"
+externalDatabase = "Ekstern database"
+googleDriveIntegration = "Google Drive-integration"
+prometheusSupport = "Prometheus-understøttelse"
+regularUpdates = "Regelmæssige opdateringer"
+saml = "SAML"
+secureLoginSupport = "Understøttelse af sikkert login"
+selfHostedDeployment = "Selvhostet udrulning"
+sso = "SSO"
+unlimitedUsers = "Ubegrænsede brugere"
+upToFiveUsers = "Op til 5 brugere"
+upToFiveUsersLowercase = "op til 5 brugere"
+usageTracking = "Brugssporing"
+usersLimitedToSeats = "Brugere begrænset til pladser"
+
 [plan.free]
 forever = "Altid gratis"
 highlight1 = "Begrænset brug af værktøjer pr. uge"
@@ -5792,6 +6264,22 @@ highlight2 = "Adgang til alle værktøjer"
 highlight3 = "Support fra fællesskabet"
 included = "Inkluderet"
 name = "Gratis"
+
+[plan.highlights]
+advancedIntegrations = "Avancerede integrationer"
+allBasicFeatures = "Alle grundlæggende funktioner"
+cancelAnytime = "Annuller når som helst"
+customPdfMetadata = "Brugerdefinerede PDF-metadata"
+editingTextInPdfsCaps = "Redigering af tekst i PDF'er"
+enterpriseFeatures = "Enterprise-funktioner (SAML, revision)"
+perSeatLicensing = "Licensering pr. plads"
+saveWithAnnualBilling = "Spar med årlig fakturering"
+selfHosted = "Selvhostet"
+selfHostedOnInfrastructure = "Selvhostet på din infrastruktur"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Ubegrænsede brugere"
+upToFiveUsers = "Op til 5 brugere"
+usageTrackingPrometheus = "Brugssporing & Prometheus"
 
 [plan.licenseWarning]
 body = "Du har {{total}} brugere, men den gratis plan understøtter kun {{limit}} pr. server. Opgrader for at holde Stirling PDF kørende uden problemer."
@@ -6103,6 +6591,7 @@ allSessions = "Alle sessioner"
 allTools = "All Tools"
 automate = "Automat."
 back = "Tilbage"
+backToAllTools = "Tilbage til alle værktøjer"
 certSign = "Certifikatunderskrift"
 completedSessions = "Fuldførte sessioner"
 completedTab = "Fuldført"
@@ -6772,6 +7261,9 @@ bullet3 = "Afgørende for godkendelsesarbejdsgange og juridiske beviskæder"
 description = "Den rækkefølge, du angiver, når du opretter sessionen, bestemmer, hvem der underskriver først."
 title = "Underskriftsrækkefølge"
 
+[settings]
+close = "Luk"
+
 [settings.configuration]
 advanced = "Avanceret"
 database = "Database"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Søg efter opdateringer og se versionsinfo"
 latestVersion = "Seneste version"
+managedByAdmin = "Administreret af administrator"
+modeAuto = "Installer opdateringer automatisk"
+modeDisabled = "Søg ikke efter opdateringer"
+modePrompt = "Spørg mig, før opdateringer installeres"
 serverNeedsUpdate = "Serveren skal opdateres af administratoren"
 title = "Softwareopdateringer"
+updateBehavior = "Opdateringsadfærd"
+updateBehaviorDescription = "Vælg om du vil spørges før installation af opdateringer, installere dem automatisk eller helt springe søgning efter opdateringer over."
+updateBehaviorError = "Kunne ikke ændre opdateringsadfærd"
+updateBehaviorErrorLocked = "Denne indstilling er låst af din administrator."
+updateBehaviorLockedDescription = "Din administrator har konfigureret, hvordan Stirling-PDF håndterer opdateringer på denne maskine. Kontakt dem for at ændre dette."
+updateBehaviorSaved = "Opdateringsadfærd gemt."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Vis detaljer"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Alle brugere kan se og bruge disse signaturer."
 sharedHeading = "Delte signaturer"
 tempStorageDescription = "Signaturer gemmes kun i din browser. De går tabt, hvis du rydder browserdata eller skifter browser."
 tempStorageTitle = "Midlertidig browserlagring"
+use = "Brug underskrift"
 
 [sign.saved.status]
 saved = "Gemt"
@@ -7695,6 +8198,7 @@ bulkTitle = "Upload valgte filer"
 description = "Dette uploader den aktuelle fil til serverlager, så du selv kan få adgang."
 errorTitle = "Upload mislykkedes"
 failure = "Upload mislykkedes. Kontroller dine login- og lagerindstillinger."
+featureDisabled = "Lagring til serveren er ikke aktiveret på denne server."
 fileCount = "{{count}} filer valgt"
 fileLabel = "Fil"
 hint = "Offentlige links og adgangstilstande styres af dine serverindstillinger."
@@ -7823,8 +8327,17 @@ center = "Centreret"
 left = "Venstre"
 right = "Højre"
 
+[textInput]
+clear = "Ryd input"
+
 [theme]
 toggle = "Skift tema"
+
+[time.relative]
+daysAgo = "{{count}}d siden"
+hoursAgo = "{{count}}h siden"
+justNow = "lige nu"
+minutesAgo = "{{count}}m siden"
 
 [timestampPdf]
 completed = "PDF er tidsstemplet"
@@ -7852,6 +8365,10 @@ label = "Vælg en TSA-server"
 [timestampPdf.steps]
 settings = "Indstillinger"
 
+[toast]
+dismiss = "Afvis"
+toggleDetails = "Skift detaljer"
+
 [tool]
 endpointUnavailable = "Dette værktøj er ikke tilgængeligt på din server."
 endpointUnavailableClickable = "Ikke tilgængelig i denne tilstand. Klik for at logge ind."
@@ -7868,13 +8385,18 @@ viewerMode = "Skift til filredigeringsværktøjet for at vælge flere filer."
 [toolPanel]
 allTools = "Alle værktøjer"
 alpha = "Alpha"
+backToAllTools = "Tilbage til alle værktøjer"
+backToDefault = "Tilbage"
 backToTools = "Tilbage til værktøjer"
 collapse = "Sammenfold panel"
 comingSoon = "Kommer snart:"
 expand = "Udvid panel"
+goBack = "Gå tilbage"
 placeholder = "Vælg et værktøj for at komme i gang"
 premiumFeature = "Premium-funktion:"
 search = "Søg i værktøjer"
+toolsHeader = "Værktøjer"
+viewAllTools = "Vis alle værktøjer"
 
 [toolPanel.fullscreen]
 comingSoon = "Kommer snart:"
@@ -7933,6 +8455,9 @@ verification = "Verifikation"
 noSearchResults = "Ingen værktøjer fundet"
 noTools = "Ingen værktøjer tilgængelige"
 
+[tooltip]
+close = "Luk værktøjstip"
+
 [unlockPDFForms]
 description = "Dette værktøj fjerner skrivebeskyttelse fra PDF-formularfelter, så de kan redigeres og udfyldes."
 filenamePrefix = "oplåste_formularer"
@@ -7951,29 +8476,42 @@ placeholder = "Vælg en PDF-fil i hovedvisningen for at komme i gang"
 title = "Resultater for oplåste formularer"
 
 [update]
+allReleases = "Alle udgivelser"
 availableUpdates = "Tilgængelige opdateringer"
+breaking = "Breaking"
 breakingChanges = "Inkompatible ændringer"
 breakingChangesDefault = "Denne version indeholder inkompatible ændringer."
 breakingChangesDetected = "Inkompatible ændringer registreret"
 breakingChangesMessage = "Nogle versioner indeholder inkompatible ændringer. Gennemgå venligst migrationsvejledningerne nedenfor før opdatering."
 close = "Luk"
+closeModal = "Luk opdateringsvindue"
 current = "Nuværende version"
+defaultRecommendation = "Denne opdatering indeholder vigtige rettelser og forbedringer."
 downloadLatest = "Download seneste"
+later = "Senere"
 latest = "Seneste version"
 latestStable = "Seneste stabile"
 loadingDetailedInfo = "Indlæser detaljerede oplysninger..."
 migrationGuide = "Migrationsvejledning"
 migrationGuides = "Migrationsvejledninger"
+migrationGuidesDesc = "Gennemgå vigtige ændringer før opdatering."
+modalSubtitle = "En ny version af Stirling PDF er klar til installation."
 modalTitle = "Opdatering tilgængelig"
+notes = "Noter"
 priorityLabel = "Prioritet"
 recommendedAction = "Anbefalet handling"
 releaseNotes = "Udgivelsesnoter"
+showLess = "Vis færre versioner"
+showMore = "Vis alle {{count}} versioner"
+stable = "STABLE"
 unableToLoadDetails = "Kan ikke indlæse detaljerede oplysninger."
 updateAvailable = "Opdatering tilgængelig"
 urgentUpdateAvailable = "Hastende opdatering"
 version = "Version"
+versionHistory = "Versionshistorik"
 viewAllReleases = "Se alle udgivelser"
 viewGuide = "Vis vejledning"
+whatsNewIn = "Nyheder i"
 
 [update.priority]
 low = "Lav"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Aktiver mørkt filter"
 enableSepiaFilter = "Aktiver sepiafilter"
 firstPage = "Første side"
 lastPage = "Sidste side"
+moreOptions = "Mere"
 nextPage = "Næste side"
 onlyPdfSupported = "Visningen understøtter kun PDF-filer. Denne fil ser ud til at være et andet format."
+pageNavigation = "Sidenavigation"
 previousPage = "Forrige side"
 resetZoom = "Nulstil zoom"
 singlePageView = "Enkelt-sides visning"
 unknownFile = "Ukendt fil"
+view = "Visning"
+zoom = "Zoom"
 zoomIn = "Zoom ind"
 zoomOut = "Zoom ud"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Indsæt tekst"
 typeReplaceText = "Erstat tekst"
 viewComment = "Vis kommentar"
 
+[viewer.error]
+noFileProvided = "Fejl: Ingen fil angivet til fremviser"
+
 [viewer.formBar]
 apply = "Anvend ændringer"
 dismiss = "Afvis"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Denne PDF indeholder udfyldelige felter"
 title = "Formularfelter"
 unsavedBadge = "Ikke gemt"
 unsavedDesc = "Du har ikke-gemte ændringer"
+
+[viewer.link]
+delete = "Slet link"
 
 [viewer.nonPdf]
 columnDefault = "Kolonne {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Indlæser..."
 renderMarkdown = "Gengiv Markdown"
 sortedBy = "Sorterede efter: {{column}}"
 textStats = "{{lines}} linjer · {{size}}"
+
+[viewer.redaction]
+removeMark = "Fjern dette mærke"
+
+[viewer.search]
+clear = "Ryd søgning"
+close = "Luk søgning"
+next = "Næste resultat"
+previous = "Forrige resultat"
+resultsOf = "af {{total}}"
+
+[viewer.signature]
+delete = "Slet underskrift"
 
 [viewPdf]
 header = "Se PDF"
@@ -8469,6 +9030,37 @@ toggleLayers = "Slå lag til/fra"
 toggleSidebar = "Slå sidepanel til/fra"
 toggleTheme = "Skift tema"
 viewer = "Fremviser"
+
+[workflow.participant]
+accessExpired = "Din adgang til dette dokument er udløbet."
+certificateFile = "Certifikatfil"
+certificateFilePlaceholder = "Vælg certifikatfil"
+certificatePassword = "Certifikatadgangskode"
+certificateType = "Certifikattype"
+certTypeJks = "JKS Keystore"
+certTypeP12 = "P12/PKCS12-certifikat"
+certTypeServer = "Servercertifikat (hvis tilgængeligt)"
+completedDeclined = "Du har afvist dette dokument."
+completedSigned = "Du har underskrevet dette dokument."
+decline = "Afvis"
+downloadDocument = "Download dokument"
+dueDate = "Forfaldsdato: {{date}}"
+errorTitle = "Fejl"
+from = "Fra: {{name}}"
+loadingSession = "Indlæser session..."
+location = "Placering"
+locationPlaceholder = "f.eks. San Francisco, CA"
+pageNumber = "Sidetal (valgfrit)"
+reason = "Begrundelse"
+reasonPlaceholder = "f.eks. Godkendelse af dokument"
+sessionNotFound = "Session ikke fundet eller adgang nægtet."
+signDocument = "Underskriv dokument"
+statusDeclined = "Afvist"
+statusNotified = "Underrettet"
+statusPending = "Afventer"
+statusSigned = "Underskrevet"
+statusViewed = "Vist"
+submitSignature = "Indsend underskrift"
 
 [workspace]
 title = "Arbejdsområde"
