@@ -6,11 +6,9 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataAccessException;
@@ -131,36 +129,32 @@ public class StripeSubscriptionDao {
     }
 
     /**
-     * Per-document rate of whichever of {@code priceIds} bills in {@code currency} — the elegant
-     * mirror of {@link #findBilling}, reading the same synced {@code stripe.prices} table by id
-     * instead of via a subscription. The PAYG layer uses this to price the cap estimate for an
-     * un-subscribed team: its default {@code pricing_policy} carries one Stripe Price id per
-     * currency, and we pick the one matching the requested (USD, in-app) currency.
+     * Per-document rate of the active {@code stripe.prices} row with the given {@code lookupKey} in
+     * {@code currency} — the elegant mirror of {@link #findBilling}, reading the same synced table
+     * by Stripe Price {@code lookup_key} instead of via a subscription. The PAYG layer uses this to
+     * price the cap estimate for an un-subscribed team: there's no subscription to read a rate off,
+     * but the PAYG Price (lookup key {@code plan:processor}) carries the very rate they'd be billed
+     * at. We resolve by lookup_key rather than the default policy's price ids because those aren't
+     * seeded — the lookup key is the stable, env-agnostic handle (same one the price-lookup edge
+     * function uses).
      *
-     * <p>Empty when {@code priceIds} is empty, the {@code stripe} schema is absent (H2 unit tests),
-     * no matching row exists, or the row carries no usable per-unit amount (e.g. a tiered price,
-     * which PAYG doesn't use). Callers degrade to "no estimate" exactly as the subscribed path
-     * degrades to a calendar-month window.
+     * <p>Empty when the {@code stripe} schema is absent (H2 unit tests), no active matching row
+     * exists, or the row carries no usable per-unit amount (e.g. a tiered price, which PAYG doesn't
+     * use). Callers degrade to "no estimate" exactly as the subscribed path degrades to a
+     * calendar-month window.
      */
-    public Optional<PriceRate> findRateForCurrency(Collection<String> priceIds, String currency) {
-        if (priceIds == null || priceIds.isEmpty() || currency == null || currency.isBlank()) {
+    public Optional<PriceRate> findRateByLookupKey(String lookupKey, String currency) {
+        if (lookupKey == null || lookupKey.isBlank() || currency == null || currency.isBlank()) {
             return Optional.empty();
         }
-        String placeholders = priceIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String sql =
                 "SELECT p.id AS price_id, p.currency AS currency,"
                         + " p.unit_amount AS unit_amount,"
                         + " p.unit_amount_decimal AS unit_amount_decimal"
                         + " FROM stripe.prices p"
-                        + " WHERE p.currency = ? AND p.id IN ("
-                        + placeholders
-                        + ") LIMIT 1";
-        Object[] args = new Object[priceIds.size() + 1];
-        args[0] = currency.toLowerCase();
-        int idx = 1;
-        for (String id : priceIds) {
-            args[idx++] = id;
-        }
+                        + " WHERE p.lookup_key = ? AND p.currency = ?"
+                        + " AND COALESCE(p.active, true) = true"
+                        + " ORDER BY p.created DESC NULLS LAST LIMIT 1";
         try {
             List<PriceRate> rows =
                     jdbcTemplate.query(
@@ -173,13 +167,14 @@ public class StripeSubscriptionDao {
                                 return new PriceRate(
                                         rs.getString("price_id"), rs.getString("currency"), rate);
                             },
-                            args);
+                            lookupKey,
+                            currency.toLowerCase());
             return rows.stream().filter(Objects::nonNull).findFirst();
         } catch (DataAccessException e) {
             log.warn(
-                    "stripe.prices rate lookup failed for currency {} over {} price id(s): {}",
+                    "stripe.prices rate lookup failed for lookup_key {} / currency {}: {}",
+                    lookupKey,
                     currency,
-                    priceIds.size(),
                     e.getMessage());
             return Optional.empty();
         }

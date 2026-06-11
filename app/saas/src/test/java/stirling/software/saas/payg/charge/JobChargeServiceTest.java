@@ -614,6 +614,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
         // Row consumed no free units (free_units_consumed = 0) → all 4 are paid and meter.
 
@@ -630,7 +631,8 @@ class JobChargeServiceTest {
                         "cus_subscribed",
                         4,
                         BillingCategory.API,
-                        "process:" + jobId + ":close");
+                        "process:" + jobId + ":close",
+                        jobId);
     }
 
     @Test
@@ -648,6 +650,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
 
         withTransactionSynchronization(() -> service.close(jobId));
@@ -669,6 +672,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
 
         withTransactionSynchronization(() -> service.close(jobId));
@@ -679,7 +683,8 @@ class JobChargeServiceTest {
                         "cus_subscribed",
                         10,
                         BillingCategory.AUTOMATION,
-                        "process:" + jobId + ":close");
+                        "process:" + jobId + ":close",
+                        jobId);
     }
 
     @Test
@@ -779,6 +784,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
 
         Mockito.doThrow(new RuntimeException("simulated meter failure"))
@@ -788,7 +794,8 @@ class JobChargeServiceTest {
                         Mockito.anyString(),
                         Mockito.anyInt(),
                         Mockito.any(BillingCategory.class),
-                        Mockito.anyString());
+                        Mockito.anyString(),
+                        Mockito.any(UUID.class));
 
         // Should not throw — afterCommit's defence-in-depth wraps the call.
         withTransactionSynchronization(() -> service.close(jobId));
@@ -798,7 +805,8 @@ class JobChargeServiceTest {
                         "cus_subscribed",
                         4,
                         BillingCategory.AUTOMATION,
-                        "process:" + jobId + ":close");
+                        "process:" + jobId + ":close",
+                        jobId);
     }
 
     @Test

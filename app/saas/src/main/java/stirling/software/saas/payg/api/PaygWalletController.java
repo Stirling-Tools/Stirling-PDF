@@ -69,11 +69,11 @@ import stirling.software.saas.util.AuthenticationUtils;
  * derived from the caller, so we authorise inside the method rather than via {@code @PreAuthorize}
  * — the team id never appears on the path or query string.
  *
- * <p><b>Known dependency on PR #6532:</b> {@code stripeSubscriptionId} is sourced from {@code
- * payg_team_extensions.payg_subscription_id} once that column ships; on this branch the column
- * doesn't exist yet, so the response always returns {@code null} for that field. {@link
- * #STATUS_SUBSCRIBED} is determined by the presence of {@code stripeCustomerId} as a stand-in until
- * #6532 lands; once it does, swap to checking {@code paygSubscriptionId} instead.
+ * <p>Subscription state is sourced from {@code payg_team_extensions.payg_subscription_id} (added in
+ * V14): {@code stripeSubscriptionId} echoes it via {@link TeamBillingService}, and a team reads as
+ * {@link #STATUS_SUBSCRIBED} once {@code billing.subscribed()} is true — i.e. it has a subscription
+ * id, or a Stripe customer id as the pre-webhook bridge for a just-completed checkout whose
+ * subscription-created webhook hasn't landed yet (see {@code TeamBillingService.compute}).
  */
 @Slf4j
 @Hidden

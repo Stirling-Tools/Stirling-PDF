@@ -62,6 +62,12 @@ public class TeamBillingService {
      */
     private static final String DISPLAY_CURRENCY = "usd";
 
+    /**
+     * Stripe Price {@code lookup_key} for the PAYG per-document price. The stable handle we resolve
+     * an un-subscribed team's rate from (the default policy carries no price ids in the seed).
+     */
+    private static final String PAYG_LOOKUP_KEY = "plan:processor";
+
     private final PaygTeamExtensionsRepository extensionsRepository;
     private final WalletPolicyRepository walletPolicyRepository;
     private final PricingPolicyService pricingPolicyService;
@@ -138,7 +144,8 @@ public class TeamBillingService {
         // the whole app prices in dollars. Display-only: resolveMonthlyCap stays gated on
         // `subscribed`, so this never starts enforcing a cap on a free team.
         if (!subscribed && perDocMinor == null) {
-            Optional<PriceRate> rate = resolveDefaultUsdRate(teamId);
+            Optional<PriceRate> rate =
+                    subscriptionDao.findRateByLookupKey(PAYG_LOOKUP_KEY, DISPLAY_CURRENCY);
             if (rate.isPresent()) {
                 perDocMinor = rate.get().perDocMinor();
                 currency = rate.get().currency();
@@ -173,26 +180,6 @@ public class TeamBillingService {
         } catch (RuntimeException e) {
             log.warn("No effective pricing policy for team {}: {}", teamId, e.getMessage());
             return 0L;
-        }
-    }
-
-    /**
-     * Per-document rate for an un-subscribed team's cap estimate: the USD Price among the effective
-     * policy's {@code stripePriceIds}, read from the same synced {@code stripe.prices} table the
-     * subscribed path uses. Empty (estimate hidden) when no policy, no USD Price id, or the {@code
-     * stripe} schema is absent — never throws into the wallet hot path.
-     */
-    private Optional<PriceRate> resolveDefaultUsdRate(Long teamId) {
-        try {
-            PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
-            return subscriptionDao.findRateForCurrency(
-                    policy.getStripePriceIds(), DISPLAY_CURRENCY);
-        } catch (RuntimeException e) {
-            log.warn(
-                    "Could not resolve default USD per-doc rate for team {}: {}",
-                    teamId,
-                    e.getMessage());
-            return Optional.empty();
         }
     }
 

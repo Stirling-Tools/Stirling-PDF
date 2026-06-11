@@ -405,14 +405,29 @@ public class JobChargeService {
         if (teamId == null) {
             return;
         }
-        Optional<PaygTeamExtensions> ext = teamExtensionsRepository.findById(teamId);
-        String stripeCustomerId = ext.map(PaygTeamExtensions::getStripeCustomerId).orElse(null);
-        if (stripeCustomerId == null || stripeCustomerId.isBlank()) {
-            // Free-tier team (no Stripe identity) — ledger entry is enough. When PR #6532 lands
-            // this check tightens to ext.getPaygSubscriptionId() != null, but on this branch the
-            // presence of stripe_customer_id is the established stand-in for "is subscribed."
+        PaygTeamExtensions ext = teamExtensionsRepository.findById(teamId).orElse(null);
+        if (ext == null) {
+            return;
+        }
+        // payg_subscription_id is the single switch that says "this team is billed" (see
+        // PaygTeamExtensions). Gate on it directly now that V14 ships the column: a team with a
+        // Stripe customer but no live subscription — e.g. the brief window after checkout but
+        // before the subscription-created webhook lands — must not post meter events against a
+        // subscription that doesn't exist. A job finishing in that window is still metered later
+        // via the stale-close fallback, once the subscription has landed (same idempotency key).
+        String subscriptionId = ext.getPaygSubscriptionId();
+        if (subscriptionId == null || subscriptionId.isBlank()) {
             log.debug(
-                    "close({}): team {} has no stripeCustomerId → free-tier, no meter event",
+                    "close({}): team {} has no active subscription → no meter event",
+                    jobId,
+                    teamId);
+            return;
+        }
+        String stripeCustomerId = ext.getStripeCustomerId();
+        if (stripeCustomerId == null || stripeCustomerId.isBlank()) {
+            // Subscribed but no customer id is a data inconsistency — we can't address the event.
+            log.warn(
+                    "close({}): team {} has a subscription but no stripeCustomerId → cannot meter",
                     jobId,
                     teamId);
             return;
@@ -432,7 +447,7 @@ public class JobChargeService {
         }
         String idempotencyKey = "process:" + jobId + ":close";
         meterReportingService.recordUsage(
-                teamId, stripeCustomerId, paidUnits, category, idempotencyKey);
+                teamId, stripeCustomerId, paidUnits, category, idempotencyKey, jobId);
     }
 
     /**
