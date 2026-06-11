@@ -31,6 +31,8 @@ export interface PolicyRunRecord {
    *  which marks the policy's OUTPUT — not the input it ran on. */
   outputFileIds?: string[];
   error: string | null;
+  /** Stable backend failure code (e.g. an entitlement sentinel) when FAILED; null otherwise. */
+  errorCode?: string | null;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
 }
