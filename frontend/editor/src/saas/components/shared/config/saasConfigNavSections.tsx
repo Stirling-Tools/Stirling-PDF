@@ -148,8 +148,8 @@ function appendMcpSection(
   );
 }
 
-// Legal & community links (privacy policy, terms, Discord, GitHub). Shown to
-// anonymous users too — it's public information.
+// Legal links (privacy policy, terms, etc.). Shown to anonymous users too —
+// it's public information.
 function appendLegalSection(
   sections: ConfigNavSection[],
   t: TFunction<"translation", undefined>,

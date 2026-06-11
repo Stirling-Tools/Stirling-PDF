@@ -111,16 +111,6 @@ test.describe("2. Main Dashboard / Home Page", () => {
       await expect(page.getByText(/Terms/i).first()).toBeVisible({
         timeout: 10000,
       });
-
-      const githubLink = page
-        .locator('a[href*="github.com/Stirling-Tools/Stirling-PDF"]')
-        .first();
-      await expect(githubLink).toBeVisible();
-
-      const discordLink = page
-        .locator('a[href*="discord.gg/Cn8pWhQRxZ"]')
-        .first();
-      await expect(discordLink).toBeVisible();
     });
   });
 

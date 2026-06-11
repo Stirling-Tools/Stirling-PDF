@@ -25,6 +25,16 @@ interface CookieConsentConfig {
   forceLightMode?: boolean;
 }
 
+// Shard so Mantine's scroll-lock doesn't swallow events on the consent dialog; 
+// lazy because #cc-main only exists post-load.
+export const COOKIE_CONSENT_SCROLL_SHARD = {
+  get current(): HTMLElement | null {
+    return typeof document === "undefined"
+      ? null
+      : document.getElementById("cc-main");
+  },
+};
+
 export const useCookieConsent = ({
   analyticsEnabled = false,
   forceLightMode = false,

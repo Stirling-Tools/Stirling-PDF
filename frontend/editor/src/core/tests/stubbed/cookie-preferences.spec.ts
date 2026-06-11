@@ -55,7 +55,38 @@ test.describe("18. Cookie Preferences", () => {
         { timeout: 3000 },
       );
 
-      // Step 6: Accept all (or save) to close — again without force
+      // Step 6: Expand all sections and verify the dialog body wheel-scrolls
+      // while the settings modal is open (regression: the modal's
+      // react-remove-scroll lock swallowed wheel events on the dialog)
+      const expanders = ccMain.locator(
+        ".pm__section--expandable .pm__section-title",
+      );
+      const expanderCount = await expanders.count();
+      for (let i = 0; i < expanderCount; i++) {
+        await expanders.nth(i).click();
+      }
+      const dialogBody = ccMain.locator(".pm__body").first();
+      const canScroll = await dialogBody.evaluate(
+        (el) => el.scrollHeight > el.clientHeight,
+      );
+      if (canScroll) {
+        const box = await dialogBody.boundingBox();
+        await page.mouse.move(
+          box!.x + box!.width / 2,
+          box!.y + box!.height / 2,
+        );
+        await page.mouse.wheel(0, 300);
+        await expect
+          .poll(() => dialogBody.evaluate((el) => el.scrollTop), {
+            timeout: 3000,
+          })
+          .toBeGreaterThan(0);
+        await dialogBody.evaluate((el) => {
+          el.scrollTop = 0;
+        });
+      }
+
+      // Step 7: Accept all (or save) to close — again without force
       const acceptAllBtn = ccMain
         .locator('button:has-text("Accept all")')
         .first();
@@ -69,7 +100,7 @@ test.describe("18. Cookie Preferences", () => {
         await savePrefBtn.click();
       }
 
-      // Step 7: Verify the dialog is dismissed
+      // Step 8: Verify the dialog is dismissed
       await expect(prefsDialog).toBeHidden({ timeout: 5000 });
     });
   });

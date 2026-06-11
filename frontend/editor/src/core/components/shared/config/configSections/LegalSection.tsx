@@ -77,19 +77,6 @@ const LegalSection: React.FC = () => {
       : []),
   ];
 
-  const communityLinks: LegalLink[] = [
-    {
-      key: "discord",
-      label: t("footer.discord", "Discord"),
-      href: "https://discord.gg/Cn8pWhQRxZ",
-    },
-    {
-      key: "github",
-      label: t("footer.issues", "GitHub"),
-      href: "https://github.com/Stirling-Tools/Stirling-PDF",
-    },
-  ];
-
   const renderLink = (link: LegalLink) => (
     <Anchor
       key={link.key}
@@ -149,23 +136,6 @@ const LegalSection: React.FC = () => {
           </Group>
         </Paper>
       )}
-
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <div>
-            <Text fw={600} size="sm">
-              {t("settings.legal.community.title", "Community")}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "settings.legal.community.description",
-                "Join the community or report issues.",
-              )}
-            </Text>
-          </div>
-          <Stack gap="sm">{communityLinks.map(renderLink)}</Stack>
-        </Stack>
-      </Paper>
     </Stack>
   );
 };

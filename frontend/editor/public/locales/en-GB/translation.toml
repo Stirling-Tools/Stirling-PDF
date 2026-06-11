@@ -6548,10 +6548,6 @@ windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 label = "Legal"
 title = "Legal"
 
-[settings.legal.community]
-description = "Join the community or report issues."
-title = "Community"
-
 [settings.legal.cookiePreferences]
 description = "Review or change your cookie consent choices."
 manage = "Manage"
