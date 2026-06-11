@@ -204,6 +204,7 @@ export interface DecodedPolicy {
 }
 
 const DEFAULT_FOLDER: PolicyFolderSettings = {
+  runOn: "upload",
   outputMode: "new_version",
   outputName: "",
   outputNamePosition: "prefix",
@@ -240,6 +241,7 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
         maxRetries: input.folder.maxRetries,
         retryDelayMinutes: input.folder.retryDelayMinutes,
         automation: input.automation,
+        runOn: input.folder.runOn,
         // Policy-level metadata (no trigger bag to hold it any more).
         categoryId: input.categoryId,
         sources: input.sources,
@@ -275,6 +277,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
+      runOn: meta.runOn === "export" ? "export" : "upload",
       // Default to versioning unless the stored policy explicitly says new_file,
       // so a missing/legacy output.mode follows the new-version default rather
       // than silently flipping a reconciled policy to spawning separate files.

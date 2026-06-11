@@ -129,6 +129,10 @@ export function PolicySetupWizard({
   const [retryDelayMinutes, setRetryDelayMinutes] = useState(
     initialFolder?.retryDelayMinutes ?? 5,
   );
+  // The editor event this policy runs on: input on upload, or output on export.
+  const [runOn, setRunOn] = useState<"upload" | "export">(
+    initial.runOn ?? "upload",
+  );
   const workflowSave = useRef<(() => void) | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -197,6 +201,7 @@ export function PolicySetupWizard({
         scopeTypes: scopeNarrow ? scopeTypes : [],
         reviewerEmail,
         folder: {
+          runOn,
           outputMode,
           outputName: outputName.trim(),
           outputNamePosition,
@@ -229,6 +234,7 @@ export function PolicySetupWizard({
         scopeTypes: scopeNarrow ? scopeTypes : [],
         reviewerEmail,
         folder: {
+          runOn,
           outputMode,
           outputName: outputName.trim(),
           outputNamePosition,
@@ -348,9 +354,32 @@ export function PolicySetupWizard({
             {/* Real, working output + retry settings (applied by the engine). */}
             <p className="pol-section-label">Output &amp; retries</p>
             <Card padding="none">
+              {/* The editor event the policy runs on: input on upload, or
+                  output on export (enforced before the file is exported). */}
+              <div className="pol-subhead">Run on</div>
               <div className="pol-field" data-first>
                 <SettingsRow
-                  label="Output"
+                  label="Run on"
+                  control={
+                    <Select
+                      inputSize="sm"
+                      value={runOn}
+                      onChange={(e) =>
+                        setRunOn(e.target.value as "upload" | "export")
+                      }
+                      aria-label="Run on"
+                      options={[
+                        { value: "upload", label: "Upload" },
+                        { value: "export", label: "Export" },
+                      ]}
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-subhead">Output</div>
+              <div className="pol-field" data-first>
+                <SettingsRow
+                  label="Output as"
                   control={
                     <Select
                       inputSize="sm"

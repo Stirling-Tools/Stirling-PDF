@@ -130,6 +130,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        runOn: result.folder.runOn,
       });
     },
     [],
@@ -165,6 +166,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        runOn: result.folder.runOn,
       });
     },
     [],
@@ -228,6 +230,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        runOn: result.folder.runOn,
       });
     },
     [],
