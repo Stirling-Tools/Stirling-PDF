@@ -475,23 +475,23 @@ const LazyPageContent = ({
     };
   }, []);
 
-  if (!isVisible) {
-    return (
-      <div
-        ref={containerRef}
-        className="pdf-page-skeleton"
-        style={{
-          width: "100%",
-          height: "100%",
-          backgroundColor: "#ffffff",
-        }}
-      />
-    );
-  }
-
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-      {children}
+    <div
+      ref={containerRef}
+      style={{ width: "100%", height: "100%", position: "relative" }}
+    >
+      {isVisible ? (
+        children
+      ) : (
+        <div
+          className="pdf-page-skeleton"
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "#ffffff",
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -519,7 +519,7 @@ const TiledPageBackground = ({
       <RenderLayer
         documentId={documentId}
         pageIndex={pageIndex}
-        scale={1.0}
+        scale={0.2}
         dpr={1.0}
         style={{ position: "absolute", inset: 0 }}
       />
