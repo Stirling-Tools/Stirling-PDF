@@ -8,12 +8,10 @@ import lombok.Getter;
 import stirling.software.common.model.job.ResultFile;
 
 /**
- * Live, mutable state of a single pipeline run, held in memory by {@code PolicyRunRegistry}.
- *
- * <p>This carries the rich execution state (status, step cursor, wait state) that the job system's
- * {@code JobResult} does not model. The run is also projected into {@code TaskManager} for
- * cluster-visible status, progress notes, and file download; this object is the authoritative
- * source of the state machine.
+ * Live, mutable state of one pipeline run, held in memory by {@code PolicyRunRegistry} and the
+ * authoritative source of the state machine. Carries execution state ({@code JobResult} does not
+ * model status/step cursor/wait state); also projected into {@code TaskManager} for cluster-visible
+ * status and download.
  */
 @Getter
 public class PolicyRun {
@@ -69,9 +67,7 @@ public class PolicyRun {
         touch();
     }
 
-    /**
-     * Mark cancelled if the run has not already reached a terminal state. Returns whether it did.
-     */
+    /** Cancels unless already terminal; returns whether it transitioned. */
     public synchronized boolean cancel() {
         if (status.isTerminal()) {
             return false;

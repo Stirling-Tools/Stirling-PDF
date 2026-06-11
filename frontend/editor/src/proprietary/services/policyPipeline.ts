@@ -35,7 +35,7 @@ export interface BackendPipelineDefinition {
   output: BackendOutputSpec;
 }
 
-/** How a stored policy is triggered ("manual" | "folder" | "schedule" | "s3"). */
+/** A policy's automatic trigger ("schedule" | "folder-watch"); null means manual (run on demand). */
 export interface BackendTriggerConfig {
   type: string;
   options: Record<string, unknown>;
@@ -49,7 +49,8 @@ export interface BackendPolicy {
   owner: string;
   /** Gates automatic triggering; an explicit run ignores it. */
   enabled: boolean;
-  trigger: BackendTriggerConfig;
+  /** Null = manual; these policies are run from the browser on uploaded files. */
+  trigger: BackendTriggerConfig | null;
   steps: BackendPipelineStep[];
   output: BackendOutputSpec;
 }
@@ -188,7 +189,7 @@ export interface PolicyToStore {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
-  /** The catalog category this policy maps to (from trigger.options.categoryId). */
+  /** The catalog category this policy maps to (from output.options.categoryId). */
   categoryId: string;
   name: string;
   enabled: boolean;
@@ -210,13 +211,11 @@ const DEFAULT_FOLDER: PolicyFolderSettings = {
 };
 
 /**
- * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
- * The backend models only name/enabled/trigger/steps/output, so the policy-level
- * extras (categoryId, sources, scope, reviewer, fields) ride in `trigger.options`
- * and the output + retry settings in `output.options`; the full frontend
- * automation is stashed in `output.options.automation` for a lossless UI
- * round-trip (while `steps` carries the endpoint-mapped pipeline the engine
- * runs, pre-built by the caller).
+ * Map a frontend policy to the backend {@link BackendPolicy} for persistence. Trigger is null:
+ * these policies are run from the browser on uploaded files, not fired by a backend trigger. The
+ * backend models only name/enabled/trigger/steps/output, so all policy-level extras (categoryId,
+ * sources, scope, reviewer, fields, output/retry settings, and the full automation for a lossless
+ * UI round-trip) ride in `output.options`; `steps` carries the endpoint-mapped pipeline.
  */
 export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
   return {
@@ -224,16 +223,7 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
     name: input.name,
     owner: "",
     enabled: input.enabled,
-    trigger: {
-      type: "folder",
-      options: {
-        categoryId: input.categoryId,
-        sources: input.sources,
-        scopeTypes: input.scopeTypes,
-        reviewerEmail: input.reviewerEmail,
-        fieldValues: input.fieldValues,
-      },
-    },
+    trigger: null,
     steps: input.pipelineSteps,
     output: {
       type: "inline",
@@ -244,6 +234,11 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
         maxRetries: input.folder.maxRetries,
         retryDelayMinutes: input.folder.retryDelayMinutes,
         automation: input.automation,
+        categoryId: input.categoryId,
+        sources: input.sources,
+        scopeTypes: input.scopeTypes,
+        reviewerEmail: input.reviewerEmail,
+        fieldValues: input.fieldValues,
       },
     },
   };
@@ -251,7 +246,6 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
 
 /** Decode a stored backend policy back into the frontend settings. */
 export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
-  const trigger = policy.trigger.options;
   const output = policy.output.options;
   const str = (v: unknown, fallback = "") =>
     typeof v === "string" ? v : fallback;
@@ -259,19 +253,17 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     typeof v === "number" ? v : fallback;
   return {
     id: policy.id,
-    categoryId: str(trigger.categoryId),
+    categoryId: str(output.categoryId),
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
-    sources: Array.isArray(trigger.sources)
-      ? (trigger.sources as string[])
+    sources: Array.isArray(output.sources) ? (output.sources as string[]) : [],
+    scopeTypes: Array.isArray(output.scopeTypes)
+      ? (output.scopeTypes as string[])
       : [],
-    scopeTypes: Array.isArray(trigger.scopeTypes)
-      ? (trigger.scopeTypes as string[])
-      : [],
-    reviewerEmail: str(trigger.reviewerEmail),
+    reviewerEmail: str(output.reviewerEmail),
     fieldValues:
-      (trigger.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
+      (output.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
       outputMode: output.mode === "new_version" ? "new_version" : "new_file",
       outputName: str(output.name),

@@ -33,31 +33,24 @@ import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 
 /**
- * Runs pipelines asynchronously as tracked jobs.
+ * Runs pipelines asynchronously as tracked jobs. {@link #submit} returns a run id immediately; the
+ * pipeline runs on a virtual thread (so a step blocked on a slow tool does not hold a platform
+ * thread). Drives {@link PolicyExecutor} for the step loop, projects status/outputs into {@link
+ * TaskManager} (existing job endpoints work unchanged), and keeps live state in {@link
+ * PolicyRunRegistry}.
  *
- * <p>Each run is the unit of async work: {@link #submit} returns a run id immediately and the
- * pipeline executes on a virtual thread, so a step blocking on a slow tool does not tie up a
- * platform thread. The run drives {@link PolicyExecutor} for the actual step loop, registers its
- * outputs and progress with {@link TaskManager} (so the existing job status/download endpoints work
- * unchanged), and keeps rich state in {@link PolicyRunRegistry}.
- *
- * <p>The engine deliberately manages its own virtual-thread execution rather than routing through
- * {@code JobExecutorService}: that path force-completes a job once its work returns, which is
- * incompatible with a run that suspends in {@code WAITING_FOR_INPUT}. It still applies the shared
- * {@link ResourceMonitor}/{@link JobQueue} admission control, so heavy runs queue under load
- * instead of oversubscribing.
+ * <p>Manages its own virtual-thread execution rather than {@code JobExecutorService}, which
+ * force-completes a job once its work returns: incompatible with a run that suspends in {@code
+ * WAITING_FOR_INPUT}. Still applies the shared {@link ResourceMonitor}/{@link JobQueue} admission
+ * control so heavy runs queue under load.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PolicyEngine {
 
-    /**
-     * Resource weight of a pipeline run for admission control. A run chains many tools and holds
-     * intermediate files, so it is weighted as heavy work: the shared {@link ResourceMonitor}
-     * should let it start while the system is healthy but hold it back under memory/CPU pressure.
-     * See {@link ResourceMonitor#shouldQueueJob(int)} for how a weight maps to that decision.
-     */
+    // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
+    // files. See ResourceMonitor#shouldQueueJob(int).
     private static final int RUN_RESOURCE_WEIGHT = 50;
 
     private final PolicyExecutor stepExecutor;
@@ -72,16 +65,14 @@ public class PolicyEngine {
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
     /**
-     * Submit a pipeline to run asynchronously. The returned handle's run id scopes a job in {@link
-     * TaskManager}, so progress (notes), status, and result files are observable via the existing
-     * job endpoints as well as via {@link #getRun(String)}; its completion future resolves when the
-     * run reaches a terminal or paused state.
+     * Submit a pipeline to run asynchronously. The handle's run id scopes a {@link TaskManager} job
+     * (status/notes/results observable via the job endpoints); its future resolves when the run
+     * reaches a terminal or paused state.
      */
     public PolicyRunHandle submit(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
-        // Scope the run id to the current user (on this request thread) so the file-download
-        // ownership check passes; NoOpJobOwnershipService returns the id unchanged when security
-        // is off.
+        // Scope the run id to the current user (this request thread) so the file-download
+        // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
         taskManager.createTask(runId);
         PolicyRun run = new PolicyRun(runId, definition);
@@ -90,9 +81,8 @@ public class PolicyEngine {
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
         Runnable task = () -> runToCompletion(run, inputs, tracking, completion);
 
-        // Each run is one admission unit; steps run synchronously within it, so this gates heavy
-        // work under load without the pool-within-pool risk of queueing each tool call. Under
-        // resource pressure the run waits in the shared JobQueue; otherwise it starts immediately.
+        // One admission unit per run; steps run synchronously within it, so this gates heavy work
+        // without the pool-within-pool risk of queueing each tool call.
         if (resourceMonitor.shouldQueueJob(RUN_RESOURCE_WEIGHT)) {
             log.debug("Queueing policy run {} under resource pressure", runId);
             jobQueue.queueJob(
@@ -110,10 +100,7 @@ public class PolicyEngine {
         return new PolicyRunHandle(runId, completion);
     }
 
-    /**
-     * Run a stored policy on demand. Builds the policy's pipeline and submits it. {@code enabled}
-     * gates automatic triggering, not explicit runs, so this runs regardless of that flag.
-     */
+    /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
         return submit(policy.toDefinition(), inputs, listener);
@@ -124,8 +111,7 @@ public class PolicyEngine {
     }
 
     /**
-     * Request cancellation of a run. Stage 1 marks the run cancelled in the registry if it has not
-     * already finished; interrupting an in-flight tool call lands in a later stage.
+     * Mark a run cancelled if not already finished. Does not yet interrupt an in-flight tool call.
      */
     public boolean cancel(String runId) {
         PolicyRun run = registry.get(runId);
@@ -139,10 +125,7 @@ public class PolicyEngine {
         return cancelled;
     }
 
-    /**
-     * Resume a run paused in {@code WAITING_FOR_INPUT}. Not yet implemented; the run shape and
-     * {@link WaitState} snapshot are in place so this can be added without reworking the engine.
-     */
+    /** Resume a run paused in {@code WAITING_FOR_INPUT}. Not yet implemented. */
     public String resume(String runId, List<Resource> additionalInputs) {
         throw new UnsupportedOperationException("Pause/resume is not yet implemented");
     }
@@ -163,8 +146,8 @@ public class PolicyEngine {
             taskManager.setComplete(runId);
             run.complete(outputs);
         } catch (PolicyInputRequiredException e) {
-            // Designed-for path: suspend the run rather than fail it. Persist intermediates as
-            // fileIds so the run can resume after this worker thread is gone.
+            // Expected path: suspend rather than fail. Persist intermediates as fileIds so the run
+            // can resume after this worker thread is gone.
             WaitState wait = suspend(e);
             run.waitForInput(wait);
             taskManager.addNote(runId, "Waiting for input: " + e.getMessage());
@@ -183,15 +166,15 @@ public class PolicyEngine {
             run.fail(message);
             taskManager.setError(runId, message);
         } finally {
-            // Always resolve the handle with the run's final state so stream/await callers unblock.
+            // Always resolve so stream/await callers unblock.
             completion.complete(run);
         }
     }
 
     private ResponseEntity<?> failRejectedRun(
             PolicyRun run, CompletableFuture<PolicyRun> completion, Throwable ex) {
-        // Only reached if the run never started (e.g. the queue was full). A run that started
-        // always resolves its own completion in runToCompletion.
+        // Only reached if the run never started (e.g. queue full); a started run resolves its own
+        // completion in runToCompletion.
         if (!completion.isDone()) {
             String message = "Policy run could not be queued: " + ex.getMessage();
             log.error("Policy run {} was not admitted: {}", run.getRunId(), ex.getMessage());
