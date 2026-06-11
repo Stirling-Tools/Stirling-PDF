@@ -112,9 +112,7 @@ describe("extractSignupCategory", () => {
     expect(
       extractSignupCategory({ response: { data: { category: 7 } } }),
     ).toBeNull();
-    expect(
-      extractSignupCategory({ response: { data: {} } }),
-    ).toBeNull();
+    expect(extractSignupCategory({ response: { data: {} } })).toBeNull();
   });
 });
 
