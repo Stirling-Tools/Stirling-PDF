@@ -183,7 +183,6 @@ interface AiWorkflowResponse {
 
 interface ChatState {
   messages: ChatMessage[];
-  isOpen: boolean;
   isLoading: boolean;
   progress: AiWorkflowProgress | null;
   /** Ordered log of every progress event in the current request. UI shows the last N entries. */
@@ -200,8 +199,6 @@ type ChatAction =
   | { type: "SET_LOADING"; loading: boolean }
   | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
   | { type: "APPEND_PROGRESS"; progress: AiWorkflowProgress }
-  | { type: "TOGGLE_OPEN" }
-  | { type: "SET_OPEN"; open: boolean }
   | { type: "CLEAR" };
 
 function chatReducer(state: ChatState, action: ChatAction): ChatState {
@@ -231,10 +228,6 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
                 action.progress,
               ],
       };
-    case "TOGGLE_OPEN":
-      return { ...state, isOpen: !state.isOpen };
-    case "SET_OPEN":
-      return { ...state, isOpen: action.open };
     case "CLEAR":
       return {
         ...state,
@@ -363,13 +356,10 @@ async function consumeSSEStream(
 
 interface ChatContextValue {
   messages: ChatMessage[];
-  isOpen: boolean;
   isLoading: boolean;
   progress: AiWorkflowProgress | null;
   /** Ordered log of every progress event for the current in-flight request. */
   progressLog: AiWorkflowProgress[];
-  toggleOpen: () => void;
-  setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
   /** Abort any in-flight request and reset the chat to an empty conversation. */
   clearChat: () => void;
@@ -379,7 +369,6 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 
 const initialState: ChatState = {
   messages: [],
-  isOpen: false,
   isLoading: false,
   progress: null,
   progressLog: [],
@@ -465,11 +454,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [fileActions, downloadFile],
   );
 
-  const toggleOpen = useCallback(() => dispatch({ type: "TOGGLE_OPEN" }), []);
-  const setOpen = useCallback(
-    (open: boolean) => dispatch({ type: "SET_OPEN", open }),
-    [],
-  );
   const clearChat = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -649,12 +633,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     <ChatContext.Provider
       value={{
         messages: state.messages,
-        isOpen: state.isOpen,
         isLoading: state.isLoading,
         progress: state.progress,
         progressLog: state.progressLog,
-        toggleOpen,
-        setOpen,
         sendMessage,
         clearChat,
       }}
