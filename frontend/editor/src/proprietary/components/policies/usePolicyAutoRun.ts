@@ -84,9 +84,8 @@ export function usePolicyAutoRun(): void {
     for (const [categoryId, s] of active) {
       for (const stub of fileStubs) {
         const key = dispatchKey(categoryId, stub.id);
-        // Skip if already run (persisted) or a dispatch is mid-flight (this
-        // session) — runPolicyOnFile now waits for the file's bytes to commit,
-        // so the in-memory guard, not an eager mark, prevents double-firing.
+        // Skip if already run (persisted) or a dispatch is in flight — the
+        // in-memory guard prevents double-firing during the async wait.
         if (isDispatched(categoryId, stub.id) || dispatching.current.has(key)) {
           continue;
         }

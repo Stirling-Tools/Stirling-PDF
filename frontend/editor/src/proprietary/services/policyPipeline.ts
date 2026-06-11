@@ -256,8 +256,8 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
 /** Decode a stored backend policy back into the frontend settings. */
 export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
   const output = policy.output.options;
-  // Metadata rides in output.options now; older records kept it in
-  // trigger.options, so merge both (output wins) to decode either shape.
+  // Metadata lives in output.options; legacy records kept it in trigger.options,
+  // so merge both (output wins) to decode either shape.
   const meta = { ...(policy.trigger?.options ?? {}), ...output };
   const str = (v: unknown, fallback = "") =>
     typeof v === "string" ? v : fallback;
@@ -278,9 +278,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
       runOn: meta.runOn === "export" ? "export" : "upload",
-      // Default to versioning unless the stored policy explicitly says new_file,
-      // so a missing/legacy output.mode follows the new-version default rather
-      // than silently flipping a reconciled policy to spawning separate files.
+      // Legacy/missing output.mode defaults to new_version, not new_file.
       outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),
       outputNamePosition:

@@ -200,10 +200,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       },
     ],
     scopeLabel: "All PDFs on this device",
-    // No policy-level setting fields: detection/encryption/signing/watermark are
-    // per-tool (the Workflow step), and the access/override/sharing controls were
-    // never wired to enforcement, so they've been removed. Output naming + retries
-    // (rendered separately in the wizard) are the only configurable settings.
+    // No policy-level setting fields: tool config lives in the Workflow step;
+    // output naming + retries are set in the wizard.
     fields: [],
   },
   compliance: {
