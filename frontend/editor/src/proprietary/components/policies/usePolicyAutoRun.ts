@@ -12,7 +12,11 @@
  */
 
 import { useEffect, useRef } from "react";
-import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
+import {
+  useAllFiles,
+  useFileManagement,
+  useFileContext,
+} from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import {
@@ -22,8 +26,11 @@ import {
 } from "@app/services/policyApi";
 import type { PolicyRunStatus } from "@app/services/policyPipeline";
 import type { FileId } from "@app/types/file";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import { usePolicies } from "@app/hooks/usePolicies";
 import {
+  dispatchKey,
   isDispatched,
   markDispatched,
   recordRunStart,
@@ -36,6 +43,12 @@ import {
 const POLL_MS = 2000;
 const MAX_POLLS = 75;
 
+/** How long to wait for an upload's bytes to land in IndexedDB before giving up
+ *  (20 × 250ms ≈ 5s). The stub can surface in the file list a beat before its
+ *  bytes are committed, so a too-eager fetch would otherwise miss the file. */
+const FILE_WAIT_TRIES = 20;
+const FILE_WAIT_MS = 250;
+
 function isTerminal(status: PolicyRunStatus): boolean {
   return (
     status === "COMPLETED" || status === "FAILED" || status === "CANCELLED"
@@ -47,11 +60,14 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
   const { addFiles } = useFileManagement();
+  const { consumeFiles } = useFileContext();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
-  // Run ids currently being polled / imported, so the effects never double-fire.
+  // Keys (run ids / dispatch keys) currently in flight, so the effects never
+  // double-fire across re-renders while their first async step is pending.
   const polling = useRef<Set<string>>(new Set());
   const importing = useRef<Set<string>>(new Set());
+  const dispatching = useRef<Set<string>>(new Set());
 
   // Dispatch: for each active policy × each session file not yet run, fire a run.
   useEffect(() => {
@@ -61,14 +77,25 @@ export function usePolicyAutoRun(): void {
     );
     for (const [categoryId, s] of active) {
       for (const stub of fileStubs) {
-        if (isDispatched(categoryId, stub.id)) continue;
-        // runPolicyOnFile marks dispatched synchronously before its first await.
+        const key = dispatchKey(categoryId, stub.id);
+        // Skip if already run (persisted) or a dispatch is mid-flight (this
+        // session) — runPolicyOnFile now waits for the file's bytes to commit,
+        // so the in-memory guard, not an eager mark, prevents double-firing.
+        if (isDispatched(categoryId, stub.id) || dispatching.current.has(key)) {
+          continue;
+        }
+        dispatching.current.add(key);
         void runPolicyOnFile(
           categoryId,
           s.backendId as string,
           stub.id,
           stub.name,
-        );
+        )
+          .catch(() => {
+            // runPolicyOnFile handles its own failures; this is just a backstop
+            // so an unexpected rejection never becomes an unhandled rejection.
+          })
+          .finally(() => dispatching.current.delete(key));
       }
     }
   }, [fileStubs, policies]);
@@ -97,23 +124,53 @@ export function usePolicyAutoRun(): void {
         continue;
       }
       importing.current.add(run.runId);
-      void importOutputs(run, addFiles).finally(() =>
-        importing.current.delete(run.runId),
-      );
+      // Honour the policy's output mode: a new file, or a new version of the
+      // input file it ran on (needs that input's stub, still in the workspace).
+      const outputMode = policies[run.categoryId]?.outputMode ?? "new_version";
+      const outputName = policies[run.categoryId]?.outputName ?? "";
+      const parentStub = fileStubs.find((s) => (s.id as string) === run.fileId);
+      void importOutputs(run, {
+        addFiles,
+        consumeFiles,
+        outputMode,
+        outputName,
+        parentStub,
+      }).finally(() => importing.current.delete(run.runId));
     }
-  }, [runs, addFiles]);
+  }, [runs, addFiles, consumeFiles, policies, fileStubs]);
+}
+
+interface ImportContext {
+  addFiles: (files: File[]) => Promise<StirlingFile[]>;
+  consumeFiles: (
+    inputFileIds: FileId[],
+    outputs: StirlingFile[],
+    stubs: StirlingFileStub[],
+  ) => Promise<unknown>;
+  /** "new_file" adds the output as a separate file; "new_version" versions the input. */
+  outputMode: "new_file" | "new_version";
+  /** Rename rule. Empty → keep the input's filename; set → use the policy's
+   *  renamed output (applied server-side per the name-position setting). */
+  outputName: string;
+  /** The input file's stub — required to version it; absent if it's been removed. */
+  parentStub: StirlingFileStub | undefined;
 }
 
 /**
- * Fetch a completed run's not-yet-imported output files and add them to the
- * workspace. Per-output, via allSettled: each output is tracked once imported,
+ * Fetch a completed run's not-yet-imported output files and deliver them to the
+ * workspace. Per-output, via allSettled: each output is tracked once delivered,
  * so a partial failure retries only the missing files on a later tick and the
  * ones that succeeded are never added twice. `imported` flips true only once
  * every output has landed.
+ *
+ * Delivery honours the policy's output mode: "new_version" replaces the input
+ * file with a versioned child (its history chain), "new_file" adds the output
+ * as a standalone file. Versioning falls back to a new file if the input is
+ * gone (no parent stub).
  */
 async function importOutputs(
   run: PolicyRunRecord,
-  addFiles: (files: File[]) => Promise<unknown>,
+  ctx: ImportContext,
 ): Promise<void> {
   const done = new Set(run.importedFileIds ?? []);
   const pending = run.outputs.filter((out) => !done.has(out.fileId));
@@ -122,12 +179,18 @@ async function importOutputs(
     return;
   }
 
+  // Keep the input's original filename unless a rename rule is set — without a
+  // rule the backend's auto-suffixed name (e.g. "_watermarked_sanitized") would
+  // otherwise rename every output.
+  const targetName = ctx.outputName
+    ? undefined // use the run's per-output (renamed) name below
+    : run.fileName;
   const results = await Promise.allSettled(
     pending.map(async (out) => {
       const blob = await downloadPolicyOutput(out.fileId);
       return {
         fileId: out.fileId,
-        file: new File([blob], out.fileName || run.fileName, {
+        file: new File([blob], targetName ?? out.fileName ?? run.fileName, {
           type: blob.type || "application/pdf",
         }),
       };
@@ -141,12 +204,38 @@ async function importOutputs(
     .map((r) => r.value);
   if (fetched.length === 0) return; // all failed — retry the lot on a later tick
 
-  // Add the freshly-fetched files, then mark exactly those imported. If addFiles
-  // throws we don't mark them, so they retry (without having been added).
-  await addFiles(fetched.map((f) => f.file));
+  // Deliver, then mark exactly those imported. If delivery throws we don't mark
+  // them, so they retry (without having been added).
+  const files = fetched.map((f) => f.file);
+  // Workspace fileIds of the delivered outputs — the policy badge marks these
+  // (the policy's output), not the input it ran on. Set in both branches below.
+  let deliveredIds: string[];
+  if (ctx.outputMode === "new_version" && ctx.parentStub) {
+    // Replace the input file with a versioned child (preserves its history).
+    // The version records "automate" as its origin tool — a policy is a
+    // multi-tool automation, not any single tool (redact/watermark/sanitize/…).
+    const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+      files,
+      ctx.parentStub,
+      "automate",
+    );
+    // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
+    // the policy on its own output — that would version endlessly in a loop.
+    for (const s of stubs) markDispatched(run.categoryId, s.id);
+    deliveredIds = stubs.map((s) => s.id as string);
+    await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+  } else {
+    const added = await ctx.addFiles(files);
+    // Same loop-guard for new-file output: the produced file is a new workspace
+    // file the auto-run would otherwise re-enforce indefinitely.
+    for (const f of added) markDispatched(run.categoryId, f.fileId);
+    deliveredIds = added.map((f) => f.fileId as string);
+  }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
   updateRun(run.runId, {
     importedFileIds,
+    // Accumulate across partial-import retries rather than overwriting.
+    outputFileIds: [...(run.outputFileIds ?? []), ...deliveredIds],
     imported: run.outputs.every((out) => importedFileIds.includes(out.fileId)),
   });
 }
@@ -161,13 +250,33 @@ export async function runPolicyOnFile(
   fileId: FileId,
   fileName: string,
 ): Promise<void> {
-  // Mark synchronously, before any await, so neither the dispatch effect nor a
-  // rapid Retry click can double-fire while the file bytes load.
-  markDispatched(categoryId, fileId);
+  // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
+  // its stub can appear in the file list a beat before getStirlingFile resolves
+  // it. Wait briefly rather than bail — and DON'T mark dispatched until we hold
+  // the file, or a too-early miss would skip enforcement on that file forever.
+  // (The caller's in-flight guard prevents double-dispatch during this wait.)
+  // A transient IndexedDB error is treated as a miss (not a throw), so it retries
+  // and then marks dispatched rather than rejecting into a hot re-dispatch loop.
+  const tryGetFile = async (): Promise<StirlingFile | null> => {
+    try {
+      return await fileStorage.getStirlingFile(fileId);
+    } catch {
+      return null;
+    }
+  };
+  let file = await tryGetFile();
+  for (let i = 0; i < FILE_WAIT_TRIES && !file; i++) {
+    await delay(FILE_WAIT_MS);
+    file = await tryGetFile();
+  }
+  if (!file) {
+    // File genuinely gone (removed before it could run) — mark so we don't loop.
+    markDispatched(categoryId, fileId);
+    return;
+  }
   try {
-    const file = await fileStorage.getStirlingFile(fileId);
-    if (!file) return; // file gone; nothing to run (already marked above).
     const runId = await runStoredPolicy(backendId, [file]);
+    // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
       runId,
       categoryId,
@@ -180,8 +289,9 @@ export async function runPolicyOnFile(
       startedAt: Date.now(),
     });
   } catch {
-    // Dispatch failed (offline / backend error). Already marked dispatched so we
-    // don't hammer; the absent run simply won't appear in the activity feed.
+    // Dispatch failed (offline / backend error). Mark dispatched so we don't
+    // hammer; the absent run simply won't appear in the activity feed.
+    markDispatched(categoryId, fileId);
   }
 }
 

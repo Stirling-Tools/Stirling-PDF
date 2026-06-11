@@ -14,9 +14,11 @@ const ACCENT_VAR: Record<string, string> = {
 };
 
 /**
- * Distinct policies that have run on each file, keyed by fileId, derived from the
- * reactive policy run store. Drives the file sidebar's shield badges. Shadows the
- * core stub via the {@code @app/*} alias cascade.
+ * Distinct policies that have produced each file, keyed by fileId, derived from
+ * the reactive policy run store. Drives the file sidebar's shield badges. The
+ * badge marks a policy's OUTPUT (the versioned/added result), not the input it
+ * ran on — so it keys off each run's imported output fileIds. Shadows the core
+ * stub via the {@code @app/*} alias cascade.
  */
 export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
   const runs = usePolicyRuns();
@@ -28,14 +30,16 @@ export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
     for (const run of runs) {
       const name = labelById.get(run.categoryId);
       if (!name) continue;
-      const list = byFile.get(run.fileId) ?? [];
-      if (!list.some((p) => p.id === run.categoryId)) {
-        list.push({
-          id: run.categoryId,
-          name,
-          accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
-        });
-        byFile.set(run.fileId, list);
+      for (const fileId of run.outputFileIds ?? []) {
+        const list = byFile.get(fileId) ?? [];
+        if (!list.some((p) => p.id === run.categoryId)) {
+          list.push({
+            id: run.categoryId,
+            name,
+            accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
+          });
+          byFile.set(fileId, list);
+        }
       }
     }
     return byFile;

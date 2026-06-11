@@ -26,6 +26,10 @@ export interface PolicyRunRecord {
   /** Output fileIds already imported — tracked per-file so a partial failure
    *  retries only the missing ones and never re-adds the ones that succeeded. */
   importedFileIds?: string[];
+  /** Workspace fileIds of the imported output files (the versioned child for
+   *  "new version", or the added file for "new file"). Drives the policy badge,
+   *  which marks the policy's OUTPUT — not the input it ran on. */
+  outputFileIds?: string[];
   error: string | null;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;

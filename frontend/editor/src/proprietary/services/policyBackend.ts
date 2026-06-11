@@ -51,6 +51,8 @@ export function decodedToState(
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
+    outputMode: decoded.folder.outputMode,
+    outputName: decoded.folder.outputName,
     folderId: localFolderId,
     backendId: decoded.id,
     // Catalog-category policies are built-in defaults (not deletable).

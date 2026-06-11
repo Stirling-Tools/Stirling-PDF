@@ -2,9 +2,21 @@ import { Suspense } from "react";
 import { Loader } from "@mantine/core";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import { Card } from "@shared/components/Card";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
+import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { ToolId } from "@app/types/toolId";
+
+/** Plain-language, non-technical descriptions shown by each tool's info button. */
+const TOOL_PLAIN_INFO: Record<string, string> = {
+  redact:
+    "Automatically finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read in the document.",
+  sanitize:
+    "Removes hidden JavaScript from the file, so nothing can run automatically when someone opens it.",
+  watermark: "Stamps a visible mark (e.g. “Confidential”) across every page.",
+};
 
 /** One tool in a policy's fixed chain: whether it runs + its configured params. */
 export interface PolicyToolState {
@@ -54,6 +66,26 @@ export function PolicyToolConfig({
               <span className="pol-tool-name">
                 {entry?.name ?? tool.operation}
               </span>
+              {TOOL_PLAIN_INFO[tool.operation] && (
+                <AppTooltip
+                  content={TOOL_PLAIN_INFO[tool.operation]}
+                  sidebarTooltip
+                  pinOnClick
+                >
+                  <button
+                    type="button"
+                    className="pol-info-btn"
+                    aria-label={`What does ${entry?.name ?? tool.operation} do?`}
+                  >
+                    <LocalIcon
+                      icon="info-outline-rounded"
+                      width="1rem"
+                      height="1rem"
+                      style={{ color: "var(--icon-files-color)" }}
+                    />
+                  </button>
+                </AppTooltip>
+              )}
               <ToggleSwitch
                 size="sm"
                 checked={tool.enabled}
@@ -64,10 +96,23 @@ export function PolicyToolConfig({
             </div>
             {tool.enabled &&
               (tool.operation === "redact" ? (
-                // Redact has a bespoke config: PII preset dropdown + a custom
-                // word/regex field + advanced options, mode + regex locked on.
+                // Redact config is reduced to just the PII type picker.
                 <div className="pol-tool-body">
                   <PolicyRedactConfig
+                    parameters={tool.parameters}
+                    onChange={(parameters) => patchTool(index, { parameters })}
+                    disabled={!editable}
+                  />
+                </div>
+              ) : tool.operation === "sanitize" ? (
+                // Sanitize is config-less: it only removes JavaScript (params
+                // are fixed in the policy preset), so no settings are shown.
+                <></>
+              ) : tool.operation === "watermark" ? (
+                // Watermark: full settings minus the "Flatten PDF pages to
+                // images" toggle (hidden), with flatten forced on.
+                <div className="pol-tool-body">
+                  <PolicyWatermarkConfig
                     parameters={tool.parameters}
                     onChange={(parameters) => patchTool(index, { parameters })}
                     disabled={!editable}

@@ -180,27 +180,29 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         parameters: {
           mode: "automatic",
           useRegex: true,
+          // Flatten to image so redacted text is truly removed, not just hidden
+          // behind a box (heavier, but real redaction).
+          convertPDFToImage: true,
           wordsToRedact: DEFAULT_PII_PATTERNS,
         },
       },
-      { operation: "sanitize", parameters: {} },
+      {
+        // Sanitize is fixed to JavaScript removal only (no per-policy config).
+        operation: "sanitize",
+        parameters: {
+          removeJavaScript: true,
+          removeEmbeddedFiles: false,
+          removeMetadata: false,
+          removeLinks: false,
+          removeFonts: false,
+          removeXMPMetadata: false,
+        },
+      },
     ],
     scopeLabel: "All PDFs on this device",
     // Policy-level controls only — detection/encryption/signing/watermark are
     // per-tool and now live in the Workflow step.
     fields: [
-      {
-        label: "Default PII response",
-        key: "defaultResponse",
-        type: "select",
-        value: "Highlight & tag",
-        options: [
-          "Highlight & tag",
-          "Prompt on export",
-          "Auto-redact on export",
-          "Block export",
-        ],
-      },
       {
         label: "User can override",
         key: "userOverride",
