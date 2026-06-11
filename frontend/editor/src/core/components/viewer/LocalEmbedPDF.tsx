@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
@@ -438,6 +438,63 @@ interface TiledPageBackgroundProps {
   pageIndex: number;
   pdfRenderMode?: "normal" | "dark" | "sepia";
 }
+
+interface LazyPageContentProps {
+  pageIndex: number;
+  width: number;
+  height: number;
+  children: React.ReactNode;
+}
+
+const LazyPageContent = ({
+  pageIndex: _pageIndex,
+  width: _width,
+  height: _height,
+  children,
+}: LazyPageContentProps) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        rootMargin: "600px", // Pre-render pages within 600px margin to avoid flashes
+      }
+    );
+
+    observer.observe(el);
+    return () => {
+      observer.unobserve(el);
+    };
+  }, []);
+
+  if (!isVisible) {
+    return (
+      <div
+        ref={containerRef}
+        className="pdf-page-skeleton"
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#ffffff",
+        }}
+      />
+    );
+  }
+
+  return (
+    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+      {children}
+    </div>
+  );
+};
 
 const TiledPageBackground = ({
   documentId,
@@ -916,103 +973,105 @@ export function LocalEmbedPDF({
                                   onDrop={(e) => e.preventDefault()}
                                   onDragOver={(e) => e.preventDefault()}
                                 >
-                                  <TiledPageBackground
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    pdfRenderMode={pdfRenderMode}
-                                  />
-
-                                  <CustomSearchLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-
-                                  <div
-                                    className="pdf-selection-layer"
-                                    style={{
-                                      position: "absolute",
-                                      inset: 0,
-                                      pointerEvents: "none",
-                                    }}
-                                  >
-                                    <SelectionLayer
+                                  <LazyPageContent pageIndex={pageIndex} width={width} height={height}>
+                                    <TiledPageBackground
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      background="var(--pdf-selection-bg)"
+                                      pdfRenderMode={pdfRenderMode}
                                     />
-                                  </div>
-                                  <TextSelectionHandler
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
 
-                                  {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
-                                  {enableFormFill && file && (
-                                    <ButtonAppearanceOverlay
-                                      pageIndex={pageIndex}
-                                      pdfSource={file}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                    />
-                                  )}
-
-                                  {/* FormFieldOverlay for interactive form filling */}
-                                  {enableFormFill && (
-                                    <FormFieldOverlay
+                                    <CustomSearchLayer
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      fileId={fileId}
                                     />
-                                  )}
 
-                                  {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
-                                  {file && (
-                                    <SignatureFieldOverlay
+                                    <div
+                                      className="pdf-selection-layer"
+                                      style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        pointerEvents: "none",
+                                      }}
+                                    >
+                                      <SelectionLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        background="var(--pdf-selection-bg)"
+                                      />
+                                    </div>
+                                    <TextSelectionHandler
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      pdfSource={file}
-                                      pageWidth={width}
-                                      pageHeight={height}
                                     />
-                                  )}
 
-                                  {/* AnnotationLayer for annotation editing and annotation-based redactions */}
-                                  {(enableAnnotations || enableRedaction) && (
-                                    <AnnotationLayer
+                                    {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
+                                    {enableFormFill && file && (
+                                      <ButtonAppearanceOverlay
+                                        pageIndex={pageIndex}
+                                        pdfSource={file}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                      />
+                                    )}
+
+                                    {/* FormFieldOverlay for interactive form filling */}
+                                    {enableFormFill && (
+                                      <FormFieldOverlay
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                        fileId={fileId}
+                                      />
+                                    )}
+
+                                    {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
+                                    {file && (
+                                      <SignatureFieldOverlay
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        pdfSource={file}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                      />
+                                    )}
+
+                                    {/* AnnotationLayer for annotation editing and annotation-based redactions */}
+                                    {(enableAnnotations || enableRedaction) && (
+                                      <AnnotationLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        selectionOutline={{ color: "#007ACC" }}
+                                        selectionMenu={(props) => (
+                                          <AnnotationSelectionMenu {...props} />
+                                        )}
+                                        style={
+                                          !showBakedAnnotations
+                                            ? {
+                                                opacity: 0,
+                                                pointerEvents: "none",
+                                              }
+                                            : undefined
+                                        }
+                                      />
+                                    )}
+
+                                    {enableRedaction && (
+                                      <RedactionLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        selectionMenu={(props) => (
+                                          <RedactionSelectionMenu {...props} />
+                                        )}
+                                      />
+                                    )}
+
+                                    {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
+                                    <LinkLayer
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      selectionOutline={{ color: "#007ACC" }}
-                                      selectionMenu={(props) => (
-                                        <AnnotationSelectionMenu {...props} />
-                                      )}
-                                      style={
-                                        !showBakedAnnotations
-                                          ? {
-                                              opacity: 0,
-                                              pointerEvents: "none",
-                                            }
-                                          : undefined
-                                      }
                                     />
-                                  )}
-
-                                  {enableRedaction && (
-                                    <RedactionLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      selectionMenu={(props) => (
-                                        <RedactionSelectionMenu {...props} />
-                                      )}
-                                    />
-                                  )}
-
-                                  {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
-                                  <LinkLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
+                                  </LazyPageContent>
                                 </div>
                               </PagePointerProvider>
                             </Rotate>

@@ -87,20 +87,26 @@ function RedactionSelectionMenuInner({
       return;
     }
 
+    let frameId: number | null = null;
     const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
+      if (frameId !== null) return;
 
-      const wrapperRect = wrapper.getBoundingClientRect();
-      // Position menu below the wrapper, centered
-      // Use getBoundingClientRect which gives viewport-relative coordinates
-      // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
-      setMenuPosition({
-        top: wrapperRect.bottom + 8,
-        left: wrapperRect.left + wrapperRect.width / 2,
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
+        const wrapper = wrapperRef.current;
+        if (!wrapper) {
+          setMenuPosition(null);
+          return;
+        }
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        // Position menu below the wrapper, centered
+        // Use getBoundingClientRect which gives viewport-relative coordinates
+        // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
+        setMenuPosition({
+          top: wrapperRect.bottom + 8,
+          left: wrapperRect.left + wrapperRect.width / 2,
+        });
       });
     };
 
@@ -113,6 +119,9 @@ function RedactionSelectionMenuInner({
     return () => {
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
     };
   }, [selected, item]);
 

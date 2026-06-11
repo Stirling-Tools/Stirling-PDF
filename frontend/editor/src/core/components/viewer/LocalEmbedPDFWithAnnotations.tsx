@@ -152,6 +152,63 @@ interface TiledPageBackgroundProps {
   pageIndex: number;
 }
 
+interface LazyPageContentProps {
+  pageIndex: number;
+  width: number;
+  height: number;
+  children: React.ReactNode;
+}
+
+const LazyPageContent = ({
+  pageIndex: _pageIndex,
+  width: _width,
+  height: _height,
+  children,
+}: LazyPageContentProps) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        rootMargin: "600px", // Pre-render pages within 600px margin to avoid flashes
+      }
+    );
+
+    observer.observe(el);
+    return () => {
+      observer.unobserve(el);
+    };
+  }, []);
+
+  if (!isVisible) {
+    return (
+      <div
+        ref={containerRef}
+        className="pdf-page-skeleton"
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#ffffff",
+        }}
+      />
+    );
+  }
+
+  return (
+    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+      {children}
+    </div>
+  );
+};
+
 const TiledPageBackground = ({
   documentId,
   pageIndex,
@@ -620,136 +677,276 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                               }
                             }}
                           >
-                            <TiledPageBackground
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            />
+                            <LazyPageContent pageIndex={pageIndex} width={width} height={height}>
+                              <TiledPageBackground
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                              />
 
-                            <CustomSearchLayer
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            />
+                              <CustomSearchLayer
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                              />
 
-                            <SelectionLayer
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            />
+                              <SelectionLayer
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                              />
 
-                            {/* Annotation layer for signatures */}
-                            <AnnotationLayer
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                              selectionOutline={{ color: "#007ACC" }}
-                            />
+                              {/* Annotation layer for signatures */}
+                              <AnnotationLayer
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                                selectionOutline={{ color: "#007ACC" }}
+                              />
 
-                            {/* Signature preview overlays (support multiple) */}
-                            {signaturePreviews
-                              .filter(
-                                (preview) => preview.pageIndex === pageIndex,
-                              )
-                              .map((preview) => {
-                                if (!preview.signatureData) return null;
-                                const color =
-                                  preview.color ?? "rgb(0, 122, 204)";
-                                const colorOpacity = (opacity: number) =>
-                                  color.startsWith("rgb(")
-                                    ? color
-                                        .replace("rgb(", "rgba(")
-                                        .replace(")", `, ${opacity})`)
-                                    : color;
-                                return (
-                                  <Tooltip
-                                    key={preview.id}
-                                    label={preview.participantName ?? ""}
-                                    position="top"
-                                    withArrow
-                                    disabled={!preview.participantName}
-                                  >
-                                    <div
-                                      style={{
-                                        position: "absolute",
-                                        left: preview.x * width,
-                                        top: preview.y * height,
-                                        width: preview.width * width,
-                                        height: preview.height * height,
-                                        border: readOnly
-                                          ? `1px dashed ${colorOpacity(0.4)}`
-                                          : `2px solid ${color}`,
-                                        boxShadow: readOnly
-                                          ? "none"
-                                          : `0 0 10px ${colorOpacity(0.5)}`,
-                                        cursor: readOnly ? "default" : "move",
-                                        zIndex: Z_INDEX_SIGNATURE_OVERLAY,
-                                        backgroundColor: readOnly
-                                          ? "transparent"
-                                          : "rgba(255, 255, 255, 0.1)",
-                                        pointerEvents: "auto",
-                                      }}
+                              {/* Signature preview overlays (support multiple) */}
+                              {signaturePreviews
+                                .filter(
+                                  (preview) => preview.pageIndex === pageIndex,
+                                )
+                                .map((preview) => {
+                                  if (!preview.signatureData) return null;
+                                  const color =
+                                    preview.color ?? "rgb(0, 122, 204)";
+                                  const colorOpacity = (opacity: number) =>
+                                    color.startsWith("rgb(")
+                                      ? color
+                                          .replace("rgb(", "rgba(")
+                                          .replace(")", `, ${opacity})`)
+                                      : color;
+                                  return (
+                                    <Tooltip
+                                      key={preview.id}
+                                      label={preview.participantName ?? ""}
+                                      position="top"
+                                      withArrow
+                                      disabled={!preview.participantName}
                                     >
-                                      {/* Delete button - only show when not read-only */}
-                                      {!readOnly && (
-                                        <ActionIcon
-                                          size="sm"
-                                          radius="xl"
-                                          variant="filled"
-                                          color="red"
-                                          style={{
-                                            position: "absolute",
-                                            top: -10,
-                                            right: -10,
-                                            zIndex:
-                                              Z_INDEX_SIGNATURE_OVERLAY_DELETE,
-                                            pointerEvents: "auto",
-                                            boxShadow:
-                                              "0 1px 4px rgba(0,0,0,0.25)",
-                                            border: "2px solid white",
-                                          }}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSignaturePreviews((prev) =>
-                                              prev.filter(
-                                                (p) => p.id !== preview.id,
-                                              ),
-                                            );
-                                          }}
-                                          aria-label={t(
-                                            "viewer.signature.delete",
-                                            "Delete signature",
-                                          )}
-                                        >
-                                          <CloseIcon
-                                            style={{ fontSize: "0.8rem" }}
-                                          />
-                                        </ActionIcon>
-                                      )}
-
                                       <div
                                         style={{
-                                          width: "100%",
-                                          height: "100%",
-                                          pointerEvents: readOnly
+                                          position: "absolute",
+                                          left: preview.x * width,
+                                          top: preview.y * height,
+                                          width: preview.width * width,
+                                          height: preview.height * height,
+                                          border: readOnly
+                                            ? `1px dashed ${colorOpacity(0.4)}`
+                                            : `2px solid ${color}`,
+                                          boxShadow: readOnly
                                             ? "none"
-                                            : "auto",
+                                            : `0 0 10px ${colorOpacity(0.5)}`,
+                                          cursor: readOnly ? "default" : "move",
+                                          zIndex: Z_INDEX_SIGNATURE_OVERLAY,
+                                          backgroundColor: readOnly
+                                            ? "transparent"
+                                            : "rgba(255, 255, 255, 0.1)",
+                                          pointerEvents: "auto",
                                         }}
-                                        onPointerDown={
-                                          readOnly
-                                            ? undefined
-                                            : (e) => {
-                                                if (
-                                                  (e.target as HTMLElement)
-                                                    .dataset.resizeHandle
-                                                )
-                                                  return;
+                                      >
+                                        {/* Delete button - only show when not read-only */}
+                                        {!readOnly && (
+                                          <ActionIcon
+                                            size="sm"
+                                            radius="xl"
+                                            variant="filled"
+                                            color="red"
+                                            style={{
+                                              position: "absolute",
+                                              top: -10,
+                                              right: -10,
+                                              zIndex:
+                                                Z_INDEX_SIGNATURE_OVERLAY_DELETE,
+                                              pointerEvents: "auto",
+                                              boxShadow:
+                                                "0 1px 4px rgba(0,0,0,0.25)",
+                                              border: "2px solid white",
+                                            }}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSignaturePreviews((prev) =>
+                                                prev.filter(
+                                                  (p) => p.id !== preview.id,
+                                                ),
+                                              );
+                                              onRemoveSignature(preview.id);
+                                            }}
+                                            aria-label={t(
+                                              "viewer.signature.delete",
+                                              "Delete signature",
+                                            )}
+                                          >
+                                            <CloseIcon style={{ fontSize: 12 }} />
+                                          </ActionIcon>
+                                        )}
+
+                                        {/* Resize logic / mouse handlers for placing/moving signatures */}
+                                        <div
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            position: "relative",
+                                          }}
+                                          onPointerDown={(e) => {
+                                            if (readOnly) return;
+                                            // Don't drag if clicking the delete button or a resize handle
+                                            const target = e.target as HTMLElement;
+                                            if (
+                                              target.closest("[data-resize-handle]") ||
+                                              target.closest("button")
+                                            ) {
+                                              return;
+                                            }
+
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            const el = e.currentTarget;
+                                            el.setPointerCapture(e.pointerId);
+                                            interactionPauseRef.current?.pause();
+
+                                            const startX = e.clientX;
+                                            const startY = e.clientY;
+                                            const startLeft = preview.x;
+                                            const startTop = preview.y;
+
+                                            const handlePointerMove = (
+                                              moveEvent: PointerEvent,
+                                            ) => {
+                                              isDraggingRef.current = true;
+                                              const deltaX =
+                                                (moveEvent.clientX -
+                                                  startX) /
+                                                width;
+                                              const deltaY =
+                                                (moveEvent.clientY -
+                                                  startY) /
+                                                height;
+                                              setSignaturePreviews((prev) =>
+                                                prev.map((p) =>
+                                                  p.id === preview.id
+                                                    ? {
+                                                        ...p,
+                                                        x:
+                                                          startLeft +
+                                                          deltaX,
+                                                        y:
+                                                          startTop + deltaY,
+                                                      }
+                                                    : p,
+                                                ),
+                                              );
+                                            };
+
+                                            const handlePointerUp = (
+                                              upEvent: PointerEvent,
+                                            ) => {
+                                              el.removeEventListener(
+                                                "pointermove",
+                                                handlePointerMove,
+                                              );
+                                              el.removeEventListener(
+                                                "pointerup",
+                                                handlePointerUp,
+                                              );
+                                              el.releasePointerCapture(
+                                                upEvent.pointerId,
+                                              );
+                                              interactionPauseRef.current?.resume();
+                                              window
+                                                .getSelection()
+                                                ?.removeAllRanges();
+                                              setTimeout(() => {
+                                                isDraggingRef.current = false;
+                                              }, 10);
+                                            };
+
+                                            el.addEventListener(
+                                              "pointermove",
+                                              handlePointerMove,
+                                            );
+                                            el.addEventListener(
+                                              "pointerup",
+                                              handlePointerUp,
+                                            );
+                                          }}
+                                        >
+                                          <img
+                                            src={preview.signatureData}
+                                            alt="Signature preview"
+                                            style={{
+                                              width: "100%",
+                                              height: "100%",
+                                              objectFit: "contain",
+                                              pointerEvents: "none",
+                                            }}
+                                          />
+
+                                          {/* Resize handles */}
+                                          {[
+                                            {
+                                              position: "nw",
+                                              cursor: "nw-resize",
+                                              top: -4,
+                                              left: -4,
+                                            },
+                                            {
+                                              position: "ne",
+                                              cursor: "ne-resize",
+                                              top: -4,
+                                              right: -4,
+                                            },
+                                            {
+                                              position: "sw",
+                                              cursor: "sw-resize",
+                                              bottom: -4,
+                                              left: -4,
+                                            },
+                                            {
+                                              position: "se",
+                                              cursor: "se-resize",
+                                              bottom: -4,
+                                              right: -4,
+                                            },
+                                          ].map((handle) => (
+                                            <div
+                                              key={handle.position}
+                                              data-resize-handle="true"
+                                              style={{
+                                                position: "absolute",
+                                                width: 8,
+                                                height: 8,
+                                                backgroundColor: color,
+                                                border: "1px solid white",
+                                                cursor: handle.cursor,
+                                                zIndex:
+                                                  Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
+                                                ...(handle.top !== undefined && {
+                                                  top: handle.top,
+                                                }),
+                                                ...(handle.bottom !==
+                                                  undefined && {
+                                                  bottom: handle.bottom,
+                                                }),
+                                                ...(handle.left !== undefined && {
+                                                  left: handle.left,
+                                                }),
+                                                ...(handle.right !==
+                                                  undefined && {
+                                                  right: handle.right,
+                                                }),
+                                              }}
+                                              onPointerDown={(e) => {
                                                 e.stopPropagation();
                                                 e.preventDefault();
                                                 const el = e.currentTarget;
-                                                el.setPointerCapture(
-                                                  e.pointerId,
-                                                );
+                                                el.setPointerCapture(e.pointerId);
                                                 interactionPauseRef.current?.pause();
 
                                                 const startX = e.clientX;
                                                 const startY = e.clientY;
+                                                const startWidth = preview.width;
+                                                const startHeight =
+                                                  preview.height;
                                                 const startLeft = preview.x;
                                                 const startTop = preview.y;
 
@@ -758,23 +955,69 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                 ) => {
                                                   isDraggingRef.current = true;
                                                   const deltaX =
-                                                    (moveEvent.clientX -
-                                                      startX) /
+                                                    (moveEvent.clientX - startX) /
                                                     width;
                                                   const deltaY =
-                                                    (moveEvent.clientY -
-                                                      startY) /
+                                                    (moveEvent.clientY - startY) /
                                                     height;
+
+                                                  let newWidth = startWidth;
+                                                  let newHeight = startHeight;
+                                                  let newX = startLeft;
+                                                  let newY = startTop;
+
+                                                  // Min sizes as fractions: 50px / pageWidth, 25px / pageHeight
+                                                  const minW = 50 / width;
+                                                  const minH = 25 / height;
+
+                                                  if (
+                                                    handle.position.includes("e")
+                                                  ) {
+                                                    newWidth = Math.max(
+                                                      minW,
+                                                      startWidth + deltaX,
+                                                    );
+                                                  }
+                                                  if (
+                                                    handle.position.includes("w")
+                                                  ) {
+                                                    newWidth = Math.max(
+                                                      minW,
+                                                      startWidth - deltaX,
+                                                    );
+                                                    newX =
+                                                      startLeft +
+                                                      (startWidth - newWidth);
+                                                  }
+                                                  if (
+                                                    handle.position.includes("s")
+                                                  ) {
+                                                    newHeight = Math.max(
+                                                      minH,
+                                                      startHeight + deltaY,
+                                                    );
+                                                  }
+                                                  if (
+                                                    handle.position.includes("n")
+                                                  ) {
+                                                    newHeight = Math.max(
+                                                      minH,
+                                                      startHeight - deltaY,
+                                                    );
+                                                    newY =
+                                                      startTop +
+                                                      (startHeight - newHeight);
+                                                  }
+
                                                   setSignaturePreviews((prev) =>
                                                     prev.map((p) =>
                                                       p.id === preview.id
                                                         ? {
                                                             ...p,
-                                                            x:
-                                                              startLeft +
-                                                              deltaX,
-                                                            y:
-                                                              startTop + deltaY,
+                                                            x: newX,
+                                                            y: newY,
+                                                            width: newWidth,
+                                                            height: newHeight,
                                                           }
                                                         : p,
                                                     ),
@@ -812,238 +1055,51 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                   "pointerup",
                                                   handlePointerUp,
                                                 );
-                                              }
-                                        }
-                                      >
-                                        <img
-                                          src={preview.signatureData}
-                                          alt="Signature preview"
-                                          style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "contain",
-                                            pointerEvents: "none",
-                                          }}
-                                        />
-
-                                        {/* Resize handles */}
-                                        {[
-                                          {
-                                            position: "nw",
-                                            cursor: "nw-resize",
-                                            top: -4,
-                                            left: -4,
-                                          },
-                                          {
-                                            position: "ne",
-                                            cursor: "ne-resize",
-                                            top: -4,
-                                            right: -4,
-                                          },
-                                          {
-                                            position: "sw",
-                                            cursor: "sw-resize",
-                                            bottom: -4,
-                                            left: -4,
-                                          },
-                                          {
-                                            position: "se",
-                                            cursor: "se-resize",
-                                            bottom: -4,
-                                            right: -4,
-                                          },
-                                        ].map((handle) => (
-                                          <div
-                                            key={handle.position}
-                                            data-resize-handle="true"
-                                            style={{
-                                              position: "absolute",
-                                              width: 8,
-                                              height: 8,
-                                              backgroundColor: color,
-                                              border: "1px solid white",
-                                              cursor: handle.cursor,
-                                              zIndex:
-                                                Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
-                                              ...(handle.top !== undefined && {
-                                                top: handle.top,
-                                              }),
-                                              ...(handle.bottom !==
-                                                undefined && {
-                                                bottom: handle.bottom,
-                                              }),
-                                              ...(handle.left !== undefined && {
-                                                left: handle.left,
-                                              }),
-                                              ...(handle.right !==
-                                                undefined && {
-                                                right: handle.right,
-                                              }),
-                                            }}
-                                            onPointerDown={(e) => {
-                                              e.stopPropagation();
-                                              e.preventDefault();
-                                              const el = e.currentTarget;
-                                              el.setPointerCapture(e.pointerId);
-                                              interactionPauseRef.current?.pause();
-
-                                              const startX = e.clientX;
-                                              const startY = e.clientY;
-                                              const startWidth = preview.width;
-                                              const startHeight =
-                                                preview.height;
-                                              const startLeft = preview.x;
-                                              const startTop = preview.y;
-
-                                              const handlePointerMove = (
-                                                moveEvent: PointerEvent,
-                                              ) => {
-                                                isDraggingRef.current = true;
-                                                const deltaX =
-                                                  (moveEvent.clientX - startX) /
-                                                  width;
-                                                const deltaY =
-                                                  (moveEvent.clientY - startY) /
-                                                  height;
-
-                                                let newWidth = startWidth;
-                                                let newHeight = startHeight;
-                                                let newX = startLeft;
-                                                let newY = startTop;
-
-                                                // Min sizes as fractions: 50px / pageWidth, 25px / pageHeight
-                                                const minW = 50 / width;
-                                                const minH = 25 / height;
-
-                                                if (
-                                                  handle.position.includes("e")
-                                                ) {
-                                                  newWidth = Math.max(
-                                                    minW,
-                                                    startWidth + deltaX,
-                                                  );
-                                                }
-                                                if (
-                                                  handle.position.includes("w")
-                                                ) {
-                                                  newWidth = Math.max(
-                                                    minW,
-                                                    startWidth - deltaX,
-                                                  );
-                                                  newX =
-                                                    startLeft +
-                                                    (startWidth - newWidth);
-                                                }
-                                                if (
-                                                  handle.position.includes("s")
-                                                ) {
-                                                  newHeight = Math.max(
-                                                    minH,
-                                                    startHeight + deltaY,
-                                                  );
-                                                }
-                                                if (
-                                                  handle.position.includes("n")
-                                                ) {
-                                                  newHeight = Math.max(
-                                                    minH,
-                                                    startHeight - deltaY,
-                                                  );
-                                                  newY =
-                                                    startTop +
-                                                    (startHeight - newHeight);
-                                                }
-
-                                                setSignaturePreviews((prev) =>
-                                                  prev.map((p) =>
-                                                    p.id === preview.id
-                                                      ? {
-                                                          ...p,
-                                                          x: newX,
-                                                          y: newY,
-                                                          width: newWidth,
-                                                          height: newHeight,
-                                                        }
-                                                      : p,
-                                                  ),
-                                                );
-                                              };
-
-                                              const handlePointerUp = (
-                                                upEvent: PointerEvent,
-                                              ) => {
-                                                el.removeEventListener(
-                                                  "pointermove",
-                                                  handlePointerMove,
-                                                );
-                                                el.removeEventListener(
-                                                  "pointerup",
-                                                  handlePointerUp,
-                                                );
-                                                el.releasePointerCapture(
-                                                  upEvent.pointerId,
-                                                );
-                                                interactionPauseRef.current?.resume();
-                                                window
-                                                  .getSelection()
-                                                  ?.removeAllRanges();
-                                                setTimeout(() => {
-                                                  isDraggingRef.current = false;
-                                                }, 10);
-                                              };
-
-                                              el.addEventListener(
-                                                "pointermove",
-                                                handlePointerMove,
-                                              );
-                                              el.addEventListener(
-                                                "pointerup",
-                                                handlePointerUp,
-                                              );
-                                            }}
-                                          />
-                                        ))}
+                                              }}
+                                            />
+                                          ))}
+                                        </div>
                                       </div>
-                                    </div>
-                                  </Tooltip>
-                                );
-                              })}
+                                    </Tooltip>
+                                  );
+                                })}
 
-                            {/* Hover preview: ghost signature following cursor in placement mode */}
-                            {placementMode &&
-                              signatureData &&
-                              cursorOnPage?.pageIndex === pageIndex && (
-                                <img
-                                  src={signatureData}
-                                  alt=""
-                                  style={{
-                                    position: "absolute",
-                                    left: Math.max(
-                                      0,
-                                      Math.min(
-                                        cursorOnPage.x - 75,
-                                        width - 150,
+                              {/* Hover preview: ghost signature following cursor in placement mode */}
+                              {placementMode &&
+                                signatureData &&
+                                cursorOnPage?.pageIndex === pageIndex && (
+                                  <img
+                                    src={signatureData}
+                                    alt=""
+                                    style={{
+                                      position: "absolute",
+                                      left: Math.max(
+                                        0,
+                                        Math.min(
+                                          cursorOnPage.x - 75,
+                                          width - 150,
+                                        ),
                                       ),
-                                    ),
-                                    top: Math.max(
-                                      0,
-                                      Math.min(
-                                        cursorOnPage.y - 37.5,
-                                        height - 75,
+                                      top: Math.max(
+                                        0,
+                                        Math.min(
+                                          cursorOnPage.y - 37.5,
+                                          height - 75,
+                                        ),
                                       ),
-                                    ),
-                                    width: 150,
-                                    height: 75,
-                                    opacity: 0.6,
-                                    pointerEvents: "none",
-                                    objectFit: "contain",
-                                    boxShadow:
-                                      "0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)",
-                                    borderRadius: "4px",
-                                    zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
-                                  }}
-                                />
-                              )}
+                                      width: 150,
+                                      height: 75,
+                                      opacity: 0.6,
+                                      pointerEvents: "none",
+                                      objectFit: "contain",
+                                      boxShadow:
+                                        "0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)",
+                                      borderRadius: "4px",
+                                      zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
+                                    }}
+                                  />
+                                )}
+                            </LazyPageContent>
                           </div>
                         </PagePointerProvider>
                       </Rotate>
