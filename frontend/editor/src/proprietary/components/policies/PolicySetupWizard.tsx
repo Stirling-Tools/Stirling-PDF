@@ -329,19 +329,21 @@ export function PolicySetupWizard({
         {step === 2 && (
           <>
             <p className="pol-desc">{category.desc}</p>
-            <Card padding="none">
-              {config.fields.map((f, i) => (
-                <PolicyFieldRow
-                  key={f.key}
-                  field={f}
-                  value={fieldValues[f.key]}
-                  first={i === 0}
-                  onChange={(v) =>
-                    setFieldValues((prev) => ({ ...prev, [f.key]: v }))
-                  }
-                />
-              ))}
-            </Card>
+            {config.fields.length > 0 && (
+              <Card padding="none">
+                {config.fields.map((f, i) => (
+                  <PolicyFieldRow
+                    key={f.key}
+                    field={f}
+                    value={fieldValues[f.key]}
+                    first={i === 0}
+                    onChange={(v) =>
+                      setFieldValues((prev) => ({ ...prev, [f.key]: v }))
+                    }
+                  />
+                ))}
+              </Card>
+            )}
 
             {/* Real, working output + retry settings (applied by the engine). */}
             <p className="pol-section-label">Output &amp; retries</p>
