@@ -8,8 +8,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -71,6 +74,25 @@ public class PolicyEngine {
      */
     public PolicyRunHandle submit(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
+        // Ad-hoc run (no stored policy): bill whoever kicked it off. Capture the principal on this
+        // (request) thread — it does not survive the hop onto the async worker.
+        return submitForPrincipal(currentActingPrincipal(), definition, inputs, listener);
+    }
+
+    /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
+    public PolicyRunHandle runPolicy(
+            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+        // Bill the policy owner. Trigger-fired runs have no security context at all, and even an
+        // on-demand run executes on a background worker that doesn't inherit the caller's context —
+        // so the owner (a username stamped at policy creation) is the reliable billing identity.
+        return submitForPrincipal(policy.owner(), policy.toDefinition(), inputs, listener);
+    }
+
+    private PolicyRunHandle submitForPrincipal(
+            String actingPrincipal,
+            PipelineDefinition definition,
+            PolicyInputs inputs,
+            PolicyProgressListener listener) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -79,7 +101,16 @@ public class PolicyEngine {
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
-        Runnable task = () -> runToCompletion(run, inputs, tracking, completion);
+        // Re-establish the acting principal as the audit principal on the worker thread. Each tool
+        // step dispatches via InternalApiClient, which resolves the caller from
+        // UserService.getCurrentUsername() — that has an MDC `auditPrincipal` fallback for async
+        // threads. Without this the worker has no identity, tool calls fall back to the
+        // INTERNAL_API_USER, and PAYG charges that system account instead of the owner's team.
+        Runnable task =
+                () ->
+                        runAsPrincipal(
+                                actingPrincipal,
+                                () -> runToCompletion(run, inputs, tracking, completion));
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
         // without the pool-within-pool risk of queueing each tool call.
@@ -98,12 +129,6 @@ public class PolicyEngine {
             asyncExecutor.execute(task);
         }
         return new PolicyRunHandle(runId, completion);
-    }
-
-    /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
-    public PolicyRunHandle runPolicy(
-            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        return submit(policy.toDefinition(), inputs, listener);
     }
 
     public PolicyRun getRun(String runId) {
@@ -240,5 +265,53 @@ public class PolicyEngine {
         return String.format(
                 "The %s tool did not respond within %d seconds and was aborted.",
                 e.getEndpointPath(), e.getReadTimeout().toSeconds());
+    }
+
+    /**
+     * MDC key {@code UserService.getCurrentUsername()} reads as its async fallback (stamped by the
+     * controller audit aspect on request threads). We reuse it to carry the billing identity onto
+     * the policy worker thread.
+     */
+    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
+
+    /**
+     * The username to bill an ad-hoc run to, captured on the submitting (request) thread. Prefers
+     * the audit principal the controller aspect already stamped; falls back to the security context
+     * name. {@code anonymousUser} (and no identity) resolve to null so we don't try to bill it.
+     */
+    private static String currentActingPrincipal() {
+        String mdc = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
+        if (mdc != null && !mdc.isBlank()) {
+            return mdc;
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
+        }
+        String name = auth.getName();
+        return "anonymousUser".equals(name) ? null : name;
+    }
+
+    /**
+     * Run {@code body} with {@code principal} set as the audit principal in MDC, so async tool
+     * dispatch attributes (and charges) usage to that user. A null/blank principal runs as-is.
+     * Restores the previous MDC value afterward (defensive — worker threads aren't pooled).
+     */
+    private static void runAsPrincipal(String principal, Runnable body) {
+        if (principal == null || principal.isBlank()) {
+            body.run();
+            return;
+        }
+        String previous = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
+        MDC.put(AUDIT_PRINCIPAL_MDC_KEY, principal);
+        try {
+            body.run();
+        } finally {
+            if (previous != null) {
+                MDC.put(AUDIT_PRINCIPAL_MDC_KEY, previous);
+            } else {
+                MDC.remove(AUDIT_PRINCIPAL_MDC_KEY);
+            }
+        }
     }
 }
