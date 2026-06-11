@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import PublicIcon from "@mui/icons-material/Public";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import HistoryIcon from "@mui/icons-material/History";
@@ -66,7 +67,13 @@ function humanizeOperation(op: string): string {
  * lengthy is clamped and collapsed by default with a Show more/less toggle.
  * Short messages (e.g. "Enforcement failed") render plainly with no toggle.
  */
-function ActivityError({ message }: { message: string }) {
+function ActivityError({
+  message,
+  t,
+}: {
+  message: string;
+  t: (key: string, defaultValue: string) => string;
+}) {
   const [expanded, setExpanded] = useState(false);
   const needsToggle = message.length > 80 || message.includes("\n");
   if (!needsToggle) return <>{message}</>;
@@ -82,7 +89,9 @@ function ActivityError({ message }: { message: string }) {
         className="pol-activity-error__toggle"
         onClick={() => setExpanded((v) => !v)}
       >
-        {expanded ? "Show less" : "Show more"}
+        {expanded
+          ? t("policies.detail.showLess", "Show less")
+          : t("policies.detail.showMore", "Show more")}
       </button>
     </span>
   );
@@ -104,6 +113,7 @@ export function PolicyDetailPanel({
   onDelete,
   onRetry,
 }: PolicyDetailPanelProps) {
+  const { t } = useTranslation();
   const isPaused = status === "paused";
   // Real configured steps drive the flow; fall back to the preset's rule labels.
   const enforceItems =
@@ -123,7 +133,7 @@ export function PolicyDetailPanel({
       <PanelHeader
         icon={category.icon}
         iconAccent={ROW_ACCENT[category.id] ?? "blue"}
-        title={category.label}
+        title={t(`policies.catalog.${category.id}`, category.label)}
         onBack={onBack}
         actions={
           <StatusBadge
@@ -131,7 +141,9 @@ export function PolicyDetailPanel({
             showDot
             pulse={!isPaused}
           >
-            {isPaused ? "Paused" : "Active"}
+            {isPaused
+              ? t("policies.detail.statusPaused", "Paused")
+              : t("policies.detail.statusActive", "Active")}
           </StatusBadge>
         }
       />
@@ -139,7 +151,9 @@ export function PolicyDetailPanel({
       <div className="pol-scroll">
         {/* Enforces */}
         <div>
-          <p className="pol-section-label">Enforces</p>
+          <p className="pol-section-label">
+            {t("policies.detail.enforces", "Enforces")}
+          </p>
           <Card padding="default">
             <div className="pol-rule-flow">
               <ChipFlow items={enforceItems} separator="arrow" />
@@ -151,19 +165,24 @@ export function PolicyDetailPanel({
               </span>
               <span className="pol-meta-item">
                 <ScheduleIcon sx={{ fontSize: "0.8rem" }} />
-                On every upload
+                {t("policies.detail.onEveryUpload", "On every upload")}
               </span>
             </div>
             <div className="pol-note">
               <HistoryIcon sx={{ fontSize: "0.8rem" }} />
-              Originals stay untouched • Enforced version saved alongside
+              {t(
+                "policies.detail.originalsNote",
+                "Originals stay untouched • Enforced version saved alongside",
+              )}
             </div>
           </Card>
         </div>
 
         {/* Recent Activity */}
         <div>
-          <p className="pol-section-label">Recent Activity</p>
+          <p className="pol-section-label">
+            {t("policies.detail.recentActivity", "Recent Activity")}
+          </p>
           {activityItems.length > 0 ? (
             <Card padding="none">
               {activityItems.map((item, i) => (
@@ -192,7 +211,7 @@ export function PolicyDetailPanel({
                   title={item.doc}
                   description={
                     item.status === "flagged" ? (
-                      <ActivityError message={item.action} />
+                      <ActivityError message={item.action} t={t} />
                     ) : (
                       item.action
                     )
@@ -205,7 +224,7 @@ export function PolicyDetailPanel({
                         size="sm"
                         onClick={() => onRetry(item)}
                       >
-                        Retry
+                        {t("policies.detail.retry", "Retry")}
                       </Button>
                     ) : undefined
                   }
@@ -217,8 +236,11 @@ export function PolicyDetailPanel({
               <EmptyState
                 size="compact"
                 icon={<DescriptionIcon sx={{ fontSize: "1.5rem" }} />}
-                title="No activity yet"
-                description="Documents will appear here once this policy runs."
+                title={t("policies.detail.noActivityTitle", "No activity yet")}
+                description={t(
+                  "policies.detail.noActivityDescription",
+                  "Documents will appear here once this policy runs.",
+                )}
               />
             </Card>
           )}
@@ -232,15 +254,21 @@ export function PolicyDetailPanel({
               <span className="pol-stat-value">
                 {statValues.enforced.toLocaleString()}
               </span>
-              <span className="pol-stat-label">Docs enforced</span>
+              <span className="pol-stat-label">
+                {t("policies.detail.statDocsEnforced", "Docs enforced")}
+              </span>
             </div>
             <div className="pol-stat">
               <span className="pol-stat-value">{statValues.dataProcessed}</span>
-              <span className="pol-stat-label">Data processed</span>
+              <span className="pol-stat-label">
+                {t("policies.detail.statDataProcessed", "Data processed")}
+              </span>
             </div>
             <div className="pol-stat">
               <span className="pol-stat-value">{statValues.activeFor}</span>
-              <span className="pol-stat-label">Active</span>
+              <span className="pol-stat-label">
+                {t("policies.detail.statActive", "Active")}
+              </span>
             </div>
           </div>
         </Card>
@@ -249,7 +277,10 @@ export function PolicyDetailPanel({
           <Banner
             tone="neutral"
             icon={<LockIcon sx={{ fontSize: "1rem" }} />}
-            description="Managed by your organization. Contact an admin to change this policy."
+            description={t(
+              "policies.detail.managedByOrg",
+              "Managed by your organization. Contact an admin to change this policy.",
+            )}
           />
         )}
       </div>
@@ -265,14 +296,16 @@ export function PolicyDetailPanel({
               onClick={onDelete}
               style={{ marginRight: "auto" }}
             >
-              Delete
+              {t("delete", "Delete")}
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={onTogglePause}>
-            {isPaused ? "Resume" : "Pause"}
+            {isPaused
+              ? t("policies.detail.resume", "Resume")
+              : t("policies.detail.pause", "Pause")}
           </Button>
           <Button variant="gradient" size="sm" onClick={onEditSettings}>
-            Edit Settings
+            {t("policies.detail.editSettings", "Edit Settings")}
           </Button>
         </div>
       )}

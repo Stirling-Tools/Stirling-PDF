@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -75,6 +76,7 @@ export function PoliciesSection({
    *  collapse button), mirroring the back-button + title in a policy. */
   leadingControl?: ReactNode;
 } = {}) {
+  const { t } = useTranslation();
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
   // Persist the expand/collapse state across refreshes.
@@ -109,21 +111,26 @@ export function PoliciesSection({
       <div className="pol-list-head">
         {leadingControl}
         <SectionHeader
-          title="Policies"
-          count={`${configuredCount} active`}
+          title={t("policies.sidebar.title", "Policies")}
+          count={t("policies.sidebar.activeCount", "{{count}} active", {
+            count: configuredCount,
+          })}
           collapsible
           expanded={expanded}
           onToggle={toggleExpanded}
         />
         <AppTooltip
-          content="A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+          content={t(
+            "policies.sidebar.infoTooltip",
+            "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps.",
+          )}
           sidebarTooltip
           pinOnClick
         >
           <button
             type="button"
             className="pol-info-btn"
-            aria-label="What is a policy?"
+            aria-label={t("policies.sidebar.infoAriaLabel", "What is a policy?")}
           >
             <LocalIcon
               icon="info-outline-rounded"
@@ -149,10 +156,15 @@ export function PoliciesSection({
                     <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
                       {cat.icon}
                     </IconBadge>
-                    <span className="pol-row-label">{cat.label}</span>
+                    <span className="pol-row-label">
+                      {t(`policies.catalog.${cat.id}`, cat.label)}
+                    </span>
                     <span className="pol-row-trail">
                       <span className="pol-row-soon">
-                        Upgrade to enterprise
+                        {t(
+                          "policies.sidebar.upgradeToEnterprise",
+                          "Upgrade to enterprise",
+                        )}
                       </span>
                     </span>
                   </div>
@@ -169,16 +181,20 @@ export function PoliciesSection({
                   <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
                     {cat.icon}
                   </IconBadge>
-                  <span className="pol-row-label">{cat.label}</span>
+                  <span className="pol-row-label">
+                    {t(`policies.catalog.${cat.id}`, cat.label)}
+                  </span>
                   <span className="pol-row-trail">
                     {status === "setup" ? (
-                      <span className="pol-row-setup">Set up</span>
+                      <span className="pol-row-setup">
+                        {t("policies.sidebar.setUp", "Set up")}
+                      </span>
                     ) : (
                       <StatusBadge
                         tone={status === "active" ? "success" : "warning"}
                         size="sm"
                       >
-                        {STATUS_LABEL[status]}
+                        {t(`policies.status.${status}`, STATUS_LABEL[status])}
                       </StatusBadge>
                     )}
                     <ChevronRightIcon
@@ -201,6 +217,7 @@ export function PoliciesSection({
  * which replaces the Tools area while a policy is selected.
  */
 export function PolicyDetailTakeover() {
+  const { t } = useTranslation();
   const pol = usePolicies();
   const { categories, configs, sources, docTypes } = usePolicyCatalog();
   const { selectedId, detailView } = usePolicySelection();
@@ -311,7 +328,9 @@ export function PolicyDetailTakeover() {
       return (
         <div className="pol-detail">
           <div className="pol-scroll">
-            <p className="pol-desc">Loading…</p>
+            <p className="pol-desc">
+              {t("policies.sidebar.loading", "Loading…")}
+            </p>
           </div>
         </div>
       );
@@ -404,6 +423,7 @@ export function PoliciesCollapsedButton({
 }: {
   onExpand: () => void;
 }) {
+  const { t } = useTranslation();
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
 
@@ -416,16 +436,21 @@ export function PoliciesCollapsedButton({
           .filter((cat) => !cat.comingSoon)
           .map((cat) => {
             const status = deriveRowStatus(pol.policies[cat.id]);
+            const label = t(`policies.catalog.${cat.id}`, cat.label);
+            const statusLabel = t(
+              `policies.status.${status}`,
+              STATUS_LABEL[status],
+            );
             const suffix =
               status === "active"
-                ? " (Active)"
+                ? t("policies.sidebar.railSuffixActive", " (Active)")
                 : status === "paused"
-                  ? " (Paused)"
+                  ? t("policies.sidebar.railSuffixPaused", " (Paused)")
                   : "";
             return (
               <AppTooltip
                 key={cat.id}
-                content={`${cat.label}${suffix}`}
+                content={`${label}${suffix}`}
                 position="left"
                 arrow
                 delay={300}
@@ -434,7 +459,11 @@ export function PoliciesCollapsedButton({
                   type="button"
                   className="pol-crail-btn"
                   data-status={status}
-                  aria-label={`${cat.label} policy — ${STATUS_LABEL[status]}`}
+                  aria-label={t(
+                    "policies.sidebar.railAriaLabel",
+                    "{{label}} policy — {{status}}",
+                    { label, status: statusLabel },
+                  )}
                   onClick={() => {
                     selectPolicy(cat.id);
                     onExpand();

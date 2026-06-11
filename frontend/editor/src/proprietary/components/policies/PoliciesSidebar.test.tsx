@@ -4,6 +4,29 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
+// The global setup mock returns the i18n KEY (t: (key) => key); these tests
+// assert the rendered English copy, so override locally to return the default
+// value passed to t() — mirroring i18next's runtime fallback when a key is
+// missing. (Interpolated strings are returned raw; no test here asserts them.)
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string) =>
+      typeof defaultValue === "string" ? defaultValue : key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
+  I18nextProvider: ({ children }: { children: ReactNode }) => children,
+}));
+
+// usePolicies derives `canConfigure` from app-config; with no AppConfigProvider
+// here `config` is null, which (tri-state gate) hides the edit affordances. Mock
+// app-config as a single-user deployment (login off) so the local operator can
+// configure and the narrative view's Edit/Pause/Delete actions render.
+vi.mock("@app/contexts/AppConfigContext", async (orig) => ({
+  ...(await orig<typeof import("@app/contexts/AppConfigContext")>()),
+  useAppConfig: () => ({ config: { enableLogin: false } }),
+}));
+
 // The shared Tooltip (used by the "what is a policy?" info button) pulls in
 // preferences/sidebar contexts we don't set up here — passthrough it.
 vi.mock("@app/components/shared/Tooltip", () => ({
