@@ -31,7 +31,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
@@ -169,6 +172,35 @@ class PolicyEngineTest {
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
+    }
+
+    @Test
+    void runBlockedByUsageLimit_surfacesErrorCodeAndSubscribed() throws Exception {
+        // A downstream tool call gets a 402 entitlement block. The run fails, but its errorCode +
+        // subscribed are taken from the 402 body so the client can pop the right usage-limit modal
+        // (the policy 402 happens server-side, out of reach of the apiClient interceptor).
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        String body = "{\"error\":\"PAYG_LIMIT_REACHED\",\"subscribed\":true}";
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenThrow(
+                        HttpClientErrorException.create(
+                                HttpStatus.PAYMENT_REQUIRED,
+                                "Payment Required",
+                                HttpHeaders.EMPTY,
+                                body.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                                java.nio.charset.StandardCharsets.UTF_8));
+
+        PolicyRun run =
+                engine.submit(
+                                definition(new PipelineStep(ROTATE, Map.of())),
+                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        assertEquals("PAYG_LIMIT_REACHED", run.getErrorCode());
+        assertEquals(Boolean.TRUE, run.getErrorSubscribed());
     }
 
     @Test

@@ -1,21 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Mock the toast layer and openPlanSettings so we can assert what the
-// handler dispatches without needing a real DOM context for the toast
-// portal. Mocks are hoisted by vitest so the module under test imports
-// these in place of the real implementations.
-vi.mock("@app/components/toast", () => ({
-  alert: vi.fn(),
-}));
-vi.mock("@app/utils/appSettings", () => ({
-  openPlanSettings: vi.fn(),
-}));
-
-import { alert } from "@app/components/toast";
-import { openPlanSettings } from "@app/utils/appSettings";
+import {
+  FREE_LIMIT_MODAL_EVENT,
+  SPEND_CAP_MODAL_EVENT,
+} from "@app/components/usageLimitModals";
 import {
   classifyPaygError,
   extractSignupCategory,
+  extractSubscribed,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
 
@@ -26,6 +18,7 @@ describe("classifyPaygError", () => {
         status: 402,
         data: {
           error: "FEATURE_DEGRADED",
+          subscribed: false,
           missingGates: ["AUTOMATION"],
           state: "DEGRADED",
           periodEnd: "2026-06-30",
@@ -35,6 +28,16 @@ describe("classifyPaygError", () => {
       },
     };
     expect(classifyPaygError(err)).toBe("FEATURE_DEGRADED");
+  });
+
+  it("returns PAYG_LIMIT_REACHED for 402 + error sentinel (API-key path)", () => {
+    const err = {
+      response: {
+        status: 402,
+        data: { error: "PAYG_LIMIT_REACHED", subscribed: true },
+      },
+    };
+    expect(classifyPaygError(err)).toBe("PAYG_LIMIT_REACHED");
   });
 
   it("returns SIGNUP_REQUIRED for 401 + error sentinel", () => {
@@ -57,7 +60,7 @@ describe("classifyPaygError", () => {
     expect(classifyPaygError(err)).toBeNull();
   });
 
-  it("returns null for 402 without the FEATURE_DEGRADED sentinel", () => {
+  it("returns null for 402 without a known sentinel", () => {
     const err = {
       response: { status: 402, data: { error: "Payment required" } },
     };
@@ -116,33 +119,89 @@ describe("extractSignupCategory", () => {
   });
 });
 
-describe("handlePaygError", () => {
+describe("extractSubscribed", () => {
+  it("returns the boolean when present", () => {
+    expect(
+      extractSubscribed({ response: { data: { subscribed: true } } }),
+    ).toBe(true);
+    expect(
+      extractSubscribed({ response: { data: { subscribed: false } } }),
+    ).toBe(false);
+  });
+
+  it("returns null when missing or wrong type", () => {
+    expect(extractSubscribed(null)).toBeNull();
+    expect(extractSubscribed({})).toBeNull();
+    expect(extractSubscribed({ response: { data: {} } })).toBeNull();
+    expect(
+      extractSubscribed({ response: { data: { subscribed: "yes" } } }),
+    ).toBeNull();
+  });
+});
+
+describe("handlePaygError — usage-limit modals", () => {
+  let freeOpened: number;
+  let spendOpened: number;
+  const onFree = () => (freeOpened += 1);
+  const onSpend = () => (spendOpened += 1);
+
   beforeEach(() => {
     vi.clearAllMocks();
+    freeOpened = 0;
+    spendOpened = 0;
+    window.addEventListener(FREE_LIMIT_MODAL_EVENT, onFree);
+    window.addEventListener(SPEND_CAP_MODAL_EVENT, onSpend);
   });
 
-  it("shows the persistent upgrade toast on FEATURE_DEGRADED", () => {
+  afterEach(() => {
+    window.removeEventListener(FREE_LIMIT_MODAL_EVENT, onFree);
+    window.removeEventListener(SPEND_CAP_MODAL_EVENT, onSpend);
+  });
+
+  it("FEATURE_DEGRADED + unsubscribed → opens the free-limit modal (no spend-cap)", () => {
+    handlePaygError("FEATURE_DEGRADED", {
+      response: { status: 402, data: { error: "FEATURE_DEGRADED", subscribed: false } },
+    });
+    expect(freeOpened).toBe(1);
+    expect(spendOpened).toBe(0);
+  });
+
+  it("FEATURE_DEGRADED + subscribed → opens the spend-cap modal", () => {
+    handlePaygError("FEATURE_DEGRADED", {
+      response: { status: 402, data: { error: "FEATURE_DEGRADED", subscribed: true } },
+    });
+    expect(spendOpened).toBe(1);
+    expect(freeOpened).toBe(0);
+  });
+
+  it("PAYG_LIMIT_REACHED + subscribed → opens the spend-cap modal", () => {
+    handlePaygError("PAYG_LIMIT_REACHED", {
+      response: { status: 402, data: { error: "PAYG_LIMIT_REACHED", subscribed: true } },
+    });
+    expect(spendOpened).toBe(1);
+    expect(freeOpened).toBe(0);
+  });
+
+  it("PAYG_LIMIT_REACHED + unsubscribed → opens the free-limit modal", () => {
+    handlePaygError("PAYG_LIMIT_REACHED", {
+      response: { status: 402, data: { error: "PAYG_LIMIT_REACHED", subscribed: false } },
+    });
+    expect(freeOpened).toBe(1);
+    expect(spendOpened).toBe(0);
+  });
+
+  it("defaults to the free-limit modal when subscribed is absent", () => {
     handlePaygError("FEATURE_DEGRADED", {
       response: { status: 402, data: { error: "FEATURE_DEGRADED" } },
     });
-    expect(alert).toHaveBeenCalledTimes(1);
-    const opts = vi.mocked(alert).mock.calls[0][0];
-    expect(opts.alertType).toBe("warning");
-    expect(opts.isPersistentPopup).toBe(true);
-    expect(opts.buttonText).toBe("Go to billing");
-    // Body should reference the 500-op free monthly allowance so the
-    // user understands what they hit.
-    expect(String(opts.body)).toMatch(/500/);
+    expect(freeOpened).toBe(1);
+    expect(spendOpened).toBe(0);
   });
+});
 
-  it("invoking the toast's buttonCallback opens the Plan settings tab", () => {
-    handlePaygError("FEATURE_DEGRADED", {
-      response: { status: 402, data: { error: "FEATURE_DEGRADED" } },
-    });
-    const opts = vi.mocked(alert).mock.calls[0][0];
-    expect(opts.buttonCallback).toBeDefined();
-    opts.buttonCallback?.();
-    expect(openPlanSettings).toHaveBeenCalledTimes(1);
+describe("handlePaygError — signup", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
   it("dispatches payg:signupRequired on SIGNUP_REQUIRED with category in detail", () => {
@@ -158,8 +217,6 @@ describe("handlePaygError", () => {
       expect(handler).toHaveBeenCalledTimes(1);
       const ev = handler.mock.calls[0][0] as CustomEvent;
       expect(ev.detail).toEqual({ category: "AUTOMATION" });
-      // No toast for SIGNUP_REQUIRED — the modal carries the message.
-      expect(alert).not.toHaveBeenCalled();
     } finally {
       window.removeEventListener("payg:signupRequired", handler);
     }

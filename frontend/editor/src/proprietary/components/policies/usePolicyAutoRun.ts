@@ -11,7 +11,7 @@
  * in the run store), so re-renders and remounts don't re-fire.
  */
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   useAllFiles,
   useFileManagement,
@@ -24,7 +24,12 @@ import {
   getPolicyRun,
   downloadPolicyOutput,
 } from "@app/services/policyApi";
-import type { PolicyRunStatus } from "@app/services/policyPipeline";
+import type {
+  PolicyRunStatus,
+  PolicyRunView,
+  PolicyLimitReachedDetail,
+} from "@app/services/policyPipeline";
+import { POLICY_LIMIT_REACHED_EVENT } from "@app/services/policyPipeline";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
@@ -68,6 +73,30 @@ export function usePolicyAutoRun(): void {
   const polling = useRef<Set<string>>(new Set());
   const importing = useRef<Set<string>>(new Set());
   const dispatching = useRef<Set<string>>(new Set());
+
+  // A policy's tool calls run server-side, so a usage-limit 402 never reaches the apiClient
+  // interceptor (and thus never pops the modal that direct calls get). The backend surfaces the
+  // limit sentinel on the run's errorCode; when a run we polled finishes blocked, broadcast a
+  // window event. A saas-layer listener (which can read the wallet + open the modal — this
+  // proprietary hook can't import the saas modal API) decides free-limit vs spend-cap. Dedupe per
+  // run so a folder-watch burst opens the modal once, not once per file.
+  const firedLimitModal = useRef<Set<string>>(new Set());
+
+  const onRunFinished = useCallback((view: PolicyRunView) => {
+    const code = view.errorCode;
+    if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
+    if (firedLimitModal.current.has(view.runId)) return;
+    firedLimitModal.current.add(view.runId);
+    try {
+      window.dispatchEvent(
+        new CustomEvent<PolicyLimitReachedDetail>(POLICY_LIMIT_REACHED_EVENT, {
+          detail: { subscribed: view.errorSubscribed ?? null },
+        }),
+      );
+    } catch {
+      // non-browser env (tests / SSR) — no-op.
+    }
+  }, []);
 
   // Dispatch: for each active policy × each session file not yet run, fire a run.
   useEffect(() => {
@@ -116,9 +145,11 @@ export function usePolicyAutoRun(): void {
     for (const run of runs) {
       if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
       polling.current.add(run.runId);
-      void poll(run.runId).finally(() => polling.current.delete(run.runId));
+      void poll(run.runId, onRunFinished).finally(() =>
+        polling.current.delete(run.runId),
+      );
     }
-  }, [runs]);
+  }, [runs, onRunFinished]);
 
   // Import each completed run's outputs into the workspace (each output once),
   // so the enforced file appears in the app rather than only on the backend.
@@ -305,8 +336,16 @@ export async function runPolicyOnFile(
   }
 }
 
-/** Poll a run's status until it reaches a terminal state (or the cap). */
-async function poll(runId: string): Promise<void> {
+/**
+ * Poll a run's status until it reaches a terminal state (or the cap). Calls {@code onTerminal} once
+ * with the final view when it terminates — the caller uses that to pop the usage-limit modal when a
+ * run was blocked. Only runs polled this session fire it (terminal runs aren't re-polled), so a
+ * persisted failed run never re-triggers a modal on reload.
+ */
+async function poll(
+  runId: string,
+  onTerminal?: (view: PolicyRunView) => void,
+): Promise<void> {
   for (let i = 0; i < MAX_POLLS; i++) {
     await delay(POLL_MS);
     let view;
@@ -319,7 +358,11 @@ async function poll(runId: string): Promise<void> {
       status: view.status,
       outputs: view.outputs,
       error: view.error,
+      errorCode: view.errorCode ?? null,
     });
-    if (isTerminal(view.status)) return;
+    if (isTerminal(view.status)) {
+      onTerminal?.(view);
+      return;
+    }
   }
 }

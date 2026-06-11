@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientResponseException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -199,6 +200,26 @@ public class PolicyEngine {
                     e.getMessage());
             run.fail(message);
             taskManager.setError(runId, message);
+        } catch (RestClientResponseException e) {
+            // A downstream tool call returned an error status. When it's a structured entitlement
+            // response (401/402 with a JSON `error` sentinel), surface that code onto the run so
+            // the
+            // client can react — e.g. pop the usage-limit modal — instead of only seeing a generic
+            // failure. We don't interpret the code here (that would couple this module to the saas
+            // billing layer); we just pass it through for the client to map. Other statuses fall
+            // through to the generic failure below.
+            String code = extractDownstreamErrorCode(e);
+            if (code != null) {
+                log.info("Policy run {} blocked by downstream entitlement gate ({})", runId, code);
+                String message = "Usage limit reached";
+                run.failWithCode(message, code, extractDownstreamSubscribed(e));
+                taskManager.setError(runId, message);
+            } else {
+                String message = "Policy run failed: " + e.getMessage();
+                log.error("Policy run {} failed (downstream HTTP error)", runId, e);
+                run.fail(message);
+                taskManager.setError(runId, message);
+            }
         } catch (Exception e) {
             String message = "Policy run failed: " + e.getMessage();
             log.error("Policy run {} failed", runId, e);
@@ -279,6 +300,49 @@ public class PolicyEngine {
         return String.format(
                 "The %s tool did not respond within %d seconds and was aborted.",
                 e.getEndpointPath(), e.getReadTimeout().toSeconds());
+    }
+
+    /** Matches the {@code "error":"CODE"} field of a small JSON error body. */
+    private static final java.util.regex.Pattern ERROR_CODE_FIELD =
+            java.util.regex.Pattern.compile("\"error\"\\s*:\\s*\"([^\"]+)\"");
+
+    /**
+     * Pull the {@code error} sentinel out of a downstream 401/402 JSON body — e.g. the saas
+     * EntitlementGuard's {@code {"error":"PAYG_LIMIT_REACHED",...}}. Regex (not a JSON parse) on
+     * purpose: the body is a small, server-controlled shape and this keeps the proprietary module
+     * free of any billing-layer coupling. Returns null for other statuses or an unmatched body, in
+     * which case the caller treats it as a generic failure.
+     */
+    private static String extractDownstreamErrorCode(RestClientResponseException e) {
+        int status = e.getStatusCode().value();
+        if (status != 401 && status != 402) {
+            return null;
+        }
+        String body = e.getResponseBodyAsString();
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+        java.util.regex.Matcher m = ERROR_CODE_FIELD.matcher(body);
+        return m.find() ? m.group(1) : null;
+    }
+
+    /** Matches the {@code "subscribed":true|false} field of a small JSON error body. */
+    private static final java.util.regex.Pattern SUBSCRIBED_FIELD =
+            java.util.regex.Pattern.compile("\"subscribed\"\\s*:\\s*(true|false)");
+
+    /**
+     * Pull the {@code subscribed} flag out of a downstream 401/402 JSON body (present on the saas
+     * {@code PAYG_LIMIT_REACHED} response). Null when absent — the client then defaults to the
+     * free-limit modal. Regex for the same dependency-free reason as {@link
+     * #extractDownstreamErrorCode}.
+     */
+    private static Boolean extractDownstreamSubscribed(RestClientResponseException e) {
+        String body = e.getResponseBodyAsString();
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+        java.util.regex.Matcher m = SUBSCRIBED_FIELD.matcher(body);
+        return m.find() ? Boolean.valueOf(m.group(1)) : null;
     }
 
     /**

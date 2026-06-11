@@ -14,6 +14,8 @@ public record PolicyRunView(
         int currentStep,
         int stepCount,
         String error,
+        String errorCode,
+        Boolean errorSubscribed,
         List<ResultFile> outputs) {
 
     public static PolicyRunView of(PolicyRun run) {
@@ -23,6 +25,8 @@ public record PolicyRunView(
                 run.getCurrentStep(),
                 run.stepCount(),
                 run.getError(),
+                run.getErrorCode(),
+                run.getErrorSubscribed(),
                 run.getOutputs());
     }
 }
