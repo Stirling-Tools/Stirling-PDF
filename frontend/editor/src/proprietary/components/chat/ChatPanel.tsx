@@ -523,7 +523,12 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       )}
 
       <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
-        <Stack gap="sm" px="md" py="sm">
+        <Stack
+          gap="sm"
+          px="md"
+          pt="sm"
+          className="chat-panel-messages__content"
+        >
           {messages.map((msg) => (
             <ChatMessageBubble
               key={msg.id}

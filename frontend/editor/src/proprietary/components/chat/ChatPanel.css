@@ -165,6 +165,16 @@
 .chat-panel-messages {
   flex: 1;
   min-height: 0;
+  /* Establish a size container so the message list's bottom padding can be
+     expressed relative to the scroll viewport height (cqh) below. */
+  container-type: size;
+}
+
+/* Extra room beneath the last message so that, scrolled to the bottom, the most
+   recent turn rests near the vertical centre of the conversation rather than
+   jammed against the composer. cqh is a fraction of the scroll viewport height. */
+.chat-panel-messages__content {
+  padding-bottom: 15cqh;
 }
 
 /* Quick action cards above the input. */
