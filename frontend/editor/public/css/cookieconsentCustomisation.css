@@ -183,13 +183,10 @@
   z-index: 100 !important;
 }
 
-/* The preferences dialog only opens by deliberate user action (Settings →
-   Legal → Manage, or the banner's own button), so it must sit above the
-   settings modal (Z_INDEX_CONFIG_MODAL = 1400) while staying below the
-   restart-confirmation layer (Z_INDEX_OVER_CONFIG_MODAL = 2000). The
-   passive consent banner keeps the low z-index above. */
+/* Preferences dialog sits above the settings modal it opens from; value is
+   Z_INDEX_COOKIE_PREFERENCES_MODAL, set as this variable by useCookieConsent */
 .show--preferences #cc-main {
-  z-index: 1450 !important;
+  z-index: var(--z-index-cookie-preferences) !important;
 }
 
 /* Ensure consent modal text is visible in both themes */

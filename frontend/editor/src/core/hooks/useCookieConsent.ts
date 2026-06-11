@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { BASE_PATH } from "@app/constants/app";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { Z_INDEX_COOKIE_PREFERENCES_MODAL } from "@app/styles/zIndex";
 import { TOUR_STATE_EVENT, type TourStatePayload } from "@app/constants/events";
 import { getCookieConsentOverrides } from "@app/extensions/cookieConsentConfig";
 
@@ -25,7 +26,7 @@ interface CookieConsentConfig {
   forceLightMode?: boolean;
 }
 
-// Shard so Mantine's scroll-lock doesn't swallow events on the consent dialog; 
+// Shard so Mantine's scroll-lock doesn't swallow events on the consent dialog;
 // lazy because #cc-main only exists post-load.
 export const COOKIE_CONSENT_SCROLL_SHARD = {
   get current(): HTMLElement | null {
@@ -45,6 +46,12 @@ export const useCookieConsent = ({
 
   useEffect(() => {
     if (!analyticsEnabled) return;
+
+    // Bridge the layering constant to the static cookie-consent stylesheets
+    document.documentElement.style.setProperty(
+      "--z-index-cookie-preferences",
+      String(Z_INDEX_COOKIE_PREFERENCES_MODAL),
+    );
 
     const mainCSS = document.createElement("link");
     mainCSS.rel = "stylesheet";
