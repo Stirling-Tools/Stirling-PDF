@@ -24,6 +24,7 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -96,13 +97,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const switchSection = useCallback(
     (key: NavKey) => {
       setActive(key);
-      const alreadyInSettings =
-        window.location.pathname.startsWith("/settings");
+      const alreadyInSettings = stripBasePath(
+        window.location.pathname,
+      ).startsWith("/settings");
       if (alreadyInSettings) {
         window.history.replaceState(
           window.history.state,
           "",
-          `/settings/${key}`,
+          withBasePath(`/settings/${key}`),
         );
       } else {
         navigate(`/settings/${key}`);

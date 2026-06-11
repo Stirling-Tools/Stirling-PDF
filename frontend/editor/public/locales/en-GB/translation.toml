@@ -2960,6 +2960,7 @@ tags = "squish,small,tiny"
 
 [config]
 plan = "Plan"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Delete My Account"
@@ -3056,7 +3057,7 @@ warning = "⚠️ Warning: This action will generate new API keys and make your 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
 navLabel = "MCP Server"
-tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation."
 title = "MCP Server"
 viewApiKeys = "View API keys"
 
@@ -3075,14 +3076,6 @@ label = "Your MCP endpoint"
 addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
 title = "Connect your AI assistant"
-
-[config.mcp.tools]
-ai = "AI"
-convert = "Convert"
-misc = "Misc"
-pages = "Pages"
-security = "Security"
-title = "What your assistant can do"
 
 [config.overview]
 description = "Current application settings and configuration details."

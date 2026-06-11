@@ -24,6 +24,7 @@ import { synchronizeUserUpgrade } from "@app/services/userService";
 import {
   syncOAuthAvatar,
   getProfilePictureMetadata,
+  getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
 
@@ -262,6 +263,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchTrialStatus();
   }, [fetchTrialStatus]);
 
+  // Provider photo as interim fallback when the bucket copy is missing —
+  // skipped when the user explicitly chose upload/removal (source "upload").
+  const providerAvatarFallback = useCallback(
+    async (user: SupabaseUser): Promise<string | null> => {
+      try {
+        const metadata = await getProfilePictureMetadata(user.id);
+        if (metadata?.source === "upload") return null;
+        return getProviderAvatarUrl(user);
+      } catch {
+        return getProviderAvatarUrl(user);
+      }
+    },
+    [],
+  );
+
   const fetchProfilePicture = useCallback(
     async (sessionToUse?: Session | null) => {
       const currentSession = sessionToUse ?? session;
@@ -292,7 +308,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             "[Auth Debug] Profile picture not available:",
             error.message,
           );
-          setProfilePictureUrl(null);
+          setProfilePictureUrl(
+            await providerAvatarFallback(currentSession.user),
+          );
         } else {
           setProfilePictureUrl(data.signedUrl);
           console.debug(
@@ -301,10 +319,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error: unknown) {
         console.debug("[Auth Debug] Failed to fetch profile picture:", error);
-        setProfilePictureUrl(null);
+        setProfilePictureUrl(await providerAvatarFallback(currentSession.user));
       }
     },
-    [session],
+    [session, providerAvatarFallback],
   );
 
   const refreshProfilePicture = useCallback(async () => {
@@ -463,23 +481,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Fetch credits, pro status, trial status, profile picture metadata, and profile picture using the session from the response
           if (data.session?.user) {
-            // Sync OAuth avatar in background
-            syncOAuthAvatar(data.session.user).catch((err) => {
-              console.debug(
-                "[Auth Debug] Failed to sync OAuth avatar on init:",
-                err,
-              );
-            });
+            // Sync OAuth avatar in background; fetch the picture once the
+            // sync settles instead of guessing with a fixed delay.
+            syncOAuthAvatar(data.session.user)
+              .catch((err) => {
+                console.debug(
+                  "[Auth Debug] Failed to sync OAuth avatar on init:",
+                  err,
+                );
+                return false;
+              })
+              .then(() => fetchProfilePicture(data.session));
 
             await fetchCredits(data.session);
             await fetchProStatus(data.session);
             await fetchTrialStatus(data.session);
             await fetchProfilePictureMetadata(data.session);
-
-            // Small delay to allow avatar sync to complete if quick
-            setTimeout(() => {
-              fetchProfilePicture(data.session);
-            }, 500);
           }
         }
       } catch (err) {
@@ -543,9 +560,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // null/loading states.
 
               // Sync OAuth avatar in background (don't block other fetches)
-              syncOAuthAvatar(newSession.user).catch((err) => {
-                console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
-              });
+              const avatarSync = syncOAuthAvatar(newSession.user).catch(
+                (err) => {
+                  console.debug(
+                    "[Auth Debug] Failed to sync OAuth avatar:",
+                    err,
+                  );
+                  return false;
+                },
+              );
 
               // Fetch user data in parallel
               Promise.all([
@@ -554,15 +577,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
               ]).then(() => {
-                // Fetch profile picture AFTER sync has had time to complete
-                // Use a small delay to allow avatar sync to finish if it's quick
-                setTimeout(() => {
+                // Fetch the picture once the avatar sync settles.
+                avatarSync.then(() => {
                   fetchProfilePicture(newSession).finally(() => {
                     console.debug(
                       "[Auth Debug] User data fully loaded after sign in",
                     );
                   });
-                }, 500);
+                });
               });
             }
           } else if (event === "TOKEN_REFRESHED") {

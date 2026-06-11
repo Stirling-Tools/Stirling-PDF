@@ -201,6 +201,13 @@
   border-color: var(--border-subtle) !important;
 }
 
+/* The collapse/expand toggle keeps a stable identity across the collapsed strip
+   and the expanded header, so a view transition translates it between the two
+   (same size) instead of cross-fading/scaling it ("big then small"). */
+.tool-panel__toggle-vt {
+  view-transition-name: sidebar-toggle;
+}
+
 .tool-panel__expand-btn svg {
   color: var(--text-secondary) !important;
 }
@@ -269,6 +276,22 @@
 
 .tool-panel__compact-header-search .search-input-container {
   width: 100%;
+}
+
+/* Search that separates the Policies section from the Tools list below it. */
+.tool-panel__between-search {
+  padding: 0.5rem 0.75rem 0.25rem;
+  border-top: 1px solid var(--border-subtle, var(--color-border));
+}
+
+.tool-panel__between-search .search-input-container {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* Slightly recessed search field so it reads as distinct from the panel. */
+.tool-panel__between-search input {
+  background-color: var(--bg-muted);
 }
 
 .tool-panel__active-tool-pill {
