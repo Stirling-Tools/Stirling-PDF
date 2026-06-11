@@ -369,43 +369,33 @@ export function PolicySetupWizard({
                   }
                 />
               </div>
-              {/* Output-filename subsection: where to add custom text, and the text. */}
+              {/* Output filename: position + custom text together as one row. */}
               <div className="pol-subhead">Output filename</div>
               <div className="pol-field" data-first>
-                <SettingsRow
-                  label="Add to filename"
-                  control={
-                    <Select
-                      inputSize="sm"
-                      value={outputNamePosition}
-                      onChange={(e) =>
-                        setOutputNamePosition(
-                          e.target.value as "prefix" | "suffix" | "auto-number",
-                        )
-                      }
-                      aria-label="Add to filename"
-                      options={[
-                        { value: "prefix", label: "Prefix" },
-                        { value: "suffix", label: "Suffix" },
-                        { value: "auto-number", label: "Auto-number" },
-                      ]}
-                    />
-                  }
-                />
-              </div>
-              <div className="pol-field">
-                <SettingsRow
-                  label="Text to add"
-                  control={
-                    <Input
-                      inputSize="sm"
-                      value={outputName}
-                      onChange={(e) => setOutputName(e.target.value)}
-                      placeholder="optional"
-                      aria-label="Text to add"
-                    />
-                  }
-                />
+                <div className="pol-name-row">
+                  <Select
+                    inputSize="sm"
+                    value={outputNamePosition}
+                    onChange={(e) =>
+                      setOutputNamePosition(
+                        e.target.value as "prefix" | "suffix" | "auto-number",
+                      )
+                    }
+                    aria-label="Filename position"
+                    options={[
+                      { value: "prefix", label: "Prefix" },
+                      { value: "suffix", label: "Suffix" },
+                      { value: "auto-number", label: "Auto-number" },
+                    ]}
+                  />
+                  <Input
+                    inputSize="sm"
+                    value={outputName}
+                    onChange={(e) => setOutputName(e.target.value)}
+                    placeholder="Text to add (optional)"
+                    aria-label="Filename text"
+                  />
+                </div>
               </div>
               <div className="pol-field">
                 <SettingsRow
