@@ -445,9 +445,12 @@ const TiledPageBackground = ({
   pdfRenderMode = "normal",
 }: TiledPageBackgroundProps) => {
   const [loaded, setLoaded] = useState(false);
-  const handleLoad = () => {
-    setLoaded(true);
-  };
+  const handleLoad = React.useCallback(() => {
+    setLoaded((prev) => {
+      if (prev) return prev;
+      return true;
+    });
+  }, []);
 
   return (
     <div

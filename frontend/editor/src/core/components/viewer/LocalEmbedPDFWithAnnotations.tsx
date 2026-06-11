@@ -5,6 +5,7 @@ import {
   useImperativeHandle,
   forwardRef,
   useRef,
+  useCallback,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { createPluginRegistration } from "@embedpdf/core";
@@ -157,9 +158,12 @@ const TiledPageBackground = ({
   pageIndex,
 }: TiledPageBackgroundProps) => {
   const [loaded, setLoaded] = useState(false);
-  const handleLoad = () => {
-    setLoaded(true);
-  };
+  const handleLoad = useCallback(() => {
+    setLoaded((prev) => {
+      if (prev) return prev;
+      return true;
+    });
+  }, []);
 
   return (
     <div
