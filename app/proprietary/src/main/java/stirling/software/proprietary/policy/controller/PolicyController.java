@@ -165,10 +165,10 @@ public class PolicyController {
     }
 
     /**
-     * Assign owner + owning team server-side. Create stamps the current user and their team; update
-     * preserves the existing owner and team after verifying the policy belongs to the caller's team
-     * — so the client can neither forge ownership/team on create nor reach across teams on update
-     * (a policy in another team reads as not-found).
+     * Assign owner and team server-side: create stamps the current user and their team; update
+     * keeps the existing owner and team after checking the policy belongs to the caller's team. The
+     * client can't forge ownership on create or reach across teams on update (cross-team reads as
+     * not-found).
      */
     private Policy resolveOwnership(Policy incoming) {
         String id = incoming.id();
@@ -201,14 +201,11 @@ public class PolicyController {
     }
 
     /**
-     * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
-     * caller's team — a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
-     * admin gets no say on SaaS. Team scoping (which team's policies) is enforced separately by
-     * {@link PolicyAccessGuard}. Every mutation routes through {@link #savePolicy} (pause/resume
-     * re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two
-     * covers them all; runs ({@code /run}) stay open to the team. Single-user deployments (login
-     * disabled) have no such role, so they trust the local operator. The path allowlist for folder
-     * sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
+     * Gate create/edit/delete to the policy-editor role ({@link PolicyManagementAuthority}; a team
+     * leader on SaaS). Pause/resume re-saves through {@link #savePolicy} and deletion through
+     * {@link #deletePolicy}, so gating those covers every mutation; runs stay open. Single-user
+     * deployments (login disabled) trust the local operator. Which team's policies a user may touch
+     * is scoped separately by {@link PolicyAccessGuard}.
      */
     private void requirePolicyEditingAllowed() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {

@@ -25,9 +25,7 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.TeamMembershipRepository;
 
-/**
- * {@link TeamSecurityExpressions#isCurrentUserTeamLeader()} — used to gate policy editing on SaaS.
- */
+/** {@link TeamSecurityExpressions}: current-user team leadership and team-id resolution. */
 @ExtendWith(MockitoExtension.class)
 class TeamSecurityExpressionsTest {
 

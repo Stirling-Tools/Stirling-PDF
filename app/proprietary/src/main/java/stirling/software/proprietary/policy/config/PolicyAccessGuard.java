@@ -12,12 +12,9 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Policies are scoped to a team: a user may view, run, edit, and delete only the policies belonging
- * to their own team (the team a policy is stamped with at creation). This binds everyone — admins
- * included — so no one sees or touches another team's policies. <em>Whether</em> a user may edit
- * (vs only view/run) is a separate check gated at the controller ({@code
- * PolicyController#requirePolicyEditingAllowed} → team leader). Enforced only when login is
- * enabled; single-user deployments (login disabled) pass every check.
+ * Scopes policy access to the caller's team: every user — admins included — may view, run, edit, or
+ * delete only policies stamped with their own team. Whether a user may edit at all is a separate
+ * check at the controller. Applies only when login is enabled; single-user deployments pass.
  */
 @Component
 @RequiredArgsConstructor

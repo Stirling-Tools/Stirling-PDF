@@ -26,10 +26,7 @@ public record Policy(
         output = output == null ? OutputSpec.inline() : output;
     }
 
-    /**
-     * Without an explicit owning team. Kept for the engine and tests; the controller always stamps
-     * a {@code teamId} on stored policies so they stay scoped to the creating user's team.
-     */
+    /** Without an owning team — for engine runs; stored policies are stamped with a team. */
     public Policy(
             String id,
             String name,
