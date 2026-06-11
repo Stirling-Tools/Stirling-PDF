@@ -29,7 +29,7 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
