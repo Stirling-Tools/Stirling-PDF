@@ -38,13 +38,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.repository.AiCreateSessionRepository;
 import stirling.software.saas.ai.service.AiCreateProxyService;
 import stirling.software.saas.ai.service.AiCreateSessionService;
 import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.charge.ChargeContext;
+import stirling.software.saas.payg.charge.JobChargeService;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.FeatureGate;
+import stirling.software.saas.payg.model.JobSource;
+import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -67,6 +73,7 @@ public class AiCreateController {
     private final TeamCreditService teamCreditService;
     private final UserRepository userRepository;
     private final CreditHeaderUtils creditHeaderUtils;
+    private final JobChargeService jobChargeService;
 
     @PostMapping("/sessions")
     public ResponseEntity<CreateSessionResponse> createSession(
@@ -87,7 +94,43 @@ public class AiCreateController {
                 session.getUserId(),
                 session.getDocType(),
                 session.getTemplateId());
+        chargeForCreate(session);
         return ResponseEntity.ok(new CreateSessionResponse(session.getSessionId()));
+    }
+
+    /**
+     * Bill one document for a new AI Create session — creating a document is the charge point;
+     * follow-up edits on the same session (outline / reprompt / draft / template / stream) carry no
+     * charge. AI usage is billable, so a JWT (web) session counts the same as an API-key one.
+     *
+     * <p>Best-effort: a charge failure must not block the user's session. Entitlement is already
+     * enforced upstream — this controller is {@code @RequiresFeature(AI_SUPPORT)}, so the
+     * EntitlementGuard 402s a team with no AI allowance before we ever get here; this call only
+     * does the accounting (free-grant draw + Stripe meter).
+     */
+    private void chargeForCreate(AiCreateSession session) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+            if (user == null || user.getTeam() == null) {
+                return;
+            }
+            JobSource source =
+                    auth instanceof ApiKeyAuthenticationToken ? JobSource.API : JobSource.WEB;
+            ChargeContext ctx =
+                    new ChargeContext(
+                            user.getId(),
+                            user.getTeam().getId(),
+                            source,
+                            ProcessType.SINGLE_TOOL,
+                            BillingCategory.AI);
+            jobChargeService.chargeStandalone(ctx, 1);
+        } catch (RuntimeException e) {
+            log.warn(
+                    "AI create session {} charge failed; session proceeds unbilled: {}",
+                    session.getSessionId(),
+                    e.getMessage());
+        }
     }
 
     @DeleteMapping("/sessions/{sessionId}")
