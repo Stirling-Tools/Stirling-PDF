@@ -355,11 +355,20 @@ export function PolicySetupWizard({
                     <Select
                       inputSize="sm"
                       value={outputMode}
-                      onChange={(e) =>
-                        setOutputMode(
-                          e.target.value as "new_file" | "new_version",
-                        )
-                      }
+                      onChange={(e) => {
+                        const mode = e.target.value as
+                          | "new_file"
+                          | "new_version";
+                        setOutputMode(mode);
+                        // Auto-number only applies to new files; a new version
+                        // replaces the file in place, so fall back to suffix.
+                        if (
+                          mode === "new_version" &&
+                          outputNamePosition === "auto-number"
+                        ) {
+                          setOutputNamePosition("suffix");
+                        }
+                      }}
                       aria-label="Output mode"
                       options={[
                         { value: "new_file", label: "New file" },
@@ -385,7 +394,10 @@ export function PolicySetupWizard({
                     options={[
                       { value: "prefix", label: "Prefix" },
                       { value: "suffix", label: "Suffix" },
-                      { value: "auto-number", label: "Auto-number" },
+                      // Auto-number only makes sense for separate new files.
+                      ...(outputMode === "new_file"
+                        ? [{ value: "auto-number", label: "Auto-number" }]
+                        : []),
                     ]}
                   />
                   {/* Auto-number names the file itself, so there's no custom
