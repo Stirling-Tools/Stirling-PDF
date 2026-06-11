@@ -694,9 +694,7 @@ export function PolicySetupWizard({
 
       <div className="pol-footer">
         <Button variant="ghost" size="sm" onClick={back}>
-          {step > 1
-            ? t("policies.wizard.back", "Back")
-            : t("cancel", "Cancel")}
+          {step > 1 ? t("policies.wizard.back", "Back") : t("cancel", "Cancel")}
         </Button>
         {step < TOTAL_STEPS ? (
           <Button

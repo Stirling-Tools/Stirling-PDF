@@ -108,9 +108,13 @@ export function PolicyToolConfig({
                 checked={tool.enabled}
                 disabled={!editable}
                 onChange={(checked) => patchTool(index, { enabled: checked })}
-                aria-label={t("policies.toolConfig.enableAriaLabel", "Enable {{tool}}", {
-                  tool: toolName,
-                })}
+                aria-label={t(
+                  "policies.toolConfig.enableAriaLabel",
+                  "Enable {{tool}}",
+                  {
+                    tool: toolName,
+                  },
+                )}
               />
             </div>
             {tool.enabled &&
