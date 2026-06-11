@@ -6,6 +6,7 @@ import {
   forwardRef,
   useRef,
 } from "react";
+// Import the essential plugins
 import { useTranslation } from "react-i18next";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
@@ -13,7 +14,7 @@ import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
-// Import the essential plugins
+// Import the non-essential plugins
 import {
   Viewport,
   ViewportPluginPackage,
@@ -326,7 +327,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
 
         // Register tiling plugin
         createPluginRegistration(TilingPluginPackage, {
-          tileSize: 512, // Reduced from 768 for better parallelization
+          tileSize: 512,
           overlapPx: 2.5,
           extraRings: 1, // Pre-render adjacent tiles to reduce white flashes
           defaultImageType: "image/bmp", // BMP is faster for local processing than WebP

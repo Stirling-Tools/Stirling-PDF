@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { isFileObject } from "@app/types/fileContext";
 
 /**
