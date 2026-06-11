@@ -138,7 +138,10 @@ export function PdfViewerToolbar({
     scrollActions.scrollToLastPage();
   };
 
-  const totalPagesDigits = Math.max(2, (scrollState.totalPages || 1).toString().length);
+  const totalPagesDigits = Math.max(
+    2,
+    (scrollState.totalPages || 1).toString().length,
+  );
   const inputWidth = Math.max(48, 32 + totalPagesDigits * 8);
 
   return (
