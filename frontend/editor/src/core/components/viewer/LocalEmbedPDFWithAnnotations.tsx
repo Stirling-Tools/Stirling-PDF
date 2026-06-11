@@ -10,8 +10,7 @@ import { useTranslation } from "react-i18next";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
-import { usePdfiumEngine } from "@embedpdf/engines/react";
-import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
+import { useEngineContext } from "@embedpdf/engines/react";
 
 // Import the essential plugins
 import {
@@ -397,16 +396,8 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       ];
     }, [pdfUrl]);
 
-    // Initialize the engine
-    const { engine, isLoading, error } = usePdfiumEngine({
-      wasmUrl: pdfiumWasmUrl,
-      worker: true,
-      encoderPoolSize: Math.max(
-        4,
-        Math.min(16, window.navigator.hardwareConcurrency || 4),
-      ),
-      fontFallback: null,
-    });
+    // Retrieve the global engine instance from context
+    const { engine, isLoading, error } = useEngineContext();
 
     // Early return if no file or URL provided
     if (!file && !url) {

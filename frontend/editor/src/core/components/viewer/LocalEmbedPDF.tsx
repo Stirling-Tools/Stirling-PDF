@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
-import { usePdfiumEngine } from "@embedpdf/engines/react";
+import { useEngineContext } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -401,7 +401,6 @@ import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
-import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
@@ -659,16 +658,8 @@ export function LocalEmbedPDF({
     ];
   }, [pdfUrl, enableAnnotations, exportFileName]);
 
-  // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
-  const { engine, isLoading, error } = usePdfiumEngine({
-    wasmUrl: pdfiumWasmUrl,
-    worker: true,
-    encoderPoolSize: Math.max(
-      4,
-      Math.min(16, window.navigator.hardwareConcurrency || 4),
-    ),
-    fontFallback: null,
-  });
+  // Retrieve the global engine instance from context
+  const { engine, isLoading, error } = useEngineContext();
 
   // Early return if no file or URL provided
   if (!file && !url) {
