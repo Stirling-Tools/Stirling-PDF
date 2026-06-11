@@ -36,6 +36,29 @@
   background-color: rgba(59, 130, 246, 0.06);
 }
 
+/* A policy-enforced file glows in that policy's accent colour so it's obvious
+   the file has had a policy applied. Pulses a few times to catch the eye, then
+   settles into a soft persistent glow. */
+.file-sidebar-file-item.policy-enforced {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--policy-glow) 35%, transparent),
+    0 0 8px -2px var(--policy-glow);
+  animation: policy-glow-pulse 1.8s ease-in-out 3;
+}
+@keyframes policy-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--policy-glow) 30%, transparent),
+      0 0 6px -2px var(--policy-glow);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--policy-glow) 75%, transparent),
+      0 0 16px 0 var(--policy-glow);
+  }
+}
+
 .file-sidebar-file-item.selected {
   background-color: rgba(59, 130, 246, 0.12);
 }
