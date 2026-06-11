@@ -6,6 +6,7 @@ import { isToolRoute } from "@app/utils/pathUtils";
 import HomePage from "@app/pages/HomePage";
 import Login from "@app/routes/Login";
 import GuestUserBanner from "@app/components/auth/GuestUserBanner";
+import { TeamInvitationBanner } from "@app/components/shared/TeamInvitationBanner";
 
 export default function Landing() {
   const { session, loading } = useAuth();
@@ -70,6 +71,7 @@ export default function Landing() {
     return (
       <>
         <GuestUserBanner />
+        <TeamInvitationBanner />
         <HomePage />
       </>
     );
