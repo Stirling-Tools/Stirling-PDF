@@ -6,7 +6,7 @@ import { ChatFABButton } from "@shared/components/ChatFABButton";
 import { ChatFABWindow } from "@shared/components/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
-import { useAgentsEnabled } from "@app/components/agents/AgentsPanel";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { Z_INDEX_CHAT_FAB_OVERLAY } from "@app/styles/zIndex";
 import "@app/components/chat/ChatFAB.css";
 
@@ -54,7 +54,8 @@ export function ChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
   const { isLoading } = useChat();
-  const enabled = useAgentsEnabled();
+  const { config } = useAppConfig();
+  const enabled = Boolean(config?.aiEngineEnabled);
 
   // Detect loading → done transition. If the FAB is closed when the agent
   // finishes, show the tick badge until the user opens the panel.
