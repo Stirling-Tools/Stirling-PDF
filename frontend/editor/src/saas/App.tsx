@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
@@ -11,6 +12,7 @@ import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
+import OAuthConsent from "@app/routes/OAuthConsent";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
@@ -29,6 +31,26 @@ function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
 }
 
+/**
+ * Onboarding and trial-expired modals must never cover auth-flow pages
+ * (login, signup, OAuth consent): they steal focus from the task the user
+ * was sent there to complete. Unmounting also stops their background polling.
+ */
+function NonAuthBootstraps() {
+  const location = useLocation();
+  if (isAuthRoute(location.pathname)) {
+    return null;
+  }
+  return (
+    <>
+      <OnboardingBootstrap />
+      <TrialExpiredBootstrap />
+      <SignupRequiredBootstrap />
+      <UsageLimitModalHost />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -36,15 +58,13 @@ export default function App() {
         appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
       >
         <AppLayout>
-          <OnboardingBootstrap />
-          <TrialExpiredBootstrap />
-          <SignupRequiredBootstrap />
-          <UsageLimitModalHost />
+          <NonAuthBootstraps />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/reset" element={<ResetPassword />} />
+            <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/*" element={<Landing />} />
           </Routes>
           <OnboardingTour />

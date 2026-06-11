@@ -23,7 +23,7 @@
  *   - {@link PaygFreeMember} — read-only; the CTA is replaced with an
  *     ask-the-owner note.
  */
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
@@ -42,22 +42,9 @@ import UpgradeModal from "./UpgradeModal";
 import { DocHelp } from "./Payg";
 import {
   FreeMeterPanel,
-  freeSnapshotFromWallet,
+  useFreeSnapshot,
   type FreeSnapshot,
 } from "@app/components/shared/config/configSections/usageMeters";
-
-// ─── Free-tier snapshot (from wallet) ────────────────────────
-
-/**
- * Read free-tier snapshot from the real {@link useWallet} hook. Falls back to
- * a zeroed view if the wallet hasn't loaded yet — this only happens briefly on
- * first paint; once the snapshot arrives the component re-renders with real
- * numbers.
- */
-function useFreeSnapshot(): FreeSnapshot {
-  const { wallet } = useWallet();
-  return useMemo(() => freeSnapshotFromWallet(wallet), [wallet]);
-}
 
 // ─── Editor plan card (always-free tools only) ────────────────────────────
 
@@ -85,7 +72,10 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
           />
           {t("payg.free.editor.eyebrow", "Editor plan · Always free")}
         </span>
-        <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
+        <span
+          className="payg-role-pill"
+          data-leader={leader ? "true" : "false"}
+        >
           {pill}
         </span>
       </div>
@@ -162,8 +152,10 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
             <li>
               <CheckIcon className="paygf-cta__check" fontSize="small" />
               <span>
-                <strong>{t("payg.free.cta.benefit3Title", "API access")}</strong>
-                {": "}
+                <strong>
+                  {t("payg.free.cta.benefit3Title", "API access")}
+                </strong>
+                {" — "}
                 {t(
                   "payg.free.cta.benefit3Body",
                   "call any Stirling endpoint programmatically",

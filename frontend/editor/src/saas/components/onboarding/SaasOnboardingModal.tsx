@@ -1,8 +1,8 @@
 import React from "react";
 import { Modal, Stack } from "@mantine/core";
-import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
+import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import OnboardingStepper from "@app/components/onboarding/OnboardingStepper";
 import { renderButtons } from "@app/components/onboarding/renderButtons";
@@ -48,18 +48,23 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
       );
     }
 
+    if (slideDefinition.hero.type === "logo") {
+      return (
+        <img
+          src={`${BASE_PATH}/modern-logo/logo512.png`}
+          alt="Stirling logo"
+          className={styles.standaloneIcon}
+        />
+      );
+    }
+
     return (
       <div className={styles.heroLogoCircle}>
-        {slideDefinition.hero.type === "rocket" && (
-          <LocalIcon
-            icon="rocket-launch"
-            width={64}
-            height={64}
-            className={styles.heroIcon}
-          />
+        {slideDefinition.hero.type === "bolt" && (
+          <BoltRoundedIcon sx={{ fontSize: 64, color: "#000000" }} />
         )}
-        {slideDefinition.hero.type === "diamond" && (
-          <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />
+        {slideDefinition.hero.type === "team" && (
+          <GroupAddRoundedIcon sx={{ fontSize: 56, color: "#000000" }} />
         )}
       </div>
     );

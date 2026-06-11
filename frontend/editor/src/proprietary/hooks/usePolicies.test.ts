@@ -52,6 +52,7 @@ const wizardResult = {
   scopeTypes: [],
   reviewerEmail: "reviewer@x.com",
   folder: {
+    runOn: "upload" as const,
     outputMode: "new_file" as const,
     outputName: "",
     outputNamePosition: "prefix" as const,

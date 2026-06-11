@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
  *       + cap only.
  * </ul>
  *
- * @param subscribed team has an active PAYG subscription (or a Stripe customer awaiting its
- *     subscription-created webhook)
+ * @param subscribed team has a live PAYG subscription — i.e. {@code payg_subscription_id} is set.
+ *     Cleared by {@code payg_unlink_subscription} on cancellation, so a cancelled team reads false.
  * @param subscriptionId {@code payg_team_extensions.payg_subscription_id}; null when free
  * @param periodStart inclusive start of the monthly billing window — the Stripe subscription's
  *     current period when subscribed, calendar month otherwise

@@ -4,8 +4,9 @@
  * modals can render a meter without pulling in the upgrade-checkout subtree
  * (UpgradeModal, useWallet, etc.). Only depends on i18n + the co-located CSS.
  */
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { Wallet } from "@app/hooks/useWallet";
+import { useWallet, type Wallet } from "@app/hooks/useWallet";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
 
@@ -47,7 +48,7 @@ export interface FreeSnapshot {
 
 /**
  * Derive the free-grant snapshot from a wallet. Null (not yet loaded) yields a
- * zeroed view over the default 500 grant — the brief first-paint placeholder.
+ * zeroed view over the default 500 grant, the brief first-paint placeholder.
  */
 export function freeSnapshotFromWallet(wallet: Wallet | null): FreeSnapshot {
   if (!wallet) return { billableUsed: 0, billableLimit: 500 };
@@ -55,6 +56,15 @@ export function freeSnapshotFromWallet(wallet: Wallet | null): FreeSnapshot {
     billableUsed: Math.max(0, wallet.freeAllowance - wallet.freeRemaining),
     billableLimit: wallet.freeAllowance,
   };
+}
+
+/**
+ * Read the free-grant snapshot from the live wallet. Falls back to a zeroed
+ * view over the default grant until the wallet loads.
+ */
+export function useFreeSnapshot(): FreeSnapshot {
+  const { wallet } = useWallet();
+  return useMemo(() => freeSnapshotFromWallet(wallet), [wallet]);
 }
 
 export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {

@@ -161,7 +161,10 @@ export default function UpgradeModal({
               <h2 className="upm-header__title">
                 {step === "confirm"
                   ? t("payg.upgrade.title.confirm", "You're subscribed")
-                  : t("payg.upgrade.title.default", "Upgrade to Processor plan")}
+                  : t(
+                      "payg.upgrade.title.default",
+                      "Upgrade to Processor plan",
+                    )}
               </h2>
             </div>
             <button
@@ -213,10 +216,7 @@ export default function UpgradeModal({
               >
                 <span className="upm-step__dot">2</span>
                 <span>
-                  {t(
-                    "payg.upgrade.steps.payment",
-                    "Add payment method",
-                  )}
+                  {t("payg.upgrade.steps.payment", "Add payment method")}
                 </span>
               </div>
             </div>
@@ -342,10 +342,7 @@ function CapStep({
       </div>
 
       <h3 className="upm-section-title">
-        {t(
-          "payg.upgrade.cap.title",
-          "Set your monthly spend ceiling",
-        )}
+        {t("payg.upgrade.cap.title", "Set your monthly spend ceiling")}
       </h3>
       <p className="upm-section-help">
         {t(
@@ -377,18 +374,12 @@ function CapStep({
 
       <div className="upm-help-card" style={{ marginTop: 16 }}>
         <span className="upm-help-card__title">
-          {t(
-            "payg.upgrade.help.title",
-            "What we count toward billing",
-          )}
+          {t("payg.upgrade.help.title", "What we count toward billing")}
         </span>
         <ul style={{ margin: "4px 0 0", paddingLeft: 18, lineHeight: 1.55 }}>
           <li>
             <strong>
-              {t(
-                "payg.upgrade.help.automationTitle",
-                "Automation pipelines",
-              )}
+              {t("payg.upgrade.help.automationTitle", "Automation pipelines")}
             </strong>
             {" — "}
             {t(
@@ -397,9 +388,7 @@ function CapStep({
             )}
           </li>
           <li>
-            <strong>
-              {t("payg.upgrade.help.aiTitle", "AI tools")}
-            </strong>
+            <strong>{t("payg.upgrade.help.aiTitle", "AI tools")}</strong>
             {" — "}
             {t(
               "payg.upgrade.help.aiBody",
@@ -407,9 +396,7 @@ function CapStep({
             )}
           </li>
           <li>
-            <strong>
-              {t("payg.upgrade.help.apiTitle", "API calls")}
-            </strong>
+            <strong>{t("payg.upgrade.help.apiTitle", "API calls")}</strong>
             {" — "}
             {t(
               "payg.upgrade.help.apiBody",
@@ -447,10 +434,7 @@ function CheckoutStep({
   return (
     <>
       <h3 className="upm-section-title">
-        {t(
-          "payg.upgrade.checkout.title",
-          "Add your payment method",
-        )}
+        {t("payg.upgrade.checkout.title", "Add your payment method")}
       </h3>
       <p className="upm-section-help">
         {t(
@@ -498,10 +482,7 @@ function ConfirmationStep({
     <div className="upm-confirm">
       <CheckCircleIcon className="upm-confirm__icon" />
       <h3 className="upm-confirm__title">
-        {t(
-          "payg.confirm.title",
-          "Welcome to the Processor plan",
-        )}
+        {t("payg.confirm.title", "Welcome to the Processor plan")}
       </h3>
       <p className="upm-confirm__body">
         {t(
