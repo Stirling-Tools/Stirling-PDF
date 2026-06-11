@@ -38,6 +38,25 @@ export interface StorageStats {
   quota?: number;
 }
 
+/**
+ * Best-effort provenance for records persisted before `derivedFromTool`
+ * existed. A version chain (a tool history, a version past the first, or a
+ * parent) is unambiguously a tool output, so flag it. Legacy independent
+ * artifacts (convert/split/merge) recorded none of that and are
+ * indistinguishable from uploads in old data — they stay unflagged, which for
+ * an enforcement feature is the safe default (enforce rather than silently
+ * skip). New records always carry an explicit flag, so this only fires for
+ * pre-existing files on first read after upgrade.
+ */
+export function legacyDerivedFromTool(
+  record: StoredStirlingFileRecord,
+): boolean | undefined {
+  if ((record.toolHistory?.length ?? 0) > 0) return true;
+  if ((record.versionNumber ?? 1) > 1) return true;
+  if (record.parentFileId != null) return true;
+  return undefined;
+}
+
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
@@ -248,7 +267,8 @@ class FileStorageService {
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
           toolHistory: record.toolHistory,
-          derivedFromTool: record.derivedFromTool,
+          derivedFromTool:
+            record.derivedFromTool ?? legacyDerivedFromTool(record),
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
         };
@@ -305,7 +325,8 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
-              derivedFromTool: record.derivedFromTool,
+              derivedFromTool:
+                record.derivedFromTool ?? legacyDerivedFromTool(record),
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });
@@ -394,7 +415,8 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
-              derivedFromTool: record.derivedFromTool,
+              derivedFromTool:
+                record.derivedFromTool ?? legacyDerivedFromTool(record),
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });
