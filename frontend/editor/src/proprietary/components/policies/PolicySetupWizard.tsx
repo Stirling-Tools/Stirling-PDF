@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
+import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { Input } from "@shared/components/Input";
@@ -153,6 +154,7 @@ export function PolicySetupWizard({
       <div className="pol-detail">
         <PanelHeader
           icon={category.icon}
+          iconAccent={ROW_ACCENT[category.id] ?? "blue"}
           title={`${isEdit ? "Edit" : "Set up"} ${category.label} Policy`}
           onBack={onCancel}
         />
@@ -261,6 +263,7 @@ export function PolicySetupWizard({
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
+        iconAccent={ROW_ACCENT[category.id] ?? "blue"}
         title={`${isEdit ? "Edit" : "Set up"} ${category.label} Policy`}
         subtitle={`Step ${step} of ${TOTAL_STEPS}`}
         onBack={back}
