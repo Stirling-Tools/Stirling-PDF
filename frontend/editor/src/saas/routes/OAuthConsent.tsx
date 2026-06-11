@@ -223,7 +223,13 @@ export default function OAuthConsent() {
     return (
       <AuthLayout>
         {logoBlock}
-        <p style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+        <p
+          style={{
+            textAlign: "center",
+            marginBottom: "1.5rem",
+            color: "#374151",
+          }}
+        >
           {t(
             "oauthConsent.signInPrompt",
             "Sign in to your Stirling PDF account to continue connecting the app.",
@@ -266,17 +272,27 @@ export default function OAuthConsent() {
     <AuthLayout>
       {logoBlock}
 
+      {/* AuthLayout forces light mode but text without explicit colors still
+          inherits dark-scheme values from the app CSS; pin them like the rest
+          of the auth pages do. */}
       <h2
         style={{
           textAlign: "center",
           fontSize: "1.25rem",
           fontWeight: 700,
           marginBottom: "0.5rem",
+          color: "#111827",
         }}
       >
         {t("oauthConsent.title", "Authorize access")}
       </h2>
-      <p style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+      <p
+        style={{
+          textAlign: "center",
+          marginBottom: "1.5rem",
+          color: "#374151",
+        }}
+      >
         {t("oauthConsent.requesting", {
           app: appName,
           defaultValue: `${appName} wants to access your Stirling PDF account`,
@@ -290,6 +306,7 @@ export default function OAuthConsent() {
             borderRadius: "0.5rem",
             padding: "1rem 1.25rem",
             marginBottom: "1.5rem",
+            background: "#ffffff",
           }}
         >
           <p
@@ -297,6 +314,7 @@ export default function OAuthConsent() {
               fontSize: "0.875rem",
               fontWeight: 600,
               margin: "0 0 0.5rem",
+              color: "#111827",
             }}
           >
             {t("oauthConsent.scopesIntro", {
@@ -306,7 +324,10 @@ export default function OAuthConsent() {
           </p>
           <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
             {scopes.map((scope) => (
-              <li key={scope} style={{ fontSize: "0.875rem" }}>
+              <li
+                key={scope}
+                style={{ fontSize: "0.875rem", color: "#374151" }}
+              >
                 {scopeDescription(scope)}
               </li>
             ))}

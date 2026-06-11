@@ -23,7 +23,13 @@ export function normalizePath(pathname: string): string {
  */
 export function isAuthRoute(pathname: string): boolean {
   const p = normalizePath(pathname);
-  return p === "/login" || p === "/signup" || p === "/auth/callback";
+  return (
+    p === "/login" ||
+    p === "/signup" ||
+    p === "/auth/callback" ||
+    p === "/auth/reset" ||
+    p === "/oauth/consent"
+  );
 }
 
 /**

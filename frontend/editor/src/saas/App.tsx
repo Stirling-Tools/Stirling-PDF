@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
@@ -28,6 +29,24 @@ function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
 }
 
+/**
+ * Onboarding and trial-expired modals must never cover auth-flow pages
+ * (login, signup, OAuth consent): they steal focus from the task the user
+ * was sent there to complete. Unmounting also stops their background polling.
+ */
+function NonAuthBootstraps() {
+  const location = useLocation();
+  if (isAuthRoute(location.pathname)) {
+    return null;
+  }
+  return (
+    <>
+      <OnboardingBootstrap />
+      <TrialExpiredBootstrap />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -35,8 +54,7 @@ export default function App() {
         appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
       >
         <AppLayout>
-          <OnboardingBootstrap />
-          <TrialExpiredBootstrap />
+          <NonAuthBootstraps />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
