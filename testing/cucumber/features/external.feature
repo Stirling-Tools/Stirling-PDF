@@ -239,8 +239,7 @@ Feature: API Validation
         When I send the API request to the endpoint "/api/v1/convert/pdf/markdown"
         Then the response status code should be 200
         And the response file should have size greater than 100
-        And the response file should have extension ".zip"
-        And the response ZIP should contain 4 files
+        And the response file should have extension ".md"
 
 
     @positive @pdftocsv

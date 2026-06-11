@@ -2,22 +2,19 @@ import { BASE_PATH } from "@app/constants/app";
 import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 
 const getWasmUrl = (): string => {
-  if (
-    pdfiumWasmAssetUrl.startsWith("http://") ||
-    pdfiumWasmAssetUrl.startsWith("https://") ||
-    pdfiumWasmAssetUrl.startsWith("//")
-  ) {
-    return pdfiumWasmAssetUrl;
-  }
-
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  // In dev, Vite serves the statically-copied asset from the dev server root.
   if (import.meta.env.DEV) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}${BASE_PATH}/pdfium/pdfium.wasm`;
   }
-  const cleanAssetUrl = pdfiumWasmAssetUrl
-    .replace(/^\.\//, "")
-    .replace(/^\//, "");
-  return `${origin}${BASE_PATH}/${cleanAssetUrl}`;
+
+  // Vite has already produced a base-aware asset URL (absolute under a relative
+  // base, root-relative under an absolute base). Resolve it against the document
+  // to get a fetchable absolute URL that is also safe to pass to Web Workers.
+  if (typeof window !== "undefined") {
+    return new URL(pdfiumWasmAssetUrl, window.location.href).href;
+  }
+  return pdfiumWasmAssetUrl;
 };
 
 export const pdfiumWasmUrl = getWasmUrl();

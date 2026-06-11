@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from "react";
 import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
@@ -13,7 +14,6 @@ import {
   Box,
   Collapse,
   Group,
-  List,
   Menu,
   Paper,
   ScrollArea,
@@ -23,7 +23,10 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
 import CloseIcon from "@mui/icons-material/Close";
+import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -33,14 +36,15 @@ import {
   useChat,
   AiWorkflowPhase,
   ChatRole,
+  PROGRESS_LOG_MAX,
   isKnownEngineProgressDetail,
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
+import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
@@ -65,6 +69,27 @@ function useToolNameResolver(): ToolNameResolver {
       }
     });
     return (endpoint: string) => nameByEndpoint.get(endpoint) ?? null;
+  }, [allTools]);
+}
+
+/** Resolver mapping a tool endpoint path to its registry icon ReactNode. */
+type ToolIconResolver = (endpoint: string) => ReactNode | null;
+
+/**
+ * Look up a tool's icon ReactNode from the tool catalog, keyed by API endpoint path.
+ * Returns null when the endpoint is not found (use a generic fallback icon in that case).
+ */
+function useToolIconResolver(): ToolIconResolver {
+  const { allTools } = useTranslatedToolCatalog();
+  return useMemo(() => {
+    const iconByEndpoint = new Map<string, ReactNode>();
+    Object.values(allTools).forEach((tool) => {
+      const endpoint = tool.operationConfig?.endpoint;
+      if (typeof endpoint === "string") {
+        iconByEndpoint.set(endpoint, tool.icon);
+      }
+    });
+    return (endpoint: string) => iconByEndpoint.get(endpoint) ?? null;
   }, [allTools]);
 }
 
@@ -125,31 +150,152 @@ function formatEngineProgress(
   }
 }
 
-function ToolsUsedBlock({
-  tools,
-  resolveToolName,
+/**
+ * Choose an icon for a progress step.
+ *
+ * The active (current) step always shows the animated Stirling logo so it reads
+ * as the "live" indicator. Past steps get a phase-specific icon so the trail
+ * is scannable at a glance.
+ */
+function progressStepIcon(
+  progress: AiWorkflowProgress,
+  resolveToolIcon: ToolIconResolver,
+  isActive: boolean,
+): ReactNode {
+  if (isActive) {
+    return <StirlingLogoAnimated size={18} />;
+  }
+  if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL) {
+    const registryIcon = progress.tool ? resolveToolIcon(progress.tool) : null;
+    if (registryIcon) {
+      return <span className="chat-step-icon-scaled">{registryIcon}</span>;
+    }
+    return <BuildOutlinedIcon sx={{ fontSize: 17 }} />;
+  }
+  if (
+    progress.phase === AiWorkflowPhase.EXTRACTING_CONTENT ||
+    progress.phase === AiWorkflowPhase.ENGINE_PROGRESS
+  ) {
+    return <ArticleOutlinedIcon sx={{ fontSize: 17 }} />;
+  }
+  return <CloudOutlinedIcon sx={{ fontSize: 17 }} />;
+}
+
+/**
+ * Animated step-by-step progress log shown while the AI is working.
+ * Displays the last {@link PROGRESS_LOG_VISIBLE} steps from the live event stream,
+ * with the active (most recent) step highlighted and older steps dimmed.
+ */
+function ProgressLogDisplay({
+  progressLog,
   t,
+  resolveToolName,
+  resolveToolIcon,
 }: {
-  tools: string[];
-  resolveToolName: ToolNameResolver;
+  progressLog: AiWorkflowProgress[];
   t: TranslateFn;
+  resolveToolName: ToolNameResolver;
+  resolveToolIcon: ToolIconResolver;
+}) {
+  // Placeholder shown before the first SSE event arrives.
+  if (progressLog.length === 0) {
+    return (
+      <div className="chat-progress-log">
+        <div className="chat-progress-step chat-progress-step--active">
+          <div className="chat-progress-step__left">
+            <div className="chat-progress-step__icon">
+              <StirlingLogoAnimated size={18} />
+            </div>
+          </div>
+          <span className="chat-progress-step__label">
+            {t("chat.progress.thinking")}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Chronological order: oldest at top, newest (active) at bottom.
+  // The reducer already caps progressLog at PROGRESS_LOG_MAX entries, so this
+  // slice is effectively a no-op but kept for defensive correctness.
+  const visibleSteps = progressLog.slice(-PROGRESS_LOG_MAX);
+  const startIndex = progressLog.length - visibleSteps.length;
+
+  return (
+    <div className="chat-progress-log">
+      {visibleSteps.map((step, i) => {
+        // Stable key based on absolute position in the full log — React reuses
+        // existing DOM elements and only mounts (and animates) new ones.
+        const globalIndex = startIndex + i;
+        const isActive = i === visibleSteps.length - 1; // last = newest = bottom
+        // Connector runs below every step except the active one at the bottom.
+        const showConnector = i < visibleSteps.length - 1;
+        const label = formatProgress(step, t, resolveToolName);
+        return (
+          <div
+            key={globalIndex}
+            className={`chat-progress-step${isActive ? " chat-progress-step--active" : ""}`}
+          >
+            <div className="chat-progress-step__left">
+              <div className="chat-progress-step__icon">
+                {progressStepIcon(step, resolveToolIcon, isActive)}
+              </div>
+              {showConnector && <div className="chat-progress-step__line" />}
+            </div>
+            <span className="chat-progress-step__label">{label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatDuration(ms: number, t: TranslateFn): string {
+  const totalSeconds = Math.max(1, Math.round(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes === 0) {
+    return t("chat.progress.ranForSeconds", { count: totalSeconds });
+  }
+  if (seconds === 0) {
+    return t("chat.progress.ranForMinutes", { count: minutes });
+  }
+  return t("chat.progress.ranForMinutesSeconds", { minutes, seconds });
+}
+
+/**
+ * Collapsed "Ran for X seconds" dropdown that appears above each completed
+ * assistant turn. Expands to show the full ordered progress log for that turn.
+ */
+function CompletedProgressLogDropdown({
+  progressLog,
+  durationMs,
+  t,
+  resolveToolName,
+  resolveToolIcon,
+}: {
+  progressLog: AiWorkflowProgress[];
+  durationMs: number;
+  t: TranslateFn;
+  resolveToolName: ToolNameResolver;
+  resolveToolIcon: ToolIconResolver;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const names = tools.map(
-    (endpoint) => resolveToolName(endpoint) ?? t("chat.toolsUsed.unknownTool"),
-  );
-  const label = t("chat.toolsUsed.summary", { count: tools.length });
+  const label = formatDuration(durationMs, t);
+
   return (
-    <Box mt={6}>
+    <div className="chat-completed-log">
       <UnstyledButton
+        className="chat-completed-log__toggle"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
-        <Group gap={4} wrap="nowrap">
+        <Group gap={4} wrap="nowrap" align="center">
           {expanded ? (
-            <ExpandLessIcon sx={{ fontSize: 14 }} />
+            <ExpandLessIcon sx={{ fontSize: 12 }} />
           ) : (
-            <ExpandMoreIcon sx={{ fontSize: 14 }} />
+            <ExpandMoreIcon sx={{ fontSize: 12 }} />
           )}
           <Text size="xs" c="dimmed">
             {label}
@@ -157,19 +303,30 @@ function ToolsUsedBlock({
         </Group>
       </UnstyledButton>
       <Collapse in={expanded}>
-        <List
-          type="ordered"
-          size="xs"
-          mt={4}
-          pl="lg"
-          styles={{ itemWrapper: { lineHeight: 1.4 } }}
-        >
-          {names.map((name, i) => (
-            <List.Item key={i}>{name}</List.Item>
-          ))}
-        </List>
+        <div className="chat-completed-log__steps">
+          {progressLog.map((step, i) => {
+            const showConnector = i < progressLog.length - 1;
+            const stepLabel = formatProgress(step, t, resolveToolName);
+            return (
+              <div
+                key={i}
+                className="chat-progress-step chat-progress-step--done"
+              >
+                <div className="chat-progress-step__left">
+                  <div className="chat-progress-step__icon">
+                    {progressStepIcon(step, resolveToolIcon, false)}
+                  </div>
+                  {showConnector && (
+                    <div className="chat-progress-step__line" />
+                  )}
+                </div>
+                <span className="chat-progress-step__label">{stepLabel}</span>
+              </div>
+            );
+          })}
+        </div>
       </Collapse>
-    </Box>
+    </div>
   );
 }
 
@@ -177,15 +334,19 @@ function ChatMessageBubble({
   role,
   content,
   timestamp,
-  toolsUsed,
+  progressLog,
+  durationMs,
   resolveToolName,
+  resolveToolIcon,
   t,
 }: {
   role: ChatRole;
   content: string;
   timestamp: number;
-  toolsUsed?: string[];
+  progressLog?: AiWorkflowProgress[];
+  durationMs?: number;
   resolveToolName: ToolNameResolver;
+  resolveToolIcon: ToolIconResolver;
   t: TranslateFn;
 }) {
   const [copied, setCopied] = useState(false);
@@ -231,16 +392,18 @@ function ChatMessageBubble({
   return (
     <div className="chat-message chat-message-assistant">
       <div className="chat-bubble-assistant">
+        {progressLog && progressLog.length > 0 && durationMs != null && (
+          <CompletedProgressLogDropdown
+            progressLog={progressLog}
+            durationMs={durationMs}
+            t={t}
+            resolveToolName={resolveToolName}
+            resolveToolIcon={resolveToolIcon}
+          />
+        )}
         <Text size="sm" component="div">
           {renderMarkdown(content)}
         </Text>
-        {toolsUsed && toolsUsed.length > 0 && (
-          <ToolsUsedBlock
-            tools={toolsUsed}
-            resolveToolName={resolveToolName}
-            t={t}
-          />
-        )}
         {actions}
       </div>
     </div>
@@ -256,20 +419,55 @@ export interface ChatPanelProps {
 
 export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   const { t } = useTranslation();
-  const { messages, isLoading, progress, sendMessage, clearChat } = useChat();
+  const { messages, isLoading, progressLog, sendMessage, clearChat } =
+    useChat();
   const resolveToolName = useToolNameResolver();
+  const resolveToolIcon = useToolIconResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Tracks whether the user manually scrolled away from the bottom.
+  // A ref (not state) so scroll events don't cause re-renders.
+  const userScrolledUp = useRef(false);
 
+  // Jump to the bottom on first render so existing conversations open at the
+  // most recent message rather than the top.
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
+    requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  }, []);
+
+  // Attach a passive scroll listener to track whether the user has scrolled
+  // away from the bottom (breaks auto-scroll) or returned to it (re-latches).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      userScrolledUp.current = distFromBottom > 50;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Scroll to the bottom when messages arrive or live progress steps update,
+  // unless the user has scrolled up (they're reading history).
+  // Scrolling back to the bottom resets the ref, so the next update re-latches.
+  //
+  // RAF defers the scroll until after the browser has laid out the new nodes,
+  // so scrollHeight is correct. Direct scrollTop assignment avoids the
+  // smooth-scroll interruption problem that occurs when SSE events arrive
+  // faster than a smooth animation can complete.
+  useEffect(() => {
+    if (!userScrolledUp.current) {
+      requestAnimationFrame(() => {
+        const el = scrollRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
       });
     }
-  }, [messages]);
+  }, [messages, progressLog]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -343,21 +541,21 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
               role={msg.role}
               content={msg.content}
               timestamp={msg.timestamp}
-              toolsUsed={msg.toolsUsed}
+              progressLog={msg.progressLog}
+              durationMs={msg.durationMs}
               resolveToolName={resolveToolName}
+              resolveToolIcon={resolveToolIcon}
               t={t}
             />
           ))}
           {isLoading && (
             <div className="chat-message chat-message-assistant">
-              <div className="chat-thinking">
-                <StirlingLogoAnimated size={20} />
-                <Text size="sm" c="dimmed">
-                  {progress
-                    ? formatProgress(progress, t, resolveToolName)
-                    : t("chat.progress.thinking")}
-                </Text>
-              </div>
+              <ProgressLogDisplay
+                progressLog={progressLog}
+                t={t}
+                resolveToolName={resolveToolName}
+                resolveToolIcon={resolveToolIcon}
+              />
             </div>
           )}
         </Stack>
