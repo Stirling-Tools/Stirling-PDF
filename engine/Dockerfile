@@ -26,6 +26,7 @@ COPY .taskfiles/ ./.taskfiles/
 
 ENV PATH="/app/engine/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+ENV STIRLING_ENGINE_WORKERS=4
 
 EXPOSE 5001
 
