@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import AgentRunError
 
+from stirling.agents._registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.contracts.ledger import (
     Discrepancy,
     DiscrepancyKind,
@@ -113,13 +114,44 @@ class StatementsResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class MathAuditorAgent:
+class MathAuditorAgent(RegisterableAgent):
     """
     Encapsulates the Ledger Auditor pipeline.
 
     Instantiated once at app startup with an AppRuntime, which provides
     pre-built Model objects and ModelSettings.
     """
+
+    def describe(self) -> AgentDescriptor:
+        # MCP-only: the orchestrator reaches the math auditor indirectly (an agent
+        # emits a plan with the MATH_AUDITOR_AGENT tool, which Java runs via the
+        # examine/deliberate routes), so there is no orchestrator delegate here.
+        return AgentDescriptor(
+            mcp=(
+                McpCapability(
+                    id="math-audit-examine",
+                    description=(
+                        "Examine a folio manifest of financial / numeric documents and surface the"
+                        " evidence that needs to be checked for arithmetic consistency."
+                    ),
+                    input_model=FolioManifest,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/ai/math-auditor-agent/examine",
+                ),
+                McpCapability(
+                    id="math-audit-deliberate",
+                    description=(
+                        "Render a deliberated verdict on a single piece of evidence the examine step"
+                        " surfaced (does the arithmetic check out, with what caveats)."
+                    ),
+                    input_model=Evidence,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/ai/math-auditor-agent/deliberate",
+                ),
+            ),
+        )
 
     def __init__(self, runtime: AppRuntime) -> None:
         fast_model = runtime.fast_model

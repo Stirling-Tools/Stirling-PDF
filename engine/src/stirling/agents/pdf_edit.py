@@ -9,6 +9,7 @@ from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
+from stirling.agents._registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -171,10 +172,34 @@ class PdfEditParameterSelector:
         )
 
 
-class PdfEditAgent:
+class PdfEditAgent(RegisterableAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.parameter_selector = PdfEditParameterSelector(runtime)
+
+    def describe(self) -> AgentDescriptor:
+        return AgentDescriptor(
+            orchestrator=OrchestratorRoute(
+                capability=SupportedCapability.PDF_EDIT,
+                tool_name="delegate_pdf_edit",
+                tool_description="Delegate any requested modification of one or more PDFs; returns the edit result.",
+                orchestrate=self.orchestrate,
+            ),
+            mcp=(
+                McpCapability(
+                    id="pdf-edit-plan",
+                    description=(
+                        "Produce an edit plan (a structured sequence of PDF operations) from a"
+                        " natural-language edit request. The plan is executed by Java through the job"
+                        " pipeline; this capability does not modify files itself."
+                    ),
+                    input_model=PdfEditRequest,
+                    mode="async",
+                    required_scope="mcp.tools.write",
+                    route="/api/v1/pdf-edit",
+                ),
+            ),
+        )
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfEditResponse:
         """Entry point for the orchestrator delegate — adapts the orchestrator's

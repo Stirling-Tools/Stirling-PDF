@@ -20,6 +20,7 @@ import logging
 from pydantic import Field
 from pydantic_ai import Agent
 
+from stirling.agents._registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.agents.pdf_comment.prompts import COMMENT_AGENT_SYSTEM_PROMPT
 from stirling.contracts.pdf_comments import (
     MAX_COMMENT_TEXT_LENGTH,
@@ -66,7 +67,7 @@ class LlmCommentOutput(ApiModel):
     rationale: str = Field(max_length=1_000)
 
 
-class PdfCommentAgent:
+class PdfCommentAgent(RegisterableAgent):
     """Encapsulates the single-shot PDF comment generation pipeline.
 
     Instantiated once at app startup with an :class:`AppRuntime`, which
@@ -80,6 +81,22 @@ class PdfCommentAgent:
             output_type=LlmCommentOutput,
             system_prompt=COMMENT_AGENT_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
+        )
+
+    def describe(self) -> AgentDescriptor:
+        # MCP-only: invoked as a tool inside the PDF review plan, never a
+        # top-level orchestrator delegate.
+        return AgentDescriptor(
+            mcp=(
+                McpCapability(
+                    id="pdf-comment-generate",
+                    description="Generate inline review comments for a PDF document.",
+                    input_model=PdfCommentRequest,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/pdf-comment/generate",
+                ),
+            ),
         )
 
     async def generate(self, request: PdfCommentRequest) -> PdfCommentResponse:

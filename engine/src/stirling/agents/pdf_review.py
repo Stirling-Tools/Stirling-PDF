@@ -31,6 +31,7 @@ from typing import Literal
 from pydantic import Field
 from pydantic_ai import Agent
 
+from stirling.agents._registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.agents.contradiction import ContradictionDetector, ContradictionIntentClassifier
 from stirling.agents.contradiction.detector import _escape_for_tag
 from stirling.agents.contradiction.prompts import REVIEW_LOCALISER_PROMPT
@@ -104,7 +105,7 @@ class _LocalisedContradictionReport(ApiModel):
     comments: list[_PairedLocalisedContradiction] = Field(default_factory=list)
 
 
-class PdfReviewAgent:
+class PdfReviewAgent(RegisterableAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self._localiser_agent: Agent[None, _LocalisedVerdict] = Agent(
@@ -127,6 +128,21 @@ class PdfReviewAgent:
         # constructed once for that instance and reused across the
         # request's stages.
         self._contradiction_detector = ContradictionDetector(runtime)
+
+    def describe(self) -> AgentDescriptor:
+        return AgentDescriptor(
+            orchestrator=OrchestratorRoute(
+                capability=SupportedCapability.PDF_REVIEW,
+                tool_name="delegate_pdf_review",
+                tool_description=(
+                    "Delegate requests to review a PDF and leave review comments, notes, or"
+                    " sticky-note annotations on the document itself. Use this when the user"
+                    " wants the PDF returned with comments attached (e.g. 'review this',"
+                    " 'add review comments', 'flag unclear sentences', 'annotate with feedback')."
+                ),
+                orchestrate=self.orchestrate,
+            ),
+        )
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfReviewOrchestrateResponse:
         """Entry point for the orchestrator delegate.

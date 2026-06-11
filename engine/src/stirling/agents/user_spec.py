@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents._registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.contracts import (
     AgentDraft,
@@ -18,6 +19,7 @@ from stirling.contracts import (
     OrchestratorRequest,
     PdfEditRequest,
     PdfEditTerminalResponse,
+    SupportedCapability,
     format_conversation_history,
 )
 from stirling.models import ApiModel
@@ -30,7 +32,7 @@ class UserSpecMetadata(ApiModel):
     objective: str
 
 
-class UserSpecAgent:
+class UserSpecAgent(RegisterableAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.pdf_edit_agent = PdfEditAgent(runtime)
@@ -43,6 +45,39 @@ class UserSpecAgent:
                 "Keep the workflow grounded and practical."
             ),
             model_settings=runtime.smart_model_settings,
+        )
+
+    def describe(self) -> AgentDescriptor:
+        return AgentDescriptor(
+            orchestrator=OrchestratorRoute(
+                capability=SupportedCapability.AGENT_DRAFT,
+                tool_name="delegate_user_spec",
+                tool_description="Delegate requests to create or define an agent spec; returns the draft result.",
+                orchestrate=self.orchestrate,
+            ),
+            mcp=(
+                McpCapability(
+                    id="agent-draft",
+                    description=(
+                        "Draft a structured agent specification from a free-text description"
+                        " of the task the user wants automated."
+                    ),
+                    input_model=AgentDraftRequest,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/ai/agents/draft",
+                ),
+                McpCapability(
+                    id="agent-revise",
+                    description=(
+                        "Revise an existing draft agent specification based on user feedback or constraint changes."
+                    ),
+                    input_model=AgentRevisionRequest,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/ai/agents/revise",
+                ),
+            ),
         )
 
     async def orchestrate(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:

@@ -8,12 +8,15 @@ from typing import Any
 from pydantic_ai.models import Model
 
 from stirling.agents import (
+    AgentDescriptor,
     DocumentClassifierAgent,
     ExecutionPlanningAgent,
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
+    PdfReviewAgent,
     UserSpecAgent,
+    build_descriptors,
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
@@ -35,6 +38,8 @@ class AppState:
     math_auditor_agent: MathAuditorAgent
     pdf_comment_agent: PdfCommentAgent
     document_classifier_agent: DocumentClassifierAgent
+    # One descriptor list drives both orchestrator routing and the MCP manifest.
+    agent_descriptors: list[AgentDescriptor]
 
 
 def build_app_state(
@@ -53,16 +58,35 @@ def build_app_state(
         smart_model=smart_model,
         embedder=embedder,
     )
+    pdf_edit_agent = PdfEditAgent(runtime)
+    pdf_question_agent = PdfQuestionAgent(runtime)
+    user_spec_agent = UserSpecAgent(runtime)
+    pdf_review_agent = PdfReviewAgent(runtime)
+    execution_planning_agent = ExecutionPlanningAgent(runtime)
+    math_auditor_agent = MathAuditorAgent(runtime)
+    pdf_comment_agent = PdfCommentAgent(runtime)
+    agent_descriptors = build_descriptors(
+        [
+            pdf_edit_agent,
+            pdf_question_agent,
+            user_spec_agent,
+            pdf_review_agent,
+            pdf_comment_agent,
+            math_auditor_agent,
+            execution_planning_agent,
+        ]
+    )
     return AppState(
         runtime=runtime,
-        orchestrator_agent=OrchestratorAgent(runtime),
-        pdf_edit_agent=PdfEditAgent(runtime),
-        pdf_question_agent=PdfQuestionAgent(runtime),
-        user_spec_agent=UserSpecAgent(runtime),
-        execution_planning_agent=ExecutionPlanningAgent(runtime),
-        math_auditor_agent=MathAuditorAgent(runtime),
-        pdf_comment_agent=PdfCommentAgent(runtime),
+        orchestrator_agent=OrchestratorAgent(runtime, agent_descriptors),
+        pdf_edit_agent=pdf_edit_agent,
+        pdf_question_agent=pdf_question_agent,
+        user_spec_agent=user_spec_agent,
+        execution_planning_agent=execution_planning_agent,
+        math_auditor_agent=math_auditor_agent,
+        pdf_comment_agent=pdf_comment_agent,
         document_classifier_agent=DocumentClassifierAgent(runtime),
+        agent_descriptors=agent_descriptors,
     )
 
 
