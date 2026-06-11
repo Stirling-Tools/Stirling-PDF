@@ -111,14 +111,19 @@ public class TeamBillingService {
         Optional<WalletPolicy> walletPolicyOpt = walletPolicyRepository.findByTeamId(teamId);
 
         String subscriptionId = extOpt.map(PaygTeamExtensions::getPaygSubscriptionId).orElse(null);
-        // payg_subscription_id is the designed switch; stripe_customer_id presence is the
-        // pre-webhook stand-in kept so a team whose checkout completed but whose
-        // subscription-created webhook hasn't landed yet still renders as subscribed.
-        boolean subscribed =
-                subscriptionId != null
-                        || extOpt.map(PaygTeamExtensions::getStripeCustomerId)
-                                .filter(s -> !s.isBlank())
-                                .isPresent();
+        // payg_subscription_id is the single subscription switch. payg_link_subscription sets it
+        // (alongside stripe_customer_id, in the same write) on customer.subscription.created;
+        // payg_unlink_subscription nulls it on customer.subscription.deleted while deliberately
+        // keeping stripe_customer_id so a future re-subscribe can reuse the Stripe customer. So a
+        // cancelled team has a null subscription id and must read as free again.
+        //
+        // We deliberately do NOT fall back to stripe_customer_id presence. payg_link_subscription
+        // is the only writer of that column and it writes it together with the subscription id, so
+        // it can never be set "before the webhook lands" — there is no gap for it to bridge. A
+        // customer-id fallback would instead keep every team that ever subscribed pinned to
+        // subscribed forever (the customer outlives the subscription), which is the cancelled-team
+        // bug this guards against.
+        boolean subscribed = subscriptionId != null;
 
         long freeGrant = resolveGrant(teamId);
         long freeRemaining =
