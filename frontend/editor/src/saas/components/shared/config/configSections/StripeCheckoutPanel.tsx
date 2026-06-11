@@ -148,8 +148,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   const tRef = useRef(t);
   tRef.current = t;
 
-  const publishableKey =
-    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
+  const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
 
   // Dev preview route has no backend — skip the API call and go straight
   // to the mock placeholder so the design + completion path stay testable.
@@ -214,7 +213,9 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
         }
         if (cancelled) return;
         setClientSecret(data.client_secret);
-        setIsMock(Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"));
+        setIsMock(
+          Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+        );
       } catch (e: unknown) {
         if (cancelled) return;
         const msg =
