@@ -11,6 +11,7 @@ import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
+import OAuthConsent from "@app/routes/OAuthConsent";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
 
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/reset" element={<ResetPassword />} />
+            <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/*" element={<Landing />} />
           </Routes>
           <OnboardingTour />

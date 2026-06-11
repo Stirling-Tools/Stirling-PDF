@@ -4754,6 +4754,30 @@ title = "Authentication Failed"
 message = "You can close this window and return to Stirling PDF."
 title = "Authentication Successful"
 
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorization request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorization request..."
+missingId = "Missing authorization request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorize access"
+unknownApp = "A third-party application"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
+
 [ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
 tags = "recognition,text,image,scan,read,identify,detection,editable"
