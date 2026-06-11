@@ -11,6 +11,129 @@
   flex-wrap: nowrap;
 }
 
+/* ── Editor plan card (always-free tools only, no billing window) ─────── */
+/* Reuses .payg-planhead chrome; the eyebrow sits in the flex top row so its
+   default 8px bottom margin would misalign it against the role pill. */
+.paygf-editorcard__eyebrow {
+  margin-bottom: 0;
+}
+
+/* ── Processor plan card: two-column (pitch + benefits | meter + CTA) ──── */
+.paygf-proc {
+  gap: 14px;
+}
+.paygf-proc__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--payg-accent);
+}
+.paygf-proc__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 20px;
+}
+.paygf-proc__pitch {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.paygf-proc__pitch .paygf-cta__subtitle {
+  margin-top: 0;
+}
+/* Force the benefits into a single column inside the narrower left column. */
+.paygf-proc__benefits {
+  grid-template-columns: 1fr;
+}
+.paygf-proc__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 20px;
+  border-left: 1px solid var(--payg-divider);
+}
+.paygf-proc__cta {
+  width: 100%;
+  text-align: center;
+}
+.paygf-proc__reassure {
+  text-align: center;
+}
+.paygf-proc__membernote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.paygf-proc__membernote-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 1.1rem !important;
+  margin-top: 1px;
+}
+@media (max-width: 640px) {
+  .paygf-proc__split {
+    grid-template-columns: 1fr;
+  }
+  .paygf-proc__aside {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--payg-divider);
+  }
+}
+
+/* ── Compact one-time free meter (inside the Processor aside) ─────────── */
+.paygf-meter {
+  padding: 14px 16px;
+  border-radius: 11px;
+  background: var(--payg-inset-bg);
+  border: 1px solid var(--payg-card-border);
+}
+.paygf-meter__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.paygf-meter__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.paygf-meter__num {
+  font-size: 1.7rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter__cap {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter .payg-bar {
+  margin-top: 11px;
+}
+.paygf-meter__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
 /* ── Leader CTA card ──────────────────────────────────────────────────── */
 
 .paygf-cta {

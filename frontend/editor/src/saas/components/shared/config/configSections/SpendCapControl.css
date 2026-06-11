@@ -15,6 +15,11 @@
   --scc-accent-border: rgba(10, 139, 255, 0.25);
   --scc-chip-bg: var(--bg-muted);
   --scc-chip-border: var(--border-default);
+  /* Consistent vertical rhythm between the control row, the estimate, and any
+     note — without it the blocks sit flush. */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 [data-mantine-color-scheme="dark"] .scc {
   --scc-accent-text: #66b8ff;

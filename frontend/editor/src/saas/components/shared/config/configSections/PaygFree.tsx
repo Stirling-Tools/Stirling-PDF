@@ -13,11 +13,15 @@
  * <em>only</em> to the three billable categories — it is a lifetime allowance,
  * not a monthly one, and a team keeps any unused portion after subscribing.
  *
+ * <p>Layout: a slim <b>Editor plan</b> card (always-free tools only — no dates,
+ * no metered split) on top, then a single <b>Processor plan</b> card that
+ * two-columns the upgrade pitch + benefits (left) against the one-time free
+ * meter stacked over the call-to-action (right).
+ *
  * <p>Two variants:
- *   - {@link PaygFreeLeader} — visible to the team owner; includes the "Turn
- *     on Processor" CTA that opens the upgrade modal.
- *   - {@link PaygFreeMember} — read-only; surfaces the team's free-tier
- *     consumption and explains that the owner can enable Processor.
+ *   - {@link PaygFreeLeader} — the right column's CTA opens the upgrade modal.
+ *   - {@link PaygFreeMember} — read-only; the CTA is replaced with an
+ *     ask-the-owner note.
  */
 import React, { useMemo, useState } from "react";
 import { Stack } from "@mantine/core";
@@ -38,9 +42,6 @@ import { DocHelp } from "./Payg";
 // ─── Shared free-tier snapshot ────────────────────────────
 
 interface FreeSnapshot {
-  /** ISO yyyy-mm-dd. */
-  billingPeriodStart: string;
-  billingPeriodEnd: string;
   /** One-time free documents used so far (grant − remaining). */
   billableUsed: number;
   /**
@@ -53,19 +54,16 @@ interface FreeSnapshot {
 
 /**
  * Read free-tier snapshot from the real {@link useWallet} hook. Falls back to
- * a zeroed view with today's billing window if the wallet hasn't loaded yet —
- * this only happens briefly on first paint; once the snapshot arrives the
- * component re-renders with real numbers. Earlier versions returned a mock
- * "62 of 500" sentinel which leaked into the rendered UI and made the page
- * look like nothing was wired up.
+ * a zeroed view if the wallet hasn't loaded yet — this only happens briefly on
+ * first paint; once the snapshot arrives the component re-renders with real
+ * numbers. Earlier versions returned a mock "62 of 500" sentinel which leaked
+ * into the rendered UI and made the page look like nothing was wired up.
  */
 function useFreeSnapshot(): FreeSnapshot {
   const { wallet } = useWallet();
   return useMemo(() => {
     if (wallet) {
       return {
-        billingPeriodStart: wallet.billingPeriodStart,
-        billingPeriodEnd: wallet.billingPeriodEnd,
         // Used = grant − remaining, derived straight from the one-time grant so
         // the free view never depends on the per-state meaning of billableUsed.
         billableUsed: Math.max(0, wallet.freeAllowance - wallet.freeRemaining),
@@ -73,41 +71,68 @@ function useFreeSnapshot(): FreeSnapshot {
         billableLimit: wallet.freeAllowance,
       };
     }
-    const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const isoDay = (d: Date) => d.toISOString().slice(0, 10);
-    return {
-      billingPeriodStart: isoDay(periodStart),
-      billingPeriodEnd: isoDay(periodEnd),
-      billableUsed: 0,
-      billableLimit: 500,
-    };
+    return { billableUsed: 0, billableLimit: 500 };
   }, [wallet]);
 }
 
-function formatPeriod(start: string, end: string): string {
-  const s = new Date(start);
-  const e = new Date(end);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-  return `${fmt(s)} – ${fmt(e)}`;
-}
+type MeterState = "FULL" | "WARNED" | "DEGRADED";
 
-// ─── Hero usage panel (shared by leader + member) ─────────────────────────
-
-interface FreeHeroProps {
-  snap: FreeSnapshot;
-}
-
-function FreeHero({ snap }: FreeHeroProps) {
-  const { t } = useTranslation();
-  const pct =
-    snap.billableLimit > 0
-      ? Math.min(100, (snap.billableUsed / snap.billableLimit) * 100)
-      : 100;
-  const state =
+/** Warn/degrade band for the one-time grant meter (mirrors the BE thresholds). */
+function meterState(used: number, limit: number): { state: MeterState; pct: number } {
+  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
+  const state: MeterState =
     pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
+  return { state, pct };
+}
+
+// ─── Editor plan card (always-free tools only) ────────────────────────────
+
+interface EditorPlanCardProps {
+  /** Role pill text on the right. */
+  pill: string;
+  /** LEADER pill colour treatment. */
+  leader?: boolean;
+}
+
+/**
+ * The top card: the free Editor plan. Manual tools only, no billing window —
+ * the one-time grant lives in the Processor card below, so there's no period
+ * to show here.
+ */
+function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
+  const { t } = useTranslation();
+  return (
+    <div className="payg-planhead paygf-editorcard">
+      <div className="payg-planhead__top">
+        <span className="payg-planhead__lbl payg-planhead__lbl--free paygf-editorcard__eyebrow">
+          <AllInclusiveIcon
+            className="payg-planhead__lbl-icon"
+            fontSize="small"
+          />
+          {t("payg.free.editor.eyebrow", "Editor plan · Always free")}
+        </span>
+        <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
+          {pill}
+        </span>
+      </div>
+      <p className="payg-planhead__title">
+        {t("payg.free.header.freeTitle", "Unlimited PDF editing")}
+      </p>
+      <p className="payg-planhead__body">
+        {t(
+          "payg.free.header.freeBody",
+          "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it.",
+        )}
+      </p>
+    </div>
+  );
+}
+
+// ─── Compact one-time free meter (right column of the Processor card) ──────
+
+function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
+  const { t } = useTranslation();
+  const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
   const stateLabel =
     state === "DEGRADED"
       ? t("payg.free.state.limitReached", "Limit reached")
@@ -116,128 +141,156 @@ function FreeHero({ snap }: FreeHeroProps) {
         : t("payg.free.state.plentyLeft", "Plenty left");
 
   return (
-    <div className="payg-hero" data-state={state}>
-      <div className="payg-hero__inner">
-        <div className="payg-hero__head-row">
-          <div>
-            <div className="payg-hero__eyebrow">
-              {t("payg.free.hero.eyebrow", "Your free PDFs")}
-            </div>
-            <div className="payg-hero__figure">
-              <span className="payg-hero__spend">
-                {snap.billableUsed.toLocaleString()}
-              </span>
-              <span className="payg-hero__cap">
-                {t(
-                  "payg.free.hero.capSuffix",
-                  "/ {{limit}} free PDFs",
-                  { limit: snap.billableLimit.toLocaleString() },
-                )}
-              </span>
-            </div>
-          </div>
-          <div className="payg-status" data-state={state}>
-            <span className="payg-status__dot" />
-            {stateLabel}
-          </div>
-        </div>
-
-        <div className="payg-bar">
-          <div
-            className="payg-bar__fill"
-            data-state={state}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-
-        <div className="payg-hero__meta">
-          <span>
-            {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
+    <div className="paygf-meter" data-state={state}>
+      <div className="paygf-meter__top">
+        <div className="paygf-meter__figure">
+          <span className="paygf-meter__num">
+            {snap.billableUsed.toLocaleString()}
           </span>
-          <span className="payg-hero__meta-dot">•</span>
-          <span>
-            {t("payg.free.hero.neverResets", "One-time — never resets")}
+          <span className="paygf-meter__cap">
+            {t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
+              limit: snap.billableLimit.toLocaleString(),
+            })}
           </span>
         </div>
+        <span className="payg-status" data-state={state}>
+          <span className="payg-status__dot" />
+          {stateLabel}
+        </span>
+      </div>
 
-        <DocHelp />
+      <div className="payg-bar">
+        <div
+          className="payg-bar__fill"
+          data-state={state}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      <div className="paygf-meter__meta">
+        <span>
+          {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
+        </span>
+        <span className="payg-hero__meta-dot">•</span>
+        <span>{t("payg.free.hero.neverResets", "One-time — never resets")}</span>
       </div>
     </div>
   );
 }
 
-// ─── Section header (shared) ─────────────────────────────────────────────
-// Mirrors the Mantine Group + payg-header__subtitle + role pill pattern in
-// Payg.tsx so the free view reads as a continuation of the subscribed view.
+// ─── Processor plan card (two-column: pitch + benefits | meter + CTA) ──────
 
-interface SectionHeaderProps {
+interface ProcessorCardProps {
   snap: FreeSnapshot;
-  /** Pill text on the right. */
-  pill: string;
-  /** LEADER pill colour treatment. */
-  leader?: boolean;
+  /** Leaders get the live CTA; members get the ask-owner note. */
+  isLeader: boolean;
+  /** Opens the upgrade modal — leader only. */
+  onTurnOn?: () => void;
 }
 
-function SectionHeader({ snap, pill, leader }: SectionHeaderProps) {
+function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
   const { t } = useTranslation();
   return (
-    <div className="payg-planhead">
-      <div className="payg-planhead__top">
-        <span className="payg-planhead__eyebrow">
-          {t("payg.free.header.eyebrow", "Editor plan · {{period}}", {
-            period: formatPeriod(snap.billingPeriodStart, snap.billingPeriodEnd),
-          })}
-        </span>
-        <span
-          className="payg-role-pill"
-          data-leader={leader ? "true" : "false"}
-        >
-          {pill}
-        </span>
-      </div>
+    <div className="paygf-cta paygf-proc">
+      <span className="paygf-proc__eyebrow">
+        <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
+        {t("payg.free.proc.eyebrow", "Processor plan · metered")}
+      </span>
 
-      <div className="payg-planhead__split">
-        <div className="payg-planhead__col">
-          <div className="payg-planhead__lbl payg-planhead__lbl--free">
-            <AllInclusiveIcon
-              className="payg-planhead__lbl-icon"
-              fontSize="small"
-            />
-            {t("payg.free.header.freeLabel", "Always free")}
-          </div>
-          <p className="payg-planhead__title">
-            {t("payg.free.header.freeTitle", "Unlimited PDF editing")}
-          </p>
-          <p className="payg-planhead__body">
+      <div className="paygf-proc__split">
+        <div className="paygf-proc__pitch">
+          <h3 className="paygf-cta__title">
+            {t("payg.free.cta.title", "Turn on the Processor plan")}
+          </h3>
+          <p className="paygf-cta__subtitle">
             {t(
-              "payg.free.header.freeBody",
-              "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it.",
-            )}
-          </p>
-        </div>
-
-        <div className="payg-planhead__col payg-planhead__col--meter">
-          <div className="payg-planhead__lbl payg-planhead__lbl--meter">
-            <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
-            {t("payg.free.header.meterLabel", "Metered")}
-          </div>
-          <p className="payg-planhead__title">
-            {t("payg.free.header.meterTitle", "Automation · AI · API")}
-          </p>
-          <p className="payg-planhead__body">
-            {t(
-              "payg.free.header.meterBody",
-              "{{limit}} free PDFs to start, then simple pay-as-you-go with Processor.",
+              "payg.free.cta.subtitle",
+              "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling — you stay in control.",
               { limit: snap.billableLimit.toLocaleString() },
             )}
           </p>
+
+          <ul className="paygf-cta__benefits paygf-proc__benefits">
+            <li>
+              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <span>
+                <strong>
+                  {t("payg.free.cta.benefit1Title", "Automation pipelines")}
+                </strong>
+                {" — "}
+                {t(
+                  "payg.free.cta.benefit1Body",
+                  "chain tools, schedule runs, batch process",
+                )}
+              </span>
+            </li>
+            <li>
+              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <span>
+                <strong>{t("payg.free.cta.benefit2Title", "AI tools")}</strong>
+                {" — "}
+                {t(
+                  "payg.free.cta.benefit2Body",
+                  "summarise, classify, redact, AI-OCR",
+                )}
+              </span>
+            </li>
+            <li>
+              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <span>
+                <strong>{t("payg.free.cta.benefit3Title", "API access")}</strong>
+                {" — "}
+                {t(
+                  "payg.free.cta.benefit3Body",
+                  "call any Stirling endpoint programmatically",
+                )}
+              </span>
+            </li>
+          </ul>
+
+          <DocHelp />
+        </div>
+
+        <div className="paygf-proc__aside">
+          <FreeMeterPanel snap={snap} />
+          {isLeader ? (
+            <>
+              <button
+                type="button"
+                className="paygf-cta__button paygf-proc__cta"
+                onClick={onTurnOn}
+                data-testid="turn-on-processor"
+              >
+                {t("payg.free.cta.button", "Turn on Processor →")}
+              </button>
+              <span className="paygf-cta__reassurance paygf-proc__reassure">
+                {t(
+                  "payg.free.cta.reassurance",
+                  "No minimum · Set a $0 cap to test · Cancel anytime",
+                )}
+              </span>
+            </>
+          ) : (
+            <div className="paygf-proc__membernote">
+              <LockIcon
+                className="paygf-proc__membernote-icon"
+                fontSize="small"
+              />
+              <span>
+                {t(
+                  "payg.free.member.ownerOnly",
+                  "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like.",
+                )}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Free LEADER: hero + upgrade CTA + what's free explainer ─────────────
+// ─── Free LEADER ──────────────────────────────────────────────────────────
 
 export interface PaygFreeLeaderProps {
   /**
@@ -259,97 +312,12 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   return (
     <div className="payg">
       <Stack gap="md">
-        <SectionHeader
+        <EditorPlanCard pill={t("payg.role.leader", "Team owner")} leader />
+        <ProcessorCard
           snap={snap}
-          pill={t("payg.role.leader", "Team owner")}
-          leader
+          isLeader
+          onTurnOn={() => setUpgradeOpen(true)}
         />
-
-        <FreeHero snap={snap} />
-
-        <div className="paygf-cta">
-          <div className="paygf-cta__heading-row">
-            <BoltIcon className="paygf-cta__icon" />
-            <div className="paygf-cta__heading-text">
-              <h3 className="paygf-cta__title">
-                {t(
-                  "payg.free.cta.title",
-                  "Turn on the Processor plan",
-                )}
-              </h3>
-              <p className="paygf-cta__subtitle">
-                {t(
-                  "payg.free.cta.subtitle",
-                  "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling — you stay in control.",
-                  { limit: snap.billableLimit.toLocaleString() },
-                )}
-              </p>
-            </div>
-          </div>
-
-          <ul className="paygf-cta__benefits">
-            <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
-              <span>
-                <strong>
-                  {t(
-                    "payg.free.cta.benefit1Title",
-                    "Automation pipelines",
-                  )}
-                </strong>
-                {" — "}
-                {t(
-                  "payg.free.cta.benefit1Body",
-                  "chain tools, schedule runs, batch process",
-                )}
-              </span>
-            </li>
-            <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
-              <span>
-                <strong>
-                  {t("payg.free.cta.benefit2Title", "AI tools")}
-                </strong>
-                {" — "}
-                {t(
-                  "payg.free.cta.benefit2Body",
-                  "summarise, classify, redact, AI-OCR",
-                )}
-              </span>
-            </li>
-            <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
-              <span>
-                <strong>
-                  {t("payg.free.cta.benefit3Title", "API access")}
-                </strong>
-                {" — "}
-                {t(
-                  "payg.free.cta.benefit3Body",
-                  "call any Stirling endpoint programmatically",
-                )}
-              </span>
-            </li>
-          </ul>
-
-          <div className="paygf-cta__footer">
-            <button
-              type="button"
-              className="paygf-cta__button"
-              onClick={() => setUpgradeOpen(true)}
-              data-testid="turn-on-processor"
-            >
-              {t("payg.free.cta.button", "Turn on Processor →")}
-            </button>
-            <span className="paygf-cta__reassurance">
-              {t(
-                "payg.free.cta.reassurance",
-                "No minimum · Set a $0 cap to test · Cancel anytime",
-              )}
-            </span>
-          </div>
-        </div>
-
       </Stack>
 
       {wallet?.teamId != null && (
@@ -381,7 +349,7 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   );
 }
 
-// ─── Free MEMBER: hero + ask-owner note (no CTA) ─────────────────────────
+// ─── Free MEMBER ──────────────────────────────────────────────────────────
 
 function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");
@@ -391,35 +359,12 @@ function PaygFreeMemberInner() {
   return (
     <div className="payg">
       <Stack gap="md">
-        <SectionHeader snap={snap} pill={t("payg.role.member", "Member")} />
-
-        <FreeHero snap={snap} />
-
-        <div className="paygf-member-note">
-          <LockIcon className="paygf-member-note__icon" />
-          <div>
-            <h3 className="paygf-member-note__title">
-              {t(
-                "payg.free.member.title",
-                "Need to process more than your {{limit}} free PDFs?",
-                { limit: snap.billableLimit.toLocaleString() },
-              )}
-            </h3>
-            <p className="paygf-member-note__body">
-              {t(
-                "payg.free.member.body",
-                "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API work shares the team's one-time allowance of {{limit}} free PDFs.",
-                { limit: snap.billableLimit.toLocaleString() },
-              )}
-            </p>
-          </div>
-        </div>
-
+        <EditorPlanCard pill={t("payg.role.member", "Member")} />
+        <ProcessorCard snap={snap} isLeader={false} />
       </Stack>
     </div>
   );
 }
-
 
 // React.memo so Plan re-rendering on loading/error toggles doesn't cascade
 // down to these leaves. Plan passes a stable onUpgraded callback (hoisted in

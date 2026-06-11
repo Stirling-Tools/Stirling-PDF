@@ -215,7 +215,7 @@ const SpendCapControl: React.FC<SpendCapControlProps> = ({
           <DescriptionIcon className="scc-estimate__icon" sx={{ fontSize: 22 }} />
           <div>
             <div className="scc-estimate__main">
-              {t("payg.cap.docsEstimate", "≈ {{docs}} paid PDFs / month", {
+              {t("payg.cap.docsEstimate", "≈ {{docs}} processed PDFs / month", {
                 docs: previewDocs.toLocaleString(),
               })}
             </div>

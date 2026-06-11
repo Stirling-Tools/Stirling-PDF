@@ -229,7 +229,6 @@ export default function UpgradeModal({
                 setCapUsd={setCapUsd}
                 noCap={noCap}
                 setNoCap={setNoCap}
-                freeLimit={freeLimit}
                 pricePerDocMinor={pricePerDocMinor}
                 rateCurrency={rateCurrency}
               />
@@ -310,7 +309,6 @@ interface CapStepProps {
   setCapUsd: (v: number) => void;
   noCap: boolean;
   setNoCap: (v: boolean) => void;
-  freeLimit: number;
   pricePerDocMinor?: number | null;
   rateCurrency?: string | null;
 }
@@ -320,7 +318,6 @@ function CapStep({
   setCapUsd,
   noCap,
   setNoCap,
-  freeLimit,
   pricePerDocMinor,
   rateCurrency,
 }: CapStepProps) {
@@ -353,14 +350,13 @@ function CapStep({
       <p className="upm-section-help">
         {t(
           "payg.upgrade.cap.help",
-          "We'll never charge above this. Your first {{limit}} documents processed by automation / AI / API stay free. Set $0 if you want to keep everything free while testing.",
-          { limit: freeLimit.toLocaleString() },
+          "We'll never charge above this. Set $0 if you want to keep everything free while testing.",
         )}
       </p>
 
       {/* Same control the subscribed plan page renders. null = no cap; the
           shared control owns the presets, the inline custom-entry pill, the
-          no-cap chip, and the live paid-PDF estimate. */}
+          no-cap chip, and the live processed-PDF estimate. */}
       <SpendCapControl
         capUsd={noCap ? null : capUsd}
         onChange={(v) => {

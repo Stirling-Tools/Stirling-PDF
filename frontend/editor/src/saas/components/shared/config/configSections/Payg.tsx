@@ -731,6 +731,15 @@ function MemberRow({
 // ─── Activity feed ──────────────────────────────────────────────────────────
 
 /**
+ * Feature flag — the activity feed is hidden until the meter-event surface is
+ * built and polished (Wave 2). The backend returns {@code []} today, so an
+ * unpolished "No billable activity yet" card adds nothing. Flip to {@code true}
+ * once {@code wallet.recent} carries real rows. Kept as a flag (not deleted) so
+ * the renderer below stays wired and ready.
+ */
+const SHOW_ACTIVITY_FEED = false;
+
+/**
  * Renders {@code wallet.recent} — the backend returns {@code []} in V1 (the
  * meter-event surface ships in Wave 2), so today this shows a real empty
  * state. The row renderer is ready for when the rows arrive; fields are read
@@ -948,7 +957,7 @@ const Payg: React.FC<PaygProps> = ({
           />
         )}
 
-        <ActivityFeed recent={wallet.recent} />
+        {SHOW_ACTIVITY_FEED && <ActivityFeed recent={wallet.recent} />}
 
         {isLeader && onOpenPortal && (
           <StripePortalLink onOpenPortal={onOpenPortal} />

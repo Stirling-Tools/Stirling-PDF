@@ -328,8 +328,11 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     // subscribed team is shown with its grant fully spent (kept across the
     // subscribe — it just no longer gates them).
     freeRemaining: subscribed ? 0 : 438,
-    pricePerDocMinor: subscribed ? 2 : null,
-    currency: subscribed ? "usd" : null,
+    // Free teams also carry a rate now — the backend resolves it from the
+    // default policy's USD Price so the upgrade-flow cap estimate ("≈ N paid
+    // PDFs/month") can render before subscribing. Mirror that here.
+    pricePerDocMinor: 2,
+    currency: "usd",
     estimatedBillMinor: subscribed ? 0 : null,
     capUsd: subscribed ? 25 : null,
     noCap: false,

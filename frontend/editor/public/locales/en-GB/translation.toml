@@ -5708,7 +5708,7 @@ currency = "Currency"
 custom = "Custom"
 degradeAt = "Limit spend at"
 degradeAtDesc = "Set below 100% to leave yourself headroom."
-docsEstimate = "≈ {{docs}} paid PDFs / month"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
 docsRate = "at {{rate}} / PDF"
 noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
 noCapLabel = "No cap"
@@ -5764,6 +5764,9 @@ reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
 subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling — you stay in control."
 title = "Turn on the Processor plan"
 
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
 [payg.free.explainer]
 alwaysFreeBody = "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, no matter where you trigger them from."
 alwaysFreeForYouBody = "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, never counted."
@@ -5785,7 +5788,11 @@ neverResets = "One-time — never resets"
 
 [payg.free.member]
 body = "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API access share the team's one-time allowance of 500 free PDFs."
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
 title = "Want to process more than your 500 free PDFs?"
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
 
 [payg.free.state]
 approachingLimit = "Approaching limit"
@@ -5870,7 +5877,7 @@ finish = "Finish"
 
 [payg.upgrade.cap]
 customPlaceholder = "Or enter your own amount ($0 keeps it free)"
-help = "We'll never charge above this. Your first 500 automation / AI / API operations are free. Set $0 if you want to keep everything free while testing."
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
 noCapHint = "You can still cancel anytime from the customer portal."
 noCapLabel = "No cap — I'll manage spend manually"
 perMonthSuffix = "/ month"

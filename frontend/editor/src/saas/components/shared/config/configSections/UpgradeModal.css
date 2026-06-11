@@ -245,91 +245,9 @@
   line-height: 1.45;
 }
 
-/* Cap input + quick presets */
-.upm-cap-presets {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.upm-cap-preset {
-  padding: 12px 6px;
-  border-radius: 10px;
-  border: 1.5px solid var(--upm-divider);
-  background: transparent;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--upm-text);
-  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
-}
-.upm-cap-preset:hover {
-  border-color: var(--upm-accent);
-}
-.upm-cap-preset[data-selected="true"] {
-  background: var(--upm-accent-soft);
-  border-color: var(--upm-accent);
-  color: var(--upm-accent);
-}
-
-.upm-cap-input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--upm-divider);
-  border-radius: 12px;
-  background: var(--upm-card-bg);
-  transition: border-color 120ms ease;
-}
-.upm-cap-input-row:focus-within {
-  border-color: var(--upm-accent);
-}
-.upm-cap-input-row__currency {
-  font-weight: 700;
-  color: var(--upm-muted);
-}
-.upm-cap-input-row__input {
-  flex: 1 1 auto;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--upm-text);
-  font-variant-numeric: tabular-nums;
-}
-.upm-cap-input-row__period {
-  font-size: 0.85rem;
-  color: var(--upm-muted);
-}
-
-.upm-no-cap-toggle {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px dashed var(--upm-divider);
-  cursor: pointer;
-  user-select: none;
-}
-.upm-no-cap-toggle input {
-  margin-top: 3px;
-  accent-color: var(--upm-accent);
-}
-.upm-no-cap-toggle__text {
-  font-size: 0.825rem;
-  color: var(--upm-text);
-  line-height: 1.4;
-}
-.upm-no-cap-toggle__hint {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--upm-muted);
-  margin-top: 2px;
-}
+/* Cap selection (presets + custom + no-cap + estimate) now lives in the shared
+   SpendCapControl (SpendCapControl.css). The old upm-cap-* / upm-no-cap-toggle
+   rules were removed with it. */
 
 /* What counts as "processed" — quiet helper text */
 .upm-help-card {
