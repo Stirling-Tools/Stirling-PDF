@@ -125,6 +125,9 @@ export interface PolicyState {
   reviewerEmail: string;
   /** Saved field values, keyed by field key (overrides the definition default). */
   fieldValues: Record<string, boolean | string | string[]>;
+  /** How a run's output is delivered: a separate new file, or a new version of
+   *  the input file the policy ran on. Defaults to "new_file". */
+  outputMode?: "new_file" | "new_version";
   /**
    * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that
    * holds this policy's editable steps (its automation), output config and run

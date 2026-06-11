@@ -12,7 +12,11 @@
  */
 
 import { useEffect, useRef } from "react";
-import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
+import {
+  useAllFiles,
+  useFileManagement,
+  useFileContext,
+} from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import {
@@ -22,6 +26,8 @@ import {
 } from "@app/services/policyApi";
 import type { PolicyRunStatus } from "@app/services/policyPipeline";
 import type { FileId } from "@app/types/file";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import { usePolicies } from "@app/hooks/usePolicies";
 import {
   isDispatched,
@@ -47,6 +53,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
   const { addFiles } = useFileManagement();
+  const { consumeFiles } = useFileContext();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
   // Run ids currently being polled / imported, so the effects never double-fire.
@@ -97,23 +104,48 @@ export function usePolicyAutoRun(): void {
         continue;
       }
       importing.current.add(run.runId);
-      void importOutputs(run, addFiles).finally(() =>
-        importing.current.delete(run.runId),
-      );
+      // Honour the policy's output mode: a new file, or a new version of the
+      // input file it ran on (needs that input's stub, still in the workspace).
+      const outputMode = policies[run.categoryId]?.outputMode ?? "new_file";
+      const parentStub = fileStubs.find((s) => (s.id as string) === run.fileId);
+      void importOutputs(run, {
+        addFiles,
+        consumeFiles,
+        outputMode,
+        parentStub,
+      }).finally(() => importing.current.delete(run.runId));
     }
-  }, [runs, addFiles]);
+  }, [runs, addFiles, consumeFiles, policies, fileStubs]);
+}
+
+interface ImportContext {
+  addFiles: (files: File[]) => Promise<unknown>;
+  consumeFiles: (
+    inputFileIds: FileId[],
+    outputs: StirlingFile[],
+    stubs: StirlingFileStub[],
+  ) => Promise<unknown>;
+  /** "new_file" adds the output as a separate file; "new_version" versions the input. */
+  outputMode: "new_file" | "new_version";
+  /** The input file's stub — required to version it; absent if it's been removed. */
+  parentStub: StirlingFileStub | undefined;
 }
 
 /**
- * Fetch a completed run's not-yet-imported output files and add them to the
- * workspace. Per-output, via allSettled: each output is tracked once imported,
+ * Fetch a completed run's not-yet-imported output files and deliver them to the
+ * workspace. Per-output, via allSettled: each output is tracked once delivered,
  * so a partial failure retries only the missing files on a later tick and the
  * ones that succeeded are never added twice. `imported` flips true only once
  * every output has landed.
+ *
+ * Delivery honours the policy's output mode: "new_version" replaces the input
+ * file with a versioned child (its history chain), "new_file" adds the output
+ * as a standalone file. Versioning falls back to a new file if the input is
+ * gone (no parent stub).
  */
 async function importOutputs(
   run: PolicyRunRecord,
-  addFiles: (files: File[]) => Promise<unknown>,
+  ctx: ImportContext,
 ): Promise<void> {
   const done = new Set(run.importedFileIds ?? []);
   const pending = run.outputs.filter((out) => !done.has(out.fileId));
@@ -141,9 +173,22 @@ async function importOutputs(
     .map((r) => r.value);
   if (fetched.length === 0) return; // all failed — retry the lot on a later tick
 
-  // Add the freshly-fetched files, then mark exactly those imported. If addFiles
-  // throws we don't mark them, so they retry (without having been added).
-  await addFiles(fetched.map((f) => f.file));
+  // Deliver, then mark exactly those imported. If delivery throws we don't mark
+  // them, so they retry (without having been added).
+  const files = fetched.map((f) => f.file);
+  if (ctx.outputMode === "new_version" && ctx.parentStub) {
+    // Replace the input file with a versioned child (preserves its history).
+    // The version records "automate" as its origin tool — a policy is a
+    // multi-tool automation, not any single tool (redact/watermark/sanitize/…).
+    const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+      files,
+      ctx.parentStub,
+      "automate",
+    );
+    await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+  } else {
+    await ctx.addFiles(files);
+  }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
   updateRun(run.runId, {
     importedFileIds,

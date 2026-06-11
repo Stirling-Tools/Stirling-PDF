@@ -128,6 +128,7 @@ export function usePolicies() {
         sources: result.sources,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
+        outputMode: result.folder.outputMode,
       });
     },
     [],
@@ -161,6 +162,7 @@ export function usePolicies() {
         sources: result.sources,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
+        outputMode: result.folder.outputMode,
       });
     },
     [],
@@ -222,6 +224,7 @@ export function usePolicies() {
         sources: result.sources,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
+        outputMode: result.folder.outputMode,
       });
     },
     [],
