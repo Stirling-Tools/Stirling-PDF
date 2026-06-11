@@ -8,6 +8,7 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
+from stirling.agents.pdf_create import PdfCreateAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
@@ -26,6 +27,7 @@ from stirling.contracts import (
     format_conversation_history,
     format_file_names,
 )
+from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -77,6 +79,16 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
+                    self.delegate_pdf_create,
+                    name="delegate_pdf_create",
+                    description=(
+                        "Delegate requests to create a new PDF document from scratch based on a"
+                        " description. Use this when the user wants to generate a new document"
+                        " (e.g. 'create an invoice', 'write a report', 'make a contract',"
+                        " 'draft a letter'). No input file is required."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -92,6 +104,8 @@ class OrchestratorAgent:
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
+                "Use delegate_pdf_create when the user wants to generate a new document from"
+                " scratch with no input file — invoices, reports, letters, contracts, etc. "
                 "Use delegate_pdf_ingest for any request to convert a PDF to Markdown "
                 "or extract its content as readable text. "
                 "Use unsupported_capability when the user asks about the assistant itself "
@@ -133,12 +147,13 @@ class OrchestratorAgent:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
+            case SupportedCapability.PDF_CREATE:
+                return await self._run_pdf_create(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
                 | SupportedCapability.AGENT_NEXT_ACTION
                 | SupportedCapability.MATH_AUDITOR_AGENT
-                | SupportedCapability.PDF_TO_MARKDOWN
             ):
                 raise ValueError(f"Cannot resume orchestrator with capability: {capability}")
             case _ as unreachable:
@@ -174,6 +189,12 @@ class OrchestratorAgent:
 
     async def _run_pdf_review(self, request: OrchestratorRequest) -> PdfReviewOrchestrateResponse:
         return await PdfReviewAgent(self.runtime).orchestrate(request)
+
+    async def delegate_pdf_create(self, ctx: RunContext[OrchestratorDeps]) -> PdfCreateOrchestrateResponse:
+        return await self._run_pdf_create(ctx.deps.request)
+
+    async def _run_pdf_create(self, request: OrchestratorRequest) -> PdfCreateOrchestrateResponse:
+        return await PdfCreateAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(
         self,
