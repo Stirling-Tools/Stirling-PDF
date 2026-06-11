@@ -11,6 +11,8 @@ declare global {
       run: (config: any) => void;
       show: (show?: boolean) => void;
       hide: () => void;
+      showPreferences: () => void;
+      hidePreferences: () => void;
       getCookie: (name?: string) => any;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
@@ -391,7 +393,10 @@ export const useCookieConsent = ({
 
   const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
-      window.CookieConsent?.show(true);
+      // Open the detailed preferences dialog directly (not the consent
+      // banner) — it gets the `.show--preferences` class, which the CSS
+      // raises above the settings modal.
+      window.CookieConsent?.showPreferences();
     }
   }, [isInitialized]);
 

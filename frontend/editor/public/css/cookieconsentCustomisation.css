@@ -20,17 +20,18 @@
 
   --cc-separator-border-color: #e0e0e0;
 
-  --cc-toggle-on-bg: #007bff;
-  --cc-toggle-off-bg: #667481;
-  --cc-toggle-on-knob-bg: #ffffff;
-  --cc-toggle-off-knob-bg: #ffffff;
+  /* Toggle colors mirror Mantine Switch (light scheme) */
+  --cc-toggle-on-bg: var(--mantine-primary-color-filled, #007bff);
+  --cc-toggle-off-bg: var(--mantine-color-gray-3, #dee2e6);
+  --cc-toggle-on-knob-bg: var(--mantine-color-white, #ffffff);
+  --cc-toggle-off-knob-bg: var(--mantine-color-white, #ffffff);
 
   --cc-toggle-enabled-icon-color: #ffffff;
   --cc-toggle-disabled-icon-color: #ffffff;
 
-  --cc-toggle-readonly-bg: #f1f3f4;
-  --cc-toggle-readonly-knob-bg: #79747e;
-  --cc-toggle-readonly-knob-icon-color: #f1f3f4;
+  --cc-toggle-readonly-bg: var(--mantine-color-disabled, #f1f3f4);
+  --cc-toggle-readonly-knob-bg: var(--mantine-color-gray-0, #f8f9fa);
+  --cc-toggle-readonly-knob-icon-color: transparent;
 
   --cc-section-category-border: #e0e0e0;
 
@@ -69,17 +70,18 @@
 
   --cc-separator-border-color: #555555;
 
-  --cc-toggle-on-bg: #4dabf7;
-  --cc-toggle-off-bg: #667481;
-  --cc-toggle-on-knob-bg: #2d2d2d;
-  --cc-toggle-off-knob-bg: #2d2d2d;
+  /* Toggle colors mirror Mantine Switch (dark scheme) */
+  --cc-toggle-on-bg: var(--mantine-primary-color-filled, #4dabf7);
+  --cc-toggle-off-bg: var(--mantine-color-dark-5, #555555);
+  --cc-toggle-on-knob-bg: var(--mantine-color-white, #ffffff);
+  --cc-toggle-off-knob-bg: var(--mantine-color-white, #ffffff);
 
   --cc-toggle-enabled-icon-color: #2d2d2d;
   --cc-toggle-disabled-icon-color: #2d2d2d;
 
-  --cc-toggle-readonly-bg: #555555;
-  --cc-toggle-readonly-knob-bg: #8e8e8e;
-  --cc-toggle-readonly-knob-icon-color: #555555;
+  --cc-toggle-readonly-bg: var(--mantine-color-disabled, #555555);
+  --cc-toggle-readonly-knob-bg: var(--mantine-color-dark-3, #8e8e8e);
+  --cc-toggle-readonly-knob-icon-color: transparent;
 
   --cc-section-category-border: #555555;
 
@@ -181,6 +183,15 @@
   z-index: 100 !important;
 }
 
+/* The preferences dialog only opens by deliberate user action (Settings →
+   Legal → Manage, or the banner's own button), so it must sit above the
+   settings modal (Z_INDEX_CONFIG_MODAL = 1400) while staying below the
+   restart-confirmation layer (Z_INDEX_OVER_CONFIG_MODAL = 2000). The
+   passive consent banner keeps the low z-index above. */
+.show--preferences #cc-main {
+  z-index: 1450 !important;
+}
+
 /* Ensure consent modal text is visible in both themes */
 #cc-main .cm {
   background: var(--cc-bg) !important;
@@ -202,4 +213,64 @@
 #cc-main .cm__footer-links a,
 #cc-main .cm__link {
   color: var(--cc-primary-color) !important;
+}
+
+/* ── Category toggles restyled to match Mantine Switch (size sm) ──────────
+   Mantine sm metrics: 38×20 track, 14px plain thumb, 2.5px inline padding,
+   150ms ease transitions, no icon inside the thumb. Colors come from the
+   --cc-toggle-* variables above, which point at the Mantine palette. */
+#cc-main .section__toggle,
+#cc-main .section__toggle-wrapper,
+#cc-main .toggle__icon,
+#cc-main .toggle__label {
+  width: 38px !important;
+  height: 20px !important;
+  border-radius: 1000px !important;
+}
+
+/* Track: flat fill, no outline ring or border */
+#cc-main .toggle__icon {
+  border: none !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease !important;
+}
+
+#cc-main .section__toggle:checked ~ .toggle__icon {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Always-enabled categories = Mantine disabled switch (must out-prioritise
+   the !important checked-track rule above) */
+#cc-main .section__toggle:checked:disabled ~ .toggle__icon {
+  background: var(--cc-toggle-readonly-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#cc-main .section__toggle:disabled {
+  cursor: not-allowed !important;
+}
+
+/* Thumb: small plain circle, vertically centred, no drop shadow */
+#cc-main .toggle__icon-circle {
+  width: 14px !important;
+  height: 14px !important;
+  top: 3px !important;
+  left: 2.5px !important;
+  box-shadow: none !important;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease !important;
+}
+
+/* Checked thumb travel: 38 − 14 − 2.5 = 21.5px end position */
+#cc-main .section__toggle:checked ~ .toggle__icon .toggle__icon-circle {
+  transform: translateX(19px) !important;
+}
+
+/* Mantine switches have no check/cross glyph inside the thumb */
+#cc-main .toggle__icon-on,
+#cc-main .toggle__icon-off {
+  display: none !important;
 }

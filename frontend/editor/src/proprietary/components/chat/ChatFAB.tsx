@@ -15,8 +15,7 @@ const PANEL_HEIGHT_PX = 520;
 const PANEL_MIN_WIDTH_PX = 300;
 const PANEL_MIN_HEIGHT_PX = 380;
 const FAB_GAP_PX = 16;
-// footer-height (2rem = 32px) + gap so the panel clears the footer
-const FAB_BOTTOM_OFFSET_PX = 32 + FAB_GAP_PX;
+const FAB_BOTTOM_OFFSET_PX = FAB_GAP_PX;
 
 const RESET_MS = 380;
 const RESET_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
