@@ -133,9 +133,10 @@ describe("buildBackendPolicy", () => {
     expect(policy.steps).toEqual([
       { operation: "/api/v1/misc/compress-pdf", parameters: {} },
     ]);
-    // Extras ride in options.
-    expect(policy.trigger.options.categoryId).toBe("security");
-    expect(policy.trigger.options.reviewerEmail).toBe("me@x.com");
+    // Trigger is null (browser-driven); extras ride in output.options.
+    expect(policy.trigger).toBeNull();
+    expect(policy.output.options.categoryId).toBe("security");
+    expect(policy.output.options.reviewerEmail).toBe("me@x.com");
     expect(policy.output.options.maxRetries).toBe(2);
   });
 

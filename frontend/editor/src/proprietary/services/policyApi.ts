@@ -74,7 +74,11 @@ export async function runPolicyPipeline(
 ): Promise<string> {
   const form = new FormData();
   for (const file of files) form.append("fileInput", file);
-  form.append("json", JSON.stringify(definition));
+  // The backend binds this as a typed @RequestPart, so it must be an application/json part.
+  form.append(
+    "json",
+    new Blob([JSON.stringify(definition)], { type: "application/json" }),
+  );
   const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
