@@ -39,7 +39,6 @@ import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
@@ -72,7 +71,6 @@ public class PolicyController {
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
     private final PolicyValidator policyValidator;
-    private final FolderAccessGuard folderAccessGuard;
     private final PolicyAccessGuard policyAccessGuard;
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
@@ -156,8 +154,8 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
+        requirePolicyEditingAllowed();
         Policy owned = resolveOwnership(policy);
-        requireAuthorizedForFolderAccess(owned);
         try {
             policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
@@ -167,18 +165,16 @@ public class PolicyController {
     }
 
     /**
-     * Assign the owner: create stamps the current user; update preserves the existing owner after
-     * an access check. So the client can neither forge ownership on create nor reassign it on
-     * update.
+     * Assign the owner: create stamps the current user; update preserves the existing owner — so
+     * the client can neither forge ownership on create nor reassign it on update. Editing is gated
+     * to admins by {@link #requirePolicyEditingAllowed}; policies are org-wide, so there is no
+     * per-owner access check here.
      */
     private Policy resolveOwnership(Policy incoming) {
         String id = incoming.id();
         if (id != null && !id.isBlank()) {
             Policy existing = policyStore.get(id).orElse(null);
             if (existing != null) {
-                if (!policyAccessGuard.canAccess(existing)) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
-                }
                 return withOwner(incoming, existing.owner());
             }
         }
@@ -198,28 +194,28 @@ public class PolicyController {
     }
 
     /**
-     * Folder sources/outputs grant whoever saves the policy access to that path, so gate them to
-     * admins on multi-user deployments. Single-user (login disabled) trusts the local operator;
-     * {@link FolderAccessGuard} still enforces SaaS-off and the path allowlist at validation time.
+     * Creating, editing, pausing/resuming, and deleting policies is admin-only on multi-user
+     * deployments. Every mutation routes through {@link #savePolicy} (pause/resume re-save with a
+     * flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two covers them all;
+     * runs ({@code /run}) stay open. Single-user deployments (login disabled) have no admin
+     * concept, so they trust the local operator. The path allowlist for folder sources/outputs is
+     * enforced separately by {@link PolicyValidator} at validation time.
      */
-    private void requireAuthorizedForFolderAccess(Policy policy) {
-        if (!folderAccessGuard.usesFolderAccess(policy)) {
-            return;
-        }
+    private void requirePolicyEditingAllowed() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
             return;
         }
         if (!userService.isCurrentUserAdmin()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Folder sources and outputs may only be configured by an administrator");
+                    "Policies may only be created or modified by an administrator");
         }
     }
 
     @GetMapping
     @Operation(
             summary = "List policies",
-            description = "Lists the caller's policies; admins see all.")
+            description = "Lists all policies (org-wide; every user sees them all).")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visible(policyStore.all());
     }
@@ -229,7 +225,6 @@ public class PolicyController {
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
-                .filter(policyAccessGuard::canAccess)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -237,9 +232,8 @@ public class PolicyController {
     @DeleteMapping("/{policyId}")
     @Operation(summary = "Delete a policy by id")
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
-        boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
-        if (accessible && policyStore.delete(policyId)) {
+        requirePolicyEditingAllowed();
+        if (policyStore.get(policyId).isPresent() && policyStore.delete(policyId)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
@@ -259,7 +253,6 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
-                        .filter(policyAccessGuard::canAccess)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(

@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   loadPolicies,
   onPoliciesChange,
@@ -63,6 +64,7 @@ function toStoreRequest(
 
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
+  const { config } = useAppConfig();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
@@ -291,9 +293,17 @@ export function usePolicies() {
     return folder.id;
   }, []);
 
-  // Configuration is open to signed-in users; real per-org gating is a backend
-  // concern (the mock owner/admin/member permission model has been removed).
-  const canConfigure = true;
+  // Editing/creating policies is admin-only, mirroring the backend's enforcement
+  // on the save/delete endpoints. On single-user deployments (login disabled)
+  // there's no admin concept, so the local operator can always configure. When
+  // login is enabled, only admins can — non-admins get the read-only surface.
+  // The `config != null` guard keeps the gate CLOSED until app-config resolves:
+  // config is null while loading (and in bare test renders), and a failed/partial
+  // fetch can yield `{ enableLogin: true }` with isAdmin omitted. Without it a
+  // non-admin would briefly see edit controls during load, and an admin would be
+  // wrongly locked out on a transient config-fetch error.
+  const canConfigure =
+    config != null && (!config.enableLogin || config.isAdmin === true);
 
   return {
     policies,

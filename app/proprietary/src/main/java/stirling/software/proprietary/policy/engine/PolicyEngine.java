@@ -26,6 +26,7 @@ import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
+import stirling.software.common.util.JobContext;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -74,22 +75,34 @@ public class PolicyEngine {
      */
     public PolicyRunHandle submit(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
-        // Ad-hoc run (no stored policy): bill whoever kicked it off. Capture the principal on this
-        // (request) thread — it does not survive the hop onto the async worker.
-        return submitForPrincipal(currentActingPrincipal(), definition, inputs, listener);
+        // Ad-hoc run (no stored policy): bill whoever kicked it off and own the outputs as them
+        // too.
+        // Capture the principal on this (request) thread — it does not survive the hop onto the
+        // async
+        // worker.
+        String principal = currentActingPrincipal();
+        return submitForPrincipal(principal, principal, definition, inputs, listener);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        // Bill the policy owner. Trigger-fired runs have no security context at all, and even an
-        // on-demand run executes on a background worker that doesn't inherit the caller's context —
-        // so the owner (a username stamped at policy creation) is the reliable billing identity.
-        return submitForPrincipal(policy.owner(), policy.toDefinition(), inputs, listener);
+        // Bill the policy owner: trigger-fired runs have no security context, and the async worker
+        // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
+        // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
+        // OUTPUT files as the user who triggered the run (captured here on the request thread) so
+        // they can download their enforced file; otherwise an org-wide policy's output is owned by
+        // the admin and the triggering user is denied it. Trigger-fired runs have no such user, so
+        // the owner owns those outputs.
+        String triggeringUser = currentActingPrincipal();
+        String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        return submitForPrincipal(
+                policy.owner(), fileOwner, policy.toDefinition(), inputs, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
-            String actingPrincipal,
+            String billingPrincipal,
+            String fileOwner,
             PipelineDefinition definition,
             PolicyInputs inputs,
             PolicyProgressListener listener) {
@@ -109,7 +122,8 @@ public class PolicyEngine {
         Runnable task =
                 () ->
                         runAsPrincipal(
-                                actingPrincipal,
+                                billingPrincipal,
+                                fileOwner,
                                 () -> runToCompletion(run, inputs, tracking, completion));
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
@@ -297,21 +311,30 @@ public class PolicyEngine {
      * dispatch attributes (and charges) usage to that user. A null/blank principal runs as-is.
      * Restores the previous MDC value afterward (defensive — worker threads aren't pooled).
      */
-    private static void runAsPrincipal(String principal, Runnable body) {
-        if (principal == null || principal.isBlank()) {
-            body.run();
-            return;
+    private static void runAsPrincipal(String billingPrincipal, String fileOwner, Runnable body) {
+        // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
+        // set
+        // independently: usage is charged to billingPrincipal, but stored output files are owned by
+        // fileOwner — the user who triggered an org-wide policy — so they can fetch their results.
+        // Either may be null (e.g. login disabled, or a trigger-fired run); each is applied only
+        // when present and restored afterward (defensive — worker threads aren't pooled).
+        String previousPrincipal = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
+        String previousOwner = JobContext.getOwner();
+        if (billingPrincipal != null && !billingPrincipal.isBlank()) {
+            MDC.put(AUDIT_PRINCIPAL_MDC_KEY, billingPrincipal);
         }
-        String previous = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
-        MDC.put(AUDIT_PRINCIPAL_MDC_KEY, principal);
+        if (fileOwner != null && !fileOwner.isBlank()) {
+            JobContext.setOwner(fileOwner);
+        }
         try {
             body.run();
         } finally {
-            if (previous != null) {
-                MDC.put(AUDIT_PRINCIPAL_MDC_KEY, previous);
+            if (previousPrincipal != null) {
+                MDC.put(AUDIT_PRINCIPAL_MDC_KEY, previousPrincipal);
             } else {
                 MDC.remove(AUDIT_PRINCIPAL_MDC_KEY);
             }
+            JobContext.setOwner(previousOwner);
         }
     }
 }

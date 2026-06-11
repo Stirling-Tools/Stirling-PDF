@@ -11,9 +11,10 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Decides who may act on a stored {@link Policy}: its owner and global admins only, with no
- * separate view/edit/run capability. Enforced only when login is enabled; single-user deployments
- * pass every check. The owner is assigned server-side, never from client input.
+ * Policies are org-wide: every user may view and run any stored policy, so reads and runs are open
+ * to all. Creating, editing, and deleting is gated to admins at the controller (see {@code
+ * PolicyController#requirePolicyEditingAllowed}). The owner is still recorded server-side (for run
+ * / usage attribution) but no longer restricts visibility or access.
  */
 @Component
 @RequiredArgsConstructor
@@ -27,27 +28,9 @@ public class PolicyAccessGuard {
         return enforced() ? userService.getCurrentUsername() : null;
     }
 
-    /** Whether the current user may view, edit, delete, or run the given stored policy. */
-    public boolean canAccess(Policy policy) {
-        if (!enforced() || userService.isCurrentUserAdmin()) {
-            return true;
-        }
-        String current = userService.getCurrentUsername();
-        return current != null && current.equals(policy.owner());
-    }
-
-    /**
-     * The subset of {@code policies} the current user may see (their own; everything for an admin).
-     */
+    /** All stored policies are visible to every user (org-wide). */
     public List<Policy> visible(List<Policy> policies) {
-        if (!enforced() || userService.isCurrentUserAdmin()) {
-            return policies;
-        }
-        String current = userService.getCurrentUsername();
-        if (current == null) {
-            return List.of();
-        }
-        return policies.stream().filter(policy -> current.equals(policy.owner())).toList();
+        return policies;
     }
 
     private boolean enforced() {
