@@ -151,7 +151,9 @@ export function PoliciesSection({
                     </IconBadge>
                     <span className="pol-row-label">{cat.label}</span>
                     <span className="pol-row-trail">
-                      <span className="pol-row-soon">Coming soon</span>
+                      <span className="pol-row-soon">
+                        Upgrade to enterprise
+                      </span>
                     </span>
                   </div>
                 );

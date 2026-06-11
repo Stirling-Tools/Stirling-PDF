@@ -112,14 +112,14 @@ describe("Policies right-sidebar surface", () => {
     }
   });
 
-  it("shows Security as active and the unbuilt categories as Coming soon", () => {
+  it("shows Security as active and the unbuilt categories as upgrade-gated", () => {
     renderHost();
     expect(screen.getAllByText("Active").length).toBeGreaterThanOrEqual(1);
     // Ingestion, Compliance, Routing, Retention are locked for this release.
-    expect(screen.getAllByText("Coming soon")).toHaveLength(4);
+    expect(screen.getAllByText("Upgrade to enterprise")).toHaveLength(4);
   });
 
-  it("does not open a Coming soon policy when its row is clicked", () => {
+  it("does not open an upgrade-gated policy when its row is clicked", () => {
     renderHost();
     fireEvent.click(screen.getByText("Ingestion"));
     // The locked row isn't a button — we stay on the list, nothing opens.
