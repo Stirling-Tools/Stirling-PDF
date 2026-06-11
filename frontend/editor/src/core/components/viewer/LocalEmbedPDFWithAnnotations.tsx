@@ -308,7 +308,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           ? ((navigator as Navigator & { deviceMemory?: number })
               .deviceMemory ?? 4)
           : 4;
-      const bufferSize = deviceMemory >= 4 ? 8 : 4;
+      const bufferSize = deviceMemory >= 4 ? 4 : 2;
 
       return [
         createPluginRegistration(DocumentManagerPluginPackage, {
@@ -365,9 +365,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
 
         // Register tiling plugin
         createPluginRegistration(TilingPluginPackage, {
-          tileSize: 512,
+          tileSize: 1024,
           overlapPx: 2.5,
-          extraRings: 1, // Base layer handles flashes; 1 ring is enough for speculative scrolling
+          extraRings: 0,
           defaultImageType: "image/bmp", // BMP is faster for local processing than WebP
         }),
 

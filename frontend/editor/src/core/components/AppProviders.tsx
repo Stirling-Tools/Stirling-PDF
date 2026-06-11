@@ -118,10 +118,10 @@ export function AppProviders({
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
     worker: true,
-    encoderPoolSize: Math.max(
-      4,
-      Math.min(16, window.navigator.hardwareConcurrency || 4),
-    ),
+    encoderPoolSize:
+      typeof navigator !== "undefined" && navigator.hardwareConcurrency
+        ? Math.min(2, navigator.hardwareConcurrency)
+        : 1,
     fontFallback: null,
   });
 
