@@ -110,13 +110,12 @@ apiClient.interceptors.request.use(
   },
 );
 
-// List of endpoints that don't require authentication
-const publicEndpoints = [
-  "/api/v1/config/app-config",
-  "/api/v1/info/status",
-  "/api/v1/config/public-config",
-  "/api/v1/config/endpoints-enabled",
-];
+// Endpoints whose 401s must never trigger the hard redirect to /login. The
+// refresh-failure branch below already treats /api/v1/info/ and /api/v1/config/
+// as public; without the same prefixes here, a background ping like
+// /api/v1/info/wau firing before session hydration bounces the user off pages
+// that manage their own auth state (e.g. /oauth/consent) and loses URL state.
+const publicEndpoints = ["/api/v1/config/", "/api/v1/info/"];
 
 // Response interceptor for handling token refresh and credit updates
 apiClient.interceptors.response.use(
