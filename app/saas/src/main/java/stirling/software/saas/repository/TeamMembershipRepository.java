@@ -73,6 +73,16 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
             @Param("teamId") Long teamId, @Param("role") TeamRole role);
 
     /**
+     * Count members with a specific role in a team. Lighter than {@link #findByTeamIdAndRole} when
+     * only the tally is needed (e.g. last-leader checks) — avoids fetching and join-loading rows.
+     *
+     * @param teamId the team ID
+     * @param role the team role (LEADER or MEMBER)
+     * @return number of members with that role
+     */
+    long countByTeamIdAndRole(Long teamId, TeamRole role);
+
+    /**
      * Check if a user is a member of a team
      *
      * @param teamId the team ID
