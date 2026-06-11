@@ -222,6 +222,19 @@
   margin: 0 0 var(--space-2);
 }
 
+/* Sub-section header inside a settings card (e.g. "Output filename"). The field
+   directly below it carries data-first so the borders don't double up. */
+.pol-subhead {
+  padding: 0.55rem 0.875rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-4);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
 /* ---- Fields (PolicyFieldRow) — row inset matches SUI ListRow ---- */
 .pol-field {
   padding: 0.7rem 0.875rem;
