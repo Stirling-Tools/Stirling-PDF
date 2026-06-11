@@ -27,6 +27,10 @@ COPY .taskfiles/ ./.taskfiles/
 ENV PATH="/app/engine/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV STIRLING_ENGINE_WORKERS=4
+# Container runs on a fixed port; skip the host-only free-port probe (its script
+# is not shipped in the image). engine:run honours these.
+ENV ENGINE_PORT_PROBE=false
+ENV STIRLING_ENGINE_PORT=5001
 
 EXPOSE 5001
 
