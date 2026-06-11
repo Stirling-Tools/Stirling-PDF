@@ -43,7 +43,7 @@ class PgVectorStore(DocumentStore):
 
     def __init__(self, dsn: str, pool_min_size: int, pool_max_size: int) -> None:
         if not dsn:
-            raise ValueError("pgvector backend requires a non-empty DSN (STIRLING_RAG_PGVECTOR_DSN)")
+            raise ValueError("pgvector backend requires a non-empty DSN (STIRLING_DOCUMENTS_PGVECTOR_DSN)")
         self._dsn = dsn
         self._pool = AsyncConnectionPool(
             dsn,

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from stirling.config import AppSettings, RagBackend, load_settings
+from stirling.config import AppSettings, DocumentsBackend, load_settings
 from stirling.services import build_runtime
 from stirling.services.runtime import AppRuntime
 
@@ -24,12 +24,12 @@ def build_app_settings() -> AppSettings:
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
         model_max_concurrency=32,
-        rag_backend=RagBackend.SQLITE,
+        documents_backend=DocumentsBackend.SQLITE,
         rag_embedding_model="voyageai:voyage-4",
-        rag_store_path=Path(":memory:"),
-        rag_pgvector_dsn="",
-        rag_pgvector_pool_min_size=1,
-        rag_pgvector_pool_max_size=10,
+        documents_sqlite_path=Path(":memory:"),
+        documents_pgvector_dsn="",
+        documents_pgvector_pool_min_size=1,
+        documents_pgvector_pool_max_size=10,
         rag_chunk_size=512,
         rag_chunk_overlap=64,
         rag_default_top_k=5,

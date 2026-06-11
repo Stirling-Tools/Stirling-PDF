@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from stirling.api import app
 from stirling.api.dependencies import get_pdf_comment_agent
-from stirling.config import AppSettings, RagBackend, load_settings
+from stirling.config import AppSettings, DocumentsBackend, load_settings
 from stirling.contracts.pdf_comments import (
     PdfCommentInstruction,
     PdfCommentRequest,
@@ -36,12 +36,12 @@ class StubSettingsProvider:
             smart_model_max_tokens=8192,
             fast_model_max_tokens=2048,
             model_max_concurrency=32,
-            rag_backend=RagBackend.SQLITE,
+            documents_backend=DocumentsBackend.SQLITE,
             rag_embedding_model="test-embed",
-            rag_store_path=Path(":memory:"),
-            rag_pgvector_dsn="",
-            rag_pgvector_pool_min_size=1,
-            rag_pgvector_pool_max_size=10,
+            documents_sqlite_path=Path(":memory:"),
+            documents_pgvector_dsn="",
+            documents_pgvector_pool_min_size=1,
+            documents_pgvector_pool_max_size=10,
             rag_chunk_size=512,
             rag_chunk_overlap=64,
             rag_default_top_k=5,

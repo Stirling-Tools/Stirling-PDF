@@ -15,7 +15,7 @@ ENV_FILE = ENGINE_ROOT / ".env"
 ENV_LOCAL_FILE = ENGINE_ROOT / ".env.local"
 
 
-class RagBackend(StrEnum):
+class DocumentsBackend(StrEnum):
     SQLITE = "sqlite"
     PGVECTOR = "pgvector"
 
@@ -33,13 +33,16 @@ class AppSettings(BaseSettings):
     # traffic; this is the global backstop.
     model_max_concurrency: int = Field(validation_alias="STIRLING_MODEL_MAX_CONCURRENCY")
 
-    # RAG settings — always on; the backend picks between embedded sqlite-vec and external pgvector.
-    rag_backend: RagBackend = Field(validation_alias="STIRLING_RAG_BACKEND")
+    # Document store: the one database holding vector chunks, ordered page
+    # text, and ACL rows - embedded sqlite-vec or external pgvector.
+    documents_backend: DocumentsBackend = Field(validation_alias="STIRLING_DOCUMENTS_BACKEND")
+    documents_sqlite_path: Path = Field(validation_alias="STIRLING_DOCUMENTS_SQLITE_PATH")
+    documents_pgvector_dsn: str = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_DSN")
+    documents_pgvector_pool_min_size: int = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_POOL_MIN_SIZE")
+    documents_pgvector_pool_max_size: int = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_POOL_MAX_SIZE")
+
+    # RAG settings - always on.
     rag_embedding_model: str = Field(validation_alias="STIRLING_RAG_EMBEDDING_MODEL")
-    rag_store_path: Path = Field(validation_alias="STIRLING_RAG_STORE_PATH")
-    rag_pgvector_dsn: str = Field(validation_alias="STIRLING_RAG_PGVECTOR_DSN")
-    rag_pgvector_pool_min_size: int = Field(validation_alias="STIRLING_RAG_PGVECTOR_POOL_MIN_SIZE")
-    rag_pgvector_pool_max_size: int = Field(validation_alias="STIRLING_RAG_PGVECTOR_POOL_MAX_SIZE")
     rag_chunk_size: int = Field(validation_alias="STIRLING_RAG_CHUNK_SIZE")
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
