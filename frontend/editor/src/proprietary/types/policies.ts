@@ -132,6 +132,8 @@ export interface PolicyState {
    *  input's filename; when set, it's applied as a prefix/suffix per the policy's
    *  name-position setting. */
   outputName?: string;
+  /** When the policy runs: on "upload" or before "export". Defaults to "upload". */
+  runOn?: "upload" | "export";
   /**
    * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that
    * holds this policy's editable steps (its automation), output config and run
@@ -160,6 +162,8 @@ export type PoliciesByCategory = Record<string, PolicyState>;
  * backing folder (the real, working settings reused from the folder setup).
  */
 export interface PolicyFolderSettings {
+  /** The editor event the policy runs on: "upload" or "export". */
+  runOn: "upload" | "export";
   outputMode: "new_file" | "new_version";
   outputName: string;
   outputNamePosition: "prefix" | "suffix" | "auto-number";

@@ -96,7 +96,6 @@ export function PolicyToolConfig({
             </div>
             {tool.enabled &&
               (tool.operation === "redact" ? (
-                // Redact config is reduced to just the PII type picker.
                 <div className="pol-tool-body">
                   <PolicyRedactConfig
                     parameters={tool.parameters}
@@ -109,8 +108,8 @@ export function PolicyToolConfig({
                 // are fixed in the policy preset), so no settings are shown.
                 <></>
               ) : tool.operation === "watermark" ? (
-                // Watermark: full settings minus the "Flatten PDF pages to
-                // images" toggle (hidden), with flatten forced on.
+                // Watermark settings with flatten hidden + forced on (see
+                // PolicyWatermarkConfig).
                 <div className="pol-tool-body">
                   <PolicyWatermarkConfig
                     parameters={tool.parameters}

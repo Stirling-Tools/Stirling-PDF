@@ -80,8 +80,7 @@ interface PolicySetupWizardProps {
  * The shared policy wizard, used for both setup and edit. Two steps: Workflow
  * (the tool pipeline, reusing the Watch Folders builder) → Settings (the policy
  * fields + output/retry config). The workflow builder is kept mounted across
- * steps so the final action can trigger its save. (A Sources step exists in
- * code, gated off by SOURCES_IN_FLOW, for when non-editor sources return.)
+ * steps so the final action can trigger its save.
  */
 export function PolicySetupWizard({
   category,
@@ -113,8 +112,8 @@ export function PolicySetupWizard({
   );
   const [scopeNarrow, setScopeNarrow] = useState(initial.scopeTypes.length > 0);
   const [scopeTypes, setScopeTypes] = useState<string[]>(initial.scopeTypes);
-  // Reviewer is no longer configured in the flow (there's no human-review step),
-  // but the field is kept in the saved policy, defaulted to the signed-in user.
+  // Reviewer isn't shown in the flow; the field is still saved on the policy,
+  // defaulted to the signed-in user.
   const reviewerEmail = initial.reviewerEmail || user?.email || "";
   // Output + retry settings — the real, working folder settings (the engine
   // applies them). Pre-filled from the backing folder in edit mode.
@@ -128,6 +127,10 @@ export function PolicySetupWizard({
   const [maxRetries, setMaxRetries] = useState(initialFolder?.maxRetries ?? 3);
   const [retryDelayMinutes, setRetryDelayMinutes] = useState(
     initialFolder?.retryDelayMinutes ?? 5,
+  );
+  // The editor event this policy runs on: input on upload, or output on export.
+  const [runOn, setRunOn] = useState<"upload" | "export">(
+    initial.runOn ?? "upload",
   );
   const workflowSave = useRef<(() => void) | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -197,6 +200,7 @@ export function PolicySetupWizard({
         scopeTypes: scopeNarrow ? scopeTypes : [],
         reviewerEmail,
         folder: {
+          runOn,
           outputMode,
           outputName: outputName.trim(),
           outputNamePosition,
@@ -229,6 +233,7 @@ export function PolicySetupWizard({
         scopeTypes: scopeNarrow ? scopeTypes : [],
         reviewerEmail,
         folder: {
+          runOn,
           outputMode,
           outputName: outputName.trim(),
           outputNamePosition,
@@ -329,35 +334,69 @@ export function PolicySetupWizard({
         {step === 2 && (
           <>
             <p className="pol-desc">{category.desc}</p>
-            <Card padding="none">
-              {config.fields.map((f, i) => (
-                <PolicyFieldRow
-                  key={f.key}
-                  field={f}
-                  value={fieldValues[f.key]}
-                  first={i === 0}
-                  onChange={(v) =>
-                    setFieldValues((prev) => ({ ...prev, [f.key]: v }))
-                  }
-                />
-              ))}
-            </Card>
+            {config.fields.length > 0 && (
+              <Card padding="none">
+                {config.fields.map((f, i) => (
+                  <PolicyFieldRow
+                    key={f.key}
+                    field={f}
+                    value={fieldValues[f.key]}
+                    first={i === 0}
+                    onChange={(v) =>
+                      setFieldValues((prev) => ({ ...prev, [f.key]: v }))
+                    }
+                  />
+                ))}
+              </Card>
+            )}
 
             {/* Real, working output + retry settings (applied by the engine). */}
             <p className="pol-section-label">Output &amp; retries</p>
             <Card padding="none">
+              {/* The editor event the policy runs on: input on upload, or
+                  output on export (enforced before the file is exported). */}
+              <div className="pol-subhead">Run on</div>
               <div className="pol-field" data-first>
                 <SettingsRow
-                  label="Output"
+                  label="Run on"
+                  control={
+                    <Select
+                      inputSize="sm"
+                      value={runOn}
+                      onChange={(e) =>
+                        setRunOn(e.target.value as "upload" | "export")
+                      }
+                      aria-label="Run on"
+                      options={[
+                        { value: "upload", label: "Upload" },
+                        { value: "export", label: "Export" },
+                      ]}
+                    />
+                  }
+                />
+              </div>
+              <div className="pol-subhead">Output</div>
+              <div className="pol-field" data-first>
+                <SettingsRow
+                  label="Output as"
                   control={
                     <Select
                       inputSize="sm"
                       value={outputMode}
-                      onChange={(e) =>
-                        setOutputMode(
-                          e.target.value as "new_file" | "new_version",
-                        )
-                      }
+                      onChange={(e) => {
+                        const mode = e.target.value as
+                          | "new_file"
+                          | "new_version";
+                        setOutputMode(mode);
+                        // Auto-number only applies to new files; a new version
+                        // replaces the file in place, so fall back to suffix.
+                        if (
+                          mode === "new_version" &&
+                          outputNamePosition === "auto-number"
+                        ) {
+                          setOutputNamePosition("suffix");
+                        }
+                      }}
                       aria-label="Output mode"
                       options={[
                         { value: "new_file", label: "New file" },
@@ -367,41 +406,40 @@ export function PolicySetupWizard({
                   }
                 />
               </div>
-              <div className="pol-field">
-                <SettingsRow
-                  label="Add to filename"
-                  control={
-                    <Select
-                      inputSize="sm"
-                      value={outputNamePosition}
-                      onChange={(e) =>
-                        setOutputNamePosition(
-                          e.target.value as "prefix" | "suffix" | "auto-number",
-                        )
-                      }
-                      aria-label="Add to filename"
-                      options={[
-                        { value: "prefix", label: "Prefix" },
-                        { value: "suffix", label: "Suffix" },
-                        { value: "auto-number", label: "Auto-number" },
-                      ]}
-                    />
-                  }
-                />
-              </div>
-              <div className="pol-field">
-                <SettingsRow
-                  label="Text to add"
-                  control={
+              {/* Output filename: position + custom text together as one row. */}
+              <div className="pol-subhead">Output filename</div>
+              <div className="pol-field" data-first>
+                <div className="pol-name-row">
+                  <Select
+                    inputSize="sm"
+                    value={outputNamePosition}
+                    onChange={(e) =>
+                      setOutputNamePosition(
+                        e.target.value as "prefix" | "suffix" | "auto-number",
+                      )
+                    }
+                    aria-label="Filename position"
+                    options={[
+                      { value: "prefix", label: "Prefix" },
+                      { value: "suffix", label: "Suffix" },
+                      // Auto-number only makes sense for separate new files.
+                      ...(outputMode === "new_file"
+                        ? [{ value: "auto-number", label: "Auto-number" }]
+                        : []),
+                    ]}
+                  />
+                  {/* Auto-number names the file itself, so there's no custom
+                      text to add — only show the input for prefix/suffix. */}
+                  {outputNamePosition !== "auto-number" && (
                     <Input
                       inputSize="sm"
                       value={outputName}
                       onChange={(e) => setOutputName(e.target.value)}
-                      placeholder="optional"
-                      aria-label="Text to add"
+                      placeholder="Text to add (optional)"
+                      aria-label="Filename text"
                     />
-                  }
-                />
+                  )}
+                </div>
               </div>
               <div className="pol-field">
                 <SettingsRow

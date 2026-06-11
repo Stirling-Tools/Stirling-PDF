@@ -4,6 +4,11 @@ import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
 
+/** How long after a run a badge counts as "recent" (drives the one-off glow).
+ *  Covers the run + import delay; old/reloaded runs fall outside it, so the glow
+ *  fires only just after a policy is applied, not on every page reload. */
+const RECENT_MS = 60_000;
+
 /** Policy accent name (ROW_ACCENT) → the CSS colour var the badge uses. */
 const ACCENT_VAR: Record<string, string> = {
   blue: "var(--color-blue)",
@@ -26,10 +31,12 @@ export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
     const labelById = new Map(
       loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
     );
+    const now = Date.now();
     const byFile = new Map<string, FileItemPolicyRef[]>();
     for (const run of runs) {
       const name = labelById.get(run.categoryId);
       if (!name) continue;
+      const recent = now - run.startedAt < RECENT_MS;
       for (const fileId of run.outputFileIds ?? []) {
         const list = byFile.get(fileId) ?? [];
         if (!list.some((p) => p.id === run.categoryId)) {
@@ -37,6 +44,7 @@ export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
             id: run.categoryId,
             name,
             accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
+            recent,
           });
           byFile.set(fileId, list);
         }
