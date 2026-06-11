@@ -1,5 +1,12 @@
 version: '3'
 
+vars:
+  # Engine-specific names to avoid overriding the root Taskfile's FIND_FREE_PORT_*
+  # vars (Task merges included-file vars into the global scope).
+  # Paths are relative to the engine/ include dir.
+  ENGINE_FIND_FREE_PORT_SH: "bash ../scripts/find-free-port.sh"
+  ENGINE_FIND_FREE_PORT_PS: "powershell -NoProfile -File ../scripts/find-free-port.ps1"
+
 tasks:
   install:
     desc: "Install engine dependencies"
@@ -29,7 +36,10 @@ tasks:
     ignore_error: true
     dir: src
     vars:
-      PORT: '{{.PORT | default "5001"}}'
+      # When PORT is provided (e.g. from dev:all), use it directly.
+      # When running standalone, probe for a free port starting at 5001.
+      PORT:
+        sh: '{{if .PORT}}echo {{.PORT}}{{else if eq OS "windows"}}{{.ENGINE_FIND_FREE_PORT_PS}} 5001{{else}}{{.ENGINE_FIND_FREE_PORT_SH}} 5001{{end}}'
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
@@ -41,7 +51,10 @@ tasks:
     ignore_error: true
     dir: src
     vars:
-      PORT: '{{.PORT | default "5001"}}'
+      # When PORT is provided (e.g. from dev:all), use it directly.
+      # When running standalone, probe for a free port starting at 5001.
+      PORT:
+        sh: '{{if .PORT}}echo {{.PORT}}{{else if eq OS "windows"}}{{.ENGINE_FIND_FREE_PORT_PS}} 5001{{else}}{{.ENGINE_FIND_FREE_PORT_SH}} 5001{{end}}'
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
