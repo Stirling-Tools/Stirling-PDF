@@ -16,13 +16,8 @@ import { enforceExportPolicies } from "@app/services/policyExport";
 export async function downloadFileWithPolicy(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
-  // Only PDFs go through policy enforcement; zips, JSON reports, configs etc.
-  // download as-is (enforceExportPolicies is also a no-op when no export policy
-  // is active, so this just avoids handing non-PDF bytes to the policy engine).
-  const isPdf =
-    request.data.type === "application/pdf" || /\.pdf$/i.test(request.filename);
-  if (!isPdf) return downloadFile(request);
-
+  // enforceExportPolicies only touches PDFs and is a no-op without an active
+  // export policy, so non-PDF / non-policy downloads pass straight through.
   const input =
     request.data instanceof File
       ? request.data
