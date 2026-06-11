@@ -5,7 +5,7 @@ import CelebrationIcon from "@mui/icons-material/CelebrationOutlined";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
-import { openPlanSettings } from "@app/utils/appSettings";
+import { navigateToSettings } from "@app/utils/settingsNavigation";
 import {
   FreeMeterPanel,
   freeSnapshotFromWallet,
@@ -69,11 +69,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
 
   const handleUpgrade = () => {
     onClose();
-    // Open the App Config modal AND select the Plan section. navigateToSettings("plan") only
-    // pushes a /settings/plan URL, which in SaaS opens config at its default section rather than
-    // the Plan page; openPlanSettings dispatches the appConfig:open + appConfig:navigate events the
-    // config modal actually listens for.
-    openPlanSettings();
+    navigateToSettings("plan");
   };
 
   return (

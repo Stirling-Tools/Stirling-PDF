@@ -8,7 +8,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { NavKey } from "@app/components/shared/config/types";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import {
@@ -46,6 +46,21 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         handler as EventListener,
       );
   }, []);
+
+  // When the modal opens via a /settings/<section> deep link (navigateToSettings — e.g. the
+  // usage-limit modal CTAs, which need to land on the Plan section), select that section. The
+  // opener (QuickAccessBar) opens the modal whenever the path is /settings/*, but doesn't carry
+  // the section, and `active` defaults to "overview" — so without this a deep link would open on
+  // Overview rather than the linked section.
+  useEffect(() => {
+    if (!opened) return;
+    const match = stripBasePath(window.location.pathname).match(
+      /^\/settings\/([^/?#]+)/,
+    );
+    if (match) {
+      setActive(match[1] as NavKey);
+    }
+  }, [opened]);
 
   // Listen for notice updates (e.g., "Not enough credits..." next to Plan title)
   useEffect(() => {
