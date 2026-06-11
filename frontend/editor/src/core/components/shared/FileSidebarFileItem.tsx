@@ -214,7 +214,15 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${policies.length > 0 ? " policy-enforced" : ""}`}
+        // Glow the row in the (first) policy's accent so an enforced file stands out.
+        style={
+          policies.length > 0
+            ? ({
+                "--policy-glow": policies[0].accentColor,
+              } as React.CSSProperties)
+            : undefined
+        }
         onClick={() => onClick(fileId)}
         draggable={draggable}
         onDragStart={
