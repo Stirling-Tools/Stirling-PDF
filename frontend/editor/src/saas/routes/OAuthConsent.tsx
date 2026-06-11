@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
-import { supabase } from "@app/auth/supabase";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
@@ -317,9 +316,7 @@ export default function OAuthConsent() {
 
       <ErrorMessage error={error} />
 
-      <div
-        style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         <button
           type="button"
           disabled={deciding !== null}
