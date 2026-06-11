@@ -292,12 +292,14 @@
   flex-shrink: 0;
 }
 
-/* Input area: textarea on top row, action icons on bottom row. */
+/* Input area: send button on the left, textarea fills the rest — one compact
+   row so the composer stays short when the welcome screen is fully populated. */
 .chat-panel-input {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 0.5rem;
-  padding: 0.85rem 1rem 0.75rem;
+  padding: 0.7rem 0.8rem;
   margin: 0.75rem 0.75rem 1rem;
   border: none;
   border-radius: 1.1rem;
@@ -319,7 +321,7 @@
 .chat-panel-input__field,
 .chat-panel-input__field:focus,
 .chat-panel-input__field:focus-visible {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   padding: 0.15rem 0 !important;
   background: transparent !important;
   border: none !important;
@@ -327,10 +329,14 @@
   box-shadow: none !important;
 }
 
-.chat-panel-input__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Textarea grows to fill the row; the send button keeps its size on the left. */
+.chat-panel-input__textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-panel-input__send {
+  flex-shrink: 0;
 }
 
 /* AI disclaimer. Two presentations share one base:

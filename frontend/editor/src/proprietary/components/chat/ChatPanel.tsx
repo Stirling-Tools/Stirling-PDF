@@ -573,6 +573,18 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       )}
 
       <div className="chat-panel-input">
+        <ActionIcon
+          className="chat-panel-input__send"
+          variant="filled"
+          color="blue"
+          radius="xl"
+          size="sm"
+          onClick={() => handleSend()}
+          disabled={!input.trim() || isLoading}
+          aria-label={t("chat.input.send", "Send message")}
+        >
+          <ArrowUpwardIcon sx={{ fontSize: 16 }} />
+        </ActionIcon>
         <Textarea
           ref={inputRef}
           placeholder={t("chat.input.placeholder", "What do you want to do?")}
@@ -584,21 +596,11 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           minRows={1}
           maxRows={4}
           variant="unstyled"
-          classNames={{ input: "chat-panel-input__field" }}
+          classNames={{
+            root: "chat-panel-input__textarea",
+            input: "chat-panel-input__field",
+          }}
         />
-        <div className="chat-panel-input__actions">
-          <ActionIcon
-            variant="filled"
-            color="blue"
-            radius="xl"
-            size="md"
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
-            aria-label={t("chat.input.send", "Send message")}
-          >
-            <ArrowUpwardIcon sx={{ fontSize: 16 }} />
-          </ActionIcon>
-        </div>
       </div>
     </Box>
   );

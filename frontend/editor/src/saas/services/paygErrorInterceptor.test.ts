@@ -160,7 +160,10 @@ describe("handlePaygError — usage-limit modals", () => {
 
   it("FEATURE_DEGRADED + unsubscribed → opens the free-limit modal (no spend-cap)", () => {
     handlePaygError("FEATURE_DEGRADED", {
-      response: { status: 402, data: { error: "FEATURE_DEGRADED", subscribed: false } },
+      response: {
+        status: 402,
+        data: { error: "FEATURE_DEGRADED", subscribed: false },
+      },
     });
     expect(freeOpened).toBe(1);
     expect(spendOpened).toBe(0);
@@ -168,7 +171,10 @@ describe("handlePaygError — usage-limit modals", () => {
 
   it("FEATURE_DEGRADED + subscribed → opens the spend-cap modal", () => {
     handlePaygError("FEATURE_DEGRADED", {
-      response: { status: 402, data: { error: "FEATURE_DEGRADED", subscribed: true } },
+      response: {
+        status: 402,
+        data: { error: "FEATURE_DEGRADED", subscribed: true },
+      },
     });
     expect(spendOpened).toBe(1);
     expect(freeOpened).toBe(0);
@@ -176,7 +182,10 @@ describe("handlePaygError — usage-limit modals", () => {
 
   it("PAYG_LIMIT_REACHED + subscribed → opens the spend-cap modal", () => {
     handlePaygError("PAYG_LIMIT_REACHED", {
-      response: { status: 402, data: { error: "PAYG_LIMIT_REACHED", subscribed: true } },
+      response: {
+        status: 402,
+        data: { error: "PAYG_LIMIT_REACHED", subscribed: true },
+      },
     });
     expect(spendOpened).toBe(1);
     expect(freeOpened).toBe(0);
@@ -184,7 +193,10 @@ describe("handlePaygError — usage-limit modals", () => {
 
   it("PAYG_LIMIT_REACHED + unsubscribed → opens the free-limit modal", () => {
     handlePaygError("PAYG_LIMIT_REACHED", {
-      response: { status: 402, data: { error: "PAYG_LIMIT_REACHED", subscribed: false } },
+      response: {
+        status: 402,
+        data: { error: "PAYG_LIMIT_REACHED", subscribed: false },
+      },
     });
     expect(freeOpened).toBe(1);
     expect(spendOpened).toBe(0);
