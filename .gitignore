@@ -282,10 +282,3 @@ docs/type3/signatures/
 
 # Local screenshot artifacts from *-screenshots.spec.ts
 frontend/editor/screenshots/
-
-# Local working notes + review artifacts (PR reviews, design screenshots, scratch PDFs)
-/notes/
-
-# Stray bundled-backend runtime dir created when running from the wrong cwd
-# (the real Tauri source lives at frontend/editor/src-tauri/, which is tracked)
-/frontend/src-tauri/
