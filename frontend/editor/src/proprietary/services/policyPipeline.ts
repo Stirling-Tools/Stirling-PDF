@@ -49,7 +49,9 @@ export interface BackendPolicy {
   owner: string;
   /** Gates automatic triggering; an explicit run ignores it. */
   enabled: boolean;
-  trigger: BackendTriggerConfig;
+  /** Null for a manual-only (client-driven) policy — the editor fires runs on
+   *  upload/export via /run, so there's no server-side trigger. */
+  trigger: BackendTriggerConfig | null;
   steps: BackendPipelineStep[];
   output: BackendOutputSpec;
 }
@@ -211,12 +213,15 @@ const DEFAULT_FOLDER: PolicyFolderSettings = {
 
 /**
  * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
- * The backend models only name/enabled/trigger/steps/output, so the policy-level
- * extras (categoryId, sources, scope, reviewer, fields) ride in `trigger.options`
- * and the output + retry settings in `output.options`; the full frontend
- * automation is stashed in `output.options.automation` for a lossless UI
- * round-trip (while `steps` carries the endpoint-mapped pipeline the engine
- * runs, pre-built by the caller).
+ * Policies are manual-only (client-driven): the editor fires runs on upload /
+ * before export via /run, so `trigger` is null (a server-side folder-watch or
+ * schedule trigger doesn't fit the in-editor model, and a null trigger skips
+ * trigger validation on the backend). The backend models only
+ * name/enabled/trigger/steps/output, so the policy-level extras (categoryId,
+ * sources, scope, reviewer, fields) and the output + retry settings all ride in
+ * `output.options`; the full frontend automation is stashed in
+ * `output.options.automation` for a lossless UI round-trip (while `steps`
+ * carries the endpoint-mapped pipeline the engine runs, pre-built by the caller).
  */
 export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
   return {
@@ -224,16 +229,7 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
     name: input.name,
     owner: "",
     enabled: input.enabled,
-    trigger: {
-      type: "folder",
-      options: {
-        categoryId: input.categoryId,
-        sources: input.sources,
-        scopeTypes: input.scopeTypes,
-        reviewerEmail: input.reviewerEmail,
-        fieldValues: input.fieldValues,
-      },
-    },
+    trigger: null,
     steps: input.pipelineSteps,
     output: {
       type: "inline",
@@ -244,6 +240,12 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
         maxRetries: input.folder.maxRetries,
         retryDelayMinutes: input.folder.retryDelayMinutes,
         automation: input.automation,
+        // Policy-level metadata (no trigger bag to hold it any more).
+        categoryId: input.categoryId,
+        sources: input.sources,
+        scopeTypes: input.scopeTypes,
+        reviewerEmail: input.reviewerEmail,
+        fieldValues: input.fieldValues,
       },
     },
   };
@@ -251,27 +253,27 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
 
 /** Decode a stored backend policy back into the frontend settings. */
 export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
-  const trigger = policy.trigger.options;
   const output = policy.output.options;
+  // Metadata rides in output.options now; older records kept it in
+  // trigger.options, so merge both (output wins) to decode either shape.
+  const meta = { ...(policy.trigger?.options ?? {}), ...output };
   const str = (v: unknown, fallback = "") =>
     typeof v === "string" ? v : fallback;
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
   return {
     id: policy.id,
-    categoryId: str(trigger.categoryId),
+    categoryId: str(meta.categoryId),
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
-    sources: Array.isArray(trigger.sources)
-      ? (trigger.sources as string[])
+    sources: Array.isArray(meta.sources) ? (meta.sources as string[]) : [],
+    scopeTypes: Array.isArray(meta.scopeTypes)
+      ? (meta.scopeTypes as string[])
       : [],
-    scopeTypes: Array.isArray(trigger.scopeTypes)
-      ? (trigger.scopeTypes as string[])
-      : [],
-    reviewerEmail: str(trigger.reviewerEmail),
+    reviewerEmail: str(meta.reviewerEmail),
     fieldValues:
-      (trigger.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
+      (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
       // Default to versioning unless the stored policy explicitly says new_file,
       // so a missing/legacy output.mode follows the new-version default rather
