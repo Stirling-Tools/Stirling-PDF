@@ -444,14 +444,6 @@ const TiledPageBackground = ({
   pageIndex,
   pdfRenderMode = "normal",
 }: TiledPageBackgroundProps) => {
-  const [loaded, setLoaded] = useState(false);
-  const handleLoad = React.useCallback(() => {
-    setLoaded((prev) => {
-      if (prev) return prev;
-      return true;
-    });
-  }, []);
-
   return (
     <div
       style={{
@@ -466,15 +458,13 @@ const TiledPageBackground = ({
               ? "sepia(0.7) brightness(0.85)"
               : undefined,
       }}
-      className={loaded ? undefined : "pdf-page-skeleton"}
     >
       <RenderLayer
         documentId={documentId}
         pageIndex={pageIndex}
         scale={1.0}
-        dpr={typeof window !== "undefined" ? window.devicePixelRatio : 1}
+        dpr={1.0}
         style={{ position: "absolute", inset: 0 }}
-        onLoad={handleLoad}
       />
       <div className="pdf-tile-layer">
         <TilingLayer documentId={documentId} pageIndex={pageIndex} />

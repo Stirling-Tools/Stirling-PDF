@@ -5,7 +5,6 @@ import {
   useImperativeHandle,
   forwardRef,
   useRef,
-  useCallback,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { createPluginRegistration } from "@embedpdf/core";
@@ -157,14 +156,6 @@ const TiledPageBackground = ({
   documentId,
   pageIndex,
 }: TiledPageBackgroundProps) => {
-  const [loaded, setLoaded] = useState(false);
-  const handleLoad = useCallback(() => {
-    setLoaded((prev) => {
-      if (prev) return prev;
-      return true;
-    });
-  }, []);
-
   return (
     <div
       style={{
@@ -172,15 +163,13 @@ const TiledPageBackground = ({
         inset: 0,
         backgroundColor: "#ffffff",
       }}
-      className={loaded ? undefined : "pdf-page-skeleton"}
     >
       <RenderLayer
         documentId={documentId}
         pageIndex={pageIndex}
         scale={1.0}
-        dpr={typeof window !== "undefined" ? window.devicePixelRatio : 1}
+        dpr={1.0}
         style={{ position: "absolute", inset: 0 }}
-        onLoad={handleLoad}
       />
       <div className="pdf-tile-layer">
         <TilingLayer documentId={documentId} pageIndex={pageIndex} />
