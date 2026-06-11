@@ -33,6 +33,7 @@ import AppConfigLoader from "@app/components/shared/AppConfigLoader";
 import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
+import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
@@ -148,7 +149,9 @@ export function AppProviders({
                                           <WorkbenchBarProvider>
                                             <TourOrchestrationProvider>
                                               <AdminTourOrchestrationProvider>
-                                                {children}
+                                                <FolderFileContextProvider>
+                                                  {children}
+                                                </FolderFileContextProvider>
                                               </AdminTourOrchestrationProvider>
                                             </TourOrchestrationProvider>
                                           </WorkbenchBarProvider>
