@@ -251,11 +251,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
                 <strong>
                   {t("payg.free.cta.benefit3Title", "API access")}
                 </strong>
-<<<<<<< HEAD
-                {": "}
-=======
                 {" — "}
->>>>>>> 33026e1a82750450b4f4bd8079da687a463a3b52
                 {t(
                   "payg.free.cta.benefit3Body",
                   "call any Stirling endpoint programmatically",
