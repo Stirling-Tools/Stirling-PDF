@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "node:path";
+import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
 /** Screenshot review of /files surfaces; dumps PNGs to screenshots/files-page. */
 
@@ -12,62 +13,91 @@ interface SeedFile {
 }
 
 async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
-  await page.addInitScript((records) => {
-    const open = window.indexedDB.open("stirling-pdf-files", 4);
-    open.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      // Create both `files` and `folders` stores on this DB.
-      if (!db.objectStoreNames.contains("files")) {
-        const store = db.createObjectStore("files", { keyPath: "id" });
-        store.createIndex("name", "name", { unique: false });
-        store.createIndex("folderId", "folderId", { unique: false });
-        store.createIndex("originalFileId", "originalFileId", {
-          unique: false,
-        });
-      }
-      if (!db.objectStoreNames.contains("folders")) {
-        const fStore = db.createObjectStore("folders", { keyPath: "id" });
-        fStore.createIndex("parentFolderId", "parentFolderId", {
-          unique: false,
-        });
-        fStore.createIndex("name", "name", { unique: false });
-      }
-    };
-    open.onsuccess = () => {
-      const db = open.result;
-      const tx = db.transaction("files", "readwrite");
-      const store = tx.objectStore("files");
-      const now = Date.now();
-      for (const f of records) {
-        store.put({
-          id: f.id,
-          fileId: f.id,
-          quickKey: f.id,
-          name: f.name,
-          type: "application/pdf",
-          size: 1024,
-          lastModified: now,
-          createdAt: now,
-          data: new ArrayBuffer(8),
-          thumbnail: null,
-          isLeaf: true,
-          versionNumber: 1,
-          originalFileId: f.id,
-          parentFileId: null,
-          toolHistory: [],
-          folderId: f.folderId ?? null,
-          remoteStorageId: f.remoteStorageId,
-          remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
-          remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
-          remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
-          remoteAccessRole: f.remoteStorageId ? "owner" : null,
-          remoteSharedViaLink: false,
-          remoteHasShareLinks: false,
-          remoteShareToken: null,
-        });
-      }
-    };
-  }, files);
+  // Build the server-side view from the cloud entries so reconcileServerFiles
+  // sees them as still-existing on the server (otherwise they get detached
+  // and the cloud cards vanish before the screenshot is taken).
+  const serverFiles = files
+    .filter((f) => f.remoteStorageId != null)
+    .map((f) => ({
+      id: f.remoteStorageId,
+      fileName: f.name,
+      contentType: "application/pdf",
+      sizeBytes: 1024,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      owner: "testuser",
+      ownedByCurrentUser: true,
+      accessRole: "owner",
+      shareLinks: [],
+      filePurpose: "generic",
+      folderId: null,
+    }));
+  await page.route("**/api/v1/storage/files", (route: Route) =>
+    route.fulfill({ json: serverFiles }),
+  );
+  await page.addInitScript(
+    ({ records, dbVersion }) => {
+      const open = window.indexedDB.open("stirling-pdf-files", dbVersion);
+      open.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        // Create both `files` and `folders` stores on this DB.
+        if (!db.objectStoreNames.contains("files")) {
+          const store = db.createObjectStore("files", { keyPath: "id" });
+          store.createIndex("name", "name", { unique: false });
+          store.createIndex("folderId", "folderId", { unique: false });
+          store.createIndex("originalFileId", "originalFileId", {
+            unique: false,
+          });
+        }
+        if (!db.objectStoreNames.contains("folders")) {
+          const fStore = db.createObjectStore("folders", { keyPath: "id" });
+          fStore.createIndex("parentFolderId", "parentFolderId", {
+            unique: false,
+          });
+          fStore.createIndex("name", "name", { unique: false });
+        }
+      };
+      open.onsuccess = () => {
+        const db = open.result;
+        // Yield the connection if the app ever needs to upgrade, and drop it
+        // once the writes commit, so the seed never blocks the app's open.
+        db.onversionchange = () => db.close();
+        const tx = db.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        const now = Date.now();
+        for (const f of records) {
+          store.put({
+            id: f.id,
+            fileId: f.id,
+            quickKey: f.id,
+            name: f.name,
+            type: "application/pdf",
+            size: 1024,
+            lastModified: now,
+            createdAt: now,
+            data: new ArrayBuffer(8),
+            thumbnail: null,
+            isLeaf: true,
+            versionNumber: 1,
+            originalFileId: f.id,
+            parentFileId: null,
+            toolHistory: [],
+            folderId: f.folderId ?? null,
+            remoteStorageId: f.remoteStorageId,
+            remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
+            remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
+            remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
+            remoteAccessRole: f.remoteStorageId ? "owner" : null,
+            remoteSharedViaLink: false,
+            remoteHasShareLinks: false,
+            remoteShareToken: null,
+          });
+        }
+        tx.oncomplete = () => db.close();
+      };
+    },
+    { records: files, dbVersion: DATABASE_CONFIGS.FILES.version },
+  );
 }
 
 async function stubStorageApis(
@@ -141,8 +171,10 @@ test.describe("Files page screenshots", () => {
       { id: "cloud-c", name: "cloud-c.pdf", remoteStorageId: 1001 },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await settle(page);
     await page.screenshot({ path: shotPath("03_subtoolbar_with_files") });
@@ -154,8 +186,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
@@ -174,8 +208,10 @@ test.describe("Files page screenshots", () => {
       { id: "cloud-c", name: "cloud-c.pdf", remoteStorageId: 1001 },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
@@ -193,8 +229,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await page
       .locator(".files-page-card:not(.is-folder)")
@@ -213,8 +251,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
@@ -234,8 +274,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
@@ -263,8 +305,10 @@ test.describe("Files page screenshots", () => {
     ]);
     await page.setViewportSize({ width: 900, height: 700 });
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await settle(page);
     await page.screenshot({ path: shotPath("09_subtoolbar_narrow_viewport") });
@@ -298,8 +342,10 @@ test.describe("Files page screenshots", () => {
       { times: 5 },
     );
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
@@ -349,8 +395,10 @@ test.describe("Files page screenshots", () => {
       { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await settle(page);
     await page.screenshot({ path: shotPath("12_dark_subtoolbar_with_files") });
@@ -363,8 +411,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
@@ -412,8 +462,10 @@ test.describe("Files page screenshots", () => {
       { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await settle(page);
     await page.screenshot({ path: shotPath("16_rtl_subtoolbar_with_files") });
@@ -426,18 +478,21 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     const card = page
       .locator(".files-page-card:not(.is-folder)")
       .filter({ hasText: "alpha.pdf" });
-    await card.getByRole("button", { name: /File actions/i }).click();
-    await page.getByRole("menuitem", { name: /Move to/i }).click();
-    await page.getByRole("button", { name: /Create new folder/i }).click();
-    await expect(
-      page.getByRole("textbox", { name: /New folder name/i }),
-    ).toBeVisible();
+    // Locate by stable test ids, not translated accessible names: this test
+    // runs in Arabic (enableRtl), so English-text locators break once the
+    // ar-AR strings are actually translated.
+    await card.getByTestId("file-card-actions").click();
+    await page.getByTestId("file-menu-move-to").click();
+    await page.getByTestId("move-dialog-create-folder-toggle").click();
+    await expect(page.getByTestId("move-dialog-new-folder-name")).toBeVisible();
     await settle(page);
     await page.screenshot({
       path: shotPath("17_rtl_move_dialog_create_folder"),
@@ -451,8 +506,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await page
       .locator(".files-page-card:not(.is-folder)")
@@ -472,8 +529,10 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await page
       .locator(".files-page-card:not(.is-folder)")
@@ -545,8 +604,10 @@ test.describe("Files page screenshots", () => {
     ]);
     await page.setViewportSize({ width: 500, height: 900 });
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".files-page-card").first()).toBeVisible({
-      timeout: 5_000,
+    await expect(
+      page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+    ).toBeVisible({
+      timeout: 10_000,
     });
     await settle(page);
     await page.screenshot({ path: shotPath("10_subtoolbar_phone_hidden") });

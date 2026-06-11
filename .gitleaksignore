@@ -1,0 +1,14 @@
+# PostHog project-level key — phc_ prefix keys are public/client-side by design
+# (PostHog client-side tracking embeds them in the browser bundle). Committed
+# intentionally in #6150 so engine/.env has a working default, with real
+# credentials overridden via engine/.env.local.
+engine/.env:generic-api-key:41
+
+# MCP test fixtures / harness - no real secrets:
+# - test-only API key constant in an integration test
+# - JDBC URL + throwaway Keycloak creds in the local test compose
+# - placeholder / shell-variable Bearer headers in curl-based validation scripts
+app/proprietary/src/test/java/stirling/software/proprietary/mcp/security/McpApiKeyIntegrationTest.java:generic-api-key:40
+testing/compose/docker-compose-keycloak-mcp.yml:generic-api-key:25
+testing/compose/validate-mcp-apikey.sh:curl-auth-header:73
+testing/compose/validate-mcp-test.sh:curl-auth-header:92

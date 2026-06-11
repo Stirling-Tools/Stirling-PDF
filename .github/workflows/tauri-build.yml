@@ -271,10 +271,6 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
 
-      - name: Sign JPDFium dylibs inside bootJar (macOS only)
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
-        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
-
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
         run: |
