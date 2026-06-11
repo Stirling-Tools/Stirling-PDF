@@ -603,7 +603,7 @@ export default function AdminConnectionsSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.connections.ssoAutoLogin.enable",
@@ -674,7 +674,7 @@ export default function AdminConnectionsSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.connections.mobileScanner.enable",
