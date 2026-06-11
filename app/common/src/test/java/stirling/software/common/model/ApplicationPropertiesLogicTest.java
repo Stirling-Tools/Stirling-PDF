@@ -2,7 +2,7 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,16 +33,16 @@ class ApplicationPropertiesLogicTest {
 
     @Test
     void tempFileManagement_defaults_and_overrides() {
-        Function<String, String> normalize = s -> Paths.get(s).normalize().toString();
+        Function<String, String> normalize = s -> Path.of(s).normalize().toString();
         ApplicationProperties.TempFileManagement tfm =
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-                Paths.get(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
+                Path.of(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
                         .toString();
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 
-        String expectedLibre = Paths.get(expectedBase, "libreoffice").toString();
+        String expectedLibre = Path.of(expectedBase, "libreoffice").toString();
         assertEquals(expectedLibre, tfm.getLibreofficeDir());
 
         tfm.setBaseTmpDir("/custom/base");
