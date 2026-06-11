@@ -138,6 +138,9 @@ export function PdfViewerToolbar({
     scrollActions.scrollToLastPage();
   };
 
+  const totalPagesDigits = Math.max(2, (scrollState.totalPages || 1).toString().length);
+  const inputWidth = Math.max(48, 32 + totalPagesDigits * 8);
+
   return (
     <Paper
       radius="xl xl 0 0"
@@ -206,10 +209,12 @@ export function PdfViewerToolbar({
         hideControls
         styles={{
           input: {
-            width: 48,
+            width: inputWidth,
             textAlign: "center",
             fontWeight: 500,
             fontSize: 16,
+            paddingLeft: 4,
+            paddingRight: 4,
           },
         }}
       />
