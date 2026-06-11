@@ -32,6 +32,7 @@ export async function downloadFileFromStorage(
     data: stirlingFile,
     filename: stirlingFile.name,
     localPath: file.localFilePath,
+    fileId: file.id,
   });
 }
 

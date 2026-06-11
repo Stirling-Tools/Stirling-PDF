@@ -29,6 +29,6 @@ export async function downloadFileWithPolicy(
       : new File([request.data], request.filename, {
           type: request.data.type,
         });
-  const [enforced] = await enforceExportPolicies([input]);
+  const [enforced] = await enforceExportPolicies([input], [request.fileId]);
   return downloadFile({ ...request, data: enforced ?? request.data });
 }
