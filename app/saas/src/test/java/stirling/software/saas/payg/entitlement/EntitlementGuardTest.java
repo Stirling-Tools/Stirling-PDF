@@ -308,6 +308,8 @@ class EntitlementGuardTest {
         JsonNode body = json.readTree(res.getContentAsByteArray());
         assertThat(body.get("error").asText()).isEqualTo("FEATURE_DEGRADED");
         assertThat(body.get("state").asText()).isEqualTo("DEGRADED");
+        // subscribed drives the client's modal choice (free-limit vs spend-cap).
+        assertThat(body.get("subscribed").asBoolean()).isFalse();
         assertThat(body.get("capUnits").asLong()).isEqualTo(500L);
         assertThat(body.get("spendUnits").asLong()).isEqualTo(500L);
         assertThat(body.get("missingGates").isArray()).isTrue();

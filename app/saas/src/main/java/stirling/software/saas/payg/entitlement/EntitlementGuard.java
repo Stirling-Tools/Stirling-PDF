@@ -299,6 +299,10 @@ public class EntitlementGuard implements HandlerInterceptor {
         deniedDegradedCounter.increment();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", "FEATURE_DEGRADED");
+        // subscribed tells the client which usage-limit modal to show: a subscribed team is over
+        // its spending cap; an un-subscribed one has spent its free allowance. (PAYG_LIMIT_REACHED
+        // already carries this; mirror it here so the JWT/web path can pick the right modal too.)
+        body.put("subscribed", snapshot.subscribed());
         body.put("missingGates", missingGates(required, snapshot.enabledGates()));
         body.put("state", snapshot.state().name());
         body.put(
