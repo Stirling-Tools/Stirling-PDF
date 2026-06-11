@@ -1,4 +1,5 @@
 import { MultiSelect } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { PII_PRESETS } from "@app/data/policyDefinitions";
 
 /** The set of preset regexes — used to separate preset words from custom ones. */
@@ -24,6 +25,7 @@ export function PolicyPiiField({
   onChange,
   disabled,
 }: PolicyPiiFieldProps) {
+  const { t } = useTranslation();
   const words = Array.isArray(parameters.wordsToRedact)
     ? (parameters.wordsToRedact as string[])
     : [];
@@ -48,9 +50,14 @@ export function PolicyPiiField({
   return (
     <MultiSelect
       size="sm"
-      label="PII to redact"
-      placeholder="Select PII types"
-      data={PII_PRESETS.map((p) => ({ value: p.value, label: p.label }))}
+      label={t("policies.pii.fieldLabel", "PII to redact")}
+      placeholder={t("policies.pii.placeholder", "Select PII types")}
+      data={PII_PRESETS.map((p) => ({
+        value: p.value,
+        // Preset labels are catalog data — keyed by preset value with the
+        // English label as fallback.
+        label: t(`policies.pii.${p.value}`, p.label),
+      }))}
       value={selected}
       onChange={handleChange}
       disabled={disabled}

@@ -214,9 +214,26 @@ public class McpSecurityConfig {
                                                                                 auth
                                                                                         .getIssuerUri());
                                                                     }
-                                                                    builder.scope("mcp.tools.read");
-                                                                    builder.scope(
-                                                                            "mcp.tools.write");
+                                                                    // Only advertise the granular
+                                                                    // tool scopes when we actually
+                                                                    // enforce them. When scopes are
+                                                                    // disabled (e.g. the IdP only
+                                                                    // mints coarse tokens, like
+                                                                    // Supabase), advertising scopes
+                                                                    // the authorization server
+                                                                    // can't
+                                                                    // issue makes spec-compliant
+                                                                    // clients request them and get
+                                                                    // rejected with
+                                                                    // invalid_request.
+                                                                    if (applicationProperties
+                                                                            .getMcp()
+                                                                            .isScopesEnabled()) {
+                                                                        builder.scope(
+                                                                                "mcp.tools.read");
+                                                                        builder.scope(
+                                                                                "mcp.tools.write");
+                                                                    }
                                                                 }))
                                         .jwt(
                                                 jwt ->

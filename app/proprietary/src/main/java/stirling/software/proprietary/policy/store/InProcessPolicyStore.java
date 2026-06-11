@@ -31,7 +31,8 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.trigger(),
                         policy.sources(),
                         policy.steps(),
-                        policy.output());
+                        policy.output(),
+                        policy.teamId());
         policies.put(id, stored);
         return stored;
     }

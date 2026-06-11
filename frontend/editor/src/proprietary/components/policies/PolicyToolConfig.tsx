@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
 import { Card } from "@shared/components/Card";
@@ -9,13 +10,24 @@ import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkC
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { ToolId } from "@app/types/toolId";
 
-/** Plain-language, non-technical descriptions shown by each tool's info button. */
-const TOOL_PLAIN_INFO: Record<string, string> = {
-  redact:
+/**
+ * Plain-language, non-technical descriptions shown by each tool's info button.
+ * Stored as [i18n key, English default] pairs so they can be resolved with `t`
+ * at render (the map lives at module scope, outside the component).
+ */
+const TOOL_PLAIN_INFO: Record<string, readonly [key: string, en: string]> = {
+  redact: [
+    "policies.toolConfig.info.redact",
     "Automatically finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read in the document.",
-  sanitize:
+  ],
+  sanitize: [
+    "policies.toolConfig.info.sanitize",
     "Removes hidden JavaScript from the file, so nothing can run automatically when someone opens it.",
-  watermark: "Stamps a visible mark (e.g. “Confidential”) across every page.",
+  ],
+  watermark: [
+    "policies.toolConfig.info.watermark",
+    "Stamps a visible mark (e.g. “Confidential”) across every page.",
+  ],
 };
 
 /** One tool in a policy's fixed chain: whether it runs + its configured params. */
@@ -51,6 +63,7 @@ export function PolicyToolConfig({
   onChange,
   editable = true,
 }: PolicyToolConfigProps) {
+  const { t } = useTranslation();
   const patchTool = (index: number, patch: Partial<PolicyToolState>) =>
     onChange(tools.map((t, i) => (i === index ? { ...t, ...patch } : t)));
 
@@ -59,23 +72,27 @@ export function PolicyToolConfig({
       {tools.map((tool, index) => {
         const entry = toolRegistry[tool.operation as ToolId];
         const Settings = entry?.automationSettings ?? null;
+        const toolName = entry?.name ?? tool.operation;
+        const plainInfo = TOOL_PLAIN_INFO[tool.operation];
         return (
           <Card key={tool.operation} padding="none">
             <div className="pol-tool-head">
               <span className="pol-tool-icon">{entry?.icon}</span>
-              <span className="pol-tool-name">
-                {entry?.name ?? tool.operation}
-              </span>
-              {TOOL_PLAIN_INFO[tool.operation] && (
+              <span className="pol-tool-name">{toolName}</span>
+              {plainInfo && (
                 <AppTooltip
-                  content={TOOL_PLAIN_INFO[tool.operation]}
+                  content={t(plainInfo[0], plainInfo[1])}
                   sidebarTooltip
                   pinOnClick
                 >
                   <button
                     type="button"
                     className="pol-info-btn"
-                    aria-label={`What does ${entry?.name ?? tool.operation} do?`}
+                    aria-label={t(
+                      "policies.toolConfig.infoAriaLabel",
+                      "What does {{tool}} do?",
+                      { tool: toolName },
+                    )}
                   >
                     <LocalIcon
                       icon="info-outline-rounded"
@@ -91,7 +108,9 @@ export function PolicyToolConfig({
                 checked={tool.enabled}
                 disabled={!editable}
                 onChange={(checked) => patchTool(index, { enabled: checked })}
-                aria-label={`Enable ${entry?.name ?? tool.operation}`}
+                aria-label={t("policies.toolConfig.enableAriaLabel", "Enable {{tool}}", {
+                  tool: toolName,
+                })}
               />
             </div>
             {tool.enabled &&
