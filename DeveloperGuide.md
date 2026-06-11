@@ -587,7 +587,7 @@ When adding a new feature or modifying existing ones in Stirling-PDF, you'll nee
 Find the existing `messages.properties` files in the `stirling-pdf/src/main/resources` directory. You'll see files like:
 
 - `messages.properties` (default, usually English)
-- `messages_en_GB.properties`
+- `messages_en_US.properties`
 - `messages_fr_FR.properties`
 - `messages_de_DE.properties`
 - etc.
