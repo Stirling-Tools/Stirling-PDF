@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.config;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
@@ -11,10 +12,12 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Policies are org-wide: every user may view and run any stored policy, so reads and runs are open
- * to all. Creating, editing, and deleting is gated to admins at the controller (see {@code
- * PolicyController#requirePolicyEditingAllowed}). The owner is still recorded server-side (for run
- * / usage attribution) but no longer restricts visibility or access.
+ * Policies are scoped to a team: a user may view, run, edit, and delete only the policies belonging
+ * to their own team (the team a policy is stamped with at creation). This binds everyone — admins
+ * included — so no one sees or touches another team's policies. <em>Whether</em> a user may edit
+ * (vs only view/run) is a separate check gated at the controller ({@code
+ * PolicyController#requirePolicyEditingAllowed} → team leader). Enforced only when login is
+ * enabled; single-user deployments (login disabled) pass every check.
  */
 @Component
 @RequiredArgsConstructor
@@ -22,15 +25,33 @@ public class PolicyAccessGuard {
 
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
+    private final PolicyManagementAuthority policyManagementAuthority;
 
     /** Owner for a new policy: the current user, or {@code null} when login is disabled. */
     public String ownerForNewPolicy() {
         return enforced() ? userService.getCurrentUsername() : null;
     }
 
-    /** All stored policies are visible to every user (org-wide). */
+    /** Team a new policy is stamped with — the creator's team. {@code null} when login disabled. */
+    public Long teamForNewPolicy() {
+        return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
+    }
+
+    /** Whether the policy belongs to the current user's team (so they may view/run/edit it). */
+    public boolean canAccess(Policy policy) {
+        if (!enforced()) {
+            return true;
+        }
+        return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
+    }
+
+    /** The subset of {@code policies} scoped to the current user's team. */
     public List<Policy> visible(List<Policy> policies) {
-        return policies;
+        if (!enforced()) {
+            return policies;
+        }
+        Long teamId = policyManagementAuthority.currentUserTeamId();
+        return policies.stream().filter(policy -> Objects.equals(policy.teamId(), teamId)).toList();
     }
 
     private boolean enforced() {

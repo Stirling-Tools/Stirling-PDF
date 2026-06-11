@@ -1,7 +1,9 @@
 package stirling.software.proprietary.policy.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -17,47 +19,66 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Tests for {@link PolicyAccessGuard}. Policies are org-wide: every user sees them all (no
- * owner-based filtering). The owner is still assigned server-side — the current user when login is
- * enabled, {@code null} otherwise — purely for run/usage attribution.
+ * {@link PolicyAccessGuard}: policies are scoped to the caller's team. A user sees/accesses only
+ * their own team's policies (admins included — there is no cross-team escape). Login disabled
+ * (single-user) bypasses scoping.
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyAccessGuardTest {
 
     @Mock private UserServiceInterface userService;
+    @Mock private PolicyManagementAuthority policyManagementAuthority;
 
     private PolicyAccessGuard guard(boolean loginEnabled) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getSecurity().setEnableLogin(loginEnabled);
-        return new PolicyAccessGuard(userService, properties);
+        return new PolicyAccessGuard(userService, properties, policyManagementAuthority);
     }
 
     @Test
-    void visibleReturnsEveryPolicyWhenLoginEnabled() {
-        // Org-wide: a non-admin sees every policy, not just the ones they own.
-        List<Policy> all = List.of(ownedBy("alice"), ownedBy("bob"), ownedBy("alice"));
-        assertEquals(all, guard(true).visible(all));
+    void visibleFiltersToTheCallersTeam() {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        List<Policy> all = List.of(inTeam(1L), inTeam(2L), inTeam(1L), inTeam(null));
+        List<Policy> visible = guard(true).visible(all);
+        assertEquals(2, visible.size());
+        assertTrue(visible.stream().allMatch(p -> Long.valueOf(1L).equals(p.teamId())));
     }
 
     @Test
-    void visibleReturnsEveryPolicyWhenLoginDisabled() {
-        List<Policy> all = List.of(ownedBy("alice"), ownedBy("bob"));
+    void visibleReturnsEverythingWhenLoginDisabled() {
+        List<Policy> all = List.of(inTeam(1L), inTeam(2L));
         assertEquals(all, guard(false).visible(all));
     }
 
     @Test
-    void ownerForNewPolicyIsTheCurrentUserWhenLoginEnabled() {
-        when(userService.getCurrentUsername()).thenReturn("alice");
-        assertEquals("alice", guard(true).ownerForNewPolicy());
+    void canAccessOnlyOwnTeamsPolicy() {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        assertTrue(guard(true).canAccess(inTeam(1L)));
+        assertFalse(guard(true).canAccess(inTeam(2L)));
+        assertFalse(guard(true).canAccess(inTeam(null)));
     }
 
     @Test
-    void ownerForNewPolicyIsNullWhenLoginDisabled() {
-        // Single-user deployment: no identity to attribute to.
-        assertNull(guard(false).ownerForNewPolicy());
+    void canAccessAnythingWhenLoginDisabled() {
+        assertTrue(guard(false).canAccess(inTeam(2L)));
     }
 
-    private static Policy ownedBy(String owner) {
-        return new Policy("p1", "p", owner, true, null, List.of(), List.of(), OutputSpec.inline());
+    @Test
+    void ownerAndTeamForNewPolicyComeFromTheCurrentUserWhenLoginEnabled() {
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(7L);
+        assertEquals("alice", guard(true).ownerForNewPolicy());
+        assertEquals(7L, guard(true).teamForNewPolicy());
+    }
+
+    @Test
+    void ownerAndTeamForNewPolicyAreNullWhenLoginDisabled() {
+        assertNull(guard(false).ownerForNewPolicy());
+        assertNull(guard(false).teamForNewPolicy());
+    }
+
+    private static Policy inTeam(Long teamId) {
+        return new Policy(
+                "p1", "p", "owner", true, null, List.of(), List.of(), OutputSpec.inline(), teamId);
     }
 }

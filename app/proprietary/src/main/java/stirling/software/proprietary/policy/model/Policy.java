@@ -17,12 +17,29 @@ public record Policy(
         TriggerConfig trigger,
         List<InputSpec> sources,
         List<PipelineStep> steps,
-        OutputSpec output) {
+        OutputSpec output,
+        Long teamId) {
 
     public Policy {
         sources = sources == null ? List.of() : List.copyOf(sources);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
+    }
+
+    /**
+     * Without an explicit owning team. Kept for the engine and tests; the controller always stamps
+     * a {@code teamId} on stored policies so they stay scoped to the creating user's team.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            TriggerConfig trigger,
+            List<InputSpec> sources,
+            List<PipelineStep> steps,
+            OutputSpec output) {
+        this(id, name, owner, enabled, trigger, sources, steps, output, null);
     }
 
     /** A policy with no configured sources (a generator, or files supplied directly to a run). */
@@ -34,7 +51,7 @@ public record Policy(
             TriggerConfig trigger,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, List.of(), steps, output);
+        this(id, name, owner, enabled, trigger, List.of(), steps, output, null);
     }
 
     /** This policy's pipeline as the engine sees it. */
