@@ -200,29 +200,11 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       },
     ],
     scopeLabel: "All PDFs on this device",
-    // Policy-level controls only — detection/encryption/signing/watermark are
-    // per-tool and now live in the Workflow step.
-    fields: [
-      {
-        label: "User can override",
-        key: "userOverride",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "Default access level",
-        key: "defaultAccess",
-        type: "select",
-        value: "Restricted",
-        options: ["Open", "Restricted", "Confidential", "Top Secret"],
-      },
-      {
-        label: "Block external sharing",
-        key: "blockExternal",
-        type: "toggle",
-        value: false,
-      },
-    ],
+    // No policy-level setting fields: detection/encryption/signing/watermark are
+    // per-tool (the Workflow step), and the access/override/sharing controls were
+    // never wired to enforcement, so they've been removed. Output naming + retries
+    // (rendered separately in the wizard) are the only configurable settings.
+    fields: [],
   },
   compliance: {
     summary:
