@@ -388,13 +388,17 @@ export function PolicySetupWizard({
                       { value: "auto-number", label: "Auto-number" },
                     ]}
                   />
-                  <Input
-                    inputSize="sm"
-                    value={outputName}
-                    onChange={(e) => setOutputName(e.target.value)}
-                    placeholder="Text to add (optional)"
-                    aria-label="Filename text"
-                  />
+                  {/* Auto-number names the file itself, so there's no custom
+                      text to add — only show the input for prefix/suffix. */}
+                  {outputNamePosition !== "auto-number" && (
+                    <Input
+                      inputSize="sm"
+                      value={outputName}
+                      onChange={(e) => setOutputName(e.target.value)}
+                      placeholder="Text to add (optional)"
+                      aria-label="Filename text"
+                    />
+                  )}
                 </div>
               </div>
               <div className="pol-field">
