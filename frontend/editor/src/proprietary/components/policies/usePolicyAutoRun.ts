@@ -90,7 +90,12 @@ export function usePolicyAutoRun(): void {
           s.backendId as string,
           stub.id,
           stub.name,
-        ).finally(() => dispatching.current.delete(key));
+        )
+          .catch(() => {
+            // runPolicyOnFile handles its own failures; this is just a backstop
+            // so an unexpected rejection never becomes an unhandled rejection.
+          })
+          .finally(() => dispatching.current.delete(key));
       }
     }
   }, [fileStubs, policies]);
@@ -250,10 +255,19 @@ export async function runPolicyOnFile(
   // it. Wait briefly rather than bail — and DON'T mark dispatched until we hold
   // the file, or a too-early miss would skip enforcement on that file forever.
   // (The caller's in-flight guard prevents double-dispatch during this wait.)
-  let file = await fileStorage.getStirlingFile(fileId);
+  // A transient IndexedDB error is treated as a miss (not a throw), so it retries
+  // and then marks dispatched rather than rejecting into a hot re-dispatch loop.
+  const tryGetFile = async (): Promise<StirlingFile | null> => {
+    try {
+      return await fileStorage.getStirlingFile(fileId);
+    } catch {
+      return null;
+    }
+  };
+  let file = await tryGetFile();
   for (let i = 0; i < FILE_WAIT_TRIES && !file; i++) {
     await delay(FILE_WAIT_MS);
-    file = await fileStorage.getStirlingFile(fileId);
+    file = await tryGetFile();
   }
   if (!file) {
     // File genuinely gone (removed before it could run) — mark so we don't loop.

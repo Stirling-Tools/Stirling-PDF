@@ -273,7 +273,10 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (trigger.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
-      outputMode: output.mode === "new_version" ? "new_version" : "new_file",
+      // Default to versioning unless the stored policy explicitly says new_file,
+      // so a missing/legacy output.mode follows the new-version default rather
+      // than silently flipping a reconciled policy to spawning separate files.
+      outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),
       outputNamePosition:
         output.position === "suffix"
