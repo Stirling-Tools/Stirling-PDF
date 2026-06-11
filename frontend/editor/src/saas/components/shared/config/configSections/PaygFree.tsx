@@ -43,7 +43,7 @@ import { DocHelp } from "./Payg";
 
 // ─── Shared free-tier snapshot ────────────────────────────
 
-interface FreeSnapshot {
+export interface FreeSnapshot {
   /** One-time free documents used so far (grant − remaining). */
   billableUsed: number;
   /**
@@ -61,7 +61,7 @@ interface FreeSnapshot {
  * numbers. Earlier versions returned a mock "62 of 500" sentinel which leaked
  * into the rendered UI and made the page look like nothing was wired up.
  */
-function useFreeSnapshot(): FreeSnapshot {
+export function useFreeSnapshot(): FreeSnapshot {
   const { wallet } = useWallet();
   return useMemo(() => {
     if (wallet) {
@@ -138,7 +138,7 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
 
 // ─── Compact one-time free meter (right column of the Processor card) ──────
 
-function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
+export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
   const { t } = useTranslation();
   const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
   const stateLabel =
@@ -180,7 +180,9 @@ function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
           {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
         </span>
         <span className="payg-hero__meta-dot">•</span>
-        <span>{t("payg.free.hero.neverResets", "One-time, never resets")}</span>
+        <span>
+          {t("payg.free.hero.neverResets", "One-time — never resets")}
+        </span>
       </div>
     </div>
   );
@@ -249,7 +251,11 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
                 <strong>
                   {t("payg.free.cta.benefit3Title", "API access")}
                 </strong>
+<<<<<<< HEAD
                 {": "}
+=======
+                {" — "}
+>>>>>>> 33026e1a82750450b4f4bd8079da687a463a3b52
                 {t(
                   "payg.free.cta.benefit3Body",
                   "call any Stirling endpoint programmatically",
