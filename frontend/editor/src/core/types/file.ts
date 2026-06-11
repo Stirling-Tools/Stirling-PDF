@@ -38,6 +38,17 @@ export interface BaseFileMetadata {
   toolHistory?: ToolOperation[]; // Tool chain for history tracking
 
   /**
+   * True if this file was produced by a tool/automation in-app (any
+   * `consumeFiles` output — a versioned edit OR an independent artifact like a
+   * convert/split/merge result) rather than entering the system as a genuine
+   * upload. Set at the consume chokepoint so it covers both kinds, including
+   * independent artifacts whose version metadata is otherwise indistinguishable
+   * from a fresh upload. Persisted so the distinction survives a reload.
+   * Used by input-mode (upload) policy auto-run to enforce only on real uploads.
+   */
+  derivedFromTool?: boolean;
+
+  /**
    * The cloud folder this file lives in. Semantics:
    * - `remoteStorageId == null` → file is local-only; folderId MUST be null.
    * - `remoteStorageId != null && folderId == null` → file is at the cloud root.

@@ -124,6 +124,7 @@ class FileStorageService {
       originalFileId: stub.originalFileId ?? stirlingFile.fileId,
       parentFileId: stub.parentFileId ?? undefined,
       toolHistory: stub.toolHistory ?? [],
+      derivedFromTool: stub.derivedFromTool ?? false,
 
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
@@ -247,6 +248,7 @@ class FileStorageService {
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
           toolHistory: record.toolHistory,
+          derivedFromTool: record.derivedFromTool,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
         };
@@ -303,6 +305,7 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
+              derivedFromTool: record.derivedFromTool,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });
@@ -391,6 +394,7 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
+              derivedFromTool: record.derivedFromTool,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });

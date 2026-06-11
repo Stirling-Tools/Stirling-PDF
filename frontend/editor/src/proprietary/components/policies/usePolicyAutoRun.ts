@@ -83,6 +83,11 @@ export function usePolicyAutoRun(): void {
     );
     for (const [categoryId, s] of active) {
       for (const stub of fileStubs) {
+        // Input-mode policies enforce only on files that actually entered the
+        // system as an upload — not on files a tool/automation produced in-app
+        // (versioned edits or independent artifacts like convert/split/merge).
+        // Those are enforced only by export-mode policies, at export time.
+        if (stub.derivedFromTool) continue;
         const key = dispatchKey(categoryId, stub.id);
         // Skip if already run (persisted) or a dispatch is in flight — the
         // in-memory guard prevents double-firing during the async wait.

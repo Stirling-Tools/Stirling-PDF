@@ -288,7 +288,19 @@ export function fileContextReducer(
     case "CONSUME_FILES": {
       const { inputFileIds, outputStirlingFileStubs } = action.payload;
 
-      return processFileSwap(state, inputFileIds, outputStirlingFileStubs);
+      // Mark every consume output as tool-produced. This is the single
+      // chokepoint for both kinds of tool output (versioned edits and
+      // independent artifacts like convert/split/merge), so it reliably
+      // distinguishes them from genuine uploads — which input-mode policy
+      // auto-run relies on. Tag here, not in processFileSwap, so UNDO_CONSUME
+      // (which restores the original inputs through the same helper) doesn't
+      // mislabel real uploads as tool-derived.
+      const taggedOutputs = outputStirlingFileStubs.map((stub) => ({
+        ...stub,
+        derivedFromTool: true,
+      }));
+
+      return processFileSwap(state, inputFileIds, taggedOutputs);
     }
 
     case "UNDO_CONSUME_FILES": {
