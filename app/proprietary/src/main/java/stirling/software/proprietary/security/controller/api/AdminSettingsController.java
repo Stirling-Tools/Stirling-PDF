@@ -618,6 +618,8 @@ public class AdminSettingsController {
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
             case "legal" -> applicationProperties.getLegal();
             case "telegram" -> applicationProperties.getTelegram();
+            case "aiengine", "aiEngine" -> applicationProperties.getAiEngine();
+            case "mcp" -> applicationProperties.getMcp();
             default -> null;
         };
     }
@@ -641,7 +643,10 @@ public class AdminSettingsController {
                     "autoPipeline",
                     "autopipeline",
                     "legal",
-                    "telegram");
+                    "telegram",
+                    "aiEngine",
+                    "aiengine",
+                    "mcp");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =

@@ -165,7 +165,7 @@ export default function AdminPrivacySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.privacy.enableAnalytics.label",
@@ -203,7 +203,7 @@ export default function AdminPrivacySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.privacy.metricsEnabled.label",
@@ -253,7 +253,7 @@ export default function AdminPrivacySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.privacy.googleVisibility.label",

@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useAuth } from "@app/auth/UseSession";
 import { TrialExpiredModal } from "@app/components/shared/TrialExpiredModal";
-import StripeCheckout from "@app/components/shared/StripeCheckoutSaas";
+
+const StripeCheckout = lazy(
+  () => import("@app/components/shared/StripeCheckoutSaas"),
+);
 
 /**
  * Bootstrap component that shows the trial expired modal when a user's trial has ended
@@ -106,20 +109,22 @@ export default function TrialExpiredBootstrap() {
         onSubscribe={handleSubscribe}
       />
 
-      {user && (
-        <StripeCheckout
-          opened={checkoutOpened}
-          onClose={handleCheckoutClose}
-          purchaseType="subscription"
-          planId="pro"
-          creditsPack={null}
-          planName="Pro"
-          onSuccess={handleCheckoutSuccess}
-          onError={(error) =>
-            console.error("[TrialExpired] Checkout error:", error)
-          }
-          isTrialConversion={false} // Trial already ended, so this is not a conversion
-        />
+      {user && checkoutOpened && (
+        <Suspense fallback={null}>
+          <StripeCheckout
+            opened={checkoutOpened}
+            onClose={handleCheckoutClose}
+            purchaseType="subscription"
+            planId="pro"
+            creditsPack={null}
+            planName="Pro"
+            onSuccess={handleCheckoutSuccess}
+            onError={(error) =>
+              console.error("[TrialExpired] Checkout error:", error)
+            }
+            isTrialConversion={false} // Trial already ended, so this is not a conversion
+          />
+        </Suspense>
       )}
     </>
   );

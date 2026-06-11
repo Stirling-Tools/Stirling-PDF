@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -67,6 +68,7 @@ interface SecuritySettingsData {
 
 export default function AdminSecuritySection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const {
     restartModalOpened,
@@ -290,7 +292,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.enableLogin.label",
@@ -517,7 +519,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.jwt.persistence.label",
@@ -554,7 +556,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.jwt.enableKeyRotation.label",
@@ -594,7 +596,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.jwt.enableKeyCleanup.label",
@@ -778,7 +780,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.jwt.secureCookie.label",
@@ -817,7 +819,16 @@ export default function AdminSecuritySection() {
               <Text fw={600} size="sm">
                 {t("admin.settings.security.audit.label", "Audit Logging")}
               </Text>
-              <Badge color="grape" size="sm">
+              <Badge
+                color="grape"
+                size="sm"
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate("/settings/adminPlan")}
+                title={t(
+                  "admin.settings.badge.clickToUpgrade",
+                  "Click to view plan details",
+                )}
+              >
                 ENTERPRISE
               </Badge>
             </Group>
@@ -829,7 +840,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.audit.enabled.label",
@@ -944,7 +955,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.audit.captureFileHash.label",
@@ -984,7 +995,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.audit.capturePdfAuthor.label",
@@ -1024,7 +1035,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.audit.captureOperationResults.label",
@@ -1086,7 +1097,7 @@ export default function AdminSecuritySection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.security.htmlUrlSecurity.enabled.label",
@@ -1363,7 +1374,7 @@ export default function AdminSecuritySection() {
                         justifyContent: "space-between",
                       }}
                     >
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text fw={500} size="sm">
                           {t(
                             "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
@@ -1413,7 +1424,7 @@ export default function AdminSecuritySection() {
                         justifyContent: "space-between",
                       }}
                     >
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text fw={500} size="sm">
                           {t(
                             "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
@@ -1462,7 +1473,7 @@ export default function AdminSecuritySection() {
                         justifyContent: "space-between",
                       }}
                     >
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text fw={500} size="sm">
                           {t(
                             "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
@@ -1511,7 +1522,7 @@ export default function AdminSecuritySection() {
                         justifyContent: "space-between",
                       }}
                     >
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text fw={500} size="sm">
                           {t(
                             "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label",

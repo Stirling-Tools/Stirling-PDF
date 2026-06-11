@@ -24,7 +24,21 @@
         {
             "moduleName": "com.bucket4j:bucket4j_jdk17-core",
             "moduleUrl": "http://github.com/bucket4j/bucket4j/bucket4j_jdk17-core",
-            "moduleVersion": "8.18.0",
+            "moduleVersion": "8.19.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.bucket4j:bucket4j_jdk17-lettuce",
+            "moduleUrl": "http://github.com/bucket4j/bucket4j/bucket4j_jdk17-redis/bucket4j_jdk17-lettuce",
+            "moduleVersion": "8.19.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.bucket4j:bucket4j_jdk17-redis-common",
+            "moduleUrl": "http://github.com/bucket4j/bucket4j/bucket4j_jdk17-redis/bucket4j_jdk17-redis-common",
+            "moduleVersion": "8.19.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -296,6 +310,48 @@
             "moduleVersion": "1.6.3",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "https://opensource.org/licenses/mit-license.php"
+        },
+        {
+            "moduleName": "com.stirling:jpdfium",
+            "moduleUrl": "https://github.com/Stirling-Tools/JPDFium",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.stirling:jpdfium-natives-darwin-arm64",
+            "moduleUrl": "https://github.com/Stirling-Tools/JPDFium",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.stirling:jpdfium-natives-darwin-x64",
+            "moduleUrl": "https://github.com/Stirling-Tools/JPDFium",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.stirling:jpdfium-natives-linux-arm64",
+            "moduleUrl": "https://github.com/Stirling-Tools/JPDFium",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.stirling:jpdfium-natives-linux-x64",
+            "moduleUrl": "https://github.com/Stirling-Tools/JPDFium",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.stirling:jpdfium-natives-windows-x64",
+            "moduleUrl": "https://github.com/Stirling-Tools/JPDFium",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
             "moduleName": "com.sun.activation:jakarta.activation",
@@ -641,6 +697,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "io.lettuce:lettuce-core",
+            "moduleUrl": "https://github.com/redis/lettuce",
+            "moduleVersion": "6.8.2.RELEASE",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://github.com/redis/lettuce/blob/main/LICENSE"
+        },
+        {
             "moduleName": "io.micrometer:micrometer-commons",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
             "moduleVersion": "1.16.5",
@@ -674,6 +737,125 @@
             "moduleVersion": "1.16.5",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.netty:netty-buffer",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-base",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-compression",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-dns",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-http",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-http2",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-marshalling",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-codec-protobuf",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-common",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-handler",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-resolver",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-resolver-dns",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-transport",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-transport-classes-epoll",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.netty:netty-transport-native-unix-common",
+            "moduleUrl": "https://netty.io/",
+            "moduleVersion": "4.2.12.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.projectreactor:reactor-core",
+            "moduleUrl": "https://github.com/reactor/reactor-core",
+            "moduleVersion": "3.8.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-config",
@@ -1019,6 +1201,13 @@
         },
         {
             "moduleName": "org.apache.httpcomponents:httpclient",
+            "moduleUrl": "http://hc.apache.org/httpcomponents-client",
+            "moduleVersion": "4.5.13",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.httpcomponents:httpclient",
             "moduleUrl": "http://hc.apache.org/httpcomponents-client-ga",
             "moduleVersion": "4.5.14",
             "moduleLicense": "Apache License, Version 2.0",
@@ -1281,21 +1470,21 @@
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
-            "moduleVersion": "1.83",
+            "moduleVersion": "1.84",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
-            "moduleVersion": "1.83",
+            "moduleVersion": "1.84",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
-            "moduleVersion": "1.83",
+            "moduleVersion": "1.84",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1788,6 +1977,20 @@
             "moduleLicenseUrl": "https://jdbc.postgresql.org/about/license.html"
         },
         {
+            "moduleName": "org.postgresql:postgresql",
+            "moduleUrl": "https://jdbc.postgresql.org/",
+            "moduleVersion": "42.7.11",
+            "moduleLicense": "BSD-2-Clause",
+            "moduleLicenseUrl": "https://jdbc.postgresql.org/about/license.html"
+        },
+        {
+            "moduleName": "org.reactivestreams:reactive-streams",
+            "moduleUrl": "http://www.reactive-streams.org/",
+            "moduleVersion": "1.0.4",
+            "moduleLicense": "MIT-0",
+            "moduleLicenseUrl": "https://spdx.org/licenses/MIT-0.html"
+        },
+        {
             "moduleName": "org.simplejavamail:core-module",
             "moduleVersion": "8.12.6",
             "moduleLicense": "The Apache Software License, Version 2.0",
@@ -1901,6 +2104,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.boot:spring-boot-data-redis",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "4.0.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.boot:spring-boot-devtools",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "4.0.6",
@@ -1978,6 +2188,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.boot:spring-boot-netty",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "4.0.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.boot:spring-boot-persistence",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "4.0.6",
@@ -2042,6 +2259,13 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-data-jpa",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "4.0.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.boot:spring-boot-starter-data-redis",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "4.0.6",
             "moduleLicense": "Apache License, Version 2.0",
@@ -2155,6 +2379,19 @@
         {
             "moduleName": "org.springframework.data:spring-data-jpa",
             "moduleUrl": "https://projects.spring.io/spring-data-jpa",
+            "moduleVersion": "4.0.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.data:spring-data-keyvalue",
+            "moduleVersion": "4.0.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.data:spring-data-redis",
+            "moduleUrl": "https://spring.io/projects/spring-data-redis",
             "moduleVersion": "4.0.5",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
@@ -2286,6 +2523,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework:spring-oxm",
+            "moduleUrl": "https://github.com/spring-projects/spring-framework",
+            "moduleVersion": "7.0.7",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework:spring-tx",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
             "moduleVersion": "7.0.7",
@@ -2383,6 +2627,226 @@
             "moduleVersion": "2.5",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "redis.clients.authentication:redis-authx-core",
+            "moduleUrl": "https://github.com/redis/redis-authx-core",
+            "moduleVersion": "0.1.1-beta2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://github.com/redis/redis-authx-core/blob/master/LICENSE"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:annotations",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:apache-client",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:arns",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:auth",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:aws-core",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:aws-query-protocol",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:aws-xml-protocol",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:checksums",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:checksums-spi",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:crt-core",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:endpoints-spi",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:http-auth",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:http-auth-aws",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:http-auth-aws-eventstream",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:http-auth-spi",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:http-client-spi",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:identity-spi",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:json-utils",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:metrics-spi",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:netty-nio-client",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:profiles",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:protocol-core",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:regions",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:retries",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:retries-spi",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:s3",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:sdk-core",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:third-party-jackson-core",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:url-connection-client",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:utils",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.awssdk:utils-lite",
+            "moduleUrl": "https://aws.amazon.com/sdkforjava",
+            "moduleVersion": "2.44.12",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
+        },
+        {
+            "moduleName": "software.amazon.eventstream:eventstream",
+            "moduleUrl": "https://github.com/awslabs/aws-eventstream-java",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "technology.tabula:tabula",

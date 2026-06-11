@@ -36,6 +36,7 @@ public class CreditController {
     private final CreditService creditService;
 
     @GetMapping
+    @Hidden
     @Operation(
             summary = "Get user credit information",
             description =
@@ -252,6 +253,7 @@ public class CreditController {
     }
 
     @GetMapping("/usage")
+    @Hidden
     @Operation(
             summary = "Get credit usage summary",
             description = "Get overview of credit usage (for authenticated user or admin view)")

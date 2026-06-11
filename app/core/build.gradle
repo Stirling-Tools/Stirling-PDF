@@ -207,13 +207,29 @@ def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',
     'index.html',
+    'index.html.gz',
+    'index.html.br',
+    'sw.js',
+    'sw.js.gz',
+    'sw.js.br',
+    'manifest.json.gz',
+    'manifest.json.br',
+    'site.webmanifest.gz',
+    'site.webmanifest.br',
+    'browserconfig.xml.gz',
+    'browserconfig.xml.br',
+    'manifest-classic.json',
+    'manifest-classic.json.gz',
+    'manifest-classic.json.br',
     'locales',
     'Login',
     'classic-logo',
     'modern-logo',
     'og_images',
     'samples',
-    'manifest-classic.json'
+    'pdfium',
+    'vendor',
+    'pdfjs'
 ]
 
 tasks.register('npmInstall', Exec) {

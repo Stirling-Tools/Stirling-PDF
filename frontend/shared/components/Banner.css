@@ -1,0 +1,94 @@
+.sui-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.sui-banner--info {
+  background: var(--color-blue-light);
+  color: var(--color-text-2);
+  border-color: var(--color-blue-border);
+}
+.sui-banner--success {
+  background: var(--color-green-light);
+  color: var(--color-text-2);
+  border-color: var(--color-green-border);
+}
+.sui-banner--warning {
+  background: var(--color-amber-light);
+  color: var(--color-text-2);
+  border-color: var(--color-amber-border);
+}
+.sui-banner--danger {
+  background: var(--color-red-light);
+  color: var(--color-text-2);
+  border-color: var(--color-red-border);
+}
+.sui-banner--neutral {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-2);
+  border-color: var(--color-border);
+}
+
+.sui-banner__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sui-banner--info .sui-banner__icon {
+  color: var(--color-blue);
+}
+.sui-banner--success .sui-banner__icon {
+  color: var(--color-green);
+}
+.sui-banner--warning .sui-banner__icon {
+  color: var(--color-amber-dark);
+}
+.sui-banner--danger .sui-banner__icon {
+  color: var(--color-red);
+}
+
+.sui-banner__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sui-banner__title {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.sui-banner__desc {
+  color: var(--color-text-3);
+  margin-top: 0.125rem;
+}
+
+.sui-banner__action {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.sui-banner__close {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-4);
+  font-size: 1rem;
+  line-height: 1;
+}
+.sui-banner__close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-1);
+}

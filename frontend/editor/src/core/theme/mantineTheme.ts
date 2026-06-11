@@ -1,4 +1,9 @@
-import { createTheme, MantineColorsTuple } from "@mantine/core";
+import {
+  createTheme,
+  MantineColorsTuple,
+  MantineTheme,
+  MantineThemeComponent,
+} from "@mantine/core";
 
 // Define color tuples using CSS variables
 const primary: MantineColorsTuple = [
@@ -113,7 +118,7 @@ export const mantineTheme = createTheme({
       },
       variants: {
         // Custom button variant for PDF tools
-        pdfTool: (_theme: any) => ({
+        pdfTool: (_theme: MantineTheme) => ({
           root: {
             backgroundColor: "var(--bg-surface)",
             border: "1px solid var(--border-default)",
@@ -125,7 +130,7 @@ export const mantineTheme = createTheme({
           },
         }),
       },
-    } as any,
+    } as MantineThemeComponent,
 
     Paper: {
       styles: {
@@ -146,7 +151,7 @@ export const mantineTheme = createTheme({
       },
     },
     Textarea: {
-      styles: (_theme: any) => ({
+      styles: (_theme: MantineTheme) => ({
         input: {
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-default)",
@@ -164,7 +169,7 @@ export const mantineTheme = createTheme({
     },
 
     TextInput: {
-      styles: (_theme: any) => ({
+      styles: (_theme: MantineTheme) => ({
         input: {
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-default)",
@@ -182,7 +187,7 @@ export const mantineTheme = createTheme({
     },
 
     PasswordInput: {
-      styles: (_theme: any) => ({
+      styles: (_theme: MantineTheme) => ({
         input: {
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-default)",
@@ -223,7 +228,7 @@ export const mantineTheme = createTheme({
           color: "var(--text-primary)",
           "--combobox-option-hover": "var(--hover-bg)",
           "--combobox-option-selected": "var(--color-primary-100)",
-        } as any,
+        },
       },
     },
 
@@ -251,7 +256,7 @@ export const mantineTheme = createTheme({
           color: "var(--text-primary)",
           "--combobox-option-hover": "var(--hover-bg)",
           "--combobox-option-selected": "var(--color-primary-100)",
-        } as any,
+        },
       },
     },
     Tooltip: {
