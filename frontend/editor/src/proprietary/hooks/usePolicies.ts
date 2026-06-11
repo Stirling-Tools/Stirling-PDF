@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import {
   loadPolicies,
   onPoliciesChange,
@@ -65,6 +66,7 @@ function toStoreRequest(
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
   const { config } = useAppConfig();
+  const { isTeamLeader } = useSaaSTeam();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
@@ -293,17 +295,13 @@ export function usePolicies() {
     return folder.id;
   }, []);
 
-  // Editing/creating policies is admin-only, mirroring the backend's enforcement
-  // on the save/delete endpoints. On single-user deployments (login disabled)
-  // there's no admin concept, so the local operator can always configure. When
-  // login is enabled, only admins can — non-admins get the read-only surface.
-  // The `config != null` guard keeps the gate CLOSED until app-config resolves:
-  // config is null while loading (and in bare test renders), and a failed/partial
-  // fetch can yield `{ enableLogin: true }` with isAdmin omitted. Without it a
-  // non-admin would briefly see edit controls during load, and an admin would be
-  // wrongly locked out on a transient config-fetch error.
+  // Only a team leader (SaaS) or a global admin (self-hosted) may configure;
+  // everyone else gets the read-only surface. Login disabled (single-user)
+  // always can. Stays closed until config loads, so edit controls never flash
+  // for users who can't use them.
   const canConfigure =
-    config != null && (!config.enableLogin || config.isAdmin === true);
+    config != null &&
+    (!config.enableLogin || isTeamLeader || config.isAdmin === true);
 
   return {
     policies,
