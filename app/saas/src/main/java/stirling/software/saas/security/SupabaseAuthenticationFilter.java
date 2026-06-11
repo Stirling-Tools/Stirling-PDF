@@ -278,7 +278,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             if (!(raw instanceof List<?> amrList) || amrList.isEmpty()) {
                 return WEB;
             }
-            Object first = amrList.get(0);
+            Object first = amrList.getFirst();
             if (!(first instanceof Map<?, ?> entry)) {
                 return WEB;
             }

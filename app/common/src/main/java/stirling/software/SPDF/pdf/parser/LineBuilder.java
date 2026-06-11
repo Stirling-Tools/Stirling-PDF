@@ -126,7 +126,7 @@ public class LineBuilder {
      */
     private static boolean hasColumnGap(
             TextFragment next, List<TextFragment> group, float threshold) {
-        float lastRight = group.get(group.size() - 1).bounds().right();
+        float lastRight = group.getLast().bounds().right();
         return next.bounds().x() - lastRight > threshold;
     }
 

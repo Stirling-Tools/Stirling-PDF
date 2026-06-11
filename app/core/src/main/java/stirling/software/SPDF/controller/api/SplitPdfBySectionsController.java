@@ -286,9 +286,7 @@ public class SplitPdfBySectionsController {
 
     // Based on the mode, get the pages that need to be split and return the pages set
     private Set<Integer> getPagesToSplit(String pageNumbers, SplitTypes splitMode, int totalPages) {
-        Set<Integer> pagesToSplit = new HashSet<>();
-
-        switch (splitMode) {
+        return switch (splitMode) {
             case CUSTOM -> {
                 if (pageNumbers == null || pageNumbers.isBlank()) {
                     throw ExceptionUtils.createIllegalArgumentException(
@@ -300,19 +298,21 @@ public class SplitPdfBySectionsController {
                 String[] pageOrderArr = pageNumbers.split(",");
                 List<Integer> pageListToSplit =
                         GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+                Set<Integer> pagesToSplit = new HashSet<>();
                 pagesToSplit.addAll(pageListToSplit);
+                yield pagesToSplit;
             }
 
-            case SPLIT_ALL -> pagesToSplit.addAll(IntStream.range(0, totalPages).boxed().toList());
+            case SPLIT_ALL -> new HashSet<>(IntStream.range(0, totalPages).boxed().toList());
 
             case SPLIT_ALL_EXCEPT_FIRST ->
-                    pagesToSplit.addAll(IntStream.range(1, totalPages).boxed().toList());
+                    new HashSet<>(IntStream.range(1, totalPages).boxed().toList());
 
             case SPLIT_ALL_EXCEPT_LAST ->
-                    pagesToSplit.addAll(IntStream.range(0, totalPages - 1).boxed().toList());
+                    new HashSet<>(IntStream.range(0, totalPages - 1).boxed().toList());
 
             case SPLIT_ALL_EXCEPT_FIRST_AND_LAST ->
-                    pagesToSplit.addAll(IntStream.range(1, totalPages - 1).boxed().toList());
+                    new HashSet<>(IntStream.range(1, totalPages - 1).boxed().toList());
 
             default ->
                     throw ExceptionUtils.createIllegalArgumentException(
@@ -320,8 +320,6 @@ public class SplitPdfBySectionsController {
                             "Invalid {0} format: {1}",
                             "split mode",
                             splitMode);
-        }
-
-        return pagesToSplit;
+        };
     }
 }

@@ -217,7 +217,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         List<FileInfo> backupList = this.getBackupList();
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
 
-        Path latestExport = Paths.get(backupList.get(0).getFilePath());
+        Path latestExport = Paths.get(backupList.getFirst().getFilePath());
 
         executeDatabaseScript(latestExport);
     }
@@ -357,7 +357,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         List<FileInfo> backupList = this.getBackupList();
         List<Pair<FileInfo, Boolean>> deletedFiles = new ArrayList<>();
         if (!backupList.isEmpty()) {
-            FileInfo lastBackup = backupList.get(backupList.size() - 1);
+            FileInfo lastBackup = backupList.getLast();
             try {
                 Files.deleteIfExists(Paths.get(lastBackup.getFilePath()));
                 deletedFiles.add(Pair.of(lastBackup, true));
@@ -380,7 +380,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Comparator.comparing(
                             p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
 
-            FileInfo oldestFile = filteredBackupList.get(0);
+            FileInfo oldestFile = filteredBackupList.getFirst();
             Files.deleteIfExists(Paths.get(oldestFile.getFilePath()));
             log.info("Deleted oldest backup: {}", oldestFile.getFileName());
         } catch (IOException e) {

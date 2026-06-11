@@ -757,7 +757,7 @@ public class AuditRestController {
                 List<Map<String, Object>> files =
                         (List<Map<String, Object>>) eventData.get("files");
                 if (files != null && !files.isEmpty()) {
-                    Map<String, Object> firstFile = files.get(0);
+                    Map<String, Object> firstFile = files.getFirst();
                     data.put("documentname", String.valueOf(firstFile.getOrDefault("name", "")));
                     data.put("author", String.valueOf(firstFile.getOrDefault("pdfAuthor", "")));
                     data.put("filehash", String.valueOf(firstFile.getOrDefault("fileHash", "")));

@@ -148,14 +148,14 @@ public class LineAlignmentTableParser implements TableParser {
                 group.stream()
                         .map(tl -> tl.line().bounds())
                         .reduce(Bounds::merge)
-                        .orElse(group.get(0).line().bounds());
+                        .orElse(group.getFirst().line().bounds());
 
         RawLine mergedLine =
                 new RawLine(
-                        group.get(0).line().lineId(),
+                        group.getFirst().line().lineId(),
                         mergedFragments,
                         mergedBounds,
-                        group.get(0).line().pageNumber());
+                        group.getFirst().line().pageNumber());
 
         return tokenize(mergedLine);
     }
@@ -281,9 +281,7 @@ public class LineAlignmentTableParser implements TableParser {
                 continue;
             }
 
-            float gap =
-                    tl.line().bounds().y()
-                            - current.get(current.size() - 1).line().bounds().bottom();
+            float gap = tl.line().bounds().y() - current.getLast().line().bounds().bottom();
 
             if (gap > maxGap) {
                 groups.add(current);
@@ -399,7 +397,7 @@ public class LineAlignmentTableParser implements TableParser {
         List<TableCell> cells = new ArrayList<>(rawRow.size());
 
         // Label cell: use the line's full bounds as an approximation.
-        cells.add(TableCell.of(0, rawRow.get(0), tl.line().bounds()));
+        cells.add(TableCell.of(0, rawRow.getFirst(), tl.line().bounds()));
 
         for (int col = 0; col < columnGrid.size(); col++) {
             String text = col + 1 < rawRow.size() ? rawRow.get(col + 1) : "";
