@@ -24,7 +24,7 @@ function run(overrides: Partial<PolicyRunRecord>): PolicyRunRecord {
   };
 }
 
-describe("buildPolicyBadgeMap — badge follows the document down tool edits", () => {
+describe("buildPolicyBadgeMap — badge follows the document onto derived files", () => {
   it("badges a policy's direct output, and marks it recent within the window", () => {
     const map = buildPolicyBadgeMap([run({})], [{ id: "out" }], labels, NOW);
     const badges = map.get("out") ?? [];
@@ -32,73 +32,82 @@ describe("buildPolicyBadgeMap — badge follows the document down tool edits", (
     expect(badges[0].recent).toBe(true);
   });
 
-  it("a tool-created child inherits the parent's badge (but never glows)", () => {
+  it("a versioned edit inherits the badge via parentFileId (never glows)", () => {
     const map = buildPolicyBadgeMap(
       [run({})],
-      [{ id: "out" }, { id: "child", parentFileId: "out" }],
+      [{ id: "out" }, { id: "edit", parentFileId: "out" }],
       labels,
       NOW,
     );
-    const child = map.get("child") ?? [];
-    expect(child.map((b) => b.id)).toEqual(["security"]);
-    expect(child[0].recent).toBe(false); // carried, not freshly applied
+    const edit = map.get("edit") ?? [];
+    expect(edit.map((b) => b.id)).toEqual(["security"]);
+    expect(edit[0].recent).toBe(false);
   });
 
-  it("inheritance is transitive across a chain of edits", () => {
+  it("SPLIT parts inherit the badge via sourceFileIds, though they have no parent", () => {
+    // Split consumes the policy output "out" → two fresh roots, no parentFileId,
+    // each recording sourceFileIds=["out"]. "out" itself is gone from the
+    // workbench (consumed) but still lives in the run store.
     const map = buildPolicyBadgeMap(
       [run({})],
       [
-        { id: "out" },
-        { id: "child", parentFileId: "out" },
-        { id: "grandchild", parentFileId: "child" },
+        { id: "part1", sourceFileIds: ["out"] },
+        { id: "part2", sourceFileIds: ["out"] },
       ],
       labels,
       NOW,
     );
-    expect((map.get("grandchild") ?? []).map((b) => b.id)).toEqual([
+    expect((map.get("part1") ?? []).map((b) => b.id)).toEqual(["security"]);
+    expect((map.get("part2") ?? []).map((b) => b.id)).toEqual(["security"]);
+    expect((map.get("part1") ?? [])[0].recent).toBe(false);
+  });
+
+  it("resolves transitively when an intermediate edit was consumed/removed", () => {
+    // redact → edit (consumed) → split. The split part's sourceFileIds carries
+    // the original output id directly, so the badge still resolves.
+    const map = buildPolicyBadgeMap(
+      [run({})],
+      [{ id: "part", sourceFileIds: ["editGone", "out"] }],
+      labels,
+      NOW,
+    );
+    expect((map.get("part") ?? []).map((b) => b.id)).toEqual(["security"]);
+  });
+
+  it("MERGE output inherits every input's badge", () => {
+    const map = buildPolicyBadgeMap(
+      [
+        run({ runId: "r1", categoryId: "security", outputFileIds: ["a"] }),
+        run({ runId: "r2", categoryId: "watermark", outputFileIds: ["b"] }),
+      ],
+      [{ id: "merged", sourceFileIds: ["a", "b"] }],
+      labels,
+      NOW,
+    );
+    expect((map.get("merged") ?? []).map((b) => b.id).sort()).toEqual([
       "security",
+      "watermark",
     ]);
   });
 
-  it("a file with no policy ancestor gets no badge", () => {
+  it("a file with no policy provenance gets no badge", () => {
     const map = buildPolicyBadgeMap(
       [run({})],
-      [{ id: "out" }, { id: "unrelated" }],
+      [{ id: "out" }, { id: "unrelated", sourceFileIds: ["someUpload"] }],
       labels,
       NOW,
     );
     expect(map.has("unrelated")).toBe(false);
   });
 
-  it("inherited badges never glow even when the ancestor run is recent", () => {
+  it("inherited badges never glow even when the source run is recent", () => {
     const map = buildPolicyBadgeMap(
       [run({ startedAt: NOW })], // maximally recent
-      [{ id: "out" }, { id: "child", parentFileId: "out" }],
+      [{ id: "out" }, { id: "part", sourceFileIds: ["out"] }],
       labels,
       NOW,
     );
     expect((map.get("out") ?? [])[0].recent).toBe(true);
-    expect((map.get("child") ?? [])[0].recent).toBe(false);
-  });
-
-  it("merges distinct policies down the chain and dedupes a repeated one", () => {
-    const map = buildPolicyBadgeMap(
-      [
-        run({ runId: "r1", categoryId: "security", outputFileIds: ["out"] }),
-        run({
-          runId: "r2",
-          categoryId: "watermark",
-          fileId: "child",
-          outputFileIds: ["child"],
-          startedAt: NOW - 2_000,
-        }),
-      ],
-      [{ id: "out" }, { id: "child", parentFileId: "out" }],
-      labels,
-      NOW,
-    );
-    // child is watermark's direct output AND inherits security from its parent.
-    const child = (map.get("child") ?? []).map((b) => b.id).sort();
-    expect(child).toEqual(["security", "watermark"]);
+    expect((map.get("part") ?? [])[0].recent).toBe(false);
   });
 });

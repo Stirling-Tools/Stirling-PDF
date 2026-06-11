@@ -144,6 +144,7 @@ class FileStorageService {
       parentFileId: stub.parentFileId ?? undefined,
       toolHistory: stub.toolHistory ?? [],
       derivedFromTool: stub.derivedFromTool ?? false,
+      sourceFileIds: stub.sourceFileIds,
 
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
@@ -269,6 +270,7 @@ class FileStorageService {
           toolHistory: record.toolHistory,
           derivedFromTool:
             record.derivedFromTool ?? legacyDerivedFromTool(record),
+          sourceFileIds: record.sourceFileIds,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
         };
@@ -327,6 +329,7 @@ class FileStorageService {
               toolHistory: record.toolHistory || [],
               derivedFromTool:
                 record.derivedFromTool ?? legacyDerivedFromTool(record),
+              sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });
@@ -417,6 +420,7 @@ class FileStorageService {
               toolHistory: record.toolHistory || [],
               derivedFromTool:
                 record.derivedFromTool ?? legacyDerivedFromTool(record),
+              sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });

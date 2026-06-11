@@ -20,8 +20,12 @@ const ACCENT_VAR: Record<string, string> = {
   red: "var(--color-red)",
 };
 
-/** Minimal lineage shape needed to walk a file's version chain. */
-type LineageStub = { id: string; parentFileId?: string };
+/** Minimal provenance shape needed to resolve a file's inherited badges. */
+type LineageStub = {
+  id: string;
+  parentFileId?: string;
+  sourceFileIds?: string[];
+};
 
 /** Merge a ref into a list, deduping by policy id. A direct (recent) hit wins
  *  the glow over an inherited one for the same policy. */
@@ -42,9 +46,12 @@ function mergeRef(list: FileItemPolicyRef[], ref: FileItemPolicyRef): void {
  * A policy run is pinned to a specific output fileId, so a later tool edit
  * produces a NEW file that wouldn't carry the badge — "been through a policy"
  * would vanish the moment you edit the file. To keep the badge with the
- * document, every file also INHERITS its ancestors' badges by walking the
- * version lineage (`parentFileId`). Inherited badges never glow (recent=false):
- * only the original application does.
+ * document, every file also INHERITS the badges of the files it was derived
+ * from: its transitive `sourceFileIds` (recorded at the consume boundary, so it
+ * covers split/merge/convert too) plus, defensively, its `parentFileId`.
+ * Because `sourceFileIds` is transitive, a flat lookup suffices — no chain walk,
+ * and it survives a consumed intermediate. Inherited badges never glow
+ * (recent=false): only the original application does.
  */
 export function buildPolicyBadgeMap(
   runs: ReadonlyArray<PolicyRunRecord>,
@@ -83,25 +90,20 @@ export function buildPolicyBadgeMap(
       );
   }
 
-  // Lineage pass: a tool-created child inherits its ancestors' badges, so the
-  // badge follows the document as it's edited. Walk parentFileId upward,
-  // collecting each ancestor's DIRECT badges (transitive — every level is
-  // checked), marked recent=false (carried, not freshly applied).
-  const parentOf = new Map<string, string | undefined>();
-  for (const stub of stubs) parentOf.set(stub.id, stub.parentFileId);
+  // Inheritance pass: a derived file carries the badges of every file it came
+  // from. `sourceFileIds` is the transitive provenance set (so a flat lookup
+  // catches even ancestors whose intermediate edits were consumed), and
+  // `parentFileId` is included defensively for any child not created via a
+  // consume. Inherited badges are marked recent=false (carried, not applied).
   for (const stub of stubs) {
-    const seen = new Set<string>([stub.id]);
-    let ancestor = parentOf.get(stub.id);
-    while (ancestor && !seen.has(ancestor)) {
-      seen.add(ancestor);
-      const ancestorBadges = directByFile.get(ancestor);
-      if (ancestorBadges?.length) {
-        const list = result.get(stub.id) ?? [];
-        for (const ref of ancestorBadges)
-          mergeRef(list, { ...ref, recent: false });
-        result.set(stub.id, list);
-      }
-      ancestor = parentOf.get(ancestor);
+    const sources = new Set<string>(stub.sourceFileIds ?? []);
+    if (stub.parentFileId) sources.add(stub.parentFileId);
+    for (const src of sources) {
+      const srcBadges = directByFile.get(src);
+      if (!srcBadges?.length) continue;
+      const list = result.get(stub.id) ?? [];
+      for (const ref of srcBadges) mergeRef(list, { ...ref, recent: false });
+      result.set(stub.id, list);
     }
   }
 

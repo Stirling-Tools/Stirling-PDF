@@ -56,7 +56,38 @@ describe("fileContextReducer — derivedFromTool provenance", () => {
       },
     });
     expect(next.files.byId["b" as FileId].derivedFromTool).toBe(true);
+    // Provenance: "b" records the input it derived from.
+    expect(next.files.byId["b" as FileId].sourceFileIds).toEqual(["a"]);
     expect(next.files.byId["a" as FileId]).toBeUndefined(); // input consumed
+  });
+
+  it("CONSUME_FILES accumulates sourceFileIds transitively", () => {
+    // "b" already derived from "a"; consuming "b" → "c" carries both, so the
+    // badge still resolves after the intermediate "b" is gone (e.g. split).
+    const start = stateWith([stub("b", { sourceFileIds: ["a" as FileId] })]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["b" as FileId],
+        outputStirlingFileStubs: [stub("c")],
+      },
+    });
+    expect(next.files.byId["c" as FileId].sourceFileIds).toEqual(["b", "a"]);
+  });
+
+  it("CONSUME_FILES with multiple inputs (merge) records all sources", () => {
+    const start = stateWith([stub("a"), stub("b")]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId, "b" as FileId],
+        outputStirlingFileStubs: [stub("merged")],
+      },
+    });
+    expect(next.files.byId["merged" as FileId].sourceFileIds).toEqual([
+      "a",
+      "b",
+    ]);
   });
 
   it("UNDO_CONSUME_FILES restores the original upload without mislabelling it", () => {

@@ -49,6 +49,19 @@ export interface BaseFileMetadata {
   derivedFromTool?: boolean;
 
   /**
+   * Transitive set of fileIds this file was derived from — the inputs of the
+   * tool operation that produced it, plus those inputs' own `sourceFileIds`.
+   * Recorded at the `consumeFiles` boundary, the only place that knows the
+   * input→output mapping. Unlike `parentFileId` (the version chain) this is a
+   * pure provenance link, so it covers independent artifacts — split (1→N),
+   * merge (N→1), convert — that intentionally have no parent. Being transitive,
+   * it survives an intermediate edit being consumed/removed. Persisted; used so
+   * a policy badge follows a document onto everything derived from it. Legacy
+   * files predate it (the link was never recorded) and stay empty.
+   */
+  sourceFileIds?: FileId[];
+
+  /**
    * The cloud folder this file lives in. Semantics:
    * - `remoteStorageId == null` → file is local-only; folderId MUST be null.
    * - `remoteStorageId != null && folderId == null` → file is at the cloud root.
