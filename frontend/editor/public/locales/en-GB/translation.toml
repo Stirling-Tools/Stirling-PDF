@@ -2730,8 +2730,6 @@ mergeMany = "Merge these {{count}} documents into 1"
 moreFiles = "+{{count}} more"
 openFromComputer = "Open from computer"
 removeFile = "Remove {{name}}"
-rotateMany = "Rotate these documents"
-rotateOne = "Rotate this document"
 splitOne = "Split this document"
 
 [chat.responses]
@@ -5856,10 +5854,6 @@ freeTierLimitations = "Free tier includes basic PDF tools with usage limits."
 message = ""
 subscribe = "Subscribe to Pro"
 subscribeToPro = "Subscribe to Pro"
-
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."

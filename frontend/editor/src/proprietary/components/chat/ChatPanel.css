@@ -1,6 +1,10 @@
 .chat-panel {
   display: flex;
   flex-direction: column;
+  /* Clip + allow shrink so tall welcome content squeezes the scrollable
+     quick-actions block instead of pushing the composer off-screen. */
+  overflow: hidden;
+  min-height: 0;
   /* Match the right-rail toolbar background so dark-mode doesn't show a
      lighter card behind the chat, and so the agent-card → pill morph
      doesn't flash a different colour mid-transition. */
@@ -183,7 +187,12 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem 0.75rem 0.25rem;
-  flex-shrink: 0;
+  /* When the panel is short, this block (file pills + actions) shrinks and
+     scrolls internally instead of pushing the composer off-screen — the input
+     must always stay pinned and visible at the bottom. */
+  flex-shrink: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .chat-panel__quick-actions-label {
