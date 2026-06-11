@@ -25,6 +25,7 @@ import {
   downloadPolicyOutput,
 } from "@app/services/policyApi";
 import { recordRunStart } from "@app/components/policies/policyRunStore";
+import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { alert, updateToast, dismissToast } from "@app/components/toast";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 
@@ -40,6 +41,8 @@ interface ExportPolicy {
   backendId: string;
   label: string;
   outputMode: "new_file" | "new_version";
+  /** The policy's accent as a CSS colour, for the toast glow. */
+  accent: string;
 }
 
 interface PolicyRunResult {
@@ -67,6 +70,7 @@ function activeExportPolicies(): ExportPolicy[] {
       backendId: s.backendId as string,
       label: labels.get(id) ?? "Policy",
       outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+      accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
     }));
 }
 
@@ -125,6 +129,8 @@ export async function enforceExportPolicies(
     } before export…`,
     isPersistentPopup: true,
     expandable: false,
+    // Glow the toast in the (first) policy's accent so it's clearly tied to it.
+    glowColor: active[0].accent,
   });
 
   const out: File[] = [];
