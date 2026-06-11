@@ -708,7 +708,7 @@ const Payg: React.FC<PaygProps> = ({ role, wallet, onSaveCap, onOpenPortal }) =>
               <p className="payg-planhead__body">
                 {t(
                   "payg.header.freeBody",
-                  "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it.",
+                  "View, edit, merge, split, sign, watermark, compress, convert and manual OCR, as much as you want, no matter where you trigger it.",
                 )}
               </p>
             </div>
