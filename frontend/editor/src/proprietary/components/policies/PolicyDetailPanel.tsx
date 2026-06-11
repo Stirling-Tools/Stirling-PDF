@@ -279,7 +279,7 @@ export function PolicyDetailPanel({
             icon={<LockIcon sx={{ fontSize: "1rem" }} />}
             description={t(
               "policies.detail.managedByOrg",
-              "Managed by your organization. Contact an admin to change this policy.",
+              "Managed by your organization. Contact a team leader to change this policy.",
             )}
           />
         )}

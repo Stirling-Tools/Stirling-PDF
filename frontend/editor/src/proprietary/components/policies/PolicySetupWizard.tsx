@@ -179,7 +179,7 @@ export function PolicySetupWizard({
             )}
             description={t(
               "policies.wizard.lockedDescription",
-              "Contact an admin to change this policy.",
+              "Contact a team leader to change this policy.",
             )}
           />
         </div>
