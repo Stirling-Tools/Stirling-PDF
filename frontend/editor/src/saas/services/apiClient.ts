@@ -115,14 +115,13 @@ apiClient.interceptors.request.use(
   },
 );
 
-// List of endpoints that don't require authentication
-const publicEndpoints = [
-  "/api/v1/config/app-config",
-  "/api/v1/info/status",
-  "/api/v1/config/public-config",
-  "/api/v1/config/endpoints-availability",
-  "/api/v1/config/endpoint-enabled",
-];
+// Endpoints whose 401s must never trigger the hard redirect to /login. Prefix
+// matching covers the whole public surface (/api/v1/config/* and /api/v1/info/*
+// are permitAll on the backend), and crucially includes background pings like
+// /api/v1/info/wau that fire before session hydration - without this they bounce
+// the user off pages that manage their own auth state (e.g. /oauth/consent) and
+// lose URL state.
+const publicEndpoints = ["/api/v1/config/", "/api/v1/info/"];
 
 // Share one in-flight refresh: Supabase rotates the refresh token on first
 // use, so concurrent refreshSession() calls fail with "Already Used".
