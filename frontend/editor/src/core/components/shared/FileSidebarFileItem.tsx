@@ -221,8 +221,6 @@ export function FileItem({
       <div
         ref={itemRef}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${recentPolicy ? " policy-enforced" : ""}`}
-        // Glow the row in the policy's accent only just after it's applied (a
-        // recent run), so the one-off glow doesn't replay on every reload.
         style={
           recentPolicy
             ? ({

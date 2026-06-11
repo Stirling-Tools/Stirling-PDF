@@ -132,8 +132,7 @@ export interface PolicyState {
    *  input's filename; when set, it's applied as a prefix/suffix per the policy's
    *  name-position setting. */
   outputName?: string;
-  /** The editor event the policy runs on: "upload" (enforce on upload) or
-   *  "export" (enforce before export) — one or the other. Defaults to "upload". */
+  /** When the policy runs: on "upload" or before "export". Defaults to "upload". */
   runOn?: "upload" | "export";
   /**
    * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that

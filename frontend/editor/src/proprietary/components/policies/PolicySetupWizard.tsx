@@ -80,8 +80,7 @@ interface PolicySetupWizardProps {
  * The shared policy wizard, used for both setup and edit. Two steps: Workflow
  * (the tool pipeline, reusing the Watch Folders builder) → Settings (the policy
  * fields + output/retry config). The workflow builder is kept mounted across
- * steps so the final action can trigger its save. (A Sources step exists in
- * code, gated off by SOURCES_IN_FLOW, for when non-editor sources return.)
+ * steps so the final action can trigger its save.
  */
 export function PolicySetupWizard({
   category,
@@ -113,8 +112,8 @@ export function PolicySetupWizard({
   );
   const [scopeNarrow, setScopeNarrow] = useState(initial.scopeTypes.length > 0);
   const [scopeTypes, setScopeTypes] = useState<string[]>(initial.scopeTypes);
-  // Reviewer is no longer configured in the flow (there's no human-review step),
-  // but the field is kept in the saved policy, defaulted to the signed-in user.
+  // Reviewer isn't shown in the flow; the field is still saved on the policy,
+  // defaulted to the signed-in user.
   const reviewerEmail = initial.reviewerEmail || user?.email || "";
   // Output + retry settings — the real, working folder settings (the engine
   // applies them). Pre-filled from the backing folder in edit mode.
