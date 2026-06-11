@@ -243,7 +243,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   const currentLanguage =
     supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
-    supportedLanguages["en-GB"] ||
+    supportedLanguages["en-US"] ||
     "English"; // Fallback if supportedLanguages lookup fails
 
   // Hide the language selector if there's only one language option

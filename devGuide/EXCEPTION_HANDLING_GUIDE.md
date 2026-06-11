@@ -16,7 +16,7 @@ Java forms the core of Stirling-PDF. When adding new features or handling errors
 2. **Use `try-with-resources`** when working with streams or other closable resources to ensure clean-up even on failure.
 3. **Return meaningful HTTP status codes** in controllers by throwing `ResponseStatusException` or using `@ExceptionHandler` methods.
 4. **Log with context** using the project’s logging framework. Include identifiers or IDs that help trace the issue.
-5. **Internationalise messages** by placing user-facing text in `messages_en_GB.properties` and referencing them with message keys.
+5. **Internationalise messages** by placing user-facing text in `messages_en_US.properties` and referencing them with message keys.
 
 ## JavaScript
 
@@ -55,11 +55,11 @@ except Exception as err:
 
 ## Internationalisation (i18n)
 
-All user-visible error strings should be defined in the main translation file (`messages_en_GB.properties`). Other language files will use the same keys. Refer to messages in code rather than hard-coding text.
+All user-visible error strings should be defined in the main translation file (`messages_en_US.properties`). Other language files will use the same keys. Refer to messages in code rather than hard-coding text.
 
 When creating new messages:
 
-1. Add the English phrase to `messages_en_GB.properties`.
+1. Add the English phrase to `messages_en_US.properties`.
 2. Reference the message key in your Java, JavaScript, or Python code.
 3. Update other localisation files as needed.
 
