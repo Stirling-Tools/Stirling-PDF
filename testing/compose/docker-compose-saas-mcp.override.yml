@@ -1,0 +1,24 @@
+# Overlay for docker-compose-saas.yml: switches on the MCP server inside the
+# saas-flavor backend so the two-filter-chain interplay (Supabase chain at
+# @Order(1) + MCP chain at @Order(0)) can be validated locally.
+#
+# The Supabase chain registers Spring Security 7's default RFC 9728 metadata
+# filter for /.well-known/oauth-protected-resource/**. Without the MCP chain
+# claiming those subpaths, the path-inserted discovery URL is answered by that
+# default filter with a document missing authorization_servers, which makes MCP
+# clients fall back to treating Stirling itself as the authorization server.
+#
+# Usage:
+#   docker-compose -f docker-compose-saas.yml -f docker-compose-saas-mcp.override.yml up -d --build
+#   MCP_AUTH_ISSUERURI=<your issuer> bash validate-mcp-saas-chain.sh
+services:
+  stirling-pdf-saas:
+    environment:
+      MCP_ENABLED: "true"
+      MCP_AUTH_MODE: "oauth"
+      # Discovery-interplay checks only need a resolvable issuer URL; no tokens
+      # are minted against it. Point this at your real IdP to go further.
+      MCP_AUTH_ISSUERURI: "${MCP_AUTH_ISSUERURI:-https://auth.example.com}"
+      MCP_AUTH_RESOURCEID: "http://localhost:8080/mcp"
+      MCP_AUTH_USERNAMECLAIM: "email"
+      MCP_AUTH_REQUIREEXISTINGACCOUNT: "true"
