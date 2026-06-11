@@ -21,7 +21,9 @@ export function PolicyDeleteConfirmModal({
     <Modal
       opened={opened}
       onClose={onCancel}
-      title={t("policies.deleteConfirmTitle", `Delete ${label} policy?`)}
+      title={t("policies.deleteConfirmTitle", "Delete {{label}} policy?", {
+        label,
+      })}
       centered
       size="sm"
     >

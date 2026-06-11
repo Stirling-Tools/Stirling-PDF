@@ -43,7 +43,7 @@ import { DocHelp } from "./Payg";
 
 // ─── Shared free-tier snapshot ────────────────────────────
 
-interface FreeSnapshot {
+export interface FreeSnapshot {
   /** One-time free documents used so far (grant − remaining). */
   billableUsed: number;
   /**
@@ -61,7 +61,7 @@ interface FreeSnapshot {
  * numbers. Earlier versions returned a mock "62 of 500" sentinel which leaked
  * into the rendered UI and made the page look like nothing was wired up.
  */
-function useFreeSnapshot(): FreeSnapshot {
+export function useFreeSnapshot(): FreeSnapshot {
   const { wallet } = useWallet();
   return useMemo(() => {
     if (wallet) {
@@ -80,7 +80,10 @@ function useFreeSnapshot(): FreeSnapshot {
 type MeterState = "FULL" | "WARNED" | "DEGRADED";
 
 /** Warn/degrade band for the one-time grant meter (mirrors the BE thresholds). */
-function meterState(used: number, limit: number): { state: MeterState; pct: number } {
+function meterState(
+  used: number,
+  limit: number,
+): { state: MeterState; pct: number } {
   const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
   const state: MeterState =
     pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
@@ -113,7 +116,10 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
           />
           {t("payg.free.editor.eyebrow", "Editor plan · Always free")}
         </span>
-        <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
+        <span
+          className="payg-role-pill"
+          data-leader={leader ? "true" : "false"}
+        >
           {pill}
         </span>
       </div>
@@ -132,7 +138,7 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
 
 // ─── Compact one-time free meter (right column of the Processor card) ──────
 
-function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
+export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
   const { t } = useTranslation();
   const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
   const stateLabel =
@@ -174,7 +180,9 @@ function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
           {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
         </span>
         <span className="payg-hero__meta-dot">•</span>
-        <span>{t("payg.free.hero.neverResets", "One-time — never resets")}</span>
+        <span>
+          {t("payg.free.hero.neverResets", "One-time — never resets")}
+        </span>
       </div>
     </div>
   );
@@ -240,7 +248,9 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
             <li>
               <CheckIcon className="paygf-cta__check" fontSize="small" />
               <span>
-                <strong>{t("payg.free.cta.benefit3Title", "API access")}</strong>
+                <strong>
+                  {t("payg.free.cta.benefit3Title", "API access")}
+                </strong>
                 {" — "}
                 {t(
                   "payg.free.cta.benefit3Body",

@@ -227,7 +227,9 @@
   font-size: 0.95rem;
   font-family: inherit;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
   white-space: nowrap;
 }
 .paygf-cta__button:hover {

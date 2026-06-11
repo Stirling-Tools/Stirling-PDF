@@ -209,9 +209,7 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
 
   const limit = wallet.billableLimit;
   const hasLimit = limit != null && limit > 0;
-  const pct = hasLimit
-    ? Math.min(100, (wallet.billableUsed / limit) * 100)
-    : 0;
+  const pct = hasLimit ? Math.min(100, (wallet.billableUsed / limit) * 100) : 0;
   const state = hasLimit
     ? pct >= 100
       ? "DEGRADED"
@@ -387,7 +385,13 @@ function CapEditor({
   );
 }
 
-function CapReadOnly({ capUsd, noCap }: { capUsd: number | null; noCap: boolean }) {
+function CapReadOnly({
+  capUsd,
+  noCap,
+}: {
+  capUsd: number | null;
+  noCap: boolean;
+}) {
   const { t } = useTranslation();
   const hasCap = !noCap && capUsd != null;
   return (
@@ -567,10 +571,7 @@ function ActivityFeed({ recent }: { recent: Wallet["recent"] }) {
         </div>
         {recent.length === 0 ? (
           <Text size="sm" c="dimmed">
-            {t(
-              "payg.activity.empty",
-              "No billable activity yet this period.",
-            )}
+            {t("payg.activity.empty", "No billable activity yet this period.")}
           </Text>
         ) : (
           <div>
@@ -603,7 +604,11 @@ function ActivityFeed({ recent }: { recent: Wallet["recent"] }) {
 
 // ─── Stripe CTA ──────────────────────────────────────────────────────────────
 
-function StripePortalLink({ onOpenPortal }: { onOpenPortal: () => Promise<void> }) {
+function StripePortalLink({
+  onOpenPortal,
+}: {
+  onOpenPortal: () => Promise<void>;
+}) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
@@ -662,7 +667,12 @@ function StripePortalLink({ onOpenPortal }: { onOpenPortal: () => Promise<void> 
 
 // ─── Main component ───────────────────────────────────────────────────────
 
-const Payg: React.FC<PaygProps> = ({ role, wallet, onSaveCap, onOpenPortal }) => {
+const Payg: React.FC<PaygProps> = ({
+  role,
+  wallet,
+  onSaveCap,
+  onOpenPortal,
+}) => {
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
@@ -681,10 +691,14 @@ const Payg: React.FC<PaygProps> = ({ role, wallet, onSaveCap, onOpenPortal }) =>
         <div className="payg-planhead">
           <div className="payg-planhead__top">
             <span className="payg-planhead__eyebrow">
-              {t("payg.header.eyebrow", "Processor plan · {{start}} – {{end}}", {
-                start: fmt(wallet.billingPeriodStart),
-                end: fmt(wallet.billingPeriodEnd),
-              })}
+              {t(
+                "payg.header.eyebrow",
+                "Processor plan · {{start}} – {{end}}",
+                {
+                  start: fmt(wallet.billingPeriodStart),
+                  end: fmt(wallet.billingPeriodEnd),
+                },
+              )}
             </span>
             <span className="payg-role-pill" data-leader={isLeader}>
               {isLeader
@@ -715,7 +729,10 @@ const Payg: React.FC<PaygProps> = ({ role, wallet, onSaveCap, onOpenPortal }) =>
 
             <div className="payg-planhead__col payg-planhead__col--meter">
               <div className="payg-planhead__lbl payg-planhead__lbl--meter">
-                <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
+                <BoltIcon
+                  className="payg-planhead__lbl-icon"
+                  fontSize="small"
+                />
                 {t("payg.header.meterLabel", "Metered")}
               </div>
               <p className="payg-planhead__title">
