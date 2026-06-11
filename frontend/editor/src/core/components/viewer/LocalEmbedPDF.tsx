@@ -48,6 +48,8 @@ import type {
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 
+const globalBlobUrlCache = new Map<string, string>();
+
 // Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
 const VIEWPORT_GAP = 56;
 
@@ -470,18 +472,20 @@ export function LocalEmbedPDF({
 
   // Stable key — avoids recreating the blob URL (and crashing ViewportPlugin) when
   // FileContext produces new File object references for the same file content.
-  const fileStableKey =
-    fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
+  const fileStableKey = file ? `${(file as File).name}-${file.size}` : null;
   useEffect(() => {
     if (url) {
       setPdfUrl(url);
-    } else if (file) {
-      const objectUrl = URL.createObjectURL(file);
+    } else if (file && fileStableKey) {
+      let objectUrl = globalBlobUrlCache.get(fileStableKey);
+      if (!objectUrl) {
+        objectUrl = URL.createObjectURL(file);
+        globalBlobUrlCache.set(fileStableKey, objectUrl);
+      }
       setPdfUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
     }
-    // When file is present, use the stable key to avoid blob URL churn from FileContext
-    // re-renders. When only url is provided, depend on url directly so changes are picked up.
+    // Do not revoke object URL synchronously on cleanup since the worker/PDFium
+    // might still be asynchronously fetching it during React unmount/remount cycles.
   }, [file ? fileStableKey : url]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
@@ -510,13 +514,12 @@ export function LocalEmbedPDF({
         scrollEndDelay: 150,
       }),
       createPluginRegistration(ScrollPluginPackage, {
-        defaultBufferSize: 2,
+        defaultBufferSize: 3,
       }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
         withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
-        defaultImageType: "image/jpeg",
-        defaultImageQuality: 0.85,
+        defaultImageType: "image/bmp",
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -563,10 +566,10 @@ export function LocalEmbedPDF({
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
       createPluginRegistration(TilingPluginPackage, {
-        tileSize: 512,
-        overlapPx: 2,
-        extraRings: 0,
-        defaultImageType: "image/jpeg",
+        tileSize: 512, // Reduced from 768 for better parallelization
+        overlapPx: 2.5,
+        extraRings: 1, // Pre-render adjacent tiles to reduce white flashes
+        defaultImageType: "image/bmp", // BMP is faster for local processing than WebP
       }),
 
       // Register spread plugin for dual page layout
@@ -603,7 +606,10 @@ export function LocalEmbedPDF({
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
     worker: true,
-    encoderPoolSize: 2,
+    encoderPoolSize: Math.max(
+      4,
+      Math.min(16, window.navigator.hardwareConcurrency || 4),
+    ),
     fontFallback: null,
   });
 
@@ -682,8 +688,12 @@ export function LocalEmbedPDF({
           engine={engine}
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
+            if (typeof window !== "undefined") {
+              (window as any).__embedPdfRegistry = registry;
+            }
             // v2.0: Use registry.getPlugin() to access plugin APIs
             const annotationPlugin = registry.getPlugin("annotation");
+
             if (!annotationPlugin || !annotationPlugin.provides) return;
 
             const annotationApi = annotationPlugin.provides();

@@ -92,6 +92,8 @@ function InteractionPauseBridge({
   return null;
 }
 
+const globalBlobUrlCache = new Map<string, string>();
+
 const DOCUMENT_NAME = "stirling-pdf-signing-viewer";
 
 // Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
@@ -238,16 +240,22 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       [signaturePreviews],
     );
 
+    const fileStableKey = file ? `${(file as File).name}-${file.size}` : null;
     // Convert File to URL if needed
     useEffect(() => {
       if (url) {
         setPdfUrl(url);
-      } else if (file) {
-        const objectUrl = URL.createObjectURL(file);
+      } else if (file && fileStableKey) {
+        let objectUrl = globalBlobUrlCache.get(fileStableKey);
+        if (!objectUrl) {
+          objectUrl = URL.createObjectURL(file);
+          globalBlobUrlCache.set(fileStableKey, objectUrl);
+        }
         setPdfUrl(objectUrl);
-        return () => URL.revokeObjectURL(objectUrl);
       }
-    }, [file, url]);
+      // Do not revoke object URL synchronously on cleanup since the worker/PDFium
+      // might still be asynchronously fetching it during React unmount/remount cycles.
+    }, [file ? fileStableKey : url]);
 
     // Notify parent when signature previews change
     useEffect(() => {
@@ -277,13 +285,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           scrollEndDelay: 150,
         }),
         createPluginRegistration(ScrollPluginPackage, {
-          defaultBufferSize: 2,
+          defaultBufferSize: 3,
         }),
         createPluginRegistration(RenderPluginPackage, {
           withForms: true,
           withAnnotations: true,
-          defaultImageType: "image/jpeg",
-          defaultImageQuality: 0.85,
+          defaultImageType: "image/bmp",
         }),
 
         // Register interaction manager (required for annotations)
@@ -319,10 +326,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
 
         // Register tiling plugin
         createPluginRegistration(TilingPluginPackage, {
-          tileSize: 512,
-          overlapPx: 2,
-          extraRings: 0,
-          defaultImageType: "image/jpeg",
+          tileSize: 512, // Reduced from 768 for better parallelization
+          overlapPx: 2.5,
+          extraRings: 1, // Pre-render adjacent tiles to reduce white flashes
+          defaultImageType: "image/bmp", // BMP is faster for local processing than WebP
         }),
 
         // Register spread plugin
@@ -343,11 +350,14 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       ];
     }, [pdfUrl]);
 
-    // Initialize the engine with the React hook - use local WASM and parallel Web Workers for maximum performance
+    // Initialize the engine
     const { engine, isLoading, error } = usePdfiumEngine({
       wasmUrl: pdfiumWasmUrl,
       worker: true,
-      encoderPoolSize: 2,
+      encoderPoolSize: Math.max(
+        4,
+        Math.min(16, window.navigator.hardwareConcurrency || 4),
+      ),
       fontFallback: null,
     });
 
@@ -400,6 +410,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           engine={engine}
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
+            if (typeof window !== "undefined") {
+              (window as any).__embedPdfRegistry = registry;
+            }
             // v2.0: Use registry.getPlugin() to access plugin APIs
             const annotationPlugin = registry.getPlugin("annotation");
             if (!annotationPlugin || !annotationPlugin.provides) return;
