@@ -21,7 +21,10 @@ import {
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
-import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
+import {
+  RenderLayer,
+  RenderPluginPackage,
+} from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import {
   InteractionManagerPluginPackage,
@@ -146,6 +149,44 @@ export interface AnnotationAPI {
   resetZoom: () => void;
 }
 
+interface TiledPageBackgroundProps {
+  documentId: string;
+  pageIndex: number;
+}
+
+const TiledPageBackground = ({
+  documentId,
+  pageIndex,
+}: TiledPageBackgroundProps) => {
+  const [loaded, setLoaded] = useState(false);
+  const handleLoad = () => {
+    setLoaded(true);
+  };
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        backgroundColor: "#ffffff",
+      }}
+      className={loaded ? undefined : "pdf-page-skeleton"}
+    >
+      <RenderLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        scale={1.0}
+        dpr={typeof window !== "undefined" ? window.devicePixelRatio : 1}
+        style={{ position: "absolute", inset: 0 }}
+        onLoad={handleLoad}
+      />
+      <div className="pdf-tile-layer">
+        <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+      </div>
+    </div>
+  );
+};
+
 export const LocalEmbedPDFWithAnnotations = forwardRef<
   AnnotationAPI | null,
   LocalEmbedPDFWithAnnotationsProps
@@ -268,9 +309,15 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       }
     }, [signaturePreviews, onAnnotationChange, onPreviewCountChange]);
 
-    // Create plugins configuration with annotation support
     const plugins = useMemo(() => {
       if (!pdfUrl) return [];
+
+      const deviceMemory =
+        typeof navigator !== "undefined"
+          ? ((navigator as Navigator & { deviceMemory?: number })
+              .deviceMemory ?? 4)
+          : 4;
+      const bufferSize = deviceMemory >= 4 ? 8 : 4;
 
       return [
         createPluginRegistration(DocumentManagerPluginPackage, {
@@ -286,7 +333,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           scrollEndDelay: 150,
         }),
         createPluginRegistration(ScrollPluginPackage, {
-          defaultBufferSize: 3,
+          defaultBufferSize: bufferSize,
         }),
         createPluginRegistration(RenderPluginPackage, {
           withForms: true,
@@ -329,7 +376,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
         createPluginRegistration(TilingPluginPackage, {
           tileSize: 512,
           overlapPx: 2.5,
-          extraRings: 1, // Pre-render adjacent tiles to reduce white flashes
+          extraRings: 1, // Base layer handles flashes; 1 ring is enough for speculative scrolling
           defaultImageType: "image/bmp", // BMP is faster for local processing than WebP
         }),
 
@@ -516,6 +563,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                               width,
                               height,
                               position: "relative",
+                              backgroundColor: "#ffffff",
                               userSelect: "none",
                               WebkitUserSelect: "none",
                               MozUserSelect: "none",
@@ -523,6 +571,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                               cursor: placementMode ? "crosshair" : "default",
                               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
                             }}
+                            className="pdf-page-skeleton"
                             draggable={false}
                             onDragStart={(e) => e.preventDefault()}
                             onDrop={(e) => e.preventDefault()}
@@ -588,7 +637,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                               }
                             }}
                           >
-                            <TilingLayer
+                            <TiledPageBackground
                               documentId={documentId}
                               pageIndex={pageIndex}
                             />

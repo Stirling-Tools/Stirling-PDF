@@ -28,6 +28,7 @@ import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import { FileId } from "@app/types/file";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
@@ -346,7 +347,7 @@ const EmbedPdfViewerContent = ({
 
   // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
   const currentFileStableId = currentFile
-    ? `${(currentFile as any).name || "blob"}-${currentFile.size}-${(currentFile as any).lastModified || ""}`
+    ? (`${currentFile.name || "blob"}-${currentFile.size}-${currentFile.lastModified || ""}` as FileId)
     : null;
   const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
 

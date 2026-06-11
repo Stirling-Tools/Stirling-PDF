@@ -12,7 +12,10 @@ import {
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
-import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
+import {
+  RenderLayer,
+  RenderPluginPackage,
+} from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import {
   InteractionManagerPluginPackage,
@@ -430,6 +433,53 @@ interface LocalEmbedPDFProps {
   pdfRenderMode?: "normal" | "dark" | "sepia";
 }
 
+interface TiledPageBackgroundProps {
+  documentId: string;
+  pageIndex: number;
+  pdfRenderMode?: "normal" | "dark" | "sepia";
+}
+
+const TiledPageBackground = ({
+  documentId,
+  pageIndex,
+  pdfRenderMode = "normal",
+}: TiledPageBackgroundProps) => {
+  const [loaded, setLoaded] = useState(false);
+  const handleLoad = () => {
+    setLoaded(true);
+  };
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        backgroundColor: "#ffffff",
+        transition: "filter 0.25s ease",
+        filter:
+          pdfRenderMode === "dark"
+            ? "invert(1) hue-rotate(180deg)"
+            : pdfRenderMode === "sepia"
+              ? "sepia(0.7) brightness(0.85)"
+              : undefined,
+      }}
+      className={loaded ? undefined : "pdf-page-skeleton"}
+    >
+      <RenderLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        scale={1.0}
+        dpr={typeof window !== "undefined" ? window.devicePixelRatio : 1}
+        style={{ position: "absolute", inset: 0 }}
+        onLoad={handleLoad}
+      />
+      <div className="pdf-tile-layer">
+        <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+      </div>
+    </div>
+  );
+};
+
 export function LocalEmbedPDF({
   file,
   url,
@@ -496,9 +546,15 @@ export function LocalEmbedPDF({
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 
-  // Create plugins configuration
   const plugins = useMemo(() => {
     if (!pdfUrl) return [];
+
+    const deviceMemory =
+      typeof navigator !== "undefined"
+        ? ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ??
+          4)
+        : 4;
+    const bufferSize = deviceMemory >= 4 ? 8 : 4;
 
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
@@ -514,7 +570,7 @@ export function LocalEmbedPDF({
         scrollEndDelay: 150,
       }),
       createPluginRegistration(ScrollPluginPackage, {
-        defaultBufferSize: 3,
+        defaultBufferSize: bufferSize,
       }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
@@ -568,7 +624,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(TilingPluginPackage, {
         tileSize: 512, // Reduced from 768 for better parallelization
         overlapPx: 2.5,
-        extraRings: 1, // Pre-render adjacent tiles to reduce white flashes
+        extraRings: 1, // Base layer handles flashes; 1 ring is enough for speculative scrolling
         defaultImageType: "image/bmp", // BMP is faster for local processing than WebP
       }),
 
@@ -875,24 +931,11 @@ export function LocalEmbedPDF({
                                   onDrop={(e) => e.preventDefault()}
                                   onDragOver={(e) => e.preventDefault()}
                                 >
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      inset: 0,
-                                      transition: "filter 0.25s ease",
-                                      filter:
-                                        pdfRenderMode === "dark"
-                                          ? "invert(1) hue-rotate(180deg)"
-                                          : pdfRenderMode === "sepia"
-                                            ? "sepia(0.7) brightness(0.85)"
-                                            : undefined,
-                                    }}
-                                  >
-                                    <TilingLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                    />
-                                  </div>
+                                  <TiledPageBackground
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    pdfRenderMode={pdfRenderMode}
+                                  />
 
                                   <CustomSearchLayer
                                     documentId={documentId}
