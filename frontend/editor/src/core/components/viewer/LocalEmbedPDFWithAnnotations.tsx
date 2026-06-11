@@ -773,7 +773,6 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                   (p) => p.id !== preview.id,
                                                 ),
                                               );
-                                              onRemoveSignature(preview.id);
                                             }}
                                             aria-label={t(
                                               "viewer.signature.delete",
