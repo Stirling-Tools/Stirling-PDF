@@ -9,6 +9,7 @@ import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { NavKey } from "@app/components/shared/config/types";
 import { withBasePath } from "@app/constants/app";
+import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import {
   Z_INDEX_OVER_FULLSCREEN_SURFACE,
@@ -167,6 +168,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         overlayProps={{ opacity: 0.35, blur: 2 }}
         padding={0}
         fullScreen={isMobile}
+        removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
         // Hidden (not closed) while a child overlay like the PAYG UpgradeModal
         // is up — see the appConfig:overlay listener above. The focus trap and
         // escape/outside-close must release too: the trap would steal focus

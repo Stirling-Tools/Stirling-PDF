@@ -5860,6 +5860,10 @@ subscribeToPro = "Subscribe to Pro"
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
+
 [printFile]
 title = "Print File"
 
@@ -6803,6 +6807,18 @@ title = "Keyboard Shortcuts"
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 
+[settings.legal]
+label = "Legal"
+title = "Legal"
+
+[settings.legal.cookiePreferences]
+description = "Review or change your cookie consent choices."
+manage = "Manage"
+
+[settings.legal.documents]
+description = "Policies and legal information for this service."
+title = "Legal Documents"
+
 [settings.licensingAnalytics]
 audit = "Audit"
 plan = "Plan"
@@ -7489,10 +7505,6 @@ success = "Uploaded to server"
 title = "Upload to Server"
 updateButton = "Update on Server"
 uploadButton = "Upload to Server"
-
-[survey]
-nav = "Survey"
-title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentation,swagger,endpoints,development"

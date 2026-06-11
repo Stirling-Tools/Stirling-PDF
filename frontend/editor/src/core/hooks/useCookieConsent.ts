@@ -2,6 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { BASE_PATH } from "@app/constants/app";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import {
+  Z_INDEX_COOKIE_CONSENT_BANNER,
+  Z_INDEX_COOKIE_PREFERENCES_MODAL,
+} from "@app/styles/zIndex";
 import { TOUR_STATE_EVENT, type TourStatePayload } from "@app/constants/events";
 import { getCookieConsentOverrides } from "@app/extensions/cookieConsentConfig";
 
@@ -11,6 +15,8 @@ declare global {
       run: (config: any) => void;
       show: (show?: boolean) => void;
       hide: () => void;
+      showPreferences: () => void;
+      hidePreferences: () => void;
       getCookie: (name?: string) => any;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
@@ -23,6 +29,16 @@ interface CookieConsentConfig {
   forceLightMode?: boolean;
 }
 
+// Shard so Mantine's scroll-lock doesn't swallow events on the consent dialog;
+// lazy because #cc-main only exists post-load.
+export const COOKIE_CONSENT_SCROLL_SHARD = {
+  get current(): HTMLElement | null {
+    return typeof document === "undefined"
+      ? null
+      : document.getElementById("cc-main");
+  },
+};
+
 export const useCookieConsent = ({
   analyticsEnabled = false,
   forceLightMode = false,
@@ -33,6 +49,16 @@ export const useCookieConsent = ({
 
   useEffect(() => {
     if (!analyticsEnabled) return;
+
+    // Bridge the layering constants to the static cookie-consent stylesheets
+    document.documentElement.style.setProperty(
+      "--z-index-cookie-consent",
+      String(Z_INDEX_COOKIE_CONSENT_BANNER),
+    );
+    document.documentElement.style.setProperty(
+      "--z-index-cookie-preferences",
+      String(Z_INDEX_COOKIE_PREFERENCES_MODAL),
+    );
 
     const mainCSS = document.createElement("link");
     mainCSS.rel = "stylesheet";
@@ -391,7 +417,10 @@ export const useCookieConsent = ({
 
   const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
-      window.CookieConsent?.show(true);
+      // Open the detailed preferences dialog directly (not the consent
+      // banner) — it gets the `.show--preferences` class, which the CSS
+      // raises above the settings modal.
+      window.CookieConsent?.showPreferences();
     }
   }, [isInitialized]);
 
