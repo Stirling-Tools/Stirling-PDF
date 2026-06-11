@@ -235,6 +235,21 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* Position dropdown + custom-text input sitting on one row under the
+   "Output filename" subhead — the dropdown sizes to content, text fills. */
+.pol-name-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.pol-name-row > :first-child {
+  flex: 0 0 auto;
+}
+.pol-name-row > :last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* ---- Fields (PolicyFieldRow) — row inset matches SUI ListRow ---- */
 .pol-field {
   padding: 0.7rem 0.875rem;
