@@ -612,6 +612,73 @@ class PaygChargeInterceptorTest {
                 .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AUTOMATION);
     }
 
+    @Test
+    void preHandle_aiToolRoute_inScopeAndCategoryAi() throws Exception {
+        // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and carry no PAYG
+        // annotation. The interceptor recognises them by path → in scope + AI category, so a direct
+        // multipart call opens a charge. Handler has NO annotations (handlerMethodForPlain).
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/ai/tools/pdf-comment-agent");
+        req.addFile(
+                new MockMultipartFile("fileInput", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForPlain());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AI);
+    }
+
+    @Test
+    void preHandle_aiToolRoute_withAutomationHeader_isAutomation() throws Exception {
+        // An AI tool dispatched inside a policy / AI workflow carries X-Stirling-Automation: true →
+        // AUTOMATION wins over the AI path rule (the header is checked first).
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/ai/tools/pdf-comment-agent");
+        req.addFile(
+                new MockMultipartFile("fileInput", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForPlain());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AUTOMATION);
+    }
+
+    @Test
+    void preHandle_plainRouteNoAnnotations_stillShortCircuits() throws Exception {
+        // Guard against the path rule being too broad: a non-AI-tools route with no annotations
+        // must
+        // still short-circuit (BYPASSED path), unaffected by the AI-tools recognition.
+        authenticateWithUser(makeUser(7L, 42L));
+
+        MockMultipartHttpServletRequest req = newMultipart(); // URI = /api/v1/security/test-tool
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+
+        boolean cont =
+                interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForPlain());
+
+        assertThat(cont).isTrue();
+        verify(chargeService, never()).openProcess(any(), anyList());
+    }
+
     // --- helpers --------------------------------------------------------------------------------
 
     private MockMultipartHttpServletRequest newMultipart() {
