@@ -6,7 +6,6 @@ import {
   forwardRef,
   useRef,
 } from "react";
-// Import the essential plugins
 import { useTranslation } from "react-i18next";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
@@ -14,7 +13,7 @@ import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
-// Import the non-essential plugins
+// Import the essential plugins
 import {
   Viewport,
   ViewportPluginPackage,

@@ -6,6 +6,7 @@ import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
+// Import the essential plugins
 import {
   Viewport,
   ViewportPluginPackage,
