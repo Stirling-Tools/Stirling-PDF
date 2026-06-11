@@ -149,6 +149,55 @@ class EntitlementGuardTest {
         assertThat(body.get("category").asText()).isEqualTo("AI");
     }
 
+    @Test
+    void aiToolRoute_noAnnotation_isInScopeAndGatedOnAiSupport() throws Exception {
+        // /api/v1/ai/tools/** controllers live in the proprietary module and carry no
+        // @RequiresFeature; the guard recognises them by path and gates on AI_SUPPORT. A degraded
+        // team is 402'd even though the handler has no annotation.
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(jwtAuth(supabaseId));
+        when(userRepository.findBySupabaseId(supabaseId))
+                .thenReturn(Optional.of(userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        HandlerMethod hm = handlerFor("plainEndpoint"); // no annotations
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/ai/tools/pdf-comment-agent");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("FEATURE_DEGRADED");
+        assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
+        verify(entitlementService).getSnapshot(42L);
+    }
+
+    @Test
+    void aiToolRoute_anonymous_returns401WithAiCategory() throws Exception {
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new AnonymousAuthenticationToken(
+                                "key",
+                                "anonymousUser",
+                                List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+
+        HandlerMethod hm = handlerFor("plainEndpoint");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/ai/tools/math-auditor-agent");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(401);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("SIGNUP_REQUIRED");
+        assertThat(body.get("category").asText()).isEqualTo("AI");
+    }
+
     // ---------------------------------------------------------------------------------------
     // Anonymous user
     // ---------------------------------------------------------------------------------------

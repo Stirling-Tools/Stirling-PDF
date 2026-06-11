@@ -5317,6 +5317,11 @@ api = "this tool"
 automation = "automations"
 default = "this feature"
 
+[payg.spendCapMeter]
+capSuffix = "/ {{amount}} cap"
+metaCategories = "Automation · AI · API spend"
+resets = "Resets each billing period"
+
 [payg.state]
 degraded = "Cap reached"
 full = "Healthy"
@@ -5772,6 +5777,12 @@ highlight3 = "Community support"
 included = "Included"
 name = "Free"
 
+[plan.freeLimit]
+cta = "View Processor Plan"
+dismiss = "Maybe Later"
+message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+title = "Woah, {{total}} PDFs Processed!"
+
 [plan.highlights]
 advancedIntegrations = "Advanced integrations"
 allBasicFeatures = "All basic features"
@@ -5802,6 +5813,12 @@ highlight1 = "Unlimited Tool Usage"
 highlight2 = "Advanced PDF tools"
 highlight3 = "No watermarks"
 name = "Pro"
+
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
 
 [plan.static]
 activateLicense = "Activate Your License"

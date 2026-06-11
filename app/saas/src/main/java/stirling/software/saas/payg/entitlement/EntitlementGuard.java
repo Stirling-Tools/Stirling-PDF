@@ -34,6 +34,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -132,12 +133,17 @@ public class EntitlementGuard implements HandlerInterceptor {
                 AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
                         || AnnotationUtils.findAnnotation(hm.getBeanType(), RequiresFeature.class)
                                 != null;
-        if (!hasAutoJobPostMapping && !hasRequiresFeature) {
+        // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't carry
+        // @RequiresFeature; recognise them by path so they're gated on AI_SUPPORT — see
+        // AiToolRoutes and PaygChargeInterceptor, which classify the same routes as AI.
+        boolean aiToolRoute = AiToolRoutes.matches(request);
+        if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
             skippedNoAnnotationCounter.increment();
             return true;
         }
 
-        FeatureGate[] required = resolveRequiredGates(hm);
+        FeatureGate[] required =
+                aiToolRoute ? new FeatureGate[] {FeatureGate.AI_SUPPORT} : resolveRequiredGates(hm);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         boolean anonymous = isAnonymous(auth);

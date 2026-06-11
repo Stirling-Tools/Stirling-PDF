@@ -134,6 +134,51 @@ public class JobChargeService {
     }
 
     /**
+     * Charge a fixed number of units for a billable action that isn't file/lineage-driven — e.g. an
+     * AI Create session, billed once per document at session creation. Opens a standalone
+     * bookkeeping job (no lineage inputs, so follow-up calls never lineage-join it), draws the
+     * free-grant split, and writes the shadow + ledger rows exactly as {@link #openProcess} does,
+     * then closes the job so the paid portion meters to Stripe via the same {@code afterCommit}
+     * path and idempotency key ({@code process:<jobId>:close}).
+     *
+     * <p>Each call is independent: there is no join/dedup, so two sessions charge twice (correct —
+     * each is a distinct document). The caller passes the unit count; the policy {@code
+     * minChargeUnits} floor still applies. Must not be called for {@link BillingCategory#BYPASSED}.
+     *
+     * @return the bookkeeping job id (mostly useful for tests / tracing)
+     */
+    @Transactional
+    public UUID chargeStandalone(ChargeContext ctx, int units) {
+        Objects.requireNonNull(ctx, "ctx");
+        if (ctx.billingCategory() == BillingCategory.BYPASSED) {
+            throw new IllegalArgumentException("chargeStandalone must not be called for BYPASSED");
+        }
+
+        PricingPolicy policy = policyService.getEffectivePolicy(ctx.ownerTeamId());
+        int chargeUnits = Math.max(units, policy.getMinChargeUnits());
+        int stepLimit = resolveStepLimit(policy, ctx.source());
+
+        JobContext jobCtx =
+                new JobContext(
+                        ctx.ownerUserId(),
+                        ctx.ownerTeamId(),
+                        ctx.source(),
+                        ctx.processType(),
+                        policy.getId(),
+                        stepLimit);
+        ProcessingJob job = jobService.open(jobCtx, chargeUnits);
+
+        int freeUsed = consumeFreeGrant(ctx, chargeUnits);
+        recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed);
+        recordLedgerDebit(ctx, job.getId(), policy.getId(), chargeUnits);
+
+        // Close immediately — nothing will lineage-join a standalone job — so the paid portion
+        // meters via the same afterCommit hook + idempotency key as a normal process completion.
+        close(job.getId());
+        return job.getId();
+    }
+
+    /**
      * Draw this job's free portion from the team's one-time lifetime grant, atomically, and return
      * the units taken (0..{@code units}); the remainder is the paid portion that will be metered to
      * Stripe. Runs inside {@code openProcess}'s transaction with a pessimistic row lock so

@@ -5,7 +5,7 @@ import { createLightSlideBackground } from "@app/components/onboarding/slides/un
 import {
   FreeMeterPanel,
   useFreeSnapshot,
-} from "@app/components/shared/config/configSections/PaygFree";
+} from "@app/components/shared/config/configSections/usageMeters";
 import i18n from "@app/i18n";
 import styles from "@app/components/onboarding/slides/SaasOnboardingSlides.module.css";
 

@@ -825,6 +825,94 @@ class JobChargeServiceTest {
         verify(jobService).close(jobId);
     }
 
+    // --- chargeStandalone() — non-file billable actions (e.g. AI Create) -----------------------
+
+    @Test
+    void chargeStandalone_subscribedTeam_chargesAndMetersPaidPortion() {
+        // AI Create-style charge: one standalone bookkeeping job, free split, ledger debit, meter.
+        long teamId = 100L;
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(teamId)).thenReturn(policy);
+
+        UUID jobId = UUID.randomUUID();
+        when(jobService.open(any(JobContext.class), eq(1))).thenReturn(openJob(jobId));
+        when(jobService.close(jobId)).thenReturn(openJob(jobId));
+
+        // Subscribed, no free grant left → the whole unit is paid and meters.
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(teamId);
+        ext.setStripeCustomerId("cus_x");
+        ext.setPaygSubscriptionId("sub_x");
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
+        when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
+                .thenReturn(Optional.of(chargedShadowRow(jobId, teamId, 1, 0, BillingCategory.AI)));
+
+        ChargeContext ctx =
+                new ChargeContext(
+                        7L, teamId, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.AI);
+        ArgumentCaptor<WalletLedgerEntry> ledger = ArgumentCaptor.forClass(WalletLedgerEntry.class);
+
+        withTransactionSynchronization(() -> service.chargeStandalone(ctx, 1));
+
+        verify(jobService).open(any(JobContext.class), eq(1));
+        verify(jobService).close(jobId);
+        verify(ledgerRepo).save(ledger.capture());
+        assertThat(ledger.getValue().getEntryType()).isEqualTo(LedgerEntryType.DEBIT);
+        assertThat(ledger.getValue().getAmountUnits()).isEqualTo(-1);
+        assertThat(ledger.getValue().getBillingCategory()).isEqualTo(BillingCategory.AI);
+        verify(shadowRepo).save(any(PaygShadowCharge.class));
+        // Paid portion (1) metered to Stripe after commit, keyed by the standard process key.
+        verify(meterReporter)
+                .recordUsage(
+                        eq(teamId),
+                        eq("cus_x"),
+                        eq(1),
+                        eq(BillingCategory.AI),
+                        eq("process:" + jobId + ":close"),
+                        eq(jobId));
+    }
+
+    @Test
+    void chargeStandalone_freeTeamWithGrant_drawsGrantAndDoesNotMeter() {
+        long teamId = 100L;
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(teamId)).thenReturn(policy);
+
+        UUID jobId = UUID.randomUUID();
+        when(jobService.open(any(JobContext.class), eq(1))).thenReturn(openJob(jobId));
+        when(jobService.close(jobId)).thenReturn(openJob(jobId));
+
+        // Free grant available, no subscription → the unit is drawn from the grant, nothing meters.
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(teamId);
+        ext.setFreeUnitsRemaining(50L);
+        when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
+        when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
+                .thenReturn(Optional.of(chargedShadowRow(jobId, teamId, 1, 1, BillingCategory.AI)));
+
+        ChargeContext ctx =
+                new ChargeContext(
+                        7L, teamId, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.AI);
+
+        withTransactionSynchronization(() -> service.chargeStandalone(ctx, 1));
+
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(49L);
+        verify(meterReporter, never())
+                .recordUsage(any(), any(), Mockito.anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void chargeStandalone_bypassedCategory_throws() {
+        ChargeContext ctx =
+                new ChargeContext(
+                        7L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.BYPASSED);
+        assertThatThrownBy(() -> service.chargeStandalone(ctx, 1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     private static void withTransactionSynchronization(Runnable body) {
         TransactionSynchronizationManager.initSynchronization();
         try {

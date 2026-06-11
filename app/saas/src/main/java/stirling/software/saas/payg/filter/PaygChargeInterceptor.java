@@ -38,6 +38,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
 import stirling.software.saas.payg.charge.ChargeOutcome;
@@ -199,7 +200,10 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                             || AnnotationUtils.findAnnotation(
                                             hm.getBeanType(), RequiresFeature.class)
                                     != null;
-            if (!hasAutoJobPostMapping && !hasRequiresFeature) {
+            // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
+            // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
+            boolean aiToolRoute = AiToolRoutes.matches(request);
+            if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
                 callsShortCircuit.increment();
                 return true;
             }
@@ -514,11 +518,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     /**
      * Resolve the {@link BillingCategory} for this request. Precedence: {@code
      * X-Stirling-Automation: true} or {@code @RequiresFeature(AUTOMATION)} → AUTOMATION;
-     * {@code @RequiresFeature(AI_SUPPORT)} → AI; API-key auth → API; otherwise BYPASSED (manual UI
-     * tool — short-circuited in {@link #preHandle}).
+     * {@code @RequiresFeature(AI_SUPPORT)} → AI; an AI document-tool route ({@link AiToolRoutes}) →
+     * AI; API-key auth → API; otherwise BYPASSED (manual UI tool — short-circuited in {@link
+     * #preHandle}).
      *
      * <p>Method-level {@code @RequiresFeature} wins over class-level. Multiple gates: AUTOMATION
-     * dominates AI within a single annotation.
+     * dominates AI within a single annotation. The AI-tool path check sits below the automation
+     * header on purpose: an AI tool dispatched inside a policy / AI workflow bills as AUTOMATION,
+     * while a direct call to it bills as AI.
      */
     private static BillingCategory determineCategory(
             HandlerMethod handler, HttpServletRequest request, Authentication auth) {
@@ -544,6 +551,11 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             if (ai) {
                 return BillingCategory.AI;
             }
+        }
+        // AI document tools (proprietary module, recognised by path). A direct call bills as AI; an
+        // orchestrator-dispatched call already returned AUTOMATION above via the automation header.
+        if (AiToolRoutes.matches(request)) {
+            return BillingCategory.AI;
         }
         if (auth instanceof ApiKeyAuthenticationToken) {
             return BillingCategory.API;

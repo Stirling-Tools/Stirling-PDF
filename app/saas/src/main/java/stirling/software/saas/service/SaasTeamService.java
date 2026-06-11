@@ -303,6 +303,11 @@ public class SaasTeamService {
             throw new IllegalStateException("Team has no available seats");
         }
 
+        // Validate: accepting won't orphan a team the user leads or that has a paid plan.
+        // Accepting moves the user off their current team; leaveTeam already blocks the
+        // last leader of a team from walking away, so accept must enforce the same rule.
+        assertCanLeaveCurrentTeamsToJoinAnother(acceptingUser);
+
         // User can only be in one team . leave existing teams before joining new one
         List<TeamMembership> existingMemberships =
                 membershipRepository.findByUserId(acceptingUser.getId());
@@ -440,6 +445,46 @@ public class SaasTeamService {
                 remover.getId(),
                 memberUserId,
                 teamId);
+    }
+
+    /**
+     * Guard against silently orphaning a team when a user accepts an invite to another one.
+     *
+     * <p>{@link #acceptInvitation} moves a user to the inviting team by first leaving their current
+     * team(s). Personal teams are disposable (they get deleted on accept), but a non-personal team
+     * must not be left memberless while still billing. {@link #leaveTeam} already refuses to let
+     * the last leader walk away; accept took a shortcut around that check, which let a paid team's
+     * leader join another team and orphan their old team together with its live subscription.
+     *
+     * <p>So: for each non-personal team the user leads as its <em>last</em> leader, block the
+     * accept. The message points them at the right remedy — cancel the plan if the team is paid,
+     * otherwise transfer leadership first.
+     *
+     * @param user the user attempting to accept an invitation
+     * @throws IllegalStateException if accepting would orphan a team the user leads
+     */
+    private void assertCanLeaveCurrentTeamsToJoinAnother(User user) {
+        for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
+            Team team = membership.getTeam();
+            if (saasTeamExtensionService.isPersonal(team) || !membership.isLeader()) {
+                // Personal teams are deleted on accept; non-leaders leaving never orphans a team.
+                continue;
+            }
+            // Only reached for a non-personal team the user leads — at most one such team in the
+            // one-team-per-user model — so this count runs ~once, not per membership.
+            if (membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER) > 1) {
+                // Another leader remains, so the team keeps an owner.
+                continue;
+            }
+            if (hasActivePaidSubscription(team)) {
+                throw new IllegalStateException(
+                        "Your team has an active plan and you are its last leader. Cancel the plan"
+                                + " or transfer leadership before joining another team.");
+            }
+            throw new IllegalStateException(
+                    "You are the last leader of your team. Transfer leadership before joining"
+                            + " another team.");
+        }
     }
 
     /**

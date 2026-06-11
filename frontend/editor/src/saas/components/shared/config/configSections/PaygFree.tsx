@@ -23,7 +23,7 @@
  *   - {@link PaygFreeMember} — read-only; the CTA is replaced with an
  *     ask-the-owner note.
  */
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
@@ -40,55 +40,11 @@ import "./PaygFree.css";
 import UpgradeModal from "./UpgradeModal";
 // eslint-disable-next-line no-restricted-imports
 import { DocHelp } from "./Payg";
-
-// ─── Shared free-tier snapshot ────────────────────────────
-
-export interface FreeSnapshot {
-  /** One-time free documents used so far (grant − remaining). */
-  billableUsed: number;
-  /**
-   * The team's one-time free grant size in documents. Real value from the
-   * wallet endpoint (pricing_policy.free_tier_units); 500 below is only the
-   * pre-load placeholder for the first paint.
-   */
-  billableLimit: number;
-}
-
-/**
- * Read free-tier snapshot from the real {@link useWallet} hook. Falls back to
- * a zeroed view if the wallet hasn't loaded yet — this only happens briefly on
- * first paint; once the snapshot arrives the component re-renders with real
- * numbers. Earlier versions returned a mock "62 of 500" sentinel which leaked
- * into the rendered UI and made the page look like nothing was wired up.
- */
-export function useFreeSnapshot(): FreeSnapshot {
-  const { wallet } = useWallet();
-  return useMemo(() => {
-    if (wallet) {
-      return {
-        // Used = grant − remaining, derived straight from the one-time grant so
-        // the free view never depends on the per-state meaning of billableUsed.
-        billableUsed: Math.max(0, wallet.freeAllowance - wallet.freeRemaining),
-        // The free view's ceiling IS the one-time grant size.
-        billableLimit: wallet.freeAllowance,
-      };
-    }
-    return { billableUsed: 0, billableLimit: 500 };
-  }, [wallet]);
-}
-
-type MeterState = "FULL" | "WARNED" | "DEGRADED";
-
-/** Warn/degrade band for the one-time grant meter (mirrors the BE thresholds). */
-function meterState(
-  used: number,
-  limit: number,
-): { state: MeterState; pct: number } {
-  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
-  const state: MeterState =
-    pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
-  return { state, pct };
-}
+import {
+  FreeMeterPanel,
+  useFreeSnapshot,
+  type FreeSnapshot,
+} from "@app/components/shared/config/configSections/usageMeters";
 
 // ─── Editor plan card (always-free tools only) ────────────────────────────
 
@@ -132,58 +88,6 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
           "View, edit, merge, split, sign, watermark, compress, convert and manual OCR, as much as you want, no matter where you trigger it.",
         )}
       </p>
-    </div>
-  );
-}
-
-// ─── Compact one-time free meter (right column of the Processor card) ──────
-
-export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
-  const { t } = useTranslation();
-  const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
-  const stateLabel =
-    state === "DEGRADED"
-      ? t("payg.free.state.limitReached", "Limit reached")
-      : state === "WARNED"
-        ? t("payg.free.state.approachingLimit", "Approaching limit")
-        : t("payg.free.state.plentyLeft", "Plenty left");
-
-  return (
-    <div className="paygf-meter" data-state={state}>
-      <div className="paygf-meter__top">
-        <div className="paygf-meter__figure">
-          <span className="paygf-meter__num">
-            {snap.billableUsed.toLocaleString()}
-          </span>
-          <span className="paygf-meter__cap">
-            {t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
-              limit: snap.billableLimit.toLocaleString(),
-            })}
-          </span>
-        </div>
-        <span className="payg-status" data-state={state}>
-          <span className="payg-status__dot" />
-          {stateLabel}
-        </span>
-      </div>
-
-      <div className="payg-bar">
-        <div
-          className="payg-bar__fill"
-          data-state={state}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      <div className="paygf-meter__meta">
-        <span>
-          {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
-        </span>
-        <span className="payg-hero__meta-dot">•</span>
-        <span>
-          {t("payg.free.hero.neverResets", "One-time — never resets")}
-        </span>
-      </div>
     </div>
   );
 }
