@@ -5600,6 +5600,10 @@ subscribeToPro = "Subscribe to Pro"
 subscriptionScheduled = "Subscription scheduled - starts {{date}}"
 title = "Free Trial Active"
 
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
+
 [printFile]
 title = "Print File"
 

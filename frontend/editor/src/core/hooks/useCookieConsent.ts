@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { BASE_PATH } from "@app/constants/app";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { Z_INDEX_COOKIE_PREFERENCES_MODAL } from "@app/styles/zIndex";
+import {
+  Z_INDEX_COOKIE_CONSENT_BANNER,
+  Z_INDEX_COOKIE_PREFERENCES_MODAL,
+} from "@app/styles/zIndex";
 import { TOUR_STATE_EVENT, type TourStatePayload } from "@app/constants/events";
 import { getCookieConsentOverrides } from "@app/extensions/cookieConsentConfig";
 
@@ -47,7 +50,11 @@ export const useCookieConsent = ({
   useEffect(() => {
     if (!analyticsEnabled) return;
 
-    // Bridge the layering constant to the static cookie-consent stylesheets
+    // Bridge the layering constants to the static cookie-consent stylesheets
+    document.documentElement.style.setProperty(
+      "--z-index-cookie-consent",
+      String(Z_INDEX_COOKIE_CONSENT_BANNER),
+    );
     document.documentElement.style.setProperty(
       "--z-index-cookie-preferences",
       String(Z_INDEX_COOKIE_PREFERENCES_MODAL),

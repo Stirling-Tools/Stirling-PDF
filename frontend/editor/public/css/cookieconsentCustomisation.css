@@ -178,9 +178,10 @@
   color: var(--cc-primary-color) !important;
 }
 
-/* Lower z-index so cookie banner appears behind onboarding modals */
+/* Banner sits above the chat FAB but behind all modals and onboarding; value
+   is Z_INDEX_COOKIE_CONSENT_BANNER, set as this variable by useCookieConsent */
 #cc-main {
-  z-index: 100 !important;
+  z-index: var(--z-index-cookie-consent) !important;
 }
 
 /* Preferences dialog sits above the settings modal it opens from; value is
