@@ -245,7 +245,9 @@ public class McpSecurityConfig {
                 JwtValidators.createDefaultWithIssuer(auth.getIssuerUri());
         OAuth2TokenValidator<Jwt> combined =
                 new DelegatingOAuth2TokenValidator<>(
-                        defaultValidators, new McpAudienceValidator(auth.getResourceId()));
+                        defaultValidators,
+                        new McpAudienceValidator(
+                                auth.getResourceId(), auth.getAcceptedAudiences()));
         decoder.setJwtValidator(combined);
         return decoder;
     }
