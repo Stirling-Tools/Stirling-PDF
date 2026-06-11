@@ -2761,7 +2761,6 @@ copy = "Copy"
 done = "Done"
 error = "Error"
 expand = "Expand"
-learnMore = "Learn more"
 loading = "Loading..."
 next = "Next"
 operation = "this operation"
@@ -7503,28 +7502,6 @@ removeError = "Failed to remove member"
 renameError = "Failed to rename team"
 renameSuccess = "Team renamed successfully"
 
-[team.features]
-badge = "Team Features"
-subtitle = "Collaborate with your team"
-title = "Team Collaboration"
-viewPlans = "View Plans"
-
-[team.features.billing]
-description = "Manage billing and subscriptions"
-title = "Billing Management"
-
-[team.features.credits]
-description = "Shared credit pool for all members"
-title = "Shared Credits"
-
-[team.features.dashboard]
-description = "View team activity and usage"
-title = "Team Dashboard"
-
-[team.features.invite]
-description = "Add members to your team"
-title = "Invite Members"
-
 [team.invitationBanner]
 acceptButton = "Accept"
 message = "has invited you to join"
@@ -7545,11 +7522,6 @@ pending = "Pending"
 remove = "Remove"
 roleColumn = "Role"
 title = "Team Members"
-
-[team.upgrade]
-button = "Upgrade to Team"
-description = "Unlock team collaboration features"
-title = "Upgrade to Team Plan"
 
 [textAlign]
 center = "Center"
