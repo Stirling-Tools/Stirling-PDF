@@ -59,6 +59,24 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd);
 
+    /**
+     * Net signed period balance over billable entries (DEBIT negative + REFUND positive). Negate
+     * for positive spend. Unlike {@link #sumPeriodAmount} (DEBIT only) this nets refunds, so a
+     * refunded job no longer reads as spent — the headline period-spend figure for the subscribed
+     * monthly bill + cap.
+     */
+    @Query(
+            "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e"
+                    + " WHERE e.teamId = :teamId"
+                    + " AND e.entryType IN (stirling.software.saas.payg.model.LedgerEntryType.DEBIT,"
+                    + " stirling.software.saas.payg.model.LedgerEntryType.REFUND)"
+                    + " AND e.occurredAt >= :periodStart"
+                    + " AND e.occurredAt < :periodEnd")
+    long sumPeriodNetBillable(
+            @Param("teamId") Long teamId,
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd);
+
     /** Per-member period spend (only when the member has a sub-cap configured). */
     @Query(
             "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e"

@@ -47,6 +47,7 @@ import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
 import stirling.software.saas.payg.model.LedgerEntryType;
+import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
@@ -68,6 +69,7 @@ class PaygWalletControllerTest {
     @Mock private PaygTeamExtensionsRepository extRepo;
     @Mock private WalletPolicyRepository policyRepo;
     @Mock private WalletLedgerRepository ledgerRepo;
+    @Mock private PaygShadowChargeRepository shadowRepo;
     @Mock private UserRepository userRepository;
 
     private PaygWalletController controller;
@@ -82,27 +84,36 @@ class PaygWalletControllerTest {
                         extRepo,
                         policyRepo,
                         ledgerRepo,
+                        shadowRepo,
                         userRepository);
     }
 
-    /** Free-team billing context: cap == free allowance, no subscription facts. */
-    private static TeamBillingContext freeBilling(long teamFreeAllowance) {
+    /**
+     * Free-team billing context: the one-time grant is fully unused (remaining == grant), no
+     * subscription facts, no monthly cap. The displayed limit comes from the snapshot, not here.
+     */
+    private static TeamBillingContext freeBilling(long teamFreeGrant) {
         LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         return new TeamBillingContext(
                 false,
                 null,
                 start,
                 start.plusMonths(1),
-                teamFreeAllowance,
+                teamFreeGrant,
+                teamFreeGrant,
                 null,
                 null,
                 null,
-                teamFreeAllowance);
+                null);
     }
 
-    /** Subscribed billing context with a money cap (minor units) and a known per-doc rate. */
+    /**
+     * Subscribed billing context with a money cap (minor units) and a known per-doc rate. The grant
+     * is treated as exhausted (remaining 0) — typical for a team that has subscribed; {@code
+     * monthlyCapDocUnits} is the paid-doc ceiling {@code floor(capMoney / rate)}.
+     */
     private static TeamBillingContext subscribedBilling(
-            String subscriptionId, Long capMoneyMinor, Long docCap) {
+            String subscriptionId, Long capMoneyMinor, Long monthlyCapDocUnits) {
         LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         return new TeamBillingContext(
                 true,
@@ -110,10 +121,11 @@ class PaygWalletControllerTest {
                 start,
                 start.plusMonths(1),
                 500L,
+                0L,
                 BigDecimal.valueOf(2),
                 "usd",
                 capMoneyMinor,
-                docCap);
+                monthlyCapDocUnits);
     }
 
     private void stubEmptyLedgerReads(long teamId) {
@@ -169,11 +181,14 @@ class PaygWalletControllerTest {
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
         when(memberRepo.findPrimaryMembership(8L))
                 .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
-        // $25 cap (2500 minor) at $0.02/doc → 500 free + 1250 paid = 1750 docs.
+        // $25 cap (2500 minor) at $0.02/doc → 1250 paid docs/month (the one-time grant is a
+        // separate pool, not added to the cap).
         when(billingService.forTeam(99L))
-                .thenReturn(subscribedBilling("sub_test_99", 2500L, 1750L));
-        when(billingService.estimateBillMinor(any(), eq(312L))).thenReturn(Optional.of(0L));
-        when(entitlementService.getSnapshot(99L)).thenReturn(snapshot(312L, 1750L));
+                .thenReturn(subscribedBilling("sub_test_99", 2500L, 1250L));
+        // 312 paid (metered) docs this period → estimate 312 × $0.02 = $6.24 (624 minor).
+        when(shadowRepo.sumPaidUnits(eq(99L), any(), any())).thenReturn(312L);
+        when(billingService.estimateBillMinor(any(), eq(312L))).thenReturn(Optional.of(624L));
+        when(entitlementService.getSnapshot(99L)).thenReturn(snapshot(312L, 1250L));
         when(ledgerRepo.sumPeriodAmountByCategory(eq(99L), eq(LedgerEntryType.DEBIT), any(), any()))
                 .thenReturn(
                         List.of(
@@ -192,11 +207,11 @@ class PaygWalletControllerTest {
         assertThat(body.noCap()).isFalse();
         assertThat(body.billableUsed()).isEqualTo(312);
         assertThat(body.spendUnitsThisPeriod()).isEqualTo(312);
-        assertThat(body.billableLimit()).isEqualTo(1750);
+        assertThat(body.billableLimit()).isEqualTo(1250);
         assertThat(body.freeAllowance()).isEqualTo(500);
         assertThat(body.pricePerDocMinor()).isEqualByComparingTo(BigDecimal.valueOf(2));
         assertThat(body.currency()).isEqualTo("usd");
-        assertThat(body.estimatedBillMinor()).isZero();
+        assertThat(body.estimatedBillMinor()).isEqualTo(624L);
         assertThat(body.members()).isEmpty();
         assertThat(body.categoryBreakdown().api()).isEqualTo(110);
         assertThat(body.categoryBreakdown().ai()).isEqualTo(200);
@@ -336,8 +351,8 @@ class PaygWalletControllerTest {
         when(policyRepo.findByTeamId(36L)).thenReturn(Optional.empty());
         TeamBillingContext billing = subscribedBilling("sub_36", null, null);
         when(billingService.forTeam(36L)).thenReturn(billing);
-        // $28 cap at $0.02/doc → 500 free + 1400 paid = 1900 documents.
-        when(billingService.docCapForMoney(billing, 2800L)).thenReturn(Optional.of(1900L));
+        // $28 cap at $0.02/doc → 1400 paid documents/month (the grant is a separate pool).
+        when(billingService.docCapForMoney(billing, 2800L)).thenReturn(Optional.of(1400L));
 
         ResponseEntity<Void> resp =
                 controller.updateCap(
@@ -347,7 +362,7 @@ class PaygWalletControllerTest {
         ArgumentCaptor<WalletPolicy> saved = ArgumentCaptor.forClass(WalletPolicy.class);
         verify(policyRepo).save(saved.capture());
         assertThat(saved.getValue().getCapSourceMoney()).isEqualTo(2800L);
-        assertThat(saved.getValue().getCapUnits()).isEqualTo(1900L);
+        assertThat(saved.getValue().getCapUnits()).isEqualTo(1400L);
         verify(entitlementService).invalidate(36L);
     }
 

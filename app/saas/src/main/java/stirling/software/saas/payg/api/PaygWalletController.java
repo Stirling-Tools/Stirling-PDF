@@ -45,6 +45,7 @@ import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
+import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
@@ -89,7 +90,7 @@ public class PaygWalletController {
     /**
      * Placeholder ceiling for the team-less empty snapshot only (authenticated caller without a
      * membership — shouldn't happen post-migration). Teams always get the live {@code
-     * pricing_policy.free_tier_units_per_cycle} via {@link TeamBillingService}.
+     * pricing_policy.free_tier_units} grant via {@link TeamBillingService}.
      */
     private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 500;
 
@@ -101,6 +102,7 @@ public class PaygWalletController {
     private final PaygTeamExtensionsRepository extRepo;
     private final WalletPolicyRepository policyRepo;
     private final WalletLedgerRepository ledgerRepo;
+    private final PaygShadowChargeRepository shadowRepo;
     private final UserRepository userRepository;
 
     public PaygWalletController(
@@ -110,6 +112,7 @@ public class PaygWalletController {
             PaygTeamExtensionsRepository extRepo,
             WalletPolicyRepository policyRepo,
             WalletLedgerRepository ledgerRepo,
+            PaygShadowChargeRepository shadowRepo,
             UserRepository userRepository) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
@@ -117,6 +120,7 @@ public class PaygWalletController {
         this.extRepo = Objects.requireNonNull(extRepo, "extRepo");
         this.policyRepo = Objects.requireNonNull(policyRepo, "policyRepo");
         this.ledgerRepo = Objects.requireNonNull(ledgerRepo, "ledgerRepo");
+        this.shadowRepo = Objects.requireNonNull(shadowRepo, "shadowRepo");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
     }
 
@@ -162,13 +166,19 @@ public class PaygWalletController {
                         ? Math.toIntExact(billing.capMoneyMinor() / 100)
                         : null;
 
+        // Per-state by construction (see EntitlementService.computeSnapshot): free team → spend is
+        // lifetime free used, cap is the grant size; subscribed → spend is this month's net
+        // billable
+        // docs, cap is the monthly paid-doc ceiling (null = uncapped).
         int spend = clampToInt(snap.periodSpendUnits());
-        Integer limit = billing.docCapUnits() != null ? clampToInt(billing.docCapUnits()) : null;
+        Integer limit = snap.periodCapUnits() != null ? clampToInt(snap.periodCapUnits()) : null;
 
         CategoryBreakdown breakdown = buildBreakdown(teamId, snap.periodStart(), snap.periodEnd());
 
-        Long estimatedBill =
-                billingService.estimateBillMinor(billing, snap.periodSpendUnits()).orElse(null);
+        // Estimated bill = paid (Stripe-metered) docs this period × rate — the free portion was
+        // already netted out at charge time, so this is the metered total, not spend − grant.
+        long periodPaid = shadowRepo.sumPaidUnits(teamId, snap.periodStart(), snap.periodEnd());
+        Long estimatedBill = billingService.estimateBillMinor(billing, periodPaid).orElse(null);
 
         List<MemberRow> members =
                 isLeader
@@ -184,7 +194,8 @@ public class PaygWalletController {
                         ISO_DATE.format(snap.periodEnd().toLocalDate()),
                         spend,
                         limit,
-                        clampToInt(billing.freeAllowanceUnits()),
+                        clampToInt(billing.freeGrantUnits()),
+                        clampToInt(billing.freeRemainingUnits()),
                         billing.perDocMinor(),
                         billing.currency(),
                         estimatedBill,
@@ -487,6 +498,7 @@ public class PaygWalletController {
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),
                 0,
+                FREE_TIER_LIMIT_UNITS_FALLBACK,
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
                 null,

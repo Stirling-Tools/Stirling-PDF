@@ -1,12 +1,16 @@
 package stirling.software.saas.payg.stripe;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataAccessException;
@@ -22,9 +26,9 @@ import lombok.extern.slf4j.Slf4j;
  * {@code stirling_pdf} (design §10: money lives in Stripe).
  *
  * <p>PAYG prices are plain {@code per_unit} metered prices, so {@code stripe.prices.unit_amount}
- * carries the rate directly. The free allowance is deliberately NOT in Stripe — it's {@code
- * pricing_policy.free_tier_units_per_cycle}, applied app-side (free units are never metered),
- * because un-subscribed teams get the same allowance and have no Stripe Price at all.
+ * carries the rate directly. The free grant is deliberately NOT in Stripe — it's the one-time
+ * {@code pricing_policy.free_tier_units} pool, applied app-side (free units are never metered),
+ * because un-subscribed teams get the same grant and have no Stripe Price at all.
  *
  * <p>Defensive by construction: the {@code stripe} schema only exists where the sync engine has run
  * (dev + prod Supabase, not unit-test H2). Any {@link DataAccessException} — missing schema,
@@ -56,6 +60,18 @@ public class StripeSubscriptionDao {
             String status,
             String currency,
             BigDecimal perDocMinor) {}
+
+    /**
+     * The per-document rate of a Price looked up directly (not via a subscription) — used to price
+     * the cap estimate for un-subscribed teams, whose default policy points at Stripe Prices that
+     * carry the same {@code unit_amount} they'd be billed at on subscribing.
+     *
+     * @param priceId the resolved Stripe Price id
+     * @param currency lower-case ISO 4217 of that Price
+     * @param perDocMinor per-document rate in minor units (may be fractional); never null — a row
+     *     with no usable amount is filtered out rather than returned with a null rate
+     */
+    public record PriceRate(String priceId, String currency, BigDecimal perDocMinor) {}
 
     private static final String QUERY =
             "SELECT s.current_period_start, s.current_period_end, s.status::text AS status,"
@@ -93,33 +109,13 @@ public class StripeSubscriptionDao {
                                 if (startNull || endNull) {
                                     return null;
                                 }
-                                // Prefer the decimal column (sub-minor-unit precision, e.g.
-                                // half-cent per-document rates); fall back to the integer one.
-                                BigDecimal rate = null;
-                                String decimal = rs.getString("unit_amount_decimal");
-                                if (decimal != null && !decimal.isBlank()) {
-                                    try {
-                                        rate = new BigDecimal(decimal);
-                                    } catch (NumberFormatException ignore) {
-                                        rate = null;
-                                    }
-                                }
-                                if (rate == null) {
-                                    long unitAmount = rs.getLong("unit_amount");
-                                    if (!rs.wasNull()) {
-                                        rate = BigDecimal.valueOf(unitAmount);
-                                    }
-                                }
-                                if (rate != null && rate.signum() <= 0) {
-                                    rate = null;
-                                }
                                 return new SubscriptionBilling(
                                         toLocal(startEpoch),
                                         toLocal(endEpoch),
                                         rs.getString("price_id"),
                                         rs.getString("status"),
                                         rs.getString("currency"),
-                                        rate);
+                                        extractRate(rs));
                             },
                             subscriptionId);
             return rows.stream().filter(Objects::nonNull).findFirst();
@@ -132,6 +128,90 @@ public class StripeSubscriptionDao {
                     e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /**
+     * Per-document rate of whichever of {@code priceIds} bills in {@code currency} — the elegant
+     * mirror of {@link #findBilling}, reading the same synced {@code stripe.prices} table by id
+     * instead of via a subscription. The PAYG layer uses this to price the cap estimate for an
+     * un-subscribed team: its default {@code pricing_policy} carries one Stripe Price id per
+     * currency, and we pick the one matching the requested (USD, in-app) currency.
+     *
+     * <p>Empty when {@code priceIds} is empty, the {@code stripe} schema is absent (H2 unit tests),
+     * no matching row exists, or the row carries no usable per-unit amount (e.g. a tiered price,
+     * which PAYG doesn't use). Callers degrade to "no estimate" exactly as the subscribed path
+     * degrades to a calendar-month window.
+     */
+    public Optional<PriceRate> findRateForCurrency(Collection<String> priceIds, String currency) {
+        if (priceIds == null || priceIds.isEmpty() || currency == null || currency.isBlank()) {
+            return Optional.empty();
+        }
+        String placeholders = priceIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql =
+                "SELECT p.id AS price_id, p.currency AS currency,"
+                        + " p.unit_amount AS unit_amount,"
+                        + " p.unit_amount_decimal AS unit_amount_decimal"
+                        + " FROM stripe.prices p"
+                        + " WHERE p.currency = ? AND p.id IN ("
+                        + placeholders
+                        + ") LIMIT 1";
+        Object[] args = new Object[priceIds.size() + 1];
+        args[0] = currency.toLowerCase();
+        int idx = 1;
+        for (String id : priceIds) {
+            args[idx++] = id;
+        }
+        try {
+            List<PriceRate> rows =
+                    jdbcTemplate.query(
+                            sql,
+                            (rs, i) -> {
+                                BigDecimal rate = extractRate(rs);
+                                if (rate == null) {
+                                    return null;
+                                }
+                                return new PriceRate(
+                                        rs.getString("price_id"), rs.getString("currency"), rate);
+                            },
+                            args);
+            return rows.stream().filter(Objects::nonNull).findFirst();
+        } catch (DataAccessException e) {
+            log.warn(
+                    "stripe.prices rate lookup failed for currency {} over {} price id(s): {}",
+                    currency,
+                    priceIds.size(),
+                    e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Reads the per-document rate off a {@code stripe.prices} row. Prefers {@code
+     * unit_amount_decimal} (sub-minor-unit precision, e.g. half-cent rates), falls back to the
+     * integer {@code unit_amount}, and returns null when neither is usable or the amount is ≤ 0
+     * (tiered/zero prices PAYG doesn't bill on). Both queries alias the columns identically so this
+     * is shared verbatim.
+     */
+    private static BigDecimal extractRate(ResultSet rs) throws SQLException {
+        BigDecimal rate = null;
+        String decimal = rs.getString("unit_amount_decimal");
+        if (decimal != null && !decimal.isBlank()) {
+            try {
+                rate = new BigDecimal(decimal);
+            } catch (NumberFormatException ignore) {
+                rate = null;
+            }
+        }
+        if (rate == null) {
+            long unitAmount = rs.getLong("unit_amount");
+            if (!rs.wasNull()) {
+                rate = BigDecimal.valueOf(unitAmount);
+            }
+        }
+        if (rate != null && rate.signum() <= 0) {
+            rate = null;
+        }
+        return rate;
     }
 
     private static LocalDateTime toLocal(long epochSeconds) {

@@ -17,8 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.saas.payg.billing.TeamBillingContext;
-import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -71,7 +69,6 @@ public class JobChargeService {
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
     private final PaygMeterReportingService meterReportingService;
     private final WalletLedgerRepository ledgerRepository;
-    private final TeamBillingService teamBillingService;
 
     public JobChargeService(
             JobService jobService,
@@ -81,8 +78,7 @@ public class JobChargeService {
             ProcessingJobRepository jobRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
             PaygMeterReportingService meterReportingService,
-            WalletLedgerRepository ledgerRepository,
-            TeamBillingService teamBillingService) {
+            WalletLedgerRepository ledgerRepository) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -93,7 +89,6 @@ public class JobChargeService {
         this.meterReportingService =
                 Objects.requireNonNull(meterReportingService, "meterReportingService");
         this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
-        this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
     }
 
     /**
@@ -131,10 +126,40 @@ public class JobChargeService {
         int units = computeUnits(inputs, policy);
         result.job().setDocUnits(units);
 
-        recordShadowRow(ctx, result.job().getId(), policy.getId(), units);
+        int freeUsed = consumeFreeGrant(ctx, units);
+        recordShadowRow(ctx, result.job().getId(), policy.getId(), units, freeUsed);
         recordLedgerDebit(ctx, result.job().getId(), policy.getId(), units);
 
         return new ChargeOutcome(result.job().getId(), units, ChargeOutcome.Disposition.OPENED);
+    }
+
+    /**
+     * Draw this job's free portion from the team's one-time lifetime grant, atomically, and return
+     * the units taken (0..{@code units}); the remainder is the paid portion that will be metered to
+     * Stripe. Runs inside {@code openProcess}'s transaction with a pessimistic row lock so
+     * concurrent same-team charges split the grant exactly — no two jobs can both claim the last
+     * free unit. The grant is a soft floor: it never goes below 0, and the single job that crosses
+     * the boundary takes whatever's left (its remaining units bill). Skipped for non-billable /
+     * team-less calls (BYPASSED never reaches openProcess; guarded defensively).
+     */
+    private int consumeFreeGrant(ChargeContext ctx, int units) {
+        BillingCategory category = ctx.billingCategory();
+        if (category == null || category == BillingCategory.BYPASSED || ctx.ownerTeamId() == null) {
+            return 0;
+        }
+        Optional<PaygTeamExtensions> extOpt =
+                teamExtensionsRepository.findByIdForUpdate(ctx.ownerTeamId());
+        if (extOpt.isEmpty()) {
+            return 0;
+        }
+        PaygTeamExtensions ext = extOpt.get();
+        long remaining = ext.getFreeUnitsRemaining() == null ? 0L : ext.getFreeUnitsRemaining();
+        int freeUsed = (int) Math.min(units, Math.max(0L, remaining));
+        if (freeUsed > 0) {
+            ext.setFreeUnitsRemaining(remaining - freeUsed);
+            teamExtensionsRepository.save(ext);
+        }
+        return freeUsed;
     }
 
     /**
@@ -198,12 +223,19 @@ public class JobChargeService {
     }
 
     private void recordShadowRow(
-            ChargeContext ctx, java.util.UUID jobId, Long policyId, int units) {
+            ChargeContext ctx,
+            java.util.UUID jobId,
+            Long policyId,
+            int units,
+            int freeUnitsConsumed) {
         PaygShadowCharge row = new PaygShadowCharge();
         row.setTeamId(ctx.ownerTeamId());
         row.setJobId(jobId);
         row.setPolicyId(policyId);
         row.setPaygUnits(units);
+        // Free-vs-paid split fixed at charge time: paid (metered) = paygUnits - freeUnitsConsumed,
+        // and a refund restores freeUnitsConsumed to the team's grant.
+        row.setFreeUnitsConsumed(freeUnitsConsumed);
         // No legacy comparison yet — wired when the shadow path is connected to the legacy
         // CreditService in the follow-up PR. Until then, diff stays at 0.
         row.setLegacyCreditsCharged(0);
@@ -258,6 +290,14 @@ public class JobChargeService {
                     refund.setPolicyId(row.getPolicyId());
                     refund.setBillingCategory(category);
                     ledgerRepository.save(refund);
+                    // Hand back the free units this job consumed (first-step failures are
+                    // pre-meter, so nothing was billed to Stripe — only the grant moved). Exactly
+                    // what was taken at charge time, so the counter can't drift above the grant.
+                    int freeConsumed =
+                            row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
+                    if (freeConsumed > 0 && row.getTeamId() != null) {
+                        teamExtensionsRepository.restoreFreeUnits(row.getTeamId(), freeConsumed);
+                    }
                 }
             }
         }
@@ -378,28 +418,21 @@ public class JobChargeService {
             return;
         }
 
-        // The free allowance is app-side only — Stripe's Prices are plain per-unit with no free
-        // tier — so withhold the free portion here. Period spend already includes this job's
-        // DEBIT (written at openProcess, committed before this afterCommit hook runs).
-        TeamBillingContext billing = teamBillingService.forTeam(teamId);
-        long signedDebitSum =
-                ledgerRepository.sumPeriodAmount(
-                        teamId, LedgerEntryType.DEBIT, billing.periodStart(), billing.periodEnd());
-        long periodSpend = signedDebitSum < 0 ? -signedDebitSum : 0L;
-        int billableUnits = teamBillingService.billableUnitsForMeter(billing, periodSpend, units);
-        if (billableUnits <= 0) {
+        // Paid portion = units beyond the team's one-time free grant, fixed at charge time. The
+        // free grant is app-side only (Stripe's Prices are plain per-unit, no free tier), so the
+        // free units were already withheld when this row's free_units_consumed was set.
+        int freeConsumed = row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
+        int paidUnits = units - freeConsumed;
+        if (paidUnits <= 0) {
             log.debug(
-                    "close({}): {} units fall within the free allowance ({} of {}) → no meter"
-                            + " event",
+                    "close({}): all {} units came from the free grant → no meter event",
                     jobId,
-                    units,
-                    periodSpend,
-                    billing.freeAllowanceUnits());
+                    units);
             return;
         }
         String idempotencyKey = "process:" + jobId + ":close";
         meterReportingService.recordUsage(
-                teamId, stripeCustomerId, billableUnits, category, idempotencyKey);
+                teamId, stripeCustomerId, paidUnits, category, idempotencyKey);
     }
 
     /**

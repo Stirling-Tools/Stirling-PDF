@@ -21,32 +21,32 @@ import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.stripe.StripeSubscriptionDao;
+import stirling.software.saas.payg.stripe.StripeSubscriptionDao.PriceRate;
 import stirling.software.saas.payg.stripe.StripeSubscriptionDao.SubscriptionBilling;
 import stirling.software.saas.payg.wallet.WalletPolicy;
 
 /**
- * Single composition point for "what does billing look like for this team right now": billing
- * window, free allowance, per-document rate, money cap, and the document allowance the cap buys.
- * Both the entitlement hot path (cap enforcement) and the wallet endpoint (display) read from here
- * so the number the customer sees is the number the guard enforces.
+ * Single composition point for "what does billing look like for this team right now." Both the
+ * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
+ * the guard enforces.
  *
- * <p>Sources, in design terms (§10 "money lives in Stripe"):
+ * <p>Two independent meters (design 2026-06-11 — the free allowance is a one-time lifetime grant):
  *
  * <ul>
- *   <li><b>Billing window</b> — the Stripe subscription's {@code current_period_start/end} via Sync
- *       Engine when the team is subscribed; calendar month otherwise (free tier resets monthly).
- *   <li><b>Free allowance</b> — {@code pricing_policy.free_tier_units_per_cycle}. Stripe knows
- *       nothing about it: the allowance also covers un-subscribed teams (who have no Stripe Price
- *       at all), so it's enforced app-side — free units are simply never metered.
- *   <li><b>Per-document rate</b> — the subscription Price's {@code unit_amount} via the synced
- *       {@code stripe.prices} row (PAYG prices are plain per-unit metered prices).
- *   <li><b>Cap</b> — {@code wallet_policy.cap_source_money} (minor units). The document allowance
- *       is derived here: {@code freeAllowance + floor(capMoney / perDocRate)}.
+ *   <li><b>Free grant</b> — one-time, per team. Size from {@code pricing_policy.free_tier_units};
+ *       live balance from the {@code payg_team_extensions.free_units_remaining} counter (maintained
+ *       by the charge pipeline). Never resets, survives subscribing. Gates un-subscribed teams and
+ *       drives the free-vs-paid split.
+ *   <li><b>Monthly window + cap</b> — the Stripe subscription period (calendar month otherwise) and
+ *       the optional money cap. Govern the subscribed invoice + spending cap only. The per-document
+ *       rate is the synced {@code stripe.prices.unit_amount} (PAYG prices are plain per-unit).
  * </ul>
  *
- * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s — same TTL discipline as the entitlement
- * snapshot cache, which consumes this context. {@code EntitlementService.invalidate} cascades into
- * {@link #invalidate(Long)} so both caches drop together on cap edits and webhooks.
+ * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
+ * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
+ * Note the cached context's {@code freeRemainingUnits} is a 30s-stale read of the counter — the
+ * authoritative decrement happens in {@code JobChargeService} against the row directly; this cache
+ * is for display + the entitlement gate, where 30s staleness is the accepted cap-evaluation floor.
  */
 @Slf4j
 @Service
@@ -55,6 +55,12 @@ public class TeamBillingService {
 
     static final int CACHE_TTL_SECONDS = 30;
     private static final int CACHE_MAX_SIZE = 10_000;
+
+    /**
+     * In-app display/estimate currency. The app prices in dollars; Stripe handles real currency
+     * selection at checkout. Used to pick the right Price for un-subscribed teams.
+     */
+    private static final String DISPLAY_CURRENCY = "usd";
 
     private final PaygTeamExtensionsRepository extensionsRepository;
     private final WalletPolicyRepository walletPolicyRepository;
@@ -87,7 +93,7 @@ public class TeamBillingService {
         return cache.get(teamId, this::compute);
     }
 
-    /** Drop {@code teamId}'s entry after cap edits / subscription webhooks. */
+    /** Drop {@code teamId}'s entry after cap edits / subscription webhooks / grant consumption. */
     public void invalidate(Long teamId) {
         if (teamId != null) {
             cache.invalidate(teamId);
@@ -108,7 +114,11 @@ public class TeamBillingService {
                                 .filter(s -> !s.isBlank())
                                 .isPresent();
 
-        long freeAllowance = resolveFreeAllowance(teamId);
+        long freeGrant = resolveGrant(teamId);
+        long freeRemaining =
+                extOpt.map(PaygTeamExtensions::getFreeUnitsRemaining)
+                        .map(Long::longValue)
+                        .orElse(0L);
 
         Optional<SubscriptionBilling> billing =
                 subscriptionId != null
@@ -122,68 +132,94 @@ public class TeamBillingService {
         BigDecimal perDocMinor = billing.map(SubscriptionBilling::perDocMinor).orElse(null);
         String currency = billing.map(SubscriptionBilling::currency).orElse(null);
 
+        // Un-subscribed teams have no Stripe subscription to read a rate from, but the cap
+        // estimate (the upgrade flow's "≈ N paid PDFs/month") still needs one. Resolve it from
+        // the default policy's USD Price — Stripe hasn't assigned the team a currency yet, and
+        // the whole app prices in dollars. Display-only: resolveMonthlyCap stays gated on
+        // `subscribed`, so this never starts enforcing a cap on a free team.
+        if (!subscribed && perDocMinor == null) {
+            Optional<PriceRate> rate = resolveDefaultUsdRate(teamId);
+            if (rate.isPresent()) {
+                perDocMinor = rate.get().perDocMinor();
+                currency = rate.get().currency();
+            }
+        }
+
         Long capMoneyMinor = walletPolicyOpt.map(WalletPolicy::getCapSourceMoney).orElse(null);
         Long legacyCapUnits = walletPolicyOpt.map(WalletPolicy::getCapUnits).orElse(null);
 
-        Long docCap =
-                resolveDocCap(
-                        subscribed, freeAllowance, capMoneyMinor, legacyCapUnits, perDocMinor);
+        Long monthlyCapDocUnits =
+                resolveMonthlyCap(subscribed, capMoneyMinor, legacyCapUnits, perDocMinor);
 
         return new TeamBillingContext(
                 subscribed,
                 subscriptionId,
                 window[0],
                 window[1],
-                freeAllowance,
+                freeGrant,
+                freeRemaining,
                 perDocMinor,
                 currency,
                 capMoneyMinor,
-                docCap);
+                monthlyCapDocUnits);
     }
 
-    private long resolveFreeAllowance(Long teamId) {
+    /** The policy grant size — the "N" denominator for display; the counter is the live balance. */
+    private long resolveGrant(Long teamId) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
-            Long free = policy.getFreeTierUnitsPerCycle();
-            return free == null ? 0L : free;
+            Long grant = policy.getFreeTierUnits();
+            return grant == null ? 0L : grant;
         } catch (RuntimeException e) {
-            // No effective policy is a seed/config error, not a request error. Zero allowance is
-            // the conservative read (free team blocks at 402 rather than running up unbillable
-            // work).
             log.warn("No effective pricing policy for team {}: {}", teamId, e.getMessage());
             return 0L;
         }
     }
 
     /**
-     * The team's document ceiling for the current period; {@code null} = uncapped.
+     * Per-document rate for an un-subscribed team's cap estimate: the USD Price among the effective
+     * policy's {@code stripePriceIds}, read from the same synced {@code stripe.prices} table the
+     * subscribed path uses. Empty (estimate hidden) when no policy, no USD Price id, or the {@code
+     * stripe} schema is absent — never throws into the wallet hot path.
+     */
+    private Optional<PriceRate> resolveDefaultUsdRate(Long teamId) {
+        try {
+            PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
+            return subscriptionDao.findRateForCurrency(
+                    policy.getStripePriceIds(), DISPLAY_CURRENCY);
+        } catch (RuntimeException e) {
+            log.warn(
+                    "Could not resolve default USD per-doc rate for team {}: {}",
+                    teamId,
+                    e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * The subscribed monthly paid-document ceiling; {@code null} = uncapped or not subscribed. The
+     * one-time free grant is NOT added here — it's a separate lifetime pool consumed at charge
+     * time. The cap purely limits how many paid documents the team will fund per billing period.
      *
      * <ul>
-     *   <li>Free team → the free allowance is the ceiling.
-     *   <li>Subscribed, no money cap → uncapped.
-     *   <li>Subscribed, money cap + known rate → {@code free + floor(cap / rate)} (design §10's
-     *       money→units translation, computed live so a Price change shifts the allowance).
-     *   <li>Subscribed, money cap but rate unknown (price row unsynced / schema absent) → fall back
-     *       to the stored {@code cap_units} so the cap stays enforced rather than silently lifting;
-     *       WARN because that stored value may predate a price change.
+     *   <li>not subscribed → null (the free grant, not a money cap, is what bounds them);
+     *   <li>subscribed, no money cap → uncapped (null), unless an admin set raw {@code cap_units};
+     *   <li>subscribed, money cap + known rate → {@code floor(capMoney / perDocRate)};
+     *   <li>subscribed, money cap but rate unknown → stored {@code cap_units} fallback (WARN).
      * </ul>
      */
-    private Long resolveDocCap(
-            boolean subscribed,
-            long freeAllowance,
-            Long capMoneyMinor,
-            Long legacyCapUnits,
-            BigDecimal perDocMinor) {
+    private Long resolveMonthlyCap(
+            boolean subscribed, Long capMoneyMinor, Long legacyCapUnits, BigDecimal perDocMinor) {
         if (!subscribed) {
-            return freeAllowance;
+            return null;
         }
         if (capMoneyMinor == null) {
-            return legacyCapUnits; // admin-set unit caps (source money null) still apply
+            return legacyCapUnits; // admin-set unit cap (source money null) still applies
         }
-        if (perDocMinor != null) {
-            BigDecimal paidDocs =
-                    BigDecimal.valueOf(capMoneyMinor).divide(perDocMinor, 0, RoundingMode.FLOOR);
-            return freeAllowance + paidDocs.longValue();
+        if (perDocMinor != null && perDocMinor.signum() > 0) {
+            return BigDecimal.valueOf(capMoneyMinor)
+                    .divide(perDocMinor, 0, RoundingMode.FLOOR)
+                    .longValue();
         }
         log.warn(
                 "Per-document rate unavailable; enforcing stored cap_units fallback ({}).",
@@ -192,59 +228,42 @@ public class TeamBillingService {
     }
 
     /**
-     * Estimated period charges in minor units of {@link TeamBillingContext#currency()}: spend
-     * beyond the free allowance at the per-document rate. Informational — the Stripe invoice is
-     * authoritative. Empty when the rate is unknown (never substitute a made-up number).
+     * Estimated charges for the current period in minor units of {@link
+     * TeamBillingContext#currency()}: the paid (metered) documents this period at the per-document
+     * rate. Informational — the Stripe invoice is authoritative. Empty when the rate is unknown.
+     *
+     * @param paidUnitsThisPeriod metered documents this period ({@code payg_units −
+     *     free_units_consumed} summed over the period's charged jobs)
      */
-    public Optional<Long> estimateBillMinor(TeamBillingContext ctx, long spendUnits) {
+    public Optional<Long> estimateBillMinor(TeamBillingContext ctx, long paidUnitsThisPeriod) {
         if (ctx.perDocMinor() == null) {
             return Optional.empty();
         }
-        long billableDocs = Math.max(0, spendUnits - ctx.freeAllowanceUnits());
+        long paid = Math.max(0, paidUnitsThisPeriod);
         BigDecimal bill =
                 ctx.perDocMinor()
-                        .multiply(BigDecimal.valueOf(billableDocs))
+                        .multiply(BigDecimal.valueOf(paid))
                         .setScale(0, RoundingMode.HALF_UP);
         return Optional.of(bill.longValue());
     }
 
     /**
-     * How many of a just-closed job's units are beyond the free allowance and therefore get metered
-     * to Stripe. Stripe has no notion of our free tier (the Prices are plain per-unit), so
-     * withholding happens here: with period spend {@code S} (ledger DEBITs, including this job's
-     * {@code U} units) and allowance {@code F}, the billable portion is {@code clamp(S − F, 0, U)}.
-     *
-     * <p>Example: F=500, spend-before=490, U=20 → S=510 → meter 10 (10 free, 10 paid).
-     *
-     * <p>Concurrent closes can each see the other's units in {@code S}; the worst case
-     * double-counts a boundary-straddling job by at most its own size, and the meter-event
-     * reconciliation job is the corrective backstop. Single-instance dev/prod-today never hits
-     * this.
-     */
-    public int billableUnitsForMeter(
-            TeamBillingContext ctx, long periodSpendIncludingJob, int jobUnits) {
-        long beyondFree = periodSpendIncludingJob - ctx.freeAllowanceUnits();
-        if (beyondFree <= 0) {
-            return 0;
-        }
-        return (int) Math.min(jobUnits, beyondFree);
-    }
-
-    /**
-     * Documents a hypothetical money cap would buy (for the cap editor's live preview and the PATCH
-     * /cap derived write): {@code free + floor(capMinor / rate)}. Empty when the rate is unknown.
+     * Documents a hypothetical monthly money cap would buy: {@code floor(capMinor / rate)}. Used by
+     * the cap editor's live preview and the {@code PATCH /cap} derived write. The free grant is NOT
+     * added — it's a separate one-time pool. Empty when the rate is unknown.
      */
     public Optional<Long> docCapForMoney(TeamBillingContext ctx, long capMinor) {
-        if (ctx.perDocMinor() == null) {
+        if (ctx.perDocMinor() == null || ctx.perDocMinor().signum() <= 0) {
             return Optional.empty();
         }
-        BigDecimal paidDocs =
-                BigDecimal.valueOf(capMinor).divide(ctx.perDocMinor(), 0, RoundingMode.FLOOR);
-        return Optional.of(ctx.freeAllowanceUnits() + paidDocs.longValue());
+        return Optional.of(
+                BigDecimal.valueOf(capMinor)
+                        .divide(ctx.perDocMinor(), 0, RoundingMode.FLOOR)
+                        .longValue());
     }
 
     /**
-     * Inclusive-start / exclusive-end window for the calendar month — the free-tier reset cycle
+     * Inclusive-start / exclusive-end window for the calendar month — the monthly billing window
      * used when there's no Stripe subscription period to anchor on.
      */
     static LocalDateTime[] calendarMonthWindow() {

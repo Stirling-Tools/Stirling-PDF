@@ -31,8 +31,6 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.saas.payg.billing.TeamBillingContext;
-import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -72,7 +70,6 @@ class JobChargeServiceTest {
     private PaygTeamExtensionsRepository teamExtRepo;
     private PaygMeterReportingService meterReporter;
     private WalletLedgerRepository ledgerRepo;
-    private TeamBillingService billingService;
     private JobChargeService service;
 
     @BeforeEach
@@ -85,12 +82,9 @@ class JobChargeServiceTest {
         teamExtRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
         meterReporter = Mockito.mock(PaygMeterReportingService.class);
         ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
-        billingService = Mockito.mock(TeamBillingService.class);
-        // Default: no free allowance, so existing meter expectations stay 1:1 with row units.
-        // The free-allowance clamp tests override this per-test.
-        when(billingService.forTeam(any())).thenReturn(billingContext(0L));
-        when(billingService.billableUnitsForMeter(any(), Mockito.anyLong(), Mockito.anyInt()))
-                .thenCallRealMethod();
+        // findByIdForUpdate defaults to Optional.empty() (Mockito) → no free grant consumed unless
+        // a test stubs the sidecar row. The free split is decided at openProcess time now, not at
+        // close, so the meter tests just set free_units_consumed on the shadow row directly.
         service =
                 new JobChargeService(
                         jobService,
@@ -100,22 +94,7 @@ class JobChargeServiceTest {
                         jobRepo,
                         teamExtRepo,
                         meterReporter,
-                        ledgerRepo,
-                        billingService);
-    }
-
-    /** Subscribed-shaped billing context with the given free allowance and a fixed window. */
-    private static TeamBillingContext billingContext(long freeAllowance) {
-        return new TeamBillingContext(
-                true,
-                "sub_test",
-                LocalDateTime.of(2026, 6, 1, 0, 0),
-                LocalDateTime.of(2026, 7, 1, 0, 0),
-                freeAllowance,
-                java.math.BigDecimal.valueOf(2),
-                "usd",
-                null,
-                null);
+                        ledgerRepo);
     }
 
     @AfterEach
@@ -329,6 +308,96 @@ class JobChargeServiceTest {
     }
 
     @Test
+    void openProcess_drawsFreeGrant_storesSplitAndDecrementsCounter(@TempDir Path tmp)
+            throws IOException {
+        // Team has 10 free units left; a 4-unit job draws all 4 from the grant. The shadow row
+        // records free_units_consumed = 4 (so nothing meters) and the counter drops to 6.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(10L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getPaygUnits()).isEqualTo(4);
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(4);
+        // Counter decremented in-place and persisted.
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(6L);
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void openProcess_grantStraddle_drawsRemainderFreeAndBillsTheRest(@TempDir Path tmp)
+            throws IOException {
+        // Only 3 free units left; a 10-unit job takes the 3 (counter → 0) and the other 7 bill.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 10));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(3L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getPaygUnits()).isEqualTo(10);
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(3);
+        assertThat(ext.getFreeUnitsRemaining()).isZero();
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void openProcess_exhaustedGrant_storesZeroFreeAndLeavesCounterUntouched(@TempDir Path tmp)
+            throws IOException {
+        // Grant already at 0 → nothing free, full units bill, counter not re-saved.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 5));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isZero();
+        verify(teamExtRepo, never()).save(any());
+    }
+
+    @Test
     void openProcess_resolvesStepLimitFromPolicy_perJobSource(@TempDir Path tmp)
             throws IOException {
         // Different limits per source: WEB=10, PIPELINE=20. Verify the right one is passed.
@@ -433,6 +502,22 @@ class JobChargeServiceTest {
         assertThat(refund.getReferenceId()).isEqualTo(jobId.toString());
         assertThat(refund.getPolicyId()).isEqualTo(7L);
         assertThat(refund.getBillingCategory()).isEqualTo(BillingCategory.API);
+        // This row consumed no free units, so the grant counter is left alone.
+        verify(teamExtRepo, never()).restoreFreeUnits(eq(100L), Mockito.anyLong());
+    }
+
+    @Test
+    void markFirstStepFailed_withFreeConsumed_restoresGrantToCounter() {
+        // A first-step failure is pre-meter: nothing billed to Stripe, but the grant moved at
+        // charge time. The refund must hand exactly those free units back to the team's counter.
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+        when(jobRepo.findById(jobId)).thenReturn(Optional.of(openJob(jobId)));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        verify(teamExtRepo).restoreFreeUnits(100L, 3L);
     }
 
     @Test
@@ -530,11 +615,7 @@ class JobChargeServiceTest {
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
-        // Period spend including this job's 4 units; allowance 0 → all 4 meter.
-        when(ledgerRepo.sumPeriodAmount(
-                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
-                        any(), any()))
-                .thenReturn(-4L);
+        // Row consumed no free units (free_units_consumed = 0) → all 4 are paid and meter.
 
         withTransactionSynchronization(
                 () -> {
@@ -553,25 +634,21 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void close_spendWithinFreeAllowance_doesNotPostMeterEvent() {
-        // Stripe has no free tier on the Price — the allowance is withheld here. 4 units spent,
-        // 500 free → nothing to meter; the ledger DEBIT alone records the usage.
+    void close_fullyFreeJob_doesNotPostMeterEvent() {
+        // The free-vs-paid split is fixed at charge time. A job whose 4 units all came from the
+        // one-time grant (free_units_consumed = 4) has nothing left to meter; the ledger DEBIT
+        // alone records the usage.
         UUID jobId = UUID.randomUUID();
         ProcessingJob job = openJob(jobId);
         when(jobService.close(jobId)).thenReturn(job);
 
-        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, 4, BillingCategory.API);
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
 
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
-        when(billingService.forTeam(100L)).thenReturn(billingContext(500L));
-        when(ledgerRepo.sumPeriodAmount(
-                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
-                        any(), any()))
-                .thenReturn(-4L);
 
         withTransactionSynchronization(() -> service.close(jobId));
 
@@ -579,24 +656,20 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void close_spendStraddlingFreeAllowance_metersOnlyThePaidPortion() {
-        // Allowance 500, period spend 510 including this 20-unit job → 10 free, 10 metered.
+    void close_partiallyFreeJob_metersOnlyThePaidPortion() {
+        // 20-unit job that drew 10 from the remaining grant at charge time (free_units_consumed =
+        // 10) → 10 paid units meter to Stripe.
         UUID jobId = UUID.randomUUID();
         ProcessingJob job = openJob(jobId);
         when(jobService.close(jobId)).thenReturn(job);
 
-        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 20, BillingCategory.AUTOMATION);
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 20, 10, BillingCategory.AUTOMATION);
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
 
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
-        when(billingService.forTeam(100L)).thenReturn(billingContext(500L));
-        when(ledgerRepo.sumPeriodAmount(
-                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
-                        any(), any()))
-                .thenReturn(-510L);
 
         withTransactionSynchronization(() -> service.close(jobId));
 
@@ -707,10 +780,6 @@ class JobChargeServiceTest {
         ext.setTeamId(100L);
         ext.setStripeCustomerId("cus_subscribed");
         when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
-        when(ledgerRepo.sumPeriodAmount(
-                        eq(100L), eq(stirling.software.saas.payg.model.LedgerEntryType.DEBIT),
-                        any(), any()))
-                .thenReturn(-4L);
 
         Mockito.doThrow(new RuntimeException("simulated meter failure"))
                 .when(meterReporter)
@@ -764,10 +833,16 @@ class JobChargeServiceTest {
 
     private static PaygShadowCharge chargedShadowRow(
             UUID jobId, Long teamId, int units, BillingCategory category) {
+        return chargedShadowRow(jobId, teamId, units, 0, category);
+    }
+
+    private static PaygShadowCharge chargedShadowRow(
+            UUID jobId, Long teamId, int units, int freeUnitsConsumed, BillingCategory category) {
         PaygShadowCharge row = new PaygShadowCharge();
         row.setJobId(jobId);
         row.setTeamId(teamId);
         row.setPaygUnits(units);
+        row.setFreeUnitsConsumed(freeUnitsConsumed);
         row.setStatus(ShadowChargeStatus.CHARGED);
         row.setBillingCategory(category);
         return row;

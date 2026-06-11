@@ -23,7 +23,6 @@ import stirling.software.saas.payg.cap.CapEvaluator.Evaluation;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
-import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
@@ -107,9 +106,6 @@ public class EntitlementService {
         TeamBillingContext billing = teamBillingService.forTeam(teamId);
         Optional<WalletPolicy> walletPolicyOpt = walletPolicyRepository.findByTeamId(teamId);
 
-        // The document ceiling: free allowance for free teams; free allowance + what the money
-        // cap buys at the current per-document rate for subscribed teams; null = uncapped.
-        Long capUnits = billing.docCapUnits();
         FeatureSet degradedSet =
                 walletPolicyOpt.map(WalletPolicy::getDegradedFeatureSet).orElse(FeatureSet.MINIMAL);
         int warnAtPct =
@@ -123,26 +119,51 @@ public class EntitlementService {
                         .filter(Objects::nonNull)
                         .orElse(DEGRADE_AT_PCT);
 
-        // Subscription-anchored window when subscribed; calendar month otherwise.
+        // Subscription-anchored window when subscribed; calendar month otherwise. Used for the
+        // subscribed monthly cap + the displayed billing period.
         LocalDateTime periodStart = billing.periodStart();
         LocalDateTime periodEnd = billing.periodEnd();
 
-        // wallet_ledger stores debits as negative amount_units (signed). The cap evaluator wants
-        // positive spend, so we negate the SUM. COALESCE in the JPQL guarantees 0 for no-rows.
-        long signedDebitSum =
-                ledgerRepository.sumPeriodAmount(
-                        teamId, LedgerEntryType.DEBIT, periodStart, periodEnd);
-        long spendUnits = signedDebitSum < 0 ? -signedDebitSum : 0L;
+        Evaluation eval;
+        long snapshotSpend;
+        Long snapshotCap;
 
-        Evaluation eval =
-                CapEvaluator.evaluate(spendUnits, capUnits, warnAtPct, degradeAtPct, degradedSet);
+        if (billing.subscribed()) {
+            // Subscribed: gate on the monthly spending cap. Spend = this period's net billable
+            // documents (DEBIT minus REFUND so a refunded job doesn't read as spent). The one-time
+            // free grant doesn't gate a paying team — it only reduced what they were metered.
+            long signedNet = ledgerRepository.sumPeriodNetBillable(teamId, periodStart, periodEnd);
+            long periodSpend = signedNet < 0 ? -signedNet : 0L;
+            Long cap = billing.monthlyCapDocUnits();
+            eval = CapEvaluator.evaluate(periodSpend, cap, warnAtPct, degradeAtPct, degradedSet);
+            snapshotSpend = periodSpend;
+            snapshotCap = cap;
+        } else {
+            // Unsubscribed: gate on the one-time lifetime free grant. Exhausted (remaining ≤ 0, or
+            // no grant configured) → DEGRADED so billable categories hard-stop; otherwise evaluate
+            // the warn/degrade band on used-of-grant.
+            long grant = billing.freeGrantUnits();
+            long remaining = billing.freeRemainingUnits();
+            long used = Math.max(0L, grant - remaining);
+            if (remaining <= 0L) {
+                eval =
+                        new Evaluation(
+                                EntitlementState.DEGRADED,
+                                degradedSet,
+                                CapEvaluator.gatesFor(degradedSet));
+            } else {
+                eval = CapEvaluator.evaluate(used, grant, warnAtPct, degradeAtPct, degradedSet);
+            }
+            snapshotSpend = used;
+            snapshotCap = grant;
+        }
 
         return new EntitlementSnapshot(
                 eval.state(),
                 eval.featureSet(),
                 List.copyOf(eval.enabledGates()),
-                spendUnits,
-                capUnits,
+                snapshotSpend,
+                snapshotCap,
                 periodStart,
                 periodEnd,
                 billing.subscribed());
