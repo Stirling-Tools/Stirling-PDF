@@ -9,10 +9,9 @@
  * watermarks, compression — are unmetered, no matter where they're triggered
  * from. The distinction is the <em>type of work</em> (manual tool vs
  * automation / AI / API), not where the click happens, because automation and
- * AI also have UI surfaces. The 500/month free allowance applies <em>only</em>
- * to the three billable categories. Backend design doc + pricing schema will
- * catch up to this in a follow-up; this is the FE source of truth in the
- * meantime.
+ * AI also have UI surfaces. The one-time free grant (default 500) applies
+ * <em>only</em> to the three billable categories — it is a lifetime allowance,
+ * not a monthly one, and a team keeps any unused portion after subscribing.
  *
  * <p>Two variants:
  *   - {@link PaygFreeLeader} — visible to the team owner; includes the "Turn
@@ -21,8 +20,9 @@
  *     consumption and explains that the owner can enable Processor.
  */
 import React, { useMemo, useState } from "react";
-import { Group, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import BoltIcon from "@mui/icons-material/BoltRounded";
+import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import CheckIcon from "@mui/icons-material/CheckRounded";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import { useTranslation } from "react-i18next";
@@ -41,11 +41,11 @@ interface FreeSnapshot {
   /** ISO yyyy-mm-dd. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  /** Documents processed by automation + AI + API this cycle. */
+  /** One-time free documents used so far (grant − remaining). */
   billableUsed: number;
   /**
-   * Free-tier ceiling in documents. Real value from the wallet endpoint
-   * (pricing_policy.free_tier_units_per_cycle); 500 below is only the
+   * The team's one-time free grant size in documents. Real value from the
+   * wallet endpoint (pricing_policy.free_tier_units); 500 below is only the
    * pre-load placeholder for the first paint.
    */
   billableLimit: number;
@@ -66,9 +66,10 @@ function useFreeSnapshot(): FreeSnapshot {
       return {
         billingPeriodStart: wallet.billingPeriodStart,
         billingPeriodEnd: wallet.billingPeriodEnd,
-        billableUsed: wallet.billableUsed,
-        // The free view's ceiling IS the allowance (for free teams the
-        // backend's billableLimit equals it, but freeAllowance is never null).
+        // Used = grant − remaining, derived straight from the one-time grant so
+        // the free view never depends on the per-state meaning of billableUsed.
+        billableUsed: Math.max(0, wallet.freeAllowance - wallet.freeRemaining),
+        // The free view's ceiling IS the one-time grant size.
         billableLimit: wallet.freeAllowance,
       };
     }
@@ -93,13 +94,6 @@ function formatPeriod(start: string, end: string): string {
   return `${fmt(s)} – ${fmt(e)}`;
 }
 
-function daysUntil(iso: string): number {
-  return Math.max(
-    0,
-    Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000),
-  );
-}
-
 // ─── Hero usage panel (shared by leader + member) ─────────────────────────
 
 interface FreeHeroProps {
@@ -108,8 +102,10 @@ interface FreeHeroProps {
 
 function FreeHero({ snap }: FreeHeroProps) {
   const { t } = useTranslation();
-  const pct = Math.min(100, (snap.billableUsed / snap.billableLimit) * 100);
-  const daysLeft = daysUntil(snap.billingPeriodEnd);
+  const pct =
+    snap.billableLimit > 0
+      ? Math.min(100, (snap.billableUsed / snap.billableLimit) * 100)
+      : 100;
   const state =
     pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
   const stateLabel =
@@ -125,7 +121,7 @@ function FreeHero({ snap }: FreeHeroProps) {
         <div className="payg-hero__head-row">
           <div>
             <div className="payg-hero__eyebrow">
-              {t("payg.free.hero.eyebrow", "This billing period")}
+              {t("payg.free.hero.eyebrow", "Your free PDFs")}
             </div>
             <div className="payg-hero__figure">
               <span className="payg-hero__spend">
@@ -134,7 +130,7 @@ function FreeHero({ snap }: FreeHeroProps) {
               <span className="payg-hero__cap">
                 {t(
                   "payg.free.hero.capSuffix",
-                  "/ {{limit}} free documents",
+                  "/ {{limit}} free PDFs",
                   { limit: snap.billableLimit.toLocaleString() },
                 )}
               </span>
@@ -160,11 +156,7 @@ function FreeHero({ snap }: FreeHeroProps) {
           </span>
           <span className="payg-hero__meta-dot">•</span>
           <span>
-            {daysLeft === 1
-              ? t("payg.free.hero.resetsTomorrow", "Resets tomorrow")
-              : t("payg.free.hero.resetsIn", "Resets in {{days}} days", {
-                  days: daysLeft,
-                })}
+            {t("payg.free.hero.neverResets", "One-time — never resets")}
           </span>
         </div>
 
@@ -189,20 +181,59 @@ interface SectionHeaderProps {
 function SectionHeader({ snap, pill, leader }: SectionHeaderProps) {
   const { t } = useTranslation();
   return (
-    <Group justify="space-between" align="center" wrap="nowrap">
-      <div className="payg-header__subtitle">
-        {t(
-          "payg.free.header.subtitle",
-          "Editor plan — manual tools are always free. Pay only for automation, AI & API. Billing period {{period}}.",
-          {
+    <div className="payg-planhead">
+      <div className="payg-planhead__top">
+        <span className="payg-planhead__eyebrow">
+          {t("payg.free.header.eyebrow", "Editor plan · {{period}}", {
             period: formatPeriod(snap.billingPeriodStart, snap.billingPeriodEnd),
-          },
-        )}
+          })}
+        </span>
+        <span
+          className="payg-role-pill"
+          data-leader={leader ? "true" : "false"}
+        >
+          {pill}
+        </span>
       </div>
-      <span className="payg-role-pill" data-leader={leader ? "true" : "false"}>
-        {pill}
-      </span>
-    </Group>
+
+      <div className="payg-planhead__split">
+        <div className="payg-planhead__col">
+          <div className="payg-planhead__lbl payg-planhead__lbl--free">
+            <AllInclusiveIcon
+              className="payg-planhead__lbl-icon"
+              fontSize="small"
+            />
+            {t("payg.free.header.freeLabel", "Always free")}
+          </div>
+          <p className="payg-planhead__title">
+            {t("payg.free.header.freeTitle", "Unlimited PDF editing")}
+          </p>
+          <p className="payg-planhead__body">
+            {t(
+              "payg.free.header.freeBody",
+              "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it.",
+            )}
+          </p>
+        </div>
+
+        <div className="payg-planhead__col payg-planhead__col--meter">
+          <div className="payg-planhead__lbl payg-planhead__lbl--meter">
+            <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
+            {t("payg.free.header.meterLabel", "Metered")}
+          </div>
+          <p className="payg-planhead__title">
+            {t("payg.free.header.meterTitle", "Automation · AI · API")}
+          </p>
+          <p className="payg-planhead__body">
+            {t(
+              "payg.free.header.meterBody",
+              "{{limit}} free PDFs to start, then simple pay-as-you-go with Processor.",
+              { limit: snap.billableLimit.toLocaleString() },
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -227,7 +258,7 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
 
   return (
     <div className="payg">
-      <Stack gap="lg">
+      <Stack gap="md">
         <SectionHeader
           snap={snap}
           pill={t("payg.role.leader", "Team owner")}
@@ -249,7 +280,7 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
               <p className="paygf-cta__subtitle">
                 {t(
                   "payg.free.cta.subtitle",
-                  "Process more than {{limit}} documents a month with automation, AI, and the API. Set a monthly ceiling — you stay in control.",
+                  "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling — you stay in control.",
                   { limit: snap.billableLimit.toLocaleString() },
                 )}
               </p>
@@ -319,43 +350,6 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
           </div>
         </div>
 
-        <div className="paygf-explainer">
-          <div className="paygf-explainer__col">
-            <div className="paygf-explainer__label">
-              <CheckIcon
-                className="paygf-explainer__icon paygf-explainer__icon--free"
-                fontSize="small"
-              />
-              {t("payg.free.explainer.alwaysFreeLabel", "Always free")}
-            </div>
-            <p className="paygf-explainer__text">
-              {t(
-                "payg.free.explainer.alwaysFreeBody",
-                "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, no matter where you trigger them from.",
-              )}
-            </p>
-          </div>
-          <div className="paygf-explainer__col">
-            <div className="paygf-explainer__label">
-              <BoltIcon
-                className="paygf-explainer__icon paygf-explainer__icon--paid"
-                fontSize="small"
-              />
-              {t(
-                "payg.free.explainer.countsLabel",
-                "Counts toward your {{limit}} documents/month",
-                { limit: snap.billableLimit.toLocaleString() },
-              )}
-            </div>
-            <p className="paygf-explainer__text">
-              {t(
-                "payg.free.explainer.countsBody",
-                "Documents processed by automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Above {{limit}} you'll need Processor.",
-                { limit: snap.billableLimit.toLocaleString() },
-              )}
-            </p>
-          </div>
-        </div>
       </Stack>
 
       {wallet?.teamId != null && (
@@ -363,6 +357,8 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
           open={upgradeOpen}
           teamId={wallet.teamId}
           freeLimit={snap.billableLimit}
+          pricePerDocMinor={wallet.pricePerDocMinor}
+          rateCurrency={wallet.currency}
           onClose={() => setUpgradeOpen(false)}
           onComplete={({ capUsd }) => {
             setUpgradeOpen(false);
@@ -394,7 +390,7 @@ function PaygFreeMemberInner() {
 
   return (
     <div className="payg">
-      <Stack gap="lg">
+      <Stack gap="md">
         <SectionHeader snap={snap} pill={t("payg.role.member", "Member")} />
 
         <FreeHero snap={snap} />
@@ -405,59 +401,20 @@ function PaygFreeMemberInner() {
             <h3 className="paygf-member-note__title">
               {t(
                 "payg.free.member.title",
-                "Need to process more than {{limit}} documents a month?",
+                "Need to process more than your {{limit}} free PDFs?",
                 { limit: snap.billableLimit.toLocaleString() },
               )}
             </h3>
             <p className="paygf-member-note__body">
               {t(
                 "payg.free.member.body",
-                "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API work shares the team's free allowance of {{limit}} documents a month.",
+                "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API work shares the team's one-time allowance of {{limit}} free PDFs.",
                 { limit: snap.billableLimit.toLocaleString() },
               )}
             </p>
           </div>
         </div>
 
-        <div className="paygf-explainer">
-          <div className="paygf-explainer__col">
-            <div className="paygf-explainer__label">
-              <CheckIcon
-                className="paygf-explainer__icon paygf-explainer__icon--free"
-                fontSize="small"
-              />
-              {t(
-                "payg.free.explainer.alwaysFreeForYouLabel",
-                "Always free for you",
-              )}
-            </div>
-            <p className="paygf-explainer__text">
-              {t(
-                "payg.free.explainer.alwaysFreeForYouBody",
-                "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, never counted.",
-              )}
-            </p>
-          </div>
-          <div className="paygf-explainer__col">
-            <div className="paygf-explainer__label">
-              <BoltIcon
-                className="paygf-explainer__icon paygf-explainer__icon--paid"
-                fontSize="small"
-              />
-              {t(
-                "payg.free.explainer.sharedLabel",
-                "Shared with the team",
-              )}
-            </div>
-            <p className="paygf-explainer__text">
-              {t(
-                "payg.free.explainer.sharedBody",
-                "Automation pipelines, AI tools, and API calls share one allowance of {{limit}} documents a month across the whole team. If it's full, ask your owner to enable Processor.",
-                { limit: snap.billableLimit.toLocaleString() },
-              )}
-            </p>
-          </div>
-        </div>
       </Stack>
     </div>
   );

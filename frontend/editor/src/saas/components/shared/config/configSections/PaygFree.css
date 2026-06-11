@@ -14,8 +14,7 @@
 /* ── Leader CTA card ──────────────────────────────────────────────────── */
 
 .paygf-cta {
-  margin-top: var(--payg-gap);
-  padding: 22px 24px;
+  padding: 18px 22px;
   border-radius: var(--payg-radius);
   background: var(--payg-card-bg);
   /* Gradient border using padding-box / border-box trick so the inner bg
@@ -122,8 +121,7 @@
 /* ── Member ask-the-owner note ───────────────────────────────────────── */
 
 .paygf-member-note {
-  margin-top: var(--payg-gap);
-  padding: 22px 24px;
+  padding: 18px 22px;
   border-radius: var(--payg-radius);
   background: var(--payg-inset-bg);
   border: 1px solid var(--payg-card-border);

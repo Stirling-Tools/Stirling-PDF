@@ -5705,14 +5705,19 @@ viewAll = "View all"
 [payg.cap]
 amount = "Cap amount"
 currency = "Currency"
+custom = "Custom"
 degradeAt = "Limit spend at"
 degradeAtDesc = "Set below 100% to leave yourself headroom."
+docsEstimate = "≈ {{docs}} paid PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
 perMonth = "/ month"
-preview = "{{money}} ≈ {{units}} documents per month"
+preview = "{{money}} ≈ {{units}} PDFs per month"
 previewNote = "At current pricing. Final translation happens server-side on save."
-previewShort = "≈ {{units}} documents per month at current pricing."
+previewShort = "≈ {{units}} PDFs per month at current pricing."
 save = "Update cap"
-subtitle = "Set your maximum spend. We convert this to documents using the current price tier."
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
 title = "Monthly spending cap"
 warnAt = "Warn me at"
 warnAtDesc = "Notify when usage crosses this threshold."
@@ -5731,7 +5736,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond the 500/month free allowance."
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -5743,9 +5748,9 @@ body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
 [payg.exhausted]
-body = "You've used your free 500 operations this month. Upgrade to Processor to keep going."
+body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
 cta = "Go to billing"
-title = "You've hit your free monthly limit"
+title = "You've used your free PDFs"
 
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
@@ -5756,7 +5761,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Unlock more than 500 automation, AI, and API operations per month. Set a monthly ceiling — you stay in control."
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling — you stay in control."
 title = "Turn on the Processor plan"
 
 [payg.free.explainer]
@@ -5764,24 +5769,23 @@ alwaysFreeBody = "Manual tools — viewing, editing, merging, splitting, signing
 alwaysFreeForYouBody = "Manual tools — viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, never counted."
 alwaysFreeForYouLabel = "Always free for you"
 alwaysFreeLabel = "Always free"
-countsBody = "Automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Above 500 you'll need Processor."
-countsLabel = "Counts toward 500/month"
-sharedBody = "Automation pipelines, AI tools, and API calls share a single 500/month allowance across the whole team. If it's full, ask your owner to enable Processor."
+countsBody = "Automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Past your free PDFs you'll need Processor."
+countsLabel = "Counts toward your 500 free"
+sharedBody = "Automation pipelines, AI tools, and API calls share a single one-time allowance of 500 free PDFs across the whole team. Once it's used up, ask your owner to enable Processor."
 sharedLabel = "Shared with the team"
 
 [payg.free.header]
 subtitle = "Editor plan — manual tools are always free. Pay only for automation, AI & API. Billing period {{period}}."
 
 [payg.free.hero]
-capSuffix = "/ {{limit}} free operations"
-eyebrow = "This billing period"
+capSuffix = "/ {{limit}} free PDFs"
+eyebrow = "Your free PDFs"
 metaCategories = "Automation · AI · API requests"
-resetsIn = "Resets in {{days}} days"
-resetsTomorrow = "Resets tomorrow"
+neverResets = "One-time — never resets"
 
 [payg.free.member]
-body = "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API access are limited to the team's 500/month free allowance."
-title = "Want more than 500 automation, AI, or API operations a month?"
+body = "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like — automation, AI, and API access share the team's one-time allowance of 500 free PDFs."
+title = "Want to process more than your 500 free PDFs?"
 
 [payg.free.state]
 approachingLimit = "Approaching limit"
@@ -5810,7 +5814,7 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations per month — enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+body = "Stirling PDF gives every signed-up account 500 free operations — enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
 cancel = "Not now"
 cta = "Sign up free"
 subtext = "Creating an account is free and takes a few seconds. No credit card required."
@@ -5845,7 +5849,7 @@ label = "Sub-cap for {{name}}"
 remove = "Remove cap"
 
 [payg.subcaps.toast.clamped]
-body = "Clamped to team cap of {{units}} documents."
+body = "Clamped to team cap of {{units}} PDFs."
 title = "Sub-cap clamped"
 
 [payg.subcaps.toast.error]
@@ -5866,12 +5870,13 @@ finish = "Finish"
 
 [payg.upgrade.cap]
 customPlaceholder = "Or enter your own amount ($0 keeps it free)"
-help = "We'll never charge above this. Your first 500 automation / AI / API operations every month are free. Set $0 if you want to keep everything free while testing."
+help = "We'll never charge above this. Your first 500 automation / AI / API operations are free. Set $0 if you want to keep everything free while testing."
 noCapHint = "You can still cancel anytime from the customer portal."
 noCapLabel = "No cap — I'll manage spend manually"
 perMonthSuffix = "/ month"
 presetsAria = "Monthly cap preset"
 title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing — in your own currency."
 
 [payg.upgrade.checkout]
 capLabel = "Monthly ceiling:"

@@ -16,18 +16,21 @@
  *     V1 — so it shows a real empty state, not fabricated rows
  */
 import React, { useState } from "react";
-import { Button, Group, NumberInput, Stack, Switch, Text } from "@mantine/core";
+import { Button, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import CheckIcon from "@mui/icons-material/CheckRounded";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import BoltIcon from "@mui/icons-material/BoltRounded";
+import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import { alert as showToast } from "@app/components/toast";
-// Relative (not @app/*) so the co-located CSS resolves directly.
+// Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
+// eslint-disable-next-line no-restricted-imports
+import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
 import type { SubCapUpdateResult, Wallet } from "@app/hooks/useWallet";
 
@@ -129,7 +132,7 @@ export function DocHelp() {
         onClick={() => setOpen((o) => !o)}
       >
         <HelpOutlineIcon sx={{ fontSize: 15 }} />
-        {t("payg.docHelp.toggle", "What counts as a document?")}
+        {t("payg.docHelp.toggle", "What counts as a PDF?")}
         <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
       </button>
       {open && (
@@ -144,7 +147,7 @@ export function DocHelp() {
             <li>
               {t(
                 "payg.docHelp.perFile",
-                "Each file you process counts as one document. Very long or very large files can count as more than one.",
+                "Each file you process counts as one PDF. Very long or very large files can count as more than one.",
               )}
             </li>
             <li>
@@ -156,7 +159,7 @@ export function DocHelp() {
             <li>
               {t(
                 "payg.docHelp.refunds",
-                "If a job fails on its first step, the document is credited back automatically.",
+                "If a job fails on its first step, the PDF is credited back automatically.",
               )}
             </li>
           </ul>
@@ -253,10 +256,10 @@ function UsageHero({ wallet }: { wallet: Wallet }) {
                 {hasLimit
                   ? t(
                       "payg.usage.ofLimitProcessed",
-                      "/ {{limit}} documents processed",
+                      "/ {{limit}} PDFs processed",
                       { limit: limit.toLocaleString() },
                     )
-                  : t("payg.usage.processed", "documents processed")}
+                  : t("payg.usage.processed", "PDFs processed")}
               </span>
             </div>
           </div>
@@ -340,8 +343,6 @@ interface CapEditorProps {
   capUsd: number | null;
   /** True when the leader explicitly disabled the cap. */
   noCap: boolean;
-  /** Free allowance in documents/month (pricing policy). */
-  freeAllowance: number;
   /** Per-document rate in minor units; null when unknown — preview hides. */
   pricePerDocMinor: number | null;
   /** Currency of the rate; pairs with {@link CapEditorProps#pricePerDocMinor}. */
@@ -353,39 +354,23 @@ interface CapEditorProps {
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
 }
 
-// Same quick amounts the checkout flow offers — recognition over recall.
-const CAP_PRESETS = [10, 25, 50, 100] as const;
-
 /**
- * Single-row cap editor: preset chips + custom amount + a compact no-cap
- * toggle, with a live "≈ N documents/month" preview computed from the same
- * free-allowance + per-document rate the backend enforces. Save-only (the
- * controls themselves show the pending state; abandoning the card abandons
- * the edit).
+ * Single-row cap editor: the shared {@link SpendCapControl} (preset chips +
+ * inline custom-entry pill + no-cap + inline Save) over a live "≈ N paid
+ * PDFs/month" estimate, wrapped in the plan-page card chrome + the cap-reached
+ * disclosure. Save-only — the working value is local, so abandoning the card
+ * abandons the edit. The very same control drives the upgrade checkout flow.
  */
 function CapEditor({
   capUsd,
   noCap,
-  freeAllowance,
   pricePerDocMinor,
   currency,
   onSaveCap,
 }: CapEditorProps) {
   const { t } = useTranslation();
-  const [money, setMoney] = useState<number>(capUsd ?? 25);
-  const [uncapped, setUncapped] = useState<boolean>(noCap || capUsd == null);
-  const [saving, setSaving] = useState<boolean>(false);
-
-  const dirty =
-    uncapped !== (noCap || capUsd == null) ||
-    (!uncapped && money !== (capUsd ?? 25));
-
-  const sym = currencySymbol(currency);
-  // Mirror of the backend's docCapForMoney: free + floor(capMinor / rate).
-  const previewDocs =
-    !uncapped && pricePerDocMinor != null && pricePerDocMinor > 0
-      ? freeAllowance + Math.floor((money * 100) / pricePerDocMinor)
-      : null;
+  const savedCap = noCap || capUsd == null ? null : capUsd;
+  const [working, setWorking] = useState<number | null>(savedCap);
 
   return (
     <div className="payg-card">
@@ -402,85 +387,16 @@ function CapEditor({
           </div>
         </div>
 
-        <Group gap="xs" align="center" wrap="wrap">
-          {CAP_PRESETS.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              className="payg-cap-chip"
-              data-selected={!uncapped && money === preset}
-              disabled={uncapped}
-              onClick={() => {
-                setUncapped(false);
-                setMoney(preset);
-              }}
-            >
-              {sym}
-              {preset}
-            </button>
-          ))}
-          <NumberInput
-            value={money}
-            onChange={(v) => setMoney(typeof v === "number" ? v : 0)}
-            min={0}
-            step={5}
-            decimalScale={0}
-            prefix={sym}
-            size="xs"
-            w={110}
-            disabled={uncapped}
-            aria-label={t("payg.cap.amount", "Cap amount")}
-          />
-          <Switch
-            size="sm"
-            checked={uncapped}
-            onChange={(e) => setUncapped(e.currentTarget.checked)}
-            label={t("payg.cap.noCapLabel", "No cap")}
-            styles={{ label: { paddingInlineStart: 6 } }}
-          />
-          <Button
-            variant="default"
-            size="xs"
-            ml="auto"
-            disabled={!dirty || saving}
-            loading={saving}
-            leftSection={<LocalIcon icon="check-rounded" />}
-            onClick={async () => {
-              if (!onSaveCap) return;
-              setSaving(true);
-              try {
-                await onSaveCap(uncapped ? null : Math.round(money));
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            {t("payg.cap.save", "Update cap")}
-          </Button>
-        </Group>
+        <SpendCapControl
+          capUsd={working}
+          onChange={setWorking}
+          pricePerDocMinor={pricePerDocMinor}
+          currency={currency}
+          savedCapUsd={savedCap}
+          onSave={onSaveCap}
+        />
 
-        {previewDocs != null && (
-          <Text size="sm" c="dimmed">
-            {t(
-              "payg.cap.docsPreview",
-              "≈ {{docs}} documents/month ({{free}} free + {{paid}} at {{rate}}/document)",
-              {
-                docs: previewDocs.toLocaleString(),
-                free: freeAllowance.toLocaleString(),
-                paid: (previewDocs - freeAllowance).toLocaleString(),
-                rate: formatMinor(pricePerDocMinor ?? 0, currency),
-              },
-            )}
-          </Text>
-        )}
-        {uncapped && (
-          <Text size="sm" c="dimmed">
-            {t(
-              "payg.cap.noCapDesc",
-              "Usage is billed without an upper limit. You can re-enable a cap at any time.",
-            )}
-          </Text>
-        )}
+        <CapReachedHelp />
       </Stack>
     </div>
   );
@@ -513,6 +429,8 @@ function CapReadOnly({ capUsd, noCap }: { capUsd: number | null; noCap: boolean 
             </div>
           </div>
         </div>
+
+        <CapReachedHelp />
       </Stack>
     </div>
   );
@@ -529,42 +447,50 @@ const GATE_CAP_BEHAVIOR: { gate: Gate; staysAtCap: boolean }[] = [
   { gate: "AI_SUPPORT", staysAtCap: false },
 ];
 
-function GatesCard() {
+/**
+ * Folded-in "what happens at the cap" — previously its own GatesCard, now a
+ * collapsed disclosure rendered inside the cap card(s) to save vertical space.
+ * Mirrors the {@link DocHelp} toggle pattern; default-collapsed so it costs no
+ * height until the user opens it.
+ */
+function CapReachedHelp() {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
   return (
-    <div className="payg-card">
-      <Stack gap="md">
-        <div>
-          <div className="payg-card__title">
-            {t("payg.gates.title", "What happens when the cap is reached")}
-          </div>
-          <div className="payg-card__subtitle">
-            {t(
-              "payg.gates.subtitle",
-              "Your everyday tools keep working. Only AI and automation pause until the cap resets or is raised.",
-            )}
-          </div>
-        </div>
-        <div className="payg-gates">
-          {GATE_CAP_BEHAVIOR.map(({ gate, staysAtCap }) => (
-            <div className="payg-gate" data-enabled={staysAtCap} key={gate}>
-              <span className="payg-gate__chip">
-                {staysAtCap ? (
-                  <CheckIcon sx={{ fontSize: 18 }} />
-                ) : (
-                  <LockIcon sx={{ fontSize: 16 }} />
-                )}
-              </span>
-              <span className="payg-gate__label">{gateLabel(gate, t)}</span>
-              {!staysAtCap && (
-                <span className="payg-gate__tag" data-variant="pause">
-                  {t("payg.gates.pauses", "pauses at cap")}
+    <div className="payg-help">
+      <button
+        type="button"
+        className="payg-help__toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <HelpOutlineIcon sx={{ fontSize: 15 }} />
+        {t("payg.gates.title", "What happens when the cap is reached")}
+        <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
+      </button>
+      {open && (
+        <div className="payg-help__panel">
+          <div className="payg-gates">
+            {GATE_CAP_BEHAVIOR.map(({ gate, staysAtCap }) => (
+              <div className="payg-gate" data-enabled={staysAtCap} key={gate}>
+                <span className="payg-gate__chip">
+                  {staysAtCap ? (
+                    <CheckIcon sx={{ fontSize: 18 }} />
+                  ) : (
+                    <LockIcon sx={{ fontSize: 16 }} />
+                  )}
                 </span>
-              )}
-            </div>
-          ))}
+                <span className="payg-gate__label">{gateLabel(gate, t)}</span>
+                {!staysAtCap && (
+                  <span className="payg-gate__tag" data-variant="pause">
+                    {t("payg.gates.pauses", "pauses at cap")}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </Stack>
+      )}
     </div>
   );
 }
@@ -671,7 +597,7 @@ function MemberRow({
           title: t("payg.subcaps.toast.clamped.title", "Sub-cap clamped"),
           body: t(
             "payg.subcaps.toast.clamped.body",
-            "Clamped to team cap of {{units}} documents.",
+            "Clamped to team cap of {{units}} PDFs.",
             { units: result.effective.toLocaleString() },
           ),
           location: "bottom-right",
@@ -944,26 +870,62 @@ const Payg: React.FC<PaygProps> = ({
 
   return (
     <div className="payg">
-      <Stack gap="lg">
+      <Stack gap="md">
         {/* The modal chrome already renders the section title ("Billing &
             usage"), so we lead with the descriptive subtitle + role pill. */}
-        <Group justify="space-between" align="center" wrap="nowrap">
-          <div className="payg-header__subtitle">
-            {t(
-              "payg.subtitle",
-              "Manual editing is always free — you only pay for documents processed by automation, AI, and the API. Billing period {{start}} – {{end}}.",
-              {
+        <div className="payg-planhead">
+          <div className="payg-planhead__top">
+            <span className="payg-planhead__eyebrow">
+              {t("payg.header.eyebrow", "Processor plan · {{start}} – {{end}}", {
                 start: fmt(wallet.billingPeriodStart),
                 end: fmt(wallet.billingPeriodEnd),
-              },
-            )}
+              })}
+            </span>
+            <span className="payg-role-pill" data-leader={isLeader}>
+              {isLeader
+                ? t("payg.role.leader", "Team owner")
+                : t("payg.role.member", "Member")}
+            </span>
           </div>
-          <span className="payg-role-pill" data-leader={isLeader}>
-            {isLeader
-              ? t("payg.role.leader", "Team owner")
-              : t("payg.role.member", "Member")}
-          </span>
-        </Group>
+
+          <div className="payg-planhead__split">
+            <div className="payg-planhead__col">
+              <div className="payg-planhead__lbl payg-planhead__lbl--free">
+                <AllInclusiveIcon
+                  className="payg-planhead__lbl-icon"
+                  fontSize="small"
+                />
+                {t("payg.header.freeLabel", "Always free")}
+              </div>
+              <p className="payg-planhead__title">
+                {t("payg.header.freeTitle", "Unlimited PDF editing")}
+              </p>
+              <p className="payg-planhead__body">
+                {t(
+                  "payg.header.freeBody",
+                  "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it.",
+                )}
+              </p>
+            </div>
+
+            <div className="payg-planhead__col payg-planhead__col--meter">
+              <div className="payg-planhead__lbl payg-planhead__lbl--meter">
+                <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
+                {t("payg.header.meterLabel", "Metered")}
+              </div>
+              <p className="payg-planhead__title">
+                {t("payg.header.meterTitle", "Automation · AI · API")}
+              </p>
+              <p className="payg-planhead__body">
+                {t(
+                  "payg.header.meterBody",
+                  "{{limit}} free PDFs to start, then billed per PDF up to your cap.",
+                  { limit: wallet.freeAllowance.toLocaleString() },
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
 
         <UsageHero wallet={wallet} />
 
@@ -971,7 +933,6 @@ const Payg: React.FC<PaygProps> = ({
           <CapEditor
             capUsd={wallet.capUsd}
             noCap={wallet.noCap}
-            freeAllowance={wallet.freeAllowance}
             pricePerDocMinor={wallet.pricePerDocMinor}
             currency={wallet.currency}
             onSaveCap={onSaveCap}
@@ -979,8 +940,6 @@ const Payg: React.FC<PaygProps> = ({
         ) : (
           <CapReadOnly capUsd={wallet.capUsd} noCap={wallet.noCap} />
         )}
-
-        <GatesCard />
 
         {isLeader && wallet.members.length > 0 && (
           <MemberSubCaps

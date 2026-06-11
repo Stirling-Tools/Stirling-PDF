@@ -25,6 +25,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
 // eslint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
+// eslint-disable-next-line no-restricted-imports
+import SpendCapControl from "./SpendCapControl";
 
 /**
  * Tell the AppConfigModal (or any other full-screen surface listening) that an
@@ -62,16 +64,25 @@ interface UpgradeModalProps {
   /** ISO 4217 currency code for the cap input. Default USD. */
   currency?: "USD" | "EUR" | "GBP";
   /**
-   * The team's free-tier allowance in documents/month — the real
-   * {@code wallet.billableLimit}, threaded from the free-leader view so the
-   * step copy quotes the backend's number instead of a hardcoded one.
+   * The team's one-time free grant in documents — the real {@code
+   * wallet.freeAllowance}, threaded from the free-leader view so the step copy
+   * quotes the backend's number instead of a hardcoded one. A lifetime grant,
+   * not a monthly one.
    */
   freeLimit: number;
+  /**
+   * Per-document rate in minor units for the live "≈ N paid PDFs/month"
+   * estimate, threaded from {@code wallet.pricePerDocMinor}. For unsubscribed
+   * teams the backend resolves this from the default pricing policy's USD
+   * Price (Stripe hasn't assigned the team a currency yet). Null hides the
+   * estimate.
+   */
+  pricePerDocMinor?: number | null;
+  /** Lower-case ISO currency of {@link #pricePerDocMinor} (e.g. {@code "usd"}). */
+  rateCurrency?: string | null;
 }
 
 type Step = "cap" | "checkout" | "confirm";
-
-const CAP_PRESETS_USD = [10, 25, 50, 100] as const;
 
 function currencySymbol(c: UpgradeModalProps["currency"]): string {
   switch (c) {
@@ -91,10 +102,12 @@ export default function UpgradeModal({
   onComplete,
   currency = "USD",
   freeLimit,
+  pricePerDocMinor,
+  rateCurrency,
 }: UpgradeModalProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>("cap");
-  const [capUsd, setCapUsd] = useState<number>(25);
+  const [capUsd, setCapUsd] = useState<number>(500);
   const [noCap, setNoCap] = useState<boolean>(false);
 
   // The config modal hides itself while we're open (it listens for this event)
@@ -216,8 +229,9 @@ export default function UpgradeModal({
                 setCapUsd={setCapUsd}
                 noCap={noCap}
                 setNoCap={setNoCap}
-                currency={currency}
                 freeLimit={freeLimit}
+                pricePerDocMinor={pricePerDocMinor}
+                rateCurrency={rateCurrency}
               />
             )}
             {step === "checkout" && (
@@ -296,8 +310,9 @@ interface CapStepProps {
   setCapUsd: (v: number) => void;
   noCap: boolean;
   setNoCap: (v: boolean) => void;
-  currency: UpgradeModalProps["currency"];
   freeLimit: number;
+  pricePerDocMinor?: number | null;
+  rateCurrency?: string | null;
 }
 
 function CapStep({
@@ -305,11 +320,11 @@ function CapStep({
   setCapUsd,
   noCap,
   setNoCap,
-  currency,
   freeLimit,
+  pricePerDocMinor,
+  rateCurrency,
 }: CapStepProps) {
   const { t } = useTranslation();
-  const sym = currencySymbol(currency);
 
   return (
     <>
@@ -338,87 +353,33 @@ function CapStep({
       <p className="upm-section-help">
         {t(
           "payg.upgrade.cap.help",
-          "We'll never charge above this. Your first {{limit}} documents processed by automation / AI / API every month stay free. Set $0 if you want to keep everything free while testing.",
+          "We'll never charge above this. Your first {{limit}} documents processed by automation / AI / API stay free. Set $0 if you want to keep everything free while testing.",
           { limit: freeLimit.toLocaleString() },
         )}
       </p>
 
-      <div
-        className="upm-cap-presets"
-        role="radiogroup"
-        aria-label={t(
-          "payg.upgrade.cap.presetsAria",
-          "Monthly cap preset",
+      {/* Same control the subscribed plan page renders. null = no cap; the
+          shared control owns the presets, the inline custom-entry pill, the
+          no-cap chip, and the live paid-PDF estimate. */}
+      <SpendCapControl
+        capUsd={noCap ? null : capUsd}
+        onChange={(v) => {
+          if (v === null) {
+            setNoCap(true);
+          } else {
+            setNoCap(false);
+            setCapUsd(v);
+          }
+        }}
+        pricePerDocMinor={pricePerDocMinor}
+        currency={rateCurrency}
+        note={t(
+          "payg.upgrade.cap.usdNote",
+          "Estimated in USD. You can adjust your cap any time after subscribing — in your own currency.",
         )}
-      >
-        {CAP_PRESETS_USD.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            role="radio"
-            aria-checked={!noCap && capUsd === preset}
-            className="upm-cap-preset"
-            data-selected={!noCap && capUsd === preset}
-            onClick={() => {
-              setNoCap(false);
-              setCapUsd(preset);
-            }}
-          >
-            {sym}
-            {preset}
-          </button>
-        ))}
-      </div>
+      />
 
-      <label className="upm-cap-input-row" htmlFor="upm-cap-amount">
-        <span className="upm-cap-input-row__currency">{sym}</span>
-        <input
-          id="upm-cap-amount"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={10000}
-          value={noCap ? "" : capUsd}
-          disabled={noCap}
-          placeholder={t(
-            "payg.upgrade.cap.customPlaceholder",
-            "Or enter your own amount ($0 keeps it free)",
-          )}
-          onChange={(e) => {
-            const v = parseInt(e.target.value, 10);
-            if (!Number.isNaN(v) && v >= 0) {
-              setCapUsd(v);
-              setNoCap(false);
-            }
-          }}
-          className="upm-cap-input-row__input"
-        />
-        <span className="upm-cap-input-row__period">
-          {t("payg.upgrade.cap.perMonthSuffix", "/ month")}
-        </span>
-      </label>
-
-      <label className="upm-no-cap-toggle">
-        <input
-          type="checkbox"
-          checked={noCap}
-          onChange={(e) => setNoCap(e.target.checked)}
-        />
-        <span className="upm-no-cap-toggle__text">
-          {t(
-            "payg.upgrade.cap.noCapLabel",
-            "No cap — I'll manage spend manually",
-          )}
-          <span className="upm-no-cap-toggle__hint">
-            {t(
-              "payg.upgrade.cap.noCapHint",
-              "You can still cancel anytime from the customer portal.",
-            )}
-          </span>
-        </span>
-      </label>
-
-      <div className="upm-help-card">
+      <div className="upm-help-card" style={{ marginTop: 16 }}>
         <span className="upm-help-card__title">
           {t(
             "payg.upgrade.help.title",
@@ -549,7 +510,7 @@ function ConfirmationStep({
       <p className="upm-confirm__body">
         {t(
           "payg.confirm.body",
-          "Your team can now process documents with automation, AI, and the API beyond the {{limit}}/month free allowance.",
+          "Your team can now process documents with automation, AI, and the API beyond your {{limit}} free PDFs.",
           { limit: freeLimit.toLocaleString() },
         )}
       </p>

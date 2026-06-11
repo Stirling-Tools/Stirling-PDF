@@ -100,19 +100,31 @@ export interface Wallet {
    */
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  /** Documents processed by automation + AI + API this cycle. */
+  /**
+   * For a free team: the one-time free documents used so far ({@code
+   * freeAllowance − freeRemaining}). For a subscribed team: documents
+   * processed this month across automation + AI + API.
+   */
   billableUsed: number;
   /**
-   * The team's document ceiling this period: the free allowance for free
-   * teams; freeAllowance + floor(cap / perDocRate) for capped subscribed
-   * teams; null when subscribed with no cap (uncapped).
+   * The team's document ceiling for the matching window: the one-time free
+   * grant ({@code freeAllowance}) for free teams; the monthly paid-doc cap
+   * {@code floor(cap / perDocRate)} for capped subscribed teams; null when
+   * subscribed with no cap (uncapped).
    */
   billableLimit: number | null;
   /**
-   * Documents per cycle that are free before paid billing starts
-   * (pricing_policy.free_tier_units_per_cycle).
+   * The team's one-time free document grant size — the "N" in "X of N free".
+   * A lifetime grant ({@code pricing_policy.free_tier_units}): it never resets
+   * and is not lost when the team subscribes.
    */
   freeAllowance: number;
+  /**
+   * One-time free documents still available to the team
+   * ({@code payg_team_extensions.free_units_remaining}). 0 = grant exhausted.
+   * Survives subscribing — a subscribed team keeps any unused grant.
+   */
+  freeRemaining: number;
   /**
    * Paid per-document rate in minor units of {@link Wallet#currency} (may be
    * fractional); null when the rate can't be resolved — render "unknown",
@@ -122,8 +134,9 @@ export interface Wallet {
   /** Lower-case ISO 4217 currency of the subscription's Stripe Price; null when unknown. */
   currency: string | null;
   /**
-   * Estimated charges so far this period in minor units of currency:
-   * max(0, used − freeAllowance) × rate. Informational — the Stripe invoice
+   * Estimated charges so far this period in minor units of currency: paid
+   * (Stripe-metered) documents this period × rate. The free portion was
+   * already netted out at charge time. Informational — the Stripe invoice
    * is authoritative. Null when the rate is unknown.
    */
   estimatedBillMinor: number | null;
@@ -238,6 +251,7 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.billableUsed !== next.billableUsed ||
     prev.billableLimit !== next.billableLimit ||
     prev.freeAllowance !== next.freeAllowance ||
+    prev.freeRemaining !== next.freeRemaining ||
     prev.pricePerDocMinor !== next.pricePerDocMinor ||
     prev.currency !== next.currency ||
     prev.estimatedBillMinor !== next.estimatedBillMinor ||
@@ -308,8 +322,12 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     billingPeriodStart: isoDay(periodStart),
     billingPeriodEnd: isoDay(periodEnd),
     billableUsed: 62,
-    billableLimit: subscribed ? 1750 : 500,
+    billableLimit: subscribed ? 1250 : 500,
     freeAllowance: 500,
+    // One-time grant: a free team has used 62 of 500 (438 left); the dev
+    // subscribed team is shown with its grant fully spent (kept across the
+    // subscribe — it just no longer gates them).
+    freeRemaining: subscribed ? 0 : 438,
     pricePerDocMinor: subscribed ? 2 : null,
     currency: subscribed ? "usd" : null,
     estimatedBillMinor: subscribed ? 0 : null,

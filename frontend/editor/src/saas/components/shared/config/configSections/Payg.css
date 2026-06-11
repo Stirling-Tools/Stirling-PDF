@@ -58,12 +58,91 @@
   border: 1px solid var(--border-default);
 }
 
+/* ── Plan header: free-vs-metered split (shared by free + subscribed) ──── */
+.payg-planhead {
+  padding: 14px 20px;
+  border-radius: var(--payg-radius);
+  background: var(--payg-card-bg);
+  border: 1px solid var(--payg-card-border);
+}
+.payg-planhead__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.payg-planhead__eyebrow {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.payg-planhead__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.payg-planhead__col {
+  padding-right: 22px;
+}
+.payg-planhead__col--meter {
+  padding-right: 0;
+  padding-left: 22px;
+  border-left: 1px solid var(--payg-divider);
+}
+.payg-planhead__lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.payg-planhead__lbl--free {
+  color: #10b981;
+}
+.payg-planhead__lbl--meter {
+  color: var(--payg-accent);
+}
+.payg-planhead__lbl-icon {
+  font-size: 1rem !important;
+}
+.payg-planhead__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.payg-planhead__body {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .payg-planhead__split {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .payg-planhead__col {
+    padding-right: 0;
+  }
+  .payg-planhead__col--meter {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--payg-divider);
+  }
+}
+
 /* ── Generic card ───────────────────────────────────────────────────── */
 .payg-card {
   background: var(--payg-card-bg);
   border: 1px solid var(--payg-card-border);
   border-radius: var(--payg-radius);
-  padding: 22px 24px;
+  padding: 16px 20px;
   box-shadow: var(--shadow-xs);
 }
 .payg-card__title {
@@ -82,7 +161,7 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--payg-radius);
-  padding: 24px 26px;
+  padding: 18px 22px;
   border: 1px solid var(--payg-card-border);
   background: var(--payg-card-bg);
   box-shadow: var(--shadow-xs);
@@ -270,36 +349,6 @@
 }
 .payg-bar__fill[data-state="DEGRADED"] {
   background: linear-gradient(90deg, #dc2626, #f87171);
-}
-
-/* ── Cap editor preset chips ────────────────────────────────────────── */
-.payg-cap-chip {
-  padding: 5px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--payg-card-border);
-  background: var(--bg-muted);
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-variant-numeric: tabular-nums;
-}
-.payg-cap-chip:hover:not(:disabled) {
-  color: var(--text-primary);
-  border-color: var(--border-strong);
-}
-.payg-cap-chip[data-selected="true"] {
-  background: rgba(10, 139, 255, 0.14);
-  border-color: #0a8bff;
-  color: #0a8bff;
-}
-[data-mantine-color-scheme="dark"] .payg-cap-chip[data-selected="true"] {
-  color: #66b8ff;
-}
-.payg-cap-chip:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 
 /* ── "What counts as a document?" expandable help ───────────────────── */
