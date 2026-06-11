@@ -14,6 +14,10 @@
 services:
   stirling-pdf-saas:
     environment:
+      # Base compose pins this to "disabled" (Supabase JWT enforcement off) for the payg
+      # cucumber tests. For full-stack MCP/consent testing against a real Supabase
+      # project, pass the project ref so the Supabase chain validates real tokens.
+      SAAS_DB_PROJECT_REF: "${SAAS_DB_PROJECT_REF:-disabled}"
       MCP_ENABLED: "true"
       MCP_AUTH_MODE: "oauth"
       # Discovery-interplay checks only need a resolvable issuer URL; no tokens
