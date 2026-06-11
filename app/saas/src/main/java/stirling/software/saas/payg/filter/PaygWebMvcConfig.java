@@ -9,6 +9,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.saas.payg.entitlement.EntitlementGuard;
+
 /**
  * Wires the PAYG filter + interceptor into Spring MVC. Two registrations:
  *
@@ -28,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class PaygWebMvcConfig implements WebMvcConfigurer {
 
     private final PaygChargeInterceptor paygChargeInterceptor;
+    private final EntitlementGuard entitlementGuard;
 
     @Bean
     public FilterRegistrationBean<PaygResponseBodyWrapperFilter>
@@ -46,6 +49,16 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
      */
     public static final int INTERCEPTOR_ORDER = 1000;
 
+    /**
+     * The entitlement guard runs AFTER the charge interceptor so cap-rejected requests still leave
+     * the charge interceptor's preHandle state in the consistent open-or-bypassed shape (and so the
+     * guard's 402 reaches the client without the charge interceptor needing to know about it).
+     * Spring runs interceptors in registration order on the way in, reverse order on the way out;
+     * the guard's preHandle short-circuit ({@code return false}) prevents the handler from running
+     * but Spring still invokes the charge interceptor's afterCompletion to clean up temp files.
+     */
+    public static final int ENTITLEMENT_GUARD_ORDER = 1100;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(paygChargeInterceptor)
@@ -56,5 +69,14 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/info/**",
                         "/api/v1/admin/**")
                 .order(INTERCEPTOR_ORDER);
+
+        registry.addInterceptor(entitlementGuard)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns(
+                        "/api/v1/credits/**",
+                        "/api/v1/config/**",
+                        "/api/v1/info/**",
+                        "/api/v1/admin/**")
+                .order(ENTITLEMENT_GUARD_ORDER);
     }
 }

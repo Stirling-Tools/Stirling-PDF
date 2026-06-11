@@ -42,10 +42,7 @@ export function ManageBillingButton({
         url: string;
         error?: string;
       }>("manage-billing", {
-        body: {
-          name: "Functions",
-          return_url: returnUrl,
-        },
+        body: { return_url: returnUrl },
       });
       if (error) throw error;
       if (!data || "error" in data)

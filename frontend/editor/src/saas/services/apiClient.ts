@@ -3,6 +3,10 @@ import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import { alert } from "@app/components/toast";
 import { openPlanSettings } from "@app/utils/appSettings";
+import {
+  classifyPaygError,
+  handlePaygError,
+} from "@app/services/paygErrorInterceptor";
 import { withBasePath } from "@app/constants/app";
 
 // Global credit update callback - will be set by the AuthProvider
@@ -159,12 +163,6 @@ apiClient.interceptors.response.use(
         );
       }
     }
-    if (response.config?.url?.includes("/api/v1/credits")) {
-      console.debug(
-        "[API Client] Credits endpoint response headers:",
-        response.headers,
-      );
-    }
     return response;
   },
   async (error) => {
@@ -173,6 +171,32 @@ apiClient.interceptors.response.use(
     const isPublicEndpoint = publicEndpoints.some((endpoint) =>
       originalRequest.url?.includes(endpoint),
     );
+
+    // PAYG entitlement errors come from the EntitlementGuard on the server
+    // and have specific sentinels in the response body that we want to
+    // recognise *before* the generic 401/401-refresh logic kicks in:
+    //
+    //   402 FEATURE_DEGRADED  — free-tier monthly cap exhausted; show a
+    //     toast nudging the user to the Plan tab to upgrade.
+    //   401 SIGNUP_REQUIRED   — anonymous user hit a billable endpoint;
+    //     show a "Sign up to use [category]" modal instead of redirecting
+    //     to /login (which is the default 401 behaviour). The user IS
+    //     authenticated as anonymous — refreshing their session wouldn't
+    //     unlock the endpoint, only signing up will.
+    //
+    // We classify the error here. If it matches either sentinel, we
+    // surface the appropriate UI and short-circuit the rest of the
+    // response interceptor so:
+    //   - 401 SIGNUP_REQUIRED won't trigger the session-refresh / redirect-
+    //     to-login dance below.
+    //   - The handleHttpError() generic toast at the bottom won't fire.
+    // The error itself is still propagated to the caller so any
+    // component-level catch can react if needed.
+    const paygKind = classifyPaygError(error);
+    if (paygKind !== null) {
+      handlePaygError(paygKind, error);
+      return Promise.reject(error);
+    }
 
     // On a first 401, refresh and retry — public endpoints included, since an
     // expired Bearer token is rejected on any route during cold load.

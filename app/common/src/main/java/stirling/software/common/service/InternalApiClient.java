@@ -50,6 +50,16 @@ public class InternalApiClient {
                     "^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$"
                             + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
 
+    /**
+     * Marker propagated on every internal sub-step dispatch so the saas PAYG interceptor classifies
+     * the call as {@code BillingCategory.AUTOMATION}. By construction every {@link
+     * InternalApiClient#post} caller is an automation surface (pipeline executor, AI workflow,
+     * policy runner) running a child tool inside a parent automation flow — see the saas {@code
+     * PaygChargeInterceptor.determineCategory} precedence chain, where this header dominates any
+     * per-tool {@code @RequiresFeature} annotation.
+     */
+    public static final String AUTOMATION_HEADER = "X-Stirling-Automation";
+
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
     private final TempFileManager tempFileManager;
@@ -96,6 +106,11 @@ public class InternalApiClient {
         if (apiKey != null && !apiKey.isEmpty()) {
             headers.add("X-API-KEY", apiKey);
         }
+        // Tag the sub-step as automation so PAYG bills it under AUTOMATION regardless of which
+        // tool-level @RequiresFeature annotation the dispatched controller carries (e.g. an AI-OCR
+        // step inside a policy run must bill as AUTOMATION, not AI). Set unconditionally because
+        // every caller of this dispatcher is an automation surface by design.
+        headers.add(AUTOMATION_HEADER, "true");
 
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
         RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
