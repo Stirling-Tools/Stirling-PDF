@@ -275,7 +275,6 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 customize = "Customize Appearance"
 customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
 fontName = "Font Name"
@@ -286,6 +285,7 @@ positionAndPages = "Position & Pages"
 preview = "Position Selection"
 previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
 submit = "Add Page Numbers"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -303,9 +303,9 @@ title = "Page Number Results"
 6 = "Custom Text Format"
 
 [addPassword]
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 desc = "Encrypt your PDF document with a password."
 submit = "Encrypt"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 
 [addPassword.encryption.keyLength]
@@ -350,6 +350,9 @@ title = "Password Types"
 [addPassword.tooltip.permissions]
 text = "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
 title = "Change Permissions"
+
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
 alphabet = "Alphabet"
@@ -421,6 +424,9 @@ header = "Add text to PDFs"
 tags = "text,annotation,label"
 title = "Add Text"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addText.error]
 failed = "An error occurred while adding text to the PDF."
 
@@ -439,25 +445,6 @@ resume = "Resume placement"
 
 [addText.results]
 title = "Add Text Results"
-
-[addText.step]
-createDesc = "Enter the text you want to add"
-place = "Place text"
-placeDesc = "Click on the PDF to add your text"
-
-[addText.steps]
-configure = "Configure Text"
-
-[addText.text]
-colorLabel = "Text colour"
-fontLabel = "Font"
-fontSizeLabel = "Font size"
-fontSizePlaceholder = "Type or select font size (8-200)"
-name = "Text content"
-placeholder = "Enter the text you want to add"
-
-[addText.canvas]
-colorPickerTitle = "Choose stroke colour"
 
 [addText.saved]
 defaultCanvasLabel = "Drawing signature"
@@ -481,6 +468,22 @@ canvas = "Drawing"
 image = "Upload"
 text = "Text"
 
+[addText.step]
+createDesc = "Enter the text you want to add"
+place = "Place text"
+placeDesc = "Click on the PDF to add your text"
+
+[addText.steps]
+configure = "Configure Text"
+
+[addText.text]
+colorLabel = "Text colour"
+fontLabel = "Font"
+fontSizeLabel = "Font size"
+fontSizePlaceholder = "Type or select font size (8-200)"
+name = "Text content"
+placeholder = "Enter the text you want to add"
+
 [addText.type]
 canvas = "Canvas"
 image = "Image"
@@ -491,7 +494,6 @@ text = "Text"
 tags = "color-correction,tune,modify,enhance,colour-correction"
 
 [adjustContrast]
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 adjustColors = "Adjust Colors"
 basic = "Basic Adjustments"
 blue = "Blue"
@@ -502,6 +504,7 @@ green = "Green"
 noPreview = "Select a PDF to preview"
 red = "Red"
 saturation = "Saturation:"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Adjust Colors/Contrast"
 
 [adjustContrast.error]
@@ -1513,12 +1516,18 @@ title = "Feedback Messages"
 
 [admin.settings.telegram.feedback.channel]
 title = "Channel Feedback Rules"
-errorMessage.description = "Show detailed error messages for channels."
-errorMessage.label = "Show error messages (Channel)"
-errorProcessing.description = "Send processing error messages to channels."
-errorProcessing.label = "Show processing errors (Channel)"
-noValidDocument.description = "Suppress the no valid document response for channel uploads."
-noValidDocument.label = "Show \"No valid document\" (Channel)"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+description = "Show detailed error messages for channels."
+label = "Show error messages (Channel)"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+description = "Send processing error messages to channels."
+label = "Show processing errors (Channel)"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+description = "Suppress the no valid document response for channel uploads."
+label = "Show \"No valid document\" (Channel)"
 
 [admin.settings.telegram.feedback.general.enabled]
 description = "Control whether the bot sends feedback messages at all."
@@ -1526,12 +1535,18 @@ label = "Enable Feedback"
 
 [admin.settings.telegram.feedback.user]
 title = "User Feedback Rules"
-errorMessage.description = "Show detailed error messages for users."
-errorMessage.label = "Show error messages (User)"
-errorProcessing.description = "Send processing error messages to users."
-errorProcessing.label = "Show processing errors (User)"
-noValidDocument.description = "Suppress the no valid document response for user uploads."
-noValidDocument.label = "Show \"No valid document\" (User)"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+description = "Show detailed error messages for users."
+label = "Show error messages (User)"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+description = "Send processing error messages to users."
+label = "Show processing errors (User)"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+description = "Suppress the no valid document response for user uploads."
+label = "Show \"No valid document\" (User)"
 
 [admin.settings.telegram.pipelineInboxFolder]
 description = "Folder under the pipeline directory where incoming Telegram files are stored."
@@ -1602,6 +1617,9 @@ learnMore = "Learn more about our analytics"
 paragraph1 = "Stirling PDF has opt-in analytics to help us improve the product. We do not track any personal information or file contents."
 paragraph2 = "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
 title = "Do you want to help make Stirling PDF better?"
+
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
 annotationStyle = "Annotation style"
@@ -1832,7 +1850,6 @@ bullet3 = "Keeps the original name if no suitable title is found"
 title = "Smart Renaming"
 
 [automate]
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 copyToSaved = "Copy to Saved"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 export = "Export"
@@ -1842,6 +1859,7 @@ importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
 importSuccess = "Imported automation: {{name}}"
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 
 [automate.config]
@@ -1939,8 +1957,8 @@ secureWorkflow = "Security Workflow"
 secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default."
 
 [autoRename]
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"
@@ -2520,9 +2538,9 @@ ssoManaged = "Your account is managed by your identity provider."
 title = "Change Credentials"
 
 [changeMetadata]
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 filenamePrefix = "metadata"
 submit = "Change"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Advanced Options"
@@ -2628,9 +2646,9 @@ true = "True"
 unknown = "Unknown"
 
 [changePermissions]
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 desc = "Change document restrictions and permissions."
 submit = "Change Permissions"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 
 [changePermissions.error]
@@ -2678,6 +2696,10 @@ resize = "Resize chat panel"
 [chat.actions]
 copy = "Copy message"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [chat.header]
 agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
@@ -2695,18 +2717,18 @@ executing_tool_single = "Running {{tool}}..."
 executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
 extracting_content = "Extracting content from your documents..."
 processing = "Processing extracted content..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Thinking..."
 whole_doc_compression_round = "Consolidating notes..."
 whole_doc_read_done = "Finished reading the document..."
 whole_doc_read_started = "Reading the document..."
 whole_doc_slice_done = "Reading the document... ({{percent}}% complete)"
-ranForSeconds = "Ran for {{count}} seconds"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
-ranForMinutes = "Ran for {{count}} minutes"
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
 
 [chat.quickActions]
 browseYourFiles = "Browse your files"
@@ -2735,10 +2757,6 @@ unsupported_capability = "Unsupported capability: {{capability}}"
 [chat.toolsUsed]
 summary = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
-
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
 
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
@@ -2896,9 +2914,9 @@ unlinkedTitle = "Independent scroll & pan enabled"
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."
 
 [compress]
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 desc = "Compress PDFs to reduce their file size."
 submit = "Compress"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Compress"
 
 [compress.compressionLevel]
@@ -3098,7 +3116,6 @@ security = "Security Configuration"
 system = "System Configuration"
 
 [convert]
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
 blackwhite = "Black & White"
@@ -3158,6 +3175,7 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Target format"
 title = "Convert"
 webOptions = "Web to PDF Options"
@@ -3377,6 +3395,18 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Search..."
 
@@ -3385,8 +3415,8 @@ edit = "Edit"
 editSecretValue = "Edit secret value"
 
 [editTableOfContents]
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 submit = "Apply table of contents"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Clipboard access is not available in this browser."
@@ -3520,8 +3550,8 @@ title = "Settings"
 tags = "extract"
 
 [extractPages]
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 submit = "Extract Pages"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Extract Pages"
 
 [extractPages.error]
@@ -3780,104 +3810,144 @@ versionOrigin = "Original upload"
 versionsCount = "{{count}} versions"
 versionShowHidden = "Show {{count}} earlier versions"
 viewVersion = "View this version"
-appearance.colour = "Colour"
-appearance.icon = "Icon"
-appearance.title = "Appearance"
-appearance.useColour = "Use colour {{c}}"
-column.modified = "Modified"
-column.name = "Name"
-column.size = "Size"
-column.type = "Type"
-empty.hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organise your files."
-empty.newFolderCta = "Create folder"
-empty.title = "This folder is empty"
-empty.uploadCta = "Upload files"
-empty.cloud.hint = "Upload a file to start, or create a folder to organise."
-empty.cloud.offlineHint = "Reconnect to load your cloud library."
-empty.cloud.offlineTitle = "No cached cloud files"
-empty.cloud.title = "No cloud files yet"
-empty.local.hint = "Files saved without uploading stay here. Drop a file to add one."
-empty.local.title = "No local-only files"
-empty.recent.hint = "Files you open or edit will appear here."
-empty.recent.title = "Nothing modified yet"
-empty.shared.hint = "When someone shares a file via link, it appears here."
-empty.shared.title = "Nothing shared with you"
-empty.sharedByMe.hint = "Create a share link or invite a teammate from any of your files to see it here."
-empty.sharedByMe.title = "You haven't shared any files yet"
-error.actionFailed = "Could not {{action}}."
-error.actionFailedDetail = "Could not {{action}}: {{message}}"
-error.deleteFolderFailed = "Could not delete folder."
-error.deleteFolderFailedDetail = "Could not delete folder: {{message}}"
-error.folderAppearanceFailed = "Could not update folder appearance."
-error.folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
-error.moveFilesFailed = "Could not move files."
-error.moveFilesFailedDetail = "Could not move files: {{message}}"
-error.moveFolderFailed = "Could not move folder."
-error.moveFolderFailedDetail = "Could not move folder: {{message}}"
-error.removeFilesFailed = "Could not remove files."
-error.removeFilesFailedDetail = "Could not remove files: {{message}}"
-error.uploadFilesFailed = "Could not upload files."
-error.uploadFilesFailedDetail = "Could not upload files: {{message}}"
-field.added = "Added"
-field.count = "Files"
-field.folder = "Folder"
-field.modified = "Modified"
-field.name = "Name"
-field.size = "Size"
-field.toolHistory = "Tool history"
-field.toolHistoryAtVersion = "Cumulative tool chain"
-field.totalSize = "Total size"
-field.type = "Type"
-field.versionHistory = "Version journey"
-folderName.cancel = "Cancel"
-folderName.error = "Could not save folder. Try again."
-folderName.label = "Folder name"
-folderName.placeholder = "Folder name"
-moveDialog.cancel = "Cancel"
-moveDialog.confirm = "Move here"
-moveDialog.error = "Could not move. Try again."
-moveDialog.hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
-moveDialog.newFolderCancel = "Discard"
-moveDialog.newFolderCreate = "Create"
-moveDialog.newFolderError = "Could not create folder. Try again."
-moveDialog.newFolderLabel = "New folder name"
-moveDialog.newFolderPlaceholder = "Folder name"
-moveDialog.newFolderToggle = "Create new folder…"
-moveDialog.title = "Move to folder"
-origin.all = "All sources"
-origin.cloud = "Cloud"
-origin.cloudHint = "Stored on the Stirling server"
-origin.local = "Local"
-origin.localHint = "Only stored in this browser"
-origin.shared = "Shared"
-origin.sharedHint = "Shared with you via link"
-sort.modifiedAsc = "Oldest first"
-sort.modifiedDesc = "Recent first"
-sort.nameAsc = "Name A→Z"
-sort.nameDesc = "Name Z→A"
-sort.sizeAsc = "Smallest first"
-sort.sizeDesc = "Largest first"
-syncError.client = "Folder sync failed."
-syncError.network = "Could not reach the server."
-syncError.server = "Server error during folder sync."
-tabName.local = "Local"
-tabName.recent = "Recent"
-tabName.shared = "Shared with me"
-tabName.sharedByMe = "Shared by me"
-tabs.all = "All"
-tabs.ariaLabel = "File views"
-tabs.recent = "Recent"
-tabs.shared = "Shared with me"
-tabs.sharedByMe = "Shared by me"
-treeMenu.actions = "Folder actions for {{name}}"
-treeMenu.delete = "Delete folder"
-treeMenu.newSubfolder = "New subfolder"
-treeMenu.rename = "Rename"
-typeFilter.allTypes = "All types"
-typeFilter.label = "Filter by type"
-viewMode.grid = "Grid view"
-viewMode.label = "View mode"
-viewMode.list = "List view"
+
+[filesPage.appearance]
+colour = "Colour"
+icon = "Icon"
+title = "Appearance"
+useColour = "Use colour {{c}}"
+
+[filesPage.column]
+modified = "Modified"
+name = "Name"
+size = "Size"
+type = "Type"
+
+[filesPage.empty]
+hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organise your files."
+newFolderCta = "Create folder"
+title = "This folder is empty"
+uploadCta = "Upload files"
+
+[filesPage.empty.cloud]
+hint = "Upload a file to start, or create a folder to organise."
+offlineHint = "Reconnect to load your cloud library."
+offlineTitle = "No cached cloud files"
+title = "No cloud files yet"
+
+[filesPage.empty.local]
+hint = "Files saved without uploading stay here. Drop a file to add one."
+title = "No local-only files"
+
+[filesPage.empty.recent]
+hint = "Files you open or edit will appear here."
+title = "Nothing modified yet"
+
+[filesPage.empty.shared]
+hint = "When someone shares a file via link, it appears here."
+title = "Nothing shared with you"
+
+[filesPage.empty.sharedByMe]
+hint = "Create a share link or invite a teammate from any of your files to see it here."
+title = "You haven't shared any files yet"
+
+[filesPage.error]
+actionFailed = "Could not {{action}}."
+actionFailedDetail = "Could not {{action}}: {{message}}"
+deleteFolderFailed = "Could not delete folder."
+deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+folderAppearanceFailed = "Could not update folder appearance."
+folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
+moveFilesFailed = "Could not move files."
+moveFilesFailedDetail = "Could not move files: {{message}}"
+moveFolderFailed = "Could not move folder."
+moveFolderFailedDetail = "Could not move folder: {{message}}"
+removeFilesFailed = "Could not remove files."
+removeFilesFailedDetail = "Could not remove files: {{message}}"
+uploadFilesFailed = "Could not upload files."
+uploadFilesFailedDetail = "Could not upload files: {{message}}"
+
+[filesPage.field]
+added = "Added"
+count = "Files"
+folder = "Folder"
+modified = "Modified"
+name = "Name"
+size = "Size"
+toolHistory = "Tool history"
+toolHistoryAtVersion = "Cumulative tool chain"
+totalSize = "Total size"
+type = "Type"
+versionHistory = "Version journey"
+
+[filesPage.folderName]
+cancel = "Cancel"
+error = "Could not save folder. Try again."
+label = "Folder name"
+placeholder = "Folder name"
+
+[filesPage.moveDialog]
+cancel = "Cancel"
+confirm = "Move here"
+error = "Could not move. Try again."
+hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
+newFolderCancel = "Discard"
+newFolderCreate = "Create"
+newFolderError = "Could not create folder. Try again."
+newFolderLabel = "New folder name"
+newFolderPlaceholder = "Folder name"
+newFolderToggle = "Create new folder…"
+title = "Move to folder"
+
+[filesPage.origin]
+all = "All sources"
+cloud = "Cloud"
+cloudHint = "Stored on the Stirling server"
+local = "Local"
+localHint = "Only stored in this browser"
+shared = "Shared"
+sharedHint = "Shared with you via link"
+
+[filesPage.sort]
+modifiedAsc = "Oldest first"
+modifiedDesc = "Recent first"
+nameAsc = "Name A→Z"
+nameDesc = "Name Z→A"
+sizeAsc = "Smallest first"
+sizeDesc = "Largest first"
+
+[filesPage.syncError]
+client = "Folder sync failed."
+network = "Could not reach the server."
+server = "Server error during folder sync."
+
+[filesPage.tabName]
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.tabs]
+all = "All"
+ariaLabel = "File views"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.treeMenu]
+actions = "Folder actions for {{name}}"
+delete = "Delete folder"
+newSubfolder = "New subfolder"
+rename = "Rename"
+
+[filesPage.typeFilter]
+allTypes = "All types"
+label = "Filter by type"
+
+[filesPage.viewMode]
+grid = "Grid view"
+label = "View mode"
+list = "List view"
 
 [fileToPDF]
 tags = "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint"
@@ -3919,8 +3989,8 @@ welcomeMessage = "For security reasons, you must change your password on your fi
 welcomeTitle = "Welcome!"
 
 [flatten]
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 submit = "Flatten"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 
 [flatten.error]
@@ -4565,6 +4635,7 @@ signIn = "Sign In"
 accountCreatedSuccess = "Account created successfully! You can now sign in."
 backToSignIn = "Back to sign in"
 changePasswordWarning = "Please change your password after logging in for the first time"
+createAccount = "Create an account"
 credentialsUpdated = "Your credentials have been updated. Please sign in again."
 defaultCredentials = "Default Login Credentials"
 email = "Email"
@@ -4594,7 +4665,6 @@ sending = "Sending…"
 sendMagicLink = "Send Magic Link"
 sendResetLink = "Send reset link"
 sessionExpired = "Your session has expired. Please sign in again."
-createAccount = "Create an account"
 signin = "Sign in"
 signingIn = "Signing in..."
 signInWith = "Sign in with"
@@ -5240,7 +5310,6 @@ REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
 SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
 
 [pdfTextEditor]
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 conversionFailed = "Failed to convert PDF. Please try again."
 converting = "Converting PDF to editable format..."
 currentFile = "Current file: {{name}}"
@@ -5248,6 +5317,7 @@ imageLabel = "Placed image"
 noTextOnPage = "No editable text was detected on this page."
 pagePreviewAlt = "Page preview"
 pageSummary = "Page {{number}} of {{total}}"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 viewLabel = "PDF Editor"
 
@@ -5409,9 +5479,9 @@ title = "PDF to Presentation"
 tags = "single page"
 
 [pdfToSinglePage]
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 description = "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights."
 submit = "Convert To Single Page"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF To Single Page"
 
 [pdfToSinglePage.error]
@@ -5887,6 +5957,9 @@ whatsNewTourDesc = "Tour the updated layout"
 admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
 user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Redact"
 tags = "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact"
@@ -6017,8 +6090,8 @@ title = "What it does"
 title = "About Remove Annotations"
 
 [removeBlanks]
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 submit = "Remove blank pages"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Remove Blanks"
 
 [removeBlanks.error]
@@ -6076,8 +6149,8 @@ failed = "An error occurred whilst removing certificate signatures."
 title = "Certificate Removal Results"
 
 [removeImage]
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 submit = "Remove image"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Remove image"
 
 [removeImage.error]
@@ -6148,8 +6221,8 @@ title = "Decrypted PDFs"
 description = "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
 
 [reorganizePages]
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 submit = "Reorganize Pages"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Failed to reorganize pages"
@@ -6232,11 +6305,11 @@ text = "Completely invert all colours in the PDF, creating a negative-like effec
 title = "Invert All Colours"
 
 [rotate]
-tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 rotateLeft = "Rotate Anticlockwise"
 rotateRight = "Rotate Clockwise"
 selectRotation = "Select Rotation Angle (Clockwise)"
 submit = "Apply Rotation"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotate PDF"
 
 [rotate.error]
@@ -6256,10 +6329,10 @@ text = "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments
 title = "Rotate Settings Overview"
 
 [sanitize]
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 desc = "Remove potentially harmful elements from PDF files."
 sanitizationResults = "Sanitisation Results"
 submit = "Sanitise PDF"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sanitise"
 
 [sanitize.error]
@@ -6305,6 +6378,9 @@ title = "Sanitise PDF"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"
+
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Angle Threshold:"
@@ -6730,7 +6806,6 @@ title = "Show Javascript"
 title = "Extracted JavaScript"
 
 [sign]
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 activate = "Activate Signature Placement"
 add = "Add"
 addToAll = "Add to all pages"
@@ -6750,6 +6825,7 @@ redo = "Redo"
 save = "Save Signature"
 sharedSigs = "Shared Signatures"
 submit = "Sign Document"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 undo = "Undo"
 updateAndPlace = "Update and Place"
@@ -6937,11 +7013,11 @@ small = "Small"
 x-large = "X-Large"
 
 [split]
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 resultsTitle = "Split Results"
 selectMethod = "Select a split method"
 splitPages = "Enter pages to split on:"
 submit = "Split"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Split PDF"
 
 [split.error]
@@ -7328,10 +7404,10 @@ justNow = "just now"
 minutesAgo = "{{count}}m ago"
 
 [timestampPdf]
-tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 desc = "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server."
 results = "Timestamp Results"
 submit = "Apply Timestamp"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "Timestamp PDF"
 
 [timestampPdf.error]
@@ -7727,10 +7803,173 @@ title = "View/Edit PDF"
 [warning]
 tooltipTitle = "Warning"
 
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
+
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
 [watermark]
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 desc = "Add text or image watermarks to PDF files"
 submit = "Add Watermark"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Add Watermark"
 
 [watermark.error]
@@ -8191,189 +8430,3 @@ cancel = "Cancel"
 confirm = "Extract"
 message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.modal]
-automation = "Automation"
-createFolder = "Create Folder"
-automationRequired = "Add at least one configured step before saving."
-color = "Accent color"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-automationNameFallback = "Watched Folder automation"
-maxRetries = "Max retries"
-retryDelay = "Delay (minutes)"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputName = "Output filename prefix"
-outputNameSuffix = "Suffix"
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-localOutputFolder = "Local output folder"
-outputFolderUnsupported = "Not supported in this browser"
-outputFolderNotSet = "Not set — outputs stay in app"
-advanced = "Advanced"
-replaceOriginal = "Replace original file"
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-outputNamePrefix = "Filename prefix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-
-[watchedFolders.home]
-create = "Create your first Watched Folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-file = "file"
-files = "files"
-emptyTitle = "Automate your PDF workflows"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-resume = "Resume"
-pause = "Pause"
-deleteFolder = "Delete folder"
-
-[watchedFolders.card]
-edit = "Edit folder"
-delete = "Delete folder"
-
-[watchedFolders.status]
-done = "Done"
-processing = "Processing"
-paused = "Paused"
-active = "Active"
-
-[watchedFolders.howItWorks]
-title = "How Watched Folders work"
-step1Title = "Drop files"
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step2Title = "Pipeline runs"
-step2Desc = "Your configured tools process each file automatically"
-step3Title = "Output ready"
-step3Desc = "Download processed files from inside the folder"
-
-[watchedFolders.workbench]
-addFiles = "Add files"
-inputs = "Inputs"
-outputs = "Outputs"
-failed = "Failed"
-dataSaved = "Saved"
-running = "Running"
-dropToProcess = "Drop to process"
-activity = "Activity"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-pause = "Pause"
-resume = "Resume"
-dayRunning = "day running"
-daysRunning = "days running"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-filterAll = "All"
-filterPending = "Pending"
-search = "Search…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-watching = "Watching: {{name}}"
-noInputFolder = "No input folder — edit to configure"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-exportZip = "Export zip"
-exportSeparately = "Export separately"
-countSelected = "{{count}} selected"
-selectAll = "Select all {{count}}"
-delete = "Delete"
-clearSelection = "Clear selection"
-preview = "Preview"
-export = "Export"
-previewInput = "Preview input"
-previewOutput = "Preview output"
-directionIn = "in"
-directionOut = "out"
-queuedWaiting = "Queued — waiting to run"
-allTime = "All time"
-queued = "Queued"
-inputSize = "Input size"
-filesProcessedOverTime = "Files processed over time"
-legendComplete = "Complete"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-removeEntry = "Remove entry"
-removeEntries = "Remove {{count}} entries"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-cancel = "Cancel"
-removeNotificationsOnly = "Remove notifications only"
-deleteOutputs = "Delete outputs"
-previewLoadFailed = "Could not load file preview."
-
-[watchedFolders.actions]
-back = "Back"
-dismiss = "Dismiss"
-retry = "Retry"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-collapse = "Collapse"
-expand = "Expand"
-
-[watchedFolders.time]
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-hoursAgo = "{{count}}h ago"
-daysAgo = "{{count}}d ago"
-[addStamp]
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-
-[annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
-
-[devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
-
-[devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
-
-[devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
-
-[devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
-
-[read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
-
-[scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
