@@ -4,17 +4,13 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
-import { ChipFlow } from "@shared/components/ChipFlow";
-import { DataRow } from "@shared/components/DataRow";
 import { Input } from "@shared/components/Input";
 import { Select } from "@shared/components/Select";
 import { SettingsRow } from "@shared/components/SettingsRow";
-import { FormField } from "@shared/components/FormField";
 import { Checkbox } from "@shared/components/Checkbox";
 import { Banner } from "@shared/components/Banner";
 import { EmptyState } from "@shared/components/EmptyState";
 import { StepIndicator } from "@shared/components/StepIndicator";
-import { IconBadge } from "@shared/components/IconBadge";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -43,7 +39,7 @@ import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
 // Sources are always "editor" for this release, so the Sources step is dropped
 // from the flow (its panel code is kept below for when other sources return).
 const SOURCES_IN_FLOW = false;
-const TOTAL_STEPS = SOURCES_IN_FLOW ? 4 : 3;
+const TOTAL_STEPS = SOURCES_IN_FLOW ? 3 : 2;
 
 interface PolicySetupWizardProps {
   category: PolicyCategory;
@@ -80,10 +76,11 @@ interface PolicySetupWizardProps {
 }
 
 /**
- * The shared policy wizard, used for both setup and edit. Four steps:
- * Workflow (the tool pipeline, reusing the Watch Folders builder) → Settings
- * (the policy fields) → Sources → Review. The workflow builder is kept mounted
- * across steps so the final action can trigger its save.
+ * The shared policy wizard, used for both setup and edit. Two steps: Workflow
+ * (the tool pipeline, reusing the Watch Folders builder) → Settings (the policy
+ * fields + output/retry config). The workflow builder is kept mounted across
+ * steps so the final action can trigger its save. (A Sources step exists in
+ * code, gated off by SOURCES_IN_FLOW, for when non-editor sources return.)
  */
 export function PolicySetupWizard({
   category,
@@ -115,10 +112,9 @@ export function PolicySetupWizard({
   );
   const [scopeNarrow, setScopeNarrow] = useState(initial.scopeTypes.length > 0);
   const [scopeTypes, setScopeTypes] = useState<string[]>(initial.scopeTypes);
-  // Default flagged-document reviewer to the signed-in user.
-  const [reviewerEmail, setReviewerEmail] = useState(
-    initial.reviewerEmail || user?.email || "",
-  );
+  // Reviewer is no longer configured in the flow (there's no human-review step),
+  // but the field is kept in the saved policy, defaulted to the signed-in user.
+  const reviewerEmail = initial.reviewerEmail || user?.email || "";
   // Output + retry settings — the real, working folder settings (the engine
   // applies them). Pre-filled from the backing folder in edit mode.
   const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
@@ -521,53 +517,6 @@ export function PolicySetupWizard({
                 )}
               </Card>
             )}
-          </>
-        )}
-
-        {step === TOTAL_STEPS && (
-          <>
-            <p className="pol-desc">
-              When Stirling has low confidence in an enforcement action, it will
-              send the document for human review.
-            </p>
-            <p className="pol-section-label">Reviewer</p>
-            <Card padding="default">
-              <FormField
-                label="Send flagged documents to:"
-                helperText="They'll open flagged documents directly in the Stirling editor."
-              >
-                <Input
-                  type="email"
-                  inputSize="sm"
-                  value={reviewerEmail}
-                  onChange={(e) => setReviewerEmail(e.target.value)}
-                  placeholder="email@company.com"
-                />
-              </FormField>
-            </Card>
-
-            <p className="pol-section-label">Summary</p>
-            <Card padding="default">
-              <div className="pol-summary-head">
-                <IconBadge accent="blue" size="sm">
-                  {category.icon}
-                </IconBadge>
-                <span className="pol-summary-title">
-                  {category.label} Policy
-                </span>
-              </div>
-              <div className="pol-summary-rows">
-                <DataRow label="Enforces" align="top">
-                  <ChipFlow items={config.rules} />
-                </DataRow>
-                {SOURCES_IN_FLOW && (
-                  <DataRow label="Sources">{sources.length} selected</DataRow>
-                )}
-                <DataRow label="Reviewer">
-                  {reviewerEmail || <span className="pol-muted">Not set</span>}
-                </DataRow>
-              </div>
-            </Card>
           </>
         )}
       </div>
