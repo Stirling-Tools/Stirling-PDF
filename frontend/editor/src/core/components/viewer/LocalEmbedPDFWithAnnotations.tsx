@@ -179,7 +179,7 @@ const LazyPageContent = ({
       },
       {
         rootMargin: "600px", // Pre-render pages within 600px margin to avoid flashes
-      }
+      },
     );
 
     observer.observe(el);
@@ -677,7 +677,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                               }
                             }}
                           >
-                            <LazyPageContent pageIndex={pageIndex} width={width} height={height}>
+                            <LazyPageContent
+                              pageIndex={pageIndex}
+                              width={width}
+                              height={height}
+                            >
                               <TiledPageBackground
                                 documentId={documentId}
                                 pageIndex={pageIndex}
@@ -776,7 +780,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                               "Delete signature",
                                             )}
                                           >
-                                            <CloseIcon style={{ fontSize: 12 }} />
+                                            <CloseIcon
+                                              style={{ fontSize: 12 }}
+                                            />
                                           </ActionIcon>
                                         )}
 
@@ -790,9 +796,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                           onPointerDown={(e) => {
                                             if (readOnly) return;
                                             // Don't drag if clicking the delete button or a resize handle
-                                            const target = e.target as HTMLElement;
+                                            const target =
+                                              e.target as HTMLElement;
                                             if (
-                                              target.closest("[data-resize-handle]") ||
+                                              target.closest(
+                                                "[data-resize-handle]",
+                                              ) ||
                                               target.closest("button")
                                             ) {
                                               return;
@@ -814,23 +823,18 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                             ) => {
                                               isDraggingRef.current = true;
                                               const deltaX =
-                                                (moveEvent.clientX -
-                                                  startX) /
+                                                (moveEvent.clientX - startX) /
                                                 width;
                                               const deltaY =
-                                                (moveEvent.clientY -
-                                                  startY) /
+                                                (moveEvent.clientY - startY) /
                                                 height;
                                               setSignaturePreviews((prev) =>
                                                 prev.map((p) =>
                                                   p.id === preview.id
                                                     ? {
                                                         ...p,
-                                                        x:
-                                                          startLeft +
-                                                          deltaX,
-                                                        y:
-                                                          startTop + deltaY,
+                                                        x: startLeft + deltaX,
+                                                        y: startTop + deltaY,
                                                       }
                                                     : p,
                                                 ),
@@ -920,14 +924,16 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                 cursor: handle.cursor,
                                                 zIndex:
                                                   Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
-                                                ...(handle.top !== undefined && {
+                                                ...(handle.top !==
+                                                  undefined && {
                                                   top: handle.top,
                                                 }),
                                                 ...(handle.bottom !==
                                                   undefined && {
                                                   bottom: handle.bottom,
                                                 }),
-                                                ...(handle.left !== undefined && {
+                                                ...(handle.left !==
+                                                  undefined && {
                                                   left: handle.left,
                                                 }),
                                                 ...(handle.right !==
@@ -939,12 +945,15 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                 e.stopPropagation();
                                                 e.preventDefault();
                                                 const el = e.currentTarget;
-                                                el.setPointerCapture(e.pointerId);
+                                                el.setPointerCapture(
+                                                  e.pointerId,
+                                                );
                                                 interactionPauseRef.current?.pause();
 
                                                 const startX = e.clientX;
                                                 const startY = e.clientY;
-                                                const startWidth = preview.width;
+                                                const startWidth =
+                                                  preview.width;
                                                 const startHeight =
                                                   preview.height;
                                                 const startLeft = preview.x;
@@ -955,10 +964,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                 ) => {
                                                   isDraggingRef.current = true;
                                                   const deltaX =
-                                                    (moveEvent.clientX - startX) /
+                                                    (moveEvent.clientX -
+                                                      startX) /
                                                     width;
                                                   const deltaY =
-                                                    (moveEvent.clientY - startY) /
+                                                    (moveEvent.clientY -
+                                                      startY) /
                                                     height;
 
                                                   let newWidth = startWidth;
@@ -971,7 +982,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                   const minH = 25 / height;
 
                                                   if (
-                                                    handle.position.includes("e")
+                                                    handle.position.includes(
+                                                      "e",
+                                                    )
                                                   ) {
                                                     newWidth = Math.max(
                                                       minW,
@@ -979,7 +992,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                     );
                                                   }
                                                   if (
-                                                    handle.position.includes("w")
+                                                    handle.position.includes(
+                                                      "w",
+                                                    )
                                                   ) {
                                                     newWidth = Math.max(
                                                       minW,
@@ -990,7 +1005,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                       (startWidth - newWidth);
                                                   }
                                                   if (
-                                                    handle.position.includes("s")
+                                                    handle.position.includes(
+                                                      "s",
+                                                    )
                                                   ) {
                                                     newHeight = Math.max(
                                                       minH,
@@ -998,7 +1015,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                                     );
                                                   }
                                                   if (
-                                                    handle.position.includes("n")
+                                                    handle.position.includes(
+                                                      "n",
+                                                    )
                                                   ) {
                                                     newHeight = Math.max(
                                                       minH,

@@ -77,10 +77,7 @@ export function ThumbnailSidebar({
     const generateThumbnails = async () => {
       const CONCURRENCY_LIMIT = 3;
       // Initialize queue with all page indices
-      const queue = Array.from(
-        { length: scrollState.totalPages },
-        (_, i) => i,
-      );
+      const queue = Array.from({ length: scrollState.totalPages }, (_, i) => i);
 
       const processNext = async () => {
         if (queue.length === 0 || isCancelled) return;

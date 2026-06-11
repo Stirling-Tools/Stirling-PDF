@@ -466,7 +466,7 @@ const LazyPageContent = ({
       },
       {
         rootMargin: "600px", // Pre-render pages within 600px margin to avoid flashes
-      }
+      },
     );
 
     observer.observe(el);
@@ -973,7 +973,11 @@ export function LocalEmbedPDF({
                                   onDrop={(e) => e.preventDefault()}
                                   onDragOver={(e) => e.preventDefault()}
                                 >
-                                  <LazyPageContent pageIndex={pageIndex} width={width} height={height}>
+                                  <LazyPageContent
+                                    pageIndex={pageIndex}
+                                    width={width}
+                                    height={height}
+                                  >
                                     <TiledPageBackground
                                       documentId={documentId}
                                       pageIndex={pageIndex}
