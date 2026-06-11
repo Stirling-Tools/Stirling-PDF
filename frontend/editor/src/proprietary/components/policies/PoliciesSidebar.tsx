@@ -130,7 +130,10 @@ export function PoliciesSection({
           <button
             type="button"
             className="pol-info-btn"
-            aria-label={t("policies.sidebar.infoAriaLabel", "What is a policy?")}
+            aria-label={t(
+              "policies.sidebar.infoAriaLabel",
+              "What is a policy?",
+            )}
           >
             <LocalIcon
               icon="info-outline-rounded"
