@@ -470,10 +470,9 @@ public class SaasTeamService {
                 // Personal teams are deleted on accept; non-leaders leaving never orphans a team.
                 continue;
             }
-            boolean lastLeader =
-                    membershipRepository.findByTeamIdAndRole(team.getId(), TeamRole.LEADER).size()
-                            == 1;
-            if (!lastLeader) {
+            // Only reached for a non-personal team the user leads — at most one such team in the
+            // one-team-per-user model — so this count runs ~once, not per membership.
+            if (membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER) > 1) {
                 // Another leader remains, so the team keeps an owner.
                 continue;
             }
