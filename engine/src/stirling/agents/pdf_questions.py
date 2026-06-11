@@ -5,7 +5,9 @@ import logging
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
+from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
     AiFile,
     EditPlanResponse,
@@ -24,43 +26,52 @@ from stirling.contracts import (
     format_conversation_history,
     format_file_names,
 )
+from stirling.documents import RagCapability
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
-from stirling.rag import RagCapability
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
 
 
 PDF_QUESTION_SYSTEM_PROMPT = (
-    "You answer questions about PDF documents by retrieving relevant content with the "
-    "search_knowledge tool. Use it before answering. Do not guess or use outside knowledge.\n"
+    "You answer questions about PDF documents using three retrieval tools:\n"
     "\n"
-    "The search_knowledge tool has a finite call budget per run. When it is no longer "
-    "available, answer from what you have already retrieved.\n"
+    "1. search_knowledge(query) - returns the passages most semantically similar "
+    "to the query. Use it for targeted lookups: a specific fact, a named section, "
+    "a particular passage. Typically one or two calls is enough.\n"
+    "\n"
+    "2. read_full_document(query) - reads every page of the attached documents in "
+    "parallel and returns notes relevant to the query. Use it when answering "
+    "requires seeing the whole document end-to-end: summaries, aggregations "
+    "(largest, shortest, count), comparisons across sections. It is more "
+    "expensive than search_knowledge, so prefer search_knowledge when one or two "
+    "passages would suffice.\n"
+    "\n"
+    "3. find_contradictions(query) - audits the attached documents for textual "
+    "contradictions across pages (opposing claims, conflicting recommendations, "
+    "inconsistent deadlines, etc.) and returns a notes-style report. Use it when "
+    "the question is about logical or textual consistency of the content (NOT "
+    "numerical math). One call audits the entire document set.\n"
+    "\n"
+    "Pick the right tool, call it, then answer from what you got back. Do not "
+    "guess or use outside knowledge.\n"
     "\n"
     "Guidelines:\n"
-    "- Make targeted search_knowledge calls. Typically one or two is enough.\n"
-    "- Answer from the retrieved text. If the retrieved content doesn't support a confident "
-    "answer, return not_found.\n"
-    "- For questions that would require reading the entire document end-to-end (e.g. "
-    "'what's the shortest chapter', 'how many X are there'), return not_found.\n"
-    "- Include a short list of evidence snippets (with page numbers where available) drawn "
-    "from what search_knowledge returned.\n"
+    "- If the retrieved content does not support a confident answer, return not_found.\n"
+    "- Include a short list of evidence snippets (with page numbers where available) "
+    "drawn from what the tools returned.\n"
     "\n"
     "Writing the not_found reason:\n"
     "- The reason is shown directly to the end user, so write it in plain, friendly "
     "language. One or two short sentences.\n"
     "- NEVER mention 'RAG', 'retrieval', 'chunks', 'search results', 'targeted search', "
-    "'search_knowledge', or other implementation details.\n"
-    "- Be honest about the actual limitation. For questions that require full-document "
-    "analysis (shortest chapter, word counts, etc.), explain that the document is too "
-    "long to analyse end-to-end: you can only look up specific passages, and that's "
-    "not enough to compare every part of the document against every other.\n"
+    "'search_knowledge', 'read_full_document', 'find_contradictions', or other "
+    "implementation details.\n"
     "- For questions where the answer just isn't in the document, say so directly: "
     "'I couldn't find that information in the document.'\n"
-    "- Do not make it sound like you're choosing not to answer. Be clear that it's "
-    "a genuine constraint."
+    "- Do not make it sound like you're choosing not to answer."
 )
+
 
 _MATH_SYNTH_SYSTEM_PROMPT = (
     "You are given a math-audit Verdict (structured JSON) and the user's "
@@ -83,6 +94,13 @@ class PdfQuestionAgent:
             model_settings=runtime.fast_model_settings,
         )
         self._math_intent_classifier = MathIntentClassifier(runtime)
+        # Shared across whole-doc-reader instances so the worker agent and
+        # semaphore are constructed once and reused per request.
+        self._chunked_reasoner = ChunkedReasoner(runtime)
+        # Per consuming-agent instance (which is per-request in the
+        # orchestrator) — reused across the request's capability instances
+        # (mirrors the chunked-reasoner pattern).
+        self._contradiction_detector = ContradictionDetector(runtime)
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         logger.info(
@@ -95,7 +113,7 @@ class PdfQuestionAgent:
             logger.info("[pdf-question] missing ingestions: %s", [file.name for file in missing])
             return NeedIngestResponse(
                 resume_with=SupportedCapability.PDF_QUESTION,
-                reason="Some files have not been ingested into RAG yet.",
+                reason="Some files have not been ingested yet.",
                 files_to_ingest=missing,
                 content_types=[PdfContentType.PAGE_TEXT],
             )
@@ -145,23 +163,41 @@ class PdfQuestionAgent:
     async def _find_missing_files(self, files: list[AiFile]) -> list[AiFile]:
         missing: list[AiFile] = []
         for file in files:
-            if not await self.runtime.rag_service.has_collection(file.id):
+            if not await self.runtime.documents.has_collection(file.id):
                 missing.append(file)
         return missing
 
     async def _run_answer_agent(self, request: PdfQuestionRequest) -> PdfQuestionTerminalResponse:
+        """Drive a single smart-model agent with both retrieval tools.
+
+        The agent picks ``search_knowledge`` for targeted lookups and
+        ``read_full_document`` for whole-document questions. Removing the
+        upstream classifier keeps that judgement in the same call that writes
+        the answer, and lets the agent mix tools when the question warrants it.
+        """
         rag = RagCapability(
-            rag_service=self.runtime.rag_service,
+            documents=self.runtime.documents,
             collections=[file.id for file in request.files],
             top_k=self.runtime.settings.rag_default_top_k,
             max_searches=self.runtime.settings.rag_max_searches,
+        )
+        whole_doc = WholeDocReaderCapability(
+            runtime=self.runtime,
+            files=request.files,
+            reasoner=self._chunked_reasoner,
+        )
+        contradiction = ContradictionCapability(
+            detector=self._contradiction_detector,
+            files=request.files,
         )
         agent = Agent(
             model=self.runtime.smart_model,
             output_type=NativeOutput([PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse]),
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
-            instructions=rag.instructions,
-            toolsets=[rag.toolset],
+            # pydantic-ai accepts a list of (string-or-callable) instruction sources;
+            # it resolves each at run time and concatenates them for the model.
+            instructions=[rag.instructions, whole_doc.instructions, contradiction.instructions],
+            toolsets=[rag.toolset, whole_doc.toolset, contradiction.toolset],
             model_settings=self.runtime.smart_model_settings,
         )
         prompt = self._build_prompt(request)
@@ -184,5 +220,5 @@ class PdfQuestionAgent:
             f"Conversation history:\n{history}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
-            "Use search_knowledge to retrieve the relevant content, then answer."
+            "Pick the right retrieval tool for this question, then answer from what it returns."
         )

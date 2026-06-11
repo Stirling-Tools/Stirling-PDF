@@ -30,15 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
+import stirling.software.proprietary.model.api.ai.AiDocumentIngestRequest;
+import stirling.software.proprietary.model.api.ai.AiEngineProgressDetail;
 import stirling.software.proprietary.model.api.ai.AiFile;
-import stirling.software.proprietary.model.api.ai.AiRagIngestRequest;
-import stirling.software.proprietary.model.api.ai.AiRagPageText;
+import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -60,7 +62,7 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class AiWorkflowService {
 
-    private static final String RAG_DOCUMENTS_ENDPOINT = "/api/v1/rag/documents";
+    private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
@@ -76,6 +78,14 @@ public class AiWorkflowService {
     @FunctionalInterface
     public interface ProgressListener {
         void onProgress(AiWorkflowProgressEvent event);
+
+        /**
+         * Called when the engine emits a keep-alive heartbeat. Default is a no-op; consumers that
+         * forward to a downstream connection (e.g. an SSE emitter) override this to push a
+         * heartbeat through, so the next downstream-disconnect surfaces immediately rather than
+         * waiting for the next real progress event.
+         */
+        default void onHeartbeat() {}
     }
 
     private static final ProgressListener NOOP_LISTENER = event -> {};
@@ -143,13 +153,14 @@ public class AiWorkflowService {
             ProgressListener listener)
             throws IOException {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
-        AiWorkflowResponse response = invokeOrchestrator(request);
+        AiWorkflowResponse response = invokeOrchestrator(request, listener);
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
+            case GENERATE_FILE -> onGenerateFile(response, listener);
             case NOT_FOUND,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
@@ -277,22 +288,22 @@ public class AiWorkflowService {
     }
 
     private void ingestFile(AiFile file, MultipartFile multipartFile) throws IOException {
-        List<AiRagPageText> pages = new ArrayList<>();
+        List<AiPageText> pages = new ArrayList<>();
         try (PDDocument document = pdfDocumentFactory.load(multipartFile, true)) {
             int pageCount = document.getNumberOfPages();
             for (int pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
                 String pageText = pdfContentExtractor.extractPageTextRaw(document, pageNumber);
                 if (pageText != null && !pageText.isBlank()) {
-                    pages.add(new AiRagPageText(pageNumber, pageText));
+                    pages.add(new AiPageText(pageNumber, pageText));
                 }
             }
         }
-        AiRagIngestRequest ingestRequest =
-                new AiRagIngestRequest(file.getId(), file.getName(), pages);
+        AiDocumentIngestRequest ingestRequest =
+                new AiDocumentIngestRequest(file.getId(), file.getName(), pages);
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(RAG_DOCUMENTS_ENDPOINT, body);
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body);
         log.debug(
-                "Ingested file into RAG: id={}, name={}, pages={}",
+                "Ingested document: id={}, name={}, pages={}",
                 file.getId(),
                 file.getName(),
                 pages.size());
@@ -323,10 +334,12 @@ public class AiWorkflowService {
                             result.files(),
                             inputFileNames(filesById),
                             result.report()));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
+            return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue("Tool execution failed: " + e.getMessage()));
+            return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
         }
     }
 
@@ -350,6 +363,29 @@ public class AiWorkflowService {
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
         return new WorkflowState.Terminal(response);
+    }
+
+    private WorkflowState onGenerateFile(AiWorkflowResponse response, ProgressListener listener)
+            throws IOException {
+        String content = response.getGeneratedContent();
+        String filename = response.getGeneratedFilename();
+        if (content == null || filename == null || filename.isBlank()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "AI engine returned generate_file without content or filename."));
+        }
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
+        String safeFilename = Filenames.toSimpleFileName(filename);
+        byte[] bytes = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        org.springframework.core.io.Resource resource =
+                new org.springframework.core.io.ByteArrayResource(bytes) {
+                    @Override
+                    public String getFilename() {
+                        return safeFilename;
+                    }
+                };
+        return new WorkflowState.Terminal(
+                buildCompletedResponse(response.getSummary(), List.of(resource), List.of(), null));
     }
 
     @SuppressWarnings("unchecked")
@@ -414,6 +450,10 @@ public class AiWorkflowService {
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
                             summary, currentFiles, inputFileNames(filesById), lastReport));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
+            return new WorkflowState.Terminal(
+                    cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -423,6 +463,20 @@ public class AiWorkflowService {
 
     private static List<String> inputFileNames(Map<String, MultipartFile> filesById) {
         return filesById.values().stream().map(MultipartFile::getOriginalFilename).toList();
+    }
+
+    private static String toolTimeoutMessage(String endpointPath, InternalApiTimeoutException e) {
+        return String.format(
+                "The %s tool did not respond within %d seconds and was aborted. The underlying"
+                        + " operation may be hung; try again, run on a smaller file, or use a"
+                        + " different approach.",
+                endpointPath, e.getReadTimeout().toSeconds());
+    }
+
+    private static String toolFailureMessage(String endpointPath, Throwable cause) {
+        String reason =
+                cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        return String.format("The %s tool failed: %s", endpointPath, reason);
     }
 
     /**
@@ -477,8 +531,15 @@ public class AiWorkflowService {
         }
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
-                for (Object item : list) {
-                    body.add(entry.getKey(), item);
+                if (containsStructuredElements(list)) {
+                    // Endpoints binding lists of structured objects (e.g. /security/redact's
+                    // redactions, /general/edit-text's edits) parse a single JSON string field via
+                    // a property editor. Pre-serialize the whole list so binding succeeds.
+                    body.add(entry.getKey(), objectMapper.writeValueAsString(list));
+                } else {
+                    for (Object item : list) {
+                        body.add(entry.getKey(), item);
+                    }
                 }
             } else {
                 body.add(entry.getKey(), entry.getValue());
@@ -527,6 +588,15 @@ public class AiWorkflowService {
                     e.getMessage());
             return null;
         }
+    }
+
+    private static boolean containsStructuredElements(List<?> list) {
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> || item instanceof List<?>) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesById) throws IOException {
@@ -614,10 +684,57 @@ public class AiWorkflowService {
         return response;
     }
 
-    private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request) throws IOException {
+    /**
+     * Drive the engine's streaming orchestrator endpoint. Progress events are forwarded to {@code
+     * listener} as they arrive (each one keeps the SSE connection to the frontend alive too). The
+     * final {@code result} event carries the full {@link AiWorkflowResponse}; an {@code error}
+     * event surfaces engine-side failures.
+     */
+    private AiWorkflowResponse invokeOrchestrator(
+            WorkflowTurnRequest request, ProgressListener listener) throws IOException {
         String requestBody = objectMapper.writeValueAsString(request);
-        String responseBody = aiEngineClient.post("/api/v1/orchestrator", requestBody);
-        return objectMapper.readValue(responseBody, AiWorkflowResponse.class);
+        AiWorkflowResponse[] resultHolder = new AiWorkflowResponse[1];
+        String[] errorHolder = new String[1];
+
+        aiEngineClient.streamPost(
+                "/api/v1/orchestrator",
+                requestBody,
+                line -> handleStreamLine(line, listener, resultHolder, errorHolder));
+
+        if (errorHolder[0] != null) {
+            throw new IOException("AI engine returned error: " + errorHolder[0]);
+        }
+        if (resultHolder[0] == null) {
+            throw new IOException("AI engine stream ended without a result");
+        }
+        return resultHolder[0];
+    }
+
+    private void handleStreamLine(
+            String line,
+            ProgressListener listener,
+            AiWorkflowResponse[] resultHolder,
+            String[] errorHolder) {
+        try {
+            JsonNode node = objectMapper.readTree(line);
+            String event = node.path("event").asText();
+            switch (event) {
+                case "progress" -> {
+                    AiEngineProgressDetail detail =
+                            objectMapper.treeToValue(node, AiEngineProgressDetail.class);
+                    listener.onProgress(AiWorkflowProgressEvent.engineProgress(detail));
+                }
+                case "result" -> {
+                    JsonNode response = node.path("response");
+                    resultHolder[0] = objectMapper.treeToValue(response, AiWorkflowResponse.class);
+                }
+                case "error" -> errorHolder[0] = node.path("message").asText("unknown error");
+                case "heartbeat" -> listener.onHeartbeat();
+                default -> log.warn("Ignoring unknown engine stream event: {}", event);
+            }
+        } catch (JacksonException e) {
+            log.warn("Failed to parse engine stream line: {}", line, e);
+        }
     }
 
     @Data

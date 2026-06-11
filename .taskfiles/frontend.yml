@@ -1,5 +1,10 @@
 version: '3'
 
+# Tasks operate from the workspace root (frontend/). Editor commands pass
+# `editor` as the vite project root (positional after `build` / before the
+# mode flag) or use `--project editor/...` for tsc — so the editor lives
+# under frontend/editor/ without each task needing a cd.
+
 tasks:
   install:
     desc: "Install dependencies"
@@ -21,19 +26,19 @@ tasks:
     vars:
       MODE: '{{.MODE | default ""}}'
     cmds:
-      - npx tsx scripts/setup-env.ts{{if .MODE}} --{{.MODE}}{{end}}
+      - npx tsx editor/scripts/setup-env.mts{{if .MODE}} --{{.MODE}}{{end}}
     sources:
-      - scripts/setup-env.ts
+      - editor/scripts/setup-env.mts
     generates:
-      - .env.local
-      - .env{{if .MODE}}.{{.MODE}}{{end}}.local
+      - editor/.env.local
+      - editor/.env{{if .MODE}}.{{.MODE}}{{end}}.local
 
   prepare:icons:
     internal: true
     run: once
     deps: [install]
     cmds:
-      - node scripts/generate-icons.js
+      - node editor/scripts/generate-icons.js
 
   prepare:
     desc: "Set up dev environment"
@@ -60,7 +65,7 @@ tasks:
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+      - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
   dev:
     desc: "Start frontend dev server"
@@ -115,19 +120,19 @@ tasks:
     desc: "Production build (default mode)"
     deps: [prepare]
     cmds:
-      - npx vite build
+      - npx vite build editor
 
   build:core:
     desc: "Build for core mode"
     deps: [prepare]
     cmds:
-      - npx vite build --mode core
+      - npx vite build editor --mode core
 
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prepare]
     cmds:
-      - npx vite build --mode proprietary
+      - npx vite build editor --mode proprietary
 
   build:saas:
     desc: "Build for SaaS mode"
@@ -135,7 +140,7 @@ tasks:
       - task: prepare
         vars: { MODE: saas }
     cmds:
-      - npx vite build --mode saas
+      - npx vite build editor --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
@@ -143,13 +148,13 @@ tasks:
       - task: prepare
         vars: { MODE: desktop }
     cmds:
-      - npx vite build --mode desktop
+      - npx vite build editor --mode desktop
 
   build:prototypes:
     desc: "Build for prototypes mode"
     deps: [prepare]
     cmds:
-      - npx vite build --mode prototypes
+      - npx vite build editor --mode prototypes
 
   # ============================================================
   # Code quality
@@ -160,7 +165,7 @@ tasks:
     deps: [install]
     cmds:
       - npx eslint --max-warnings=0
-      - npx dpdm src --circular --no-warning --no-tree --exit-code circular:1
+      - npx dpdm editor/src --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -195,13 +200,13 @@ tasks:
     desc: "Typecheck core build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project src/core/tsconfig.json
+      - npx tsc --noEmit --project editor/src/core/tsconfig.json
 
   typecheck:proprietary:
     desc: "Typecheck proprietary build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project src/proprietary/tsconfig.json
+      - npx tsc --noEmit --project editor/src/proprietary/tsconfig.json
 
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
@@ -209,7 +214,7 @@ tasks:
       - task: prepare
         vars: { MODE: saas }
     cmds:
-      - npx tsc --noEmit --project src/saas/tsconfig.json
+      - npx tsc --noEmit --project editor/src/saas/tsconfig.json
 
   typecheck:desktop:
     desc: "Typecheck desktop build variant"
@@ -217,19 +222,19 @@ tasks:
       - task: prepare
         vars: { MODE: desktop }
     cmds:
-      - npx tsc --noEmit --project src/desktop/tsconfig.json
+      - npx tsc --noEmit --project editor/src/desktop/tsconfig.json
 
   typecheck:scripts:
     desc: "Typecheck scripts"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project scripts/tsconfig.json
+      - npx tsc --noEmit --project editor/scripts/tsconfig.json
 
   typecheck:prototypes:
     desc: "Typecheck prototypes build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project src/prototypes/tsconfig.json
+      - npx tsc --noEmit --project editor/src/prototypes/tsconfig.json
 
   typecheck:all:
     desc: "Typecheck all build variants"
@@ -270,31 +275,19 @@ tasks:
     desc: "Run tests"
     deps: [install]
     cmds:
-      - npx vitest run
+      - npx vitest run --root editor
 
   test:watch:
     desc: "Run tests in watch mode"
     deps: [install]
     cmds:
-      - npx vitest --watch
+      - npx vitest --watch --root editor
 
   test:coverage:
     desc: "Run tests with coverage"
     deps: [install]
     cmds:
-      - npx vitest --coverage
-
-  test:e2e:
-    desc: "Run E2E tests"
-    deps: [prepare]
-    cmds:
-      - npx playwright test {{.CLI_ARGS}}
-
-  test:e2e:install:
-    desc: "Install E2E test browsers"
-    deps: [install]
-    cmds:
-      - npx playwright install {{.CLI_ARGS}} --with-deps
+      - npx vitest --coverage --root editor
 
   # ============================================================
   # Code Generation
@@ -304,4 +297,4 @@ tasks:
     desc: "Generate frontend license report"
     deps: [install]
     cmds:
-      - node scripts/generate-licenses.js
+      - node editor/scripts/generate-licenses.js

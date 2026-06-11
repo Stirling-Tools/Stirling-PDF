@@ -17,11 +17,23 @@ name: Enterprise E2E (Playwright)
 
 on:
   workflow_call:
+    inputs:
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
   push:
     branches: ["main"]
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
+    inputs:
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
 
 # No `concurrency:` block here on purpose. When this workflow is called via
 # workflow_call from build.yml, ${{ github.workflow }}/event_name/pr_number
@@ -35,16 +47,21 @@ permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   playwright-e2e-enterprise:
-    runs-on: ubuntu-latest
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     timeout-minutes: 45
     env:
       PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
       PREMIUM_ENABLED: "true"
       SYSTEM_ENABLEANALYTICS: "false"
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -63,7 +80,15 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
-        run: task frontend:test:e2e:install -- chromium
+        run: task e2e:install -- chromium
+      - name: Build frontend (needed for playwright's vite preview webServer)
+        # Enterprise tests target :8080 (Spring Boot's bundled frontend), but
+        # playwright's webServer config still launches `vite preview --port 5173`
+        # before any test run, which needs dist/ to exist. VITE_BUILD_FOR_PREVIEW
+        # forces absolute asset paths so vite preview can serve deep SPA routes.
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
 
       - name: Resolve kubernetes.docker.internal to localhost
         # The compose stacks set KC_HOSTNAME=kubernetes.docker.internal so
@@ -140,7 +165,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "OAuth"
+        run: task e2e:enterprise -- --grep "OAuth"
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
         run: |
@@ -213,7 +238,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "SAML"
+        run: task e2e:enterprise -- --grep "SAML"
       - name: Stop backend + tear down SAML Keycloak
         if: always()
         run: |
@@ -243,7 +268,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "Enterprise license"
+        run: task e2e:enterprise -- --grep "Enterprise license"
       - name: Print backend log on failure
         if: failure()
         run: |
@@ -260,5 +285,5 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-enterprise-${{ github.run_id }}
-          path: frontend/playwright-report/
+          path: frontend/editor/playwright-report/
           retention-days: 7

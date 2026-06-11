@@ -40,7 +40,10 @@ RUN gradle dependencies --no-daemon || true
 COPY . .
 
 ARG PROTOTYPES_BUILD=false
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+ARG STIRLING_FLAVOR=proprietary
+ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
+
+RUN STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
       -PprototypesMode=${PROTOTYPES_BUILD} \
@@ -81,7 +84,8 @@ RUN set -eux; \
     ln -s /configs /app/configs; \
     ln -s /customFiles /app/customFiles; \
     ln -s /pipeline /app/pipeline; \
-    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline; \
+    ln -s /storage /app/storage; \
+    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
