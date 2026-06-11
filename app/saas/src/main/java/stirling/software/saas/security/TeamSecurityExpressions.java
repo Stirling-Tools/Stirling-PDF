@@ -44,6 +44,18 @@ public class TeamSecurityExpressions {
                 .orElse(false);
     }
 
+    /** Whether the current authenticated user is a {@code LEADER} of their own team. */
+    public boolean isCurrentUserTeamLeader() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null || currentUser.getTeam() == null) {
+            return false;
+        }
+        return membershipRepository
+                .findByTeamIdAndUserId(currentUser.getTeam().getId(), currentUser.getId())
+                .map(membership -> membership.getRole() == TeamRole.LEADER)
+                .orElse(false);
+    }
+
     /** Whether the current authenticated user is any kind of member of the given team. */
     public boolean isTeamMember(Long teamId) {
         User currentUser = getCurrentUser();

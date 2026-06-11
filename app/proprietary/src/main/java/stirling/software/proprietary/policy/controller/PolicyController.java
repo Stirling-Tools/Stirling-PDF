@@ -36,10 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
-import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -72,7 +72,7 @@ public class PolicyController {
     private final PolicyStore policyStore;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
-    private final UserServiceInterface userService;
+    private final PolicyManagementAuthority policyManagementAuthority;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
 
@@ -194,21 +194,22 @@ public class PolicyController {
     }
 
     /**
-     * Creating, editing, pausing/resuming, and deleting policies is admin-only on multi-user
-     * deployments. Every mutation routes through {@link #savePolicy} (pause/resume re-save with a
-     * flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two covers them all;
-     * runs ({@code /run}) stay open. Single-user deployments (login disabled) have no admin
-     * concept, so they trust the local operator. The path allowlist for folder sources/outputs is
-     * enforced separately by {@link PolicyValidator} at validation time.
+     * Creating, editing, pausing/resuming, and deleting policies is restricted to whoever holds the
+     * manage-all role on multi-user deployments — a team leader on SaaS, a global admin self-hosted
+     * (see {@link PolicyManagementAuthority}). Every mutation routes through {@link #savePolicy}
+     * (pause/resume re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so
+     * gating those two covers them all; runs ({@code /run}) stay open. Single-user deployments
+     * (login disabled) have no such role, so they trust the local operator. The path allowlist for
+     * folder sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
      */
     private void requirePolicyEditingAllowed() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
             return;
         }
-        if (!userService.isCurrentUserAdmin()) {
+        if (!policyManagementAuthority.canManageAllPolicies()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Policies may only be created or modified by an administrator");
+                    "Policies may only be created or modified by a team leader");
         }
     }
 
