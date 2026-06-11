@@ -382,7 +382,6 @@ export function useWallet(): UseWalletResult {
         setWallet((prev) => reuseIfEqual(prev, res.data));
       } catch (e: unknown) {
         if (cancelled || reqId !== latestReqId.current) return;
-        // eslint-disable-next-line no-console
         console.warn("[useWallet] fetch failed", e);
         setError(e instanceof Error ? e.message : "Failed to load wallet");
       } finally {
@@ -450,7 +449,6 @@ export function useWallet(): UseWalletResult {
           // Real BE in play — webhook will land the subscription
           // state; log and continue. Loud-but-harmless so the dev
           // notices their /dev/mark-subscribed isn't wired up.
-          // eslint-disable-next-line no-console
           console.info(
             "[useWallet] /dev/mark-subscribed not available (404) — relying on Stripe webhook to flip subscription state",
           );

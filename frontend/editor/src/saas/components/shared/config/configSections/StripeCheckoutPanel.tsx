@@ -120,7 +120,8 @@ function getStripe(publishableKey: string): Promise<Stripe | null> {
 const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   teamId,
   currency = "gbp",
-  capUsd,
+  // capUsd is part of the props contract but intentionally unused here — the cap is set
+  // application-side via PATCH /payg/cap after the subscription lands, not during checkout.
   onComplete,
   onError,
 }) => {

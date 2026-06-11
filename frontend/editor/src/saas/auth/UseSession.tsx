@@ -19,9 +19,7 @@ import {
   SubscriptionInfo,
   CreditCheckResult,
 } from "@app/types/credits";
-import apiClient, {
-  setGlobalCreditUpdateCallback,
-} from "@app/services/apiClient";
+import { setGlobalCreditUpdateCallback } from "@app/services/apiClient";
 import { synchronizeUserUpgrade } from "@app/services/userService";
 import {
   syncOAuthAvatar,

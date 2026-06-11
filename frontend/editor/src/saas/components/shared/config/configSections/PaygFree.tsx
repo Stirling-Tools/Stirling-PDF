@@ -36,7 +36,9 @@ import { useWallet } from "@app/hooks/useWallet";
 import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
 import "./PaygFree.css";
+// eslint-disable-next-line no-restricted-imports
 import UpgradeModal from "./UpgradeModal";
+// eslint-disable-next-line no-restricted-imports
 import { DocHelp } from "./Payg";
 
 // ─── Shared free-tier snapshot ────────────────────────────
@@ -335,7 +337,6 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
             } else {
               // Standalone fallback (dev preview route renders without a parent
               // handler). Real flow always passes onUpgraded via PlanSection.
-              // eslint-disable-next-line no-alert
               alert(
                 `Demo: subscription complete. Cap = ${
                   capUsd === null ? "no cap" : `$${capUsd}/mo`

@@ -617,7 +617,6 @@ function StripePortalLink({ onOpenPortal }: { onOpenPortal: () => Promise<void> 
       // team was force-subscribed via dev hooks). Both are user-actionable
       // in roughly the same way ("try again later or contact support") so
       // we don't bother branching the copy.
-      // eslint-disable-next-line no-console
       console.warn("[Payg] portal session failed", e);
       showToast({
         alertType: "warning",

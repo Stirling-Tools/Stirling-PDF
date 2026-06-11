@@ -19,7 +19,6 @@ declare global {
 
 const IS_DEV = import.meta.env.DEV;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function useRenderCount(label: string): number {
   // useRef must run unconditionally to satisfy rules-of-hooks. In production
   // the rest of the body is dead-code-eliminated, leaving just this single
