@@ -116,6 +116,7 @@ const samplePolicy = {
   reviewerEmail: "me@x.com",
   fieldValues: { minConfidence: "80%" },
   folder: {
+    runOn: "export" as const,
     outputMode: "new_version" as const,
     outputName: "secured",
     outputNamePosition: "suffix" as const,
@@ -133,7 +134,7 @@ describe("buildBackendPolicy", () => {
     expect(policy.steps).toEqual([
       { operation: "/api/v1/misc/compress-pdf", parameters: {} },
     ]);
-    // Trigger is null (browser-driven); extras ride in output.options.
+    // Manual-only policy: no server-side trigger, extras ride in output.options.
     expect(policy.trigger).toBeNull();
     expect(policy.output.options.categoryId).toBe("security");
     expect(policy.output.options.reviewerEmail).toBe("me@x.com");

@@ -35,7 +35,7 @@ export interface BackendPipelineDefinition {
   output: BackendOutputSpec;
 }
 
-/** A policy's automatic trigger ("schedule" | "folder-watch"); null means manual (run on demand). */
+/** How a stored policy is triggered ("manual" | "folder" | "schedule" | "s3"). */
 export interface BackendTriggerConfig {
   type: string;
   options: Record<string, unknown>;
@@ -49,7 +49,8 @@ export interface BackendPolicy {
   owner: string;
   /** Gates automatic triggering; an explicit run ignores it. */
   enabled: boolean;
-  /** Null = manual; these policies are run from the browser on uploaded files. */
+  /** Null for a manual-only (client-driven) policy — the editor fires runs on
+   *  upload/export via /run, so there's no server-side trigger. */
   trigger: BackendTriggerConfig | null;
   steps: BackendPipelineStep[];
   output: BackendOutputSpec;
@@ -189,7 +190,7 @@ export interface PolicyToStore {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
-  /** The catalog category this policy maps to (from output.options.categoryId). */
+  /** The catalog category this policy maps to (from trigger.options.categoryId). */
   categoryId: string;
   name: string;
   enabled: boolean;
@@ -203,6 +204,7 @@ export interface DecodedPolicy {
 }
 
 const DEFAULT_FOLDER: PolicyFolderSettings = {
+  runOn: "upload",
   outputMode: "new_version",
   outputName: "",
   outputNamePosition: "prefix",
@@ -211,11 +213,16 @@ const DEFAULT_FOLDER: PolicyFolderSettings = {
 };
 
 /**
- * Map a frontend policy to the backend {@link BackendPolicy} for persistence. Trigger is null:
- * these policies are run from the browser on uploaded files, not fired by a backend trigger. The
- * backend models only name/enabled/trigger/steps/output, so all policy-level extras (categoryId,
- * sources, scope, reviewer, fields, output/retry settings, and the full automation for a lossless
- * UI round-trip) ride in `output.options`; `steps` carries the endpoint-mapped pipeline.
+ * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
+ * Policies are manual-only (client-driven): the editor fires runs on upload /
+ * before export via /run, so `trigger` is null (a server-side folder-watch or
+ * schedule trigger doesn't fit the in-editor model, and a null trigger skips
+ * trigger validation on the backend). The backend models only
+ * name/enabled/trigger/steps/output, so the policy-level extras (categoryId,
+ * sources, scope, reviewer, fields) and the output + retry settings all ride in
+ * `output.options`; the full frontend automation is stashed in
+ * `output.options.automation` for a lossless UI round-trip (while `steps`
+ * carries the endpoint-mapped pipeline the engine runs, pre-built by the caller).
  */
 export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
   return {
@@ -234,6 +241,8 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
         maxRetries: input.folder.maxRetries,
         retryDelayMinutes: input.folder.retryDelayMinutes,
         automation: input.automation,
+        runOn: input.folder.runOn,
+        // Policy-level metadata (no trigger bag to hold it any more).
         categoryId: input.categoryId,
         sources: input.sources,
         scopeTypes: input.scopeTypes,
@@ -247,27 +256,29 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
 /** Decode a stored backend policy back into the frontend settings. */
 export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
   const output = policy.output.options;
+  // Metadata lives in output.options; legacy records kept it in trigger.options,
+  // so merge both (output wins) to decode either shape.
+  const meta = { ...(policy.trigger?.options ?? {}), ...output };
   const str = (v: unknown, fallback = "") =>
     typeof v === "string" ? v : fallback;
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
   return {
     id: policy.id,
-    categoryId: str(output.categoryId),
+    categoryId: str(meta.categoryId),
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
-    sources: Array.isArray(output.sources) ? (output.sources as string[]) : [],
-    scopeTypes: Array.isArray(output.scopeTypes)
-      ? (output.scopeTypes as string[])
+    sources: Array.isArray(meta.sources) ? (meta.sources as string[]) : [],
+    scopeTypes: Array.isArray(meta.scopeTypes)
+      ? (meta.scopeTypes as string[])
       : [],
-    reviewerEmail: str(output.reviewerEmail),
+    reviewerEmail: str(meta.reviewerEmail),
     fieldValues:
-      (output.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
+      (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
-      // Default to versioning unless the stored policy explicitly says new_file,
-      // so a missing/legacy output.mode follows the new-version default rather
-      // than silently flipping a reconciled policy to spawning separate files.
+      runOn: meta.runOn === "export" ? "export" : "upload",
+      // Legacy/missing output.mode defaults to new_version, not new_file.
       outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),
       outputNamePosition:

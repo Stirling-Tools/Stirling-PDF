@@ -62,6 +62,24 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       window.removeEventListener("appConfig:notice", handler as EventListener);
   }, []);
 
+  // Full-screen overlays that live inside our React tree (e.g. the PAYG
+  // UpgradeModal, portal'd to document.body) announce themselves here so we
+  // can hide — not unmount — while they're up. Unmounting would kill the
+  // overlay itself since it's our descendant; hiding keeps all section state
+  // (active tab, scroll, wallet data) intact for when the overlay closes.
+  const [overlayActive, setOverlayActive] = useState(false);
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as
+        | { open?: boolean }
+        | undefined;
+      setOverlayActive(Boolean(detail?.open));
+    };
+    window.addEventListener("appConfig:overlay", handler as EventListener);
+    return () =>
+      window.removeEventListener("appConfig:overlay", handler as EventListener);
+  }, []);
+
   // When the modal opens to Plan, proactively refresh credits and log values
   useEffect(() => {
     if (!opened) return;
@@ -107,7 +125,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
 
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
 
-  // Left navigation structure and icons
+  // Left navigation structure and icons. The Plan tab now internally branches
+  // free vs subscribed × leader vs member via useWallet(), so the modal no
+  // longer plumbs paygEnabled / isLeader through to the nav builder.
   const configNavSections = useMemo(
     () =>
       createSaasConfigNavSections(Overview, openLogoutConfirm, {
@@ -140,7 +160,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         opened={opened}
         onClose={onClose}
         title={null}
-        size={isMobile ? "100%" : 980}
+        size={isMobile ? "100%" : 1200}
         centered
         radius="lg"
         withCloseButton={false}
@@ -149,6 +169,17 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         padding={0}
         fullScreen={isMobile}
         removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
+        // Hidden (not closed) while a child overlay like the PAYG UpgradeModal
+        // is up — see the appConfig:overlay listener above. The focus trap and
+        // escape/outside-close must release too: the trap would steal focus
+        // from the Stripe card iframe, and Escape would close US underneath
+        // the overlay — unmounting the checkout mid-payment.
+        styles={{
+          root: { display: overlayActive ? "none" : undefined },
+        }}
+        trapFocus={!overlayActive}
+        closeOnEscape={!overlayActive}
+        closeOnClickOutside={!overlayActive}
       >
         <div className="modal-container">
           {/* Left navigation */}

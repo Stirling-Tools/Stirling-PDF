@@ -275,7 +275,6 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 customize = "Customize Appearance"
 customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
 fontName = "Font Name"
@@ -286,6 +285,7 @@ positionAndPages = "Position & Pages"
 preview = "Position Selection"
 previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
 submit = "Add Page Numbers"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -303,9 +303,9 @@ title = "Page Number Results"
 6 = "Custom Text Format"
 
 [addPassword]
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 desc = "Encrypt your PDF document with a password."
 submit = "Encrypt"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 
 [addPassword.encryption.keyLength]
@@ -350,6 +350,9 @@ title = "Password Types"
 [addPassword.tooltip.permissions]
 text = "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
 title = "Change Permissions"
+
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
 alphabet = "Alphabet"
@@ -421,6 +424,9 @@ header = "Add text to PDFs"
 tags = "text,annotation,label"
 title = "Add Text"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addText.error]
 failed = "An error occurred while adding text to the PDF."
 
@@ -439,25 +445,6 @@ resume = "Resume placement"
 
 [addText.results]
 title = "Add Text Results"
-
-[addText.step]
-createDesc = "Enter the text you want to add"
-place = "Place text"
-placeDesc = "Click on the PDF to add your text"
-
-[addText.steps]
-configure = "Configure Text"
-
-[addText.text]
-colorLabel = "Text colour"
-fontLabel = "Font"
-fontSizeLabel = "Font size"
-fontSizePlaceholder = "Type or select font size (8-200)"
-name = "Text content"
-placeholder = "Enter the text you want to add"
-
-[addText.canvas]
-colorPickerTitle = "Choose stroke colour"
 
 [addText.saved]
 defaultCanvasLabel = "Drawing signature"
@@ -481,6 +468,22 @@ canvas = "Drawing"
 image = "Upload"
 text = "Text"
 
+[addText.step]
+createDesc = "Enter the text you want to add"
+place = "Place text"
+placeDesc = "Click on the PDF to add your text"
+
+[addText.steps]
+configure = "Configure Text"
+
+[addText.text]
+colorLabel = "Text colour"
+fontLabel = "Font"
+fontSizeLabel = "Font size"
+fontSizePlaceholder = "Type or select font size (8-200)"
+name = "Text content"
+placeholder = "Enter the text you want to add"
+
 [addText.type]
 canvas = "Canvas"
 image = "Image"
@@ -491,7 +494,6 @@ text = "Text"
 tags = "color-correction,tune,modify,enhance,colour-correction"
 
 [adjustContrast]
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 adjustColors = "Adjust Colors"
 basic = "Basic Adjustments"
 blue = "Blue"
@@ -502,6 +504,7 @@ green = "Green"
 noPreview = "Select a PDF to preview"
 red = "Red"
 saturation = "Saturation:"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Adjust Colors/Contrast"
 
 [adjustContrast.error]
@@ -1131,6 +1134,10 @@ apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Author
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
+[admin.settings.mcp.acceptedAudiences]
+description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
+label = "Additional accepted audiences (optional)"
+
 [admin.settings.mcp.allowedOps]
 description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
 label = "Allowed tools"
@@ -1603,6 +1610,9 @@ paragraph1 = "Stirling PDF has opt-in analytics to help us improve the product. 
 paragraph2 = "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
 title = "Do you want to help make Stirling PDF better?"
 
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+
 [annotation]
 annotationStyle = "Annotation style"
 backgroundColor = "Background colour"
@@ -1832,7 +1842,6 @@ bullet3 = "Keeps the original name if no suitable title is found"
 title = "Smart Renaming"
 
 [automate]
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 copyToSaved = "Copy to Saved"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 export = "Export"
@@ -1842,6 +1851,7 @@ importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
 importSuccess = "Imported automation: {{name}}"
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 
 [automate.config]
@@ -1939,8 +1949,8 @@ secureWorkflow = "Security Workflow"
 secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default."
 
 [autoRename]
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"
@@ -2520,9 +2530,9 @@ ssoManaged = "Your account is managed by your identity provider."
 title = "Change Credentials"
 
 [changeMetadata]
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 filenamePrefix = "metadata"
 submit = "Change"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Advanced Options"
@@ -2628,9 +2638,9 @@ true = "True"
 unknown = "Unknown"
 
 [changePermissions]
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 desc = "Change document restrictions and permissions."
 submit = "Change Permissions"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 
 [changePermissions.error]
@@ -2678,6 +2688,10 @@ resize = "Resize chat panel"
 [chat.actions]
 copy = "Copy message"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [chat.header]
 agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
@@ -2695,18 +2709,18 @@ executing_tool_single = "Running {{tool}}..."
 executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
 extracting_content = "Extracting content from your documents..."
 processing = "Processing extracted content..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Thinking..."
 whole_doc_compression_round = "Consolidating notes..."
 whole_doc_read_done = "Finished reading the document..."
 whole_doc_read_started = "Reading the document..."
 whole_doc_slice_done = "Reading the document... ({{percent}}% complete)"
-ranForSeconds = "Ran for {{count}} seconds"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
-ranForMinutes = "Ran for {{count}} minutes"
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
 
 [chat.quickActions]
 browseYourFiles = "Browse your files"
@@ -2736,10 +2750,6 @@ unsupported_capability = "Unsupported capability: {{capability}}"
 summary = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
-
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -2761,7 +2771,6 @@ copy = "Copy"
 done = "Done"
 error = "Error"
 expand = "Expand"
-learnMore = "Learn more"
 loading = "Loading..."
 next = "Next"
 operation = "this operation"
@@ -2896,9 +2905,9 @@ unlinkedTitle = "Independent scroll & pan enabled"
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."
 
 [compress]
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 desc = "Compress PDFs to reduce their file size."
 submit = "Compress"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Compress"
 
 [compress.compressionLevel]
@@ -3090,8 +3099,19 @@ integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
 
+[config.payg]
+label = "Billing & usage"
+section = "Pay-as-you-go"
+
+[connectionMode.status]
+localOffline = "Offline mode running"
+localOnline = "Offline mode running"
+saas = "Connected to Stirling Cloud"
+selfhostedChecking = "Connected to self-hosted server (checking...)"
+selfhostedOffline = "Self-hosted server unreachable"
+selfhostedOnline = "Connected to self-hosted server"
+
 [convert]
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
 blackwhite = "Black & White"
@@ -3151,6 +3171,7 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Target format"
 title = "Convert"
 webOptions = "Web to PDF Options"
@@ -3370,6 +3391,18 @@ docsLink = "View installation documentation"
 message = "Stirling-PDF does not have permission to update itself on this machine."
 title = "Administrator permissions required"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Search..."
 
@@ -3378,8 +3411,8 @@ edit = "Edit"
 editSecretValue = "Edit secret value"
 
 [editTableOfContents]
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 submit = "Apply table of contents"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Clipboard access is not available in this browser."
@@ -3513,8 +3546,8 @@ title = "Settings"
 tags = "extract"
 
 [extractPages]
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 submit = "Extract Pages"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Extract Pages"
 
 [extractPages.error]
@@ -3912,8 +3945,8 @@ welcomeMessage = "For security reasons, you must change your password on your fi
 welcomeTitle = "Welcome!"
 
 [flatten]
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 submit = "Flatten"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 
 [flatten.error]
@@ -4558,6 +4591,7 @@ signIn = "Sign In"
 accountCreatedSuccess = "Account created successfully! You can now sign in."
 backToSignIn = "Back to sign in"
 changePasswordWarning = "Please change your password after logging in for the first time"
+createAccount = "Create an account"
 credentialsUpdated = "Your credentials have been updated. Please sign in again."
 defaultCredentials = "Default Login Credentials"
 email = "Email"
@@ -4587,7 +4621,6 @@ sending = "Sending…"
 sendMagicLink = "Send Magic Link"
 sendResetLink = "Send reset link"
 sessionExpired = "Your session has expired. Please sign in again."
-createAccount = "Create an account"
 signin = "Sign in"
 signingIn = "Signing in..."
 signInWith = "Sign in with"
@@ -4724,6 +4757,34 @@ title = "Authentication Failed"
 [oauth.success]
 message = "You can close this window and return to Stirling PDF."
 title = "Authentication Successful"
+
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorization request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorization request..."
+missingId = "Missing authorization request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorize access"
+unknownApp = "A third-party application"
+
+[oauthConsent.access]
+actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
 
 [ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
@@ -5132,6 +5193,239 @@ title = "Page Ranges"
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
+[pageSelection.tooltip.syntax]
+text = "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported."
+title = "Syntax Basics"
+
+[pageSelection.tooltip.syntax.bullets]
+keywords = "Keywords: odd, even"
+numbers = "Numbers/ranges: 5, 10-20"
+progressions = "Progressions: 3n, 4n+1"
+
+[pageSelection.tooltip.tips]
+bullet1 = "Page numbers start from 1 (not 0)"
+bullet2 = "Spaces are automatically removed"
+bullet3 = "Invalid expressions are ignored"
+text = "Keep these guidelines in mind:"
+title = "Tips"
+
+[payg]
+subtitle = "Pay-as-you-go: you only pay for what you process. Billing period {{start}} – {{end}}."
+
+[payg.activity]
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
+units = "units"
+viewAll = "View all"
+
+[payg.cap]
+amount = "Cap amount"
+currency = "Currency"
+custom = "Custom"
+degradeAt = "Limit spend at"
+degradeAtDesc = "Set below 100% to leave yourself headroom."
+docsEstimate = "≈ {{docs}} processed PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
+perMonth = "/ month"
+preview = "{{money}} ≈ {{units}} PDFs per month"
+previewNote = "At current pricing. Final translation happens server-side on save."
+previewShort = "≈ {{units}} PDFs per month at current pricing."
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
+title = "Monthly spending cap"
+warnAt = "Warn me at"
+warnAtDesc = "Notify when usage crosses this threshold."
+
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode; no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.exhausted]
+body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
+cta = "Go to billing"
+title = "You've used your free PDFs"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
+[payg.free.explainer]
+alwaysFreeBody = "Manual tools: viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, no matter where you trigger them from."
+alwaysFreeForYouBody = "Manual tools: viewing, editing, merging, splitting, signing, watermarks, compression, conversion, manual OCR. Use them as much as you want, never counted."
+alwaysFreeForYouLabel = "Always free for you"
+alwaysFreeLabel = "Always free"
+countsBody = "Automation pipelines (chained tools, scheduled runs), AI tools (summaries, classification, AI-OCR), and API calls (programmatic access). Past your free PDFs you'll need Processor."
+countsLabel = "Counts toward your 500 free"
+sharedBody = "Automation pipelines, AI tools, and API calls share a single one-time allowance of 500 free PDFs across the whole team. Once it's used up, ask your owner to enable Processor."
+sharedLabel = "Shared with the team"
+
+[payg.free.header]
+subtitle = "Editor plan: manual tools are always free. Pay only for automation, AI & API. Billing period {{period}}."
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free PDFs"
+eyebrow = "Your free PDFs"
+metaCategories = "Automation · AI · API requests"
+neverResets = "One-time, never resets"
+
+[payg.free.member]
+body = "Your team owner can enable the Processor plan and set a monthly ceiling. Until then, manual tools are free for you to use as much as you like. Automation, AI, and API access share the team's one-time allowance of 500 free PDFs."
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+title = "Want to process more than your 500 free PDFs?"
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+subtitle = "Your everyday tools keep working. Only AI and automation pause until the cap resets or is raised."
+title = "What happens when the cap is reached"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
+[payg.upgrade]
+closeAria = "Close"
+
+[payg.upgrade.button]
+back = "← Back"
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+customPlaceholder = "Or enter your own amount ($0 keeps it free)"
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
+noCapHint = "You can still cancel anytime from the customer portal."
+noCapLabel = "No cap, I'll manage spend manually"
+perMonthSuffix = "/ month"
+presetsAria = "Monthly cap preset"
+title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+
+[payg.upgrade.checkout]
+capLabel = "Monthly ceiling:"
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.footer]
+capHint = "You can change your cap any time later."
+checkoutHint = "Card details handled by Stripe, never touched by Stirling."
+confirmHint = "Your wallet will refresh automatically in a moment."
+
+[payg.upgrade.help]
+aiBody = "summarise, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
+
+[payg.usage]
+credit = "{{amount}} account credit"
+docs = "documents"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+spent = "{{spend}} of {{cap}} used"
+thisPeriod = "This billing period"
+
 [payment]
 autoClose = "This window will close automatically..."
 canCloseWindow = "You can now close this window."
@@ -5233,7 +5527,6 @@ REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
 SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
 
 [pdfTextEditor]
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 conversionFailed = "Failed to convert PDF. Please try again."
 converting = "Converting PDF to editable format..."
 currentFile = "Current file: {{name}}"
@@ -5241,6 +5534,7 @@ imageLabel = "Placed image"
 noTextOnPage = "No editable text was detected on this page."
 pagePreviewAlt = "Page preview"
 pageSummary = "Page {{number}} of {{total}}"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 viewLabel = "PDF Editor"
 
@@ -5402,9 +5696,9 @@ title = "PDF to Presentation"
 tags = "single page"
 
 [pdfToSinglePage]
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 description = "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights."
 submit = "Convert To Single Page"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF To Single Page"
 
 [pdfToSinglePage.error]
@@ -5884,6 +6178,9 @@ whatsNewTourDesc = "Tour the updated layout"
 admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
 user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Redact"
 tags = "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact"
@@ -6014,8 +6311,8 @@ title = "What it does"
 title = "About Remove Annotations"
 
 [removeBlanks]
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 submit = "Remove blank pages"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Remove Blanks"
 
 [removeBlanks.error]
@@ -6073,8 +6370,8 @@ failed = "An error occurred whilst removing certificate signatures."
 title = "Certificate Removal Results"
 
 [removeImage]
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 submit = "Remove image"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Remove image"
 
 [removeImage.error]
@@ -6145,8 +6442,8 @@ title = "Decrypted PDFs"
 description = "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
 
 [reorganizePages]
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 submit = "Reorganize Pages"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Failed to reorganize pages"
@@ -6229,11 +6526,11 @@ text = "Completely invert all colours in the PDF, creating a negative-like effec
 title = "Invert All Colours"
 
 [rotate]
-tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 rotateLeft = "Rotate Anticlockwise"
 rotateRight = "Rotate Clockwise"
 selectRotation = "Select Rotation Angle (Clockwise)"
 submit = "Apply Rotation"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotate PDF"
 
 [rotate.error]
@@ -6253,10 +6550,10 @@ text = "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments
 title = "Rotate Settings Overview"
 
 [sanitize]
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 desc = "Remove potentially harmful elements from PDF files."
 sanitizationResults = "Sanitisation Results"
 submit = "Sanitise PDF"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sanitise"
 
 [sanitize.error]
@@ -6302,6 +6599,9 @@ title = "Sanitise PDF"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"
+
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Angle Threshold:"
@@ -6739,7 +7039,6 @@ title = "Show Javascript"
 title = "Extracted JavaScript"
 
 [sign]
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 activate = "Activate Signature Placement"
 add = "Add"
 addToAll = "Add to all pages"
@@ -6759,6 +7058,7 @@ redo = "Redo"
 save = "Save Signature"
 sharedSigs = "Shared Signatures"
 submit = "Sign Document"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 undo = "Undo"
 updateAndPlace = "Update and Place"
@@ -6946,11 +7246,11 @@ small = "Small"
 x-large = "X-Large"
 
 [split]
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 resultsTitle = "Split Results"
 selectMethod = "Select a split method"
 splitPages = "Enter pages to split on:"
 submit = "Split"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Split PDF"
 
 [split.error]
@@ -7270,28 +7570,6 @@ removeError = "Failed to remove member"
 renameError = "Failed to rename team"
 renameSuccess = "Team renamed successfully"
 
-[team.features]
-badge = "Team Features"
-subtitle = "Collaborate with your team"
-title = "Team Collaboration"
-viewPlans = "View Plans"
-
-[team.features.billing]
-description = "Manage billing and subscriptions"
-title = "Billing Management"
-
-[team.features.credits]
-description = "Shared credit pool for all members"
-title = "Shared Credits"
-
-[team.features.dashboard]
-description = "View team activity and usage"
-title = "Team Dashboard"
-
-[team.features.invite]
-description = "Add members to your team"
-title = "Invite Members"
-
 [team.invitationBanner]
 acceptButton = "Accept"
 message = "has invited you to join"
@@ -7313,11 +7591,6 @@ remove = "Remove"
 roleColumn = "Role"
 title = "Team Members"
 
-[team.upgrade]
-button = "Upgrade to Team"
-description = "Unlock team collaboration features"
-title = "Upgrade to Team Plan"
-
 [textAlign]
 center = "Center"
 left = "Left"
@@ -7333,10 +7606,10 @@ justNow = "just now"
 minutesAgo = "{{count}}m ago"
 
 [timestampPdf]
-tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 desc = "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server."
 results = "Timestamp Results"
 submit = "Apply Timestamp"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "Timestamp PDF"
 
 [timestampPdf.error]
@@ -7732,10 +8005,173 @@ title = "View/Edit PDF"
 [warning]
 tooltipTitle = "Warning"
 
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
+
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
 [watermark]
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 desc = "Add text or image watermarks to PDF files"
 submit = "Add Watermark"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Add Watermark"
 
 [watermark.error]
@@ -8196,189 +8632,3 @@ cancel = "Cancel"
 confirm = "Extract"
 message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.modal]
-automation = "Automation"
-createFolder = "Create Folder"
-automationRequired = "Add at least one configured step before saving."
-color = "Accent color"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-automationNameFallback = "Watched Folder automation"
-maxRetries = "Max retries"
-retryDelay = "Delay (minutes)"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputName = "Output filename prefix"
-outputNameSuffix = "Suffix"
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-localOutputFolder = "Local output folder"
-outputFolderUnsupported = "Not supported in this browser"
-outputFolderNotSet = "Not set — outputs stay in app"
-advanced = "Advanced"
-replaceOriginal = "Replace original file"
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-outputNamePrefix = "Filename prefix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-
-[watchedFolders.home]
-create = "Create your first Watched Folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-file = "file"
-files = "files"
-emptyTitle = "Automate your PDF workflows"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-resume = "Resume"
-pause = "Pause"
-deleteFolder = "Delete folder"
-
-[watchedFolders.card]
-edit = "Edit folder"
-delete = "Delete folder"
-
-[watchedFolders.status]
-done = "Done"
-processing = "Processing"
-paused = "Paused"
-active = "Active"
-
-[watchedFolders.howItWorks]
-title = "How Watched Folders work"
-step1Title = "Drop files"
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step2Title = "Pipeline runs"
-step2Desc = "Your configured tools process each file automatically"
-step3Title = "Output ready"
-step3Desc = "Download processed files from inside the folder"
-
-[watchedFolders.workbench]
-addFiles = "Add files"
-inputs = "Inputs"
-outputs = "Outputs"
-failed = "Failed"
-dataSaved = "Saved"
-running = "Running"
-dropToProcess = "Drop to process"
-activity = "Activity"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-pause = "Pause"
-resume = "Resume"
-dayRunning = "day running"
-daysRunning = "days running"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-filterAll = "All"
-filterPending = "Pending"
-search = "Search…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-watching = "Watching: {{name}}"
-noInputFolder = "No input folder — edit to configure"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-exportZip = "Export zip"
-exportSeparately = "Export separately"
-countSelected = "{{count}} selected"
-selectAll = "Select all {{count}}"
-delete = "Delete"
-clearSelection = "Clear selection"
-preview = "Preview"
-export = "Export"
-previewInput = "Preview input"
-previewOutput = "Preview output"
-directionIn = "in"
-directionOut = "out"
-queuedWaiting = "Queued — waiting to run"
-allTime = "All time"
-queued = "Queued"
-inputSize = "Input size"
-filesProcessedOverTime = "Files processed over time"
-legendComplete = "Complete"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-removeEntry = "Remove entry"
-removeEntries = "Remove {{count}} entries"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-cancel = "Cancel"
-removeNotificationsOnly = "Remove notifications only"
-deleteOutputs = "Delete outputs"
-previewLoadFailed = "Could not load file preview."
-
-[watchedFolders.actions]
-back = "Back"
-dismiss = "Dismiss"
-retry = "Retry"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-collapse = "Collapse"
-expand = "Expand"
-
-[watchedFolders.time]
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-hoursAgo = "{{count}}h ago"
-daysAgo = "{{count}}d ago"
-[addStamp]
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-
-[annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
-
-[devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
-
-[devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
-
-[devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
-
-[devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
-
-[read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
-
-[scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"

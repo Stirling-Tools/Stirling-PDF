@@ -18,11 +18,8 @@ import {
   CreditSummary,
   SubscriptionInfo,
   CreditCheckResult,
-  ApiCredits,
 } from "@app/types/credits";
-import apiClient, {
-  setGlobalCreditUpdateCallback,
-} from "@app/services/apiClient";
+import { setGlobalCreditUpdateCallback } from "@app/services/apiClient";
 import { synchronizeUserUpgrade } from "@app/services/userService";
 import {
   syncOAuthAvatar,
@@ -145,72 +142,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
 
-  const fetchCredits = useCallback(
-    async (sessionToUse?: Session | null) => {
-      const currentSession = sessionToUse ?? session;
-
-      if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping credit fetch");
-        setCreditBalance(null);
-        setCreditSummary(null);
-        setSubscription(null);
-        return;
-      }
-
-      try {
-        console.debug(
-          "[Auth Debug] Fetching credits for user:",
-          currentSession.user.id,
-        );
-        // Auto-fires on session init and TOKEN_REFRESHED; a backend 401 must
-        // stay local rather than trigger the global login redirect.
-        const response = await apiClient.get<ApiCredits>("/api/v1/credits", {
-          suppressErrorToast: true,
-          skipAuthRedirect: true,
-        });
-        const apiCredits = response.data;
-
-        // Map server payload to app CreditSummary
-        const credits: CreditSummary = {
-          currentCredits: apiCredits.totalAvailableCredits,
-          maxCredits:
-            apiCredits.weeklyCreditsAllocated + apiCredits.totalBoughtCredits,
-          creditsUsed:
-            apiCredits.weeklyCreditsAllocated -
-            apiCredits.weeklyCreditsRemaining +
-            (apiCredits.totalBoughtCredits - apiCredits.boughtCreditsRemaining),
-          creditsRemaining: apiCredits.totalAvailableCredits,
-          resetDate: apiCredits.weeklyResetDate,
-          weeklyAllowance: apiCredits.weeklyCreditsAllocated,
-        };
-
-        setCreditSummary(credits);
-        setCreditBalance(credits.creditsRemaining);
-
-        const subscriptionInfo: SubscriptionInfo = {
-          status: "active",
-          tier: (credits.weeklyAllowance || 0) > 100 ? "premium" : "free",
-          creditsPerWeek: credits.weeklyAllowance,
-          maxCredits: credits.maxCredits,
-        };
-        setSubscription(subscriptionInfo);
-
-        console.debug("[Auth Debug] Credits fetched successfully:", credits);
-      } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch credits:", error);
-        // Don't set error state for credit fetching failures to avoid disrupting auth flow
-        // Credits might not be available in all deployments
-        setCreditBalance(null);
-        setCreditSummary(null);
-        setSubscription(null);
-      }
-    },
-    [session],
-  );
+  // Legacy weekly-credits feed (GET /api/v1/credits) is dead. PAYG replaces it via
+  // useWallet() reading /api/v1/payg/wallet. Symbols are kept as no-ops so existing
+  // consumers of useAuth() that still destructure creditBalance / refreshCredits
+  // compile cleanly; values just stay null forever and refreshCredits is a noop.
+  // _ underscore on the param keeps the public signature stable for callers.
+  const fetchCredits = useCallback(async (_sessionToUse?: Session | null) => {
+    /* legacy credit fetch removed — see comment above */
+  }, []);
 
   const refreshCredits = useCallback(async () => {
-    await fetchCredits();
-  }, [fetchCredits]);
+    /* legacy credit refresh removed — useWallet() replaces this */
+  }, []);
 
   const fetchProStatus = useCallback(
     async (sessionToUse?: Session | null) => {

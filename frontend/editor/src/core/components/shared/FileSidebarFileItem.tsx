@@ -132,6 +132,9 @@ export interface FileItemPolicyRef {
   name: string;
   /** CSS colour for the badge (matches the policy's accent). */
   accentColor: string;
+  /** True only just after the policy was applied — drives the one-off glow, so
+   *  it doesn't replay on every reload of an already-enforced file. */
+  recent: boolean;
 }
 
 export interface FileItemProps {
@@ -201,6 +204,9 @@ export function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
+  // A just-applied policy (recent run) drives the one-off row glow.
+  const recentPolicy = policies.find((p) => p.recent);
+
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
     hoverRect && resolvedThumbnail
@@ -214,7 +220,14 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${recentPolicy ? " policy-enforced" : ""}`}
+        style={
+          recentPolicy
+            ? ({
+                "--policy-glow": recentPolicy.accentColor,
+              } as React.CSSProperties)
+            : undefined
+        }
         onClick={() => onClick(fileId)}
         draggable={draggable}
         onDragStart={

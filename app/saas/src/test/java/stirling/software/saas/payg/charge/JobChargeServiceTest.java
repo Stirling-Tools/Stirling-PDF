@@ -17,14 +17,18 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.saas.payg.docs.DocumentClassifier;
@@ -33,15 +37,24 @@ import stirling.software.saas.payg.job.JobContext;
 import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
+import stirling.software.saas.payg.meter.PaygMeterReportingService;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
+import stirling.software.saas.payg.model.LedgerBucket;
+import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.model.ProcessType;
+import stirling.software.saas.payg.model.ReferenceType;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
+import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
+import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.ProcessingJobRepository;
+import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
+import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
 /**
  * Exercises {@link JobChargeService} as an orchestrator: policy lookup, step-limit resolution,
@@ -54,6 +67,9 @@ class JobChargeServiceTest {
     private DocumentClassifier classifier;
     private PaygShadowChargeRepository shadowRepo;
     private ProcessingJobRepository jobRepo;
+    private PaygTeamExtensionsRepository teamExtRepo;
+    private PaygMeterReportingService meterReporter;
+    private WalletLedgerRepository ledgerRepo;
     private JobChargeService service;
 
     @BeforeEach
@@ -63,7 +79,31 @@ class JobChargeServiceTest {
         classifier = Mockito.mock(DocumentClassifier.class);
         shadowRepo = Mockito.mock(PaygShadowChargeRepository.class);
         jobRepo = Mockito.mock(ProcessingJobRepository.class);
-        service = new JobChargeService(jobService, policyService, classifier, shadowRepo, jobRepo);
+        teamExtRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
+        meterReporter = Mockito.mock(PaygMeterReportingService.class);
+        ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
+        // findByIdForUpdate defaults to Optional.empty() (Mockito) → no free grant consumed unless
+        // a test stubs the sidecar row. The free split is decided at openProcess time now, not at
+        // close, so the meter tests just set free_units_consumed on the shadow row directly.
+        service =
+                new JobChargeService(
+                        jobService,
+                        policyService,
+                        classifier,
+                        shadowRepo,
+                        jobRepo,
+                        teamExtRepo,
+                        meterReporter,
+                        ledgerRepo);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Defensive: a previous test could have left a fake synchronization registered. Clearing
+        // ensures isolation when tests run in any order.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clear();
+        }
     }
 
     @Test
@@ -80,7 +120,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.SINGLE_TOOL,
+                                BillingCategory.API),
                         List.of(in));
 
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.JOINED);
@@ -89,6 +134,7 @@ class JobChargeServiceTest {
         verify(classifier, never()).classify(any(MultipartFile.class), any());
         verify(classifier, never()).classify(anyList(), any());
         verify(shadowRepo, never()).save(any());
+        verify(ledgerRepo, never()).save(any());
     }
 
     @Test
@@ -106,7 +152,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.SINGLE_TOOL,
+                                BillingCategory.API),
                         List.of(in));
 
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.OPENED);
@@ -126,9 +177,82 @@ class JobChargeServiceTest {
         // Legacy comparison not wired yet — zeroed until CreditService is wired in the follow-up.
         assertThat(row.getLegacyCreditsCharged()).isZero();
         assertThat(row.getDiffPct()).isZero();
+        // PAYG analytics axis: billing_category + job_source are copied from the context so the
+        // row stays self-describing after processing_job rows are pruned.
+        assertThat(row.getBillingCategory()).isEqualTo(BillingCategory.API);
+        assertThat(row.getJobSource()).isEqualTo(JobSource.WEB);
 
         // Job entity carries the classified docUnits so close-time receipts can render correctly.
         assertThat(newJob.getDocUnits()).isEqualTo(4);
+
+        // Live ledger DEBIT mirrors the shadow row: same units, stored NEGATIVE per the
+        // wallet_ledger sign convention, tied back to the job via reference.
+        ArgumentCaptor<WalletLedgerEntry> ledgerCaptor =
+                ArgumentCaptor.forClass(WalletLedgerEntry.class);
+        verify(ledgerRepo).save(ledgerCaptor.capture());
+        WalletLedgerEntry debit = ledgerCaptor.getValue();
+        assertThat(debit.getTeamId()).isEqualTo(100L);
+        assertThat(debit.getActorUserId()).isEqualTo(42L);
+        assertThat(debit.getEntryType()).isEqualTo(LedgerEntryType.DEBIT);
+        assertThat(debit.getBucket()).isEqualTo(LedgerBucket.CYCLE);
+        assertThat(debit.getAmountUnits()).isEqualTo(-4);
+        assertThat(debit.getReferenceType()).isEqualTo(ReferenceType.JOB);
+        assertThat(debit.getReferenceId()).isEqualTo(newJob.getId().toString());
+        assertThat(debit.getPolicyId()).isEqualTo(policy.getId());
+        assertThat(debit.getBillingCategory()).isEqualTo(BillingCategory.API);
+    }
+
+    @Test
+    void openProcess_bypassedCategory_writesShadowRowButNoLedgerDebit(@TempDir Path tmp)
+            throws IOException {
+        // Manual UI work is never billed: the shadow row still lands (comparison audit trail)
+        // but the live wallet_ledger must stay untouched.
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.WEB,
+                        ProcessType.SINGLE_TOOL,
+                        BillingCategory.BYPASSED),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        verify(shadowRepo).save(any(PaygShadowCharge.class));
+        verify(ledgerRepo, never()).save(any());
+    }
+
+    @Test
+    void openProcess_openedAutomationContext_writesShadowRowWithAutomationCategory(
+            @TempDir Path tmp) throws IOException {
+        PricingPolicy policy =
+                stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10, JobSource.PIPELINE, 20));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.PIPELINE,
+                        ProcessType.AUTOMATION,
+                        BillingCategory.AUTOMATION),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getBillingCategory()).isEqualTo(BillingCategory.AUTOMATION);
+        assertThat(captor.getValue().getJobSource()).isEqualTo(JobSource.PIPELINE);
     }
 
     @Test
@@ -146,7 +270,12 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.AUTOMATION),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.AUTOMATION,
+                                BillingCategory.AUTOMATION),
                         List.of(a, b));
 
         assertThat(out.units()).isEqualTo(7);
@@ -167,10 +296,105 @@ class JobChargeServiceTest {
 
         ChargeOutcome out =
                 service.openProcess(
-                        new ChargeContext(42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                        new ChargeContext(
+                                42L,
+                                100L,
+                                JobSource.WEB,
+                                ProcessType.SINGLE_TOOL,
+                                BillingCategory.API),
                         List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         assertThat(out.units()).isEqualTo(5);
+    }
+
+    @Test
+    void openProcess_drawsFreeGrant_storesSplitAndDecrementsCounter(@TempDir Path tmp)
+            throws IOException {
+        // Team has 10 free units left; a 4-unit job draws all 4 from the grant. The shadow row
+        // records free_units_consumed = 4 (so nothing meters) and the counter drops to 6.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(10L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getPaygUnits()).isEqualTo(4);
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(4);
+        // Counter decremented in-place and persisted.
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(6L);
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void openProcess_grantStraddle_drawsRemainderFreeAndBillsTheRest(@TempDir Path tmp)
+            throws IOException {
+        // Only 3 free units left; a 10-unit job takes the 3 (counter → 0) and the other 7 bill.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 10));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(3L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getPaygUnits()).isEqualTo(10);
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(3);
+        assertThat(ext.getFreeUnitsRemaining()).isZero();
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void openProcess_exhaustedGrant_storesZeroFreeAndLeavesCounterUntouched(@TempDir Path tmp)
+            throws IOException {
+        // Grant already at 0 → nothing free, full units bill, counter not re-saved.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 5));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isZero();
+        verify(teamExtRepo, never()).save(any());
     }
 
     @Test
@@ -187,7 +411,12 @@ class JobChargeServiceTest {
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
-                new ChargeContext(42L, 100L, JobSource.PIPELINE, ProcessType.AUTOMATION),
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.PIPELINE,
+                        ProcessType.AUTOMATION,
+                        BillingCategory.AUTOMATION),
                 List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
@@ -211,7 +440,12 @@ class JobChargeServiceTest {
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
 
         service.openProcess(
-                new ChargeContext(42L, 100L, JobSource.DESKTOP_APP, ProcessType.SINGLE_TOOL),
+                new ChargeContext(
+                        42L,
+                        100L,
+                        JobSource.DESKTOP_APP,
+                        ProcessType.SINGLE_TOOL,
+                        BillingCategory.API),
                 List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
@@ -225,7 +459,11 @@ class JobChargeServiceTest {
                         () ->
                                 service.openProcess(
                                         new ChargeContext(
-                                                42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL),
+                                                42L,
+                                                100L,
+                                                JobSource.WEB,
+                                                ProcessType.SINGLE_TOOL,
+                                                BillingCategory.API),
                                         List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("inputs must not be empty");
@@ -234,9 +472,8 @@ class JobChargeServiceTest {
     @Test
     void markFirstStepFailed_flipsShadowRowAndClosesProcess() {
         UUID jobId = UUID.randomUUID();
-        PaygShadowCharge row = new PaygShadowCharge();
-        row.setJobId(jobId);
-        row.setStatus(ShadowChargeStatus.CHARGED);
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        row.setPolicyId(7L);
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.of(row));
         ProcessingJob job = openJob(jobId);
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
@@ -250,6 +487,37 @@ class JobChargeServiceTest {
         assertThat(job.getClosedAt()).isNotNull();
         verify(shadowRepo).save(row);
         verify(jobRepo).save(job);
+
+        // Compensating REFUND entry: positive amount mirroring the openProcess debit, same JOB
+        // reference so the pair nets to zero for the period.
+        ArgumentCaptor<WalletLedgerEntry> ledgerCaptor =
+                ArgumentCaptor.forClass(WalletLedgerEntry.class);
+        verify(ledgerRepo).save(ledgerCaptor.capture());
+        WalletLedgerEntry refund = ledgerCaptor.getValue();
+        assertThat(refund.getTeamId()).isEqualTo(100L);
+        assertThat(refund.getEntryType()).isEqualTo(LedgerEntryType.REFUND);
+        assertThat(refund.getBucket()).isEqualTo(LedgerBucket.CYCLE);
+        assertThat(refund.getAmountUnits()).isEqualTo(4);
+        assertThat(refund.getReferenceType()).isEqualTo(ReferenceType.JOB);
+        assertThat(refund.getReferenceId()).isEqualTo(jobId.toString());
+        assertThat(refund.getPolicyId()).isEqualTo(7L);
+        assertThat(refund.getBillingCategory()).isEqualTo(BillingCategory.API);
+        // This row consumed no free units, so the grant counter is left alone.
+        verify(teamExtRepo, never()).restoreFreeUnits(eq(100L), Mockito.anyLong());
+    }
+
+    @Test
+    void markFirstStepFailed_withFreeConsumed_restoresGrantToCounter() {
+        // A first-step failure is pre-meter: nothing billed to Stripe, but the grant moved at
+        // charge time. The refund must hand exactly those free units back to the team's counter.
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+        when(jobRepo.findById(jobId)).thenReturn(Optional.of(openJob(jobId)));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        verify(teamExtRepo).restoreFreeUnits(100L, 3L);
     }
 
     @Test
@@ -267,6 +535,8 @@ class JobChargeServiceTest {
 
         verify(shadowRepo, never()).save(any());
         verify(jobRepo, never()).save(any());
+        // No double-credit: the REFUND ledger entry only accompanies the CHARGED→REFUNDED flip.
+        verify(ledgerRepo, never()).save(any());
     }
 
     @Test
@@ -328,6 +598,262 @@ class JobChargeServiceTest {
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
         service.decrementStepCount(jobId); // must not throw
         verify(jobRepo, never()).save(any());
+    }
+
+    // --- close() — meter reporting in afterCommit -----------------------------------------------
+
+    @Test
+    void close_subscribedTeam_postsMeterEventAfterCommit() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+        // Row consumed no free units (free_units_consumed = 0) → all 4 are paid and meter.
+
+        withTransactionSynchronization(
+                () -> {
+                    service.close(jobId);
+                    Mockito.verifyNoInteractions(meterReporter);
+                });
+
+        // afterCommit ran on tearDown of withTransactionSynchronization → meter posted now.
+        verify(meterReporter)
+                .recordUsage(
+                        100L,
+                        "cus_subscribed",
+                        4,
+                        BillingCategory.API,
+                        "process:" + jobId + ":close",
+                        jobId);
+    }
+
+    @Test
+    void close_fullyFreeJob_doesNotPostMeterEvent() {
+        // The free-vs-paid split is fixed at charge time. A job whose 4 units all came from the
+        // one-time grant (free_units_consumed = 4) has nothing left to meter; the ledger DEBIT
+        // alone records the usage.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+    }
+
+    @Test
+    void close_partiallyFreeJob_metersOnlyThePaidPortion() {
+        // 20-unit job that drew 10 from the remaining grant at charge time (free_units_consumed =
+        // 10) → 10 paid units meter to Stripe.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 20, 10, BillingCategory.AUTOMATION);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        verify(meterReporter)
+                .recordUsage(
+                        100L,
+                        "cus_subscribed",
+                        10,
+                        BillingCategory.AUTOMATION,
+                        "process:" + jobId + ":close",
+                        jobId);
+    }
+
+    @Test
+    void close_freeTierTeam_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        // No stripe_customer_id → treated as free-tier on this branch (pre-#6532).
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId(null);
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+    }
+
+    @Test
+    void close_noTeamExtensionsRow_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.empty());
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+    }
+
+    @Test
+    void close_refundedShadowRow_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
+        row.setStatus(ShadowChargeStatus.REFUNDED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+        Mockito.verifyNoInteractions(teamExtRepo);
+    }
+
+    @Test
+    void close_noShadowRow_doesNotPostMeterEvent() {
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.empty());
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+        Mockito.verifyNoInteractions(teamExtRepo);
+    }
+
+    @Test
+    void close_bypassedCategoryOnShadowRow_doesNotPostMeterEvent() {
+        // Defensive: BYPASSED rows shouldn't normally exist (the interceptor short-circuits
+        // before openProcess), but if one slips through we must not meter it.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.BYPASSED);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        withTransactionSynchronization(() -> service.close(jobId));
+
+        Mockito.verifyNoInteractions(meterReporter);
+        Mockito.verifyNoInteractions(teamExtRepo);
+    }
+
+    @Test
+    void close_meterReporterThrowsRuntimeException_doesNotPropagate() {
+        // PaygMeterReportingService is documented to swallow; defence-in-depth in
+        // JobChargeService catches a misbehaving impl so the afterCommit hook can't poison the
+        // close flow.
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.AUTOMATION);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setStripeCustomerId("cus_subscribed");
+        ext.setPaygSubscriptionId("sub_test");
+        when(teamExtRepo.findById(100L)).thenReturn(Optional.of(ext));
+
+        Mockito.doThrow(new RuntimeException("simulated meter failure"))
+                .when(meterReporter)
+                .recordUsage(
+                        Mockito.anyLong(),
+                        Mockito.anyString(),
+                        Mockito.anyInt(),
+                        Mockito.any(BillingCategory.class),
+                        Mockito.anyString(),
+                        Mockito.any(UUID.class));
+
+        // Should not throw — afterCommit's defence-in-depth wraps the call.
+        withTransactionSynchronization(() -> service.close(jobId));
+        verify(meterReporter)
+                .recordUsage(
+                        100L,
+                        "cus_subscribed",
+                        4,
+                        BillingCategory.AUTOMATION,
+                        "process:" + jobId + ":close",
+                        jobId);
+    }
+
+    @Test
+    void close_noActiveTransactionSync_skipsMeterPostButStillClosesJob() {
+        // Direct call without an outer @Transactional → no sync to register against. close()
+        // must still close the job; the meter post is implicitly deferred to whatever async path
+        // eventually wraps the call (or is never made, which is fine for ledger-only flows).
+        UUID jobId = UUID.randomUUID();
+        ProcessingJob job = openJob(jobId);
+        when(jobService.close(jobId)).thenReturn(job);
+
+        assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
+        service.close(jobId);
+
+        Mockito.verifyNoInteractions(meterReporter);
+        verify(jobService).close(jobId);
+    }
+
+    private static void withTransactionSynchronization(Runnable body) {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            body.run();
+            // Drain registered synchronizations to simulate a successful commit.
+            for (TransactionSynchronization sync :
+                    TransactionSynchronizationManager.getSynchronizations()) {
+                sync.afterCommit();
+            }
+        } finally {
+            TransactionSynchronizationManager.clear();
+        }
+    }
+
+    private static PaygShadowCharge chargedShadowRow(
+            UUID jobId, Long teamId, int units, BillingCategory category) {
+        return chargedShadowRow(jobId, teamId, units, 0, category);
+    }
+
+    private static PaygShadowCharge chargedShadowRow(
+            UUID jobId, Long teamId, int units, int freeUnitsConsumed, BillingCategory category) {
+        PaygShadowCharge row = new PaygShadowCharge();
+        row.setJobId(jobId);
+        row.setTeamId(teamId);
+        row.setPaygUnits(units);
+        row.setFreeUnitsConsumed(freeUnitsConsumed);
+        row.setStatus(ShadowChargeStatus.CHARGED);
+        row.setBillingCategory(category);
+        return row;
     }
 
     // --- helpers --------------------------------------------------------------------------------

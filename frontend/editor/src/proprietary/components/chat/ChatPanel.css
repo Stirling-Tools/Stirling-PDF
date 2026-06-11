@@ -35,7 +35,6 @@
   transition:
     background 120ms ease-out,
     border-color 120ms ease-out;
-  /* Pair with .agent-button to morph between the card and the pill. */
   view-transition-name: stirling-agent;
 }
 
@@ -62,6 +61,36 @@
   color: var(--mantine-color-blue-filled);
   flex-shrink: 0;
   position: relative;
+}
+
+/* Running / in-progress status dot, anchored to the agent pill icon. */
+.agent-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mantine-color-blue-5);
+  border: 1.5px solid var(--mantine-color-body);
+  animation: agent-dot-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes agent-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-status-dot {
+    animation: none;
+  }
 }
 
 .chat-panel__agent-pill--loading {

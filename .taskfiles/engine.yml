@@ -43,7 +43,7 @@ tasks:
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
-      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}}
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --workers "${STIRLING_ENGINE_WORKERS:-4}"
 
   dev:
     desc: "Start engine dev server with hot reload"

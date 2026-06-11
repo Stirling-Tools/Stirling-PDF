@@ -43,6 +43,8 @@ import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.repository.AiCreateSessionRepository;
 import stirling.software.saas.ai.service.AiCreateProxyService;
 import stirling.software.saas.ai.service.AiCreateSessionService;
+import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -54,6 +56,7 @@ import stirling.software.saas.util.CreditHeaderUtils;
 @Tag(name = "AI")
 @Hidden
 @RequiredArgsConstructor
+@RequiresFeature(FeatureGate.AI_SUPPORT)
 @Slf4j
 public class AiCreateController {
 
