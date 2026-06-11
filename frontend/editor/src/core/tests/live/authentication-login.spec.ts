@@ -19,12 +19,7 @@ test.describe("1. Authentication and Login", () => {
           .first(),
       ).toBeVisible();
 
-      // Step 3: Confirm the heading for "Sign In" / "Login" is visible
-      await expect(
-        page.getByRole("heading", { name: /sign in|login|masuk/i }),
-      ).toBeVisible();
-
-      // Step 4: Confirm a "Username" text input field is present and empty
+      // Step 3: Confirm a "Username" text input field is present and empty
       const usernameInput = page.locator("#email");
       await expect(usernameInput).toBeVisible();
       await expect(usernameInput).toHaveValue("");

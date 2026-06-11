@@ -13,6 +13,15 @@ vi.mock("@app/auth/supabase", () => ({
   },
 }));
 
+// Stub apiClient's heavy UI/util deps so importing it stays cheap. None are
+// exercised here (toast, plan settings and handleHttpError paths aren't hit),
+// and re-importing the real toast graph per test made these tests time out.
+vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@app/utils/appSettings", () => ({ openPlanSettings: vi.fn() }));
+vi.mock("@app/services/httpErrorHandler", () => ({
+  handleHttpError: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("apiClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
