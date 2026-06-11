@@ -122,7 +122,7 @@ export function PolicySetupWizard({
   // Output + retry settings — the real, working folder settings (the engine
   // applies them). Pre-filled from the backing folder in edit mode.
   const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
-    initialFolder?.outputMode ?? "new_file",
+    initialFolder?.outputMode ?? "new_version",
   );
   const [outputName, setOutputName] = useState(initialFolder?.outputName ?? "");
   const [outputNamePosition, setOutputNamePosition] = useState<

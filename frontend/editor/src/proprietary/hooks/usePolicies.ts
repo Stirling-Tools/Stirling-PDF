@@ -129,6 +129,7 @@ export function usePolicies() {
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
+        outputName: result.folder.outputName,
       });
     },
     [],
@@ -163,6 +164,7 @@ export function usePolicies() {
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
+        outputName: result.folder.outputName,
       });
     },
     [],
@@ -225,6 +227,7 @@ export function usePolicies() {
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
+        outputName: result.folder.outputName,
       });
     },
     [],

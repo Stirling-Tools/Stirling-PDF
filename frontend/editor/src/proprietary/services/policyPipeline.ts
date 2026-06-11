@@ -202,7 +202,7 @@ export interface DecodedPolicy {
 }
 
 const DEFAULT_FOLDER: PolicyFolderSettings = {
-  outputMode: "new_file",
+  outputMode: "new_version",
   outputName: "",
   outputNamePosition: "prefix",
   maxRetries: 3,

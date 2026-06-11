@@ -22,7 +22,10 @@ function defaultState(): PolicyState {
     // Empty by default; the wizard defaults the reviewer to the signed-in user.
     reviewerEmail: "",
     fieldValues: {},
-    outputMode: "new_file",
+    // Default to versioning the input file rather than spawning a separate one.
+    outputMode: "new_version",
+    // No rename by default — the output keeps the input's filename.
+    outputName: "",
     // Every catalog category is a shipped, built-in policy → default (not
     // deletable). User-created policies (later) will set this false.
     isDefault: true,
