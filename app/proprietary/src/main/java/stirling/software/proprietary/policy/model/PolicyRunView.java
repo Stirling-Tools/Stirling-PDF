@@ -10,6 +10,7 @@ import stirling.software.common.model.job.ResultFile;
  */
 public record PolicyRunView(
         String runId,
+        String policyId,
         PolicyRunStatus status,
         int currentStep,
         int stepCount,
@@ -21,6 +22,7 @@ public record PolicyRunView(
     public static PolicyRunView of(PolicyRun run) {
         return new PolicyRunView(
                 run.getRunId(),
+                run.getPolicyId(),
                 run.getStatus(),
                 run.getCurrentStep(),
                 run.stepCount(),

@@ -73,6 +73,8 @@ export interface BackendResultFile {
 /** Read-only view returned by the run status endpoint (mirrors PolicyRunView). */
 export interface PolicyRunView {
   runId: string;
+  /** ID of the stored policy that produced the run; null for ad-hoc pipelines. */
+  policyId: string | null;
   status: PolicyRunStatus;
   currentStep: number;
   stepCount: number;

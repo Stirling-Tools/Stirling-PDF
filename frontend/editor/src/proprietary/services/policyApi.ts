@@ -103,3 +103,14 @@ export async function getPolicyRun(runId: string): Promise<PolicyRunView> {
   );
   return res.data;
 }
+
+/**
+ * The caller's in-flight and recently-finished stored-policy runs (server-owned,
+ * within the run-retention window). Used to reconcile on load: a run started
+ * before a refresh/crash is rediscovered here and its outputs collected, so a
+ * finished run is never orphaned on the backend.
+ */
+export async function listPolicyRuns(): Promise<PolicyRunView[]> {
+  const res = await apiClient.get<PolicyRunView[]>("/api/v1/policies/runs");
+  return res.data;
+}

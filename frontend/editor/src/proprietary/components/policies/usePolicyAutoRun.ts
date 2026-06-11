@@ -22,6 +22,7 @@ import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import {
   runStoredPolicy,
   getPolicyRun,
+  listPolicyRuns,
   downloadPolicyOutput,
 } from "@app/services/policyApi";
 import type {
@@ -32,8 +33,10 @@ import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
 import {
+  addReconciledRun,
   dispatchKey,
   getRun,
   isDispatched,
@@ -123,6 +126,8 @@ export function usePolicyAutoRun(): void {
   const polling = useRef<Set<string>>(new Set());
   const importing = useRef<Set<string>>(new Set());
   const dispatching = useRef<Set<string>>(new Set());
+  // Reconcile against the backend exactly once per mount.
+  const reconciled = useRef(false);
 
   // A policy's tool calls run server-side, so a usage-limit 402 never reaches the apiClient
   // interceptor (and thus never pops the modal that direct calls get). The backend surfaces the
@@ -273,6 +278,18 @@ export function usePolicyAutoRun(): void {
       }).finally(() => importing.current.delete(run.runId));
     }
   }, [runs, addFiles, consumeFiles, policies, fileStubs]);
+
+  // Reconcile against the backend on load. The server owns runs (durable, user-scoped),
+  // so a run started before this client recorded it, or before a refresh/crash, is
+  // rediscovered here; the poll + import effects above then collect its outputs rather
+  // than leaving them orphaned. Waits until policies are known so server runs can be
+  // attributed to their category.
+  useEffect(() => {
+    if (!POLICIES_ENABLED || reconciled.current) return;
+    if (Object.keys(policies).length === 0) return;
+    reconciled.current = true;
+    void reconcileServerRuns(policies);
+  }, [policies]);
 }
 
 interface ImportContext {
@@ -289,6 +306,56 @@ interface ImportContext {
   outputName: string;
   /** The input file's stub — required to version it; absent if it's been removed. */
   parentStub: StirlingFileStub | undefined;
+}
+
+/**
+ * Pull the caller's server-side runs and fold them into the local store. For a run we already
+ * track, patch its status/outputs (preserving local import progress + attribution); for one we
+ * don't, adopt it so the poll/import effects pick it up. Server-excluded ad-hoc runs and runs we
+ * can't map to a configured category are skipped.
+ */
+async function reconcileServerRuns(
+  policies: PoliciesByCategory,
+): Promise<void> {
+  let serverRuns;
+  try {
+    serverRuns = await listPolicyRuns();
+  } catch {
+    return; // offline / backend down; local cache stands.
+  }
+  for (const view of serverRuns) {
+    // No-ops unless the run is already tracked, so this only patches known runs.
+    updateRun(view.runId, {
+      status: view.status,
+      outputs: view.outputs,
+      error: view.error,
+    });
+    // No-ops if already tracked, so this only adopts runs we'd otherwise have lost.
+    const categoryId = categoryForPolicy(view.policyId, policies);
+    if (!categoryId) continue;
+    addReconciledRun({
+      runId: view.runId,
+      categoryId,
+      fileId: "",
+      fileName: view.outputs[0]?.fileName ?? "",
+      fileSize: 0,
+      status: view.status,
+      outputs: view.outputs,
+      error: view.error,
+      startedAt: Date.now(),
+    });
+  }
+}
+
+/** The category whose configured policy produced this run, if any. */
+function categoryForPolicy(
+  policyId: string | null,
+  policies: PoliciesByCategory,
+): string | undefined {
+  if (!policyId) return undefined;
+  return Object.entries(policies).find(
+    ([, s]) => s.backendId === policyId,
+  )?.[0];
 }
 
 /**
@@ -424,8 +491,9 @@ export async function runPolicyOnFile(
       startedAt: Date.now(),
     });
   } catch {
-    // Dispatch failed (offline / backend error). Mark dispatched so we don't
-    // hammer; the absent run simply won't appear in the activity feed.
+    // Dispatch failed (offline / backend error). Mark dispatched so we don't hammer;
+    // the absent run simply won't appear in the activity feed. If the backend did
+    // start a run we never recorded, reconcileServerRuns rediscovers it.
     markDispatched(categoryId, fileId);
   }
 }
