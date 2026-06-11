@@ -2,6 +2,7 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
 import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 
 /**
  * Downloads a blob as a file using browser download API
@@ -27,7 +28,7 @@ export async function downloadFileFromStorage(
     throw new Error(`File "${file.name}" not found in storage`);
   }
 
-  await downloadFile({
+  await downloadFileWithPolicy({
     data: stirlingFile,
     filename: stirlingFile.name,
     localPath: file.localFilePath,
@@ -125,7 +126,7 @@ export async function downloadFiles(
  * @param filename - Optional custom filename
  */
 export function downloadFileObject(file: File, filename?: string): void {
-  void downloadFile({ data: file, filename: filename || file.name });
+  void downloadFileWithPolicy({ data: file, filename: filename || file.name });
 }
 
 /**
