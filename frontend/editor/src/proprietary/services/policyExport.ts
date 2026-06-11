@@ -1,20 +1,13 @@
 /**
- * Export-time policy enforcement.
+ * Export-time policy enforcement. A policy whose `runOn` is "export" runs its
+ * pipeline on a file just before it leaves the editor; the enforced result is
+ * what gets exported. Core export handlers reach this via the `@app/*` alias
+ * (the open-source build ships a no-op stub).
  *
- * A policy whose `runOn` is "export" enforces its pipeline on a file the moment
- * before it leaves the editor: the file's bytes are sent to the backend, the
- * policy runs, and the enforced result is what actually gets exported. The (core)
- * export handlers reach this via the `@app/*` alias; the open-source build ships
- * a no-op stub, so this only does work in the proprietary build.
- *
- * Export is never hard-blocked (product decision): if the run fails or times out
- * the ORIGINAL file is exported and a warning toast is shown, rather than
- * stopping the user from getting their file.
- *
- * When the policy's output mode is "new version" AND we know the workspace file
- * being exported, the run is also recorded in the run store so the mounted
- * import effect versions the in-editor file too — the editor's copy ends up with
- * the policy applied, not just the downloaded one.
+ * Export is never hard-blocked: on failure the original file is exported and a
+ * warning toast is shown. For "new version" policies, the run is also recorded
+ * so the mounted import effect versions the in-editor file, not just the
+ * download. Only PDFs are enforced.
  */
 
 import { loadPolicies } from "@app/services/policyStorage";
@@ -35,6 +28,9 @@ const MAX_POLLS = 75;
 /** How long the result toast lingers before fading out. */
 const TOAST_LINGER_MS = 10_000;
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isPdf = (f: File) =>
+  f.type === "application/pdf" || /\.pdf$/i.test(f.name);
 
 interface ExportPolicy {
   categoryId: string;
@@ -107,85 +103,90 @@ async function runToCompletion(
 }
 
 /**
- * Enforce every active export-policy on each file just before export, returning
- * the enforced files (or the original on failure). `fileIds[i]` is the workspace
- * id of `files[i]` when known — used to version the in-editor file for
- * "new version" policies. Shows a single toast for the batch that fades after a
- * few seconds. A no-op when nothing is set to run on export.
+ * Enforce every active export-policy on each PDF just before export, returning
+ * the files in order (enforced, or the original on failure). `fileIds[i]` is the
+ * workspace id of `files[i]` when known — used to version the in-editor file for
+ * "new version" policies. Non-PDFs pass through untouched, and a single toast
+ * (glowing in the policy's accent while it runs) fades a few seconds after the
+ * result.
  */
 export async function enforceExportPolicies(
   files: File[],
   fileIds?: (string | undefined)[],
 ): Promise<File[]> {
   const active = activeExportPolicies();
-  if (!active.length || !files.length) return files;
+  const targets = files.flatMap((f, i) => (isPdf(f) ? [i] : []));
+  if (!active.length || targets.length === 0) return files;
 
   const names = active.map((p) => p.label).join(", ");
   const toastId = alert({
     alertType: "neutral",
     title: `Applying ${names}`,
     body: `Enforcing ${
-      files.length === 1 ? "your file" : `${files.length} files`
+      targets.length === 1 ? "your file" : `${targets.length} files`
     } before export…`,
     isPersistentPopup: true,
     expandable: false,
-    // Glow the toast in the (first) policy's accent so it's clearly tied to it.
     glowColor: active[0].accent,
   });
 
-  const out: File[] = [];
+  const out = [...files];
   let failures = 0;
-  for (let i = 0; i < files.length; i++) {
+  for (const i of targets) {
     const file = files[i];
     const fileId = fileIds?.[i];
     try {
       let current = file;
+      // The last "new version" policy's output is what versions the editor file
+      // (recording every policy would double-consume the same input).
+      let versionRun: PolicyRunResult & { categoryId: string };
+      let hasVersionRun = false;
       for (const policy of active) {
         const result = await runToCompletion(policy.backendId, current);
         current = result.file;
-        // Version the in-editor file too (only for "new version" policies, and
-        // only when we know which workspace file this export came from). The
-        // mounted import effect picks the recorded run up and versions it.
         if (policy.outputMode === "new_version" && fileId) {
-          recordRunStart({
-            runId: result.runId,
-            categoryId: policy.categoryId,
-            fileId,
-            fileName: file.name,
-            fileSize: file.size,
-            status: "COMPLETED",
-            outputs: result.outputs,
-            error: null,
-            startedAt: Date.now(),
-          });
+          versionRun = { ...result, categoryId: policy.categoryId };
+          hasVersionRun = true;
         }
       }
-      out.push(current);
+      out[i] = current;
+      if (hasVersionRun && fileId) {
+        recordRunStart({
+          runId: versionRun!.runId,
+          categoryId: versionRun!.categoryId,
+          fileId,
+          fileName: file.name,
+          fileSize: file.size,
+          status: "COMPLETED",
+          outputs: versionRun!.outputs,
+          error: null,
+          startedAt: Date.now(),
+        });
+      }
     } catch {
-      failures += 1;
-      out.push(file); // export the original — never hard-block.
+      failures += 1; // leave out[i] as the original — never hard-block.
     }
   }
 
-  if (failures) {
-    updateToast(toastId, {
-      alertType: "warning",
-      title: "Exported without full enforcement",
-      body: `${failures} of ${files.length} file(s) couldn't be processed and were exported as-is.`,
-      isPersistentPopup: false,
-      glowColor: undefined, // only the in-progress toast glows, not the result.
-    });
-  } else {
-    updateToast(toastId, {
-      alertType: "success",
-      title: `${names} applied`,
-      body: "Enforced before export.",
-      isPersistentPopup: false,
-      glowColor: undefined, // only the in-progress toast glows, not the result.
-    });
-  }
-  // The toast holds while running (persistent); fade it out a few seconds after
-  // it flips to its result, since update() doesn't reschedule auto-dismiss.
+  updateToast(
+    toastId,
+    failures
+      ? {
+          alertType: "warning",
+          title: "Exported without full enforcement",
+          body: `${failures} of ${targets.length} file(s) couldn't be processed and were exported as-is.`,
+          isPersistentPopup: false,
+          glowColor: undefined,
+        }
+      : {
+          alertType: "success",
+          title: `${names} applied`,
+          body: "Enforced before export.",
+          isPersistentPopup: false,
+          glowColor: undefined,
+        },
+  );
+  // update() doesn't reschedule auto-dismiss, so fade the result out explicitly.
   window.setTimeout(() => dismissToast(toastId), TOAST_LINGER_MS);
   return out;
 }
