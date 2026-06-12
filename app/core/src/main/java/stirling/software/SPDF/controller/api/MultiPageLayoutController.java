@@ -10,13 +10,17 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +29,8 @@ import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralFormCopyUtils;
@@ -33,6 +39,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@Path("/api/v1/general")
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class MultiPageLayoutController {
@@ -40,17 +48,72 @@ public class MultiPageLayoutController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/multi-page-layout")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/multi-page-layout",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
                     "This operation takes an input PDF file and the number of pages to merge into a"
                             + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> mergeMultiplePagesIntoOne(
-            @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
+    public Response mergeMultiplePagesIntoOne(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("mode") String modeForm,
+            @RestForm("pagesPerSheet") Integer pagesPerSheetForm,
+            @RestForm("arrangement") String arrangementForm,
+            @RestForm("readingDirection") String readingDirectionForm,
+            @RestForm("rows") Integer rowsForm,
+            @RestForm("cols") Integer colsForm,
+            @RestForm("orientation") String orientationForm,
+            @RestForm("innerMargin") Integer innerMarginForm,
+            @RestForm("topMargin") Integer topMarginForm,
+            @RestForm("bottomMargin") Integer bottomMarginForm,
+            @RestForm("leftMargin") Integer leftMarginForm,
+            @RestForm("rightMargin") Integer rightMarginForm,
+            @RestForm("borderWidth") Integer borderWidthForm,
+            @RestForm("addBorder") Boolean addBorderForm)
+            throws IOException {
+
+        MergeMultiplePagesRequest request = new MergeMultiplePagesRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setMode(modeForm);
+        if (pagesPerSheetForm != null) {
+            request.setPagesPerSheet(pagesPerSheetForm);
+        }
+        request.setArrangement(arrangementForm);
+        request.setReadingDirection(readingDirectionForm);
+        if (rowsForm != null) {
+            request.setRows(rowsForm);
+        }
+        if (colsForm != null) {
+            request.setCols(colsForm);
+        }
+        request.setOrientation(orientationForm);
+        if (innerMarginForm != null) {
+            request.setInnerMargin(innerMarginForm);
+        }
+        if (topMarginForm != null) {
+            request.setTopMargin(topMarginForm);
+        }
+        if (bottomMarginForm != null) {
+            request.setBottomMargin(bottomMarginForm);
+        }
+        if (leftMarginForm != null) {
+            request.setLeftMargin(leftMarginForm);
+        }
+        if (rightMarginForm != null) {
+            request.setRightMargin(rightMarginForm);
+        }
+        if (borderWidthForm != null) {
+            request.setBorderWidth(borderWidthForm);
+        }
+        request.setAddBorder(addBorderForm);
 
         int MAX_PAGES = 100000;
         int MAX_COLS = 300;

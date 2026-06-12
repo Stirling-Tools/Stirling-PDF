@@ -15,15 +15,17 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import jakarta.validation.Valid;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,8 @@ import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -42,6 +46,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPdfBySectionsController {
@@ -49,8 +55,11 @@ public class SplitPdfBySectionsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/split-pdf-by-sections")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/split-pdf-by-sections",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
@@ -61,8 +70,28 @@ public class SplitPdfBySectionsController {
                             + " which page to split, and how to split"
                             + " ( halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<Resource> splitPdf(
-            @Valid @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
+    public Response splitPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbersForm,
+            @RestForm("splitMode") String splitModeForm,
+            @RestForm("horizontalDivisions") Integer horizontalDivisionsForm,
+            @RestForm("verticalDivisions") Integer verticalDivisionsForm,
+            @RestForm("merge") Boolean mergeForm)
+            throws Exception {
+        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbersForm);
+        request.setSplitMode(splitModeForm);
+        if (horizontalDivisionsForm != null) {
+            request.setHorizontalDivisions(horizontalDivisionsForm);
+        }
+        if (verticalDivisionsForm != null) {
+            request.setVerticalDivisions(verticalDivisionsForm);
+        }
+        request.setMerge(mergeForm);
+
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
         SplitTypes splitMode =

@@ -11,14 +11,18 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +31,8 @@ import stirling.software.SPDF.model.api.misc.AddPageNumbersRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -34,15 +40,20 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@Path("/api/v1/misc")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/add-page-numbers")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/add-page-numbers",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
@@ -50,8 +61,40 @@ public class PageNumbersController {
             description =
                     "This operation takes an input PDF file and adds page numbers to it. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<Resource> addPageNumbers(@ModelAttribute AddPageNumbersRequest request)
+    public Response addPageNumbers(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("customMargin") String customMarginForm,
+            @RestForm("position") Integer positionForm,
+            @RestForm("startingNumber") Integer startingNumberForm,
+            @RestForm("pagesToNumber") String pagesToNumberForm,
+            @RestForm("customText") String customTextForm,
+            @RestForm("zeroPad") Integer zeroPadForm,
+            @RestForm("fontSize") Float fontSizeForm,
+            @RestForm("fontType") String fontTypeForm,
+            @RestForm("fontColor") String fontColorForm)
             throws IOException {
+
+        AddPageNumbersRequest request = new AddPageNumbersRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setCustomMargin(customMarginForm);
+        if (positionForm != null) {
+            request.setPosition(positionForm);
+        }
+        if (startingNumberForm != null) {
+            request.setStartingNumber(startingNumberForm);
+        }
+        request.setPagesToNumber(pagesToNumberForm);
+        request.setCustomText(customTextForm);
+        if (zeroPadForm != null) {
+            request.setZeroPad(zeroPadForm);
+        }
+        if (fontSizeForm != null) {
+            request.setFontSize(fontSizeForm);
+        }
+        request.setFontType(fontTypeForm);
+        request.setFontColor(fontColorForm);
 
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();

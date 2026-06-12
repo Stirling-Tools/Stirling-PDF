@@ -18,13 +18,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +45,7 @@ import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
@@ -58,6 +63,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@ApplicationScoped
+@Path("/api/v1/convert")
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertImgPDFController {
@@ -73,8 +80,11 @@ public class ConvertImgPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
+    @POST
+    @Path("/pdf/img")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/img",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
@@ -84,9 +94,25 @@ public class ConvertImgPDFController {
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
                             + " color type, and DPI. Users can choose to get a single image or multiple"
                             + " images.  Input:PDF Output:Image Type:SI-Conditional")
-    public ResponseEntity<?> convertToImage(@ModelAttribute ConvertToImageRequest request)
+    public Response convertToImage(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("imageFormat") String imageFormatParam,
+            @RestForm("singleOrMultiple") String singleOrMultipleParam,
+            @RestForm("colorType") String colorTypeParam,
+            @RestForm("dpi") Integer dpiParam,
+            @RestForm("pageNumbers") String pageNumbersParam,
+            @RestForm("includeAnnotations") Boolean includeAnnotationsParam)
             throws Exception {
-        MultipartFile file = request.getFileInput();
+        ConvertToImageRequest request = new ConvertToImageRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setImageFormat(imageFormatParam);
+        request.setSingleOrMultiple(singleOrMultipleParam);
+        request.setColorType(colorTypeParam);
+        request.setDpi(dpiParam);
+        request.setPageNumbers(pageNumbersParam);
+        request.setIncludeAnnotations(includeAnnotationsParam);
+
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
         String colorType = request.getColorType();
@@ -194,7 +220,7 @@ public class ConvertImgPDFController {
                     FileUtils.deleteDirectory(tempOutputDir.toFile());
                     tempOutputDir = null;
                     String docName = filename + "." + imageFormat;
-                    MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
+                    MediaType mediaType = MediaType.valueOf(getMediaType(imageFormat));
                     return WebResponseUtils.bytesToWebResponse(webpBytes, docName, mediaType);
                 } else {
                     ByteArrayOutputStream zipBAOS = new ByteArrayOutputStream();
@@ -211,18 +237,22 @@ public class ConvertImgPDFController {
                     tempOutputDir = null;
                     String zipFilename = filename + "_convertedToImages.zip";
                     return WebResponseUtils.bytesToWebResponse(
-                            zipBAOS.toByteArray(), zipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                            zipBAOS.toByteArray(),
+                            zipFilename,
+                            MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
                 }
             }
 
             if (singleImage) {
                 String docName = filename + "." + imageFormat;
-                MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
+                MediaType mediaType = MediaType.valueOf(getMediaType(imageFormat));
                 return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
             } else {
                 String zipFilename = filename + "_convertedToImages.zip";
                 return WebResponseUtils.bytesToWebResponse(
-                        result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                        result,
+                        zipFilename,
+                        MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
             }
 
         } finally {
@@ -243,8 +273,11 @@ public class ConvertImgPDFController {
         }
     }
 
+    @POST
+    @Path("/img/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/img/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
@@ -254,9 +287,29 @@ public class ConvertImgPDFController {
                     "This endpoint converts one or more images to a PDF file. Users can specify"
                             + " whether to stretch the images to fit the PDF page, and whether to"
                             + " automatically rotate the images. Input:Image Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request)
+    public Response convertToPdf(
+            @RestForm("fileInput") List<FileUpload> fileUploads,
+            @RestForm("fitOption") String fitOptionParam,
+            @RestForm("colorType") String colorTypeParam,
+            @RestForm("autoRotate") Boolean autoRotateParam)
             throws IOException {
-        MultipartFile[] file = request.getFileInput();
+        // TODO: Migration required - ConvertToPdfRequest.fileInput is still typed as Spring's
+        // org.springframework.web.multipart.MultipartFile[]. setFileInput(...) below passes the
+        // common shim (stirling.software.common.model.MultipartFile[]); this will not compile until
+        // ConvertToPdfRequest is migrated to the shim type (collaborator edit on the model file).
+        ConvertToPdfRequest request = new ConvertToPdfRequest();
+        stirling.software.common.model.MultipartFile[] requestFiles =
+                fileUploads == null
+                        ? new stirling.software.common.model.MultipartFile[0]
+                        : fileUploads.stream()
+                                .map(FileUploadMultipartFile::of)
+                                .toArray(stirling.software.common.model.MultipartFile[]::new);
+        request.setFileInput(requestFiles);
+        request.setFitOption(fitOptionParam);
+        request.setColorType(colorTypeParam);
+        request.setAutoRotate(autoRotateParam);
+
+        stirling.software.common.model.MultipartFile[] file = request.getFileInput();
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
         boolean autoRotate = Boolean.TRUE.equals(request.getAutoRotate());
@@ -275,8 +328,11 @@ public class ConvertImgPDFController {
                 GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
+    @POST
+    @Path("/cbz/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/cbz/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
@@ -284,9 +340,18 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
                             + "Input:CBZ Output:PDF Type:SISO")
-    public ResponseEntity<Resource> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
+    public Response convertCbzToPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("optimizeForEbook") Boolean optimizeForEbookParam)
             throws IOException {
-        MultipartFile file = request.getFileInput();
+        // TODO: Migration required - ConvertCbzToPdfRequest.fileInput is still typed as Spring's
+        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
+        // and will not compile until that model file is migrated to the shim type.
+        ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setOptimizeForEbook(Boolean.TRUE.equals(optimizeForEbookParam));
+
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
         // Disable optimization if Ghostscript is not available
@@ -304,8 +369,11 @@ public class ConvertImgPDFController {
         return WebResponseUtils.pdfFileToWebResponse(pdfFile, filename);
     }
 
+    @POST
+    @Path("/pdf/cbz")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/cbz",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -313,9 +381,19 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
                             + "Input:PDF Output:CBZ Type:SISO")
-    public ResponseEntity<Resource> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
+    public Response convertPdfToCbz(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("dpi") Integer dpiParam)
             throws IOException {
-        MultipartFile file = request.getFileInput();
+        // TODO: Migration required - ConvertPdfToCbzRequest.fileInput is still typed as Spring's
+        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
+        // and will not compile until that model file is migrated to the shim type.
+        ConvertPdfToCbzRequest request = new ConvertPdfToCbzRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        if (dpiParam != null) {
+            request.setDpi(dpiParam);
+        }
+
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
 
         if (dpi <= 0) {
@@ -330,8 +408,11 @@ public class ConvertImgPDFController {
         return WebResponseUtils.zipFileToWebResponse(cbzFile, filename);
     }
 
+    @POST
+    @Path("/cbr/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/cbr/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
@@ -339,9 +420,18 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a CBR (RAR) comic book archive to a PDF file. "
                             + "Input:CBR Output:PDF Type:SISO")
-    public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
+    public Response convertCbrToPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("optimizeForEbook") Boolean optimizeForEbookParam)
             throws IOException {
-        MultipartFile file = request.getFileInput();
+        // TODO: Migration required - ConvertCbrToPdfRequest.fileInput is still typed as Spring's
+        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
+        // and will not compile until that model file is migrated to the shim type.
+        ConvertCbrToPdfRequest request = new ConvertCbrToPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setOptimizeForEbook(Boolean.TRUE.equals(optimizeForEbookParam));
+
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
         // Disable optimization if Ghostscript is not available
@@ -359,8 +449,11 @@ public class ConvertImgPDFController {
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
 
+    @POST
+    @Path("/pdf/cbr")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/cbr",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -368,9 +461,19 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to a CBR comic book archive using the local RAR CLI. "
                             + "Input:PDF Output:CBR Type:SISO")
-    public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
+    public Response convertPdfToCbr(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("dpi") Integer dpiParam)
             throws IOException {
-        MultipartFile file = request.getFileInput();
+        // TODO: Migration required - ConvertPdfToCbrRequest.fileInput is still typed as Spring's
+        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
+        // and will not compile until that model file is migrated to the shim type.
+        ConvertPdfToCbrRequest request = new ConvertPdfToCbrRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        if (dpiParam != null) {
+            request.setDpi(dpiParam);
+        }
+
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
 
         if (dpi <= 0) {
@@ -382,7 +485,7 @@ public class ConvertImgPDFController {
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
 
         return WebResponseUtils.bytesToWebResponse(
-                cbrBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
+                cbrBytes, filename, MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
     }
 
     private String createConvertedFilename(String originalFilename, String suffix) {
@@ -400,7 +503,7 @@ public class ConvertImgPDFController {
 
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
-        return "null".equals(mimeType) ? MediaType.APPLICATION_OCTET_STREAM_VALUE : mimeType;
+        return "null".equals(mimeType) ? MediaType.APPLICATION_OCTET_STREAM : mimeType;
     }
 
     /**
@@ -411,7 +514,8 @@ public class ConvertImgPDFController {
      * @return A byte array of the rearranged PDF.
      * @throws IOException If an error occurs while processing the PDF.
      */
-    private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
+    private byte[] rearrangePdfPages(
+            stirling.software.common.model.MultipartFile pdfFile, String[] pageOrderArr)
             throws IOException {
         // Load the input PDF
         try (PDDocument document = pdfDocumentFactory.load(pdfFile);

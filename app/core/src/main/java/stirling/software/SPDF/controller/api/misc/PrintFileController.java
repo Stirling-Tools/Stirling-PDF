@@ -21,49 +21,58 @@ import javax.print.PrintServiceLookup;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
+import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.util.ExceptionUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/misc")
 @Slf4j
 public class PrintFileController {
 
-    // TODO
-    // @PostMapping(value = "/print-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    // @Operation(
+    // TODO: Migration required - endpoint mapping was commented out in the original Spring source
+    // (the @PostMapping/@Operation were disabled), so this route remains intentionally inactive.
+    // The conversion below preserves the disabled state: routing annotations are kept commented.
+    // To enable, uncomment the JAX-RS annotations and provide a multipart-bound request.
+    // @POST
+    // @jakarta.ws.rs.Path("/print-file")
+    // @jakarta.ws.rs.Consumes(MediaType.MULTIPART_FORM_DATA)
+    // @io.swagger.v3.oas.annotations.Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
     //                "Input of PDF or Image along with a printer name/URL/IP to match against to
     // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
-    public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
+    public Response printFile(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("printerName") String printerName)
             throws IOException {
-        MultipartFile file = request.getFileInput();
+        PrintFileRequest request = new PrintFileRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setPrinterName(printerName);
+
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null
                 && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalid.filepath", "Invalid file path detected: " + originalFilename);
         }
-        String printerName = request.getPrinterName();
+        String resolvedPrinterName = request.getPrinterName();
         String contentType = file.getContentType();
         try {
             // Find matching printer
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
-            String normalizedPrinterName = printerName.toLowerCase(Locale.ROOT);
+            String normalizedPrinterName = resolvedPrinterName.toLowerCase(Locale.ROOT);
             PrintService selectedService =
                     Arrays.stream(services)
                             .filter(
@@ -79,7 +88,7 @@ public class PrintFileController {
 
             log.info("Selected Printer: {}", selectedService.getName());
 
-            if (MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
+            if (MediaType.APPLICATION_PDF.equals(contentType)) {
                 // Use Stream-to-File pattern: write to temp file first, then load from file
                 Path tempFile = Files.createTempFile("print-", ".pdf");
                 try {
@@ -123,11 +132,10 @@ public class PrintFileController {
                     job.print();
                 }
             }
-            return new ResponseEntity<>(
-                    "File printed successfully to " + selectedService.getName(), HttpStatus.OK);
+            return Response.ok("File printed successfully to " + selectedService.getName()).build();
         } catch (Exception e) {
             System.err.println("Failed to print: " + e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 }

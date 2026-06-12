@@ -2,14 +2,13 @@ package stirling.software.SPDF.controller.web;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -20,19 +19,21 @@ import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/general")
+@ApplicationScoped
+@Path("/api/v1/general")
 @Tag(name = "Signature Assets", description = "Retrieve saved signature images")
 public class SignatureImageController {
 
     private final SharedSignatureService sharedSignatureService;
-    private final PersonalSignatureServiceInterface personalSignatureService;
-    private final UserServiceInterface userService;
+    // MIGRATION: Spring @Autowired(required=false) optional bean -> CDI Instance<>.
+    private final Instance<PersonalSignatureServiceInterface> personalSignatureService;
+    private final Instance<UserServiceInterface> userService;
 
+    @Inject
     public SignatureImageController(
             SharedSignatureService sharedSignatureService,
-            @Autowired(required = false) PersonalSignatureServiceInterface personalSignatureService,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<PersonalSignatureServiceInterface> personalSignatureService,
+            Instance<UserServiceInterface> userService) {
         this.sharedSignatureService = sharedSignatureService;
         this.personalSignatureService = personalSignatureService;
         this.userService = userService;
@@ -43,17 +44,20 @@ public class SignatureImageController {
      * Authenticated with proprietary: tries personal first, then shared - Unauthenticated or
      * community: tries shared only
      */
-    @GetMapping("/signatures/{fileName}")
-    public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName) {
+    @GET
+    @Path("/signatures/{fileName}")
+    public Response getSignature(@PathParam("fileName") String fileName) {
         try {
             byte[] imageBytes = null;
 
             // If proprietary service available and user authenticated, try personal folder first
-            if (personalSignatureService != null && userService != null) {
+            if (personalSignatureService.isResolvable() && userService.isResolvable()) {
                 try {
-                    String username = userService.getCurrentUsername();
+                    String username = userService.get().getCurrentUsername();
                     imageBytes =
-                            personalSignatureService.getPersonalSignatureBytes(username, fileName);
+                            personalSignatureService
+                                    .get()
+                                    .getPersonalSignatureBytes(username, fileName);
                 } catch (Exception e) {
                     // Not found in personal folder or not authenticated, will try shared
                     log.debug("Personal signature not found, trying shared: {}", e.getMessage());
@@ -66,16 +70,16 @@ public class SignatureImageController {
             }
 
             // Determine content type from file extension
-            MediaType contentType = MediaType.IMAGE_PNG; // Default
+            String contentType = "image/png"; // Default
             String lowerFileName = fileName.toLowerCase();
             if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
-                contentType = MediaType.IMAGE_JPEG;
+                contentType = "image/jpeg";
             }
 
-            return ResponseEntity.ok().contentType(contentType).body(imageBytes);
+            return Response.ok(imageBytes).type(contentType).build();
         } catch (IOException e) {
             log.debug("Signature not found: {}", fileName);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
 }

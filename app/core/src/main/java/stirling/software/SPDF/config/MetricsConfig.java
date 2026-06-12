@@ -1,16 +1,17 @@
 package stirling.software.SPDF.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.config.MeterFilterReply;
 
-@Configuration
+@ApplicationScoped
 public class MetricsConfig {
 
-    @Bean
+    @Produces
+    @ApplicationScoped
     public MeterFilter meterFilter() {
         return new MeterFilter() {
             @Override

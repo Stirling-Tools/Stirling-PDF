@@ -9,13 +9,17 @@ import java.util.Locale;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +31,7 @@ import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
@@ -35,6 +40,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class RearrangePagesPDFController {
@@ -42,8 +49,11 @@ public class RearrangePagesPDFController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/remove-pages")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/remove-pages",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
@@ -53,10 +63,17 @@ public class RearrangePagesPDFController {
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
                             + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request)
+    public Response deletePages(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers)
             throws IOException {
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbers);
 
-        MultipartFile pdfFile = request.getFileInput();
+        stirling.software.common.model.MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
@@ -226,8 +243,11 @@ public class RearrangePagesPDFController {
         }
     }
 
+    @POST
+    @Path("/rearrange-pages")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/rearrange-pages",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
@@ -238,9 +258,19 @@ public class RearrangePagesPDFController {
                             + " order or custom mode. Users can provide a page order as a"
                             + " comma-separated list of page numbers or page ranges, or a custom mode."
                             + " Input:PDF Output:PDF")
-    public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
+    public Response rearrangePages(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers,
+            @RestForm("customMode") String customMode)
             throws IOException {
-        MultipartFile pdfFile = request.getFileInput();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbers);
+        request.setCustomMode(customMode);
+
+        stirling.software.common.model.MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();
         try {

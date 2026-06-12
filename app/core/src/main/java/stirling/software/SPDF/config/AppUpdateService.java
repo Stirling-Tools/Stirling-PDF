@@ -1,32 +1,36 @@
 package stirling.software.SPDF.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Named;
 
 import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 
-@Configuration
+@ApplicationScoped
 class AppUpdateService {
 
     private final ApplicationProperties applicationProperties;
 
-    private final ShowAdminInterface showAdmin;
+    // @Autowired(required = false) -> Instance<T> for optional injection
+    private final Instance<ShowAdminInterface> showAdmin;
 
     public AppUpdateService(
             ApplicationProperties applicationProperties,
-            @Autowired(required = false) ShowAdminInterface showAdmin) {
+            Instance<ShowAdminInterface> showAdmin) {
         this.applicationProperties = applicationProperties;
         this.showAdmin = showAdmin;
     }
 
-    @Bean(name = "shouldShow")
-    @Scope("request")
+    @Produces
+    @Named("shouldShow")
+    @RequestScoped
     public boolean shouldShow() {
         boolean showUpdate = applicationProperties.getSystem().isShowUpdate();
-        boolean showAdminResult = showAdmin == null || showAdmin.getShowUpdateOnlyAdmins();
+        boolean showAdminResult =
+                showAdmin.isUnsatisfied() || showAdmin.get().getShowUpdateOnlyAdmins();
         return showUpdate && showAdminResult;
     }
 }

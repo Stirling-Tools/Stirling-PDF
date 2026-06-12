@@ -1,35 +1,20 @@
 package stirling.software.SPDF.exception;
 
 import java.io.IOException;
-import java.net.URI;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.HttpMediaTypeNotAcceptableException;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.support.MissingServletRequestPartException;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ExceptionUtils;
@@ -41,6 +26,14 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Returns RFC 7807 Problem Details for HTTP APIs, ensuring consistent error responses across the
  * application.
+ *
+ * <p>Migrated from a Spring {@code @RestControllerAdvice} to a JAX-RS
+ * {@link jakarta.ws.rs.ext.ExceptionMapper}. Because JAX-RS resolves at most one mapper per
+ * exception type, this single {@code ExceptionMapper<Throwable>} reproduces the original per-type
+ * {@code @ExceptionHandler} dispatch by inspecting the thrown exception with {@code instanceof}.
+ * The RFC 7807 body, previously a Spring {@code ProblemDetail}, is now built as an ordered
+ * {@link java.util.Map} (serialized by quarkus-rest-jackson) to preserve the exact response shape
+ * without depending on Spring types.
  *
  * <h2>Exception Handler Hierarchy:</h2>
  *
@@ -61,17 +54,6 @@ import tools.jackson.databind.ObjectMapper;
  *         <li>{@link EmlFormatException} - 400 Bad Request
  *         <li>Other {@link BaseValidationException} - 400 Bad Request
  *       </ul>
- *   <li>Spring Framework Exceptions
- *       <ul>
- *         <li>{@link MethodArgumentNotValidException} - 400 Bad Request
- *         <li>{@link MissingServletRequestParameterException} - 400 Bad Request
- *         <li>{@link MissingServletRequestPartException} - 400 Bad Request
- *         <li>{@link MaxUploadSizeExceededException} - 413 Payload Too Large
- *         <li>{@link HttpRequestMethodNotSupportedException} - 405 Method Not Allowed
- *         <li>{@link HttpMediaTypeNotSupportedException} - 415 Unsupported Media Type
- *         <li>{@link HttpMessageNotReadableException} - 400 Bad Request
- *         <li>{@link NoHandlerFoundException} - 404 Not Found
- *       </ul>
  *   <li>Java Standard Exceptions
  *       <ul>
  *         <li>{@link IllegalArgumentException} - 400 Bad Request
@@ -80,130 +62,130 @@ import tools.jackson.databind.ObjectMapper;
  *       </ul>
  * </ol>
  *
- * <h2>Usage Examples:</h2>
- *
- * <pre>{@code
- * // In controllers/services - use ExceptionUtils to create typed exceptions:
- * try {
- *     PDDocument doc = Loader.loadPDF(file);
- * } catch (IOException e) {
- *     throw ExceptionUtils.createPdfCorruptedException("during load", e);
- * }
- * // -> GlobalExceptionHandler catches it and returns HTTP 422 with Problem Detail
- *
- * // For validation errors:
- * if (file == null || file.isEmpty()) {
- *     throw ExceptionUtils.createFileNullOrEmptyException();
- * }
- * // -> Returns HTTP 400 with error code "E032"
- *
- * // Spring validation automatically handled:
- * public void processFile(@Valid FileRequest request) { ... }
- * // -> Returns HTTP 400 with field-level validation errors
- *
- * // File size limits automatically enforced:
- * // -> Returns HTTP 413 when upload exceeds spring.servlet.multipart.max-file-size
- * }</pre>
- *
- * <h2>Best Practices:</h2>
+ * <p>TODO: Migration required - the Spring-MVC-specific framework exceptions that used to be handled
+ * here are never thrown under Quarkus/RESTEasy Reactive and their types cannot be referenced
+ * without Spring on the classpath. A collaborator should add JAX-RS equivalents (likely as separate
+ * {@code @Provider ExceptionMapper}s or additional {@code instanceof} branches once the Quarkus
+ * exception types are confirmed):
  *
  * <ul>
- *   <li>Use {@link ExceptionUtils} factory methods to create exceptions (ensures error codes)
- *   <li>Add context to exceptions (e.g., "during merge" helps debugging)
- *   <li>Let this handler convert exceptions to HTTP responses (don't return ResponseEntity from
- *       controllers)
- *   <li>Check messages.properties for localized error messages before adding new ones
+ *   <li>{@code MethodArgumentNotValidException} -> {@code jakarta.validation.ConstraintViolationException}
+ *       (400, build the {@code errors} list from {@code getConstraintViolations()})
+ *   <li>{@code MissingServletRequestParameterException} / {@code MissingServletRequestPartException}
+ *       -> RESTEasy missing {@code @QueryParam}/{@code @RestForm} handling (400)
+ *   <li>{@code MaxUploadSizeExceededException} -> quarkus.http.limits.max-body-size rejection (413)
+ *   <li>{@code HttpRequestMethodNotSupportedException} -> {@code jakarta.ws.rs.NotAllowedException} (405)
+ *   <li>{@code HttpMediaTypeNotSupportedException} -> {@code jakarta.ws.rs.NotSupportedException} (415)
+ *   <li>{@code HttpMediaTypeNotAcceptableException} -> {@code jakarta.ws.rs.NotAcceptableException} (406)
+ *   <li>{@code HttpMessageNotReadableException} -> JSON deserialization failure (400)
+ *   <li>{@code NoHandlerFoundException} / {@code NoResourceFoundException} ->
+ *       {@code jakarta.ws.rs.NotFoundException} (404)
+ *   <li>{@code ResponseStatusException} -> {@code jakarta.ws.rs.WebApplicationException}
+ *       (carry through {@code getResponse().getStatus()})
  * </ul>
  *
- * <h2>Creating Custom Exceptions:</h2>
- *
- * <pre>{@code
- * // 1. Register a new error code in ExceptionUtils.ErrorCode enum:
- * CUSTOM_ERROR("E999", "Custom error occurred"),
- *
- * // 2. Create a new exception class in ExceptionUtils:
- * public static class CustomException extends BaseAppException {
- *     public CustomException(String message, Throwable cause, String errorCode) {
- *         super(message, cause, errorCode);
- *     }
- * }
- *
- * // 3. Create factory method in ExceptionUtils:
- * public static CustomException createCustomException(String context) {
- *     String message = getLocalizedMessage(
- *         ErrorCode.CUSTOM_ERROR,
- *         "Custom operation failed");
- *     return new CustomException(
- *         message + " " + context,
- *         null,
- *         ErrorCode.CUSTOM_ERROR.getCode());
- * }
- *
- * // 4. Add handler in GlobalExceptionHandler:
- * @ExceptionHandler(CustomException.class)
- * public ResponseEntity<ProblemDetail> handleCustomException(
- *         CustomException ex, HttpServletRequest request) {
- *     logException("error", "Custom", request, ex, ex.getErrorCode());
- *     String title = getLocalizedMessage(
- *         "error.custom.title",
- *         ErrorTitles.CUSTOM_DEFAULT);
- *     return createProblemDetailResponse(
- *         ex, HttpStatus.BAD_REQUEST, ErrorTypes.CUSTOM, title, request);
- * }
- *
- * // 5. Add localized messages in messages.properties:
- * error.E999=Custom error occurred
- * error.E999.hint.1=Check the input parameters
- * error.E999.hint.2=Verify the configuration
- * error.E999.actionRequired=Review and correct the request
- * error.custom.title=Custom Error
- * }</pre>
+ * <p>Their full body-building logic is preserved below in private {@code build*} helper methods so
+ * the collaborator can reuse it once the JAX-RS exception types are wired in.
  *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc7807">RFC 7807: Problem Details for HTTP
  *     APIs</a>
  * @see ExceptionUtils
  */
 @Slf4j
-@RestControllerAdvice
-@RequiredArgsConstructor
-public class GlobalExceptionHandler {
+@Provider
+@ApplicationScoped
+public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
-    private final MessageSource messageSource;
-    private final Environment environment;
+    private static final String PROBLEM_JSON = "application/problem+json";
 
-    private static final org.springframework.http.MediaType PROBLEM_JSON =
-            org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
+    // TODO: Migration required - the per-request locale used to come from Spring's
+    // LocaleContextHolder (populated by the MVC LocaleChangeInterceptor). Until the equivalent
+    // ContainerRequestFilter described in LocaleConfiguration is in place, fall back to the JVM
+    // default locale. Localized messages are read from the shared messages.properties bundle (the
+    // same bundle ExceptionUtils uses) instead of a Spring MessageSource bean, which no longer
+    // exists under Quarkus.
+    private static final String MESSAGES_BUNDLE = "messages";
 
+    // TODO: Migration required - development mode used to be derived from Spring active profiles via
+    // org.springframework.core.env.Environment. Quarkus exposes the profile through
+    // io.quarkus.runtime.LaunchMode / quarkus.profile; this is read here from the standard config so
+    // no Spring Environment is needed.
     private Boolean isDevelopmentMode;
 
+    @Context HttpServletRequest request;
+
+    @Override
+    public Response toResponse(Throwable exception) {
+        HttpServletRequest req = request;
+
+        if (exception instanceof PdfPasswordException ex) {
+            return handlePdfPassword(ex, req);
+        }
+        if (exception instanceof GhostscriptException ex) {
+            return handleGhostscriptException(ex, req);
+        }
+        if (exception instanceof FfmpegRequiredException ex) {
+            return handleFfmpegRequired(ex, req);
+        }
+        if (exception instanceof PdfCorruptedException
+                || exception instanceof PdfEncryptionException
+                || exception instanceof OutOfMemoryDpiException) {
+            return handlePdfAndDpiExceptions((BaseAppException) exception, req);
+        }
+        if (exception instanceof CbrFormatException
+                || exception instanceof CbzFormatException
+                || exception instanceof EmlFormatException) {
+            return handleFormatExceptions((BaseValidationException) exception, req);
+        }
+        if (exception instanceof BaseValidationException ex) {
+            return handleValidation(ex, req);
+        }
+        if (exception instanceof BaseAppException ex) {
+            return handleBaseApp(ex, req);
+        }
+        if (exception instanceof IllegalArgumentException ex) {
+            return handleIllegalArgument(ex, req);
+        }
+        if (exception instanceof IOException ex) {
+            return handleIOException(ex, req);
+        }
+        if (exception instanceof RuntimeException ex) {
+            return handleRuntimeException(ex, req);
+        }
+        if (exception instanceof Exception ex) {
+            return handleGenericException(ex, req);
+        }
+        // Throwable (Error etc.) - treat as unexpected.
+        return handleGenericException(new Exception(exception), req);
+    }
+
     /**
-     * Create a base ProblemDetail with common properties (timestamp, path).
-     *
-     * <p>This method provides a foundation for all ProblemDetail responses with standardized
-     * metadata.
+     * Create a base RFC 7807 problem map with common properties (status, detail, timestamp, path).
      *
      * @param status the HTTP status code
      * @param detail the problem detail message
      * @param request the HTTP servlet request
-     * @return a ProblemDetail with timestamp and path properties set
+     * @return a mutable, ordered map with status/detail/timestamp/path set
      */
-    private static ProblemDetail createBaseProblemDetail(
-            HttpStatus status, String detail, HttpServletRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
-        problemDetail.setProperty("timestamp", Instant.now());
-        problemDetail.setProperty("path", request.getRequestURI());
+    private static Map<String, Object> createBaseProblemDetail(
+            Response.Status status, String detail, HttpServletRequest request) {
+        Map<String, Object> problemDetail = new LinkedHashMap<>();
+        problemDetail.put("status", status.getStatusCode());
+        problemDetail.put("detail", detail);
+        problemDetail.put("timestamp", java.time.Instant.now());
+        problemDetail.put("path", request.getRequestURI());
         return problemDetail;
     }
 
     /**
      * Checks whether the given IOException indicates that the client disconnected before the
      * response could be written (broken pipe, connection reset, etc.). When this happens there is
-     * no point in serialising a {@link ProblemDetail} body because the socket is already closed -
-     * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
-     * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
+     * no point in serialising a problem body because the socket is already closed - and attempting
+     * to do so may trigger a secondary write error if the response Content-Type was already
+     * committed as a non-JSON type (e.g. image/png).
      */
     private static boolean isClientDisconnectException(IOException ex) {
-        // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
+        // Walk the causal chain - the server may wrap the low-level SocketException
         Throwable current = ex;
         while (current != null) {
             String msg = current.getMessage();
@@ -221,41 +203,36 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Helper method to create a standardized ProblemDetail response for exceptions with error
-     * codes.
+     * Helper method to create a standardized problem response for exceptions with error codes.
      *
      * <p>This method uses the {@link ExceptionUtils.ErrorCodeProvider} interface for type-safe
      * polymorphic handling of both {@link BaseAppException} and {@link BaseValidationException},
      * which are created by {@link ExceptionUtils} factory methods.
-     *
-     * <p>The error codes follow the format defined in {@link ExceptionUtils.ErrorCode} enum,
-     * ensuring consistency across the application.
      *
      * @param ex the exception implementing ErrorCodeProvider interface
      * @param status the HTTP status
      * @param typeUri the problem type URI
      * @param title the problem title
      * @param request the HTTP servlet request
-     * @return ResponseEntity with ProblemDetail including errorCode property
+     * @return a Response with a problem+json body including errorCode property
      */
-    private static ResponseEntity<ProblemDetail> createProblemDetailResponse(
+    private static Response createProblemDetailResponse(
             ExceptionUtils.ErrorCodeProvider ex,
-            HttpStatus status,
+            Response.Status status,
             String typeUri,
             String title,
             HttpServletRequest request) {
 
-        ProblemDetail problemDetail = createBaseProblemDetail(status, ex.getMessage(), request);
-        problemDetail.setType(URI.create(typeUri));
-        problemDetail.setTitle(title);
-        // Also set as property to ensure serialization (Spring Boot compatibility)
-        problemDetail.setProperty("title", title);
-        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        Map<String, Object> problemDetail =
+                createBaseProblemDetail(status, ex.getMessage(), request);
+        problemDetail.put("type", typeUri);
+        problemDetail.put("title", title);
+        problemDetail.put("errorCode", ex.getErrorCode());
 
         // Attach hints and actionRequired from centralized registry (single call)
         enrichWithErrorMetadata(problemDetail, ex.getErrorCode());
 
-        return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
+        return Response.status(status).type(PROBLEM_JSON).entity(problemDetail).build();
     }
 
     /**
@@ -290,50 +267,39 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Enrich ProblemDetail with error metadata (hints and action required) from error code
+     * Enrich the problem map with error metadata (hints and action required) from error code
      * registry.
      *
-     * <p>This method retrieves hints and actionRequired text for the given error code from the
-     * centralized error code registry in ExceptionUtils.
-     *
-     * @param problemDetail the ProblemDetail to enrich
+     * @param problemDetail the problem map to enrich
      * @param errorCode the error code to look up
      */
-    private static void enrichWithErrorMetadata(ProblemDetail problemDetail, String errorCode) {
+    private static void enrichWithErrorMetadata(
+            Map<String, Object> problemDetail, String errorCode) {
         List<String> hints = ExceptionUtils.getHintsForErrorCode(errorCode);
         if (!hints.isEmpty()) {
-            problemDetail.setProperty("hints", hints);
+            problemDetail.put("hints", hints);
         }
 
         String actionRequired = ExceptionUtils.getActionRequiredForErrorCode(errorCode);
         if (actionRequired != null && !actionRequired.isBlank()) {
-            problemDetail.setProperty("actionRequired", actionRequired);
+            problemDetail.put("actionRequired", actionRequired);
         }
     }
 
     /**
      * Handle PDF password exceptions.
      *
-     * <p>When thrown: When a PDF file requires a password that was not provided or is incorrect.
-     *
-     * <p>Client action: Prompt the user to provide the correct PDF password and retry the request.
-     *
-     * <p>Related: {@link ExceptionUtils#createPdfPasswordException(Exception)}
-     *
      * @param ex the PdfPasswordException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST (changed from 422 for better client
-     *     compatibility)
+     * @return Response with HTTP 400 BAD_REQUEST
      */
-    @ExceptionHandler(PdfPasswordException.class)
-    public ResponseEntity<ProblemDetail> handlePdfPassword(
-            PdfPasswordException ex, HttpServletRequest request) {
+    public Response handlePdfPassword(PdfPasswordException ex, HttpServletRequest request) {
         logException("warn", "PDF password", request, ex, ex.getErrorCode());
 
         String title =
                 getLocalizedMessage("error.pdfPassword.title", ErrorTitles.PDF_PASSWORD_DEFAULT);
         return createProblemDetailResponse(
-                ex, HttpStatus.BAD_REQUEST, ErrorTypes.PDF_PASSWORD, title, request);
+                ex, Response.Status.BAD_REQUEST, ErrorTypes.PDF_PASSWORD, title, request);
     }
 
     /**
@@ -341,10 +307,9 @@ public class GlobalExceptionHandler {
      *
      * @param ex the GhostscriptException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 500 INTERNAL_SERVER_ERROR (external process failure)
+     * @return Response with HTTP 500 INTERNAL_SERVER_ERROR (external process failure)
      */
-    @ExceptionHandler(GhostscriptException.class)
-    public ResponseEntity<ProblemDetail> handleGhostscriptException(
+    public Response handleGhostscriptException(
             GhostscriptException ex, HttpServletRequest request) {
         logException("warn", "Ghostscript", request, ex, ex.getErrorCode());
 
@@ -352,7 +317,11 @@ public class GlobalExceptionHandler {
                 getLocalizedMessage(
                         "error.ghostscriptCompression.title", ErrorTitles.GHOSTSCRIPT_DEFAULT);
         return createProblemDetailResponse(
-                ex, HttpStatus.INTERNAL_SERVER_ERROR, ErrorTypes.GHOSTSCRIPT, title, request);
+                ex,
+                Response.Status.INTERNAL_SERVER_ERROR,
+                ErrorTypes.GHOSTSCRIPT,
+                title,
+                request);
     }
 
     /**
@@ -360,51 +329,39 @@ public class GlobalExceptionHandler {
      *
      * @param ex the FfmpegRequiredException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 503 SERVICE_UNAVAILABLE
+     * @return Response with HTTP 503 SERVICE_UNAVAILABLE
      */
-    @ExceptionHandler(FfmpegRequiredException.class)
-    public ResponseEntity<ProblemDetail> handleFfmpegRequired(
-            FfmpegRequiredException ex, HttpServletRequest request) {
+    public Response handleFfmpegRequired(FfmpegRequiredException ex, HttpServletRequest request) {
         logException("warn", "FFmpeg unavailable", request, ex, ex.getErrorCode());
 
         String title =
                 getLocalizedMessage(
                         "error.ffmpegRequired.title", ErrorTitles.FFMPEG_REQUIRED_DEFAULT);
         return createProblemDetailResponse(
-                ex, HttpStatus.SERVICE_UNAVAILABLE, ErrorTypes.FFMPEG_REQUIRED, title, request);
+                ex,
+                Response.Status.SERVICE_UNAVAILABLE,
+                ErrorTypes.FFMPEG_REQUIRED,
+                title,
+                request);
     }
 
     /**
      * Handle PDF and DPI-related BaseAppException subtypes.
      *
-     * <p>Related factory methods in {@link ExceptionUtils}:
-     *
-     * <ul>
-     *   <li>{@link ExceptionUtils#createPdfCorruptedException(String, Exception)}
-     *   <li>{@link ExceptionUtils#createPdfEncryptionException(Exception)}
-     *   <li>{@link ExceptionUtils#createOutOfMemoryDpiException(int, int, Throwable)}
-     * </ul>
-     *
      * @param ex the BaseAppException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with appropriate HTTP status
+     * @return Response with appropriate HTTP status
      */
-    @ExceptionHandler({
-        PdfCorruptedException.class,
-        PdfEncryptionException.class,
-        OutOfMemoryDpiException.class
-    })
-    public ResponseEntity<ProblemDetail> handlePdfAndDpiExceptions(
-            BaseAppException ex, HttpServletRequest request) {
+    public Response handlePdfAndDpiExceptions(BaseAppException ex, HttpServletRequest request) {
 
-        HttpStatus status;
+        Response.Status status;
         String type;
         String title;
         String category;
 
         if (ex instanceof OutOfMemoryDpiException) {
             // Use BAD_REQUEST for better client compatibility (was 422/507)
-            status = HttpStatus.BAD_REQUEST;
+            status = Response.Status.BAD_REQUEST;
             type = ErrorTypes.OUT_OF_MEMORY_DPI;
             title =
                     getLocalizedMessage(
@@ -412,7 +369,7 @@ public class GlobalExceptionHandler {
             category = "Out of Memory DPI";
         } else if (ex instanceof PdfCorruptedException) {
             // Use BAD_REQUEST for better client compatibility (was 422)
-            status = HttpStatus.BAD_REQUEST;
+            status = Response.Status.BAD_REQUEST;
             type = ErrorTypes.PDF_CORRUPTED;
             title =
                     getLocalizedMessage(
@@ -420,14 +377,14 @@ public class GlobalExceptionHandler {
             category = "PDF Corrupted";
         } else if (ex instanceof PdfEncryptionException) {
             // Use BAD_REQUEST for better client compatibility (was 422)
-            status = HttpStatus.BAD_REQUEST;
+            status = Response.Status.BAD_REQUEST;
             type = ErrorTypes.PDF_ENCRYPTION;
             title =
                     getLocalizedMessage(
                             "error.pdfEncryption.title", ErrorTitles.PDF_ENCRYPTION_DEFAULT);
             category = "PDF Encryption";
         } else {
-            status = HttpStatus.BAD_REQUEST;
+            status = Response.Status.BAD_REQUEST;
             type = ErrorTypes.APP_ERROR;
             title = getLocalizedMessage("error.application.title", ErrorTitles.APPLICATION_DEFAULT);
             category = "Application";
@@ -440,24 +397,11 @@ public class GlobalExceptionHandler {
     /**
      * Handle archive format validation exceptions.
      *
-     * <p>Related factory methods in {@link ExceptionUtils}:
-     *
-     * <ul>
-     *   <li>{@link ExceptionUtils#createCbrInvalidFormatException(String)}
-     *   <li>{@link ExceptionUtils#createCbzInvalidFormatException(Exception)}
-     *   <li>{@link ExceptionUtils#createEmlInvalidFormatException()}
-     * </ul>
-     *
      * @param ex the format exception
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
+     * @return Response with HTTP 400 BAD_REQUEST
      */
-    @ExceptionHandler({
-        CbrFormatException.class,
-        CbzFormatException.class,
-        EmlFormatException.class
-    })
-    public ResponseEntity<ProblemDetail> handleFormatExceptions(
+    public Response handleFormatExceptions(
             BaseValidationException ex, HttpServletRequest request) {
 
         String type;
@@ -485,7 +429,7 @@ public class GlobalExceptionHandler {
         }
 
         logException("warn", category, request, ex, ex.getErrorCode());
-        return createProblemDetailResponse(ex, HttpStatus.BAD_REQUEST, type, title, request);
+        return createProblemDetailResponse(ex, Response.Status.BAD_REQUEST, type, title, request);
     }
 
     /**
@@ -493,16 +437,14 @@ public class GlobalExceptionHandler {
      *
      * @param ex the BaseValidationException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
+     * @return Response with HTTP 400 BAD_REQUEST
      */
-    @ExceptionHandler(BaseValidationException.class)
-    public ResponseEntity<ProblemDetail> handleValidation(
-            BaseValidationException ex, HttpServletRequest request) {
+    public Response handleValidation(BaseValidationException ex, HttpServletRequest request) {
         logException("warn", "Validation", request, ex, ex.getErrorCode());
         String title =
                 getLocalizedMessage("error.validation.title", ErrorTitles.VALIDATION_DEFAULT);
         return createProblemDetailResponse(
-                ex, HttpStatus.BAD_REQUEST, ErrorTypes.VALIDATION, title, request);
+                ex, Response.Status.BAD_REQUEST, ErrorTypes.VALIDATION, title, request);
     }
 
     /**
@@ -510,370 +452,37 @@ public class GlobalExceptionHandler {
      *
      * @param ex the BaseAppException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 500 INTERNAL_SERVER_ERROR
+     * @return Response with HTTP 500 INTERNAL_SERVER_ERROR
      */
-    @ExceptionHandler(BaseAppException.class)
-    public ResponseEntity<ProblemDetail> handleBaseApp(
-            BaseAppException ex, HttpServletRequest request) {
+    public Response handleBaseApp(BaseAppException ex, HttpServletRequest request) {
         logException("error", "Application", request, ex, ex.getErrorCode());
         String title =
                 getLocalizedMessage("error.application.title", ErrorTitles.APPLICATION_DEFAULT);
         return createProblemDetailResponse(
-                ex, HttpStatus.INTERNAL_SERVER_ERROR, ErrorTypes.APPLICATION, title, request);
+                ex,
+                Response.Status.INTERNAL_SERVER_ERROR,
+                ErrorTypes.APPLICATION,
+                title,
+                request);
     }
 
-    /**
-     * Handle Bean Validation errors from @Valid annotations.
-     *
-     * <p>When thrown: When request body or parameters fail @Valid constraint validations.
-     *
-     * <p>Client action: Review the 'errors' field in the response for specific validation failures
-     * and correct the request payload.
-     *
-     * @param ex the MethodArgumentNotValidException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log.warn(
-                "Bean validation error at {}: {} field errors",
-                request.getRequestURI(),
-                ex.getBindingResult().getErrorCount());
-
-        List<String> errors =
-                ex.getBindingResult().getFieldErrors().stream()
-                        .map(
-                                error ->
-                                        String.format(
-                                                "%s: %s",
-                                                error.getField(), error.getDefaultMessage()))
-                        .toList();
-
-        String title =
-                getLocalizedMessage(
-                        "error.validation.title", ErrorTitles.REQUEST_VALIDATION_FAILED_DEFAULT);
-        String detail = getLocalizedMessage("error.validation.detail", "Validation failed");
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, detail, request);
-        problemDetail.setType(URI.create(ErrorTypes.VALIDATION));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("errors", errors);
-        addStandardHints(
-                problemDetail,
-                "error.validation.hints",
-                List.of(
-                        "Review the 'errors' list and correct the specified fields.",
-                        "Ensure data types and formats match the API schema.",
-                        "Resend the request after fixing validation issues."));
-        problemDetail.setProperty(
-                "actionRequired", "Correct the invalid fields and resend the request.");
-
-        return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
-    }
+    // ===========================================================================================
+    // 406 NOT ACCEPTABLE - direct write
+    // ===========================================================================================
 
     /**
-     * Handle missing request parameters.
+     * Build the JSON body previously written directly to the servlet response when the client's
+     * Accept header could not be satisfied (Spring's {@code HttpMediaTypeNotAcceptableException}).
      *
-     * <p>When thrown: When a required @RequestParam is missing from the request.
-     *
-     * <p>Client action: Add the missing parameter specified in 'parameterName' to the request.
-     *
-     * @param ex the MissingServletRequestParameterException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
+     * <p>TODO: Migration required - this path was triggered by Spring MVC content negotiation. Under
+     * Quarkus/JAX-RS the equivalent is {@code jakarta.ws.rs.NotAcceptableException}; a collaborator
+     * should register a mapper that returns this body with status 406 and Content-Type
+     * application/problem+json. The body-building logic is preserved here for reuse.
      */
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ProblemDetail> handleMissingParameter(
-            MissingServletRequestParameterException ex, HttpServletRequest request) {
-        log.warn("Missing parameter at {}: {}", request.getRequestURI(), ex.getParameterName());
-
-        String message =
-                getLocalizedMessage(
-                        "error.missingParameter.detail",
-                        String.format(
-                                "Required parameter '%s' of type '%s' is missing",
-                                ex.getParameterName(), ex.getParameterType()),
-                        ex.getParameterName(),
-                        ex.getParameterType());
-
-        String title =
-                getLocalizedMessage(
-                        "error.missingParameter.title", ErrorTitles.MISSING_PARAMETER_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.MISSING_PARAMETER));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("parameterName", ex.getParameterName());
-        problemDetail.setProperty("parameterType", ex.getParameterType());
-        addStandardHints(
-                problemDetail,
-                "error.missingParameter.hints",
-                List.of(
-                        "Add the missing parameter to the query string or form data.",
-                        "Verify the parameter name is spelled correctly.",
-                        "Provide a value matching the required type."));
-        problemDetail.setProperty(
-                "actionRequired",
-                String.format("Add the required '%s' parameter and retry.", ex.getParameterName()));
-
-        return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
-    }
-
-    /**
-     * Handle missing multipart file in request.
-     *
-     * <p>When thrown: When a required @RequestPart (file upload) is missing from a multipart
-     * request.
-     *
-     * <p>Client action: Include the missing file part specified in 'partName' in the multipart
-     * request.
-     *
-     * @param ex the MissingServletRequestPartException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
-     */
-    @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<ProblemDetail> handleMissingPart(
-            MissingServletRequestPartException ex, HttpServletRequest request) {
-        log.warn("Missing file part at {}: {}", request.getRequestURI(), ex.getRequestPartName());
-
-        String message =
-                getLocalizedMessage(
-                        "error.missingFile.detail",
-                        String.format(
-                                "Required file part '%s' is missing", ex.getRequestPartName()),
-                        ex.getRequestPartName());
-
-        String title =
-                getLocalizedMessage("error.missingFile.title", ErrorTitles.MISSING_FILE_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.MISSING_FILE));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("partName", ex.getRequestPartName());
-        addStandardHints(
-                problemDetail,
-                "error.missingFile.hints",
-                List.of(
-                        "Attach the missing file part to the multipart/form-data request.",
-                        "Ensure the field name matches the API specification.",
-                        "Check that your client is sending multipart data correctly."));
-        problemDetail.setProperty(
-                "actionRequired",
-                String.format("Attach the '%s' file part and retry.", ex.getRequestPartName()));
-
-        return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
-    }
-
-    /**
-     * Handle file upload size exceeded.
-     *
-     * <p>When thrown: When an uploaded file exceeds the maximum size configured in
-     * spring.servlet.multipart.max-file-size.
-     *
-     * <p>Client action: Reduce the file size or split into smaller files. Check 'maxSizeMB'
-     * property for the limit.
-     *
-     * @param ex the MaxUploadSizeExceededException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 413 CONTENT_TOO_LARGE
-     */
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ProblemDetail> handleMaxUploadSize(
-            MaxUploadSizeExceededException ex, HttpServletRequest request) {
-        log.warn("File upload size exceeded at {}", request.getRequestURI());
-
-        long maxSize = ex.getMaxUploadSize();
-        String message =
-                maxSize > 0
-                        ? getLocalizedMessage(
-                                "error.fileTooLarge.detail",
-                                String.format(
-                                        "File size exceeds maximum allowed limit of %d MB",
-                                        maxSize / (1024 * 1024)),
-                                maxSize / (1024 * 1024))
-                        : getLocalizedMessage(
-                                "error.fileTooLarge.detailUnknown",
-                                "File size exceeds maximum allowed limit");
-
-        String title =
-                getLocalizedMessage("error.fileTooLarge.title", ErrorTitles.FILE_TOO_LARGE_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.CONTENT_TOO_LARGE, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.FILE_TOO_LARGE));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        if (maxSize > 0) {
-            problemDetail.setProperty("maxSizeBytes", maxSize);
-            problemDetail.setProperty("maxSizeMB", maxSize / (1024 * 1024));
-        }
-        addStandardHints(
-                problemDetail,
-                "error.fileTooLarge.hints",
-                List.of(
-                        "Compress or reduce the resolution of the file before uploading.",
-                        "Split the file into smaller parts if possible.",
-                        "Contact the administrator to increase the upload limit if necessary."));
-        problemDetail.setProperty(
-                "actionRequired", "Reduce the file size to be within the upload limit.");
-
-        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
-    /**
-     * Handle HTTP method not supported.
-     *
-     * <p>When thrown: When a request uses an HTTP method (GET, POST, etc.) not supported by the
-     * endpoint.
-     *
-     * <p>Client action: Use one of the supported methods listed in 'supportedMethods' property.
-     *
-     * @param ex the HttpRequestMethodNotSupportedException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 405 METHOD_NOT_ALLOWED
-     */
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ProblemDetail> handleMethodNotSupported(
-            HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
-        log.warn(
-                "Method not supported at {}: {} not allowed",
-                request.getRequestURI(),
-                ex.getMethod());
-
-        String message =
-                getLocalizedMessage(
-                        "error.methodNotAllowed.detail",
-                        String.format(
-                                "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
-                                ex.getMethod(), String.join(", ", ex.getSupportedMethods())),
-                        ex.getMethod(),
-                        String.join(", ", ex.getSupportedMethods()));
-
-        String title =
-                getLocalizedMessage(
-                        "error.methodNotAllowed.title", ErrorTitles.METHOD_NOT_ALLOWED_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.METHOD_NOT_ALLOWED));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("method", ex.getMethod());
-        problemDetail.setProperty("supportedMethods", ex.getSupportedMethods());
-        addStandardHints(
-                problemDetail,
-                "error.methodNotAllowed.hints",
-                List.of(
-                        "Change the HTTP method to one of the supported methods.",
-                        "Consult the API documentation for the correct method.",
-                        "If using a tool like curl or Postman, update the method accordingly."));
-        problemDetail.setProperty("actionRequired", "Use one of the supported HTTP methods.");
-
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
-    /**
-     * Handle unsupported media type.
-     *
-     * <p>When thrown: When the Content-Type header contains a media type not supported by the
-     * endpoint.
-     *
-     * <p>Client action: Change the Content-Type header to one of the supported types in
-     * 'supportedMediaTypes' property.
-     *
-     * @param ex the HttpMediaTypeNotSupportedException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 415 UNSUPPORTED_MEDIA_TYPE
-     */
-    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ProblemDetail> handleMediaTypeNotSupported(
-            HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
-        log.warn(
-                "Media type not supported at {}: {}", request.getRequestURI(), ex.getContentType());
-
-        String message =
-                getLocalizedMessage(
-                        "error.unsupportedMediaType.detail",
-                        String.format(
-                                "Media type '%s' is not supported. Supported media types: %s",
-                                ex.getContentType(), ex.getSupportedMediaTypes()),
-                        String.valueOf(ex.getContentType()),
-                        ex.getSupportedMediaTypes().toString());
-
-        String title =
-                getLocalizedMessage(
-                        "error.unsupportedMediaType.title",
-                        ErrorTitles.UNSUPPORTED_MEDIA_TYPE_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.UNSUPPORTED_MEDIA_TYPE));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("contentType", String.valueOf(ex.getContentType()));
-        problemDetail.setProperty("supportedMediaTypes", ex.getSupportedMediaTypes());
-        addStandardHints(
-                problemDetail,
-                "error.unsupportedMediaType.hints",
-                List.of(
-                        "Set the Content-Type header to a supported media type.",
-                        "When sending JSON, use 'application/json'.",
-                        "Check that the request body matches the declared Content-Type."));
-        problemDetail.setProperty(
-                "actionRequired", "Change the Content-Type to a supported value.");
-
-        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
-    /**
-     * Handle 406 Not Acceptable errors when error responses cannot match client Accept header.
-     *
-     * <p>When thrown: When the client sends Accept: application/pdf but the server needs to return
-     * a JSON error response (e.g., when an attachment is not found).
-     *
-     * <p>This handler writes directly to HttpServletResponse to bypass Spring's content negotiation
-     * and ensure error responses are always delivered as JSON.
-     *
-     * @param ex the HttpMediaTypeNotAcceptableException
-     * @param request the HTTP servlet request
-     * @param response the HTTP servlet response
-     */
-    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
-    public void handleMediaTypeNotAcceptable(
-            HttpMediaTypeNotAcceptableException ex,
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        log.warn(
-                "Media type not acceptable at {}: client accepts {}, server supports {}",
-                request.getRequestURI(),
-                request.getHeader("Accept"),
-                ex.getSupportedMediaTypes());
-
-        // Write JSON error response directly, bypassing content negotiation
-        response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
-        response.setContentType("application/problem+json");
-        response.setCharacterEncoding("UTF-8");
-
+    private String buildNotAcceptableJson(HttpServletRequest request) {
         // Use ObjectMapper to properly escape JSON values and prevent XSS
         ObjectMapper mapper = new ObjectMapper();
-        java.util.Map<String, Object> errorMap = new LinkedHashMap<>();
+        Map<String, Object> errorMap = new LinkedHashMap<>();
         errorMap.put("type", "about:blank");
         errorMap.put("title", "Not Acceptable");
         errorMap.put("status", 406);
@@ -881,16 +490,13 @@ public class GlobalExceptionHandler {
                 "detail",
                 "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.");
         errorMap.put("instance", request.getRequestURI());
-        errorMap.put("timestamp", Instant.now().toString());
+        errorMap.put("timestamp", java.time.Instant.now().toString());
         errorMap.put(
                 "hints",
                 java.util.Arrays.asList(
                         "Error responses are always returned as application/json or application/problem+json",
                         "Set Accept header to include application/json for proper error handling"));
-
-        String errorJson = mapper.writeValueAsString(errorMap);
-        response.getWriter().write(errorJson);
-        response.getWriter().flush();
+        return mapper.writeValueAsString(errorMap);
     }
 
     // ===========================================================================================
@@ -898,170 +504,23 @@ public class GlobalExceptionHandler {
     // ===========================================================================================
 
     /**
-     * Handle malformed JSON or request body parsing errors.
-     *
-     * <p>When thrown: When the request body cannot be parsed (invalid JSON, wrong format, etc.).
-     *
-     * <p>Client action: Check the request body format and ensure it matches the expected structure.
-     *
-     * @param ex the HttpMessageNotReadableException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
-     */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ProblemDetail> handleMessageNotReadable(
-            HttpMessageNotReadableException ex, HttpServletRequest request) {
-        log.warn("Malformed request body at {}: {}", request.getRequestURI(), ex.getMessage());
-
-        String message =
-                getLocalizedMessage(
-                        "error.malformedRequest.detail",
-                        "Malformed JSON request or invalid request body format");
-        Throwable cause = ex.getCause();
-        if (cause != null && cause.getMessage() != null) {
-            message =
-                    getLocalizedMessage(
-                            "error.malformedRequest.detailWithCause",
-                            "Invalid request body: " + cause.getMessage(),
-                            cause.getMessage());
-        }
-
-        String title =
-                getLocalizedMessage(
-                        "error.malformedRequest.title", ErrorTitles.MALFORMED_REQUEST_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.MALFORMED_REQUEST));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        addStandardHints(
-                problemDetail,
-                "error.malformedRequest.hints",
-                List.of(
-                        "Validate the JSON or request body format before sending.",
-                        "Ensure field names and types match the API contract.",
-                        "Remove trailing commas and ensure proper quoting in JSON."));
-        problemDetail.setProperty("actionRequired", "Fix the request body format and retry.");
-
-        return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
-    }
-
-    /**
-     * Handle 404 Not Found errors.
-     *
-     * <p>When thrown: When no handler mapping exists for the requested URL and HTTP method.
-     *
-     * <p>Client action: Verify the endpoint URL and HTTP method are correct.
-     *
-     * @param ex the NoHandlerFoundException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 404 NOT_FOUND
-     */
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ProblemDetail> handleNotFound(
-            NoHandlerFoundException ex, HttpServletRequest request) {
-        log.warn("Endpoint not found: {} {}", ex.getHttpMethod(), ex.getRequestURL());
-
-        String message =
-                getLocalizedMessage(
-                        "error.notFound.detail",
-                        String.format(
-                                "No endpoint found for %s %s",
-                                ex.getHttpMethod(), ex.getRequestURL()),
-                        ex.getHttpMethod(),
-                        ex.getRequestURL());
-
-        String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.NOT_FOUND, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("method", ex.getHttpMethod());
-        addStandardHints(
-                problemDetail,
-                "error.notFound.hints",
-                List.of(
-                        "Verify the URL path and HTTP method are correct.",
-                        "Check the API base path and version if applicable.",
-                        "Ensure there are no typos in the endpoint path."));
-        problemDetail.setProperty("actionRequired", "Use a valid endpoint URL and method.");
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
-    /** Unmapped path → clean 404 instead of falling through to the generic 500 catch-all. */
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ProblemDetail> handleNoResourceFound(
-            NoResourceFoundException ex, HttpServletRequest request) {
-        // /api/* miss = likely missing controller (operator-relevant); other paths = favicons,
-        // robots.txt, scanner noise. Demote the latter so prod logs aren't flooded.
-        String uri = request.getRequestURI();
-        if (uri != null && uri.startsWith("/api/")) {
-            log.warn("No resource at {}: {}", uri, ex.getMessage());
-        } else {
-            log.debug("No resource at {}: {}", uri, ex.getMessage());
-        }
-
-        String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
-        String detail =
-                getLocalizedMessage(
-                        "error.notFound.detail",
-                        String.format(
-                                "No endpoint found for %s %s",
-                                request.getMethod(), request.getRequestURI()),
-                        request.getMethod(),
-                        request.getRequestURI());
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.NOT_FOUND, detail, request);
-        problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title);
-        problemDetail.setProperty("method", request.getMethod());
-        addStandardHints(
-                problemDetail,
-                "error.notFound.hints",
-                List.of(
-                        "Verify the URL path and HTTP method are correct.",
-                        "Check the API base path and version if applicable.",
-                        "Ensure there are no typos in the endpoint path."));
-        problemDetail.setProperty("actionRequired", "Use a valid endpoint URL and method.");
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
-    /**
      * Handle IllegalArgumentException.
-     *
-     * <p>When thrown: When method receives an illegal or inappropriate argument.
-     *
-     * <p>Client action: Review the error message and correct the invalid argument in the request.
      *
      * @param ex the IllegalArgumentException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 400 BAD_REQUEST
+     * @return Response with HTTP 400 BAD_REQUEST
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ProblemDetail> handleIllegalArgument(
-            IllegalArgumentException ex, HttpServletRequest request) {
+    public Response handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         log.warn("Invalid argument at {}: {}", request.getRequestURI(), ex.getMessage());
 
         String title =
                 getLocalizedMessage(
                         "error.invalidArgument.title", ErrorTitles.INVALID_ARGUMENT_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
-        problemDetail.setType(URI.create(ErrorTypes.INVALID_ARGUMENT));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
+        Map<String, Object> problemDetail =
+                createBaseProblemDetail(Response.Status.BAD_REQUEST, ex.getMessage(), request);
+        problemDetail.put("type", ErrorTypes.INVALID_ARGUMENT);
+        problemDetail.put("title", title);
         addStandardHints(
                 problemDetail,
                 "error.invalidArgument.hints",
@@ -1069,9 +528,12 @@ public class GlobalExceptionHandler {
                         "Review the error message and adjust the parameter value.",
                         "Consult the API docs for accepted ranges and formats.",
                         "Ensure required parameters are present."));
-        problemDetail.setProperty("actionRequired", "Correct the invalid argument and retry.");
+        problemDetail.put("actionRequired", "Correct the invalid argument and retry.");
 
-        return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
+        return Response.status(Response.Status.BAD_REQUEST)
+                .type(PROBLEM_JSON)
+                .entity(problemDetail)
+                .build();
     }
 
     /**
@@ -1081,50 +543,14 @@ public class GlobalExceptionHandler {
      * (AutoJobAspect wraps checked exceptions in RuntimeException) and delegates to the appropriate
      * specific handler.
      *
+     * <p>Note: Spring's {@code ResponseStatusException} branch was removed here; see the class-level
+     * TODO for its JAX-RS equivalent ({@code jakarta.ws.rs.WebApplicationException}).
+     *
      * @param ex the RuntimeException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with appropriate HTTP status
+     * @return Response with appropriate HTTP status
      */
-    /**
-     * Handle ResponseStatusException explicitly so its embedded HTTP status reaches the client
-     * instead of being swallowed by the {@code RuntimeException} catch-all (which would downgrade
-     * every controller-thrown 400/404/409 to a generic 500). Folder/file storage controllers and
-     * any other code that throws {@code ResponseStatusException} relies on this handler taking
-     * precedence.
-     */
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ProblemDetail> handleResponseStatusException(
-            ResponseStatusException ex, HttpServletRequest request) {
-        HttpStatus status =
-                HttpStatus.resolve(ex.getStatusCode().value()) != null
-                        ? HttpStatus.valueOf(ex.getStatusCode().value())
-                        : HttpStatus.INTERNAL_SERVER_ERROR;
-        String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
-        ProblemDetail problemDetail = createBaseProblemDetail(status, reason, request);
-        problemDetail.setType(URI.create("/errors/" + status.value()));
-        problemDetail.setTitle(status.getReasonPhrase());
-        problemDetail.setProperty("title", status.getReasonPhrase());
-        // 5xx is operator-relevant; 4xx is a normal client-rejection - log at the right level.
-        if (status.is5xxServerError()) {
-            log.error(
-                    "ResponseStatusException {} at {}: {}",
-                    status.value(),
-                    request.getRequestURI(),
-                    reason,
-                    ex);
-        } else {
-            log.debug(
-                    "ResponseStatusException {} at {}: {}",
-                    status.value(),
-                    request.getRequestURI(),
-                    reason);
-        }
-        return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ProblemDetail> handleRuntimeException(
-            RuntimeException ex, HttpServletRequest request) {
+    public Response handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
 
         // Check if this RuntimeException wraps a typed exception from job execution
         Throwable cause = ex.getCause();
@@ -1175,11 +601,11 @@ public class GlobalExceptionHandler {
         String title =
                 getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
-        problemDetail.setType(URI.create(ErrorTypes.UNEXPECTED));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title);
+        Map<String, Object> problemDetail =
+                createBaseProblemDetail(
+                        Response.Status.INTERNAL_SERVER_ERROR, userMessage, request);
+        problemDetail.put("type", ErrorTypes.UNEXPECTED);
+        problemDetail.put("title", title);
 
         addStandardHints(
                 problemDetail,
@@ -1188,53 +614,47 @@ public class GlobalExceptionHandler {
                         "Retry the request after a short delay.",
                         "If the problem persists, contact support with the timestamp and path.",
                         "Check service status or logs for outages."));
-        problemDetail.setProperty(
+        problemDetail.put(
                 "actionRequired",
                 "Retry later; if persistent, contact support with the error details.");
 
         if (isDevelopmentMode()) {
-            problemDetail.setProperty("debugMessage", ex.getMessage());
-            problemDetail.setProperty("exceptionType", ex.getClass().getName());
+            problemDetail.put("debugMessage", ex.getMessage());
+            problemDetail.put("exceptionType", ex.getClass().getName());
         }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .type(PROBLEM_JSON)
+                .entity(problemDetail)
+                .build();
     }
 
     /**
      * Handle IOException.
-     *
-     * <p>When thrown: When file I/O operations fail (read, write, corrupt file, etc.).
-     *
-     * <p>Client action: Verify the file is valid and not corrupted, then retry the request.
      *
      * <p>Note: This handler uses {@link ExceptionUtils#handlePdfException(IOException, String)} to
      * detect and wrap PDF-specific errors (corruption, encryption, password) before processing.
      *
      * @param ex the IOException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 500 INTERNAL_SERVER_ERROR
+     * @return Response with HTTP 500 INTERNAL_SERVER_ERROR
      */
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<ProblemDetail> handleIOException(
-            IOException ex, HttpServletRequest request) {
+    public Response handleIOException(IOException ex, HttpServletRequest request) {
 
         // Broken pipe / connection reset means the client disconnected.
-        // Attempting to write a ProblemDetail response will fail because the
+        // Attempting to write a problem response will fail because the
         // response Content-Type may already be committed (e.g. image/png) and
         // the client is gone anyway. Log at WARN and return an empty body.
         if (isClientDisconnectException(ex)) {
             log.warn("Client disconnected at {}: {}", request.getRequestURI(), ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
         // Check if this is a PDF-specific error and wrap it appropriately
         IOException processedException =
                 ExceptionUtils.handlePdfException(ex, request.getRequestURI());
 
-        // If it was wrapped as a specific PDF exception, the more specific handler will catch it on
-        // retry
+        // If it was wrapped as a specific PDF exception, dispatch to the BaseApp handler.
         if (processedException instanceof BaseAppException) {
             return handleBaseApp((BaseAppException) processedException, request);
         }
@@ -1254,17 +674,20 @@ public class GlobalExceptionHandler {
             String title =
                     getLocalizedMessage("error.tempFileNotFound.title", "Temporary File Not Found");
 
-            ProblemDetail problemDetail =
-                    createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
-            problemDetail.setType(URI.create("https://stirlingpdf.com/errors/temp-file-not-found"));
-            problemDetail.setTitle(title);
-            problemDetail.setProperty("title", title);
-            problemDetail.setProperty("errorCode", "E999");
-            problemDetail.setProperty(
+            Map<String, Object> problemDetail =
+                    createBaseProblemDetail(
+                            Response.Status.INTERNAL_SERVER_ERROR, message, request);
+            problemDetail.put("type", "https://stirlingpdf.com/errors/temp-file-not-found");
+            problemDetail.put("title", title);
+            problemDetail.put("errorCode", "E999");
+            problemDetail.put(
                     "hint.1",
                     "This error usually occurs when temporary files are cleaned up before processing completes.");
-            problemDetail.setProperty("hint.2", "Try submitting your request again.");
-            return new ResponseEntity<>(problemDetail, HttpStatus.INTERNAL_SERVER_ERROR);
+            problemDetail.put("hint.2", "Try submitting your request again.");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .type(PROBLEM_JSON)
+                    .entity(problemDetail)
+                    .build();
         }
 
         log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
@@ -1278,11 +701,10 @@ public class GlobalExceptionHandler {
 
         String title = getLocalizedMessage("error.ioError.title", ErrorTitles.IO_ERROR_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.IO_ERROR));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
+        Map<String, Object> problemDetail =
+                createBaseProblemDetail(Response.Status.INTERNAL_SERVER_ERROR, message, request);
+        problemDetail.put("type", ErrorTypes.IO_ERROR);
+        problemDetail.put("title", title);
         addStandardHints(
                 problemDetail,
                 "error.ioError.hints",
@@ -1290,39 +712,30 @@ public class GlobalExceptionHandler {
                         "Confirm the file exists and is accessible.",
                         "Ensure the file is not corrupted and is of a supported type.",
                         "Retry the operation in case of transient I/O issues."));
-        problemDetail.setProperty("actionRequired", "Verify the file and try the request again.");
+        problemDetail.put("actionRequired", "Verify the file and try the request again.");
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .type(PROBLEM_JSON)
+                .entity(problemDetail)
+                .build();
     }
 
     /**
      * Handle generic exceptions as a fallback.
      *
-     * <p>When thrown: Any exception not explicitly handled by other handlers.
-     *
-     * <p>Client action: This indicates an unexpected server error. Retry the request after a delay
-     * or contact support if the issue persists.
-     *
      * @param ex the Exception
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 500 INTERNAL_SERVER_ERROR
+     * @return Response with HTTP 500 INTERNAL_SERVER_ERROR
      */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ProblemDetail> handleGenericException(
-            Exception ex, HttpServletRequest request, HttpServletResponse response) {
+    public Response handleGenericException(Exception ex, HttpServletRequest request) {
         log.error("Unexpected error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
-        // If response is already committed (e.g., during streaming), we can't send an error
-        // response
-        // Log the error and return null to let Spring handle it gracefully
-        if (response.isCommitted()) {
-            log.warn(
-                    "Cannot send error response because response is already committed for URI: {}",
-                    request.getRequestURI());
-            return null; // Spring will handle gracefully
-        }
+        // TODO: Migration required - the original Spring handler checked
+        // HttpServletResponse.isCommitted() and returned null to let Spring write nothing when the
+        // response was already committed (e.g. during streaming). JAX-RS ExceptionMapper has no
+        // direct access to commit state; returning a Response here is the closest equivalent. If
+        // streaming endpoints need the old "do nothing when committed" behavior, a collaborator
+        // should detect that condition (e.g. via a ContainerResponseFilter) and short-circuit.
 
         String userMessage =
                 getLocalizedMessage(
@@ -1332,11 +745,11 @@ public class GlobalExceptionHandler {
         String title =
                 getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
-        problemDetail.setType(URI.create(ErrorTypes.UNEXPECTED));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
+        Map<String, Object> problemDetail =
+                createBaseProblemDetail(
+                        Response.Status.INTERNAL_SERVER_ERROR, userMessage, request);
+        problemDetail.put("type", ErrorTypes.UNEXPECTED);
+        problemDetail.put("title", title);
 
         addStandardHints(
                 problemDetail,
@@ -1345,93 +758,108 @@ public class GlobalExceptionHandler {
                         "Retry the request after a short delay.",
                         "If the problem persists, contact support with the timestamp and path.",
                         "Check service status or logs for outages."));
-        problemDetail.setProperty(
+        problemDetail.put(
                 "actionRequired",
                 "Retry later; if persistent, contact support with the error details.");
 
         // Only expose detailed error info in development mode
         if (isDevelopmentMode()) {
-            problemDetail.setProperty("debugMessage", ex.getMessage());
-            problemDetail.setProperty("exceptionType", ex.getClass().getName());
+            problemDetail.put("debugMessage", ex.getMessage());
+            problemDetail.put("exceptionType", ex.getClass().getName());
         }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .type(PROBLEM_JSON)
+                .entity(problemDetail)
+                .build();
     }
 
     /**
-     * Get a localized message from the MessageSource.
+     * Get a localized message from the shared messages.properties ResourceBundle.
      *
-     * <p>Attempts to retrieve a message from the ResourceBundle using the provided key. If the key
-     * is not found, returns the default message.
+     * <p>Replaces the former Spring {@code MessageSource} lookup. Reads from the same bundle that
+     * {@link ExceptionUtils} uses, so error wording stays consistent.
      *
      * @param key the message key in the ResourceBundle
      * @param defaultMessage the default message to use if the key is not found
      * @return the localized message or the default message
      */
     private String getLocalizedMessage(String key, String defaultMessage) {
-        return messageSource.getMessage(key, null, defaultMessage, LocaleContextHolder.getLocale());
+        return getLocalizedMessage(key, defaultMessage, (Object[]) null);
     }
 
     /**
-     * Get a localized message from the MessageSource with arguments.
-     *
-     * <p>Attempts to retrieve a message from the ResourceBundle using the provided key and format
-     * it with the supplied arguments. If the key is not found, returns the default message.
+     * Get a localized message from the shared messages.properties ResourceBundle with arguments.
      *
      * @param key the message key in the ResourceBundle
      * @param defaultMessage the default message to use if the key is not found
-     * @param args arguments to format into the message
+     * @param args arguments to format into the message ({@code {0}}, {@code {1}} placeholders)
      * @return the localized message or the default message
      */
     private String getLocalizedMessage(String key, String defaultMessage, Object... args) {
-        return messageSource.getMessage(key, args, defaultMessage, LocaleContextHolder.getLocale());
+        // TODO: Migration required - locale is the JVM default until the per-request locale
+        // ContainerRequestFilter described in LocaleConfiguration replaces Spring's
+        // LocaleContextHolder.getLocale().
+        String template = defaultMessage;
+        try {
+            ResourceBundle bundle =
+                    ResourceBundle.getBundle(MESSAGES_BUNDLE, Locale.getDefault());
+            if (bundle.containsKey(key)) {
+                template = bundle.getString(key);
+            }
+        } catch (java.util.MissingResourceException ignored) {
+            // Fall back to the default message below.
+        }
+        if (template == null) {
+            return null;
+        }
+        return (args != null && args.length > 0)
+                ? java.text.MessageFormat.format(template, args)
+                : template;
     }
 
     /**
      * Check if the application is running in development mode.
      *
-     * <p>Development mode is identified by checking for "dev" or "development" in active Spring
-     * profiles. When enabled, additional debugging information is included in error responses.
-     *
-     * <p>The result is cached after the first call to avoid repeated array scans.
+     * <p>The result is cached after the first call.
      *
      * @return true if development mode is active, false otherwise
      */
     private boolean isDevelopmentMode() {
         if (isDevelopmentMode == null) {
-            String[] activeProfiles = environment.getActiveProfiles();
-            isDevelopmentMode = false;
-            for (String profile : activeProfiles) {
-                if ("dev".equalsIgnoreCase(profile) || "development".equalsIgnoreCase(profile)) {
-                    isDevelopmentMode = true;
-                    break;
-                }
-            }
+            // TODO: Migration required - this replaces Spring's Environment.getActiveProfiles()
+            // ("dev"/"development") check. Quarkus exposes the active profile via
+            // io.quarkus.runtime.LaunchMode and the "quarkus.profile" config key; read it from the
+            // standard config so no Spring Environment bean is required.
+            String profile =
+                    org.eclipse.microprofile.config.ConfigProvider.getConfig()
+                            .getOptionalValue("quarkus.profile", String.class)
+                            .orElse(System.getProperty("quarkus.profile", ""));
+            isDevelopmentMode =
+                    "dev".equalsIgnoreCase(profile) || "development".equalsIgnoreCase(profile);
         }
         return isDevelopmentMode;
     }
 
     /**
-     * Add standard hints to a ProblemDetail from internationalized messages or defaults.
+     * Add standard hints to a problem map from internationalized messages or defaults.
      *
-     * @param problemDetail the ProblemDetail to enrich
+     * @param problemDetail the problem map to enrich
      * @param hintKey the i18n key for hints (should contain "|" separated hints)
      * @param defaultHints the default hints if i18n key is not found
      */
     private void addStandardHints(
-            ProblemDetail problemDetail, String hintKey, List<String> defaultHints) {
+            Map<String, Object> problemDetail, String hintKey, List<String> defaultHints) {
         String localizedHints = getLocalizedMessage(hintKey, null);
         if (localizedHints != null) {
-            problemDetail.setProperty(
+            problemDetail.put(
                     "hints",
                     List.of(
                             RegexPatternUtils.getInstance()
                                     .getPipeDelimiterPattern()
                                     .split(localizedHints)));
         } else {
-            problemDetail.setProperty("hints", defaultHints);
+            problemDetail.put("hints", defaultHints);
         }
     }
 

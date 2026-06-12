@@ -12,13 +12,16 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.Overlay;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +30,8 @@ import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -35,6 +40,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/general")
 @RequiredArgsConstructor
 public class PdfOverlayController {
 
@@ -43,20 +50,42 @@ public class PdfOverlayController {
 
     @AutoJobPostMapping(
             value = "/overlay-pdfs",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @POST
+    @jakarta.ws.rs.Path("/overlay-pdfs")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @StandardPdfResponse
     @Operation(
             summary = "Overlay PDF files in various modes",
             description =
                     "Overlay PDF files onto a base PDF with different modes: Sequential,"
                             + " Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
-    public ResponseEntity<Resource> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
+    public Response overlayPdfs(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("overlayFiles") List<FileUpload> overlayFileUploads,
+            @RestForm("overlayMode") String overlayMode,
+            @RestForm("counts") int[] counts,
+            @RestForm("overlayPosition") int overlayPosition)
             throws IOException {
+        // TODO: Migration required - collaborator edit. OverlayPdfsRequest still imports Spring's
+        // MultipartFile for its overlayFiles[] field, so the form fields are bound directly here
+        // and a populated request object is rebuilt rather than reusing @ModelAttribute binding.
+        OverlayPdfsRequest request = new OverlayPdfsRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setOverlayMode(overlayMode);
+        request.setCounts(counts);
+        request.setOverlayPosition(overlayPosition);
+
         MultipartFile baseFile = request.getFileInput();
         int overlayPos = request.getOverlayPosition();
 
-        MultipartFile[] overlayFiles = request.getOverlayFiles();
+        MultipartFile[] overlayFiles =
+                overlayFileUploads == null
+                        ? new MultipartFile[0]
+                        : overlayFileUploads.stream()
+                                .map(FileUploadMultipartFile::of)
+                                .toArray(MultipartFile[]::new);
         File[] overlayPdfFiles = new File[overlayFiles.length];
         List<File> tempFiles = new ArrayList<>(); // List to keep track of temporary files
 
@@ -68,7 +97,7 @@ public class PdfOverlayController {
 
             String mode = request.getOverlayMode(); // "SequentialOverlay", "InterleavedOverlay",
             // "FixedRepeatOverlay"
-            int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
+            int[] overlayCounts = request.getCounts(); // Used for FixedRepeatOverlay mode
 
             try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
                     Overlay overlay = new Overlay()) {
@@ -77,7 +106,7 @@ public class PdfOverlayController {
                                 basePdf.getNumberOfPages(),
                                 overlayPdfFiles,
                                 mode,
-                                counts,
+                                overlayCounts,
                                 tempFiles);
 
                 overlay.setInputPDF(basePdf);

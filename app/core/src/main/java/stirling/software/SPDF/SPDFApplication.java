@@ -1,26 +1,22 @@
 package stirling.software.SPDF;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.eclipse.microprofile.config.Config;
 
 import io.github.pixee.security.SystemCommand;
 
-import jakarta.annotation.PostConstruct;
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.QuarkusApplication;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.runtime.annotations.QuarkusMain;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,16 +25,16 @@ import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
+// MIGRATION (Spring -> Quarkus): @SpringBootApplication + SpringApplication.run replaced by
+// @QuarkusMain + QuarkusApplication.run(args)/Quarkus.waitForExit(). @EnableScheduling is removed -
+// Quarkus enables io.quarkus.scheduler.Scheduled out of the box, no app-level toggle needed.
+// The former @PostConstruct init() and @EventListener(ApplicationReadyEvent) startup hooks now live
+// in the nested @ApplicationScoped StartupObserver bean (the entry-point class itself is NOT a CDI
+// bean). External config files were wired via "spring.config.additional-location"; in Quarkus that
+// is replaced by SmallRye Config sources - see the TODO in main().
 @Slf4j
-@EnableScheduling
-@SpringBootApplication(
-        scanBasePackages = {
-            "stirling.software.SPDF",
-            "stirling.software.common",
-            "stirling.software.proprietary",
-            "stirling.software.saas"
-        })
-public class SPDFApplication {
+@QuarkusMain
+public class SPDFApplication implements QuarkusApplication {
 
     private static final Pattern PORT_SUFFIX_PATTERN = Pattern.compile(".+:\\d+$");
     private static final Pattern URL_SCHEME_PATTERN =
@@ -48,143 +44,151 @@ public class SPDFApplication {
     private static String baseUrlStatic;
     private static String contextPathStatic;
 
-    private final AppConfig appConfig;
-    private final Environment env;
-    private final ApplicationProperties applicationProperties;
-
-    public SPDFApplication(
-            AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
-        this.appConfig = appConfig;
-        this.env = env;
-        this.applicationProperties = applicationProperties;
-    }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        SpringApplication app = new SpringApplication(SPDFApplication.class);
-
-        Properties props = new Properties();
-
-        app.setAdditionalProfiles(getActiveProfile(args));
-
+    public static void main(String[] args) {
+        // ConfigInitializer must run before the Quarkus runtime boots so that the external settings
+        // files exist on disk and can be picked up by config sources.
         ConfigInitializer initializer = new ConfigInitializer();
         try {
             initializer.ensureConfigExists();
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException | java.net.URISyntaxException e) {
             log.error("Error initialising configuration", e);
         }
-        Map<String, String> propertyFiles = new HashMap<>();
 
         // External config files
-        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         log.info("Settings file: {}", settingsPath.toString());
-        if (Files.exists(settingsPath)) {
-            propertyFiles.put(
-                    "spring.config.additional-location", "file:" + settingsPath.toString());
-        } else {
+        if (!Files.exists(settingsPath)) {
             log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
         }
-
-        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
         log.info("Custom settings file: {}", customSettingsPath.toString());
-        if (Files.exists(customSettingsPath)) {
-            String existingLocation =
-                    propertyFiles.getOrDefault("spring.config.additional-location", "");
-            if (!existingLocation.isEmpty()) {
-                existingLocation += ",";
-            }
-            propertyFiles.put(
-                    "spring.config.additional-location",
-                    existingLocation + "file:" + customSettingsPath.toString());
-        } else {
+        if (!Files.exists(customSettingsPath)) {
             log.warn(
                     "Custom configuration file '{}' does not exist.",
                     customSettingsPath.toString());
         }
-        Properties finalProps = new Properties();
 
-        if (!propertyFiles.isEmpty()) {
-            finalProps.putAll(
-                    Collections.singletonMap(
-                            "spring.config.additional-location",
-                            propertyFiles.get("spring.config.additional-location")));
-        }
+        // TODO: Migration required - the Spring "spring.config.additional-location" property used to
+        // load the external settings/customSettings YAML files into the environment. Quarkus uses
+        // SmallRye Config; wire these files via a config source instead, e.g. set the system property
+        // "smallrye.config.locations" to the (comma-separated) file: URLs before this point, or
+        // register a custom ConfigSourceFactory. The directories/log lines above are preserved.
 
-        if (!props.isEmpty()) {
-            finalProps.putAll(props);
-        }
-        app.setDefaultProperties(finalProps);
+        // TODO: Migration required - profile auto-detection (former getActiveProfile / Spring
+        // setAdditionalProfiles) must be expressed via "quarkus.profile". The classpath-shape
+        // detection logic is retained below in getActiveProfile(); translate its result into the
+        // "quarkus.profile" system property (e.g. System.setProperty("quarkus.profile", ...)) before
+        // Quarkus.run if profile-based config layering is required.
+        getActiveProfile(args);
 
-        app.run(args);
-
-        // Ensure directories are created
-        try {
-            Files.createDirectories(Path.of(InstallationPathConfig.getTemplatesPath()));
-            Files.createDirectories(Path.of(InstallationPathConfig.getStaticPath()));
-        } catch (IOException e) {
-            log.error("Error creating directories: {}", e.getMessage());
-        }
-
-        printStartupLogs();
+        Quarkus.run(SPDFApplication.class, args);
     }
 
-    @PostConstruct
-    public void init() {
-        String backendUrl = appConfig.getBackendUrl();
-        String contextPath = appConfig.getContextPath();
-        String serverPort = appConfig.getServerPort();
-        baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
-        contextPathStatic = contextPath;
-        serverPortStatic = serverPort;
-        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
+    @Override
+    public int run(String... args) throws Exception {
+        printStartupLogs();
+        Quarkus.waitForExit();
+        return 0;
+    }
 
-        // Log Tauri mode information
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
-            String parentPid = System.getenv("TAURI_PARENT_PID");
-            log.info(
-                    "Running in Tauri mode. Parent process PID: {}",
-                    parentPid != null ? parentPid : "not set");
+    /**
+     * Startup observer carrying the former {@code @PostConstruct init()} and
+     * {@code @EventListener(ApplicationReadyEvent)} logic. This is the CDI bean (the entry-point
+     * class above is not managed by Arc).
+     */
+    @ApplicationScoped
+    public static class StartupObserver {
+
+        private final AppConfig appConfig;
+        private final Config config;
+        private final ApplicationProperties applicationProperties;
+
+        @Inject
+        public StartupObserver(
+                AppConfig appConfig,
+                Config config,
+                ApplicationProperties applicationProperties) {
+            this.appConfig = appConfig;
+            this.config = config;
+            this.applicationProperties = applicationProperties;
         }
-        // Standard browser opening logic
-        String browserOpenEnv = env.getProperty("BROWSER_OPEN");
-        boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
-        if (browserOpen) {
-            try {
-                String os = System.getProperty("os.name").toLowerCase();
-                Runtime rt = Runtime.getRuntime();
 
-                if (os.contains("win")) {
-                    // For Windows
-                    SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
-                } else if (os.contains("mac")) {
-                    SystemCommand.runCommand(rt, "open " + url);
-                } else if (os.contains("nix") || os.contains("nux")) {
-                    SystemCommand.runCommand(rt, "xdg-open " + url);
-                }
+        void onStart(@Observes StartupEvent event) {
+            // Ensure directories are created (was after SpringApplication.run in main()).
+            try {
+                Files.createDirectories(Path.of(InstallationPathConfig.getTemplatesPath()));
+                Files.createDirectories(Path.of(InstallationPathConfig.getStaticPath()));
             } catch (IOException e) {
-                log.error("Error opening browser: {}", e.getMessage());
+                log.error("Error creating directories: {}", e.getMessage());
             }
+
+            init();
+            onApplicationReady();
+        }
+
+        // Former @PostConstruct init().
+        private void init() {
+            String backendUrl = appConfig.getBackendUrl();
+            String contextPath = appConfig.getContextPath();
+            String serverPort = appConfig.getServerPort();
+            baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
+            contextPathStatic = contextPath;
+            serverPortStatic = serverPort;
+            String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
+
+            // Log Tauri mode information
+            if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
+                String parentPid = System.getenv("TAURI_PARENT_PID");
+                log.info(
+                        "Running in Tauri mode. Parent process PID: {}",
+                        parentPid != null ? parentPid : "not set");
+            }
+            // Standard browser opening logic
+            String browserOpenEnv = config.getOptionalValue("BROWSER_OPEN", String.class).orElse(null);
+            boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
+            if (browserOpen) {
+                try {
+                    String os = System.getProperty("os.name").toLowerCase();
+                    Runtime rt = Runtime.getRuntime();
+
+                    if (os.contains("win")) {
+                        // For Windows
+                        SystemCommand.runCommand(
+                                rt, "rundll32 url.dll,FileProtocolHandler " + url);
+                    } else if (os.contains("mac")) {
+                        SystemCommand.runCommand(rt, "open " + url);
+                    } else if (os.contains("nix") || os.contains("nux")) {
+                        SystemCommand.runCommand(rt, "xdg-open " + url);
+                    }
+                } catch (IOException e) {
+                    log.error("Error opening browser: {}", e.getMessage());
+                }
+            }
+        }
+
+        // Former @EventListener(ApplicationReadyEvent) onApplicationReady().
+        private void onApplicationReady() {
+            // TODO: Migration required - the Spring "local.server.port" property exposed the actual
+            // runtime port (relevant for server.port=0 / "auto" port assignment). In Quarkus read
+            // the resolved port from config "quarkus.http.port" (or observe an HTTP-started event)
+            // and update serverPortStatic here. Falling back to the configured value for now.
+            String port =
+                    config.getOptionalValue("quarkus.http.port", String.class).orElse(null);
+            if (port != null) {
+                serverPortStatic = port;
+            }
+            // Log the actual runtime port for Tauri to parse
+            log.info("Stirling-PDF running on port: {}", serverPortStatic);
         }
     }
 
     public static void setServerPortStatic(String port) {
         if ("auto".equalsIgnoreCase(port)) {
-            // Use Spring Boot's automatic port assignment (server.port=0)
-            SPDFApplication.serverPortStatic =
-                    "0"; // This will let Spring Boot assign an available port
+            // Use automatic port assignment (port 0)
+            SPDFApplication.serverPortStatic = "0"; // This will let the server assign an open port
         } else {
             SPDFApplication.serverPortStatic = port;
         }
-    }
-
-    @EventListener
-    public void onApplicationReady(ApplicationReadyEvent event) {
-        String port =
-                event.getApplicationContext().getEnvironment().getProperty("local.server.port");
-        if (port != null) {
-            serverPortStatic = port;
-        }
-        // Log the actual runtime port for Tauri to parse
-        log.info("Stirling-PDF running on port: {}", serverPortStatic);
     }
 
     private static void printStartupLogs() {

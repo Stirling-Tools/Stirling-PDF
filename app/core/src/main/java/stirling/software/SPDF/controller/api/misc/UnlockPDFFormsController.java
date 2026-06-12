@@ -10,21 +10,29 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -32,19 +40,19 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@Path("/api/v1/misc")
+@ApplicationScoped
 @Slf4j
+@RequiredArgsConstructor
 public class UnlockPDFFormsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    public UnlockPDFFormsController(
-            CustomPDFDocumentFactory pdfDocumentFactory, TempFileManager tempFileManager) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.tempFileManager = tempFileManager;
-    }
-
+    @POST
+    @Path("/unlock-pdf-forms")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/unlock-pdf-forms",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
@@ -53,7 +61,14 @@ public class UnlockPDFFormsController {
             description =
                     "Removing read-only property from form fields making them fillable"
                             + "Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<Resource> unlockPDFForms(@ModelAttribute PDFFile file) {
+    public Response unlockPDFForms(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId) {
+        PDFFile file = new PDFFile();
+        file.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        file.setFileId(fileId);
+
+        MultipartFile fileInput = file.getFileInput();
+
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 
@@ -123,7 +138,7 @@ public class UnlockPDFFormsController {
             }
             String mergedFileName =
                     GeneralUtils.generateFilename(
-                            file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
+                            fileInput.getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName), tempFileManager);
         } catch (Exception e) {

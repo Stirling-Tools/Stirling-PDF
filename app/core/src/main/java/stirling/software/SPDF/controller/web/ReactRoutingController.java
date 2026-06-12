@@ -4,28 +4,38 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.CacheControl;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.util.HtmlUtils;
-import org.springframework.web.util.JavaScriptUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.CacheControl;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
-@Controller
+// NOTE: SPA forwarding controller. The forwarding routes below cover the SPA "clean URL" paths the
+// app historically matched with Spring regex path variables. Quarkus/RESTEasy Reactive does not
+// support arbitrary regex constraints on @Path templates, so the original single negative-lookahead
+// regex routes are replaced with explicit @Path templates that forward to serveIndexHtml.
+// TODO: Migration required - the original Spring routes excluded a fixed set of asset prefixes
+// (api/static/pipeline/pdfjs/.../samples) via regex lookahead and matched only path segments that
+// contain no '.'. Quarkus serves those static assets via quarkus.http static-resources, so they no
+// longer collide with these routes. If a new SPA top-level route is added that is NOT covered by the
+// {path} / {path}/{subpath} templates below, add it explicitly or introduce a ContainerRequestFilter
+// fallback that serves index.html for unmatched non-API, extension-less GETs.
+@Path("")
+@ApplicationScoped
 public class ReactRoutingController {
 
     private static final org.slf4j.Logger log =
@@ -33,8 +43,11 @@ public class ReactRoutingController {
     private static final Pattern BASE_HREF_PATTERN =
             Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
 
-    @Value("${server.servlet.context-path:/}")
-    private String contextPath;
+    // server.servlet.context-path has no direct Quarkus equivalent (it maps to quarkus.http.root-path
+    // at build time). Kept as a configurable property so the index.html base href rewrite still works.
+    // TODO: Migration required - consider sourcing this from quarkus.http.root-path instead.
+    @ConfigProperty(name = "server.servlet.context-path", defaultValue = "/")
+    String contextPath;
 
     private String cachedIndexHtml;
     private String cachedCallbackHtml;
@@ -66,7 +79,8 @@ public class ReactRoutingController {
         }
 
         // Check for external index.html first (customFiles/static/)
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        java.nio.file.Path externalIndexPath =
+                Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
         log.debug("Checking for custom index.html at: {}", externalIndexPath);
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             log.info("Using custom index.html from: {}", externalIndexPath);
@@ -136,7 +150,8 @@ public class ReactRoutingController {
 
     private Resource getIndexHtmlResource() {
         // Check external location first
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        java.nio.file.Path externalIndexPath =
+                Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             return new FileSystemResource(externalIndexPath.toFile());
         }
@@ -145,57 +160,83 @@ public class ReactRoutingController {
         return new ClassPathResource("static/index.html");
     }
 
-    @GetMapping(
-            value = {"/", "/index.html"},
-            produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveRootPage(HttpServletRequest request) {
+    @GET
+    @Path("/")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveRootPage() {
         // Swap ONLY the root page for SaaS. SPA entry points that delegate to serveIndexHtml
         // (/auth/callback, /share/{token}, forwarded routes) keep serving the normal shell.
         if (saasLandingExists && cachedSaasLandingHtml != null) {
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(cachedSaasLandingHtml);
+            return Response.ok(cachedSaasLandingHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         }
-        return serveIndexHtml(request);
+        return serveIndexHtml();
     }
 
-    public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) {
+    @GET
+    @Path("/index.html")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveIndexHtmlPage() {
+        if (saasLandingExists && cachedSaasLandingHtml != null) {
+            return Response.ok(cachedSaasLandingHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
+        }
+        return serveIndexHtml();
+    }
+
+    public Response serveIndexHtml() {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
-                return ResponseEntity.ok()
-                        .cacheControl(CacheControl.noCache().mustRevalidate())
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(cachedIndexHtml);
+                return Response.ok(cachedIndexHtml)
+                        .cacheControl(noCacheMustRevalidate())
+                        .type(MediaType.TEXT_HTML)
+                        .build();
             }
             // Fallback: process on each request (dev mode or cache failed)
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(processIndexHtml());
+            return Response.ok(processIndexHtml())
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         } catch (Exception ex) {
             log.error("Failed to serve index.html, returning fallback", ex);
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(buildFallbackHtml());
+            return Response.ok(buildFallbackHtml())
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         }
     }
 
-    @GetMapping(value = "/auth/callback", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveAuthCallback(HttpServletRequest request) {
-        return serveIndexHtml(request);
+    private static CacheControl noCacheMustRevalidate() {
+        CacheControl cc = new CacheControl();
+        cc.setNoCache(true);
+        cc.setMustRevalidate(true);
+        return cc;
     }
 
-    @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
-        return serveIndexHtml(request);
+    @GET
+    @Path("/auth/callback")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveAuthCallback() {
+        return serveIndexHtml();
     }
 
-    @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
+    @GET
+    @Path("/share/{token}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveShareLinkPage(@PathParam("token") String token) {
+        return serveIndexHtml();
+    }
+
+    @GET
+    @Path("/auth/callback/tauri")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveTauriAuthCallback() {
         // cachedCallbackHtml is always initialized in @PostConstruct
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedCallbackHtml);
+        return Response.ok(cachedCallbackHtml).type(MediaType.TEXT_HTML).build();
     }
 
     // `files` was historically a backend static-asset directory and was therefore
@@ -203,27 +244,41 @@ public class ReactRoutingController {
     // forward to the SPA index.html, which is what FileManagerView expects.
     // (Real storage endpoints live under /api/v1/storage/files, already
     // excluded by the leading `api` token in the same regex.)
-    @GetMapping(
-            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
-    public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
-        return serveIndexHtml(request);
+    //
+    // TODO: Migration required - the original Spring route used a negative-lookahead regex to
+    // exclude asset prefixes (api/static/robots.txt/favicon.ico/manifest*.json/pipeline/pdfjs/
+    // pdfjs-legacy/pdfium/vendor/fonts/images/css/js/assets/locales/modern-logo/classic-logo/Login/
+    // og_images/samples) and to match only single segments containing no '.'. RESTEasy Reactive does
+    // not allow such regex constraints in @Path. Those excluded prefixes are now served by Quarkus
+    // static-resources (higher precedence) so they no longer reach this method. This template still
+    // matches a dot-bearing single segment (e.g. "/foo.txt"); if that must be excluded, add a
+    // ContainerRequestFilter that only forwards extension-less, non-API GETs to serveIndexHtml().
+    @GET
+    @Path("/{path}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response forwardRootPaths(@PathParam("path") String path) throws IOException {
+        return serveIndexHtml();
     }
 
-    @GetMapping(
-            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
-    public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
+    // TODO: Migration required - same regex-exclusion caveat as forwardRootPaths above. The original
+    // route matched a nested two-segment SPA path where the second segment contains no '.'.
+    @GET
+    @Path("/{path}/{subpath}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response forwardNestedPaths(
+            @PathParam("path") String path, @PathParam("subpath") String subpath)
             throws IOException {
-        return serveIndexHtml(request);
+        return serveIndexHtml();
     }
 
     private String buildFallbackHtml() {
         String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
 
         // Escape for HTML attribute context
-        String escapedBaseUrlHtml = HtmlUtils.htmlEscape(baseUrl);
+        String escapedBaseUrlHtml = htmlEscape(baseUrl);
 
         // Escape for JavaScript string context
-        String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
+        String escapedBaseUrlJs = javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
         return """
@@ -279,10 +334,10 @@ public class ReactRoutingController {
         String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
 
         // Escape for HTML attribute context
-        String escapedBaseUrlHtml = HtmlUtils.htmlEscape(baseUrl);
+        String escapedBaseUrlHtml = htmlEscape(baseUrl);
 
         // Escape for JavaScript string context
-        String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
+        String escapedBaseUrlJs = javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
         return """
@@ -519,5 +574,54 @@ public class ReactRoutingController {
                 </html>
                 """
                 .formatted(escapedBaseUrlHtml, serverUrl);
+    }
+
+    // Replacements for Spring's org.springframework.web.util.HtmlUtils.htmlEscape and
+    // org.springframework.web.util.JavaScriptUtils.javaScriptEscape (no Quarkus/Jakarta equivalent
+    // and commons-text is not a dependency). These mirror the subset of behavior required for the
+    // context-path string injected into the fallback/callback HTML.
+    private static String htmlEscape(String input) {
+        if (input == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '&' -> sb.append("&amp;");
+                case '<' -> sb.append("&lt;");
+                case '>' -> sb.append("&gt;");
+                case '"' -> sb.append("&quot;");
+                case '\'' -> sb.append("&#39;");
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String javaScriptEscape(String input) {
+        if (input == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '"' -> sb.append("\\\"");
+                case '\'' -> sb.append("\\'");
+                case '\\' -> sb.append("\\\\");
+                case '/' -> sb.append("\\/");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                case '\b' -> sb.append("\\b");
+                case '\f' -> sb.append("\\f");
+                case '<' -> sb.append("\\u003C");
+                case '>' -> sb.append("\\u003E");
+                case '&' -> sb.append("\\u0026");
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

@@ -5,11 +5,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
+import io.quarkus.scheduler.Scheduled;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.common.service.PostHogService;
 
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class MetricsAggregatorService {
@@ -26,7 +26,7 @@ public class MetricsAggregatorService {
     private final EndpointInspector endpointInspector;
     private final Map<String, Double> lastSentMetrics = new ConcurrentHashMap<>();
 
-    @Scheduled(fixedRate = 7200000) // Run every 2 hours
+    @Scheduled(every = "7200s") // Run every 2 hours
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 

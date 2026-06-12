@@ -42,12 +42,17 @@ import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +62,9 @@ import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -69,6 +76,8 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 @SecurityApi
+@Path("/api/v1/security")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class GetInfoOnPDF {
@@ -287,7 +296,7 @@ public class GetInfoOnPDF {
         }
     }
 
-    private static ResponseEntity<byte[]> createErrorResponse(String errorMessage) {
+    private static Response createErrorResponse(String errorMessage) {
         try {
             ObjectNode errorNode = objectMapper.createObjectNode();
             errorNode.put("error", errorMessage);
@@ -298,10 +307,10 @@ public class GetInfoOnPDF {
             return WebResponseUtils.bytesToWebResponse(
                     jsonString.getBytes(StandardCharsets.UTF_8),
                     "error.json",
-                    MediaType.APPLICATION_JSON);
+                    MediaType.valueOf(MediaType.APPLICATION_JSON));
         } catch (Exception e) {
             log.error("Failed to create error response", e);
-            return ResponseEntity.internalServerError().build();
+            return Response.serverError().build();
         }
     }
 
@@ -1062,15 +1071,24 @@ public class GetInfoOnPDF {
         return stats;
     }
 
+    @POST
+    @Path("/get-info-on-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/get-info-on-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Get comprehensive PDF information",
             description =
                     "Extracts all available information from a PDF file. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
+    public Response getPdfInfo(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
+            throws IOException {
+        PDFFile request = new PDFFile();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+
         MultipartFile inputFile = request.getFileInput();
 
         // Validate input
@@ -1129,7 +1147,7 @@ public class GetInfoOnPDF {
             return WebResponseUtils.bytesToWebResponse(
                     jsonString.getBytes(StandardCharsets.UTF_8),
                     "response.json",
-                    MediaType.APPLICATION_JSON);
+                    MediaType.valueOf(MediaType.APPLICATION_JSON));
 
         } catch (IOException e) {
             log.error("IO error while processing PDF: {}", e.getMessage(), e);

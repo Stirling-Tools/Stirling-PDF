@@ -30,18 +30,18 @@ import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import io.github.pixee.security.Filenames;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AttachmentInfo;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.util.ExceptionUtils;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class AttachmentService implements AttachmentServiceInterface {
 
     private static final long DEFAULT_MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024; // 50 MB

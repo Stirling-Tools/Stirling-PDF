@@ -24,14 +24,16 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,8 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -55,6 +59,8 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
 @GeneralApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/general")
 @Slf4j
 @RequiredArgsConstructor
 public class MergeController {
@@ -261,9 +267,12 @@ public class MergeController {
     }
 
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/merge-pdfs",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @POST
+    @jakarta.ws.rs.Path("/merge-pdfs")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @StandardPdfResponse
     @Operation(
             summary = "Merge multiple PDF files into one",
@@ -271,10 +280,34 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<Resource> mergePdfs(
-            @ModelAttribute MergePdfsRequest request,
-            @RequestParam(value = "fileOrder", required = false) String fileOrder)
+    public Response mergePdfs(
+            @RestForm("fileInput") List<FileUpload> fileUploads,
+            @RestForm("sortType") String sortType,
+            @RestForm("removeCertSign") Boolean removeCertSignParam,
+            @RestForm("generateToc") Boolean generateTocParam,
+            @RestForm("clientFileIds") String clientFileIds,
+            @RestForm("fileOrder") String fileOrder)
             throws IOException {
+        // TODO: Migration required - collaborator edit. MergePdfsRequest/MultiplePDFFiles must
+        // declare fileInput as stirling.software.common.model.MultipartFile[] (the shim) for the
+        // setFileInput call below to type-check; MultiplePDFFiles still imports Spring's MultipartFile.
+        MergePdfsRequest request = new MergePdfsRequest();
+        if (fileUploads != null) {
+            MultipartFile[] mappedFiles =
+                    fileUploads.stream()
+                            .map(FileUploadMultipartFile::of)
+                            .toArray(MultipartFile[]::new);
+            request.setFileInput(mappedFiles);
+        }
+        if (sortType != null) {
+            request.setSortType(sortType);
+        }
+        request.setRemoveCertSign(removeCertSignParam);
+        if (generateTocParam != null) {
+            request.setGenerateToc(generateTocParam);
+        }
+        request.setClientFileIds(clientFileIds);
+
         List<File> filesToDelete = new ArrayList<>();
         TempFile outputTempFile = null;
 

@@ -34,19 +34,20 @@ import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.util.Store;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class CertificateValidationService {
     /**
@@ -92,10 +93,13 @@ public class CertificateValidationService {
         }
     }
 
+    @Inject
     public CertificateValidationService(
-            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            Instance<ServerCertificateServiceInterface> serverCertificateService,
             ApplicationProperties applicationProperties) {
-        this.serverCertificateService = serverCertificateService;
+        // @Autowired(required = false) -> CDI Instance<T>; resolve the optional bean (null if none)
+        this.serverCertificateService =
+                serverCertificateService.isResolvable() ? serverCertificateService.get() : null;
         this.applicationProperties = applicationProperties;
     }
 

@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +23,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 
 import tools.jackson.databind.ObjectMapper;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class SharedSignatureService {
 
@@ -51,7 +50,7 @@ public class SharedSignatureService {
         List<SignatureFile> signatures = new ArrayList<>();
 
         // Get signatures from user's personal folder
-        if (StringUtils.hasText(username)) {
+        if (username != null && !username.isBlank()) {
             Path userFolder = Paths.get(SIGNATURE_BASE_PATH, username);
             if (Files.exists(userFolder)) {
                 try {

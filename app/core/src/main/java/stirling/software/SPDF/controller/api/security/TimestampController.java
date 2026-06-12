@@ -28,13 +28,17 @@ import org.bouncycastle.tsp.TimeStampRequest;
 import org.bouncycastle.tsp.TimeStampRequestGenerator;
 import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampToken;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +49,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -53,6 +59,8 @@ import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
 @SecurityApi
+@ApplicationScoped
+@Path("/api/v1/security")
 @RequiredArgsConstructor
 public class TimestampController {
 
@@ -79,8 +87,11 @@ public class TimestampController {
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/timestamp-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/timestamp-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
@@ -89,10 +100,18 @@ public class TimestampController {
             description =
                     "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
                             + " document timestamp into the PDF. Only a SHA-256 hash of the"
-                            + " document is sent to the TSA — the PDF itself never leaves the"
+                            + " document is sent to the TSA - the PDF itself never leaves the"
                             + " server. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
+    public Response timestampPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("tsaUrl") String tsaUrlParam)
             throws Exception {
+        TimestampPdfRequest request = new TimestampPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setTsaUrl(tsaUrlParam);
+
         MultipartFile inputFile = request.getFileInput();
         ApplicationProperties.Security.Timestamp tsConfig =
                 applicationProperties.getSecurity().getTimestamp();

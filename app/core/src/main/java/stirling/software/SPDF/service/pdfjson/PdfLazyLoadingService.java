@@ -16,8 +16,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +33,7 @@ import stirling.software.SPDF.model.json.PdfJsonPage;
 import stirling.software.SPDF.model.json.PdfJsonPageDimension;
 import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExceptionUtils;
@@ -43,7 +44,7 @@ import tools.jackson.databind.ObjectMapper;
  * Service for lazy loading PDF pages. Caches PDF documents and extracts pages on-demand to reduce
  * memory usage for large PDFs.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class PdfLazyLoadingService {

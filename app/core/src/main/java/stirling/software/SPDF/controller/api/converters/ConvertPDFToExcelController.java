@@ -12,12 +12,17 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +31,7 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -39,6 +45,8 @@ import technology.tabula.Table;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 @ConvertApi
+@Path("/api/v1/convert")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertPDFToExcelController {
@@ -46,17 +54,31 @@ public class ConvertPDFToExcelController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/pdf/xlsx")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/pdf/xlsx",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert a PDF to an Excel spreadsheet (XLSX)",
             description =
                     "Extracts tabular data from each page of a PDF and writes it into an Excel"
                             + " workbook, one sheet per table. Input:PDF Output:XLSX Type:SISO")
-    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
+    public Response pdfToExcel(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers)
             throws Exception {
+
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (pageNumbers != null) {
+            request.setPageNumbers(pageNumbers);
+        }
+
         String baseName =
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
@@ -99,7 +121,7 @@ public class ConvertPDFToExcelController {
 
             if (sheetCount == 0) {
                 tempOut.close();
-                return ResponseEntity.noContent().build();
+                return Response.noContent().build();
             }
 
             try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
@@ -111,7 +133,7 @@ public class ConvertPDFToExcelController {
         }
 
         MediaType mediaType =
-                MediaType.parseMediaType(
+                MediaType.valueOf(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return WebResponseUtils.fileToWebResponse(tempOut, baseName + ".xlsx", mediaType);
     }

@@ -24,13 +24,17 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +44,8 @@ import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -47,14 +53,19 @@ import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
 @SecurityApi
+@ApplicationScoped
+@Path("/api/v1/security")
 @RequiredArgsConstructor
 public class SanitizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/sanitize-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/sanitize-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
@@ -63,8 +74,26 @@ public class SanitizeController {
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
                             + " provided options. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
+    public Response sanitizePDF(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("removeJavaScript") Boolean removeJavaScriptParam,
+            @RestForm("removeEmbeddedFiles") Boolean removeEmbeddedFilesParam,
+            @RestForm("removeXMPMetadata") Boolean removeXMPMetadataParam,
+            @RestForm("removeMetadata") Boolean removeMetadataParam,
+            @RestForm("removeLinks") Boolean removeLinksParam,
+            @RestForm("removeFonts") Boolean removeFontsParam)
             throws IOException {
+        SanitizePdfRequest request = new SanitizePdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setRemoveJavaScript(removeJavaScriptParam);
+        request.setRemoveEmbeddedFiles(removeEmbeddedFilesParam);
+        request.setRemoveXMPMetadata(removeXMPMetadataParam);
+        request.setRemoveMetadata(removeMetadataParam);
+        request.setRemoveLinks(removeLinksParam);
+        request.setRemoveFonts(removeFontsParam);
+
         MultipartFile inputFile = request.getFileInput();
         boolean removeJavaScript = Boolean.TRUE.equals(request.getRemoveJavaScript());
         boolean removeEmbeddedFiles = Boolean.TRUE.equals(request.getRemoveEmbeddedFiles());

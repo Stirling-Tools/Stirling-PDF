@@ -31,16 +31,20 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +54,8 @@ import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
@@ -61,6 +67,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@Path("/api/v1/misc")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class CompressController {
@@ -69,8 +77,8 @@ public class CompressController {
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
 
-    @Autowired(required = false)
-    private LineArtConversionService lineArtConversionService;
+    // @Autowired(required = false) -> optional CDI bean via Instance<T>
+    @Inject Instance<LineArtConversionService> lineArtConversionServiceInstance;
 
     private boolean isQpdfEnabled() {
         return endpointConfiguration.isGroupEnabled("qpdf");
@@ -923,8 +931,11 @@ public class CompressController {
         return Math.min(9, currentLevel + 1);
     }
 
+    @POST
+    @Path("/compress-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/compress-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -932,8 +943,45 @@ public class CompressController {
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
                             + " parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> optimizePdf(@ModelAttribute OptimizePdfRequest request)
+    public Response optimizePdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("optimizeLevel") Integer optimizeLevelForm,
+            @RestForm("expectedOutputSize") String expectedOutputSizeForm,
+            @RestForm("linearize") Boolean linearizeForm,
+            @RestForm("normalize") Boolean normalizeForm,
+            @RestForm("grayscale") Boolean grayscaleForm,
+            @RestForm("lineArt") Boolean lineArtForm,
+            @RestForm("lineArtThreshold") Double lineArtThresholdForm,
+            @RestForm("lineArtEdgeLevel") Integer lineArtEdgeLevelForm)
             throws Exception {
+
+        OptimizePdfRequest request = new OptimizePdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (optimizeLevelForm != null) {
+            request.setOptimizeLevel(optimizeLevelForm);
+        }
+        request.setExpectedOutputSize(expectedOutputSizeForm);
+        if (linearizeForm != null) {
+            request.setLinearize(linearizeForm);
+        }
+        if (normalizeForm != null) {
+            request.setNormalize(normalizeForm);
+        }
+        if (grayscaleForm != null) {
+            request.setGrayscale(grayscaleForm);
+        }
+        if (lineArtForm != null) {
+            request.setLineArt(lineArtForm);
+        }
+        if (lineArtThresholdForm != null) {
+            request.setLineArtThreshold(lineArtThresholdForm);
+        }
+        if (lineArtEdgeLevelForm != null) {
+            request.setLineArtEdgeLevel(lineArtEdgeLevelForm);
+        }
+
         MultipartFile inputFile = request.getFileInput();
 
         // Validate input file
@@ -980,10 +1028,10 @@ public class CompressController {
             }
 
             if (Boolean.TRUE.equals(convertToLineArt)) {
-                if (lineArtConversionService == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.FORBIDDEN,
-                            "Line art conversion is unavailable - ImageMagick service not found");
+                if (lineArtConversionServiceInstance.isUnsatisfied()) {
+                    throw new WebApplicationException(
+                            "Line art conversion is unavailable - ImageMagick service not found",
+                            Response.Status.FORBIDDEN);
                 }
                 if (!isImageMagickEnabled()) {
                     throw new IOException(
@@ -1173,8 +1221,9 @@ public class CompressController {
             stats.totalOriginalBytes += originalSize;
 
             PDImageXObject converted =
-                    lineArtConversionService.convertImageToLineArt(
-                            doc, originalImage, threshold, edgeLevel);
+                    lineArtConversionServiceInstance
+                            .get()
+                            .convertImageToLineArt(doc, originalImage, threshold, edgeLevel);
             convertedImages.put(imageIdentity, converted);
             stats.compressedImages++;
 

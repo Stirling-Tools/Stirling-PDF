@@ -1,71 +1,90 @@
 package stirling.software.SPDF.config;
 
 import java.util.List;
+import java.util.Map;
 
-import org.springdoc.core.customizers.OpenApiCustomizer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.eclipse.microprofile.openapi.OASFactory;
+import org.eclipse.microprofile.openapi.OASFilter;
+import org.eclipse.microprofile.openapi.models.Components;
+import org.eclipse.microprofile.openapi.models.OpenAPI;
+import org.eclipse.microprofile.openapi.models.info.Contact;
+import org.eclipse.microprofile.openapi.models.info.Info;
+import org.eclipse.microprofile.openapi.models.info.License;
+import org.eclipse.microprofile.openapi.models.media.Schema;
+import org.eclipse.microprofile.openapi.models.security.SecurityRequirement;
+import org.eclipse.microprofile.openapi.models.security.SecurityScheme;
+import org.eclipse.microprofile.openapi.models.servers.Server;
+import org.eclipse.microprofile.openapi.models.tags.Tag;
 
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.media.ComposedSchema;
-import io.swagger.v3.oas.models.media.ObjectSchema;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.servers.Server;
-import io.swagger.v3.oas.models.tags.Tag;
-
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.inject.spi.CDI;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Configuration
-@RequiredArgsConstructor
-public class OpenApiConfig {
-
-    private final ApplicationProperties applicationProperties;
+/**
+ * Quarkus replacement for the former SpringDoc {@code OpenApiConfig}.
+ *
+ * <p>Under quarkus-smallrye-openapi the per-controller {@code @Tag}/{@code @Operation} annotations
+ * are read automatically, so this class is now an {@link OASFilter} (registered via
+ * {@code mp.openapi.filter} in application.properties) that reproduces the old programmatic
+ * customizations:
+ *
+ * <ul>
+ *   <li>API {@link Info} (title, version, license, contact, terms of service, description);
+ *   <li>the global "AI" {@link Tag};
+ *   <li>the {@link Server} entry (optionally from {@code SWAGGER_SERVER_URL});
+ *   <li>the {@code ErrorResponse} component schema;
+ *   <li>the {@code apiKey} security scheme + requirement when login is enabled;
+ *   <li>the {@code PDFFile} {@code oneOf} (upload vs. server-side file id) schema.
+ * </ul>
+ *
+ * <p>TODO: Migration required - register this filter by setting {@code mp.openapi.filter=
+ * stirling.software.SPDF.config.OpenApiConfig} in application.properties (collaborator edit; not
+ * the assigned file). Without that key smallrye-openapi will not invoke this filter.
+ */
+public class OpenApiConfig implements OASFilter {
 
     private static final String DEFAULT_TITLE = "Stirling PDF API";
     private static final String DEFAULT_DESCRIPTION =
             "API documentation for all Server-Side processing.\n"
                     + "Please note some functionality might be UI only and missing from here.";
 
-    @Bean
-    public OpenAPI customOpenAPI() {
+    @Override
+    public OpenAPI filterOpenAPI(OpenAPI openAPI) {
+        customizeOpenAPI(openAPI);
+        applyPdfFileOneOf(openAPI);
+        return openAPI;
+    }
+
+    private void customizeOpenAPI(OpenAPI openAPI) {
         String version = getClass().getPackage().getImplementationVersion();
         if (version == null) {
             // default version if all else fails
             version = "1.0.0";
         }
         Info info =
-                new Info()
+                OASFactory.createInfo()
                         .title(DEFAULT_TITLE)
                         .version(version)
                         .license(
-                                new License()
+                                OASFactory.createLicense()
                                         .name("Open-Core - MIT Licensed")
                                         .url(
                                                 "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
                         .termsOfService("https://www.stirlingpdf.com/terms")
                         .contact(
-                                new Contact()
+                                OASFactory.createContact()
                                         .name("Stirling Software")
                                         .url("https://www.stirlingpdf.com")
                                         .email("contact@stirlingpdf.com"))
                         .description(DEFAULT_DESCRIPTION);
-
-        OpenAPI openAPI = new OpenAPI().info(info).openapi("3.0.3");
+        openAPI.setInfo(info);
+        openAPI.setOpenapi("3.0.3");
 
         // Register a single global "AI" tag so every AI endpoint groups under it in the docs.
         // The AI controllers are currently @Hidden, so they don't emit this tag themselves yet;
         // defining it here keeps the grouping ready for when those endpoints are unhidden.
-        openAPI.addTagsItem(
-                new Tag()
+        openAPI.addTag(
+                OASFactory.createTag()
                         .name("AI")
                         .description(
                                 "AI-powered document creation, editing, and assistant endpoints."));
@@ -74,91 +93,129 @@ public class OpenApiConfig {
         String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");
         Server server;
         if (swaggerServerUrl != null && !swaggerServerUrl.trim().isEmpty()) {
-            server = new Server().url(swaggerServerUrl).description("API Server");
+            server = OASFactory.createServer().url(swaggerServerUrl).description("API Server");
         } else {
             // Use relative path so Swagger uses the current browser origin to avoid CORS issues
             // when accessing via different ports
-            server = new Server().url("/").description("Current Server");
+            server = OASFactory.createServer().url("/").description("Current Server");
         }
-        openAPI.addServersItem(server);
+        openAPI.addServer(server);
 
         // Add ErrorResponse schema to components
-        Schema<?> errorResponseSchema =
-                new Schema<>()
-                        .type("object")
+        Schema errorResponseSchema =
+                OASFactory.createSchema()
+                        .type(List.of(Schema.SchemaType.OBJECT))
                         .addProperty(
                                 "timestamp",
-                                new Schema<>()
-                                        .type("string")
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.STRING))
                                         .format("date-time")
                                         .description("Error timestamp"))
                         .addProperty(
                                 "status",
-                                new Schema<>().type("integer").description("HTTP status code"))
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.INTEGER))
+                                        .description("HTTP status code"))
                         .addProperty(
-                                "error", new Schema<>().type("string").description("Error type"))
+                                "error",
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.STRING))
+                                        .description("Error type"))
                         .addProperty(
                                 "message",
-                                new Schema<>().type("string").description("Error message"))
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.STRING))
+                                        .description("Error message"))
                         .addProperty(
-                                "path", new Schema<>().type("string").description("Request path"))
+                                "path",
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.STRING))
+                                        .description("Request path"))
                         .description("Standard error response format");
 
-        Components components = new Components().addSchemas("ErrorResponse", errorResponseSchema);
+        Components components = openAPI.getComponents();
+        if (components == null) {
+            components = OASFactory.createComponents();
+            openAPI.setComponents(components);
+        }
+        components.addSchema("ErrorResponse", errorResponseSchema);
 
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
-            return openAPI.components(components);
-        } else {
+        if (isEnableLogin()) {
             SecurityScheme apiKeyScheme =
-                    new SecurityScheme()
+                    OASFactory.createSecurityScheme()
                             .type(SecurityScheme.Type.APIKEY)
                             .in(SecurityScheme.In.HEADER)
                             .name("X-API-KEY");
-            components.addSecuritySchemes("apiKey", apiKeyScheme);
-            return openAPI.components(components)
-                    .addSecurityItem(new SecurityRequirement().addList("apiKey"));
+            components.addSecurityScheme("apiKey", apiKeyScheme);
+            SecurityRequirement requirement =
+                    OASFactory.createSecurityRequirement().addScheme("apiKey");
+            openAPI.addSecurityRequirement(requirement);
         }
     }
 
-    @Bean
-    OpenApiCustomizer pdfFileOneOfCustomizer() {
-        return openApi -> {
-            var components = openApi.getComponents();
-            var schemas = components.getSchemas();
+    private boolean isEnableLogin() {
+        // OASFilter instances are created by smallrye-openapi, not by CDI, so resolve the
+        // ApplicationProperties bean programmatically rather than via constructor injection.
+        try {
+            ApplicationProperties applicationProperties =
+                    CDI.current().select(ApplicationProperties.class).get();
+            return applicationProperties.getSecurity().isEnableLogin();
+        } catch (RuntimeException e) {
+            // If the CDI container is not available at OpenAPI-build time, fall back to the
+            // login-disabled shape (no apiKey scheme), matching the original default behaviour.
+            return false;
+        }
+    }
 
-            // Define the two shapes
-            var upload =
-                    new ObjectSchema()
-                            .name("PDFFileUpload")
-                            .description("Upload a PDF file")
-                            .addProperty("fileInput", new StringSchema().format("binary"))
-                            .addRequiredItem("fileInput");
+    private void applyPdfFileOneOf(OpenAPI openAPI) {
+        Components components = openAPI.getComponents();
+        if (components == null) {
+            components = OASFactory.createComponents();
+            openAPI.setComponents(components);
+        }
+        Map<String, Schema> schemas = components.getSchemas();
+        if (schemas == null) {
+            return;
+        }
 
-            var ref =
-                    new ObjectSchema()
-                            .name("PDFFileRef")
-                            .description("Reference a server-side file")
-                            .addProperty(
-                                    "fileId",
-                                    new StringSchema()
-                                            .example("a1b2c3d4-5678-90ab-cdef-ghijklmnopqr"))
-                            .addRequiredItem("fileId");
+        // Define the two shapes
+        Schema upload =
+                OASFactory.createSchema()
+                        .type(List.of(Schema.SchemaType.OBJECT))
+                        .description("Upload a PDF file")
+                        .addProperty(
+                                "fileInput",
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.STRING))
+                                        .format("binary"))
+                        .addRequired("fileInput");
 
-            schemas.put("PDFFileUpload", upload);
-            schemas.put("PDFFileRef", ref);
+        Schema ref =
+                OASFactory.createSchema()
+                        .type(List.of(Schema.SchemaType.OBJECT))
+                        .description("Reference a server-side file")
+                        .addProperty(
+                                "fileId",
+                                OASFactory.createSchema()
+                                        .type(List.of(Schema.SchemaType.STRING))
+                                        .example("a1b2c3d4-5678-90ab-cdef-ghijklmnopqr"))
+                        .addRequired("fileId");
 
-            // Create the oneOf schema
-            var pdfFileOneOf =
-                    new ComposedSchema()
-                            .oneOf(
-                                    List.of(
-                                            new Schema<>()
-                                                    .$ref("#/components/schemas/PDFFileUpload"),
-                                            new Schema<>().$ref("#/components/schemas/PDFFileRef")))
-                            .description("Either upload a file or provide a server-side file ID");
+        components.addSchema("PDFFileUpload", upload);
+        components.addSchema("PDFFileRef", ref);
 
-            // Replace PDFFile schema
-            schemas.put("PDFFile", pdfFileOneOf);
-        };
+        // Create the oneOf schema
+        Schema pdfFileOneOf =
+                OASFactory.createSchema()
+                        .oneOf(
+                                List.of(
+                                        OASFactory.createSchema()
+                                                .ref("#/components/schemas/PDFFileUpload"),
+                                        OASFactory.createSchema()
+                                                .ref("#/components/schemas/PDFFileRef")))
+                        .description("Either upload a file or provide a server-side file ID");
+
+        // Replace PDFFile schema
+        components.addSchema("PDFFile", pdfFileOneOf);
     }
 }

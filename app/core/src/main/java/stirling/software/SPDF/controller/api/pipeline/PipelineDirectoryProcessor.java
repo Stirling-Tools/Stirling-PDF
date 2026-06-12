@@ -24,9 +24,9 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.Resource;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,12 +35,13 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class PipelineDirectoryProcessor {
 
@@ -75,7 +76,7 @@ public class PipelineDirectoryProcessor {
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(every = "60s")
     public void scanFolders() {
         // Clear the processed directories set for this scan cycle
         processedDirsInScan.get().clear();

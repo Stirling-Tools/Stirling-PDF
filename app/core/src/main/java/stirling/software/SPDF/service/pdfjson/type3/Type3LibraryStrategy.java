@@ -2,8 +2,8 @@ package stirling.software.SPDF.service.pdfjson.type3;
 
 import java.io.IOException;
 
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +16,8 @@ import stirling.software.SPDF.service.pdfjson.type3.library.Type3FontLibraryMatc
 import stirling.software.SPDF.service.pdfjson.type3.library.Type3FontLibraryPayload;
 
 @Slf4j
-@Component
-@Order(0)
+@ApplicationScoped
+@Priority(0)
 @RequiredArgsConstructor
 public class Type3LibraryStrategy implements Type3ConversionStrategy {
 

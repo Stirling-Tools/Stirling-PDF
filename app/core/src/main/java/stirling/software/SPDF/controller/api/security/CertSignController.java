@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
-import java.beans.PropertyEditorSupport;
 import java.io.*;
 import java.nio.file.Files;
 import java.security.*;
@@ -53,29 +52,31 @@ import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -84,35 +85,25 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/security")
+@SecurityApi
+@Path("/api/v1/security")
+@ApplicationScoped
 @Slf4j
-@Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
 
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
-    }
-
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final ServerCertificateServiceInterface serverCertificateService;
+    // @Autowired(required = false) -> CDI Instance<T> (optional / may be unsatisfied).
+    private final Instance<ServerCertificateServiceInterface> serverCertificateService;
     private final TempFileManager tempFileManager;
 
+    @Inject
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
-            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            Instance<ServerCertificateServiceInterface> serverCertificateService,
             TempFileManager tempFileManager) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
@@ -158,11 +149,14 @@ public class CertSignController {
 
     @AutoJobPostMapping(
             consumes = {
-                MediaType.MULTIPART_FORM_DATA_VALUE,
-                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+                MediaType.MULTIPART_FORM_DATA,
+                MediaType.APPLICATION_FORM_URLENCODED
             },
             value = "/cert-sign",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @POST
+    @Path("/cert-sign")
+    @Consumes({MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
     @StandardPdfResponse
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
@@ -170,8 +164,44 @@ public class CertSignController {
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
                             + " file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
+    public Response signPDFWithCert(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("certType") String certTypeForm,
+            @RestForm("privateKeyFile") FileUpload privateKeyUpload,
+            @RestForm("certFile") FileUpload certUpload,
+            @RestForm("p12File") FileUpload p12Upload,
+            @RestForm("jksFile") FileUpload jksUpload,
+            @RestForm("password") String passwordForm,
+            @RestForm("showSignature") Boolean showSignatureForm,
+            @RestForm("reason") String reasonForm,
+            @RestForm("location") String locationForm,
+            @RestForm("name") String nameForm,
+            @RestForm("pageNumber") Integer pageNumberForm,
+            @RestForm("showLogo") Boolean showLogoForm)
             throws Exception {
+        // TODO: Migration required - collaborator edit needed in
+        // SignPDFWithCertRequest (model/api/security): its privateKeyFile/certFile/p12File/jksFile
+        // fields still import org.springframework.web.multipart.MultipartFile. They must be
+        // changed to stirling.software.common.model.MultipartFile so the
+        // FileUploadMultipartFile.of(...) values below type-check and the getBytes/getInputStream/
+        // isEmpty usages in this controller compile. The inherited fileInput already uses the shim.
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setCertType(certTypeForm);
+        request.setPrivateKeyFile(FileUploadMultipartFile.of(privateKeyUpload));
+        request.setCertFile(FileUploadMultipartFile.of(certUpload));
+        request.setP12File(FileUploadMultipartFile.of(p12Upload));
+        request.setJksFile(FileUploadMultipartFile.of(jksUpload));
+        request.setPassword(passwordForm);
+        request.setShowSignature(showSignatureForm);
+        request.setReason(reasonForm);
+        request.setLocation(locationForm);
+        request.setName(nameForm);
+        request.setPageNumber(pageNumberForm);
+        request.setShowLogo(showLogoForm);
+
         MultipartFile pdf = request.getFileInput();
         String certType = request.getCertType();
         MultipartFile privateKeyFile = request.getPrivateKeyFile();
@@ -228,22 +258,24 @@ public class CertSignController {
                 ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
             case "SERVER":
-                if (serverCertificateService == null) {
+                if (!serverCertificateService.isResolvable()) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.serverCertificateNotAvailable",
                             "Server certificate service is not available in this edition");
                 }
-                if (!serverCertificateService.isEnabled()) {
+                ServerCertificateServiceInterface serverCertService =
+                        serverCertificateService.get();
+                if (!serverCertService.isEnabled()) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.serverCertificateDisabled",
                             "Server certificate feature is disabled");
                 }
-                if (!serverCertificateService.hasServerCertificate()) {
+                if (!serverCertService.hasServerCertificate()) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.serverCertificateNotFound", "No server certificate configured");
                 }
-                ks = serverCertificateService.getServerKeyStore();
-                keystorePassword = serverCertificateService.getServerCertificatePassword();
+                ks = serverCertService.getServerKeyStore();
+                keystorePassword = serverCertService.getServerCertificatePassword();
                 break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(

@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.common.model.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.AttachmentInfo;
 

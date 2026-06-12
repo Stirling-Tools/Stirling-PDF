@@ -11,15 +11,18 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,15 +36,17 @@ import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.general.EditTextOperation;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
 
 import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Find/replace text editing for PDFs. Round-trips through {@link PdfJsonConversionService}: the
@@ -62,6 +67,8 @@ import tools.jackson.core.type.TypeReference;
  */
 @Slf4j
 @GeneralApi
+@Path("/api/v1/general")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class EditTextController {
 
@@ -69,17 +76,13 @@ public class EditTextController {
 
     private final PdfJsonConversionService pdfJsonConversionService;
     private final TempFileManager tempFileManager;
+    private final ObjectMapper objectMapper;
 
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                List.class,
-                "edits",
-                new JsonListPropertyEditor<>(new TypeReference<List<EditTextOperation>>() {}));
-    }
-
+    @POST
+    @Path("/edit-text")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = "multipart/form-data",
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/edit-text",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
@@ -96,8 +99,28 @@ public class EditTextController {
                             + " single replacement run anchored at the leftmost matched position;"
                             + " centered or tracked text may shift left when its content changes."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> editText(@ModelAttribute EditTextRequest request)
+    public Response editText(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers,
+            @RestForm("edits") String editsJson,
+            @RestForm("wholeWordSearch") Boolean wholeWordSearch)
             throws Exception {
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (pageNumbers != null) {
+            request.setPageNumbers(pageNumbers);
+        }
+        request.setWholeWordSearch(wholeWordSearch);
+        // Was bound via @InitBinder + JsonListPropertyEditor under Spring; the multipart "edits"
+        // field arrives as a JSON array string, parsed here with the same TypeReference.
+        if (editsJson != null && !editsJson.isBlank()) {
+            request.setEdits(
+                    objectMapper.readValue(
+                            editsJson, new TypeReference<List<EditTextOperation>>() {}));
+        }
+
         MultipartFile inputFile = request.getFileInput();
         if (inputFile == null) {
             throw ExceptionUtils.createFileNullOrEmptyException();

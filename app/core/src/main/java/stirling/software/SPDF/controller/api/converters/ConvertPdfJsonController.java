@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -9,19 +10,24 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +41,7 @@ import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -43,6 +50,8 @@ import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
 @ConvertApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/convert")
 @RequiredArgsConstructor
 public class ConvertPdfJsonController {
 
@@ -52,9 +61,12 @@ public class ConvertPdfJsonController {
     private final PdfJsonConversionService pdfJsonConversionService;
     private final TempFileManager tempFileManager;
 
-    @Autowired(required = false)
-    private JobOwnershipService jobOwnershipService;
+    // @Autowired(required = false) -> CDI Instance<T> (optional / may be unsatisfied).
+    @Inject Instance<JobOwnershipService> jobOwnershipService;
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/text-editor")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = "multipart/form-data",
             value = "/pdf/text-editor",
@@ -63,11 +75,18 @@ public class ConvertPdfJsonController {
             summary = "Convert PDF to Text Editor Format",
             description =
                     "Extracts PDF text, fonts, and metadata into an editable JSON structure for the text editor tool. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<Resource> convertPdfToJson(
-            @ModelAttribute PDFFile request,
-            @RequestParam(value = "lightweight", defaultValue = "false") boolean lightweight)
+    public Response convertPdfToJson(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("lightweight") Boolean lightweightParam)
             throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+        // TODO: Migration - PDFFile (@ModelAttribute) is not yet migrated to a multipart @BeanParam,
+        // so the request model is rebuilt here from individual @RestForm fields. Once the model
+        // carries @RestForm annotations, switch to @BeanParam binding.
+        PDFFile request = new PDFFile();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        boolean lightweight = Boolean.TRUE.equals(lightweightParam);
+
+        stirling.software.common.model.MultipartFile inputFile = request.getFileInput();
         if (inputFile == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
@@ -89,13 +108,17 @@ public class ConvertPdfJsonController {
         }
         try {
             logJsonResponse("pdf/text-editor", tempOut.getPath());
-            return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+            return WebResponseUtils.fileToWebResponse(
+                    tempOut, docName, MediaType.APPLICATION_JSON_TYPE);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/text-editor/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = "multipart/form-data",
             value = "/text-editor/pdf",
@@ -105,9 +128,15 @@ public class ConvertPdfJsonController {
             summary = "Convert Text Editor Format to PDF",
             description =
                     "Rebuilds a PDF from the editable JSON structure generated by the text editor tool. Input:JSON Output:PDF Type:SISO")
-    public ResponseEntity<Resource> convertJsonToPdf(@ModelAttribute GeneralFile request)
+    public Response convertJsonToPdf(@RestForm("fileInput") FileUpload fileUpload)
             throws Exception {
-        MultipartFile jsonFile = request.getFileInput();
+        // TODO: Migration - GeneralFile (@ModelAttribute) is not yet migrated to a multipart
+        // @BeanParam, so the request model is rebuilt here from the @RestForm file field. Once the
+        // model carries @RestForm annotations, switch to @BeanParam binding.
+        GeneralFile request = new GeneralFile();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+
+        stirling.software.common.model.MultipartFile jsonFile = request.getFileInput();
         if (jsonFile == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
@@ -130,6 +159,9 @@ public class ConvertPdfJsonController {
         return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/text-editor/metadata")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = "multipart/form-data",
             value = "/pdf/text-editor/metadata",
@@ -140,9 +172,15 @@ public class ConvertPdfJsonController {
                     "Extracts document metadata, fonts, and page dimensions for the text editor tool. Caches the document for"
                             + " subsequent page requests. Returns a server-generated jobId scoped to the"
                             + " authenticated user. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<Resource> extractPdfMetadata(@ModelAttribute PDFFile request)
+    public Response extractPdfMetadata(@RestForm("fileInput") FileUpload fileUpload)
             throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+        // TODO: Migration - PDFFile (@ModelAttribute) is not yet migrated to a multipart @BeanParam,
+        // so the request model is rebuilt here from the @RestForm file field. Once the model carries
+        // @RestForm annotations, switch to @BeanParam binding.
+        PDFFile request = new PDFFile();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+
+        stirling.software.common.model.MultipartFile inputFile = request.getFileInput();
         if (inputFile == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
@@ -162,20 +200,22 @@ public class ConvertPdfJsonController {
         }
         try {
             logJsonResponse("pdf/text-editor/metadata", tempOut.getPath());
-            return ResponseEntity.ok()
-                    .header("X-Job-Id", scopedJobKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .contentLength(Files.size(tempOut.getPath()))
-                    .body(new WebResponseUtils.ManagedTempFileResource(tempOut));
+            // WebResponseUtils.ManagedTempFileResource was removed in the JAX-RS migration; stream
+            // the temp file inline (deleting it once written) so we can also attach the X-Job-Id
+            // header that this endpoint requires.
+            return managedJsonResponseWithHeader(tempOut, "X-Job-Id", scopedJobKey);
         } catch (IOException | RuntimeException e) {
             tempOut.close();
             throw e;
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/text-editor/partial/{jobId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @AutoJobPostMapping(
             value = "/pdf/text-editor/partial/{jobId}",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
@@ -184,10 +224,10 @@ public class ConvertPdfJsonController {
                     "Applies edits for the specified pages of a cached PDF and returns an updated PDF."
                             + " Requires the PDF to have been previously cached via the text editor metadata endpoint."
                             + " The jobId must be obtained from the metadata extraction endpoint.")
-    public ResponseEntity<Resource> exportPartialPdf(
-            @PathVariable String jobId,
-            @RequestBody PdfJsonDocument document,
-            @RequestParam(value = "filename", required = false) String filename)
+    public Response exportPartialPdf(
+            @PathParam("jobId") String jobId,
+            PdfJsonDocument document,
+            @org.jboss.resteasy.reactive.RestQuery("filename") String filename)
             throws Exception {
         if (document == null) {
             throw ExceptionUtils.createNullArgumentException("document");
@@ -220,15 +260,17 @@ public class ConvertPdfJsonController {
         }
     }
 
-    @GetMapping(value = "/pdf/text-editor/page/{jobId}/{pageNumber}")
+    @GET
+    @jakarta.ws.rs.Path("/pdf/text-editor/page/{jobId}/{pageNumber}")
     @Operation(
             summary = "Extract single page from cached PDF for text editor",
             description =
                     "Retrieves a single page's content from a previously cached PDF document for the text editor tool."
                             + " Requires prior call to /pdf/text-editor/metadata. The jobId must belong to the"
                             + " authenticated user. Output:JSON")
-    public ResponseEntity<Resource> extractSinglePage(
-            @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
+    public Response extractSinglePage(
+            @PathParam("jobId") String jobId, @PathParam("pageNumber") int pageNumber)
+            throws Exception {
 
         validateJobAccess(jobId);
 
@@ -242,22 +284,25 @@ public class ConvertPdfJsonController {
         }
         try {
             logJsonResponse("pdf/text-editor/page", tempOut.getPath());
-            return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+            return WebResponseUtils.fileToWebResponse(
+                    tempOut, docName, MediaType.APPLICATION_JSON_TYPE);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
     }
 
-    @GetMapping(value = "/pdf/text-editor/fonts/{jobId}/{pageNumber}")
+    @GET
+    @jakarta.ws.rs.Path("/pdf/text-editor/fonts/{jobId}/{pageNumber}")
     @Operation(
             summary = "Extract fonts used by a single cached page for text editor",
             description =
                     "Retrieves the font payloads used by a single page from a previously cached PDF document."
                             + " Requires prior call to /pdf/text-editor/metadata. The jobId must belong to the"
                             + " authenticated user. Output:JSON")
-    public ResponseEntity<Resource> extractPageFonts(
-            @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
+    public Response extractPageFonts(
+            @PathParam("jobId") String jobId, @PathParam("pageNumber") int pageNumber)
+            throws Exception {
 
         validateJobAccess(jobId);
 
@@ -271,16 +316,20 @@ public class ConvertPdfJsonController {
         }
         try {
             logJsonResponse("pdf/text-editor/fonts/page", tempOut.getPath());
-            return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+            return WebResponseUtils.fileToWebResponse(
+                    tempOut, docName, MediaType.APPLICATION_JSON_TYPE);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/text-editor/clear-cache/{jobId}")
+    @Consumes(MediaType.WILDCARD)
     @AutoJobPostMapping(
             value = "/pdf/text-editor/clear-cache/{jobId}",
-            consumes = MediaType.ALL_VALUE,
+            consumes = MediaType.WILDCARD,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Clear cached PDF document for text editor",
@@ -288,17 +337,47 @@ public class ConvertPdfJsonController {
                     "Manually clears a cached PDF document used by the text editor to free up server resources."
                             + " Called automatically after 30 minutes. The jobId must belong to the"
                             + " authenticated user.")
-    public ResponseEntity<Void> clearCache(@PathVariable String jobId) {
+    public Response clearCache(@PathParam("jobId") String jobId) {
 
         validateJobAccess(jobId);
 
         pdfJsonConversionService.clearCachedDocument(jobId);
-        return ResponseEntity.ok().build();
+        return Response.ok().build();
+    }
+
+    /**
+     * Streams a managed temp file as a JSON response with an extra header, deleting the backing
+     * {@link TempFile} once the body has been written (or on failure). Mirrors the lifecycle of
+     * {@link WebResponseUtils#fileToWebResponse} but allows an additional response header.
+     */
+    private Response managedJsonResponseWithHeader(
+            TempFile tempOut, String headerName, String headerValue) throws IOException {
+        Path path = tempOut.getPath();
+        long len = Files.size(path);
+        StreamingOutput body =
+                output -> {
+                    try (InputStream in = Files.newInputStream(path)) {
+                        in.transferTo(output);
+                    } finally {
+                        try {
+                            tempOut.close();
+                        } catch (Exception closeEx) {
+                            log.warn(
+                                    "Failed to clean up temp file after streaming response",
+                                    closeEx);
+                        }
+                    }
+                };
+        return Response.ok(body)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .header(headerName, headerValue)
+                .header(HttpHeaders.CONTENT_LENGTH, len)
+                .build();
     }
 
     private String getScopedJobKey(String baseJobId) {
-        if (jobOwnershipService != null) {
-            return jobOwnershipService.createScopedJobKey(baseJobId);
+        if (jobOwnershipService.isResolvable()) {
+            return jobOwnershipService.get().createScopedJobKey(baseJobId);
         }
         return baseJobId;
     }
@@ -508,8 +587,8 @@ public class ConvertPdfJsonController {
     }
 
     private void validateJobAccess(String jobId) {
-        if (jobOwnershipService != null) {
-            jobOwnershipService.validateJobAccess(jobId);
+        if (jobOwnershipService.isResolvable()) {
+            jobOwnershipService.get().validateJobAccess(jobId);
         }
     }
 }

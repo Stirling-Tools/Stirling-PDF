@@ -5,9 +5,10 @@ import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Locale;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
-import jakarta.annotation.PostConstruct;
+import io.quarkus.runtime.StartupEvent;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PdfJsonFontService {
 
@@ -39,8 +40,7 @@ public class PdfJsonFontService {
     private volatile boolean pythonCffConverterAvailable;
     private volatile boolean fontForgeCffConverterAvailable;
 
-    @PostConstruct
-    private void initialiseCffConverterAvailability() {
+    void initialiseCffConverterAvailability(@Observes StartupEvent event) {
         loadConfiguration();
         if (!cffConversionEnabled) {
             log.warn("[FONT-DEBUG] CFF conversion is DISABLED in configuration");

@@ -14,25 +14,26 @@ import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Component;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontSignatureCalculator;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class Type3FontLibrary {
 
     private final ObjectMapper objectMapper;
-    private final ResourceLoader resourceLoader;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
     private String indexLocation;
@@ -54,7 +55,7 @@ public class Type3FontLibrary {
             entries = List.of();
             return;
         }
-        Resource resource = resourceLoader.getResource(indexLocation);
+        Resource resource = getResource(resolveLocation(indexLocation));
         if (!resource.exists()) {
             log.info("[TYPE3] Library index {} not found; Type3 library disabled", indexLocation);
             entries = List.of();
@@ -238,13 +239,27 @@ public class Type3FontLibrary {
             throw new IOException("Resource location is null or blank");
         }
         String resolved = resolveLocation(location);
-        Resource resource = resourceLoader.getResource(resolved);
+        Resource resource = getResource(resolved);
         if (!resource.exists()) {
             throw new IOException("Resource not found: " + resolved);
         }
         try (InputStream inputStream = resource.getInputStream()) {
             return inputStream.readAllBytes();
         }
+    }
+
+    // MIGRATION: replaces Spring's ResourceLoader.getResource(location). Resolves the same
+    // prefixes the codebase uses: "classpath:" -> ClassPathResource, "file:"/everything else ->
+    // FileSystemResource. Locations are pre-normalised by resolveLocation (bare paths get a
+    // "classpath:" prefix), matching Spring DefaultResourceLoader behaviour for prefix-less paths.
+    private Resource getResource(String location) {
+        if (location != null && location.startsWith("classpath:")) {
+            return new ClassPathResource(location.substring("classpath:".length()));
+        }
+        if (location != null && location.startsWith("file:")) {
+            return new FileSystemResource(location.substring("file:".length()));
+        }
+        return new FileSystemResource(location);
     }
 
     private String resolveLocation(String location) {

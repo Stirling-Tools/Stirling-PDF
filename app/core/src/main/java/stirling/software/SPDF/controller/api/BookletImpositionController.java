@@ -12,40 +12,46 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.BookletImpositionRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/general")
-@Tag(name = "General", description = "General APIs")
+@GeneralApi
+@Path("/api/v1/general")
+@jakarta.enterprise.context.ApplicationScoped
 @RequiredArgsConstructor
 public class BookletImpositionController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/booklet-imposition")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/booklet-imposition",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Create a booklet with proper page imposition",
@@ -53,8 +59,38 @@ public class BookletImpositionController {
                     "This operation combines page reordering for booklet printing with multi-page layout. "
                             + "It rearranges pages in the correct order for booklet printing and places multiple pages "
                             + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> createBookletImposition(
-            @ModelAttribute BookletImpositionRequest request) throws IOException {
+    public Response createBookletImposition(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pagesPerSheet") Integer pagesPerSheetForm,
+            @RestForm("addBorder") Boolean addBorderForm,
+            @RestForm("spineLocation") String spineLocationForm,
+            @RestForm("addGutter") Boolean addGutterForm,
+            @RestForm("gutterSize") Float gutterSizeForm,
+            @RestForm("doubleSided") Boolean doubleSidedForm,
+            @RestForm("duplexPass") String duplexPassForm,
+            @RestForm("flipOnShortEdge") Boolean flipOnShortEdgeForm)
+            throws IOException {
+
+        BookletImpositionRequest request = new BookletImpositionRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (pagesPerSheetForm != null) {
+            request.setPagesPerSheet(pagesPerSheetForm);
+        }
+        request.setAddBorder(addBorderForm);
+        if (spineLocationForm != null) {
+            request.setSpineLocation(spineLocationForm);
+        }
+        request.setAddGutter(addGutterForm);
+        if (gutterSizeForm != null) {
+            request.setGutterSize(gutterSizeForm);
+        }
+        request.setDoubleSided(doubleSidedForm);
+        if (duplexPassForm != null) {
+            request.setDuplexPass(duplexPassForm);
+        }
+        request.setFlipOnShortEdge(flipOnShortEdgeForm);
 
         MultipartFile file = request.getFileInput();
         int pagesPerSheet = request.getPagesPerSheet();

@@ -8,13 +8,17 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +27,11 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
-import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.io.Resource;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -37,7 +42,11 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.ObjectMapper;
 
+// MIGRATION (Spring -> JAX-RS): @PipelineApi now supplies only the OpenAPI @Tag; the routing base
+// path must be declared explicitly via @Path (see @PipelineApi javadoc: "/api/v1/pipeline").
 @PipelineApi
+@Path("/api/v1/pipeline")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class PipelineController {
@@ -50,9 +59,16 @@ public class PipelineController {
 
     private final TempFileManager tempFileManager;
 
+    // MIGRATION (Spring -> JAX-RS): @AutoJobPostMapping is now a CDI interceptor binding and no longer
+    // provides routing, so the explicit @POST + @Path + @Consumes are added alongside it.
+    // The former @ModelAttribute HandleDataRequest is bound here as multipart @RestForm fields: the
+    // file array as List<FileUpload> and the JSON config as a String form field.
+    @POST
+    @Path("/handleData")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/handleData",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
@@ -61,12 +77,23 @@ public class PipelineController {
                     "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
                             + "Users provide files and a JSON configuration defining the sequence of operations to perform. "
                             + "Input:PDF Output:PDF/ZIP Type:MIMO")
-    public ResponseEntity<Resource> handleData(@ModelAttribute HandleDataRequest request)
+    public Response handleData(
+            @RestForm("fileInput") List<FileUpload> fileInput, @RestForm("json") String jsonString)
             throws DatabindException, JacksonException {
-        MultipartFile[] files = request.getFileInput();
-        String jsonString = request.getJson();
-        if (files == null) {
+        if (fileInput == null) {
             return null;
+        }
+        // MIGRATION (Spring -> JAX-RS): adapt the inbound multipart uploads to the migration shim
+        // MultipartFile so they can be passed to the existing service layer.
+        // TODO: Migration required - PipelineProcessor.generateInputFiles still declares the Spring
+        // org.springframework.web.multipart.MultipartFile[] parameter type. When that collaborator is
+        // migrated to stirling.software.common.model.MultipartFile[], this array type lines up. Until
+        // then this controller will not compile against the processor; the adapter call below targets
+        // the migrated shim type.
+        stirling.software.common.model.MultipartFile[] files =
+                new stirling.software.common.model.MultipartFile[fileInput.size()];
+        for (int i = 0; i < fileInput.size(); i++) {
+            files[i] = FileUploadMultipartFile.of(fileInput.get(i));
         }
         PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
         log.info("Received POST request to /handleData with {} files", files.length);
@@ -99,7 +126,7 @@ public class PipelineController {
                     return WebResponseUtils.fileToWebResponse(
                             singleTempFile,
                             singleFile.getFilename(),
-                            MediaType.APPLICATION_OCTET_STREAM);
+                            MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
                 } catch (Exception e) {
                     singleTempFile.close();
                     throw e;

@@ -13,13 +13,17 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +35,14 @@ import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@Path("/api/v1/convert")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class ExtractCSVController {
@@ -43,9 +50,12 @@ public class ExtractCSVController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TabulaTableParser tabulaTableParser;
 
+    @POST
+    @Path("/pdf/csv")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/pdf/csv",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @CsvConversionResponse
     @Operation(
@@ -53,7 +63,19 @@ public class ExtractCSVController {
             description =
                     "This operation takes an input PDF file and returns CSV file of whole page."
                             + " Input:PDF Output:CSV Type:SISO")
-    public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums request) throws Exception {
+    public Response pdfToCsv(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers)
+            throws Exception {
+
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (pageNumbers != null) {
+            request.setPageNumbers(pageNumbers);
+        }
+
         String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
@@ -80,7 +102,7 @@ public class ExtractCSVController {
             }
 
             if (csvEntries.isEmpty()) {
-                return ResponseEntity.noContent().build();
+                return Response.noContent().build();
             } else if (csvEntries.size() == 1) {
                 return createCsvResponse(csvEntries.get(0), baseName);
             } else {
@@ -89,8 +111,7 @@ public class ExtractCSVController {
         }
     }
 
-    private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName)
-            throws Exception {
+    private Response createZipResponse(List<CsvEntry> entries, String baseName) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
             for (CsvEntry entry : entries) {
@@ -104,18 +125,16 @@ public class ExtractCSVController {
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
                 baseName + "_extracted.zip",
-                MediaType.APPLICATION_OCTET_STREAM);
+                MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
     }
 
-    private ResponseEntity<String> createCsvResponse(CsvEntry entry, String baseName) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(
-                ContentDisposition.builder("attachment")
-                        .filename(baseName + "_extracted.csv")
-                        .build());
-        headers.setContentType(MediaType.parseMediaType("text/csv"));
-
-        return ResponseEntity.ok().headers(headers).body(entry.content());
+    private Response createCsvResponse(CsvEntry entry, String baseName) {
+        return Response.ok(entry.content())
+                .type(MediaType.valueOf("text/csv"))
+                .header(
+                        "Content-Disposition",
+                        "attachment; filename=\"" + baseName + "_extracted.csv\"")
+                .build();
     }
 
     private String generateEntryName(String baseName, int pageNum, int tableIndex) {

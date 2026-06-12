@@ -6,17 +6,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,8 @@ import stirling.software.common.annotations.api.InfoApi;
 import stirling.software.common.model.ApplicationProperties;
 
 @InfoApi
+@Path("/api/v1/info")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class MetricsController {
@@ -37,7 +40,8 @@ public class MetricsController {
     private final ApplicationProperties applicationProperties;
     private final MeterRegistry meterRegistry;
     private final EndpointInspector endpointInspector;
-    private final Optional<WeeklyActiveUsersService> wauService;
+    // @Autowired(required=false) Optional<WeeklyActiveUsersService> -> CDI Instance<T> (optional bean)
+    private final Instance<WeeklyActiveUsersService> wauService;
     private boolean metricsEnabled;
 
     @PostConstruct
@@ -45,25 +49,27 @@ public class MetricsController {
         metricsEnabled = applicationProperties.getMetrics().isEnabled();
     }
 
-    @GetMapping("/status")
+    @GET
+    @Path("/status")
     @Operation(
             summary = "Application status and version",
             description =
                     "This endpoint returns the status of the application and its version number.")
-    public ResponseEntity<?> getStatus() {
+    public Response getStatus() {
         return getApplicationStatus();
     }
 
-    @GetMapping("/health")
+    @GET
+    @Path("/health")
     @Operation(
             summary = "Application health check",
             description =
                     "This endpoint returns the health status of the application and its version number. Mirrors /api/v1/info/status.")
-    public ResponseEntity<?> getHealth() {
+    public Response getHealth() {
         return getApplicationStatus();
     }
 
-    private ResponseEntity<?> getApplicationStatus() {
+    private Response getApplicationStatus() {
         Map<String, String> status = new HashMap<>();
         status.put("status", "UP");
         String version = getClass().getPackage().getImplementationVersion();
@@ -71,7 +77,7 @@ public class MetricsController {
             version = getVersionFromProperties();
         }
         status.put("version", version);
-        return ResponseEntity.ok(status);
+        return Response.ok(status).build();
     }
 
     private String getVersionFromProperties() {
@@ -87,145 +93,165 @@ public class MetricsController {
         return null;
     }
 
-    @GetMapping("/load")
+    @GET
+    @Path("/load")
     @Operation(
             summary = "GET request count",
             description =
                     "This endpoint returns the total count of GET requests for a specific endpoint or all endpoints.")
-    public ResponseEntity<?> getPageLoads(
-            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
-                    Optional<String> endpoint) {
+    public Response getPageLoads(
+            @QueryParam("endpoint") @Parameter(description = "endpoint") String endpoint) {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
-            double count = getRequestCount("GET", endpoint);
-            return ResponseEntity.ok(count);
+            double count = getRequestCount("GET", Optional.ofNullable(endpoint));
+            return Response.ok(count).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/load/unique")
+    @GET
+    @Path("/load/unique")
     @Operation(
             summary = "Unique users count for GET requests",
             description =
                     "This endpoint returns the count of unique users for GET requests for a specific endpoint or all endpoints.")
-    public ResponseEntity<?> getUniquePageLoads(
-            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
-                    Optional<String> endpoint) {
+    public Response getUniquePageLoads(
+            @QueryParam("endpoint") @Parameter(description = "endpoint") String endpoint) {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
-            double count = getUniqueUserCount("GET", endpoint);
-            return ResponseEntity.ok(count);
+            double count = getUniqueUserCount("GET", Optional.ofNullable(endpoint));
+            return Response.ok(count).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/load/all")
+    @GET
+    @Path("/load/all")
     @Operation(
             summary = "GET requests count for all endpoints",
             description = "This endpoint returns the count of GET requests for each endpoint.")
-    public ResponseEntity<?> getAllEndpointLoads() {
+    public Response getAllEndpointLoads() {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
             List<EndpointCount> results = getEndpointCounts("GET");
-            return ResponseEntity.ok(results);
+            return Response.ok(results).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/load/all/unique")
+    @GET
+    @Path("/load/all/unique")
     @Operation(
             summary = "Unique users count for GET requests for all endpoints",
             description =
                     "This endpoint returns the count of unique users for GET requests for each endpoint.")
-    public ResponseEntity<?> getAllUniqueEndpointLoads() {
+    public Response getAllUniqueEndpointLoads() {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
             List<EndpointCount> results = getUniqueUserCounts("GET");
-            return ResponseEntity.ok(results);
+            return Response.ok(results).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/requests")
+    @GET
+    @Path("/requests")
     @Operation(
             summary = "POST request count",
             description =
                     "This endpoint returns the total count of POST requests for a specific endpoint or all endpoints.")
-    public ResponseEntity<?> getTotalRequests(
-            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
-                    Optional<String> endpoint) {
+    public Response getTotalRequests(
+            @QueryParam("endpoint") @Parameter(description = "endpoint") String endpoint) {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
-            double count = getRequestCount("POST", endpoint);
-            return ResponseEntity.ok(count);
+            double count = getRequestCount("POST", Optional.ofNullable(endpoint));
+            return Response.ok(count).build();
         } catch (Exception e) {
-            return ResponseEntity.ok(-1);
+            return Response.ok(-1).build();
         }
     }
 
-    @GetMapping("/requests/unique")
+    @GET
+    @Path("/requests/unique")
     @Operation(
             summary = "Unique users count for POST requests",
             description =
                     "This endpoint returns the count of unique users for POST requests for a specific endpoint or all endpoints.")
-    public ResponseEntity<?> getUniqueTotalRequests(
-            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
-                    Optional<String> endpoint) {
+    public Response getUniqueTotalRequests(
+            @QueryParam("endpoint") @Parameter(description = "endpoint") String endpoint) {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
-            double count = getUniqueUserCount("POST", endpoint);
-            return ResponseEntity.ok(count);
+            double count = getUniqueUserCount("POST", Optional.ofNullable(endpoint));
+            return Response.ok(count).build();
         } catch (Exception e) {
-            return ResponseEntity.ok(-1);
+            return Response.ok(-1).build();
         }
     }
 
-    @GetMapping("/requests/all")
+    @GET
+    @Path("/requests/all")
     @Operation(
             summary = "POST requests count for all endpoints",
             description = "This endpoint returns the count of POST requests for each endpoint.")
-    public ResponseEntity<?> getAllPostRequests() {
+    public Response getAllPostRequests() {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
             List<EndpointCount> results = getEndpointCounts("POST");
-            return ResponseEntity.ok(results);
+            return Response.ok(results).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/requests/all/unique")
+    @GET
+    @Path("/requests/all/unique")
     @Operation(
             summary = "Unique users count for POST requests for all endpoints",
             description =
                     "This endpoint returns the count of unique users for POST requests for each endpoint.")
-    public ResponseEntity<?> getAllUniquePostRequests() {
+    public Response getAllUniquePostRequests() {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         try {
             List<EndpointCount> results = getUniqueUserCounts("POST");
-            return ResponseEntity.ok(results);
+            return Response.ok(results).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -371,33 +397,40 @@ public class MetricsController {
                 .toList();
     }
 
-    @GetMapping("/uptime")
-    public ResponseEntity<?> getUptime() {
+    @GET
+    @Path("/uptime")
+    public Response getUptime() {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
         LocalDateTime now = LocalDateTime.now();
         Duration uptime = Duration.between(StartupApplicationListener.startTime, now);
-        return ResponseEntity.ok(formatDuration(uptime));
+        return Response.ok(formatDuration(uptime)).build();
     }
 
-    @GetMapping("/wau")
+    @GET
+    @Path("/wau")
     @Operation(
             summary = "Weekly Active Users statistics",
             description =
                     "Returns WAU (Weekly Active Users) count and total unique browsers. "
                             + "Only available when security is disabled (no-login mode). "
                             + "Tracks unique browsers via client-generated UUID in localStorage.")
-    public ResponseEntity<?> getWeeklyActiveUsers() {
+    public Response getWeeklyActiveUsers() {
         if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("This endpoint is disabled.")
+                    .build();
         }
 
         // Check if WAU service is available (only when security.enableLogin=false)
-        if (wauService.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(
-                            "WAU tracking is only available when security is disabled (no-login mode)");
+        if (wauService.isUnsatisfied()) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(
+                            "WAU tracking is only available when security is disabled (no-login mode)")
+                    .build();
         }
 
         WeeklyActiveUsersService service = wauService.get();
@@ -408,7 +441,7 @@ public class MetricsController {
         wauStats.put("daysOnline", service.getDaysOnline());
         wauStats.put("trackingSince", service.getStartTime().toString());
 
-        return ResponseEntity.ok(wauStats);
+        return Response.ok(wauStats).build();
     }
 
     private String formatDuration(Duration duration) {

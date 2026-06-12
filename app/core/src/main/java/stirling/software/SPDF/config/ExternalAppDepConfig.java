@@ -12,9 +12,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.context.annotation.Configuration;
+import io.quarkus.runtime.StartupEvent;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +27,7 @@ import stirling.software.common.util.RegexPatternUtils;
  * PATHs) - supports Windows+Unix in a single place - de-duplicates logic for version extraction &
  * command availability - keeps group <-> command mapping and feature formatting tidy & immutable
  */
-@Configuration
+@ApplicationScoped
 @Slf4j
 public class ExternalAppDepConfig {
 
@@ -83,7 +84,10 @@ public class ExternalAppDepConfig {
         return dependenciesChecked;
     }
 
-    @PostConstruct
+    void onStart(@Observes StartupEvent event) {
+        checkDependencies();
+    }
+
     public void checkDependencies() {
         try {
             // core checks in parallel

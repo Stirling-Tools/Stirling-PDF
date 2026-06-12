@@ -12,14 +12,17 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,8 @@ import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -38,6 +43,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/convert")
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertEbookToPDFController {
@@ -57,8 +64,11 @@ public class ConvertEbookToPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/ebook/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/ebook/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -66,8 +76,26 @@ public class ConvertEbookToPDFController {
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
                             + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
-    public ResponseEntity<Resource> convertEbookToPdf(
-            @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
+    public Response convertEbookToPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("embedAllFonts") Boolean embedAllFonts,
+            @RestForm("includeTableOfContents") Boolean includeTableOfContents,
+            @RestForm("includePageNumbers") Boolean includePageNumbers,
+            @RestForm("optimizeForEbook") Boolean optimizeForEbook)
+            throws Exception {
+        // TODO: Migration required - ConvertEbookToPdfRequest (was bound via @ModelAttribute) is
+        // not yet migrated: its fileInput field still uses org.springframework MultipartFile, so
+        // setFileInput(FileUploadMultipartFile.of(...)) will only compile once the model field is
+        // switched to stirling.software.common.model.MultipartFile. The request model is rebuilt
+        // here from individual @RestForm fields; once the model carries @RestForm annotations,
+        // switch this method to accept it directly as a @jakarta.ws.rs.BeanParam.
+        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setEmbedAllFonts(embedAllFonts);
+        request.setIncludeTableOfContents(includeTableOfContents);
+        request.setIncludePageNumbers(includePageNumbers);
+        request.setOptimizeForEbook(optimizeForEbook);
+
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
         }
@@ -166,7 +194,7 @@ public class ConvertEbookToPDFController {
                     document.save(tempOut.getFile());
                 }
             }
-            ResponseEntity<Resource> response =
+            Response response =
                     WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
             tempOut = null;
             return response;

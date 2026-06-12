@@ -2,18 +2,18 @@ package stirling.software.SPDF.controller.web;
 
 import java.util.Locale;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class UploadLimitService {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    @Inject ApplicationProperties applicationProperties;
 
     public long getUploadLimit() {
         String raw =

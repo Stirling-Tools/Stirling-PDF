@@ -3,15 +3,20 @@ package stirling.software.SPDF.controller.api.security;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +27,13 @@ import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.util.ExceptionUtils;
 
 @SecurityApi
+@Path("/api/v1/security")
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class VerifyPDFController {
@@ -38,12 +47,17 @@ public class VerifyPDFController {
                             + "Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards "
                             + "from the document's XMP metadata and validates compliance. "
                             + "Input:PDF Output:JSON Type:SISO")
+    @POST
+    @Path("/verify-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/verify-pdf",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
-    public ResponseEntity<List<PDFVerificationResult>> verifyPDF(
-            @ModelAttribute PDFVerificationRequest request) {
+    public Response verifyPDF(@RestForm("fileInput") FileUpload fileUpload) {
+
+        PDFVerificationRequest request = new PDFVerificationRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
 
         MultipartFile file = request.getFileInput();
 
@@ -62,7 +76,7 @@ public class VerifyPDFController {
                     file.getOriginalFilename(),
                     results.size());
 
-            return ResponseEntity.ok(results);
+            return Response.ok(results).build();
 
         } catch (ValidationException e) {
             log.error("Validation exception for file: {}", file.getOriginalFilename(), e);
