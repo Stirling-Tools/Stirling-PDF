@@ -6,9 +6,9 @@ import { parse } from "smol-toml";
 
 const REPO_ROOT = path.join(__dirname, "../../../..");
 const SRC_ROOT = path.join(__dirname, "../..");
-const EN_GB_FILE = path.join(
+const EN_US_FILE = path.join(
   __dirname,
-  "../../../public/locales/en-GB/translation.toml",
+  "../../../public/locales/en-US/translation.toml",
 );
 
 const IGNORED_DIRS = new Set(["tests", "__mocks__"]);
@@ -161,13 +161,13 @@ const getTranslationLookupKeys = (key: string): string[] => {
 
 describe("Unused translation coverage", () => {
   test(
-    "fails if any en-GB translation key has no source references",
+    "fails if any en-US translation key has no source references",
     { timeout: 30_000 },
     () => {
-      expect(fs.existsSync(EN_GB_FILE)).toBe(true);
+      expect(fs.existsSync(EN_US_FILE)).toBe(true);
 
-      const enGb = parse(fs.readFileSync(EN_GB_FILE, "utf8"));
-      const availableKeys = Array.from(flattenKeys(enGb));
+      const enUs = parse(fs.readFileSync(EN_US_FILE, "utf8"));
+      const availableKeys = Array.from(flattenKeys(enUs));
       expect(availableKeys.length).toBeGreaterThan(100); // sanity check
 
       const sourceFiles = listSourceFiles();
@@ -201,20 +201,20 @@ describe("Unused translation coverage", () => {
       });
 
       const localeRelative = path
-        .relative(REPO_ROOT, EN_GB_FILE)
+        .relative(REPO_ROOT, EN_US_FILE)
         .replace(/\\/g, "/");
 
       // GitHub Annotations format so unused keys show up tagged on the
       // translation file in CI.
       for (const key of unused) {
         process.stderr.write(
-          `::error file=${localeRelative}::Unused en-GB translation: ${key}\n`,
+          `::error file=${localeRelative}::Unused en-US translation: ${key}\n`,
         );
       }
 
       expect(
         unused,
-        `Found ${unused.length} unused en-GB translation key(s). ` +
+        `Found ${unused.length} unused en-US translation key(s). ` +
           `Remove them from ${localeRelative}, or (if the usage is too ` +
           `dynamic for the heuristic to spot) add to IGNORED_KEY_PATTERNS ` +
           `in this test.`,

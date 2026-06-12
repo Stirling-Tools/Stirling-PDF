@@ -6,9 +6,9 @@ import { parse } from "smol-toml";
 
 const REPO_ROOT = path.join(__dirname, "../../../..");
 const SRC_ROOT = path.join(__dirname, "../..");
-const EN_GB_FILE = path.join(
+const EN_US_FILE = path.join(
   __dirname,
-  "../../../public/locales/en-GB/translation.toml",
+  "../../../public/locales/en-US/translation.toml",
 );
 
 const IGNORED_DIRS = new Set(["tests", "__mocks__"]);
@@ -181,14 +181,14 @@ const extractKeys = (file: string): FoundKey[] => {
 
 describe("Missing translation coverage", () => {
   test(
-    "fails if any en-GB translation key used in source is missing",
+    "fails if any en-US translation key used in source is missing",
     { timeout: 10000 },
     () => {
-      expect(fs.existsSync(EN_GB_FILE)).toBe(true);
+      expect(fs.existsSync(EN_US_FILE)).toBe(true);
 
-      const localeContent = fs.readFileSync(EN_GB_FILE, "utf8");
-      const enGb = parse(localeContent);
-      const availableKeys = flattenKeys(enGb);
+      const localeContent = fs.readFileSync(EN_US_FILE, "utf8");
+      const enUs = parse(localeContent);
+      const availableKeys = flattenKeys(enUs);
 
       const usedKeys = listSourceFiles()
         .flatMap(extractKeys)
@@ -221,7 +221,7 @@ describe("Missing translation coverage", () => {
       // Output errors in GitHub Annotations format so they appear tagged in the code in CI
       for (const { key, fallback, file, line, column } of annotations) {
         process.stderr.write(
-          `::error file=${file},line=${line},col=${column}::Missing en-GB translation for ${key} (${fallback})\n`,
+          `::error file=${file},line=${line},col=${column}::Missing en-US translation for ${key} (${fallback})\n`,
         );
       }
 
