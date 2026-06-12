@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { Routes, Route, useLocation, useParams } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -16,7 +16,6 @@ import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
-import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
@@ -36,24 +35,15 @@ function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
 }
 
-// Minimal providers for public, no-auth pages (the mobile-scanner QR page and
-// the participant signing page). Just theme + preferences, no AppProviders, so
-// no auth and no backend bootstrap - these render without a logged-in session.
+// Minimal providers for the public, no-auth mobile-scanner page. Just theme +
+// preferences, no AppProviders, so no auth and no backend bootstrap - it
+// renders without a logged-in session.
 function PublicRouteProviders({ children }: { children: ReactNode }) {
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>{children}</RainbowThemeProvider>
     </PreferencesProvider>
   );
-}
-
-// Participant signing page - public, token-gated, no login required. The
-// participant API (/api/v1/workflow/participant/*) authenticates via the share
-// token, so it works without a Supabase session.
-function ParticipantViewPage() {
-  const { token } = useParams<{ token: string }>();
-  if (!token) return null;
-  return <ParticipantView token={token} />;
 }
 
 /**
@@ -88,17 +78,6 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileScannerPage />
-            </PublicRouteProviders>
-          }
-        />
-
-        {/* Participant signing - public, token-gated, no login required. Same
-            reasoning as the mobile scanner (kept outside AppProviders). */}
-        <Route
-          path="/workflow/sign/:token"
-          element={
-            <PublicRouteProviders>
-              <ParticipantViewPage />
             </PublicRouteProviders>
           }
         />
