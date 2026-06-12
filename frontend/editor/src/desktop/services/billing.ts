@@ -4,10 +4,8 @@
  * Routes Stripe session/portal creation through the desktop supabase-js client's
  * functions.invoke with an EXPLICIT Authorization: Bearer header carrying the
  * authService token (the desktop client is configured persistSession:false /
- * autoRefreshToken:false, so it never auto-attaches a JWT). This is the same
- * transport saasBillingService already uses to reach the Stripe billing edge
- * functions (getBillingStatus / openCheckout / openBillingPortal) — the request
- * is fulfilled by the webview fetch against the Supabase edge functions.
+ * autoRefreshToken:false, so it never auto-attaches a JWT). The request is
+ * fulfilled by the webview fetch against the Supabase edge functions.
  *
  * The one substantive difference from the web impl is the return URL: web uses
  * window.location.origin, but in the desktop webview that is a localhost dev

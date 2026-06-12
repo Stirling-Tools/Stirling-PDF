@@ -14,6 +14,12 @@ import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 interface SaasOnboardingModalProps {
   opened: boolean;
   onClose: () => void;
+  /**
+   * Drop the closing "desktop-install" slide. Set by the desktop app, which
+   * reuses this flow but has no reason to pitch its own download. Defaults to
+   * false (slide shown) so the web (saas) flow is unchanged.
+   */
+  hideDesktopInstall?: boolean;
 }
 
 export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {

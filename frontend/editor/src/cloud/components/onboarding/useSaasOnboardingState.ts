@@ -25,11 +25,18 @@ interface UseSaasOnboardingStateResult {
 interface UseSaasOnboardingStateProps {
   opened: boolean;
   onClose: () => void;
+  /**
+   * Drop the closing "desktop-install" slide. The desktop app reuses this
+   * flow but has no reason to pitch its own download. Defaults to false
+   * (slide shown) so the web (saas) flow is unchanged.
+   */
+  hideDesktopInstall?: boolean;
 }
 
 export function useSaasOnboardingState({
   opened,
   onClose,
+  hideDesktopInstall = false,
 }: UseSaasOnboardingStateProps): UseSaasOnboardingStateResult | null {
   const { loading } = useAuth();
   const { wallet } = useWallet();
@@ -81,8 +88,8 @@ export function useSaasOnboardingState({
   const showTeamSlide = isTeamLeader;
 
   const flowSlideIds = useMemo(
-    () => resolveSaasFlow({ showUsageSlide, showTeamSlide }),
-    [showUsageSlide, showTeamSlide],
+    () => resolveSaasFlow({ showUsageSlide, showTeamSlide, hideDesktopInstall }),
+    [showUsageSlide, showTeamSlide, hideDesktopInstall],
   );
   const totalSteps = flowSlideIds.length;
   const maxIndex = Math.max(totalSteps - 1, 0);
