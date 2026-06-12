@@ -18,4 +18,9 @@ public record OutputSpec(String type, Map<String, Object> options) {
     public static OutputSpec inline() {
         return new OutputSpec("inline", Map.of());
     }
+
+    /** Write outputs to a directory on disk. */
+    public static OutputSpec folder(String directory) {
+        return new OutputSpec("folder", Map.of("directory", directory));
+    }
 }
