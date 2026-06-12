@@ -88,7 +88,7 @@ public class PrintFileController {
 
             log.info("Selected Printer: {}", selectedService.getName());
 
-            if (MediaType.APPLICATION_PDF.equals(contentType)) {
+            if ("application/pdf".equals(contentType)) {
                 // Use Stream-to-File pattern: write to temp file first, then load from file
                 Path tempFile = Files.createTempFile("print-", ".pdf");
                 try {

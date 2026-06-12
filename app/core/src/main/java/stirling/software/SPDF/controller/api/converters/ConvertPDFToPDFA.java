@@ -603,7 +603,7 @@ public class ConvertPDFToPDFA {
         MultipartFile inputFile = request.getFileInput();
 
         // Validate input file type
-        if (!MediaType.APPLICATION_PDF.toString().equals(inputFile.getContentType())) {
+        if (!"application/pdf".equals(inputFile.getContentType())) {
             log.error("Invalid input file type: {}", inputFile.getContentType());
             throw ExceptionUtils.createPdfFileRequiredException();
         }

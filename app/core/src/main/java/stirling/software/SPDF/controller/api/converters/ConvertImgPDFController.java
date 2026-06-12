@@ -26,7 +26,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -64,7 +63,7 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
 @ApplicationScoped
-@Path("/api/v1/convert")
+@jakarta.ws.rs.Path("/api/v1/convert")
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertImgPDFController {
@@ -81,7 +80,7 @@ public class ConvertImgPDFController {
     }
 
     @POST
-    @Path("/pdf/img")
+    @jakarta.ws.rs.Path("/pdf/img")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,
@@ -274,7 +273,7 @@ public class ConvertImgPDFController {
     }
 
     @POST
-    @Path("/img/pdf")
+    @jakarta.ws.rs.Path("/img/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,
@@ -329,7 +328,7 @@ public class ConvertImgPDFController {
     }
 
     @POST
-    @Path("/cbz/pdf")
+    @jakarta.ws.rs.Path("/cbz/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,
@@ -370,7 +369,7 @@ public class ConvertImgPDFController {
     }
 
     @POST
-    @Path("/pdf/cbz")
+    @jakarta.ws.rs.Path("/pdf/cbz")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,
@@ -388,12 +387,13 @@ public class ConvertImgPDFController {
         // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
         // and will not compile until that model file is migrated to the shim type.
         ConvertPdfToCbzRequest request = new ConvertPdfToCbzRequest();
-        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileInput(fileUpload);
         if (dpiParam != null) {
             request.setDpi(dpiParam);
         }
 
-        stirling.software.common.model.MultipartFile file = request.getFileInput();
+        stirling.software.common.model.MultipartFile file =
+                FileUploadMultipartFile.of(fileUpload);
         int dpi = request.getDpi();
 
         if (dpi <= 0) {
@@ -409,7 +409,7 @@ public class ConvertImgPDFController {
     }
 
     @POST
-    @Path("/cbr/pdf")
+    @jakarta.ws.rs.Path("/cbr/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,
@@ -450,7 +450,7 @@ public class ConvertImgPDFController {
     }
 
     @POST
-    @Path("/pdf/cbr")
+    @jakarta.ws.rs.Path("/pdf/cbr")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,

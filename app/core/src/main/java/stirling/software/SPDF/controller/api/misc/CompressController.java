@@ -41,7 +41,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -67,7 +66,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
-@Path("/api/v1/misc")
+@jakarta.ws.rs.Path("/api/v1/misc")
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
@@ -932,7 +931,7 @@ public class CompressController {
     }
 
     @POST
-    @Path("/compress-pdf")
+    @jakarta.ws.rs.Path("/compress-pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,

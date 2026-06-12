@@ -222,7 +222,9 @@ subprojects {
         implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
 
         // Core CDI container (replaces Spring DI). quarkus-arc is the implicit base for every module.
-        implementation 'io.quarkus:quarkus-arc'
+        // api-scoped so library modules expose io.quarkus.arc.* (profile annotations, Arc container)
+        // to the app module on its compile classpath.
+        api 'io.quarkus:quarkus-arc'
 
         // spring-boot-starter-actuator -> SmallRye Health + Micrometer (endpoints served at /q/*)
         implementation 'io.quarkus:quarkus-smallrye-health'

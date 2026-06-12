@@ -23,7 +23,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -49,7 +48,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
-@Path("/api/v1/convert")
+@jakarta.ws.rs.Path("/api/v1/convert")
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
@@ -70,7 +69,7 @@ public class ConvertWebsiteToPDF {
             value = "/url/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @POST
-    @Path("/url/pdf")
+    @jakarta.ws.rs.Path("/url/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Convert a URL to a PDF",

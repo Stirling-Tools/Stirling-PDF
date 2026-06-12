@@ -655,16 +655,16 @@ public class ScannerEffectController {
             }
 
             int baseRotation = request.getRotationValue() + request.getRotate();
-            int rotateVariance = request.getRotateVariance();
+            int effRotateVariance = request.getRotateVariance();
             int borderPx = request.getBorder();
-            float brightness = request.getBrightness();
-            float contrast = request.getContrast();
-            float blur = request.getBlur();
-            float noise = request.getNoise();
-            boolean yellowish = request.isYellowish();
-            int resolution = request.getResolution();
+            float effBrightness = request.getBrightness();
+            float effContrast = request.getContrast();
+            float effBlur = request.getBlur();
+            float effNoise = request.getNoise();
+            boolean effYellowish = request.isYellowish();
+            int effResolution = request.getResolution();
             int renderResolution = determineRenderResolution(request);
-            ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
+            ScannerEffectRequest.Colorspace effColorspace = request.getColorspace();
 
             long inputFileSize = Files.size(processingInput);
             byte[] renderingPdfBytes = null;
@@ -681,12 +681,12 @@ public class ScannerEffectController {
             if (properties != null && properties.getSystem() != null) {
                 maxSafeDpi = properties.getSystem().getMaxDPI();
             }
-            if (resolution > maxSafeDpi) {
+            if (effResolution > maxSafeDpi) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.dpiExceedsLimit",
                         "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
                                 + " memory issues and crashes. Please use a lower DPI value.",
-                        resolution,
+                        effResolution,
                         maxSafeDpi);
             }
 
@@ -744,15 +744,15 @@ public class ScannerEffectController {
                                                                                 renderingResources
                                                                                         .get(),
                                                                                 baseRotation,
-                                                                                rotateVariance,
+                                                                                effRotateVariance,
                                                                                 borderPx,
-                                                                                brightness,
-                                                                                contrast,
-                                                                                blur,
-                                                                                noise,
-                                                                                yellowish,
+                                                                                effBrightness,
+                                                                                effContrast,
+                                                                                effBlur,
+                                                                                effNoise,
+                                                                                effYellowish,
                                                                                 renderResolution,
-                                                                                colorspace))
+                                                                                effColorspace))
                                         .toList();
 
                         List<Future<ProcessedPage>> futures = customPool.invokeAll(tasks);

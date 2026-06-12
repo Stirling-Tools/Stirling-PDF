@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -83,38 +82,25 @@ public class ConvertEbookToPDFController {
             @RestForm("includePageNumbers") Boolean includePageNumbers,
             @RestForm("optimizeForEbook") Boolean optimizeForEbook)
             throws Exception {
-        // TODO: Migration required - ConvertEbookToPdfRequest (was bound via @ModelAttribute) is
-        // not yet migrated: its fileInput field still uses org.springframework MultipartFile, so
-        // setFileInput(FileUploadMultipartFile.of(...)) will only compile once the model field is
-        // switched to stirling.software.common.model.MultipartFile. The request model is rebuilt
-        // here from individual @RestForm fields; once the model carries @RestForm annotations,
-        // switch this method to accept it directly as a @jakarta.ws.rs.BeanParam.
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
-        request.setEmbedAllFonts(embedAllFonts);
-        request.setIncludeTableOfContents(includeTableOfContents);
-        request.setIncludePageNumbers(includePageNumbers);
-        request.setOptimizeForEbook(optimizeForEbook);
-
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
         }
 
-        MultipartFile inputFile = request.getFileInput();
+        MultipartFile inputFile = FileUploadMultipartFile.of(fileUpload);
         if (inputFile == null || inputFile.isEmpty()) {
             throw new IllegalArgumentException("No input file provided");
         }
 
-        boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
-        if (optimizeForEbook && !isGhostscriptEnabled()) {
+        boolean optimizeForEbookFlag = Boolean.TRUE.equals(optimizeForEbook);
+        if (optimizeForEbookFlag && !isGhostscriptEnabled()) {
             log.warn(
                     "Ghostscript optimization requested but Ghostscript is not enabled/available"
                             + " for ebook conversion");
-            optimizeForEbook = false;
+            optimizeForEbookFlag = false;
         }
-        boolean embedAllFonts = Boolean.TRUE.equals(request.getEmbedAllFonts());
-        boolean includeTableOfContents = Boolean.TRUE.equals(request.getIncludeTableOfContents());
-        boolean includePageNumbers = Boolean.TRUE.equals(request.getIncludePageNumbers());
+        boolean embedAllFontsFlag = Boolean.TRUE.equals(embedAllFonts);
+        boolean includeTableOfContentsFlag = Boolean.TRUE.equals(includeTableOfContents);
+        boolean includePageNumbersFlag = Boolean.TRUE.equals(includePageNumbers);
 
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -148,9 +134,9 @@ public class ConvertEbookToPDFController {
                 buildCalibreCommand(
                         inputPath,
                         outputPath,
-                        embedAllFonts,
-                        includeTableOfContents,
-                        includePageNumbers);
+                        embedAllFontsFlag,
+                        includeTableOfContentsFlag,
+                        includePageNumbersFlag);
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
                         .runCommandWithOutputHandling(command, workingDirectory.toFile());
@@ -177,7 +163,7 @@ public class ConvertEbookToPDFController {
         TempFile tempOut = null;
         try {
             tempOut = tempFileManager.createManagedTempFile(".pdf");
-            if (optimizeForEbook) {
+            if (optimizeForEbookFlag) {
                 byte[] pdfBytes = Files.readAllBytes(outputPath);
                 try {
                     byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);

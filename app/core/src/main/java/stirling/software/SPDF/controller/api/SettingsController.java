@@ -44,7 +44,8 @@ public class SettingsController {
     @Hidden
     public Response updateApiKey(@RestForm("enabled") Boolean enabled) throws IOException {
         if (applicationProperties.getSystem().getEnableAnalytics() != null) {
-            return Response.status(Response.Status.ALREADY_REPORTED)
+            // HTTP 208 ALREADY_REPORTED is not in JAX-RS Response.Status enum; use numeric code
+            return Response.status(208)
                     .entity(
                             Map.of(
                                     "message",

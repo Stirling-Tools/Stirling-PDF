@@ -138,8 +138,8 @@ public class EditTextController {
             }
         }
 
-        boolean wholeWordSearch = Boolean.TRUE.equals(request.getWholeWordSearch());
-        List<CompiledEdit> compiledEdits = compileEdits(edits, wholeWordSearch);
+        boolean wholeWordSearchEnabled = Boolean.TRUE.equals(request.getWholeWordSearch());
+        List<CompiledEdit> compiledEdits = compileEdits(edits, wholeWordSearchEnabled);
 
         PdfJsonDocument document = pdfJsonConversionService.convertPdfToJsonDocument(inputFile);
         Set<Integer> pageFilter = resolvePageFilter(request, document);

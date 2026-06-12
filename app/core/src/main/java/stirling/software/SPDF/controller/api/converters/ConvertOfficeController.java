@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -51,7 +50,7 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
 @ApplicationScoped
-@Path("/api/v1/convert")
+@jakarta.ws.rs.Path("/api/v1/convert")
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertOfficeController {
@@ -214,7 +213,7 @@ public class ConvertOfficeController {
     }
 
     @POST
-    @Path("/file/pdf")
+    @jakarta.ws.rs.Path("/file/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,

@@ -148,8 +148,6 @@ public class StampController {
                     "error.invalid.filepath", "Invalid PDF file path: " + pdfFileName);
         }
 
-        String stampType = request.getStampType();
-        String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
         if ("image".equalsIgnoreCase(stampType)) {
             if (stampImage == null) {
@@ -168,7 +166,6 @@ public class StampController {
                         stampImageName);
             }
         }
-        String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();
         float opacity = request.getOpacity();
@@ -176,7 +173,6 @@ public class StampController {
         float overrideX = request.getOverrideX(); // New field for X override
         float overrideY = request.getOverrideY(); // New field for Y override
 
-        String customColor = request.getCustomColor();
         float marginFactor =
                 switch (request.getCustomMargin().toLowerCase(Locale.ROOT)) {
                     case "small" -> 0.02f;
@@ -189,9 +185,9 @@ public class StampController {
         // Load the input PDF
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-            List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+            List<Integer> pageNumberList = request.getPageNumbersList(document, true);
 
-            for (int pageIndex : pageNumbers) {
+            for (int pageIndex : pageNumberList) {
                 int zeroBasedIndex = pageIndex - 1;
                 if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
                     PDPage page = document.getPage(zeroBasedIndex);
@@ -219,7 +215,7 @@ public class StampController {
                                 rotation,
                                 position,
                                 fontSize,
-                                alphabet,
+                                request.getAlphabet(),
                                 overrideX,
                                 overrideY,
                                 margin,

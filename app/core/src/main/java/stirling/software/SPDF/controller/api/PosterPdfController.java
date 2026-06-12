@@ -118,16 +118,16 @@ public class PosterPdfController {
                 LayerUtility layerUtility = new LayerUtility(outputDocument);
 
                 int totalPages = sourceDocument.getNumberOfPages();
-                int xFactor = request.getXFactor();
-                int yFactor = request.getYFactor();
-                boolean rightToLeft = request.isRightToLeft();
+                int xGrid = request.getXFactor();
+                int yGrid = request.getYFactor();
+                boolean splitRightToLeft = request.isRightToLeft();
 
                 log.debug(
                         "Processing {} pages with grid {}x{}, RTL={}",
                         totalPages,
-                        xFactor,
-                        yFactor,
-                        rightToLeft);
+                        xGrid,
+                        yGrid,
+                        splitRightToLeft);
 
                 // Process each page
                 for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
@@ -179,14 +179,14 @@ public class PosterPdfController {
                     sourcePage.setCropBox(originalCropBox);
 
                     // Calculate cell dimensions in source page coordinates
-                    float cellWidth = sourceWidth / xFactor;
-                    float cellHeight = sourceHeight / yFactor;
+                    float cellWidth = sourceWidth / xGrid;
+                    float cellHeight = sourceHeight / yGrid;
 
                     // Create grid cells (rows × columns)
-                    for (int row = 0; row < yFactor; row++) {
-                        for (int col = 0; col < xFactor; col++) {
+                    for (int row = 0; row < yGrid; row++) {
+                        for (int col = 0; col < xGrid; col++) {
                             // Apply RTL ordering for columns if enabled
-                            int actualCol = rightToLeft ? (xFactor - 1 - col) : col;
+                            int actualCol = splitRightToLeft ? (xGrid - 1 - col) : col;
 
                             // Calculate crop rectangle in source coordinates
                             // PDF coordinates start at bottom-left
@@ -194,7 +194,7 @@ public class PosterPdfController {
                             // For Y: invert so row 0 shows TOP (following
                             // SplitPdfBySectionsController
                             // pattern)
-                            float cropY = (yFactor - 1 - row) * cellHeight;
+                            float cropY = (yGrid - 1 - row) * cellHeight;
 
                             // Create new output page with target size
                             PDPage outputPage = new PDPage(targetPageSize);

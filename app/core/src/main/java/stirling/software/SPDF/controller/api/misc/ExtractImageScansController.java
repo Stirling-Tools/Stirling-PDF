@@ -25,7 +25,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -53,7 +52,7 @@ import stirling.software.common.util.WebResponseUtils;
 @MiscApi
 @Slf4j
 @ApplicationScoped
-@Path("/api/v1/misc")
+@jakarta.ws.rs.Path("/api/v1/misc")
 @RequiredArgsConstructor
 public class ExtractImageScansController {
 
@@ -67,7 +66,7 @@ public class ExtractImageScansController {
             value = "/extract-image-scans",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @POST
-    @Path("/extract-image-scans")
+    @jakarta.ws.rs.Path("/extract-image-scans")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @MultiFileResponse
     @Operation(

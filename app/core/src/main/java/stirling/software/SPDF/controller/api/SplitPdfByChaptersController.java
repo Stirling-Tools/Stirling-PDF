@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -52,7 +51,7 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
-@Path("/api/v1/general")
+@jakarta.ws.rs.Path("/api/v1/general")
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
@@ -97,7 +96,7 @@ public class SplitPdfByChaptersController {
     }
 
     @POST
-    @Path("/split-pdf-by-chapters")
+    @jakarta.ws.rs.Path("/split-pdf-by-chapters")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/split-pdf-by-chapters",

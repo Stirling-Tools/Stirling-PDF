@@ -31,7 +31,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -58,7 +57,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
-@Path("/api/v1/misc")
+@jakarta.ws.rs.Path("/api/v1/misc")
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
@@ -93,7 +92,7 @@ public class OCRController {
     }
 
     @POST
-    @Path("/ocr-pdf")
+    @jakarta.ws.rs.Path("/ocr-pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA,

@@ -49,10 +49,9 @@ public class OpenApiConfig implements OASFilter {
                     + "Please note some functionality might be UI only and missing from here.";
 
     @Override
-    public OpenAPI filterOpenAPI(OpenAPI openAPI) {
+    public void filterOpenAPI(OpenAPI openAPI) {
         customizeOpenAPI(openAPI);
         applyPdfFileOneOf(openAPI);
-        return openAPI;
     }
 
     private void customizeOpenAPI(OpenAPI openAPI) {
