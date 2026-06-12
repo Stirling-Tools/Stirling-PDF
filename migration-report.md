@@ -25,7 +25,7 @@
 | Module | Status | Notes |
 |--------|--------|-------|
 | Build (Gradle + config) | ✅ Done | Plugins, BOM, extension mapping, `application.properties`. `./gradlew :stirling-pdf:help` succeeds. |
-| Code: DI/REST/scheduling | 🟡 Partial | common DI/scheduling/markers/AppConfig done (~38 files). REST controllers, multipart, ResponseEntity not started. |
+| Code: DI/REST/scheduling | 🟡 ~80% of common | common: 62 of 77 Spring files converted (DI, scheduling, markers, AppConfig producers, MultipartFile shim). 15 hard residual files remain (Resource, ResponseEntity util, RestTemplate, StreamingResponseBody, AutoJob AOP, Spring config infra). core/proprietary/saas controllers not started. |
 | Code: Data JPA → Panache | ⬜ Not started | Repositories/entities across proprietary + saas. |
 | Code: Security/OAuth2/JWT/SAML | ⬜ Not started | ~200 files. SAML2 on OpenSAML 5; OAuth2→quarkus-oidc; JWT→smallrye-jwt; filters→JAX-RS. |
 | Frontend (static/SPA routing) | ⬜ Not started | Move `static/`→`META-INF/resources/`; replace `ReactRoutingController`. |
@@ -62,6 +62,16 @@
   `@Autowired(required=false)`→`Instance<>`; Spring `Environment`→MicroProfile `Config`.
 - `AppConfig`: `@Configuration`/`@Bean`→`@Produces`/`@Named`; `@Profile("default")`→`@DefaultBean`;
   request-scoped primitives→`@Dependent`.
+
+## Cross-cutting shims (low-ripple migration aids)
+
+- **`MultipartFile`** → `stirling.software.common.model.MultipartFile` interface mirroring Spring's
+  method surface, with `ByteArrayMultipartFile` and `FileUploadMultipartFile` (adapts Quarkus REST
+  `FileUpload`) implementations. Converting a file is now just an import swap; controllers adapt
+  inbound `FileUpload` at the boundary. Applied to all 23 common usages.
+- **TODO (next):** a similar `Resource` strategy/shim for the 18 `org.springframework.core.io.Resource`
+  usages, and a decision on `WebResponseUtils` (`ResponseEntity` → JAX-RS `Response`) which ripples
+  into every controller and is best done alongside controller migration.
 
 ## Established conversion patterns (reusable for remaining modules)
 
