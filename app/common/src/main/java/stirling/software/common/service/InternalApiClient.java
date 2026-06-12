@@ -112,6 +112,17 @@ public class InternalApiClient {
         // every caller of this dispatcher is an automation surface by design.
         headers.add(AUTOMATION_HEADER, "true");
 
+        // A no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string params, so
+        // without this RestTemplate would use urlencoded instead of the multipart the controller
+        // expects. File-bearing calls get the right multipart content-type from RestTemplate.
+        boolean isAiTool = endpointPath.startsWith("/api/v1/ai/tools/");
+        boolean hasFilePart =
+                body.values().stream()
+                        .flatMap(java.util.List::stream)
+                        .anyMatch(v -> v instanceof Resource);
+        if (isAiTool && !hasFilePart) {
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        }
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
         RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
 

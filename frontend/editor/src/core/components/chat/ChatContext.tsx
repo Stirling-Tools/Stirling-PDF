@@ -11,6 +11,7 @@ export function useChat() {
     progress: null,
     progressLog: [] as never[],
     sendMessage: async (_content: string) => {},
+    cancelMessage: () => {},
     clearChat: () => {},
   };
 }
