@@ -6,9 +6,9 @@ import {
   SPEND_CAP_MODAL_EVENT,
 } from "@app/components/usageLimitModals";
 import {
-  POLICY_LIMIT_REACHED_EVENT,
-  type PolicyLimitReachedDetail,
-} from "@app/services/policyPipeline";
+  PAYG_LIMIT_REACHED_EVENT,
+  type PaygLimitReachedDetail,
+} from "@app/services/usageLimitBridge";
 
 /**
  * Always-mounted host for the usage-limit warning modals. Mount once (in
@@ -17,11 +17,11 @@ import {
  * only while open, so it reads the wallet (and animates in) on open rather
  * than on app load.
  *
- * <p>Also bridges the policy auto-run path: a policy's tool calls run server-side,
- * so their usage-limit 402 never reaches the apiClient interceptor that pops these
- * modals for direct calls. The proprietary auto-run hook broadcasts {@link
- * POLICY_LIMIT_REACHED_EVENT} (with the blocking 402's {@code subscribed} flag)
- * instead; we open the matching modal here.
+ * <p>Also bridges the server-side run paths (policy auto-run, AI agent): their tool
+ * calls run server-side, so a usage-limit 402 never reaches the apiClient interceptor
+ * that pops these modals for direct calls. Those proprietary paths broadcast {@link
+ * PAYG_LIMIT_REACHED_EVENT} (with the blocking 402's {@code subscribed} flag) instead;
+ * we open the matching modal here.
  */
 export default function UsageLimitModalHost() {
   const [freeOpen, setFreeOpen] = useState(false);
@@ -30,19 +30,19 @@ export default function UsageLimitModalHost() {
   useEffect(() => {
     const onFree = () => setFreeOpen(true);
     const onSpend = () => setSpendOpen(true);
-    const onPolicyLimit = (e: Event) => {
-      const subscribed = (e as CustomEvent<PolicyLimitReachedDetail>).detail
+    const onServerLimit = (e: Event) => {
+      const subscribed = (e as CustomEvent<PaygLimitReachedDetail>).detail
         ?.subscribed;
       if (subscribed) setSpendOpen(true);
       else setFreeOpen(true);
     };
     window.addEventListener(FREE_LIMIT_MODAL_EVENT, onFree);
     window.addEventListener(SPEND_CAP_MODAL_EVENT, onSpend);
-    window.addEventListener(POLICY_LIMIT_REACHED_EVENT, onPolicyLimit);
+    window.addEventListener(PAYG_LIMIT_REACHED_EVENT, onServerLimit);
     return () => {
       window.removeEventListener(FREE_LIMIT_MODAL_EVENT, onFree);
       window.removeEventListener(SPEND_CAP_MODAL_EVENT, onSpend);
-      window.removeEventListener(POLICY_LIMIT_REACHED_EVENT, onPolicyLimit);
+      window.removeEventListener(PAYG_LIMIT_REACHED_EVENT, onServerLimit);
     };
   }, []);
 

@@ -27,9 +27,8 @@ import {
 import type {
   PolicyRunStatus,
   PolicyRunView,
-  PolicyLimitReachedDetail,
 } from "@app/services/policyPipeline";
-import { POLICY_LIMIT_REACHED_EVENT } from "@app/services/policyPipeline";
+import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
@@ -87,15 +86,7 @@ export function usePolicyAutoRun(): void {
     if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
     if (firedLimitModal.current.has(view.runId)) return;
     firedLimitModal.current.add(view.runId);
-    try {
-      window.dispatchEvent(
-        new CustomEvent<PolicyLimitReachedDetail>(POLICY_LIMIT_REACHED_EVENT, {
-          detail: { subscribed: view.errorSubscribed ?? null },
-        }),
-      );
-    } catch {
-      // non-browser env (tests / SSR) — no-op.
-    }
+    dispatchPaygLimitReached(view.errorSubscribed ?? null);
   }, []);
 
   // Dispatch: for each active policy × each session file not yet run, fire a run.
