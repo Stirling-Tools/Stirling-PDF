@@ -36,10 +36,10 @@ function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
 }
 
-// Minimal providers for the mobile scanner: no AppProviders, so no auth and no
-// backend bootstrap. The page is opened on a phone via a QR code and must work
-// without a logged-in session, the same way it does in the proprietary build.
-function MobileScannerProviders({ children }: { children: ReactNode }) {
+// Minimal providers for public, no-auth pages (the mobile-scanner QR page and
+// the participant signing page). Just theme + preferences, no AppProviders, so
+// no auth and no backend bootstrap - these render without a logged-in session.
+function PublicRouteProviders({ children }: { children: ReactNode }) {
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>{children}</RainbowThemeProvider>
@@ -86,9 +86,9 @@ export default function App() {
         <Route
           path="/mobile-scanner"
           element={
-            <MobileScannerProviders>
+            <PublicRouteProviders>
               <MobileScannerPage />
-            </MobileScannerProviders>
+            </PublicRouteProviders>
           }
         />
 
@@ -97,9 +97,9 @@ export default function App() {
         <Route
           path="/workflow/sign/:token"
           element={
-            <MobileScannerProviders>
+            <PublicRouteProviders>
               <ParticipantViewPage />
-            </MobileScannerProviders>
+            </PublicRouteProviders>
           }
         />
 
