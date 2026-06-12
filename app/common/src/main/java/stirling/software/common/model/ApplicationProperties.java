@@ -15,15 +15,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-// TODO: Migration required - the Spring property-source machinery below
-// (ConfigurableEnvironment, PropertySource, EncodedResource) has no direct
-// Quarkus/MicroProfile-Config drop-in. The dynamicYamlPropertySource method keeps these
-// three Spring imports until the YAML-into-config wiring is reimplemented via a custom
-// org.eclipse.microprofile.config.spi.ConfigSource plus @io.smallrye.config.ConfigMapping.
-// Resource/ClassPathResource/FileSystemResource are now the local shim types, not Spring.
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.support.EncodedResource;
+// Resource/ClassPathResource/FileSystemResource are the local migration shim types (used by the
+// SAML cert/key accessors), not Spring. The former Spring property-source imports
+// (ConfigurableEnvironment/PropertySource/EncodedResource) were dropped with dynamicYamlPropertySource.
 import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
@@ -41,7 +35,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.common.configuration.YamlPropertySourceFactory;
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.model.oauth2.GitHubProvider;
@@ -87,44 +80,16 @@ public class ApplicationProperties {
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
 
-    // TODO: Migration required - this was a Spring @Bean that injected the
-    // ConfigurableEnvironment and registered an extra YAML PropertySource at runtime so
-    // settings.yml could override (or be overridden by) other property sources. Quarkus has
-    // no ConfigurableEnvironment/PropertySource model; the equivalent is a custom
-    // org.eclipse.microprofile.config.spi.ConfigSource (registered via ConfigSourceProvider
-    // or @io.smallrye.config.ConfigMapping). The original logic is preserved verbatim below
-    // and is currently never invoked by CDI since the @Bean annotation has been removed.
-    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
-            throws IOException {
-        String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: {}", configPath);
-
-        File file = new File(configPath);
-        if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: {}", configPath);
-        }
-
-        Resource resource = new FileSystemResource(configPath);
-        if (!resource.exists()) {
-            throw new FileNotFoundException("Settings file not found at: " + configPath);
-        }
-
-        EncodedResource encodedResource = new EncodedResource(resource);
-        PropertySource<?> propertySource =
-                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
-
-        boolean saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
-        if (saasActive) {
-            // Saas-pinned values in application-saas.properties must beat settings.yml.
-            environment.getPropertySources().addLast(propertySource);
-        } else {
-            environment.getPropertySources().addFirst(propertySource);
-        }
-
-        log.debug("Loaded properties: {}", propertySource.getSource());
-
-        return propertySource;
-    }
+    // REMOVED (Spring -> Quarkus): dynamicYamlPropertySource(ConfigurableEnvironment).
+    // This was a Spring @Bean that registered settings.yml as an extra runtime PropertySource on the
+    // ConfigurableEnvironment (added first, or last under the "saas" profile). Quarkus has no
+    // ConfigurableEnvironment/PropertySource model and the @Bean had already been removed, so the
+    // method was dead code referencing Spring-only types.
+    // TODO: Migration required - reimplement external settings.yml loading as a custom
+    // org.eclipse.microprofile.config.spi.ConfigSource (registered via a ConfigSourceProvider /
+    // META-INF/services), giving it an ordinal that reproduces the old precedence: higher than the
+    // application defaults normally, but lower than application-saas.properties under the saas
+    // profile. Wire it in ConfigInitializer.
 
     /**
      * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports

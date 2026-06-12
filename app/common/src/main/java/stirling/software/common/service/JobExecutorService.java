@@ -14,11 +14,6 @@ import stirling.software.common.model.io.Resource;
 // JAX-RS drop-in for these utility method params; changing the type would ripple to
 // callers, so it is kept as-is for now.
 import stirling.software.common.model.MultipartFile;
-// TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
-// .StreamingResponseBody is a Spring MVC servlet type with no JAX-RS equivalent here;
-// it is still consumed by FileStorage#storeFromStreamingBody (whose signature has not yet
-// been migrated), so the result-handling branch below keeps this type as-is for now.
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -26,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -248,18 +244,15 @@ public class JobExecutorService {
                     String fileId = fileStorage.storeBytes((byte[]) body, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
                     log.debug("Stored Response<byte[]> result with fileId: {}", fileId);
-                } else if (body instanceof StreamingResponseBody streamingBody) {
-                    // TODO: Migration required - FileStorage#storeFromStreamingBody still accepts the
-                    // Spring StreamingResponseBody type. Once that signature is migrated to
-                    // jakarta.ws.rs.core.StreamingOutput, this branch should test for StreamingOutput
-                    // (the type a JAX-RS Response carries for streamed bodies) instead.
+                } else if (body instanceof StreamingOutput streamingBody) {
+                    // JAX-RS Response carries a StreamingOutput for streamed bodies (migrated from
+                    // Spring's StreamingResponseBody).
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);
 
                     String fileId = fileStorage.storeFromStreamingBody(streamingBody, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
-                    log.debug(
-                            "Stored Response<StreamingResponseBody> result with fileId: {}", fileId);
+                    log.debug("Stored Response<StreamingOutput> result with fileId: {}", fileId);
                 } else if (body instanceof Resource resource) {
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);

@@ -7,22 +7,17 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
 import org.slf4j.MDC;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
-// drop-in. The type is used internally via FileStorage (retrieveFile/storeFile return/accept
-// MultipartFile) and PDFFile.getFileInput()/setFileInput(MultipartFile). Changing the type here
-// would ripple into FileStorage and PDFFile public signatures, so the original type is kept until
-// those collaborators are migrated.
 import stirling.software.common.model.MultipartFile;
 
 import jakarta.annotation.Priority;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InvocationContext;
 import jakarta.servlet.http.HttpServletRequest;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -30,18 +25,17 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 
-// TODO: Migration required - @Aspect / @Around is Spring AOP (AspectJ proxy weaving). Quarkus/Arc
-// has no equivalent for advising arbitrary annotated methods this way; this should be reworked as a
-// CDI @InterceptorBinding + @Interceptor (jakarta.interceptor) or a JAX-RS filter. The aspect
-// pointcut and ProceedingJoinPoint logic are kept intact pending that rework.
-@Aspect
-@ApplicationScoped
-@RequiredArgsConstructor
-@Slf4j
-// @Order(20) -> @Priority: lower precedence, executes AFTER audit aspects populate MDC.
-// TODO: Migration required - @Priority only orders CDI interceptors/decorators, not Spring AOP
-// aspects; ordering here is inert until this class is reworked into a CDI interceptor.
+/**
+ * MIGRATION (Spring AOP -> CDI interceptor): was an {@code @Aspect} with {@code @Around} advice on
+ * {@code @AutoJobPostMapping}. Reworked into a CDI {@link Interceptor} bound by the
+ * {@code @AutoJobPostMapping} {@code @InterceptorBinding}; {@code @Around}/{@code ProceedingJoinPoint}
+ * became {@code @AroundInvoke}/{@link InvocationContext}. {@code @Priority(20)} now meaningfully
+ * orders this interceptor (runs after lower-priority audit interceptors populate MDC).
+ */
+@Interceptor
+@AutoJobPostMapping
 @Priority(20)
+@Slf4j
 public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
@@ -50,10 +44,20 @@ public class AutoJobAspect {
     private final HttpServletRequest request;
     private final FileStorage fileStorage;
 
-    @Around("@annotation(autoJobPostMapping)")
-    public Object wrapWithJobExecution(
-            ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) throws Exception {
-        // This aspect will run before any audit aspects due to @Order(0)
+    @Inject
+    public AutoJobAspect(
+            JobExecutorService jobExecutorService,
+            HttpServletRequest request,
+            FileStorage fileStorage) {
+        this.jobExecutorService = jobExecutorService;
+        this.request = request;
+        this.fileStorage = fileStorage;
+    }
+
+    @AroundInvoke
+    public Object wrapWithJobExecution(InvocationContext ctx) throws Exception {
+        AutoJobPostMapping autoJobPostMapping =
+                ctx.getMethod().getAnnotation(AutoJobPostMapping.class);
         // Extract parameters from the request and annotation
         boolean async = Boolean.parseBoolean(request.getParameter("async"));
         log.debug(
@@ -74,7 +78,8 @@ public class AutoJobAspect {
                 trackProgress);
 
         // Process arguments in-place to avoid type mismatch issues
-        Object[] args = processArgsInPlace(joinPoint.getArgs(), async);
+        Object[] args = processArgsInPlace(ctx.getParameters(), async);
+        ctx.setParameters(args);
 
         // Extract queueable and resourceWeight parameters and validate
         boolean queueable = autoJobPostMapping.queueable();
@@ -93,7 +98,7 @@ public class AutoJobAspect {
                                     // The trackProgress flag controls whether detailed progress is
                                     // stored
                                     // for REST API queries, not WebSocket notifications
-                                    return joinPoint.proceed(args);
+                                    return ctx.proceed();
                                 } catch (Throwable ex) {
                                     log.error(
                                             "AutoJobAspect caught exception during job execution: {}",
@@ -114,7 +119,7 @@ public class AutoJobAspect {
         } else {
             // Use retry logic
             return executeWithRetries(
-                    joinPoint,
+                    ctx,
                     args,
                     async,
                     timeout,
@@ -126,7 +131,7 @@ public class AutoJobAspect {
     }
 
     private Object executeWithRetries(
-            ProceedingJoinPoint joinPoint,
+            InvocationContext ctx,
             Object[] args,
             boolean async,
             long timeout,
@@ -171,7 +176,7 @@ public class AutoJobAspect {
                                     }
 
                                     // Attempt to execute the operation
-                                    return joinPoint.proceed(args);
+                                    return ctx.proceed();
 
                                 } catch (Throwable ex) {
                                     lastException = ex;

@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 /**
  * Adapts a Quarkus REST {@link FileUpload} (the inbound multipart representation at the JAX-RS
@@ -60,6 +62,12 @@ public class FileUploadMultipartFile implements MultipartFile {
     @Override
     public InputStream getInputStream() throws IOException {
         return Files.newInputStream(delegate.uploadedFile());
+    }
+
+    @Override
+    public Resource getResource() {
+        // File-backed: enables FileStorage's zero-copy fast path.
+        return new FileSystemResource(delegate.uploadedFile());
     }
 
     @Override

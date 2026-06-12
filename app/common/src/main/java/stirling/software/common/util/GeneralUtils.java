@@ -19,12 +19,10 @@ import java.util.regex.Pattern;
 // ClassPathUtils or build-time indexing). org.springframework.core.io.ResourceLoader and
 // org.springframework.core.io.support.ResourcePatternUtils have no Quarkus/Jakarta shim. They are
 // used only by getResourcesFromLocationPattern below; that method's public signature and the Spring
-// resource-pattern glob resolver are relied on by callers, so the imports and logic are kept intact
-// until the glob rewrite (which ripples to callers) is done. The shim
-// stirling.software.common.model.io.Resource is already used for the return type.
+// MIGRATION: Spring ResourceLoader/ResourcePatternUtils glob scanning replaced by java.nio
+// directory listing (file:) + classloader lookup (classpath:); see getResourcesFromLocationPattern.
+import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternUtils;
 
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile has no servlet/JAX-RS
 // drop-in for these utility method params. The public signatures of convertMultipartFileToFile and
@@ -259,22 +257,60 @@ public class GeneralUtils {
         return safeName;
     }
 
-    // Get resources from a location pattern
-    // TODO: Migration required - replace Spring classpath scanning with Quarkus (e.g. io.quarkus
-    // ClassPathUtils or build-time indexing). The ResourceLoader param and ResourcePatternUtils glob
-    // resolver have no Quarkus/Jakarta drop-in; the logic is preserved verbatim pending a
-    // filesystem/classpath glob rewrite that also touches every caller of this method.
-    public Resource[] getResourcesFromLocationPattern(
-            String locationPattern, ResourceLoader resourceLoader) throws Exception {
-        // Normalize the path for file resources
-        String pattern = locationPattern;
-        if (pattern.startsWith("file:")) {
-            String rawPath = pattern.substring(5).replace("\\*", "").replace("/*", "");
-            Path normalizePath = Paths.get(rawPath).normalize();
-            pattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
+    /**
+     * Resolve files matching a location pattern. Supports {@code file:<dir>/<glob>} and {@code
+     * classpath:<dir>/<glob>} (e.g. {@code *} or {@code *.woff2}).
+     *
+     * <p>MIGRATION (Spring -> Quarkus): replaced Spring's {@code ResourceLoader} +
+     * {@code ResourcePatternUtils} pattern resolver. The {@code ResourceLoader} parameter was
+     * removed. {@code file:} patterns are resolved with {@link java.nio.file.Files#list}; {@code
+     * classpath:} patterns are resolved via the classloader and only support directory resources
+     * that live on the filesystem.
+     *
+     * <p>TODO: Migration required - {@code classpath:} resolution does not enumerate entries inside a
+     * packaged JAR. For uber-jar deployments, prefer serving these assets from
+     * {@code META-INF/resources/} or build a Jandex/build-time index of the matching files.
+     */
+    public static Resource[] getResourcesFromLocationPattern(String locationPattern)
+            throws Exception {
+        String body = locationPattern;
+        boolean classpath = false;
+        if (body.startsWith("file:")) {
+            body = body.substring(5);
+        } else if (body.startsWith("classpath:")) {
+            body = body.substring(10);
+            classpath = true;
         }
-        return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                .getResources(pattern);
+        body = body.replace("\\", "/");
+        int lastSlash = body.lastIndexOf('/');
+        String dirPart = lastSlash >= 0 ? body.substring(0, lastSlash) : "";
+        String glob = lastSlash >= 0 ? body.substring(lastSlash + 1) : body;
+        if (glob.isEmpty()) {
+            glob = "*";
+        }
+
+        Path dir;
+        if (classpath) {
+            URL url = GeneralUtils.class.getClassLoader().getResource(dirPart);
+            if (url == null || !"file".equals(url.getProtocol())) {
+                // Not a filesystem-backed classpath dir (e.g. inside a jar) - see TODO above.
+                return new Resource[0];
+            }
+            dir = Paths.get(url.toURI());
+        } else {
+            dir = Paths.get(dirPart).normalize();
+        }
+
+        if (!Files.isDirectory(dir)) {
+            return new Resource[0];
+        }
+        PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + glob);
+        List<Resource> resources = new ArrayList<>();
+        try (var stream = Files.list(dir)) {
+            stream.filter(p -> Files.isRegularFile(p) && matcher.matches(p.getFileName()))
+                    .forEach(p -> resources.add(new FileSystemResource(p)));
+        }
+        return resources.toArray(new Resource[0]);
     }
 
     /**

@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import stirling.software.common.model.io.Resource;
+
 /**
  * Migration compatibility shim for Spring's {@code org.springframework.web.multipart.MultipartFile}.
  *
@@ -36,6 +38,20 @@ public interface MultipartFile {
     byte[] getBytes() throws IOException;
 
     InputStream getInputStream() throws IOException;
+
+    /**
+     * The content as a {@link Resource}. The default is a stream-backed resource; file-backed
+     * implementations (e.g. {@code FileUploadMultipartFile}) override this to enable zero-copy fast
+     * paths.
+     */
+    default Resource getResource() {
+        try {
+            return new stirling.software.common.model.io.InputStreamResource(
+                    getInputStream(), getOriginalFilename());
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
 
     default void transferTo(File dest) throws IOException {
         transferTo(dest.toPath());

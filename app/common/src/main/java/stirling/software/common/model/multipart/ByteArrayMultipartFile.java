@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 
 /**
  * In-memory {@link MultipartFile} backed by a byte array. Useful for tests and for code paths that
@@ -57,5 +59,10 @@ public class ByteArrayMultipartFile implements MultipartFile {
     @Override
     public InputStream getInputStream() {
         return new ByteArrayInputStream(content);
+    }
+
+    @Override
+    public Resource getResource() {
+        return new InputStreamResource(new ByteArrayInputStream(content), originalFilename);
     }
 }

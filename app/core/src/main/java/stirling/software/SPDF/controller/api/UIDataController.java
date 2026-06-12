@@ -221,7 +221,7 @@ public class UIDataController {
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
             Resource[] resources =
-                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
+                    GeneralUtils.getResourcesFromLocationPattern(locationPattern);
             return Arrays.stream(resources)
                     .map(
                             resource -> {

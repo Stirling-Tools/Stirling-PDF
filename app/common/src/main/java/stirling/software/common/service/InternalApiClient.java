@@ -1,52 +1,37 @@
 package stirling.software.common.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.ConnectException;
+import java.net.URI;
 import java.net.URLDecoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
-
-// TODO: Migration required - the HTTP dispatch in this class is built entirely on Spring's
-// RestTemplate (RestTemplate.execute/httpEntityCallback with SimpleClientHttpRequestFactory,
-// RequestCallback, ResponseExtractor and ResourceAccessException). The faithful Quarkus target is
-// java.net.http.HttpClient (HttpClient.Builder for the connect/read timeouts, multipart body built
-// manually, ConnectException/HttpTimeoutException replacing ResourceAccessException). That rewrite
-// is blocked here because the public API surface uses Spring HTTP types that cannot change without
-// editing callers:
-//   - post(String, MultiValueMap<String, Object>) : ResponseEntity<Resource>
-//     is called by, and its MultiValueMap argument / ResponseEntity<Resource> result are consumed
-//     by, McpOperationExecutor and PolicyExecutor (app/proprietary) and asserted directly by
-//     InternalApiClientTest (which mocks RestTemplate.execute + ResponseExtractor).
-//   - ResponseEntity<Resource> -> jakarta.ws.rs.core.Response, MultiValueMap -> a manual
-//     Map<String,List<Object>>/form encoding, HttpHeaders/HttpStatus/HttpEntity/MediaType/HttpMethod
-//     -> jakarta.ws.rs.core equivalents, all in lockstep with those callers.
-// These Spring imports are intentionally retained until that cross-file migration is scheduled;
-// they are listed explicitly (no wildcard) so each retained type is auditable.
-import stirling.software.common.model.io.FileSystemResource;
-import stirling.software.common.model.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 
 import org.eclipse.microprofile.config.Config;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.ServletContext;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -54,6 +39,12 @@ import stirling.software.common.util.TempFileManager;
  * Dispatches HTTP POST requests to internal Stirling API endpoints via loopback. Used by
  * PipelineProcessor and AiWorkflowService to execute tool operations programmatically without
  * leaving the JVM network stack.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): the HTTP dispatch was rebuilt on {@link java.net.http.HttpClient}
+ * (replacing Spring's {@code RestTemplate}/{@code SimpleClientHttpRequestFactory}). The multipart
+ * body is encoded manually; {@code MultiValueMap<String,Object>} became {@code
+ * Map<String,List<Object>>} and {@code ResponseEntity<Resource>} became {@link Response}.
+ * {@code ResourceAccessException} timeout handling is now driven by {@link HttpTimeoutException}.
  */
 @ApplicationScoped
 @Slf4j
@@ -76,7 +67,7 @@ public class InternalApiClient {
     private final TempFileManager tempFileManager;
     private final Config config;
     private final Duration readTimeout;
-    private final RestTemplate restTemplate;
+    private final HttpClient httpClient;
 
     public InternalApiClient(
             ServletContext servletContext,
@@ -94,10 +85,10 @@ public class InternalApiClient {
         // because this is a loopback call; if connecting takes longer than a few seconds the
         // local server is itself unhealthy.
         this.readTimeout = Duration.ofSeconds(internalApi.getReadTimeoutSeconds());
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofSeconds(internalApi.getConnectTimeoutSeconds()));
-        factory.setReadTimeout(readTimeout);
-        this.restTemplate = new RestTemplate(factory);
+        this.httpClient =
+                HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(internalApi.getConnectTimeoutSeconds()))
+                        .build();
     }
 
     /**
@@ -105,73 +96,105 @@ public class InternalApiClient {
      * prefixes (e.g. {@code /api/v1/misc/compress-pdf}).
      *
      * @param endpointPath API path (e.g. {@code /api/v1/general/rotate-pdf})
-     * @param body multipart form body (fileInput + parameters)
-     * @return response with the result file as a {@link TempFileResource} body
+     * @param body multipart form body (fileInput + parameters): each value is either a {@link
+     *     Resource} (file part) or a {@code String} (form field)
+     * @return JAX-RS {@link Response} with the result file as a {@link TempFileResource} entity
      */
-    public ResponseEntity<Resource> post(String endpointPath, MultiValueMap<String, Object> body) {
+    public Response post(String endpointPath, Map<String, List<Object>> body) {
         validateUrl(endpointPath);
         String url = getBaseUrl() + endpointPath;
 
-        HttpHeaders headers = new HttpHeaders();
+        String boundary = "----StirlingBoundary" + Long.toHexString(System.nanoTime());
+        byte[] multipartBody = encodeMultipart(body, boundary);
+
+        HttpRequest.Builder requestBuilder =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .timeout(readTimeout)
+                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                        .POST(HttpRequest.BodyPublishers.ofByteArray(multipartBody));
+
         String apiKey = getApiKeyForUser();
         if (apiKey != null && !apiKey.isEmpty()) {
-            headers.add("X-API-KEY", apiKey);
+            requestBuilder.header("X-API-KEY", apiKey);
         }
-
-        // A no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string params, so
-        // without this RestTemplate would use urlencoded instead of the multipart the controller
-        // expects. File-bearing calls get the right multipart content-type from RestTemplate.
-        boolean isAiTool = endpointPath.startsWith("/api/v1/ai/tools/");
-        boolean hasFilePart =
-                body.values().stream()
-                        .flatMap(java.util.List::stream)
-                        .anyMatch(v -> v instanceof Resource);
-        if (isAiTool && !hasFilePart) {
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        }
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-        RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
 
         try {
-            return restTemplate.execute(
-                    url,
-                    HttpMethod.POST,
-                    requestCallback,
-                    response -> {
-                        try {
-                            TempFile tempFile =
-                                    tempFileManager.createManagedTempFile("internal-api");
-                            Files.copy(
-                                    response.getBody(),
-                                    tempFile.getPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                            String filename = extractFilename(response.getHeaders());
-                            TempFileResource resource = new TempFileResource(tempFile, filename);
-                            return ResponseEntity.status(response.getStatusCode())
-                                    .headers(response.getHeaders())
-                                    .body(resource);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
-        } catch (ResourceAccessException e) {
-            // RestTemplate wraps low-level I/O failures in ResourceAccessException. Only the
-            // SocketTimeoutException-rooted case is a real timeout; other I/O failures (connection
-            // refused, DNS, etc.) propagate as-is so the upstream generic handler can describe
-            // them accurately.
-            if (e.getCause() instanceof java.net.SocketTimeoutException) {
-                throw new InternalApiTimeoutException(endpointPath, readTimeout, e);
+            HttpResponse<InputStream> response =
+                    httpClient.send(
+                            requestBuilder.build(), HttpResponse.BodyHandlers.ofInputStream());
+            try (InputStream responseBody = response.body()) {
+                TempFile tempFile = tempFileManager.createManagedTempFile("internal-api");
+                Files.copy(
+                        responseBody,
+                        tempFile.getPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                String filename =
+                        extractFilename(
+                                response.headers().firstValue("Content-Disposition").orElse(null));
+                TempFileResource resource = new TempFileResource(tempFile, filename);
+                Response.ResponseBuilder rb = Response.status(response.statusCode()).entity(resource);
+                response.headers()
+                        .map()
+                        .forEach((k, vs) -> vs.forEach(v -> rb.header(k, v)));
+                return rb.build();
             }
-            throw e;
+        } catch (HttpTimeoutException e) {
+            throw new InternalApiTimeoutException(endpointPath, readTimeout, e);
+        } catch (ConnectException e) {
+            throw new UncheckedIOException(new IOException("Internal API connection failed", e));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Internal API dispatch interrupted", e);
         }
     }
 
+    /** Encode a multipart/form-data body. File parts are {@link Resource}; others are form fields. */
+    private static byte[] encodeMultipart(Map<String, List<Object>> body, String boundary) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            for (Map.Entry<String, List<Object>> entry : body.entrySet()) {
+                String name = entry.getKey();
+                for (Object value : entry.getValue()) {
+                    baos.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+                    if (value instanceof Resource resource) {
+                        String fn = resource.getFilename() != null ? resource.getFilename() : name;
+                        baos.write(
+                                ("Content-Disposition: form-data; name=\""
+                                                + name
+                                                + "\"; filename=\""
+                                                + fn
+                                                + "\"\r\n"
+                                                + "Content-Type: application/octet-stream\r\n\r\n")
+                                        .getBytes(StandardCharsets.UTF_8));
+                        try (InputStream in = resource.getInputStream()) {
+                            in.transferTo(baos);
+                        }
+                        baos.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                    } else {
+                        baos.write(
+                                ("Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n")
+                                        .getBytes(StandardCharsets.UTF_8));
+                        baos.write(
+                                String.valueOf(value).getBytes(StandardCharsets.UTF_8));
+                        baos.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+            }
+            baos.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return baos.toByteArray();
+    }
+
     /**
-     * Extract the filename from a response's {@code Content-Disposition} header. Returns {@code
-     * null} if the header is missing or has no filename.
+     * Extract the filename from a {@code Content-Disposition} header value. Returns {@code null} if
+     * the header is missing or has no filename.
      */
-    private static String extractFilename(HttpHeaders headers) {
-        String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+    private static String extractFilename(String contentDisposition) {
         if (contentDisposition == null || contentDisposition.isBlank()) {
             return null;
         }
@@ -190,14 +213,11 @@ public class InternalApiClient {
     }
 
     private String getBaseUrl() {
-        // Resolve the port lazily so desktop mode (server.port=0, OS-assigned) dispatches to the
-        // actual bound port. The "local.server.port" config key is published once the web server
-        // is up; fall back to the configured server.port for early calls (tests, non-web contexts).
-        // TODO: Migration required - verify the runtime exposes "local.server.port"/"server.port"
-        // via MicroProfile Config under Quarkus (Quarkus uses "quarkus.http.port" and, for
-        // random-port test/dev runs, "quarkus.http.test-port"); this lazy port lookup assumed
-        // Spring Boot's WebServerInitializedEvent populating "local.server.port".
-        String port = config.getOptionalValue("local.server.port", String.class).orElse(null);
+        // Resolve the port lazily so desktop mode dispatches to the actual bound port.
+        // TODO: Migration required - verify Quarkus exposes the bound port via config. Quarkus uses
+        // "quarkus.http.port" and, for random-port test/dev runs, "quarkus.http.test-port"; the old
+        // "local.server.port"/"server.port" keys came from Spring Boot's WebServerInitializedEvent.
+        String port = config.getOptionalValue("quarkus.http.port", String.class).orElse(null);
         if (port == null) {
             port = config.getOptionalValue("server.port", String.class).orElse("8080");
         }
