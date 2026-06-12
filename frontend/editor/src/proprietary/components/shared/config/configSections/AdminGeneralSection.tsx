@@ -625,7 +625,7 @@ export default function AdminGeneralSection() {
                 data={defaultLocaleOptions}
                 searchable
                 clearable
-                placeholder="en_GB"
+                placeholder="en_US"
                 comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
                 disabled={!loginEnabled}
               />
