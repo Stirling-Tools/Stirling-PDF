@@ -52,7 +52,6 @@ import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.store.PolicyStore;
-import stirling.software.proprietary.security.config.PremiumEndpoint;
 
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
@@ -62,7 +61,6 @@ import stirling.software.proprietary.security.config.PremiumEndpoint;
 @RestController
 @RequestMapping("/api/v1/policies")
 @Hidden
-@PremiumEndpoint
 @RequiredArgsConstructor
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
 public class PolicyController {
