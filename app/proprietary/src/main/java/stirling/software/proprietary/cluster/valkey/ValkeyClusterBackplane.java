@@ -1,5 +1,6 @@
 package stirling.software.proprietary.cluster.valkey;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.redis.datasource.RedisDataSource;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,15 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.cluster.ClusterBackplane;
 import stirling.software.common.model.ApplicationProperties;
 
+// Build-time gating: this bean (and its RedisDataSource dependency) is only included in the build
+// when cluster.backplane=valkey. With the default backplane (inprocess) the whole Valkey bean is
+// removed, so RedisDataSource has no consumers and Quarkus emits no eager startup observer for the
+// inactive Redis client - the in-process @DefaultBean ClusterBackplane satisfies the interface.
 @Slf4j
+@IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 @ApplicationScoped
-// TODO: Migration required - @ConditionalOnValkeyBackplane was a Spring @ConditionalOnExpression
-// guard ("cluster.enabled=true AND cluster.backplane=valkey"). Quarkus has no runtime
-// @Conditional for beans; this bean is now always instantiated. Gate selection at runtime
-// (e.g. a ClusterBackplane producer that picks valkey vs in-process based on injected config),
-// or use @io.quarkus.arc.lookup.LookupIfProperty(name="cluster.backplane", stringValue="valkey")
-// (build-time/static only - does not also check cluster.enabled). The composite condition must be
-// re-expressed accordingly.
 public class ValkeyClusterBackplane implements ClusterBackplane {
 
     @Inject ApplicationProperties applicationProperties;

@@ -21,6 +21,10 @@ import stirling.software.common.cluster.KeyValueCache;
 // @io.quarkus.arc.lookup.LookupIfProperty
 // or @io.quarkus.arc.profile.IfBuildProfile, or a runtime guard) so Valkey beans only load when
 // cluster.enabled=true AND cluster.backplane=valkey.
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisDataSource dependency) is removed so no eager Redis startup observer is generated
+// and the in-process @DefaultBean KeyValueCache satisfies the interface.
+@io.quarkus.arc.properties.IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 @ApplicationScoped
 public class ValkeyKeyValueCache implements KeyValueCache {
 

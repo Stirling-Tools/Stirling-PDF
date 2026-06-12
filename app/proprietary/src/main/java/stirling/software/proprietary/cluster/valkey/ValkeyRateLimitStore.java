@@ -11,7 +11,7 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.RedisClient;
-import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.arc.properties.IfBuildProperty;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -25,13 +25,13 @@ import stirling.software.common.cluster.RateLimitStore;
  * refills continuously and enforces one global limit across nodes, with the same semantics as the
  * in-process {@code InProcessRateLimitStore} (which also uses Bucket4j).
  */
-// @ConditionalOnValkeyBackplane is documentary only under CDI (see that annotation's javadoc);
-// the two guards below must be carried directly so the Valkey beans load only when
-// cluster.enabled=true AND cluster.backplane=valkey, otherwise the in-process @DefaultBean wins.
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisClient dependency) is removed so no eager Redis startup observer is generated and
+// the in-process @DefaultBean RateLimitStore wins. @ConditionalOnValkeyBackplane is documentary
+// only.
 @ApplicationScoped
 @ConditionalOnValkeyBackplane
-@LookupIfProperty(name = "cluster.enabled", stringValue = "true")
-@LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
+@IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 public class ValkeyRateLimitStore implements RateLimitStore {
 
     private static final String PREFIX = "stirling:rl:";

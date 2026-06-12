@@ -27,10 +27,10 @@ import stirling.software.common.cluster.InstanceRegistry;
  * Valkey-backed {@link InstanceRegistry}. Each node is stored as a hash with a TTL equal to the
  * configured heartbeat TTL; the heartbeat re-arms the TTL.
  */
-// TODO: Migration required - the original @ConditionalOnValkeyBackplane (cluster.enabled=true AND
-// cluster.backplane=valkey) was a runtime toggle. Quarkus build-time conditions (@IfBuildProfile /
-// @LookupIfProperty) cannot express this composite runtime expression. Guard producer/usage at
-// runtime via the Config values, or rework ConditionalOnValkeyBackplane into a CDI lookup guard.
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisDataSource dependency) is removed so no eager Redis startup observer is generated
+// and the in-process @DefaultBean InstanceRegistry satisfies the interface.
+@io.quarkus.arc.properties.IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 @ApplicationScoped
 @RequiredArgsConstructor
 public class ValkeyInstanceRegistry implements InstanceRegistry {

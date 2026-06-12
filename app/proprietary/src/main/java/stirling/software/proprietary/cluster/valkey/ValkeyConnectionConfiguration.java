@@ -6,7 +6,7 @@ import java.time.Duration;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
-import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.redis.datasource.RedisDataSource;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -53,10 +53,15 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
 // so
 // the injected RedisDataSource targets the right Valkey. parseUrl/buildClientConfiguration are kept
 // to validate the URL and to drive that config mapping once it is wired.
+// Build-time gating: the whole producer class (RedisDataSource consumer + RedisClient producer) is
+// only included in the build when cluster.backplane=valkey. With the default backplane the class
+// and
+// its producers are removed, so the inactive Redis client has no consumers and no eager startup
+// observer is generated.
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
-@LookupIfProperty(name = "cluster.enabled", stringValue = "true")
+@IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 public class ValkeyConnectionConfiguration {
 
     private final ApplicationProperties applicationProperties;
@@ -298,7 +303,6 @@ public class ValkeyConnectionConfiguration {
     // RedisURI once cluster.valkey credentials handling is finalised.
     @Produces
     @Singleton
-    @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
     public RedisClient nativeRedisClient() {
         Endpoint endpoint = parseUrl(applicationProperties.getCluster().getValkey().getUrl());
         RedisURI.Builder uri =

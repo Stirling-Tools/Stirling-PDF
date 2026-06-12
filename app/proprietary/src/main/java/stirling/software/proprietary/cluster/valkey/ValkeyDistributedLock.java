@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.value.SetArgs;
 import io.quarkus.redis.datasource.value.ValueCommands;
@@ -34,9 +34,10 @@ import stirling.software.common.cluster.DistributedLock;
 // The injected bean is now the RedisDataSource that ValkeyConnectionConfiguration produces; the Lua
 // scripts and the acquire/release/renew control flow are framework-agnostic and carry over
 // unchanged.
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisDataSource dependency) is removed so no eager Redis startup observer is generated.
 @ApplicationScoped
-@LookupIfProperty(name = "cluster.enabled", stringValue = "true")
-@LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
+@IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 @Slf4j
 public class ValkeyDistributedLock implements DistributedLock {
 
