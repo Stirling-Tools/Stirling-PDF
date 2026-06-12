@@ -6,8 +6,10 @@ import {
 } from "@proprietary/components/shared/config/configNavSections";
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
-import { SaasPlanSection } from "@app/components/shared/config/configSections/SaasPlanSection";
-import TeamSection from "@app/components/shared/config/configSections/TeamSection";
+import {
+  createCloudPlanNavItem,
+  createCloudTeamNavItem,
+} from "@app/components/shared/config/cloudConfigNavSections";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
 
@@ -100,29 +102,18 @@ export const useConfigNavSections = (
   // Connection Mode always sits immediately after Preferences
   result.push(connectionModeSection);
 
-  // Plan & Billing and Team sections only when authenticated in SaaS mode
+  // Plan & Billing and Team sections only when authenticated in SaaS mode.
+  // These are the SHARED cloud sections — the wallet-driven PAYG Plan
+  // (dashboard + spend cap) and the team management UI — so a desktop SaaS
+  // user sees the same Plan / billing / team experience as the web app.
   if (isSaasMode && isAuthenticated) {
     result.push({
       title: t("settings.planBilling.title", "Plan & Billing"),
-      items: [
-        {
-          key: "planBilling",
-          label: t("settings.planBilling.title", "Plan & Billing"),
-          icon: "credit-card",
-          component: <SaasPlanSection />,
-        },
-      ],
+      items: [createCloudPlanNavItem(t)],
     });
     result.push({
       title: t("settings.team.title", "Team"),
-      items: [
-        {
-          key: "teams",
-          label: t("settings.team.title", "Team"),
-          icon: "groups-rounded",
-          component: <TeamSection />,
-        },
-      ],
+      items: [createCloudTeamNavItem(t)],
     });
   }
 
@@ -180,17 +171,11 @@ export const createConfigNavSections = (
     ],
   });
 
-  // Add Plan & Billing section (after Connection Mode)
+  // Add Plan & Billing section (after Connection Mode). Uses the shared cloud
+  // Plan item so this deprecated path matches the hook above.
   sections.splice(2, 0, {
     title: "Plan & Billing",
-    items: [
-      {
-        key: "planBilling",
-        label: "Plan & Billing",
-        icon: "credit-card",
-        component: <SaasPlanSection />,
-      },
-    ],
+    items: [createCloudPlanNavItem()],
   });
 
   return sections;
