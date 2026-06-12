@@ -819,7 +819,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <Loader size="sm" color="var(--text-muted)" />
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
-                  <div className="file-sidebar-file-list">
+                  <div className="file-sidebar-file-list" role="tablist" aria-label={t("fileSidebar.files", "Files")}>
                     {filteredFileStubs.map((stub) => {
                       const workbenchFileId = state.files.ids.find(
                         (id) => (id as string) === (stub.id as string),
