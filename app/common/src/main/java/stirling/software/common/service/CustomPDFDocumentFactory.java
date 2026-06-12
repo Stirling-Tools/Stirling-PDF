@@ -29,7 +29,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 // (controllers/other services) span the codebase; changing these public signatures to byte[]/
 // InputStream would ripple widely. The original import and type are kept intact pending a
 // coordinated migration of all callers.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

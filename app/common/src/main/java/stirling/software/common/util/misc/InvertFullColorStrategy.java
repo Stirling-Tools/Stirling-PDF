@@ -26,7 +26,7 @@ import org.springframework.core.io.InputStreamResource;
 // for these constructor params. The parent class ReplaceAndInvertColorStrategy declares the same
 // MultipartFile constructor parameter; changing the public signature here would diverge from the
 // parent and ripple to callers, so the type is kept until the parent/callers are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 

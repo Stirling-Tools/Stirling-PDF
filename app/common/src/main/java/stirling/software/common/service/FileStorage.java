@@ -18,7 +18,7 @@ import org.springframework.core.io.Resource;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile is used in public
 // method signatures (storeFile, retrieveFile). No servlet/JAX-RS drop-in for utility method
 // params; changing it would ripple widely into callers. Keeping the type.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 // TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
 // .StreamingResponseBody is used in the public storeFromStreamingBody signature. No Quarkus/JAX-RS
 // drop-in; converting would ripple into callers. Keeping the type.

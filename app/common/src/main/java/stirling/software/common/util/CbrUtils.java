@@ -20,7 +20,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 // MultipartFile and rely on isEmpty()/getOriginalFilename()/transferTo(File), which are
 // MultipartFile-specific. Converting the signatures (e.g. to byte[]/InputStream) would ripple
 // to all callers, so the type is intentionally kept until the calling endpoints are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import com.github.junrar.Archive;
 import com.github.junrar.exception.CorruptHeaderException;

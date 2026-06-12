@@ -38,7 +38,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 // getOriginalFilename(), getInputStream() and ImageProcessingUtils.loadImageWithExifOrientation(file).
 // Changing the public signature would ripple across all callers, so the type is kept for now and
 // must be re-migrated together with its callers (e.g. to a JAX-RS multipart form / byte[] / InputStream).
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 

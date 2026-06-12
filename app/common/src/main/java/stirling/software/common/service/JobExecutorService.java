@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
 // JAX-RS drop-in for these utility method params; changing the type would ripple to
 // callers, so it is kept as-is for now.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 // TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
 // .StreamingResponseBody is a Spring MVC servlet type with no JAX-RS equivalent here;
 // it is consumed by FileStorage#storeFromStreamingBody and kept as-is for now.

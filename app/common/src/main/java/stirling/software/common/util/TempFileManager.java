@@ -13,7 +13,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
 // drop-in. Kept to preserve the public convertMultipartFileToFile signature used by callers;
 // migrate to byte[]/InputStream or a Quarkus multipart type once callers are updated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

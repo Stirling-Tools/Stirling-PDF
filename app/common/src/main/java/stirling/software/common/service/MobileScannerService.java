@@ -18,7 +18,7 @@ import io.quarkus.scheduler.Scheduled;
 // drop-in. uploadFiles(...) is a public API consumed by callers and relies on isEmpty(),
 // getOriginalFilename(), getSize(), getContentType() and transferTo(Path). Changing it to
 // byte[]/InputStream would ripple to callers, so the Spring type is kept here intentionally.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 

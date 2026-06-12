@@ -12,7 +12,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 // JAX-RS/servlet drop-in. It is used as a public method return type and implemented by the
 // inner CustomMultipartFile class; converting the type would ripple to all callers. Keeping
 // the Spring type for now to preserve the public signature and behavior.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 

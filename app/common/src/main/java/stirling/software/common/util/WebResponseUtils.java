@@ -27,7 +27,7 @@ import org.springframework.http.ResponseEntity;
 // drop-in for a utility method parameter. Converting multiPartFileToWebResponse to accept
 // byte[]/InputStream would ripple through every caller, so the Spring type and its import are kept
 // here intentionally.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;

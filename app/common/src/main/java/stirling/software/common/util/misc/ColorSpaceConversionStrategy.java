@@ -16,7 +16,7 @@ import org.springframework.core.io.InputStreamResource;
 // the superclass ctor ReplaceAndInvertColorStrategy(MultipartFile, ReplaceAndInvert) requires it.
 // No JAX-RS drop-in exists for this constructor param without rippling changes to the parent and
 // every caller, so the type is preserved here.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 

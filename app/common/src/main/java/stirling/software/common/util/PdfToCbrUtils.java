@@ -22,7 +22,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 // (convertPdfToCbr/validatePdfFile/isPdfFile) consumed by callers; changing it to
 // byte[]/InputStream would ripple widely, so the type is intentionally kept until callers
 // are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 

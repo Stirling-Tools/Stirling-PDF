@@ -29,7 +29,7 @@ import org.springframework.core.io.support.ResourcePatternUtils;
 // drop-in for these utility method params. The public signatures of convertMultipartFileToFile and
 // multipartToFile are used by many callers, so the type is kept to avoid a wide ripple. Revisit to
 // accept InputStream/byte[] or a JAX-RS form-data type once callers are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 

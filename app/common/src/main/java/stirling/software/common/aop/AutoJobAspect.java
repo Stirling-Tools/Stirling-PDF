@@ -16,7 +16,7 @@ import org.slf4j.MDC;
 // MultipartFile) and PDFFile.getFileInput()/setFileInput(MultipartFile). Changing the type here
 // would ripple into FileStorage and PDFFile public signatures, so the original type is kept until
 // those collaborators are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;

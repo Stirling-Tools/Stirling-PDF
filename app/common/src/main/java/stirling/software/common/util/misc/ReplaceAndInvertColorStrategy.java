@@ -11,7 +11,7 @@ import org.springframework.core.io.InputStreamResource;
 // the inherited PDFFile.setFileInput(MultipartFile) (PDFFile keeps this type for the same
 // reason); changing this constructor parameter would ripple to callers and the API binding
 // layer, so the type is kept until PDFFile and its callers are migrated together.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

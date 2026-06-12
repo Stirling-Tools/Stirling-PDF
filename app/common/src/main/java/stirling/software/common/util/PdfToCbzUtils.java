@@ -17,7 +17,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 // JAX-RS drop-in for these public static utility method params. Converting to byte[]/
 // InputStream would change widely-used public signatures (convertPdfToCbz, isPdfFile,
 // validatePdfFile) and ripple to callers, so the type is kept until callers are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 

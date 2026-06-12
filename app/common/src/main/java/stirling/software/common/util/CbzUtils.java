@@ -24,7 +24,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 // drop-in for these utility method parameters. The type appears in public method signatures
 // (convertCbzToPdf, isCbzFile, isComicBookFile) consumed by other modules; switching to
 // byte[]/InputStream would ripple across callers. Keep the Spring type until callers migrate.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;

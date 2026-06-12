@@ -47,7 +47,7 @@ import jakarta.ws.rs.core.MediaType;
 // MultipartFile implementation with a custom byte[]/InputStream holder and reworking the private
 // addAttachmentsToDocumentWithMapping signature. Kept as-is to preserve behavior; revisit to
 // introduce a Quarkus-friendly attachment abstraction.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.Data;
 import lombok.Getter;

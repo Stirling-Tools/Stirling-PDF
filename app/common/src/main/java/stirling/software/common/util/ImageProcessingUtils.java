@@ -16,7 +16,7 @@ import javax.imageio.stream.ImageInputStream;
 // drop-in. loadImageWithExifOrientation(MultipartFile) is a public utility used by callers that
 // pass Spring MultipartFile; converting to byte[]/InputStream would change the public signature
 // and ripple to those callers. Keep the type until callers are migrated.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;

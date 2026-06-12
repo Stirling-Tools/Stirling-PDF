@@ -4,7 +4,7 @@ package stirling.software.common.model.api;
 // servlet/JAX-RS drop-in for a DTO field type. Changing this public field type to
 // byte[]/InputStream or a JAX-RS multipart type would ripple to all callers and the
 // API binding layer, so the type is kept until callers are migrated together.
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
