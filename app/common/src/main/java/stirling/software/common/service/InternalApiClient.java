@@ -9,16 +9,28 @@ import java.time.Duration;
 import java.util.regex.Pattern;
 
 // TODO: Migration required - the HTTP dispatch in this class is built entirely on Spring's
-// RestTemplate (with SimpleClientHttpRequestFactory, RequestCallback, ResourceAccessException),
-// and its public API surface uses Spring HTTP types (ResponseEntity<Resource>, MultiValueMap,
-// HttpHeaders, HttpEntity, MediaType, HttpMethod) plus org.springframework.core.io.Resource /
-// FileSystemResource. Converting to the Quarkus REST client or java.net.http.HttpClient is
-// non-trivial and would ripple to callers (PipelineProcessor, AiWorkflowService) that pass
-// MultiValueMap bodies and consume ResponseEntity<Resource>. These Spring imports are
-// intentionally retained until that cross-file migration is scheduled.
+// RestTemplate (RestTemplate.execute/httpEntityCallback with SimpleClientHttpRequestFactory,
+// RequestCallback, ResponseExtractor and ResourceAccessException). The faithful Quarkus target is
+// java.net.http.HttpClient (HttpClient.Builder for the connect/read timeouts, multipart body built
+// manually, ConnectException/HttpTimeoutException replacing ResourceAccessException). That rewrite
+// is blocked here because the public API surface uses Spring HTTP types that cannot change without
+// editing callers:
+//   - post(String, MultiValueMap<String, Object>) : ResponseEntity<Resource>
+//     is called by, and its MultiValueMap argument / ResponseEntity<Resource> result are consumed
+//     by, McpOperationExecutor and PolicyExecutor (app/proprietary) and asserted directly by
+//     InternalApiClientTest (which mocks RestTemplate.execute + ResponseExtractor).
+//   - ResponseEntity<Resource> -> jakarta.ws.rs.core.Response, MultiValueMap -> a manual
+//     Map<String,List<Object>>/form encoding, HttpHeaders/HttpStatus/HttpEntity/MediaType/HttpMethod
+//     -> jakarta.ws.rs.core equivalents, all in lockstep with those callers.
+// These Spring imports are intentionally retained until that cross-file migration is scheduled;
+// they are listed explicitly (no wildcard) so each retained type is auditable.
 import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RequestCallback;
@@ -49,7 +61,7 @@ public class InternalApiClient {
 
     // Allowlist for internal dispatch. Matches fixed namespace prefixes,
     // but rejects traversal (..), URL-encoding (%), query/fragment, backslashes, and any other
-    // character that could alter the resolved endpoint on the local Spring server.
+    // character that could alter the resolved endpoint on the local server.
     //
     // The second alternation carves out `/api/v1/ai/tools/*` specifically — AI tools are
     // dispatchable, but the broader `/api/v1/ai/` surface (orchestrate, health, etc.) is
@@ -179,8 +191,12 @@ public class InternalApiClient {
 
     private String getBaseUrl() {
         // Resolve the port lazily so desktop mode (server.port=0, OS-assigned) dispatches to the
-        // actual bound port. Spring publishes local.server.port once the web server is up; fall
-        // back to the configured server.port for early calls (tests, non-web contexts).
+        // actual bound port. The "local.server.port" config key is published once the web server
+        // is up; fall back to the configured server.port for early calls (tests, non-web contexts).
+        // TODO: Migration required - verify the runtime exposes "local.server.port"/"server.port"
+        // via MicroProfile Config under Quarkus (Quarkus uses "quarkus.http.port" and, for
+        // random-port test/dev runs, "quarkus.http.test-port"); this lazy port lookup assumed
+        // Spring Boot's WebServerInitializedEvent populating "local.server.port".
         String port = config.getOptionalValue("local.server.port", String.class).orElse(null);
         if (port == null) {
             port = config.getOptionalValue("server.port", String.class).orElse("8080");

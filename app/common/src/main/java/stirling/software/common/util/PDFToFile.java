@@ -16,21 +16,10 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-// TODO: Migration required - org.springframework.core.io.Resource, org.springframework.http.*
-// (HttpStatus, MediaType, ResponseEntity) and org.springframework.web.multipart.MultipartFile are
-// retained here because the public method signatures return ResponseEntity<Resource> and delegate
-// to WebResponseUtils.fileToWebResponse(TempFile, String, org.springframework.http.MediaType),
-// which is defined in another (not-yet-migrated) file. MultipartFile params are public signatures
-// consumed by many controllers. Converting these would require editing WebResponseUtils and every
-// caller, so per the migration rules they are left intact with this TODO until those files migrate.
-// JAX-RS equivalents would be: ResponseEntity<Resource> -> jakarta.ws.rs.core.Response,
-// org.springframework.http.MediaType -> jakarta.ws.rs.core.MediaType,
-// HttpStatus.BAD_REQUEST -> Response.Status.BAD_REQUEST,
-// MultipartFile -> byte[]/InputStream or a JAX-RS multipart type.
-import stirling.software.common.model.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import stirling.software.common.model.MultipartFile;
 
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
@@ -60,10 +49,10 @@ public class PDFToFile {
         this.runtimePathConfig = runtimePathConfig;
     }
 
-    public ResponseEntity<Resource> processPdfToMarkdown(MultipartFile inputFile)
+    public Response processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if (!"application/pdf".equals(inputFile.getContentType())) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
         MutableDataSet options =
@@ -167,7 +156,7 @@ public class PDFToFile {
             throw e;
         }
         return WebResponseUtils.fileToWebResponse(
-                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     /**
@@ -180,10 +169,10 @@ public class PDFToFile {
         return PATTERN.matcher(markdown).replaceAll("$1(images/$2)");
     }
 
-    public ResponseEntity<Resource> processPdfToHtml(MultipartFile inputFile)
+    public Response processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if (!"application/pdf".equals(inputFile.getContentType())) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
         // Get the original PDF file name without the extension
@@ -240,15 +229,15 @@ public class PDFToFile {
         }
 
         return WebResponseUtils.fileToWebResponse(
-                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
-    public ResponseEntity<Resource> processPdfToOfficeFormat(
+    public Response processPdfToOfficeFormat(
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
 
-        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if (!"application/pdf".equals(inputFile.getContentType())) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
         // Get the original PDF file name without the extension
@@ -266,7 +255,7 @@ public class PDFToFile {
         List<String> allowedFormats =
                 Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "xml", "txt:Text");
         if (!allowedFormats.contains(outputFormat)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
         String fileName;
@@ -377,7 +366,7 @@ public class PDFToFile {
             }
         }
         return WebResponseUtils.fileToWebResponse(
-                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     private boolean isUnoConvertEnabled() {

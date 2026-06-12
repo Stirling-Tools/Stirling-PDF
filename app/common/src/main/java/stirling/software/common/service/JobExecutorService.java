@@ -9,30 +9,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-// TODO: Migration required - the public API of this service returns Spring
-// org.springframework.http.ResponseEntity, which ripples widely to every caller
-// (controllers and the JobQueue). The Spring HTTP type cluster below
-// (ResponseEntity, HttpHeaders, MediaType) cannot be swapped to
-// jakarta.ws.rs.core equivalents in isolation without breaking those signatures,
-// because they are consumed via ResponseEntity#getHeaders()/getBody() and built
-// via ResponseEntity builders. These imports are intentionally retained until the
-// callers are migrated as a unit.
 import stirling.software.common.model.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
 // JAX-RS drop-in for these utility method params; changing the type would ripple to
 // callers, so it is kept as-is for now.
 import stirling.software.common.model.MultipartFile;
 // TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
 // .StreamingResponseBody is a Spring MVC servlet type with no JAX-RS equivalent here;
-// it is consumed by FileStorage#storeFromStreamingBody and kept as-is for now.
+// it is still consumed by FileStorage#storeFromStreamingBody (whose signature has not yet
+// been migrated), so the result-handling branch below keeps this type as-is for now.
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -46,6 +39,8 @@ import stirling.software.common.util.RegexPatternUtils;
 @ApplicationScoped
 @Slf4j
 public class JobExecutorService {
+
+    private static final String APPLICATION_PDF_VALUE = "application/pdf";
 
     private final TaskManager taskManager;
     private final FileStorage fileStorage;
@@ -82,16 +77,15 @@ public class JobExecutorService {
                 "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
     }
 
-    public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
+    public Response runJobGeneric(boolean async, Supplier<Object> work) {
         return runJobGeneric(async, work, -1);
     }
 
-    public ResponseEntity<?> runJobGeneric(
-            boolean async, Supplier<Object> work, long customTimeoutMs) {
+    public Response runJobGeneric(boolean async, Supplier<Object> work, long customTimeoutMs) {
         return runJobGeneric(async, work, customTimeoutMs, false, 50);
     }
 
-    public ResponseEntity<?> runJobGeneric(
+    public Response runJobGeneric(
             boolean async,
             Supplier<Object> work,
             long customTimeoutMs,
@@ -160,10 +154,10 @@ public class JobExecutorService {
                         }
                     };
 
-            CompletableFuture<ResponseEntity<?>> future =
+            CompletableFuture<Response> future =
                     jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
 
-            return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
+            return Response.ok(new JobResponse<>(true, jobId, null)).build();
         } else if (async) {
             taskManager.createTask(jobId);
 
@@ -192,7 +186,7 @@ public class JobExecutorService {
                         }
                     });
 
-            return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
+            return Response.ok(new JobResponse<>(true, jobId, null)).build();
         } else {
             try {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
@@ -200,15 +194,16 @@ public class JobExecutorService {
                 stirling.software.common.util.JobContext.setJobId(jobId);
                 Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
 
-                if (result instanceof ResponseEntity) {
-                    return (ResponseEntity<?>) result;
+                if (result instanceof Response) {
+                    return (Response) result;
                 }
 
                 return handleResultForSyncJob(result);
             } catch (TimeoutException te) {
                 log.error("Synchronous job timed out after {} ms", timeoutToUse);
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(Map.of("error", "Job timed out after " + timeoutToUse + " ms"))
+                        .build();
             } catch (RuntimeException e) {
                 Throwable cause = e.getCause();
                 if (e instanceof IllegalArgumentException
@@ -222,12 +217,14 @@ public class JobExecutorService {
                     throw e;
                 }
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job failed: " + e.getMessage()));
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(Map.of("error", "Job failed: " + e.getMessage()))
+                        .build();
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job failed: " + e.getMessage()));
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(Map.of("error", "Job failed: " + e.getMessage()))
+                        .build();
             } finally {
                 stirling.software.common.util.JobContext.clear();
             }
@@ -238,12 +235,11 @@ public class JobExecutorService {
         try {
             if (result instanceof byte[]) {
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
-                taskManager.setFileResult(
-                        jobId, fileId, "result.pdf", MediaType.APPLICATION_PDF_VALUE);
+                taskManager.setFileResult(jobId, fileId, "result.pdf", APPLICATION_PDF_VALUE);
                 log.debug("Stored byte[] result with fileId: {}", fileId);
-            } else if (result instanceof ResponseEntity) {
-                ResponseEntity<?> response = (ResponseEntity<?>) result;
-                Object body = response.getBody();
+            } else if (result instanceof Response) {
+                Response response = (Response) result;
+                Object body = response.getEntity();
 
                 if (body instanceof byte[]) {
                     String filename = extractResponseFilename(response);
@@ -251,23 +247,26 @@ public class JobExecutorService {
 
                     String fileId = fileStorage.storeBytes((byte[]) body, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
-                    log.debug("Stored ResponseEntity<byte[]> result with fileId: {}", fileId);
+                    log.debug("Stored Response<byte[]> result with fileId: {}", fileId);
                 } else if (body instanceof StreamingResponseBody streamingBody) {
+                    // TODO: Migration required - FileStorage#storeFromStreamingBody still accepts the
+                    // Spring StreamingResponseBody type. Once that signature is migrated to
+                    // jakarta.ws.rs.core.StreamingOutput, this branch should test for StreamingOutput
+                    // (the type a JAX-RS Response carries for streamed bodies) instead.
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);
 
                     String fileId = fileStorage.storeFromStreamingBody(streamingBody, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
                     log.debug(
-                            "Stored ResponseEntity<StreamingResponseBody> result with fileId: {}",
-                            fileId);
+                            "Stored Response<StreamingResponseBody> result with fileId: {}", fileId);
                 } else if (body instanceof Resource resource) {
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);
 
                     String fileId = fileStorage.storeFromResource(resource, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
-                    log.debug("Stored ResponseEntity<Resource> result with fileId: {}", fileId);
+                    log.debug("Stored Response<Resource> result with fileId: {}", fileId);
                 } else {
                     if (body != null && body.toString().contains("fileId")) {
                         try {
@@ -277,7 +276,7 @@ public class JobExecutorService {
 
                             if (fileId != null && !fileId.isEmpty()) {
                                 String filename = "result.pdf";
-                                String contentType = MediaType.APPLICATION_PDF_VALUE;
+                                String contentType = APPLICATION_PDF_VALUE;
 
                                 try {
                                     java.lang.reflect.Method getOriginalFileName =
@@ -331,7 +330,7 @@ public class JobExecutorService {
 
                         if (fileId != null && !fileId.isEmpty()) {
                             String filename = "result.pdf";
-                            String contentType = MediaType.APPLICATION_PDF_VALUE;
+                            String contentType = APPLICATION_PDF_VALUE;
 
                             try {
                                 java.lang.reflect.Method getOriginalFileName =
@@ -377,31 +376,34 @@ public class JobExecutorService {
         }
     }
 
-    private ResponseEntity<?> handleResultForSyncJob(Object result) throws IOException {
+    private Response handleResultForSyncJob(Object result) throws IOException {
         if (result instanceof byte[]) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
+            return Response.ok(result)
+                    .type(MediaType.valueOf(APPLICATION_PDF_VALUE))
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
                             "form-data; name=\"attachment\"; filename=\"result.pdf\"")
-                    .body(result);
+                    .build();
         } else if (result instanceof MultipartFile file) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(file.getContentType()))
+            return Response.ok(file.getBytes())
+                    .type(MediaType.valueOf(file.getContentType()))
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
                             "form-data; name=\"attachment\"; filename=\""
                                     + file.getOriginalFilename()
                                     + "\"")
-                    .body(file.getBytes());
+                    .build();
         } else {
-            return ResponseEntity.ok(result);
+            return Response.ok(result).build();
         }
     }
 
-    private static String extractResponseFilename(ResponseEntity<?> response) {
-        if (response.getHeaders().getContentDisposition() != null) {
-            String filename = response.getHeaders().getContentDisposition().getFilename();
+    private static String extractResponseFilename(Response response) {
+        // JAX-RS exposes Content-Disposition as a raw header string; parse the filename token out of
+        // it (Spring previously used ContentDisposition#getFilename()).
+        String contentDisposition = response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition != null) {
+            String filename = parseFilenameFromContentDisposition(contentDisposition);
             if (filename != null && !filename.isEmpty()) {
                 return filename;
             }
@@ -409,9 +411,23 @@ public class JobExecutorService {
         return "result.pdf";
     }
 
-    private static String extractResponseContentType(ResponseEntity<?> response) {
-        MediaType mediaType = response.getHeaders().getContentType();
-        return mediaType != null ? mediaType.toString() : MediaType.APPLICATION_PDF_VALUE;
+    private static String parseFilenameFromContentDisposition(String contentDisposition) {
+        for (String part : contentDisposition.split(";")) {
+            String trimmed = part.trim();
+            if (trimmed.regionMatches(true, 0, "filename=", 0, "filename=".length())) {
+                String value = trimmed.substring("filename=".length()).trim();
+                if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length() - 1);
+                }
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private static String extractResponseContentType(Response response) {
+        MediaType mediaType = response.getMediaType();
+        return mediaType != null ? mediaType.toString() : APPLICATION_PDF_VALUE;
     }
 
     private long parseSessionTimeout(String timeout) {

@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.StreamingOutput;
 
 // TODO: Migration required - org.springframework.core.io.Resource is used in public method
 // signatures (storeFile, storeFromResource) and for behavior (isFile()/getFile()/getInputStream()).
@@ -19,11 +20,6 @@ import stirling.software.common.model.io.Resource;
 // method signatures (storeFile, retrieveFile). No servlet/JAX-RS drop-in for utility method
 // params; changing it would ripple widely into callers. Keeping the type.
 import stirling.software.common.model.MultipartFile;
-// TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
-// .StreamingResponseBody is used in the public storeFromStreamingBody signature. No Quarkus/JAX-RS
-// drop-in; converting would ripple into callers. Keeping the type.
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -113,7 +109,7 @@ public class FileStorage {
         return new StoredFile(stored.fileId(), stored.size());
     }
 
-    public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
+    public String storeFromStreamingBody(StreamingOutput body, String originalName)
             throws IOException {
         String owner = resolveOwner();
         // Hold Throwable not IOException: an unchecked failure (NPE, IllegalState, OOM, etc.)
@@ -129,7 +125,7 @@ public class FileStorage {
                         executor.submit(
                                 () -> {
                                     try {
-                                        body.writeTo(out);
+                                        body.write(out);
                                     } catch (Throwable ex) {
                                         bodyError.set(ex);
                                     } finally {
@@ -158,10 +154,10 @@ public class FileStorage {
                         throw ioe;
                     }
                     throw new IOException(
-                            "StreamingResponseBody writer failed: " + writerErr.getMessage(),
+                            "StreamingOutput writer failed: " + writerErr.getMessage(),
                             writerErr);
                 }
-                log.debug("Stored StreamingResponseBody with ID: {}", stored.fileId());
+                log.debug("Stored StreamingOutput with ID: {}", stored.fileId());
                 return stored.fileId();
             } finally {
                 // Interrupt and join the writer task: shutdown() alone returns immediately and a

@@ -15,12 +15,13 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// TODO: Migration required - org.springframework.core.io.{ClassPathResource,Resource,ResourceLoader}
-// and org.springframework.core.io.support.ResourcePatternUtils have no direct Quarkus/Jakarta
-// equivalent. ClassPathResource usages below have been converted to the JDK ClassLoader
-// resource API. Resource/ResourceLoader/ResourcePatternUtils remain in getResourcesFromLocationPattern
-// because that method's public signature and the Spring resource-pattern resolver are used by
-// callers; converting it requires a filesystem/classpath glob rewrite that ripples to callers.
+// TODO: Migration required - replace Spring classpath scanning with Quarkus (e.g. io.quarkus
+// ClassPathUtils or build-time indexing). org.springframework.core.io.ResourceLoader and
+// org.springframework.core.io.support.ResourcePatternUtils have no Quarkus/Jakarta shim. They are
+// used only by getResourcesFromLocationPattern below; that method's public signature and the Spring
+// resource-pattern glob resolver are relied on by callers, so the imports and logic are kept intact
+// until the glob rewrite (which ripples to callers) is done. The shim
+// stirling.software.common.model.io.Resource is already used for the return type.
 import stirling.software.common.model.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
@@ -259,6 +260,10 @@ public class GeneralUtils {
     }
 
     // Get resources from a location pattern
+    // TODO: Migration required - replace Spring classpath scanning with Quarkus (e.g. io.quarkus
+    // ClassPathUtils or build-time indexing). The ResourceLoader param and ResourcePatternUtils glob
+    // resolver have no Quarkus/Jakarta drop-in; the logic is preserved verbatim pending a
+    // filesystem/classpath glob rewrite that also touches every caller of this method.
     public Resource[] getResourcesFromLocationPattern(
             String locationPattern, ResourceLoader resourceLoader) throws Exception {
         // Normalize the path for file resources

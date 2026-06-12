@@ -16,18 +16,17 @@ import java.util.Locale;
 import java.util.UUID;
 
 // TODO: Migration required - the Spring property-source machinery below
-// (ConfigurableEnvironment, PropertySource, EncodedResource, ClassPathResource,
-// FileSystemResource, Resource) has no direct Quarkus/MicroProfile-Config drop-in.
-// The dynamicYamlPropertySource @Bean equivalent and the SAML2 Resource accessors
-// keep these Spring imports until the YAML-into-config and classpath/file resource
-// lookups are reimplemented (e.g. via @io.smallrye.config.ConfigMapping plus a
-// custom ConfigSource, and java.nio / ClassLoader#getResourceAsStream for resources).
+// (ConfigurableEnvironment, PropertySource, EncodedResource) has no direct
+// Quarkus/MicroProfile-Config drop-in. The dynamicYamlPropertySource method keeps these
+// three Spring imports until the YAML-into-config wiring is reimplemented via a custom
+// org.eclipse.microprofile.config.spi.ConfigSource plus @io.smallrye.config.ConfigMapping.
+// Resource/ClassPathResource/FileSystemResource are now the local shim types, not Spring.
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.support.EncodedResource;
 import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
-import org.springframework.core.io.support.EncodedResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
