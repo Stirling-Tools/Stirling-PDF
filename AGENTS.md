@@ -426,7 +426,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Translation Rules
 
-- **CRITICAL**: Always update translations in `en-GB` only, never `en-US`
+- **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
 - Translation files are located in `frontend/editor/public/locales/`
 
 ## Important Notes

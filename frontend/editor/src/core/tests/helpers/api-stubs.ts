@@ -154,8 +154,8 @@ export async function mockAppApis(
       email: "test@example.com",
       roles: ["ROLE_USER"],
     },
-    languages = ["en-GB"],
-    defaultLocale = "en-GB",
+    languages = ["en-US"],
+    defaultLocale = "en-US",
     endpointsAvailability = {},
     backendStatus = "UP",
   } = opts;
