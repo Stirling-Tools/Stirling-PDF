@@ -1,9 +1,9 @@
 package stirling.software.proprietary.cluster.valkey;
 
+import io.quarkus.redis.datasource.RedisDataSource;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import io.quarkus.redis.datasource.RedisDataSource;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,14 +21,12 @@ import stirling.software.common.model.ApplicationProperties;
 // re-expressed accordingly.
 public class ValkeyClusterBackplane implements ClusterBackplane {
 
-    @Inject
-    ApplicationProperties applicationProperties;
+    @Inject ApplicationProperties applicationProperties;
 
     // TODO: Migration required - was Spring spring-data-redis StringRedisTemplate. Replaced with
     // Quarkus RedisDataSource (io.quarkus.redis.datasource). Verify the redis client extension
     // (quarkus-redis-client) is on the classpath and configured via quarkus.redis.* properties.
-    @Inject
-    RedisDataSource redisDataSource;
+    @Inject RedisDataSource redisDataSource;
 
     @Override
     public boolean isHealthy() {

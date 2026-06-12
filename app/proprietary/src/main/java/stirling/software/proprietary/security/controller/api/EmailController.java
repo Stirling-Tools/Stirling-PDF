@@ -91,7 +91,8 @@ public class EmailController {
             return Response.ok("Email sent successfully").build();
         } catch (MessagingException e) {
             // Catches any messaging exception (e.g., invalid email address, SMTP server issues).
-            // TODO: Migration required - the Spring-specific org.springframework.mail.MailSendException
+            // TODO: Migration required - the Spring-specific
+            // org.springframework.mail.MailSendException
             // ("Invalid Addresses" case) was previously handled separately. Once EmailService is
             // migrated off Spring's JavaMailSender that branch can be reintroduced with the
             // replacement exception type.

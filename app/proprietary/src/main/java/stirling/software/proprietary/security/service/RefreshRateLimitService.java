@@ -5,9 +5,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.quarkus.scheduler.Scheduled;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.scheduler.Scheduled;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;

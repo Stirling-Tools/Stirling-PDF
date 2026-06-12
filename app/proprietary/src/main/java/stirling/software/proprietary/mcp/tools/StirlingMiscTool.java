@@ -1,9 +1,9 @@
 package stirling.software.proprietary.mcp.tools;
 
+import io.quarkus.arc.lookup.LookupIfProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
-
-import io.quarkus.arc.lookup.LookupIfProperty;
 
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;

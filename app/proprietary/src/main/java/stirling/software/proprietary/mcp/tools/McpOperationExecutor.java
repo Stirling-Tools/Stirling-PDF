@@ -127,11 +127,16 @@ public class McpOperationExecutor {
         }
 
         // Spring's RestTemplate threw RestClientResponseException on non-2xx upstream responses;
-        // the migrated HttpClient-based InternalApiClient returns the upstream status as a Response.
+        // the migrated HttpClient-based InternalApiClient returns the upstream status as a
+        // Response.
         int status = response.getStatus();
         if (status < 200 || status >= 300) {
             String responseBody = readErrorBody(response);
-            log.warn("MCP {} upstream error: HTTP {} - {}", meta.id(), status, snippet(responseBody));
+            log.warn(
+                    "MCP {} upstream error: HTTP {} - {}",
+                    meta.id(),
+                    status,
+                    snippet(responseBody));
             return McpResponses.error(mapper, meta.id() + " failed: HTTP " + status + ".");
         }
         return buildResult(meta, response);
@@ -159,9 +164,7 @@ public class McpOperationExecutor {
                         ? meta.id()
                         : body.getFilename();
         String mimeType =
-                contentType != null
-                        ? contentType.toString()
-                        : MediaType.APPLICATION_OCTET_STREAM;
+                contentType != null ? contentType.toString() : MediaType.APPLICATION_OCTET_STREAM;
         long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
             long size = body.contentLength();

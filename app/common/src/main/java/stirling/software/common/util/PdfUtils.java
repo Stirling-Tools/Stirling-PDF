@@ -33,19 +33,13 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no servlet/JAX-RS
-// drop-in for these utility method params. imageToPdf relies on getContentType(),
-// getOriginalFilename(), getInputStream() and ImageProcessingUtils.loadImageWithExifOrientation(file).
-// Changing the public signature would ripple across all callers, so the type is kept for now and
-// must be re-migrated together with its callers (e.g. to a JAX-RS multipart form / byte[] / InputStream).
-import stirling.software.common.model.MultipartFile;
-
 import io.github.pixee.security.Filenames;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j

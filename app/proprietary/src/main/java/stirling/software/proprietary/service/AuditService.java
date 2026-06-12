@@ -17,23 +17,15 @@ import java.util.stream.IntStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
 
-// Migration: org.springframework.boot.actuate.audit.AuditEvent and AuditEventRepository were Spring
-// Boot Actuator types with no Quarkus equivalent. The write side has already been ported to a plain
-// CDI bean (stirling.software.proprietary.config.CustomAuditEventRepository) whose add(principal,
-// type, timestamp, data) method persists a PersistentAuditEvent. This service now depends on that
-// bean directly; the old `repository.add(new AuditEvent(principal, type, data))` calls have been
-// rewritten to `repository.add(principal, type, Instant.now(), data)`, preserving persistence
-// behavior without the Actuator DTO.
 import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.interceptor.InvocationContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MediaType;
@@ -293,8 +285,7 @@ public class AuditService {
      * @param auditLevel The current audit level
      * @return A map with standard audit data
      */
-    public Map<String, Object> createBaseAuditData(
-            ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+    public Map<String, Object> createBaseAuditData(InvocationContext ctx, AuditLevel auditLevel) {
         Map<String, Object> data = new HashMap<>();
 
         // Common data for all levels
@@ -313,10 +304,8 @@ public class AuditService {
 
         // Add class name and method name only at VERBOSE level
         if (auditLevel.includes(AuditLevel.VERBOSE)) {
-            data.put("className", joinPoint.getTarget().getClass().getName());
-            data.put(
-                    "methodName",
-                    ((MethodSignature) joinPoint.getSignature()).getMethod().getName());
+            data.put("className", ctx.getTarget().getClass().getName());
+            data.put("methodName", ctx.getMethod().getName());
         }
 
         return data;
@@ -385,12 +374,12 @@ public class AuditService {
      * @param auditLevel The current audit level
      */
     public void addFileData(
-            Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+            Map<String, Object> data, InvocationContext ctx, AuditLevel auditLevel) {
         if (auditLevel.includes(AuditLevel.STANDARD)) {
             List<MultipartFile> files = new ArrayList<>();
 
             // Extract files from multiple sources:
-            for (Object arg : joinPoint.getArgs()) {
+            for (Object arg : ctx.getParameters()) {
                 // 1. Direct MultipartFile arguments
                 if (arg instanceof MultipartFile) {
                     files.add((MultipartFile) arg);
@@ -492,20 +481,19 @@ public class AuditService {
      * @param auditLevel The current audit level
      */
     public void addMethodArguments(
-            Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+            Map<String, Object> data, InvocationContext ctx, AuditLevel auditLevel) {
         if (auditLevel.includes(AuditLevel.VERBOSE)) {
-            MethodSignature sig = (MethodSignature) joinPoint.getSignature();
-            String[] names = sig.getParameterNames();
-            Object[] vals = joinPoint.getArgs();
-            if (names != null && vals != null) {
-                IntStream.range(0, names.length)
+            java.lang.reflect.Parameter[] params = ctx.getMethod().getParameters();
+            Object[] vals = ctx.getParameters();
+            if (params != null && vals != null) {
+                IntStream.range(0, params.length)
                         .forEach(
                                 i -> {
+                                    String name = params[i].getName();
                                     if (vals[i] != null) {
-                                        // Convert objects to safe string representation
-                                        data.put("arg_" + names[i], safeToString(vals[i], 500));
+                                        data.put("arg_" + name, safeToString(vals[i], 500));
                                     } else {
-                                        data.put("arg_" + names[i], null);
+                                        data.put("arg_" + name, null);
                                     }
                                 });
             }
@@ -913,10 +901,11 @@ public class AuditService {
             // WEB distinction can no longer be made by instanceof here. Once the API-key auth path
             // is migrated (custom IdentityProvider / SecurityIdentityAugmentor), re-derive "API" by
             // inspecting a SecurityIdentity attribute/role set by that augmentor (e.g.
-            // identity.getAttribute("authType") or a dedicated role) instead of an instanceof check.
+            // identity.getAttribute("authType") or a dedicated role) instead of an instanceof
+            // check.
             // Until then, any authenticated non-anonymous identity is reported as "WEB"; the
             // refresh-token claim inspection below still recovers "API" for refresh requests.
-            if (securityIdentity.isSatisfied()) {
+            if (securityIdentity.isResolvable()) {
                 SecurityIdentity identity = securityIdentity.get();
                 String authType = String.valueOf(identity.getAttribute("authType"));
                 if ("API".equalsIgnoreCase(authType)) {

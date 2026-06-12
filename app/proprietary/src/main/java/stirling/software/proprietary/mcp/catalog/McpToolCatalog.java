@@ -8,13 +8,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.quarkus.runtime.StartupEvent;
+import io.swagger.v3.oas.annotations.Operation;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-
-import io.quarkus.runtime.StartupEvent;
-
-import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,13 +89,15 @@ public class McpToolCatalog {
         // (RequestMethod POST/PUT), and the HandlerMethod/MethodParameter reflection used to build
         // request schemas. Quarkus/RESTEasy Reactive has no equivalent runtime registry of JAX-RS
         // resources. To restore catalog population, replace this with one of:
-        //   (a) a build-time scan via a Quarkus extension / @io.quarkus.runtime.annotations.Recorder
+        //   (a) a build-time scan via a Quarkus extension /
+        // @io.quarkus.runtime.annotations.Recorder
         //       over Jandex-indexed @Path + @POST/@PUT methods, or
         //   (b) a custom registry populated as endpoints register themselves, or
         //   (c) classpath reflection (Jandex CombinedIndexBuildItem) over the @XxxApi-annotated
         //       resource classes.
         // The per-handler helpers below (buildMeta/paramSchemaFor/firstComplexParamType/indexOne/
-        // extractPatterns/isInvocableMethod) all depended on Spring MVC types and have been removed;
+        // extractPatterns/isInvocableMethod) all depended on Spring MVC types and have been
+        // removed;
         // the schema-generation logic (SimpleSchemaGenerator) and OperationMeta model are reusable
         // once a Quarkus-native handler enumeration is supplied.
         log.info("MCP tool catalog discovered {} PDF operation(s)", pdfOps.size());
@@ -111,7 +112,8 @@ public class McpToolCatalog {
                         : prettifyOpId(opId);
         // TODO: Migration required - request body type was previously resolved from Spring's
         // HandlerMethod#getMethodParameters(); resolve the first complex parameter type via plain
-        // reflection on the JAX-RS resource method instead, then call schemaGenerator.toSchema(...).
+        // reflection on the JAX-RS resource method instead, then call
+        // schemaGenerator.toSchema(...).
         ObjectNode schema = paramSchemaFor(method);
         // Every mutating endpoint requires the write scope.
         return new OperationMeta(

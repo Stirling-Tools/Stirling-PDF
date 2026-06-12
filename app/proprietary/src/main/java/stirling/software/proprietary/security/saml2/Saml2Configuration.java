@@ -21,13 +21,15 @@ import stirling.software.common.model.io.Resource;
 // (org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository
 // and ...web.authentication.OpenSaml5AuthenticationRequestResolver). Those builder/glue types have
 // no Quarkus equivalent, so the Spring Security SAML2 imports and @Configuration/@Bean wiring have
-// been removed. The SAML Service Provider must be rehosted on a Jakarta @WebServlet driving OpenSAML
+// been removed. The SAML Service Provider must be rehosted on a Jakarta @WebServlet driving
+// OpenSAML
 // 5 directly (see the dnulnets/quarkus-saml pattern). The OpenSAML 5 logic and the credential /
 // metadata-location preparation below are PRESERVED so the rehost can reuse them.
 //
 // TODO: Migration required - @ConditionalOnProperty(value = "security.saml2.enabled",
 // havingValue = "true") gated this whole class on a runtime property. Quarkus has no runtime
-// @ConditionalOnProperty for beans; enforce the security.saml2.enabled runtime toggle at the SAML SP
+// @ConditionalOnProperty for beans; enforce the security.saml2.enabled runtime toggle at the SAML
+// SP
 // entry point (e.g. a guard in the @WebServlet, or skip SP registration when disabled).
 @ApplicationScoped
 @Slf4j
@@ -81,14 +83,16 @@ public class Saml2Configuration {
         if (!privateKeyResource.exists()) {
             log.error("SAML2 SP private key not found at: {}", privateKeyResource.getFilename());
             throw new IllegalStateException(
-                    "SAML2 SP private key file does not exist: " + privateKeyResource.getFilename());
+                    "SAML2 SP private key file does not exist: "
+                            + privateKeyResource.getFilename());
         }
 
         log.info("Loading SP certificate from: {}", certificateResource.getFilename());
         if (!certificateResource.exists()) {
             log.error("SAML2 SP certificate not found at: {}", certificateResource.getFilename());
             throw new IllegalStateException(
-                    "SAML2 SP certificate file does not exist: " + certificateResource.getFilename());
+                    "SAML2 SP certificate file does not exist: "
+                            + certificateResource.getFilename());
         }
 
         // TODO: Migration required - was new Saml2X509Credential(privateKey, cert,
@@ -118,8 +122,10 @@ public class Saml2Configuration {
         String acsLocation = backendUrl + "/login/saml2/sso/{registrationId}";
         String sloResponseLocation = backendUrl + "/login";
 
-        // TODO: Migration required - the following Spring Security RelyingPartyRegistration was built
-        // here and stored in an InMemoryRelyingPartyRegistrationRepository. Re-implement against the
+        // TODO: Migration required - the following Spring Security RelyingPartyRegistration was
+        // built
+        // here and stored in an InMemoryRelyingPartyRegistrationRepository. Re-implement against
+        // the
         // OpenSAML-5-based SP using entityId / acsLocation / sloResponseLocation, the IdP issuer
         // (samlConf.getIdpIssuer()), SSO/SLO bindings (POST) and locations
         // (samlConf.getIdpSingleLoginUrl() / samlConf.getIdpSingleLogoutUrl()), authnRequestsSigned
@@ -156,7 +162,8 @@ public class Saml2Configuration {
 
     /**
      * Applies the original AuthnRequest customization: assigns a unique request ID and logs the
-     * request/HTTP details. Invoke this from the OpenSAML-5-based SP after building the AuthnRequest.
+     * request/HTTP details. Invoke this from the OpenSAML-5-based SP after building the
+     * AuthnRequest.
      */
     static void customizeAuthnRequest(HttpServletRequest request, AuthnRequest authnRequest) {
         // Generate a unique AuthnRequest ID for each SAML request

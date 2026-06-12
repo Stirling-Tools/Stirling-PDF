@@ -6,16 +6,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import io.quarkus.runtime.StartupEvent;
-import io.quarkus.scheduler.Scheduled;
 
 import lombok.extern.slf4j.Slf4j;
 

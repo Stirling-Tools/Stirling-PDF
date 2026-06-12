@@ -19,9 +19,11 @@ import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.GeneralUtils;
 
 // TODO: Migration required - Spring @Order(Ordered.HIGHEST_PRECEDENCE + 1) controlled the relative
-// order of this startup hook against other initializers. CDI StartupEvent observers have no portable
+// order of this startup hook against other initializers. CDI StartupEvent observers have no
+// portable
 // total ordering; if a specific run-before/run-after relationship is required, use @Priority on the
-// observer parameter or @Observes(during=...) and coordinate ordering across the migrated startup beans.
+// observer parameter or @Observes(during=...) and coordinate ordering across the migrated startup
+// beans.
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor

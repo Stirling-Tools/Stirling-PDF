@@ -12,17 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-// TODO: Migration required - Spring Security glue. This filter populates the
-// SecurityContextHolder (now a compat shim in stirling.software.common.security),
-// which has no Quarkus equivalent. In Quarkus the authenticated principal is exposed
-// as io.quarkus.security.identity.SecurityIdentity and is produced by an
-// IdentityProvider / SecurityIdentityAugmentor, NOT written imperatively from a
-// servlet filter. The Spring Security imports have been replaced with the
-// stirling.software.common.security compat shims so this file compiles; once the
-// collaborators are ported to Quarkus security, this filter should register the user
-// via a custom IdentityProvider keyed off the validated JWT claims (prefer
-// quarkus-smallrye-jwt for bearer validation) instead of
-// UsernamePasswordAuthenticationToken.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
@@ -73,8 +62,9 @@ public class JwtAuthenticationFilter implements Filter {
     @Inject ApplicationProperties.Security securityProperties;
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-            FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
@@ -179,8 +169,11 @@ public class JwtAuthenticationFilter implements Filter {
                     // SecurityIdentity produced by a custom IdentityProvider for the API key.
                     List<GrantedAuthority> authorities =
                             user.get().getAuthorities().stream()
-                                    .map(a -> (GrantedAuthority) new SimpleGrantedAuthority(
-                                            a.getAuthority()))
+                                    .map(
+                                            a ->
+                                                    (GrantedAuthority)
+                                                            new SimpleGrantedAuthority(
+                                                                    a.getAuthority()))
                                     .toList();
                     authentication =
                             new UsernamePasswordAuthenticationToken(
@@ -220,8 +213,11 @@ public class JwtAuthenticationFilter implements Filter {
             if (userDetails != null) {
                 List<GrantedAuthority> authorities =
                         userDetails.getAuthorities().stream()
-                                .map(a -> (GrantedAuthority) new SimpleGrantedAuthority(
-                                        a.getAuthority()))
+                                .map(
+                                        a ->
+                                                (GrantedAuthority)
+                                                        new SimpleGrantedAuthority(
+                                                                a.getAuthority()))
                                 .toList();
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, authorities);

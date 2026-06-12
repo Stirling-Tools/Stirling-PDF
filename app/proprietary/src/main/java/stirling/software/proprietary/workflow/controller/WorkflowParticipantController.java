@@ -7,6 +7,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -24,18 +27,13 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import org.jboss.resteasy.reactive.RestForm;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
-import stirling.software.proprietary.workflow.dto.ParticipantResponse;
 import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
-import stirling.software.proprietary.workflow.dto.WorkflowSessionResponse;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
@@ -203,7 +201,7 @@ public class WorkflowParticipantController {
 
             // Update status to SIGNED
             participant.setStatus(ParticipantStatus.SIGNED);
-            participant = participantRepository.save(participant);
+            participantRepository.persist(participant);
 
             log.info(
                     "Participant {} submitted signature for session {}",
@@ -261,7 +259,7 @@ public class WorkflowParticipantController {
                     participant.getId(), "Declined participation");
         }
 
-        participant = participantRepository.save(participant);
+        participantRepository.persist(participant);
 
         log.info(
                 "Participant {} declined workflow session {}",
@@ -412,8 +410,9 @@ public class WorkflowParticipantController {
     }
 
     /**
-     * Builds the {@code Content-Disposition: attachment} header value with an RFC 5987 UTF-8 encoded
-     * filename, mirroring Spring's {@code ContentDisposition.attachment().filename(name, UTF_8)}.
+     * Builds the {@code Content-Disposition: attachment} header value with an RFC 5987 UTF-8
+     * encoded filename, mirroring Spring's {@code ContentDisposition.attachment().filename(name,
+     * UTF_8)}.
      */
     private static String contentDispositionAttachment(String filename) {
         String encoded =

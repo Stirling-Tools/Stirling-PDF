@@ -41,7 +41,7 @@ import stirling.software.proprietary.service.AiUserDataService;
 // via quarkus.http.auth.* and quarkus-oidc (for OAuth2/OIDC logout).
 @Slf4j
 @ApplicationScoped
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class CustomLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";

@@ -3,10 +3,10 @@ package stirling.software.proprietary.storage.repository;
 import java.util.List;
 import java.util.Optional;
 
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -74,10 +74,9 @@ public class StoredFileRepository implements PanacheRepository<StoredFile> {
     }
 
     public long sumStorageBytesTotal() {
-        return find(
-                        "SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
-                                + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
-                                + "FROM StoredFile f")
+        return find("SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
+                        + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
+                        + "FROM StoredFile f")
                 .project(Long.class)
                 .firstResult();
     }

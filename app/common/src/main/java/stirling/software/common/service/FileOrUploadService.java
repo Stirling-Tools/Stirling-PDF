@@ -4,17 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
-// JAX-RS/servlet drop-in. It is used as a public method return type and implemented by the
-// inner CustomMultipartFile class; converting the type would ripple to all callers. Keeping
-// the Spring type for now to preserve the public signature and behavior.
-import stirling.software.common.model.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
+
+import stirling.software.common.model.MultipartFile;
 
 @ApplicationScoped
 @RequiredArgsConstructor

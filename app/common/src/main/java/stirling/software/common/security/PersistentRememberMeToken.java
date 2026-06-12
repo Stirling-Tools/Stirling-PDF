@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.Date;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken}.
  *
  * <p>Holds the persistent remember-me token data for a single series.
  */
@@ -15,8 +15,7 @@ public class PersistentRememberMeToken {
     private final String tokenValue;
     private final Date date;
 
-    public PersistentRememberMeToken(
-            String username, String series, String tokenValue, Date date) {
+    public PersistentRememberMeToken(String username, String series, String tokenValue, Date date) {
         this.username = username;
         this.series = series;
         this.tokenValue = tokenValue;

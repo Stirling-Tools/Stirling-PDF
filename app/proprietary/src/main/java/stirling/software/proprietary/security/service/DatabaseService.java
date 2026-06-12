@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.tuple.Pair;
 
 import io.quarkus.arc.profile.UnlessBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
@@ -485,7 +486,8 @@ public class DatabaseService implements DatabaseServiceInterface {
             }
             // TODO: Migration required - dropped catch for
             // org.springframework.jdbc.datasource.init.ScriptException (Spring JDBC). Raw JDBC
-            // PreparedStatement.execute() only throws SQLException; script errors are now logged via
+            // PreparedStatement.execute() only throws SQLException; script errors are now logged
+            // via
             // the SQLException branch above. Restore equivalent handling if a Quarkus/Hibernate
             // script runner is introduced later.
         }

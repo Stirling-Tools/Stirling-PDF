@@ -10,7 +10,6 @@ import java.util.ResourceBundle;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -27,13 +26,13 @@ import tools.jackson.databind.ObjectMapper;
  * Returns RFC 7807 Problem Details for HTTP APIs, ensuring consistent error responses across the
  * application.
  *
- * <p>Migrated from a Spring {@code @RestControllerAdvice} to a JAX-RS
- * {@link jakarta.ws.rs.ext.ExceptionMapper}. Because JAX-RS resolves at most one mapper per
- * exception type, this single {@code ExceptionMapper<Throwable>} reproduces the original per-type
+ * <p>Migrated from a Spring {@code @RestControllerAdvice} to a JAX-RS {@link
+ * jakarta.ws.rs.ext.ExceptionMapper}. Because JAX-RS resolves at most one mapper per exception
+ * type, this single {@code ExceptionMapper<Throwable>} reproduces the original per-type
  * {@code @ExceptionHandler} dispatch by inspecting the thrown exception with {@code instanceof}.
- * The RFC 7807 body, previously a Spring {@code ProblemDetail}, is now built as an ordered
- * {@link java.util.Map} (serialized by quarkus-rest-jackson) to preserve the exact response shape
- * without depending on Spring types.
+ * The RFC 7807 body, previously a Spring {@code ProblemDetail}, is now built as an ordered {@link
+ * java.util.Map} (serialized by quarkus-rest-jackson) to preserve the exact response shape without
+ * depending on Spring types.
  *
  * <h2>Exception Handler Hierarchy:</h2>
  *
@@ -62,26 +61,31 @@ import tools.jackson.databind.ObjectMapper;
  *       </ul>
  * </ol>
  *
- * <p>TODO: Migration required - the Spring-MVC-specific framework exceptions that used to be handled
- * here are never thrown under Quarkus/RESTEasy Reactive and their types cannot be referenced
- * without Spring on the classpath. A collaborator should add JAX-RS equivalents (likely as separate
- * {@code @Provider ExceptionMapper}s or additional {@code instanceof} branches once the Quarkus
- * exception types are confirmed):
+ * <p>TODO: Migration required - the Spring-MVC-specific framework exceptions that used to be
+ * handled here are never thrown under Quarkus/RESTEasy Reactive and their types cannot be
+ * referenced without Spring on the classpath. A collaborator should add JAX-RS equivalents (likely
+ * as separate {@code @Provider ExceptionMapper}s or additional {@code instanceof} branches once the
+ * Quarkus exception types are confirmed):
  *
  * <ul>
- *   <li>{@code MethodArgumentNotValidException} -> {@code jakarta.validation.ConstraintViolationException}
- *       (400, build the {@code errors} list from {@code getConstraintViolations()})
- *   <li>{@code MissingServletRequestParameterException} / {@code MissingServletRequestPartException}
- *       -> RESTEasy missing {@code @QueryParam}/{@code @RestForm} handling (400)
+ *   <li>{@code MethodArgumentNotValidException} -> {@code
+ *       jakarta.validation.ConstraintViolationException} (400, build the {@code errors} list from
+ *       {@code getConstraintViolations()})
+ *   <li>{@code MissingServletRequestParameterException} / {@code
+ *       MissingServletRequestPartException} -> RESTEasy missing
+ *       {@code @QueryParam}/{@code @RestForm} handling (400)
  *   <li>{@code MaxUploadSizeExceededException} -> quarkus.http.limits.max-body-size rejection (413)
- *   <li>{@code HttpRequestMethodNotSupportedException} -> {@code jakarta.ws.rs.NotAllowedException} (405)
- *   <li>{@code HttpMediaTypeNotSupportedException} -> {@code jakarta.ws.rs.NotSupportedException} (415)
- *   <li>{@code HttpMediaTypeNotAcceptableException} -> {@code jakarta.ws.rs.NotAcceptableException} (406)
+ *   <li>{@code HttpRequestMethodNotSupportedException} -> {@code jakarta.ws.rs.NotAllowedException}
+ *       (405)
+ *   <li>{@code HttpMediaTypeNotSupportedException} -> {@code jakarta.ws.rs.NotSupportedException}
+ *       (415)
+ *   <li>{@code HttpMediaTypeNotAcceptableException} -> {@code jakarta.ws.rs.NotAcceptableException}
+ *       (406)
  *   <li>{@code HttpMessageNotReadableException} -> JSON deserialization failure (400)
- *   <li>{@code NoHandlerFoundException} / {@code NoResourceFoundException} ->
- *       {@code jakarta.ws.rs.NotFoundException} (404)
- *   <li>{@code ResponseStatusException} -> {@code jakarta.ws.rs.WebApplicationException}
- *       (carry through {@code getResponse().getStatus()})
+ *   <li>{@code NoHandlerFoundException} / {@code NoResourceFoundException} -> {@code
+ *       jakarta.ws.rs.NotFoundException} (404)
+ *   <li>{@code ResponseStatusException} -> {@code jakarta.ws.rs.WebApplicationException} (carry
+ *       through {@code getResponse().getStatus()})
  * </ul>
  *
  * <p>Their full body-building logic is preserved below in private {@code build*} helper methods so
@@ -106,9 +110,11 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
     // exists under Quarkus.
     private static final String MESSAGES_BUNDLE = "messages";
 
-    // TODO: Migration required - development mode used to be derived from Spring active profiles via
+    // TODO: Migration required - development mode used to be derived from Spring active profiles
+    // via
     // org.springframework.core.env.Environment. Quarkus exposes the profile through
-    // io.quarkus.runtime.LaunchMode / quarkus.profile; this is read here from the standard config so
+    // io.quarkus.runtime.LaunchMode / quarkus.profile; this is read here from the standard config
+    // so
     // no Spring Environment is needed.
     private Boolean isDevelopmentMode;
 
@@ -317,11 +323,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
                 getLocalizedMessage(
                         "error.ghostscriptCompression.title", ErrorTitles.GHOSTSCRIPT_DEFAULT);
         return createProblemDetailResponse(
-                ex,
-                Response.Status.INTERNAL_SERVER_ERROR,
-                ErrorTypes.GHOSTSCRIPT,
-                title,
-                request);
+                ex, Response.Status.INTERNAL_SERVER_ERROR, ErrorTypes.GHOSTSCRIPT, title, request);
     }
 
     /**
@@ -401,8 +403,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * @param request the HTTP servlet request
      * @return Response with HTTP 400 BAD_REQUEST
      */
-    public Response handleFormatExceptions(
-            BaseValidationException ex, HttpServletRequest request) {
+    public Response handleFormatExceptions(BaseValidationException ex, HttpServletRequest request) {
 
         String type;
         String title;
@@ -459,11 +460,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
         String title =
                 getLocalizedMessage("error.application.title", ErrorTitles.APPLICATION_DEFAULT);
         return createProblemDetailResponse(
-                ex,
-                Response.Status.INTERNAL_SERVER_ERROR,
-                ErrorTypes.APPLICATION,
-                title,
-                request);
+                ex, Response.Status.INTERNAL_SERVER_ERROR, ErrorTypes.APPLICATION, title, request);
     }
 
     // ===========================================================================================
@@ -474,9 +471,9 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * Build the JSON body previously written directly to the servlet response when the client's
      * Accept header could not be satisfied (Spring's {@code HttpMediaTypeNotAcceptableException}).
      *
-     * <p>TODO: Migration required - this path was triggered by Spring MVC content negotiation. Under
-     * Quarkus/JAX-RS the equivalent is {@code jakarta.ws.rs.NotAcceptableException}; a collaborator
-     * should register a mapper that returns this body with status 406 and Content-Type
+     * <p>TODO: Migration required - this path was triggered by Spring MVC content negotiation.
+     * Under Quarkus/JAX-RS the equivalent is {@code jakarta.ws.rs.NotAcceptableException}; a
+     * collaborator should register a mapper that returns this body with status 406 and Content-Type
      * application/problem+json. The body-building logic is preserved here for reuse.
      */
     private String buildNotAcceptableJson(HttpServletRequest request) {
@@ -543,8 +540,8 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * (AutoJobAspect wraps checked exceptions in RuntimeException) and delegates to the appropriate
      * specific handler.
      *
-     * <p>Note: Spring's {@code ResponseStatusException} branch was removed here; see the class-level
-     * TODO for its JAX-RS equivalent ({@code jakarta.ws.rs.WebApplicationException}).
+     * <p>Note: Spring's {@code ResponseStatusException} branch was removed here; see the
+     * class-level TODO for its JAX-RS equivalent ({@code jakarta.ws.rs.WebApplicationException}).
      *
      * @param ex the RuntimeException
      * @param request the HTTP servlet request
@@ -802,8 +799,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
         // LocaleContextHolder.getLocale().
         String template = defaultMessage;
         try {
-            ResourceBundle bundle =
-                    ResourceBundle.getBundle(MESSAGES_BUNDLE, Locale.getDefault());
+            ResourceBundle bundle = ResourceBundle.getBundle(MESSAGES_BUNDLE, Locale.getDefault());
             if (bundle.containsKey(key)) {
                 template = bundle.getString(key);
             }

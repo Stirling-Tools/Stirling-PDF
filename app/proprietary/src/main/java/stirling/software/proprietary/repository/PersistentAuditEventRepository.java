@@ -4,35 +4,36 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 
 /**
  * Quarkus Panache repository for {@link PersistentAuditEvent}.
  *
- * <p>Migrated from a Spring Data {@code JpaRepository}. The original {@code @Query} JPQL strings are
- * preserved verbatim and executed through Panache's {@link #find(String, Object...)} /
- * {@link #find(String, io.quarkus.panache.common.Sort, java.util.Map)} APIs.
+ * <p>Migrated from a Spring Data {@code JpaRepository}. The original {@code @Query} JPQL strings
+ * are preserved verbatim and executed through Panache's {@link #find(String, Object...)} / {@link
+ * #find(String, io.quarkus.panache.common.Sort, java.util.Map)} APIs.
  *
- * <p>TODO: Migration required - the previous Spring Data signatures returned
- * {@code org.springframework.data.domain.Page<T>} and accepted {@code
+ * <p>TODO: Migration required - the previous Spring Data signatures returned {@code
+ * org.springframework.data.domain.Page<T>} and accepted {@code
  * org.springframework.data.domain.Pageable}. Those Spring types are gone in Quarkus; the paged
- * finders below now return a Panache {@link PanacheQuery} and accept an
- * {@code io.quarkus.panache.common.Page}. Collaborators that still consume the old Spring API
+ * finders below now return a Panache {@link PanacheQuery} and accept an {@code
+ * io.quarkus.panache.common.Page}. Collaborators that still consume the old Spring API
  * (AuditRestController, AuditCleanupService, CustomAuditEventRepository) must be updated:
+ *
  * <ul>
  *   <li>{@code page.getContent()} -> {@code query.page(page).list()}
  *   <li>{@code page.getTotalElements()} -> {@code query.count()}
  *   <li>{@code page.getTotalPages()} -> {@code query.pageCount()}
- *   <li>{@code page.getNumber()}/{@code getSize()} -> read from the requested
- *       {@code io.quarkus.panache.common.Page}
+ *   <li>{@code page.getNumber()}/{@code getSize()} -> read from the requested {@code
+ *       io.quarkus.panache.common.Page}
  *   <li>build the {@code io.quarkus.panache.common.Page} from the request's page index + size
  * </ul>
  */
@@ -42,7 +43,8 @@ public class PersistentAuditEventRepository
 
     // ---------------------------------------------------------------------
     // Basic paged queries
-    // TODO: Migration required - callers must adapt to the PanacheQuery return type (see class doc).
+    // TODO: Migration required - callers must adapt to the PanacheQuery return type (see class
+    // doc).
     // ---------------------------------------------------------------------
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipal(String principal) {
@@ -58,11 +60,11 @@ public class PersistentAuditEventRepository
 
     public PanacheQuery<PersistentAuditEvent> findByTimestampBetween(
             Instant startDate, Instant endDate) {
-        return find(
-                "timestamp BETWEEN ?1 AND ?2", startDate, endDate);
+        return find("timestamp BETWEEN ?1 AND ?2", startDate, endDate);
     }
 
-    public PanacheQuery<PersistentAuditEvent> findByPrincipalAndType(String principal, String type) {
+    public PanacheQuery<PersistentAuditEvent> findByPrincipalAndType(
+            String principal, String type) {
         return find(
                 "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
                         + " :principal, '%')) AND e.type = :type",
@@ -81,8 +83,7 @@ public class PersistentAuditEventRepository
 
     public PanacheQuery<PersistentAuditEvent> findByTypeAndTimestampBetween(
             String type, Instant startDate, Instant endDate) {
-        return find(
-                "type = ?1 AND timestamp BETWEEN ?2 AND ?3", type, startDate, endDate);
+        return find("type = ?1 AND timestamp BETWEEN ?2 AND ?3", type, startDate, endDate);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipalAndTypeAndTimestampBetween(
@@ -150,8 +151,7 @@ public class PersistentAuditEventRepository
 
     public List<PersistentAuditEvent> findAllByTypeAndTimestampBetweenForExport(
             String type, Instant startDate, Instant endDate) {
-        return list(
-                "type = ?1 AND timestamp BETWEEN ?2 AND ?3", type, startDate, endDate);
+        return list("type = ?1 AND timestamp BETWEEN ?2 AND ?3", type, startDate, endDate);
     }
 
     public List<PersistentAuditEvent> findAllByPrincipalAndTypeAndTimestampBetweenForExport(
@@ -179,10 +179,11 @@ public class PersistentAuditEventRepository
     /**
      * Find IDs for batch deletion - using JPQL with paging instead of a native query.
      *
-     * <p>TODO: Migration required - originally accepted a Spring {@code Pageable}; callers must pass
-     * an {@code io.quarkus.panache.common.Page} instead (see class doc).
+     * <p>TODO: Migration required - originally accepted a Spring {@code Pageable}; callers must
+     * pass an {@code io.quarkus.panache.common.Page} instead (see class doc).
      */
-    public List<Long> findIdsForBatchDeletion(Instant cutoffDate, io.quarkus.panache.common.Page page) {
+    public List<Long> findIdsForBatchDeletion(
+            Instant cutoffDate, io.quarkus.panache.common.Page page) {
         return getEntityManager()
                 .createQuery(
                         "SELECT e.id FROM PersistentAuditEvent e WHERE e.timestamp < :cutoffDate"
@@ -304,7 +305,8 @@ public class PersistentAuditEventRepository
     }
 
     public Optional<PersistentAuditEvent> findTopByPrincipalOrderByTimestampDesc(String principal) {
-        return find("principal", Sort.by("timestamp").descending(), principal).firstResultOptional();
+        return find("principal", Sort.by("timestamp").descending(), principal)
+                .firstResultOptional();
     }
 
     public Optional<PersistentAuditEvent> findTopByTypeOrderByTimestampDesc(String type) {
@@ -313,7 +315,8 @@ public class PersistentAuditEventRepository
 
     // ---------------------------------------------------------------------
     // Multi-value queries for filtering by multiple types and/or principals
-    // TODO: Migration required - callers must adapt to the PanacheQuery return type (see class doc).
+    // TODO: Migration required - callers must adapt to the PanacheQuery return type (see class
+    // doc).
     // ---------------------------------------------------------------------
 
     public PanacheQuery<PersistentAuditEvent> findByTypeIn(List<String> types) {
@@ -326,8 +329,7 @@ public class PersistentAuditEventRepository
 
     public PanacheQuery<PersistentAuditEvent> findByTypeInAndTimestampBetween(
             List<String> types, Instant startDate, Instant endDate) {
-        return find(
-                "type IN ?1 AND timestamp BETWEEN ?2 AND ?3", types, startDate, endDate);
+        return find("type IN ?1 AND timestamp BETWEEN ?2 AND ?3", types, startDate, endDate);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipalInAndTimestampBetween(
@@ -365,8 +367,7 @@ public class PersistentAuditEventRepository
 
     public List<PersistentAuditEvent> findByTypeInAndTimestampBetweenForExport(
             List<String> types, Instant startDate, Instant endDate) {
-        return list(
-                "type IN ?1 AND timestamp BETWEEN ?2 AND ?3", types, startDate, endDate);
+        return list("type IN ?1 AND timestamp BETWEEN ?2 AND ?3", types, startDate, endDate);
     }
 
     public List<PersistentAuditEvent> findByPrincipalInAndTimestampBetweenForExport(

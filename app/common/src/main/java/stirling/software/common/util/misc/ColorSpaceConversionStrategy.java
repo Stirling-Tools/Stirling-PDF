@@ -7,20 +7,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Migration required - org.springframework.core.io.InputStreamResource is retained
-// because the abstract superclass ReplaceAndInvertColorStrategy.replace() declares this return
-// type. Migrating it (e.g. to java.io.InputStream) would change the public API of the parent
-// class and all sibling strategies/callers, which is out of scope for this single-file migration.
-import stirling.software.common.model.io.InputStreamResource;
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile is retained because
-// the superclass ctor ReplaceAndInvertColorStrategy(MultipartFile, ReplaceAndInvert) requires it.
-// No JAX-RS drop-in exists for this constructor param without rippling changes to the parent and
-// every caller, so the type is preserved here.
-import stirling.software.common.model.MultipartFile;
-
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;

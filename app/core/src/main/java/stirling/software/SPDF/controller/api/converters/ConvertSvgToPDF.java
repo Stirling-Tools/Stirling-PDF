@@ -145,14 +145,10 @@ public class ConvertSvgToPDF {
 
     private Response errorResponse(Response.Status status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        return Response.status(status)
-                .header("Content-Length", body.length)
-                .entity(body)
-                .build();
+        return Response.status(status).header("Content-Length", body.length).entity(body).build();
     }
 
-    private Response handleCombinedConversion(
-            List<byte[]> sanitizedSvgs, List<String> filenames) {
+    private Response handleCombinedConversion(List<byte[]> sanitizedSvgs, List<String> filenames) {
         try {
             log.info("Combining {} SVG files into single PDF", sanitizedSvgs.size());
 
@@ -190,8 +186,7 @@ public class ConvertSvgToPDF {
         }
     }
 
-    private Response handleSeparateConversion(
-            List<byte[]> sanitizedSvgs, List<String> filenames) {
+    private Response handleSeparateConversion(List<byte[]> sanitizedSvgs, List<String> filenames) {
         List<ConvertedPdf> convertedPdfs = new ArrayList<>();
 
         for (int i = 0; i < sanitizedSvgs.size(); i++) {

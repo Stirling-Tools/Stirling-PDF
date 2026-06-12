@@ -20,15 +20,11 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
-// drop-in for these utility method parameters. The type appears in public method signatures
-// (convertCbzToPdf, isCbzFile, isComicBookFile) consumed by other modules; switching to
-// byte[]/InputStream would ripple across callers. Keep the Spring type until callers migrate.
-import stirling.software.common.model.MultipartFile;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j

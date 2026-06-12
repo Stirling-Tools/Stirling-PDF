@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.Folder;

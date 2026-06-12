@@ -2,13 +2,14 @@ package stirling.software.proprietary.security.database;
 
 import java.util.Arrays;
 
+import org.eclipse.microprofile.config.Config;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import org.eclipse.microprofile.config.Config;
-
 // TODO: Migration required - this was an org.springframework.context.annotation.Condition used via
-// @Conditional(H2SQLCondition.class) to gate bean/controller registration at startup. Quarkus has no
+// @Conditional(H2SQLCondition.class) to gate bean/controller registration at startup. Quarkus has
+// no
 // runtime @Conditional equivalent (@io.quarkus.arc.profile.IfBuildProfile / @LookupIfProperty are
 // build-time/property-name based and cannot replicate this composite logic). The decision logic has
 // been preserved as a runtime-evaluable CDI bean; callers that previously used @Conditional must
@@ -27,7 +28,8 @@ public class H2SQLCondition {
 
     /** Evaluates the H2 deployment decision against the active configuration. */
     public boolean matches() {
-        // Quarkus exposes active profiles via the "quarkus.profile" config property (comma separated).
+        // Quarkus exposes active profiles via the "quarkus.profile" config property (comma
+        // separated).
         String activeProfiles = config.getOptionalValue("quarkus.profile", String.class).orElse("");
         if (Arrays.asList(activeProfiles.split(",")).contains("saas")) {
             return false;

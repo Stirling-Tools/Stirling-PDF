@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.Date;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.web.authentication.rememberme.PersistentTokenRepository}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.web.authentication.rememberme.PersistentTokenRepository}.
  *
  * <p>Persists the remember-me tokens used by the persistent token based remember-me services.
  */

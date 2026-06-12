@@ -29,9 +29,9 @@ public class CacheConfig {
     }
 
     /**
-     * Retained for reference: the JWT key retention window (in days) that previously
-     * drove Caffeine's expireAfterWrite. Used by the Quarkus cache migration described
-     * above to derive the TTL for the corresponding named cache.
+     * Retained for reference: the JWT key retention window (in days) that previously drove
+     * Caffeine's expireAfterWrite. Used by the Quarkus cache migration described above to derive
+     * the TTL for the corresponding named cache.
      */
     public int getKeyRetentionDays() {
         return applicationProperties.getSecurity().getJwt().getKeyRetentionDays();

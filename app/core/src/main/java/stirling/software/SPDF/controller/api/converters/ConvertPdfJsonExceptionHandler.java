@@ -20,8 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 @Provider
 @Slf4j
 @RequiredArgsConstructor
-public class ConvertPdfJsonExceptionHandler
-        implements ExceptionMapper<CacheUnavailableException> {
+public class ConvertPdfJsonExceptionHandler implements ExceptionMapper<CacheUnavailableException> {
 
     private final ObjectMapper objectMapper;
 

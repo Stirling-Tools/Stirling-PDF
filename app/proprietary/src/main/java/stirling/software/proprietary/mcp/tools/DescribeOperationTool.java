@@ -1,6 +1,7 @@
 package stirling.software.proprietary.mcp.tools;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -65,8 +66,7 @@ public class DescribeOperationTool implements McpTool {
             return McpResponses.error(mapper, "Missing required argument: operation");
         }
         String opId = opNode.asText();
-        McpToolCatalog catalog =
-                catalogProvider.isResolvable() ? catalogProvider.get() : null;
+        McpToolCatalog catalog = catalogProvider.isResolvable() ? catalogProvider.get() : null;
         if (catalog == null) {
             return McpResponses.error(mapper, "MCP catalog is not available");
         }

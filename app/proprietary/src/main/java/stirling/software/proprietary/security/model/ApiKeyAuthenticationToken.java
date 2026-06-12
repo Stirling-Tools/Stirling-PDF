@@ -29,8 +29,7 @@ public class ApiKeyAuthenticationToken {
             Object principal, String apiKey, Collection<String> authorities) {
         this.principal = principal; // principal can be a UserDetails-like object
         this.credentials = apiKey;
-        this.authorities =
-                authorities == null ? Collections.emptyList() : authorities;
+        this.authorities = authorities == null ? Collections.emptyList() : authorities;
         this.authenticated = true; // this authentication is trusted
     }
 

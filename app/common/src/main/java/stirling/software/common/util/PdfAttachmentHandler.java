@@ -41,18 +41,11 @@ import org.jetbrains.annotations.NotNull;
 
 import jakarta.ws.rs.core.MediaType;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
-// drop-in. It is used here only as an internal data carrier (created by createMultipartFile and
-// consumed by private methods within this file). Migrating it would mean replacing the anonymous
-// MultipartFile implementation with a custom byte[]/InputStream holder and reworking the private
-// addAttachmentsToDocumentWithMapping signature. Kept as-is to preserve behavior; revisit to
-// introduce a Quarkus-friendly attachment abstraction.
-import stirling.software.common.model.MultipartFile;
-
 import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @UtilityClass

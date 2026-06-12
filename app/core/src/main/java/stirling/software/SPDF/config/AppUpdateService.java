@@ -18,8 +18,7 @@ class AppUpdateService {
     private final Instance<ShowAdminInterface> showAdmin;
 
     public AppUpdateService(
-            ApplicationProperties applicationProperties,
-            Instance<ShowAdminInterface> showAdmin) {
+            ApplicationProperties applicationProperties, Instance<ShowAdminInterface> showAdmin) {
         this.applicationProperties = applicationProperties;
         this.showAdmin = showAdmin;
     }

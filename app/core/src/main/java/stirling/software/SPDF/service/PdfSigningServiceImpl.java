@@ -38,8 +38,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ByteArrayMultipartFile inputFile =
-                new ByteArrayMultipartFile(
-                        "file", "document.pdf", "application/pdf", pdfBytes);
+                new ByteArrayMultipartFile("file", "document.pdf", "application/pdf", pdfBytes);
 
         CertSignController.sign(
                 pdfDocumentFactory,

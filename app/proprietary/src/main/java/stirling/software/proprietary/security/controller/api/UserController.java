@@ -9,14 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-// TODO: Migration required - SessionPersistentRegistry (a not-yet-migrated collaborator) still
-// exposes session types (SessionInformation) and principal types (UserDetails, OAuth2User)
-// through its API. These now reference the common compat shims; the principal-type instanceof
-// checks below must be revisited once the session registry returns Quarkus SecurityIdentity-based
-// principals.
-import stirling.software.common.security.OAuth2User;
-import stirling.software.common.security.SessionInformation;
-import stirling.software.common.security.UserDetails;
+import org.jboss.resteasy.reactive.RestForm;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
@@ -33,8 +26,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 
-import org.jboss.resteasy.reactive.RestForm;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +34,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -197,7 +191,12 @@ public class UserController {
             throws IOException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(newUsername)) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of("error", "invalidUsername", "message", "Invalid username format"))
+                    .entity(
+                            Map.of(
+                                    "error",
+                                    "invalidUsername",
+                                    "message",
+                                    "Invalid username format"))
                     .build();
         }
         if (securityContext.getUserPrincipal() == null) {
@@ -226,8 +225,7 @@ public class UserController {
         }
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(
-                            Map.of("error", "incorrectPassword", "message", "Incorrect password"))
+                    .entity(Map.of("error", "incorrectPassword", "message", "Incorrect password"))
                     .build();
         }
         if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
@@ -333,8 +331,7 @@ public class UserController {
         User user = userOpt.get();
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(
-                            Map.of("error", "incorrectPassword", "message", "Incorrect password"))
+                    .entity(Map.of("error", "incorrectPassword", "message", "Incorrect password"))
                     .build();
         }
         // Set flags before changing password so they're saved together
@@ -383,8 +380,7 @@ public class UserController {
         User user = userOpt.get();
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(
-                            Map.of("error", "incorrectPassword", "message", "Incorrect password"))
+                    .entity(Map.of("error", "incorrectPassword", "message", "Incorrect password"))
                     .build();
         }
         userService.changePassword(user, newPassword);
@@ -503,7 +499,7 @@ public class UserController {
             }
         } else {
             // Check if the selected team is Internal - prevent assigning to it
-            Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
+            Team selectedTeam = teamRepository.findByIdOptional(effectiveTeamId).orElse(null);
             if (selectedTeam != null
                     && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -627,7 +623,7 @@ public class UserController {
                 effectiveTeamId = defaultTeam.getId();
             }
         } else {
-            Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
+            Team selectedTeam = teamRepository.findByIdOptional(effectiveTeamId).orElse(null);
             if (selectedTeam != null
                     && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -723,7 +719,7 @@ public class UserController {
 
         // Update the team if a teamId is provided
         if (teamId != null) {
-            Team team = teamRepository.findById(teamId).orElse(null);
+            Team team = teamRepository.findByIdOptional(teamId).orElse(null);
             if (team != null) {
                 // Prevent assigning to Internal team
                 if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
@@ -741,7 +737,7 @@ public class UserController {
                 }
 
                 user.setTeam(team);
-                userRepository.save(user);
+                userRepository.persist(user);
             }
         }
 
@@ -1087,7 +1083,7 @@ public class UserController {
 
             User user = userOpt.get();
             user.setHasCompletedInitialSetup(true);
-            userRepository.save(user);
+            userRepository.persist(user);
 
             log.info("User {} completed initial setup", username);
             return Response.ok(Map.of("success", true)).build();
@@ -1113,7 +1109,7 @@ public class UserController {
         }
 
         List<UserSummaryDTO> users =
-                userRepository.findAll().stream()
+                userRepository.findAll().list().stream()
                         .filter(User::isEnabled)
                         .map(this::toUserSummaryDTO)
                         .collect(java.util.stream.Collectors.toList());

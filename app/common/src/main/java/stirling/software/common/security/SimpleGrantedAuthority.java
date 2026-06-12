@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.Objects;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.authority.SimpleGrantedAuthority}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.authority.SimpleGrantedAuthority}.
  *
  * <p>A basic, immutable {@link GrantedAuthority} backed by a single string.
  */

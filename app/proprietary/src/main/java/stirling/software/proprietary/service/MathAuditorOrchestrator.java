@@ -7,10 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
 
 import lombok.extern.slf4j.Slf4j;
 

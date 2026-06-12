@@ -1,7 +1,6 @@
 package stirling.software.common.model;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -14,13 +13,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
-// Resource/ClassPathResource/FileSystemResource are the local migration shim types (used by the
-// SAML cert/key accessors), not Spring. The former Spring property-source imports
-// (ConfigurableEnvironment/PropertySource/EncodedResource) were dropped with dynamicYamlPropertySource.
-import stirling.software.common.model.io.ClassPathResource;
-import stirling.software.common.model.io.FileSystemResource;
-import stirling.software.common.model.io.Resource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
@@ -81,7 +76,8 @@ public class ApplicationProperties {
     private Policies policies = new Policies();
 
     // REMOVED (Spring -> Quarkus): dynamicYamlPropertySource(ConfigurableEnvironment).
-    // This was a Spring @Bean that registered settings.yml as an extra runtime PropertySource on the
+    // This was a Spring @Bean that registered settings.yml as an extra runtime PropertySource on
+    // the
     // ConfigurableEnvironment (added first, or last under the "saas" profile). Quarkus has no
     // ConfigurableEnvironment/PropertySource model and the @Bean had already been removed, so the
     // method was dead code referencing Spring-only types.

@@ -1,10 +1,10 @@
 package stirling.software.common.util;
 
+import io.quarkus.arc.Arc;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.literal.NamedLiteral;
-
-import io.quarkus.arc.Arc;
 
 /**
  * Helper class that provides access to the CDI container. Useful for getting beans in classes that

@@ -1,11 +1,11 @@
 package stirling.software.common.util;
 
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.literal.NamedLiteral;
-
-import io.quarkus.arc.Arc;
-import io.quarkus.arc.ArcContainer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +36,9 @@ public class SpringContextHolder {
         try {
             Instance<T> instance = container.select(beanClass);
             if (!instance.isResolvable()) {
-                log.error("Error getting bean of type {}: bean is not resolvable", beanClass.getName());
+                log.error(
+                        "Error getting bean of type {}: bean is not resolvable",
+                        beanClass.getName());
                 return null;
             }
             return instance.get();
@@ -64,8 +66,7 @@ public class SpringContextHolder {
             // TODO: Migration required - Spring looked up by bean name across all types; here we
             // resolve a @Named CDI bean of Object.class. Verify named beans are registered with a
             // matching @jakarta.inject.Named qualifier so this lookup resolves the intended bean.
-            Instance<Object> instance =
-                    container.select(Object.class, NamedLiteral.of(beanName));
+            Instance<Object> instance = container.select(Object.class, NamedLiteral.of(beanName));
             if (!instance.isResolvable()) {
                 log.error("Error getting bean '{}': bean is not resolvable", beanName);
                 return null;

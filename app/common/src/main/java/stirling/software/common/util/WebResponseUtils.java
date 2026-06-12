@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -11,16 +10,16 @@ import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 
-import stirling.software.common.model.MultipartFile;
+import io.github.pixee.security.Filenames;
 
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 
-import io.github.pixee.security.Filenames;
-
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.MultipartFile;
 
 @Slf4j
 public class WebResponseUtils {
@@ -79,10 +78,11 @@ public class WebResponseUtils {
      * Save a {@link PDDocument} to a managed temp file and return it as a streamed web response.
      *
      * <p>MIGRATION (Spring -> JAX-RS): previously returned {@code ResponseEntity<Resource>} backed
-     * by a {@code ManagedTempFileResource}, relying on Spring's {@code ResourceHttpMessageConverter}
-     * to call {@code Resource#getInputStream()} and close it after writing (the hook that deleted
-     * the {@link TempFile}). The JAX-RS equivalent is a {@link StreamingOutput} that copies the file
-     * to the response and deletes the temp file in a {@code finally} block once writing completes.
+     * by a {@code ManagedTempFileResource}, relying on Spring's {@code
+     * ResourceHttpMessageConverter} to call {@code Resource#getInputStream()} and close it after
+     * writing (the hook that deleted the {@link TempFile}). The JAX-RS equivalent is a {@link
+     * StreamingOutput} that copies the file to the response and deletes the temp file in a {@code
+     * finally} block once writing completes.
      */
     public static Response pdfDocToWebResponse(
             PDDocument document, String docName, TempFileManager tempFileManager)
@@ -115,8 +115,8 @@ public class WebResponseUtils {
      *
      * <p>The body is a {@link StreamingOutput} that copies the temp file to the client and deletes
      * the backing {@link TempFile} once the transfer completes (or fails). This replaces the former
-     * Spring {@code ResponseEntity<Resource>} + {@code ResourceHttpMessageConverter} lifecycle.
-     * I/O errors during the copy are logged and propagated.
+     * Spring {@code ResponseEntity<Resource>} + {@code ResourceHttpMessageConverter} lifecycle. I/O
+     * errors during the copy are logged and propagated.
      */
     public static Response fileToWebResponse(
             TempFile outputTempFile, String docName, MediaType mediaType) throws IOException {
@@ -172,7 +172,9 @@ public class WebResponseUtils {
     }
 
     // REMOVED (Spring -> JAX-RS): ManagedTempFileResource (extended Spring FileSystemResource) and
-    // ClosingInputStream. Their job - delete the TempFile after the response body is written - is now
-    // done inline by the StreamingOutput's finally block in fileToWebResponse, which is the idiomatic
+    // ClosingInputStream. Their job - delete the TempFile after the response body is written - is
+    // now
+    // done inline by the StreamingOutput's finally block in fileToWebResponse, which is the
+    // idiomatic
     // JAX-RS lifecycle and removes the dependency on Spring's ResourceHttpMessageConverter.
 }

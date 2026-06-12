@@ -124,8 +124,7 @@ public class ApiDocService implements stirling.software.common.service.ToolMetad
             }
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpResponse<String> response =
-                    httpClient.send(
-                            requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+                    httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
             apiDocsJson = response.body();
             apiDocsJsonRootNode = objectMapper.readTree(apiDocsJson);
             JsonNode paths = apiDocsJsonRootNode.path("paths");

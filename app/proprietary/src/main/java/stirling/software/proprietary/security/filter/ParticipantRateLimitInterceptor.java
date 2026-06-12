@@ -3,13 +3,13 @@ package stirling.software.proprietary.security.filter;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.quarkus.scheduler.Scheduled;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
-
-import io.quarkus.scheduler.Scheduled;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,10 +52,7 @@ public class ParticipantRateLimitInterceptor implements ContainerRequestFilter {
                         });
 
         if (entry[0] > MAX_REQUESTS_PER_MINUTE) {
-            log.warn(
-                    "Rate limit exceeded for IP {} on participant endpoint {}",
-                    ip,
-                    path);
+            log.warn("Rate limit exceeded for IP {} on participant endpoint {}", ip, path);
             requestContext.abortWith(
                     Response.status(Response.Status.TOO_MANY_REQUESTS)
                             .header("Retry-After", "60")

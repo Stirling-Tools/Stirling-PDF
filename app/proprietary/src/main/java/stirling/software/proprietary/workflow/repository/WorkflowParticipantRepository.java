@@ -3,11 +3,11 @@ package stirling.software.proprietary.workflow.repository;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Parameters;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
@@ -18,8 +18,8 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
  * Quarkus Panache repository for {@link WorkflowParticipant}.
  *
  * <p>Migrated from a Spring Data {@code JpaRepository<WorkflowParticipant, Long>}. Derived finders
- * are reimplemented as Panache queries; the {@code @Query}-annotated methods preserve their original
- * JPQL strings via {@code find(...)} / {@code update(...)} / {@code delete(...)}.
+ * are reimplemented as Panache queries; the {@code @Query}-annotated methods preserve their
+ * original JPQL strings via {@code find(...)} / {@code update(...)} / {@code delete(...)}.
  */
 @ApplicationScoped
 public class WorkflowParticipantRepository implements PanacheRepository<WorkflowParticipant> {
@@ -74,8 +74,7 @@ public class WorkflowParticipantRepository implements PanacheRepository<Workflow
 
     /** Find expired participants that haven't completed */
     public List<WorkflowParticipant> findExpiredIncompleteParticipants() {
-        return list(
-                "expiresAt < CURRENT_TIMESTAMP AND status NOT IN ('SIGNED', 'DECLINED')");
+        return list("expiresAt < CURRENT_TIMESTAMP AND status NOT IN ('SIGNED', 'DECLINED')");
     }
 
     /** Find all participants pending notification */

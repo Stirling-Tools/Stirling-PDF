@@ -15,13 +15,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
-// drop-in. These public utility methods (convertCbrToPdf/isCbrFile/validateCbrFile) take
-// MultipartFile and rely on isEmpty()/getOriginalFilename()/transferTo(File), which are
-// MultipartFile-specific. Converting the signatures (e.g. to byte[]/InputStream) would ripple
-// to all callers, so the type is intentionally kept until the calling endpoints are migrated.
-import stirling.software.common.model.MultipartFile;
-
 import com.github.junrar.Archive;
 import com.github.junrar.exception.CorruptHeaderException;
 import com.github.junrar.exception.RarException;
@@ -30,6 +23,7 @@ import com.github.junrar.rarfile.FileHeader;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j

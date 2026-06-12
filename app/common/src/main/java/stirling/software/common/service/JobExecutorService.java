@@ -9,11 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-import stirling.software.common.model.io.Resource;
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
-// JAX-RS drop-in for these utility method params; changing the type would ripple to
-// callers, so it is kept as-is for now.
-import stirling.software.common.model.MultipartFile;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -23,10 +19,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.RegexPatternUtils;
@@ -46,8 +42,7 @@ public class JobExecutorService {
     private final ExecutorService executor = ExecutorFactory.newVirtualThreadExecutor();
     private final long effectiveTimeoutMs;
 
-    @jakarta.inject.Inject
-    Instance<JobOwnershipService> jobOwnershipService;
+    @jakarta.inject.Inject Instance<JobOwnershipService> jobOwnershipService;
 
     public JobExecutorService(
             TaskManager taskManager,
@@ -55,9 +50,7 @@ public class JobExecutorService {
             HttpServletRequest request,
             ResourceMonitor resourceMonitor,
             JobQueue jobQueue,
-            @ConfigProperty(
-                            name = "spring.mvc.async.request-timeout",
-                            defaultValue = "1200000")
+            @ConfigProperty(name = "spring.mvc.async.request-timeout", defaultValue = "1200000")
                     long asyncRequestTimeoutMs,
             @ConfigProperty(name = "server.servlet.session.timeout", defaultValue = "30m")
                     String sessionTimeout) {
@@ -392,7 +385,8 @@ public class JobExecutorService {
     }
 
     private static String extractResponseFilename(Response response) {
-        // JAX-RS exposes Content-Disposition as a raw header string; parse the filename token out of
+        // JAX-RS exposes Content-Disposition as a raw header string; parse the filename token out
+        // of
         // it (Spring previously used ContentDisposition#getFilename()).
         String contentDisposition = response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION);
         if (contentDisposition != null) {

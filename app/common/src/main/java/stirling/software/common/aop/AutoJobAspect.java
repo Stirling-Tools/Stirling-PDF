@@ -9,8 +9,6 @@ import java.util.function.Supplier;
 
 import org.slf4j.MDC;
 
-import stirling.software.common.model.MultipartFile;
-
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
@@ -21,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
@@ -28,9 +27,10 @@ import stirling.software.common.service.JobExecutorService;
 /**
  * MIGRATION (Spring AOP -> CDI interceptor): was an {@code @Aspect} with {@code @Around} advice on
  * {@code @AutoJobPostMapping}. Reworked into a CDI {@link Interceptor} bound by the
- * {@code @AutoJobPostMapping} {@code @InterceptorBinding}; {@code @Around}/{@code ProceedingJoinPoint}
- * became {@code @AroundInvoke}/{@link InvocationContext}. {@code @Priority(20)} now meaningfully
- * orders this interceptor (runs after lower-priority audit interceptors populate MDC).
+ * {@code @AutoJobPostMapping} {@code @InterceptorBinding}; {@code @Around}/{@code
+ * ProceedingJoinPoint} became {@code @AroundInvoke}/{@link InvocationContext}.
+ * {@code @Priority(20)} now meaningfully orders this interceptor (runs after lower-priority audit
+ * interceptors populate MDC).
  */
 @Interceptor
 @AutoJobPostMapping

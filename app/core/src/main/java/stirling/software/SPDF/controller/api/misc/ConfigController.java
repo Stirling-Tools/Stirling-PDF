@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import io.swagger.v3.oas.annotations.Hidden;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,8 +18,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-
-import org.eclipse.microprofile.config.ConfigProvider;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -356,8 +356,7 @@ public class ConfigController {
             // Server certificate settings
             ServerCertificateServiceInterface certService = serverCertificateService();
             configData.put(
-                    "serverCertificateEnabled",
-                    certService != null && certService.isEnabled());
+                    "serverCertificateEnabled", certService != null && certService.isEnabled());
 
             // Legal settings
             configData.put(

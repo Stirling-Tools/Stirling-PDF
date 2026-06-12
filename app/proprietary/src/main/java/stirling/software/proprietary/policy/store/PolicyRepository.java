@@ -2,9 +2,9 @@ package stirling.software.proprietary.policy.store;
 
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class PolicyRepository implements PanacheRepositoryBase<PolicyEntity, String> {

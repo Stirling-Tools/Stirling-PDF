@@ -12,18 +12,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.StreamingOutput;
 
-// TODO: Migration required - org.springframework.core.io.Resource is used in public method
-// signatures (storeFile, storeFromResource) and for behavior (isFile()/getFile()/getInputStream()).
-// No drop-in JAX-RS/Jakarta equivalent; converting would ripple into callers. Keeping the type.
-import stirling.software.common.model.io.Resource;
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile is used in public
-// method signatures (storeFile, retrieveFile). No servlet/JAX-RS drop-in for utility method
-// params; changing it would ripple widely into callers. Keeping the type.
-import stirling.software.common.model.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.FileStore;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.JobContext;
 
 /**
@@ -154,8 +148,7 @@ public class FileStorage {
                         throw ioe;
                     }
                     throw new IOException(
-                            "StreamingOutput writer failed: " + writerErr.getMessage(),
-                            writerErr);
+                            "StreamingOutput writer failed: " + writerErr.getMessage(), writerErr);
                 }
                 log.debug("Stored StreamingOutput with ID: {}", stored.fileId());
                 return stored.fileId();

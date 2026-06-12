@@ -19,21 +19,18 @@ import org.apache.pdfbox.pdmodel.font.PDFontFactory;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.TextPosition;
-// TODO: Migration required - InputStreamResource is the return type of the abstract
-// replace() method declared in the parent ReplaceAndInvertColorStrategy (not in scope for
-// this migration). Changing it here would break the @Override and ripple to all callers, so
-// the Spring type is retained until the parent and its callers are migrated together.
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.api.misc.HighContrastColorCombination;
+import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.model.io.InputStreamResource;
+
 // TODO: Migration required - MultipartFile is the constructor parameter type that must match
 // the parent ReplaceAndInvertColorStrategy(MultipartFile, ReplaceAndInvert) constructor (not in
 // scope for this migration). There is no JAX-RS drop-in for this widely used public signature;
 // retained until the parent and its callers are migrated together.
-import stirling.software.common.model.MultipartFile;
-
-import lombok.extern.slf4j.Slf4j;
-
-import stirling.software.common.model.api.misc.HighContrastColorCombination;
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
 
 @Slf4j
 public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {

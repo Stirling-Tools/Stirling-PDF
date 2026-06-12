@@ -13,11 +13,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.github.pixee.security.Filenames;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
-
-import io.github.pixee.security.Filenames;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -223,8 +223,7 @@ public class PipelineProcessor {
                         processOutputFiles(operation, response, newOutputFiles, result);
                     } else {
                         // Log error if the response status is not OK
-                        logPrintStream.println(
-                                "Error in multi-input operation: " + responseBody);
+                        logPrintStream.println("Error in multi-input operation: " + responseBody);
                         hasErrors = true;
                     }
                 } else {

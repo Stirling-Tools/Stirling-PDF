@@ -16,27 +16,27 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.slf4j.MDC;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import org.slf4j.MDC;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.GrantedAuthority;
 import stirling.software.common.security.OAuth2User;
 import stirling.software.common.security.PasswordEncoder;
 import stirling.software.common.security.SecurityContextHolder;
-import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.common.security.UserDetails;
-import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.common.security.UsernameNotFoundException;
-import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
@@ -75,7 +75,8 @@ public class UserService implements UserServiceInterface {
     // LocaleContextHolder (Spring i18n) have no Quarkus equivalent on the classpath. Rebind to a
     // Quarkus message bundle (io.quarkus.qute / @org.eclipse.microprofile.config or a
     // jakarta.enterprise localization helper) and an explicit Locale source. The injected field is
-    // removed for now and getInvalidUsernameMessage() returns a constant fallback so the bean can be
+    // removed for now and getInvalidUsernameMessage() returns a constant fallback so the bean can
+    // be
     // constructed; localization must be restored when the i18n layer is ported.
 
     private final SessionPersistentRegistry sessionRegistry;
@@ -272,7 +273,7 @@ public class UserService implements UserServiceInterface {
         // FileShareAccess for those shares must be cleared first (no cascade from FileShare side).
         List<FileShare> sharesTargetingUser = fileShareRepository.findBySharedWithUser(user);
         sharesTargetingUser.forEach(fileShareAccessRepository::deleteByFileShare);
-        fileShareRepository.deleteAll(sharesTargetingUser);
+        sharesTargetingUser.forEach(fileShareRepository::delete);
 
         // Null out WorkflowParticipant.user for sessions this user participates in but does not
         // own.
@@ -283,8 +284,9 @@ public class UserService implements UserServiceInterface {
         storedFileRepository.clearWorkflowSessionReferencesByOwner(user);
 
         // Delete WorkflowSessions (CascadeType.ALL cascades to WorkflowParticipant)
-        workflowSessionRepository.deleteAll(
-                workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
+        workflowSessionRepository
+                .findByOwnerOrderByCreatedAtDesc(user)
+                .forEach(workflowSessionRepository::delete);
 
         // Collect storage keys for physical cleanup before deleting DB records
         List<StoredFile> files = storedFileRepository.findAllByOwner(user);
@@ -304,13 +306,13 @@ public class UserService implements UserServiceInterface {
         for (StoredFile file : files) {
             file.getShares().forEach(fileShareAccessRepository::deleteByFileShare);
         }
-        storedFileRepository.deleteAll(files);
+        files.forEach(storedFileRepository::delete);
 
         // Schedule physical deletion of all storage blobs; StorageCleanupService handles retry
         for (String key : storageKeys) {
             StorageCleanupEntry entry = new StorageCleanupEntry();
             entry.setStorageKey(key);
-            storageCleanupEntryRepository.save(entry);
+            storageCleanupEntryRepository.persist(entry);
         }
     }
 
@@ -666,8 +668,7 @@ public class UserService implements UserServiceInterface {
                 } else if (principal instanceof OAuth2User oAuth2User) {
                     // OAuth2User shim exposes getAttributes() (Map) but not the singular
                     // getAttribute(String) convenience accessor; read from the map directly.
-                    Object usernameAttr =
-                            oAuth2User.getAttributes().get(oAuth2.getUseAsUsername());
+                    Object usernameAttr = oAuth2User.getAttributes().get(oAuth2.getUseAsUsername());
                     return usernameAttr != null ? usernameAttr.toString() : null;
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                     return saml2User.name();

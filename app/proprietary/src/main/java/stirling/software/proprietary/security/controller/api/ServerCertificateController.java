@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.controller.api;
 
-import java.io.IOException;
-
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -61,11 +59,9 @@ public class ServerCertificateController {
             description =
                     "Upload a new PKCS12 certificate file to be used as the server certificate")
     public Response uploadServerCertificate(
-            @Parameter(description = "PKCS12 certificate file", required = true)
-                    @RestForm("file")
+            @Parameter(description = "PKCS12 certificate file", required = true) @RestForm("file")
                     FileUpload fileUpload,
-            @Parameter(description = "Certificate password", required = true)
-                    @RestForm("password")
+            @Parameter(description = "Certificate password", required = true) @RestForm("password")
                     String password) {
 
         MultipartFile file = FileUploadMultipartFile.of(fileUpload);
@@ -93,9 +89,7 @@ public class ServerCertificateController {
                     .build();
         } catch (Exception e) {
             log.error("Failed to upload server certificate", e);
-            return Response.serverError()
-                    .entity("Failed to upload server certificate")
-                    .build();
+            return Response.serverError().entity("Failed to upload server certificate").build();
         }
     }
 
@@ -109,9 +103,7 @@ public class ServerCertificateController {
             return Response.ok("Server certificate deleted successfully").build();
         } catch (Exception e) {
             log.error("Failed to delete server certificate", e);
-            return Response.serverError()
-                    .entity("Failed to delete server certificate")
-                    .build();
+            return Response.serverError().entity("Failed to delete server certificate").build();
         }
     }
 
@@ -127,9 +119,7 @@ public class ServerCertificateController {
             return Response.ok("New server certificate generated successfully").build();
         } catch (Exception e) {
             log.error("Failed to generate server certificate", e);
-            return Response.serverError()
-                    .entity("Failed to generate server certificate")
-                    .build();
+            return Response.serverError().entity("Failed to generate server certificate").build();
         }
     }
 

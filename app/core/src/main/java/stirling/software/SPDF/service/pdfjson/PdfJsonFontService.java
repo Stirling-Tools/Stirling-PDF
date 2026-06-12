@@ -5,10 +5,10 @@ import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Locale;
 
+import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-
-import io.quarkus.runtime.StartupEvent;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

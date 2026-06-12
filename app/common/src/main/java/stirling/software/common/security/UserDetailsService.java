@@ -1,8 +1,8 @@
 package stirling.software.common.security;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.userdetails.UserDetailsService}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.userdetails.UserDetailsService}.
  *
  * <p>Loads user-specific data, typically as part of an authentication flow.
  */

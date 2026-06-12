@@ -87,6 +87,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.DateConverter;
 import org.apache.pdfbox.util.Matrix;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -6018,11 +6019,14 @@ public class PdfJsonConversionService {
 
         // TODO Quarkus migration: Spring's RequestContextHolder/ServletRequestAttributes have no
         // direct Quarkus equivalent for accessing the current request outside of a JAX-RS resource.
-        // The primary mechanism for resolving the jobId is the JobContext ThreadLocal checked above,
-        // which covers async jobs. The previous Spring fallback read a "jobId" request attribute for
+        // The primary mechanism for resolving the jobId is the JobContext ThreadLocal checked
+        // above,
+        // which covers async jobs. The previous Spring fallback read a "jobId" request attribute
+        // for
         // sync jobs; without a request-scoped holder here we safely fall back to null and rely on
         // JobContext. If sync-job jobId resolution is needed, inject the request (e.g. via
-        // jakarta.enterprise.inject.Instance<HttpServletRequest> or RoutingContext) at the call site.
+        // jakarta.enterprise.inject.Instance<HttpServletRequest> or RoutingContext) at the call
+        // site.
         return null;
     }
 

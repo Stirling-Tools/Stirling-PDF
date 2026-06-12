@@ -241,7 +241,7 @@ public class MfaService {
     }
 
     private void persist(User user) throws SQLException, UnsupportedProviderException {
-        userRepository.save(user);
+        userRepository.persist(user);
         databaseService.exportDatabase();
     }
 }

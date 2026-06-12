@@ -20,9 +20,11 @@ import stirling.software.common.cluster.DistributedLock;
 // DI mapping applied here:
 //   @Component                  -> @ApplicationScoped
 //   @RequiredArgsConstructor    -> explicit @Inject constructor (single injected collaborator)
-//   @ConditionalOnValkeyBackplane -> the two stacked @LookupIfProperty guards below (per the note in
+//   @ConditionalOnValkeyBackplane -> the two stacked @LookupIfProperty guards below (per the note
+// in
 //                                    ConditionalOnValkeyBackplane: Quarkus does not transitively
-//                                    propagate @LookupIfProperty through the meta-annotation, so the
+//                                    propagate @LookupIfProperty through the meta-annotation, so
+// the
 //                                    guards are repeated directly on this consumer).
 //
 // Migrated off spring-data-redis (StringRedisTemplate / RedisScript / DefaultRedisScript) onto
@@ -30,7 +32,8 @@ import stirling.software.common.cluster.DistributedLock;
 //   - tryAcquire -> SET key value NX PX <leaseMillis> via ValueCommands.setAndChanged(..., SetArgs)
 //   - release/renew -> EVAL of the Lua scripts via RedisDataSource.execute("EVAL", ...).
 // The injected bean is now the RedisDataSource that ValkeyConnectionConfiguration produces; the Lua
-// scripts and the acquire/release/renew control flow are framework-agnostic and carry over unchanged.
+// scripts and the acquire/release/renew control flow are framework-agnostic and carry over
+// unchanged.
 @ApplicationScoped
 @LookupIfProperty(name = "cluster.enabled", stringValue = "true")
 @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
@@ -61,8 +64,7 @@ public class ValkeyDistributedLock implements DistributedLock {
         // SET key value NX PX <leaseMillis>: setAndChanged returns true only when the value was
         // actually written, i.e. the NX guard succeeded and we hold the lock.
         boolean acquired =
-                values.setAndChanged(
-                        key, value, new SetArgs().nx().px(leaseTime.toMillis()));
+                values.setAndChanged(key, value, new SetArgs().nx().px(leaseTime.toMillis()));
         if (acquired) {
             return Optional.of(new ValkeyHandle(redis, key, value));
         }

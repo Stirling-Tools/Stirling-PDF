@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import io.quarkus.runtime.Quarkus;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -318,8 +317,7 @@ public class AdminSettingsController {
                 @ApiResponse(responseCode = "500", description = "Failed to save settings")
             })
     public Response updateSettingsSection(
-            @PathParam("sectionName") String sectionName,
-            @Valid Map<String, Object> sectionData) {
+            @PathParam("sectionName") String sectionName, @Valid Map<String, Object> sectionData) {
         try {
             if (sectionData == null || sectionData.isEmpty()) {
                 return Response.status(Response.Status.BAD_REQUEST)

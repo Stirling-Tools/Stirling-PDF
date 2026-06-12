@@ -13,9 +13,9 @@ import jakarta.ws.rs.core.Response;
  * MIGRATION (Spring AOP -> CDI interceptor): was an {@code @Aspect} with {@code @Around} advice on
  * the {@code @PremiumEndpoint} pointcut ({@code @annotation || @within}). Reworked into a CDI
  * {@link Interceptor} bound by the {@code @PremiumEndpoint} {@code @InterceptorBinding};
- * {@code @Around}/{@code ProceedingJoinPoint} became {@code @AroundInvoke}/{@link InvocationContext}.
- * The Spring {@code ResponseStatusException(HttpStatus.FORBIDDEN, ...)} became a JAX-RS
- * {@link WebApplicationException} with {@link Response.Status#FORBIDDEN}.
+ * {@code @Around}/{@code ProceedingJoinPoint} became {@code @AroundInvoke}/{@link
+ * InvocationContext}. The Spring {@code ResponseStatusException(HttpStatus.FORBIDDEN, ...)} became
+ * a JAX-RS {@link WebApplicationException} with {@link Response.Status#FORBIDDEN}.
  *
  * <p>TODO: Migration required - the {@code @PremiumEndpoint} annotation (collaborator file
  * stirling.software.proprietary.security.config.PremiumEndpoint) must be annotated with

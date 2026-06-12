@@ -4,8 +4,7 @@ import java.security.Principal;
 import java.util.Collection;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.Authentication}.
+ * Migration compatibility shim for {@code org.springframework.security.core.Authentication}.
  *
  * <p>Represents the token for an authentication request or for an authenticated principal once the
  * request has been processed.

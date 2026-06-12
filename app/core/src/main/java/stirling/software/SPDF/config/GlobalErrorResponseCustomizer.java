@@ -7,7 +7,6 @@ import org.eclipse.microprofile.openapi.OASFilter;
 import org.eclipse.microprofile.openapi.models.OpenAPI;
 import org.eclipse.microprofile.openapi.models.Operation;
 import org.eclipse.microprofile.openapi.models.PathItem;
-import org.eclipse.microprofile.openapi.models.media.Content;
 import org.eclipse.microprofile.openapi.models.media.MediaType;
 import org.eclipse.microprofile.openapi.models.media.Schema;
 import org.eclipse.microprofile.openapi.models.responses.APIResponse;
@@ -18,8 +17,8 @@ import org.eclipse.microprofile.openapi.models.responses.APIResponse;
  *
  * <p>Migrated from a springdoc {@code GlobalOpenApiCustomizer} to a MicroProfile {@link OASFilter}
  * (quarkus-smallrye-openapi). Register this filter via {@code mp.openapi.filter} in
- * application.properties, e.g.
- * {@code mp.openapi.filter=stirling.software.SPDF.config.GlobalErrorResponseCustomizer}.
+ * application.properties, e.g. {@code
+ * mp.openapi.filter=stirling.software.SPDF.config.GlobalErrorResponseCustomizer}.
  */
 public class GlobalErrorResponseCustomizer implements OASFilter {
 
@@ -162,9 +161,7 @@ public class GlobalErrorResponseCustomizer implements OASFilter {
                                 .example("2024-01-15T10:30:00Z"))
                 .addProperty(
                         "path",
-                        OASFactory.createSchema()
-                                .addType(Schema.SchemaType.STRING)
-                                .example(path));
+                        OASFactory.createSchema().addType(Schema.SchemaType.STRING).example(path));
     }
 
     private Object createErrorExample(int status, String message, String path) {

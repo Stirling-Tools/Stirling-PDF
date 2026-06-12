@@ -108,7 +108,8 @@ public class OCRController {
     public Response processPdfWithOCR(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,
-            // Multipart binding of a List<String>: each "languages" form part contributes one entry.
+            // Multipart binding of a List<String>: each "languages" form part contributes one
+            // entry.
             @RestForm("languages") List<String> languages,
             @RestForm("sidecar") boolean sidecar,
             @RestForm("deskew") boolean deskew,

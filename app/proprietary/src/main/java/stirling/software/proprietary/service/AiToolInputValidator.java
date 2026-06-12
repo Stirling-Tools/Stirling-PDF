@@ -1,7 +1,6 @@
 package stirling.software.proprietary.service;
 
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.MultipartFile;
@@ -26,15 +25,15 @@ public final class AiToolInputValidator {
     private AiToolInputValidator() {}
 
     /**
-     * Validate a PDF uploaded to an AI tool endpoint. Throws {@link WebApplicationException} with an
-     * appropriate HTTP status on any failure.
+     * Validate a PDF uploaded to an AI tool endpoint. Throws {@link WebApplicationException} with
+     * an appropriate HTTP status on any failure.
      */
     public static void validatePdfUpload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new WebApplicationException("fileInput is required", Response.Status.BAD_REQUEST);
         }
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.equals(MediaType.APPLICATION_PDF)) {
+        if (contentType == null || !contentType.equals("application/pdf")) {
             throw new WebApplicationException(
                     "Only application/pdf uploads are supported", Response.Status.BAD_REQUEST);
         }

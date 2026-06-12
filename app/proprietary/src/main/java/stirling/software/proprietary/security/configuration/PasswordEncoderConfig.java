@@ -9,8 +9,8 @@ import stirling.software.common.security.PasswordEncoder;
 /**
  * Standalone {@link PasswordEncoder} producer.
  *
- * <p>Migrated off spring-security-crypto: the {@link PasswordEncoder} /
- * {@link BCryptPasswordEncoder} types now resolve to the compat shims in
+ * <p>Migrated off spring-security-crypto: the {@link PasswordEncoder} / {@link
+ * BCryptPasswordEncoder} types now resolve to the compat shims in
  * stirling.software.common.security, keeping the bean shape/return type intact for the consuming
  * services (UserService, SecurityConfiguration).
  */

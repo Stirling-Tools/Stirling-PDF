@@ -2,22 +2,22 @@ package stirling.software.common.annotations;
 
 import java.lang.annotation.*;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 import jakarta.enterprise.util.Nonbinding;
 import jakarta.interceptor.InterceptorBinding;
 import jakarta.ws.rs.core.MediaType;
-
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 /**
  * Shortcut for a POST endpoint that is executed through the Stirling "auto‑job" framework.
  *
  * <p>MIGRATION (Spring -> Quarkus): this was a Spring composed meta-annotation that stamped
- * {@code @RequestMapping(method=POST)} onto the target via {@code @AliasFor}. JAX-RS does not honour
- * {@code @Path}/{@code @POST}/{@code @Consumes} through meta-annotations, so this annotation no
- * longer provides routing. It is now a CDI {@link InterceptorBinding} handled by
- * {@code AutoJobInterceptor}. <b>Controllers using {@code @AutoJobPostMapping} must additionally
- * declare their own JAX-RS {@code @POST} + {@code @Path(value)} + {@code @Consumes(consumes)}.</b>
- * The {@link #value()}/{@link #consumes()} members are retained so a scanner/controller can read the
+ * {@code @RequestMapping(method=POST)} onto the target via {@code @AliasFor}. JAX-RS does not
+ * honour {@code @Path}/{@code @POST}/{@code @Consumes} through meta-annotations, so this annotation
+ * no longer provides routing. It is now a CDI {@link InterceptorBinding} handled by {@code
+ * AutoJobInterceptor}. <b>Controllers using {@code @AutoJobPostMapping} must additionally declare
+ * their own JAX-RS {@code @POST} + {@code @Path(value)} + {@code @Consumes(consumes)}.</b> The
+ * {@link #value()}/{@link #consumes()} members are retained so a scanner/controller can read the
  * intended routing.
  *
  * <p>Behaviour notes:
@@ -43,7 +43,9 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 @RequestBody(required = true)
 public @interface AutoJobPostMapping {
 
-    /** The path mapping of the endpoint (controllers must mirror this on a JAX-RS {@code @Path}). */
+    /**
+     * The path mapping of the endpoint (controllers must mirror this on a JAX-RS {@code @Path}).
+     */
     @Nonbinding
     String[] value() default {};
 

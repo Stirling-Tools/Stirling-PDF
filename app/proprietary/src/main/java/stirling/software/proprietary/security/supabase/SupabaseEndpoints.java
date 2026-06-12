@@ -1,8 +1,8 @@
 package stirling.software.proprietary.security.supabase;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Stirling's customer-facing Supabase project endpoints ({@code auth.stirling.com} in production).
@@ -20,7 +20,9 @@ public class SupabaseEndpoints {
     @ConfigProperty(name = "stirling.supabase.url", defaultValue = DEFAULT_URL)
     String url;
 
-    @ConfigProperty(name = "stirling.supabase.publishable-key", defaultValue = DEFAULT_PUBLISHABLE_KEY)
+    @ConfigProperty(
+            name = "stirling.supabase.publishable-key",
+            defaultValue = DEFAULT_PUBLISHABLE_KEY)
     String publishableKey;
 
     public String getUrl() {

@@ -16,8 +16,8 @@ import jakarta.ws.rs.core.Response;
  * SecurityFilterChain equivalent. The 401 response must instead be produced by a Quarkus auth
  * mechanism / failure handler (e.g. an {@link io.quarkus.security.AuthenticationFailedException}
  * mapper via a {@code jakarta.ws.rs.ext.ExceptionMapper}, or a custom HttpAuthenticationMechanism
- * sendChallenge). The reusable header-building logic below has been preserved; wire
- * {@link #commence(HttpServletRequest, HttpServletResponse)} into that handler.
+ * sendChallenge). The reusable header-building logic below has been preserved; wire {@link
+ * #commence(HttpServletRequest, HttpServletResponse)} into that handler.
  */
 @ApplicationScoped
 public class McpAuthenticationEntryPoint {

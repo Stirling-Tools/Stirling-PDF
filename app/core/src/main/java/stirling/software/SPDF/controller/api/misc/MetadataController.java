@@ -70,9 +70,9 @@ public class MetadataController {
     }
 
     /**
-     * MIGRATION (Spring -> JAX-RS): port of {@code StringToMapPropertyEditor}. The "allRequestParams"
-     * form field is a JSON object string; parse it into a {@code Map<String, String>}, returning an
-     * empty map when the field is absent/blank.
+     * MIGRATION (Spring -> JAX-RS): port of {@code StringToMapPropertyEditor}. The
+     * "allRequestParams" form field is a JSON object string; parse it into a {@code Map<String,
+     * String>}, returning an empty map when the field is absent/blank.
      */
     private Map<String, String> parseAllRequestParams(String allRequestParamsJson) {
         if (allRequestParamsJson == null || allRequestParamsJson.isBlank()) {

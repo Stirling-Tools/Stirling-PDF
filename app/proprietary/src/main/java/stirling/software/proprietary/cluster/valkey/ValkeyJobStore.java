@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,9 +21,10 @@ import io.quarkus.redis.datasource.keys.KeyCommands;
 import io.quarkus.redis.datasource.keys.KeyScanArgs;
 import io.quarkus.redis.datasource.keys.KeyScanCursor;
 import io.quarkus.redis.datasource.transactions.OptimisticLockingTransactionResult;
-import io.quarkus.redis.datasource.transactions.TransactionResult;
 import io.quarkus.redis.datasource.value.SetArgs;
 import io.quarkus.redis.datasource.value.ValueCommands;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -139,12 +138,11 @@ public class ValkeyJobStore implements JobStore {
             // withTransaction(preTxBlock, watchedKeys...): the preTxBlock runs after WATCH and
             // before MULTI; its result feeds the transactional block. If a watched key changes
             // before EXEC, Quarkus aborts and the result reports discarded() == true.
+            // withTransaction(preTxBlock, biConsumer, watchedKeys): preTxBlock result I is
+            // passed as the first arg to the BiConsumer along with the transactional datasource.
             OptimisticLockingTransactionResult<List<String>> result =
                     redis.withTransaction(
-                            ds -> {
-                                // Read the single fileIds field with hget rather than hgetall:
-                                // resolve the field server-side and avoid byte[]-key identity
-                                // pitfalls when looking it back up client-side.
+                            (io.quarkus.redis.datasource.RedisDataSource ds) -> {
                                 byte[] fileIdsBytes =
                                         ds.hash(String.class, String.class, byte[].class)
                                                 .hget(jobKey, "fileIds");
@@ -154,21 +152,20 @@ public class ValkeyJobStore implements JobStore {
                                 return readJsonList(
                                         new String(fileIdsBytes, StandardCharsets.UTF_8), jobKey);
                             },
-                            tx -> {
-                                List<String> fileIds = tx.getPreTransactionResult();
+                            (List<String> fileIds,
+                                    io.quarkus.redis.datasource.transactions
+                                                    .TransactionalRedisDataSource
+                                            tx) -> {
                                 List<String> keysToDelete = new ArrayList<>();
                                 keysToDelete.add(jobKey);
                                 for (String fileId : fileIds) {
                                     keysToDelete.add(FILE_INDEX_PREFIX + fileId);
                                 }
-                                tx.key(String.class)
-                                        .del(keysToDelete.toArray(new String[0]));
+                                tx.key(String.class).del(keysToDelete.toArray(new String[0]));
                             },
                             jobKey);
-            TransactionResult txResult = result.getExecutionResult();
-            // EXEC returns null (discarded) when WATCH detected a concurrent write; Quarkus
-            // surfaces this as discarded() == true.
-            if (txResult != null && !txResult.discarded()) {
+            // EXEC returns discarded when WATCH detected a concurrent write.
+            if (!result.discarded()) {
                 return;
             }
         }

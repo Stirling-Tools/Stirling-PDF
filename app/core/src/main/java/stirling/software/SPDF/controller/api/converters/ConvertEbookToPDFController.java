@@ -180,8 +180,7 @@ public class ConvertEbookToPDFController {
                     document.save(tempOut.getFile());
                 }
             }
-            Response response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+            Response response = WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
             tempOut = null;
             return response;
         } catch (Exception e) {

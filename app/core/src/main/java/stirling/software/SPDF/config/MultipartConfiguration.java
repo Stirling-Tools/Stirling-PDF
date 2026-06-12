@@ -14,12 +14,12 @@ import stirling.software.SPDF.controller.web.UploadLimitService;
  * fileUploadLimit from settings.yml or environment variables (SYSTEMFILEUPLOADLIMIT or
  * SYSTEM_MAXFILESIZE).
  *
- * <p>NOTE (Quarkus migration): With quarkus-undertow the produced {@link MultipartConfigElement}
- * is honored for servlet-based multipart handling. For JAX-RS (RESTEasy Reactive) multipart
- * endpoints the effective request-size limit is instead controlled by the Quarkus HTTP layer via
- * {@code quarkus.http.limits.max-body-size} / {@code quarkus.http.limits.max-form-attribute-size}.
- * Those static properties cannot be derived from a runtime setting, so the dynamic limit computed
- * here only fully applies to servlet multipart parsing.
+ * <p>NOTE (Quarkus migration): With quarkus-undertow the produced {@link MultipartConfigElement} is
+ * honored for servlet-based multipart handling. For JAX-RS (RESTEasy Reactive) multipart endpoints
+ * the effective request-size limit is instead controlled by the Quarkus HTTP layer via {@code
+ * quarkus.http.limits.max-body-size} / {@code quarkus.http.limits.max-form-attribute-size}. Those
+ * static properties cannot be derived from a runtime setting, so the dynamic limit computed here
+ * only fully applies to servlet multipart parsing.
  */
 @ApplicationScoped
 @Slf4j

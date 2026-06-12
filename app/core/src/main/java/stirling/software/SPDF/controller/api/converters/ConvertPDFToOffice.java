@@ -59,7 +59,8 @@ public class ConvertPDFToOffice {
                     "This endpoint converts a given PDF file to a Presentation format. Input:PDF"
                             + " Output:PPT Type:SISO")
     public Response processPdfToPresentation(
-            @RestForm("fileInput") FileUpload fileInput, @RestForm("outputFormat") String outputFormat)
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("outputFormat") String outputFormat)
             throws IOException, InterruptedException {
         PdfToPresentationRequest request = new PdfToPresentationRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileInput));
@@ -82,7 +83,8 @@ public class ConvertPDFToOffice {
                     "This endpoint converts a given PDF file to Text or RTF format. Input:PDF"
                             + " Output:TXT Type:SISO")
     public Response processPdfToRTForTXT(
-            @RestForm("fileInput") FileUpload fileInput, @RestForm("outputFormat") String outputFormat)
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("outputFormat") String outputFormat)
             throws IOException, InterruptedException {
         PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileInput));
@@ -122,7 +124,8 @@ public class ConvertPDFToOffice {
                     "This endpoint converts a given PDF file to a Word document format. Input:PDF"
                             + " Output:WORD Type:SISO")
     public Response processPdfToWord(
-            @RestForm("fileInput") FileUpload fileInput, @RestForm("outputFormat") String outputFormat)
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("outputFormat") String outputFormat)
             throws IOException, InterruptedException {
         PdfToWordRequest request = new PdfToWordRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileInput));

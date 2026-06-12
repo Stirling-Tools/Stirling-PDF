@@ -7,12 +7,12 @@ import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.quarkus.runtime.StartupEvent;
+
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.runtime.StartupEvent;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -4,6 +4,7 @@ import org.owasp.html.AttributePolicy;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.common.model.ApplicationProperties;

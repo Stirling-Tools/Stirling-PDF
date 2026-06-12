@@ -3,10 +3,10 @@ package stirling.software.proprietary.workflow.repository;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Sort;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.WorkflowSession;

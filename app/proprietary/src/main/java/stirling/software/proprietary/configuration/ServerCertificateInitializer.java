@@ -1,9 +1,9 @@
 package stirling.software.proprietary.configuration;
 
+import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-
-import io.quarkus.runtime.StartupEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

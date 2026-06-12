@@ -4,9 +4,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.slf4j.MDC;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.util.SecretMasker;
-
-import tools.jackson.databind.ObjectMapper;
 
 // TODO: Migration required - this class implemented Spring Boot Actuator's
 // org.springframework.boot.actuate.audit.AuditEventRepository (with @Primary). Quarkus has no
@@ -30,8 +28,13 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class CustomAuditEventRepository {
 
+    // Jackson 3 ObjectMapper as a static field - Quarkus CDI only produces com.fasterxml (Jackson
+    // 2)
+    // beans; Jackson 3 is used as a plain library here for JSON serialization of audit data.
+    private static final tools.jackson.databind.ObjectMapper MAPPER =
+            new tools.jackson.databind.ObjectMapper();
+
     private final PersistentAuditEventRepository repo;
-    private final ObjectMapper mapper;
 
     /* ── WRITE side ───────────────────────────────────────── */
     // TODO: Migration required - was @Async("auditExecutor") (Spring async executor). Quarkus has
@@ -54,7 +57,7 @@ public class CustomAuditEventRepository {
                 clean.put("requestId", rid);
             }
 
-            String auditEventData = mapper.writeValueAsString(clean);
+            String auditEventData = MAPPER.writeValueAsString(clean);
             log.debug("AuditEvent data (JSON): {}", auditEventData);
 
             PersistentAuditEvent ent =
@@ -67,7 +70,7 @@ public class CustomAuditEventRepository {
             // TODO: Migration required - repo.save(...) depends on PersistentAuditEventRepository
             // being migrated to a Quarkus PanacheRepository (save -> persist). Update this call
             // once that collaborator is converted.
-            repo.save(ent);
+            repo.persist(ent);
         } catch (Exception e) {
             log.error("Failed to persist audit event (fail-open); principal={}", principal, e);
         }

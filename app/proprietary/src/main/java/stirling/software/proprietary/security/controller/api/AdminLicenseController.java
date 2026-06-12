@@ -9,6 +9,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -19,12 +25,6 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import org.jboss.resteasy.reactive.RestForm;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -338,7 +338,12 @@ public class AdminLicenseController {
         // Check file size (max 1MB for license files)
         if (file.getSize() > 1_048_576) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of("success", false, "error", "File too large. Maximum 1MB allowed"))
+                    .entity(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "File too large. Maximum 1MB allowed"))
                     .build();
         }
 

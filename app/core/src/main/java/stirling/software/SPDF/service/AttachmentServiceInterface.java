@@ -6,9 +6,8 @@ import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 
-import stirling.software.common.model.MultipartFile;
-
 import stirling.software.SPDF.model.api.misc.AttachmentInfo;
+import stirling.software.common.model.MultipartFile;
 
 public interface AttachmentServiceInterface {
 

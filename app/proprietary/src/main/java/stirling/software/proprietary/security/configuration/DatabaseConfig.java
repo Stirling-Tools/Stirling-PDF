@@ -32,8 +32,8 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
  *   <li>{@code @Configuration} -> {@code @ApplicationScoped}; {@code @Bean} -> {@code @Produces}.
  *   <li>{@code @Qualifier("runningProOrHigher")} ctor param -> {@code @Inject} ctor with
  *       {@code @Named(...)} on the parameter (the producer lives in common {@code AppConfig}).
- *   <li>{@code @Profile("!saas")} on the producer -> {@code @UnlessBuildProfile("saas")} so the SaaS
- *       Postgres datasource shadows this H2 default exactly as the old profile override did.
+ *   <li>{@code @Profile("!saas")} on the producer -> {@code @UnlessBuildProfile("saas")} so the
+ *       SaaS Postgres datasource shadows this H2 default exactly as the old profile override did.
  *   <li>{@code @Primary} dropped - the SaaS producer is selected by build profile instead of by
  *       primary/override semantics.
  *   <li>{@code @EnableJpaRepositories}/{@code @EntityScan} removed - Quarkus auto-discovers JPA
@@ -41,19 +41,19 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
  *       is needed.
  *   <li>Spring Boot {@code DataSourceBuilder}/{@code DatabaseDriver} (no Quarkus equivalent) ->
  *       replaced with a minimal {@link DriverManager}-backed {@link DataSource}. This preserves the
- *       original lazy-connect semantics of {@code DataSourceBuilder.build()} (no connection is opened
- *       until {@link DataSource#getConnection()} is called); the driver class-name strings are the
- *       same literals {@code DatabaseDriver.H2/POSTGRESQL.getDriverClassName()} returned.
+ *       original lazy-connect semantics of {@code DataSourceBuilder.build()} (no connection is
+ *       opened until {@link DataSource#getConnection()} is called); the driver class-name strings
+ *       are the same literals {@code DatabaseDriver.H2/POSTGRESQL.getDriverClassName()} returned.
  * </ul>
  *
- * <p>TODO: Migration required - the idiomatic Quarkus approach is to drop this programmatic producer
- * entirely and configure the datasource via {@code quarkus.datasource.*} (jdbc-url / username /
- * password / db-kind), letting Agroal own the connection pool. This producer is retained to preserve
- * the runtime "custom database" toggle (premium + {@code datasource.enableCustomDatabase}) that
- * selects between the bundled H2 file DB and a user-supplied URL at startup - static config cannot
- * express that branch on its own. The {@code DriverManager} datasource below is intentionally
- * unpooled; if connection pooling is required it should be obtained from the Agroal-managed default
- * datasource instead.
+ * <p>TODO: Migration required - the idiomatic Quarkus approach is to drop this programmatic
+ * producer entirely and configure the datasource via {@code quarkus.datasource.*} (jdbc-url /
+ * username / password / db-kind), letting Agroal own the connection pool. This producer is retained
+ * to preserve the runtime "custom database" toggle (premium + {@code
+ * datasource.enableCustomDatabase}) that selects between the bundled H2 file DB and a user-supplied
+ * URL at startup - static config cannot express that branch on its own. The {@code DriverManager}
+ * datasource below is intentionally unpooled; if connection pooling is required it should be
+ * obtained from the Agroal-managed default datasource instead.
  */
 @Slf4j
 @Getter
@@ -202,9 +202,9 @@ public class DatabaseConfig {
 
     /**
      * Minimal unpooled {@link DataSource} backed by {@link DriverManager}, replacing Spring Boot's
-     * {@code DataSourceBuilder}. Connections are opened lazily on {@link #getConnection()} (matching
-     * {@code DataSourceBuilder.build()} semantics) and the optional driver class is loaded eagerly so
-     * it self-registers with {@link DriverManager}.
+     * {@code DataSourceBuilder}. Connections are opened lazily on {@link #getConnection()}
+     * (matching {@code DataSourceBuilder.build()} semantics) and the optional driver class is
+     * loaded eagerly so it self-registers with {@link DriverManager}.
      */
     private static final class SimpleDriverDataSource implements DataSource {
 
@@ -275,8 +275,12 @@ public class DatabaseConfig {
             if (iface.isInstance(this)) {
                 return iface.cast(this);
             }
-            throw new SQLException("DataSource of type [" + getClass().getName()
-                    + "] cannot be unwrapped as [" + iface.getName() + "]");
+            throw new SQLException(
+                    "DataSource of type ["
+                            + getClass().getName()
+                            + "] cannot be unwrapped as ["
+                            + iface.getName()
+                            + "]");
         }
 
         @Override

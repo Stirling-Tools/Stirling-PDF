@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.Collection;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.authentication.UsernamePasswordAuthenticationToken}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.authentication.UsernamePasswordAuthenticationToken}.
  *
  * <p>An {@link Authentication} implementation designed for simple presentation of a username and
  * password.
@@ -14,9 +14,7 @@ public class UsernamePasswordAuthenticationToken extends AbstractAuthenticationT
     private final Object principal;
     private Object credentials;
 
-    /**
-     * Creates an unauthenticated token (typically used as an authentication request).
-     */
+    /** Creates an unauthenticated token (typically used as an authentication request). */
     public UsernamePasswordAuthenticationToken(Object principal, Object credentials) {
         super(null);
         this.principal = principal;
@@ -24,9 +22,7 @@ public class UsernamePasswordAuthenticationToken extends AbstractAuthenticationT
         setAuthenticated(false);
     }
 
-    /**
-     * Creates an authenticated token (typically the result of a successful authentication).
-     */
+    /** Creates an authenticated token (typically the result of a successful authentication). */
     public UsernamePasswordAuthenticationToken(
             Object principal,
             Object credentials,
@@ -37,17 +33,13 @@ public class UsernamePasswordAuthenticationToken extends AbstractAuthenticationT
         super.setAuthenticated(true);
     }
 
-    /**
-     * Factory method mirroring Spring Security 6 for creating an unauthenticated token.
-     */
+    /** Factory method mirroring Spring Security 6 for creating an unauthenticated token. */
     public static UsernamePasswordAuthenticationToken unauthenticated(
             Object principal, Object credentials) {
         return new UsernamePasswordAuthenticationToken(principal, credentials);
     }
 
-    /**
-     * Factory method mirroring Spring Security 6 for creating an authenticated token.
-     */
+    /** Factory method mirroring Spring Security 6 for creating an authenticated token. */
     public static UsernamePasswordAuthenticationToken authenticated(
             Object principal,
             Object credentials,

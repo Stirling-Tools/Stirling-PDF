@@ -17,7 +17,8 @@ import stirling.software.common.cluster.KeyValueCache;
 
 // TODO: Migration required - @ConditionalOnValkeyBackplane (a Spring @ConditionalOnExpression
 // composite on cluster.enabled + cluster.backplane=valkey) has no direct CDI equivalent. Once that
-// collaborator annotation is migrated, re-guard this bean (e.g. @io.quarkus.arc.lookup.LookupIfProperty
+// collaborator annotation is migrated, re-guard this bean (e.g.
+// @io.quarkus.arc.lookup.LookupIfProperty
 // or @io.quarkus.arc.profile.IfBuildProfile, or a runtime guard) so Valkey beans only load when
 // cluster.enabled=true AND cluster.backplane=valkey.
 @ApplicationScoped

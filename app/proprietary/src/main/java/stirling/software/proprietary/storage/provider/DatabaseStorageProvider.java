@@ -17,7 +17,7 @@ import stirling.software.proprietary.storage.model.StoredFileBlob;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 @ApplicationScoped
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class DatabaseStorageProvider implements StorageProvider {
 
     private final StoredFileBlobRepository storedFileBlobRepository;
@@ -28,9 +28,7 @@ public class DatabaseStorageProvider implements StorageProvider {
         StoredFileBlob blob = new StoredFileBlob();
         blob.setStorageKey(storageKey);
         blob.setData(file.getBytes());
-        // TODO: Migration required - StoredFileBlobRepository must extend Panache
-        // PanacheRepositoryBase<StoredFileBlob, String>; once migrated, save(blob) -> persist(blob).
-        storedFileBlobRepository.save(blob);
+        storedFileBlobRepository.persist(blob);
 
         return StoredObject.builder()
                 .storageKey(storageKey)
@@ -42,11 +40,9 @@ public class DatabaseStorageProvider implements StorageProvider {
 
     @Override
     public Resource load(String storageKey) throws IOException {
-        // TODO: Migration required - once StoredFileBlobRepository is a Panache repository,
-        // findById(storageKey) -> findByIdOptional(storageKey).
         StoredFileBlob blob =
                 storedFileBlobRepository
-                        .findById(storageKey)
+                        .findByIdOptional(storageKey)
                         .orElseThrow(() -> new IOException("File not found"));
         // Quarkus/Jakarta has no Spring ByteArrayResource; use the common InputStreamResource shim.
         return new InputStreamResource(new ByteArrayInputStream(blob.getData()), storageKey);
@@ -54,9 +50,7 @@ public class DatabaseStorageProvider implements StorageProvider {
 
     @Override
     public void delete(String storageKey) throws IOException {
-        // TODO: Migration required - once StoredFileBlobRepository is a Panache repository,
-        // existsById(storageKey) -> count("storageKey", storageKey) > 0.
-        if (!storedFileBlobRepository.existsById(storageKey)) {
+        if (!storedFileBlobRepository.findByIdOptional(storageKey).isPresent()) {
             return;
         }
         storedFileBlobRepository.deleteById(storageKey);

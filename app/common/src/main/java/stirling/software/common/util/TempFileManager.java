@@ -10,15 +10,11 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
-// drop-in. Kept to preserve the public convertMultipartFileToFile signature used by callers;
-// migrate to byte[]/InputStream or a Quarkus multipart type once callers are updated.
-import stirling.software.common.model.MultipartFile;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Service for managing temporary files in Stirling-PDF. Provides methods for creating, tracking,

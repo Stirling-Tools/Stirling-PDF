@@ -6,10 +6,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
@@ -17,9 +17,9 @@ import stirling.software.proprietary.security.model.User;
 /**
  * Quarkus Panache repository for {@link User}.
  *
- * <p>Migrated from a Spring Data {@code JpaRepository<User, Long>}. Derived finders are reimplemented
- * as Panache queries and the {@code @Query} methods keep their original JPQL/native strings passed to
- * Panache {@code find}/{@code getEntityManager().createNativeQuery(...)}.
+ * <p>Migrated from a Spring Data {@code JpaRepository<User, Long>}. Derived finders are
+ * reimplemented as Panache queries and the {@code @Query} methods keep their original JPQL/native
+ * strings passed to Panache {@code find}/{@code getEntityManager().createNativeQuery(...)}.
  */
 @ApplicationScoped
 public class UserRepository implements PanacheRepositoryBase<User, Long> {

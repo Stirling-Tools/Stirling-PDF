@@ -1,9 +1,9 @@
 package stirling.software.common.cluster.inprocess;
 
+import io.quarkus.arc.DefaultBean;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
-
-import io.quarkus.arc.DefaultBean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,8 @@ import stirling.software.common.model.ApplicationProperties;
 // Quarkus/CDI has no direct equivalent for conditionally registering a producer set based on a
 // SpEL boolean. The @DefaultBean producers below now always provide the in-process implementations
 // unless another bean of the same type is present. If a non-inprocess backplane is added, ensure
-// it is NOT a @DefaultBean so it wins, and consider gating with @io.quarkus.arc.lookup.LookupIfProperty
+// it is NOT a @DefaultBean so it wins, and consider gating with
+// @io.quarkus.arc.lookup.LookupIfProperty
 // / @io.quarkus.arc.lookup.LookupUnlessProperty or a build-time @IfBuildProperty per producer.
 @Slf4j
 @ApplicationScoped

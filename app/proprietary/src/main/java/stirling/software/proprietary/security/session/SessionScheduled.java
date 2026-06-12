@@ -5,13 +5,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
-import stirling.software.common.security.SessionInformation;
-
 import io.quarkus.scheduler.Scheduled;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
+
+import stirling.software.common.security.SessionInformation;
 
 @ApplicationScoped
 @RequiredArgsConstructor

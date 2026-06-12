@@ -145,7 +145,10 @@ public class PolicyController {
                                         Map.of("message", throwable.getMessage()));
                             } else {
                                 sendEvent(
-                                        eventSink, sse, terminalEventName(run), PolicyRunView.of(run));
+                                        eventSink,
+                                        sse,
+                                        terminalEventName(run),
+                                        PolicyRunView.of(run));
                             }
                             eventSink.close();
                         });

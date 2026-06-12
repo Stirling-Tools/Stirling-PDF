@@ -8,7 +8,6 @@ import jakarta.transaction.Transactional;
 
 import stirling.software.common.security.PersistentRememberMeToken;
 import stirling.software.common.security.PersistentTokenRepository;
-
 import stirling.software.proprietary.security.model.PersistentLogin;
 
 @ApplicationScoped
@@ -29,26 +28,24 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
         newToken.setUsername(token.getUsername());
         newToken.setToken(token.getTokenValue());
         newToken.setLastUsed(token.getDate().toInstant());
-        // TODO: Migration required - PersistentLoginRepository is a collaborator that is not
-        // yet migrated to Quarkus Panache. Once it extends PanacheRepositoryBase, replace
-        // save(...) with persist(...).
-        persistentLoginRepository.save(newToken);
+        persistentLoginRepository.persist(newToken);
     }
 
     @Override
     @Transactional
     public void updateToken(String series, String tokenValue, Date lastUsed) {
-        PersistentLogin existingToken = persistentLoginRepository.findById(series).orElse(null);
+        PersistentLogin existingToken =
+                persistentLoginRepository.findByIdOptional(series).orElse(null);
         if (existingToken != null) {
             existingToken.setToken(tokenValue);
             existingToken.setLastUsed(lastUsed.toInstant());
-            persistentLoginRepository.save(existingToken);
+            persistentLoginRepository.persist(existingToken);
         }
     }
 
     @Override
     public PersistentRememberMeToken getTokenForSeries(String seriesId) {
-        PersistentLogin token = persistentLoginRepository.findById(seriesId).orElse(null);
+        PersistentLogin token = persistentLoginRepository.findByIdOptional(seriesId).orElse(null);
         if (token != null) {
             return new PersistentRememberMeToken(
                     token.getUsername(),

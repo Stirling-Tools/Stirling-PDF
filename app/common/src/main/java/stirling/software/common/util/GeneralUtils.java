@@ -15,21 +15,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// TODO: Migration required - replace Spring classpath scanning with Quarkus (e.g. io.quarkus
-// ClassPathUtils or build-time indexing). org.springframework.core.io.ResourceLoader and
-// org.springframework.core.io.support.ResourcePatternUtils have no Quarkus/Jakarta shim. They are
-// used only by getResourcesFromLocationPattern below; that method's public signature and the Spring
-// MIGRATION: Spring ResourceLoader/ResourcePatternUtils glob scanning replaced by java.nio
-// directory listing (file:) + classloader lookup (classpath:); see getResourcesFromLocationPattern.
-import stirling.software.common.model.io.FileSystemResource;
-import stirling.software.common.model.io.Resource;
-
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no servlet/JAX-RS
-// drop-in for these utility method params. The public signatures of convertMultipartFileToFile and
-// multipartToFile are used by many callers, so the type is kept to avoid a wide ripple. Revisit to
-// accept InputStream/byte[] or a JAX-RS form-data type once callers are migrated.
-import stirling.software.common.model.MultipartFile;
-
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 
 import io.github.pixee.security.HostValidator;
@@ -39,6 +24,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 @Slf4j
 @UtilityClass
@@ -261,15 +249,15 @@ public class GeneralUtils {
      * Resolve files matching a location pattern. Supports {@code file:<dir>/<glob>} and {@code
      * classpath:<dir>/<glob>} (e.g. {@code *} or {@code *.woff2}).
      *
-     * <p>MIGRATION (Spring -> Quarkus): replaced Spring's {@code ResourceLoader} +
-     * {@code ResourcePatternUtils} pattern resolver. The {@code ResourceLoader} parameter was
-     * removed. {@code file:} patterns are resolved with {@link java.nio.file.Files#list}; {@code
-     * classpath:} patterns are resolved via the classloader and only support directory resources
-     * that live on the filesystem.
+     * <p>MIGRATION (Spring -> Quarkus): replaced Spring's {@code ResourceLoader} + {@code
+     * ResourcePatternUtils} pattern resolver. The {@code ResourceLoader} parameter was removed.
+     * {@code file:} patterns are resolved with {@link java.nio.file.Files#list}; {@code classpath:}
+     * patterns are resolved via the classloader and only support directory resources that live on
+     * the filesystem.
      *
-     * <p>TODO: Migration required - {@code classpath:} resolution does not enumerate entries inside a
-     * packaged JAR. For uber-jar deployments, prefer serving these assets from
-     * {@code META-INF/resources/} or build a Jandex/build-time index of the matching files.
+     * <p>TODO: Migration required - {@code classpath:} resolution does not enumerate entries inside
+     * a packaged JAR. For uber-jar deployments, prefer serving these assets from {@code
+     * META-INF/resources/} or build a Jandex/build-time index of the matching files.
      */
     public static Resource[] getResourcesFromLocationPattern(String locationPattern)
             throws Exception {
@@ -1096,7 +1084,8 @@ public class GeneralUtils {
     private void copyResourceToFile(String resourcePath, Path target) throws IOException {
         Path dir = target.getParent();
         Path tmp = Files.createTempFile(dir, target.getFileName().toString(), ".tmp");
-        try (InputStream in = GeneralUtils.class.getClassLoader().getResourceAsStream(resourcePath)) {
+        try (InputStream in =
+                GeneralUtils.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (in == null) {
                 throw new IOException("Resource not found: " + resourcePath);
             }

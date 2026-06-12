@@ -89,6 +89,9 @@ dependencies {
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
     // boundary doubling).
     implementation 'com.bucket4j:bucket4j_jdk17-lettuce:8.19.0'
+    // Lettuce is an optional dep in bucket4j_jdk17-lettuce POM so Gradle does not add it
+    // transitively; declare it explicitly so ValkeyRateLimitStore can import io.lettuce.core.*.
+    implementation 'io.lettuce:lettuce-core:6.4.0.RELEASE'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"

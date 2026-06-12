@@ -6,15 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.ext.Provider;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,8 +35,9 @@ import stirling.software.common.model.ApplicationProperties;
  *       a {@link ContainerResponseFilter} that sets the {@code Cache-Control} header per request
  *       path. The static files themselves are served by Quarkus via {@code
  *       quarkus.http.static-resources} / the configured static path (see TODO).
- *   <li><b>CORS</b> ({@code addCorsMappings}) - the dynamic, configuration-driven logic is preserved
- *       below and applied via the same response filter (see TODO about Quarkus built-in CORS).
+ *   <li><b>CORS</b> ({@code addCorsMappings}) - the dynamic, configuration-driven logic is
+ *       preserved below and applied via the same response filter (see TODO about Quarkus built-in
+ *       CORS).
  * </ol>
  */
 @Provider
@@ -83,8 +84,8 @@ public class WebMvcConfig implements ContainerResponseFilter {
     }
 
     /**
-     * Reproduces the per-path Cache-Control rules from the original {@code addResourceHandlers}. The
-     * resource-handler patterns are matched here in the same priority order.
+     * Reproduces the per-path Cache-Control rules from the original {@code addResourceHandlers}.
+     * The resource-handler patterns are matched here in the same priority order.
      */
     private void applyCacheControl(String path, ContainerResponseContext responseContext) {
         if (path == null) {

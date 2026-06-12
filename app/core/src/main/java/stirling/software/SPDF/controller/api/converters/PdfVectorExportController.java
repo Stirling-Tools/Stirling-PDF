@@ -64,7 +64,8 @@ public class PdfVectorExportController {
                     "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript."
                             + " Input:PS/EPS Output:PDF Type:SISO")
     public Response convertGhostscriptInputsToPdf(
-            @RestForm("fileInput") FileUpload fileUpload, @RestForm("prepress") Boolean prepressParam)
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("prepress") Boolean prepressParam)
             throws Exception {
 
         // TODO: Migration - PdfVectorExportRequest (@ModelAttribute) is not yet migrated to a

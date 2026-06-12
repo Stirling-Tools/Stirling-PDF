@@ -9,12 +9,12 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.core.Response;
-
-import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -226,8 +226,7 @@ public class UIDataController {
 
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
-            Resource[] resources =
-                    GeneralUtils.getResourcesFromLocationPattern(locationPattern);
+            Resource[] resources = GeneralUtils.getResourcesFromLocationPattern(locationPattern);
             return Arrays.stream(resources)
                     .map(
                             resource -> {

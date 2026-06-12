@@ -1,8 +1,8 @@
 package stirling.software.common.configuration;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import com.posthog.java.PostHogLogger;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 

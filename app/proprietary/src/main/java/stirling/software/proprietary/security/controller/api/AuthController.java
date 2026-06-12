@@ -3,6 +3,9 @@ package stirling.software.proprietary.security.controller.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.quarkus.security.identity.SecurityIdentity;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,18 +18,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 
-import stirling.software.common.security.AuthenticationException;
-import stirling.software.common.security.UserDetails;
-import stirling.software.common.security.UsernameNotFoundException;
-
-import io.quarkus.security.identity.SecurityIdentity;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -120,14 +117,16 @@ public class AuthController {
             if (loginAttemptService.isBlocked(username)) {
                 log.warn("Blocked account login attempt for user: {} from IP: {}", username, ip);
                 return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity(Map.of("error", "Account is locked due to too many failed attempts"))
+                        .entity(
+                                Map.of(
+                                        "error",
+                                        "Account is locked due to too many failed attempts"))
                         .build();
             }
 
             log.debug("Login attempt for user: {} from IP: {}", username, ip);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            User user = (User) userDetails;
+            User user = userDetailsService.loadUserByUsername(username);
 
             if (!userService.isPasswordCorrect(user, request.getPassword())) {
                 log.warn("Invalid password for user: {} from IP: {}", username, ip);
@@ -274,7 +273,8 @@ public class AuthController {
     @Path("/me")
     public Response getCurrentUser() {
         try {
-            // TODO: Migration required - was SecurityContextHolder.getContext().getAuthentication().
+            // TODO: Migration required - was
+            // SecurityContextHolder.getContext().getAuthentication().
             // Quarkus SecurityIdentity has no Spring UserDetails principal; loading the full User
             // here requires a SecurityIdentityAugmentor that attaches the User (or re-loading via
             // userDetailsService by name). Until then we re-load the user from the identity name.
@@ -287,8 +287,7 @@ public class AuthController {
             }
 
             String username = securityIdentity.getPrincipal().getName();
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            User user = (User) userDetails;
+            User user = userDetailsService.loadUserByUsername(username);
 
             return Response.ok(Map.of("user", buildUserResponse(user))).build();
 
@@ -374,7 +373,8 @@ public class AuthController {
                 log.warn(
                         "Token refresh rejected: rate limit exceeded (max {} attempts allowed)",
                         JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
-                // HTTP 429 TOO_MANY_REQUESTS is not in JAX-RS Response.Status enum; use numeric code
+                // HTTP 429 TOO_MANY_REQUESTS is not in JAX-RS Response.Status enum; use numeric
+                // code
                 return Response.status(429)
                         .entity(
                                 Map.of(
@@ -394,8 +394,7 @@ public class AuthController {
                         .build();
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            User user = (User) userDetails;
+            User user = userDetailsService.loadUserByUsername(username);
 
             Map<String, Object> newClaims = new HashMap<>();
             newClaims.put("authType", user.getAuthenticationType());

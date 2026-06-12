@@ -9,13 +9,13 @@ import java.io.InputStream;
  *
  * <p>Quarkus/Jakarta has no single {@code Resource} abstraction. Rather than rewrite the many
  * public method signatures across the codebase that accept or return {@code Resource}, this
- * interface mirrors the subset of Spring's API the codebase actually uses
- * ({@code getInputStream/exists/getFile/getFilename/contentLength/isFile}) together with the
- * {@link FileSystemResource}, {@link InputStreamResource} and {@link ClassPathResource}
- * implementations. Converting a file is then just an import swap.
+ * interface mirrors the subset of Spring's API the codebase actually uses ({@code
+ * getInputStream/exists/getFile/getFilename/contentLength/isFile}) together with the {@link
+ * FileSystemResource}, {@link InputStreamResource} and {@link ClassPathResource} implementations.
+ * Converting a file is then just an import swap.
  *
- * <p>TODO: Migration required - longer term, prefer {@code java.nio.file.Path} / {@code InputStream}
- * directly at the boundaries and retire this shim.
+ * <p>TODO: Migration required - longer term, prefer {@code java.nio.file.Path} / {@code
+ * InputStream} directly at the boundaries and retire this shim.
  */
 public interface Resource {
 

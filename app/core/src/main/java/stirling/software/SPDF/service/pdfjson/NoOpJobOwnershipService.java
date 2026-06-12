@@ -2,9 +2,10 @@ package stirling.software.SPDF.service.pdfjson;
 
 import java.util.Optional;
 
+import io.quarkus.arc.properties.IfBuildProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.arc.properties.IfBuildProperty;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -16,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 // TODO: Migration required - Spring's @ConditionalOnProperty(matchIfMissing=true) is a runtime
 // condition; Quarkus @IfBuildProperty is evaluated at build time. enableIfMissing=true preserves
 // the matchIfMissing default. If security.enable-login must be toggled at runtime, switch to
-// @io.quarkus.arc.lookup.LookupIfProperty with Instance<JobOwnershipService> injection at use sites.
+// @io.quarkus.arc.lookup.LookupIfProperty with Instance<JobOwnershipService> injection at use
+// sites.
 @IfBuildProperty(name = "security.enable-login", stringValue = "false", enableIfMissing = true)
 public class NoOpJobOwnershipService
         implements stirling.software.common.service.JobOwnershipService {

@@ -73,7 +73,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User user = getCurrentUser(principal);
@@ -116,7 +118,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
 
         try {
@@ -142,7 +146,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User owner = getCurrentUser(principal);
@@ -167,7 +173,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User owner = getCurrentUser(principal);
@@ -190,7 +198,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User owner = getCurrentUser(principal);
@@ -218,7 +228,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User owner = getCurrentUser(principal);
@@ -344,7 +356,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User user = getCurrentUser(principal);
@@ -365,11 +379,14 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User user = getCurrentUser(principal);
-            return Response.ok(workflowSessionService.getSignRequestDetail(sessionId, user)).build();
+            return Response.ok(workflowSessionService.getSignRequestDetail(sessionId, user))
+                    .build();
         } catch (Exception e) {
             log.error("Error fetching sign request detail for session {}", sessionId, e);
             return Response.status(Response.Status.FORBIDDEN)
@@ -414,7 +431,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User user = getCurrentUser(principal);
@@ -438,7 +457,9 @@ public class SigningSessionController {
         workflowSessionService.ensureSigningEnabled();
         Principal principal = securityContext.getUserPrincipal();
         if (principal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Authentication required").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Authentication required")
+                    .build();
         }
         try {
             User user = getCurrentUser(principal);

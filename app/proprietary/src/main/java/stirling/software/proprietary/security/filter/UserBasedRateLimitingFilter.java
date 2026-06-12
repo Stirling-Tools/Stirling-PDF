@@ -9,7 +9,6 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.pixee.security.Newlines;
-
 import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -32,7 +31,8 @@ import stirling.software.common.util.RegexPatternUtils;
 // ContainerRequestFilter does not expose as conveniently.
 // TODO: Migration required - Spring's @Profile("!saas") gated this filter so it was NOT registered
 // in the "saas" profile. Quarkus has no per-profile bean exclusion on @WebFilter; gate registration
-// with @io.quarkus.arc.profile.UnlessBuildProfile("saas") if "saas" is a build profile, or guard the
+// with @io.quarkus.arc.profile.UnlessBuildProfile("saas") if "saas" is a build profile, or guard
+// the
 // body with a runtime check on the active profile (org.eclipse.microprofile.config Config /
 // io.quarkus.runtime.LaunchMode) if it must be a runtime toggle.
 @ApplicationScoped
@@ -140,7 +140,8 @@ public class UserBasedRateLimitingFilter implements jakarta.servlet.Filter {
             filterChain.doFilter(request, response);
         } else {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
-            response.setStatus(jakarta.ws.rs.core.Response.Status.TOO_MANY_REQUESTS.getStatusCode());
+            response.setStatus(
+                    jakarta.ws.rs.core.Response.Status.TOO_MANY_REQUESTS.getStatusCode());
             response.setHeader(
                     "X-Rate-Limit-Retry-After-Seconds",
                     Newlines.stripAll(String.valueOf(waitForRefill)));

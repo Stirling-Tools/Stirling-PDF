@@ -182,8 +182,10 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     // TODO: Migration required - jakarta.transaction.@Transactional is a CDI interceptor binding
     // and (like Spring's @Transactional) is not applied to private methods via the bean proxy. This
-    // method performs no JPA writes (only disk I/O + in-memory cache), so the annotation was a no-op
-    // under Spring too; kept for parity. If transactional semantics are ever needed, make the method
+    // method performs no JPA writes (only disk I/O + in-memory cache), so the annotation was a
+    // no-op
+    // under Spring too; kept for parity. If transactional semantics are ever needed, make the
+    // method
     // public or extract it to a separate bean.
     @Transactional
     private JwtVerificationKey generateAndStoreKeypair() {

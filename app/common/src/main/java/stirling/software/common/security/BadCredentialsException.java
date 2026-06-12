@@ -1,8 +1,8 @@
 package stirling.software.common.security;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.authentication.BadCredentialsException}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.authentication.BadCredentialsException}.
  *
  * <p>Thrown if an authentication request is rejected because the credentials are invalid.
  */

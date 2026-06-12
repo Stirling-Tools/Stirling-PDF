@@ -2,10 +2,10 @@ package stirling.software.proprietary.storage.repository;
 
 import java.util.List;
 
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -15,8 +15,8 @@ import stirling.software.proprietary.storage.model.FileShareAccess;
  * Quarkus Panache repository for {@link FileShareAccess}.
  *
  * <p>Migrated from a Spring Data {@code JpaRepository<FileShareAccess, Long>}. The {@code @Query}
- * methods keep their original JPQL strings passed to Panache {@code list}, and the derived
- * {@code deleteByXxx} finders become Panache {@code delete} calls.
+ * methods keep their original JPQL strings passed to Panache {@code list}, and the derived {@code
+ * deleteByXxx} finders become Panache {@code delete} calls.
  */
 @ApplicationScoped
 public class FileShareAccessRepository implements PanacheRepositoryBase<FileShareAccess, Long> {

@@ -11,16 +11,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import io.quarkus.scheduler.Scheduled;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.scheduler.Scheduled;
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
-// drop-in. uploadFiles(...) is a public API consumed by callers and relies on isEmpty(),
-// getOriginalFilename(), getSize(), getContentType() and transferTo(Path). Changing it to
-// byte[]/InputStream would ripple to callers, so the Spring type is kept here intentionally.
-import stirling.software.common.model.MultipartFile;
-
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Service for handling mobile scanner file uploads and temporary storage. Files are stored

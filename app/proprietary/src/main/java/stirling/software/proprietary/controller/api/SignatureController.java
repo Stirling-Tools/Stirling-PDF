@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -17,8 +19,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +36,10 @@ import stirling.software.proprietary.service.SignatureService;
  * <p>TODO: Migration required - the original endpoints were guarded by Spring Security SpEL
  * expressions ({@code @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")} and
  * {@code @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")}). These are not simple role checks, so
- * they cannot be expressed with {@code @RolesAllowed}. Authentication should be enforced via Quarkus
- * (e.g. inject {@code io.quarkus.security.identity.SecurityIdentity} or add an HTTP auth policy in
- * application.properties), and the DEMO_USER exclusion needs to be re-implemented as a runtime check
- * against the current identity's roles.
+ * they cannot be expressed with {@code @RolesAllowed}. Authentication should be enforced via
+ * Quarkus (e.g. inject {@code io.quarkus.security.identity.SecurityIdentity} or add an HTTP auth
+ * policy in application.properties), and the DEMO_USER exclusion needs to be re-implemented as a
+ * runtime check against the current identity's roles.
  */
 @Slf4j
 @ApplicationScoped

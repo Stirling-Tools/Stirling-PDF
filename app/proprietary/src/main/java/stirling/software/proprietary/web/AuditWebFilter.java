@@ -74,9 +74,7 @@ public class AuditWebFilter implements jakarta.servlet.Filter {
                 SecurityIdentity identity = securityIdentity.get();
                 if (identity != null && !identity.isAnonymous() && identity.getRoles() != null) {
                     String roles =
-                            identity.getRoles().stream()
-                                    .reduce((a, b) -> a + "," + b)
-                                    .orElse("");
+                            identity.getRoles().stream().reduce((a, b) -> a + "," + b).orElse("");
                     MDC.put("userRoles", roles);
                 }
             }

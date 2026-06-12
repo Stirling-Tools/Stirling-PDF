@@ -148,10 +148,7 @@ public class CertSignController {
     }
 
     @AutoJobPostMapping(
-            consumes = {
-                MediaType.MULTIPART_FORM_DATA,
-                MediaType.APPLICATION_FORM_URLENCODED
-            },
+            consumes = {MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED},
             value = "/cert-sign",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @POST

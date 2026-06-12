@@ -4,18 +4,18 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.slf4j.MDC;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
-
-import org.slf4j.MDC;
 
 @ApplicationScoped
 public class AsyncConfig {
 
     /**
-     * Wraps a delegate {@link Executor} so that the caller thread's MDC context is propagated to the
-     * worker (virtual) thread executing the task, then cleared afterwards to avoid leaks.
+     * Wraps a delegate {@link Executor} so that the caller thread's MDC context is propagated to
+     * the worker (virtual) thread executing the task, then cleared afterwards to avoid leaks.
      */
     static Executor mdcPropagating(Executor delegate) {
         return command -> {

@@ -64,8 +64,7 @@ public class CustomAuthenticationSuccessHandler {
     // parameter as before; wire the authenticated identity in once JwtServiceInterface is
     // migrated.
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
-    public void onAuthenticationSuccess(
-            HttpServletRequest request, HttpServletResponse response)
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String userName = request.getParameter("username");
@@ -80,8 +79,7 @@ public class CustomAuthenticationSuccessHandler {
             // Authentication. Pass the migrated Quarkus identity once JwtServiceInterface is
             // ported; generating the token by username for now.
             String jwt =
-                    jwtService.generateToken(
-                            userName, Map.of("authType", AuthenticationType.WEB));
+                    jwtService.generateToken(userName, Map.of("authType", AuthenticationType.WEB));
             log.debug("JWT generated for user: {}", userName);
 
             response.sendRedirect("/");

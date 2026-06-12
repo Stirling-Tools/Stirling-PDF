@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.arc.All;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 

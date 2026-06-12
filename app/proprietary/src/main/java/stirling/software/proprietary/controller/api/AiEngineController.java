@@ -155,8 +155,7 @@ public class AiEngineController {
         aiStreamExecutor.execute(() -> runOrchestrationStream(request, sse, sink));
     }
 
-    private void runOrchestrationStream(
-            AiWorkflowRequest request, Sse sse, SseEventSink sink) {
+    private void runOrchestrationStream(AiWorkflowRequest request, Sse sse, SseEventSink sink) {
         AiWorkflowService.ProgressListener listener =
                 new AiWorkflowService.ProgressListener() {
                     @Override

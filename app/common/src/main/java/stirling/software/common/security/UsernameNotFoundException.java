@@ -1,8 +1,8 @@
 package stirling.software.common.security;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.userdetails.UsernameNotFoundException}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.userdetails.UsernameNotFoundException}.
  *
  * <p>Thrown if a {@link UserDetailsService} implementation cannot locate a user by its username.
  */

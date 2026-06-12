@@ -2,9 +2,9 @@ package stirling.software.proprietary.security.database.repository;
 
 import java.util.Set;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.security.model.Authority;
 

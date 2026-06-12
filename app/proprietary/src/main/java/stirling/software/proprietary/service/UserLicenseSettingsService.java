@@ -70,7 +70,8 @@ public class UserLicenseSettingsService {
                             settings.setGrandfatheringLocked(false);
                             settings.setIntegritySalt(UUID.randomUUID().toString());
                             settings.setGrandfatheredUserSignature("");
-                            return settingsRepository.save(settings);
+                            settingsRepository.persist(settings);
+                            return settings;
                         });
     }
 
@@ -106,7 +107,7 @@ public class UserLicenseSettingsService {
                 changed = true;
             }
             if (changed) {
-                settingsRepository.save(settings);
+                settingsRepository.persist(settings);
             }
             log.debug(
                     "Grandfathering is locked. Current grandfathered count: {}",
@@ -140,7 +141,7 @@ public class UserLicenseSettingsService {
         settings.setGrandfatheredUserCount(grandfatheredCount);
         settings.setGrandfatheringLocked(true);
         settings.setGrandfatheredUserSignature(generateSignature(grandfatheredCount, settings));
-        settingsRepository.save(settings);
+        settingsRepository.persist(settings);
 
         log.warn(
                 "GRANDFATHERING LOCKED: {} users. This value can never be changed.",
@@ -162,7 +163,7 @@ public class UserLicenseSettingsService {
 
         if (settings.getLicenseMaxUsers() != licenseMaxUsers) {
             settings.setLicenseMaxUsers(licenseMaxUsers);
-            settingsRepository.save(settings);
+            settingsRepository.persist(settings);
             log.info("Updated license max users to: {}", licenseMaxUsers);
         }
     }
@@ -285,7 +286,7 @@ public class UserLicenseSettingsService {
                         && !targetSignature.equals(settings.getGrandfatheredUserSignature()))) {
             settings.setGrandfatheredUserCount(targetCount);
             settings.setGrandfatheredUserSignature(targetSignature);
-            settingsRepository.save(settings);
+            settingsRepository.persist(settings);
         }
     }
 

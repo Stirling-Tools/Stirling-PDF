@@ -13,6 +13,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BeanParam;
@@ -25,15 +31,8 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import io.quarkus.panache.common.Page;
-import io.quarkus.panache.common.Sort;
 
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.api.audit.AuditDataRequest;
@@ -85,28 +84,30 @@ public class AuditDashboardController {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
             query =
-                    auditRepository.findByPrincipalAndTypeAndTimestampBetween(
-                            principal, type, start, end, page, sort);
+                    auditRepository
+                            .findByPrincipalAndTypeAndTimestampBetween(principal, type, start, end)
+                            .page(page);
         } else if (type != null && principal != null) {
-            query = auditRepository.findByPrincipalAndType(principal, type, page, sort);
+            query = auditRepository.findByPrincipalAndType(principal, type).page(page);
         } else if (type != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            query = auditRepository.findByTypeAndTimestampBetween(type, start, end, page, sort);
+            query = auditRepository.findByTypeAndTimestampBetween(type, start, end).page(page);
         } else if (principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
             query =
-                    auditRepository.findByPrincipalAndTimestampBetween(
-                            principal, start, end, page, sort);
+                    auditRepository
+                            .findByPrincipalAndTimestampBetween(principal, start, end)
+                            .page(page);
         } else if (startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            query = auditRepository.findByTimestampBetween(start, end, page, sort);
+            query = auditRepository.findByTimestampBetween(start, end).page(page);
         } else if (type != null) {
-            query = auditRepository.findByType(type, page, sort);
+            query = auditRepository.findByType(type).page(page);
         } else if (principal != null) {
-            query = auditRepository.findByPrincipal(principal, page, sort);
+            query = auditRepository.findByPrincipal(principal).page(page);
         } else {
             query = auditRepository.findAll(sort).page(page);
         }
@@ -114,8 +115,7 @@ public class AuditDashboardController {
         // Logging
         List<PersistentAuditEvent> content = query.list();
 
-        return new AuditDataResponse(
-                content, query.pageCount(), query.count(), query.page().index);
+        return new AuditDataResponse(content, query.pageCount(), query.count(), query.page().index);
     }
 
     /** Get statistics for charts (last X days). Existing behavior preserved. */

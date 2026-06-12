@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -42,11 +41,13 @@ import stirling.software.proprietary.security.util.DesktopClientUtils;
 //     (SPRING_SECURITY_SAVED_REQUEST session attribute + super.onAuthenticationSuccess) has no
 //     direct Quarkus analogue; reimplement original-destination replay in the new SAML SP servlet.
 //   - org.springframework.security.core.Authentication: the principal/authentication is now passed
-//     as Object so the OpenSAML principal can still be unwrapped via CustomSaml2AuthenticatedPrincipal.
+//     as Object so the OpenSAML principal can still be unwrapped via
+// CustomSaml2AuthenticatedPrincipal.
 //   - org.springframework.security.authentication.LockedException: replaced by a plain
 //     IllegalStateException to signal a locked account; the new SP must map this to a redirect.
 //   - org.springframework.http.ResponseCookie / HttpHeaders: replaced with jakarta.servlet.Cookie.
-// Also: JwtServiceInterface.generateToken(Authentication, claims) (collaborator) still takes a Spring
+// Also: JwtServiceInterface.generateToken(Authentication, claims) (collaborator) still takes a
+// Spring
 // Authentication; once that interface is migrated, restore the web-path token call that used it.
 @AllArgsConstructor
 @Slf4j
@@ -118,7 +119,8 @@ public class CustomSaml2AuthenticationSuccessHandler {
 
             if (savedRequest != null) {
                 // TODO: Migration required - original-destination replay previously delegated to
-                // super.onAuthenticationSuccess(...) (SavedRequestAwareAuthenticationSuccessHandler).
+                // super.onAuthenticationSuccess(...)
+                // (SavedRequestAwareAuthenticationSuccessHandler).
                 // Reimplement saved-request redirect in the new SAML SP servlet, guarding static
                 // resources via RequestUriUtils.isStaticResource(contextPath, savedRedirectUrl).
                 log.debug("Saved request handling pending SAML SP migration");
@@ -248,7 +250,8 @@ public class CustomSaml2AuthenticationSuccessHandler {
             }
         } else {
             // TODO: Migration required - non-SAML2 principals were delegated to the Spring base
-            // SavedRequestAwareAuthenticationSuccessHandler. The new SAML SP servlet must decide how
+            // SavedRequestAwareAuthenticationSuccessHandler. The new SAML SP servlet must decide
+            // how
             // to handle non-SAML2 principals (this handler should only receive SAML2 ones).
             log.debug("Non-SAML2 principal detected, no parent handler available after migration");
         }
@@ -418,7 +421,8 @@ public class CustomSaml2AuthenticationSuccessHandler {
     private void clearRedirectCookie(HttpServletResponse response) {
         // TODO: Migration required - was org.springframework.http.ResponseCookie with SameSite=Lax.
         // jakarta.servlet.Cookie has no SameSite setter on this servlet API level; SameSite=Lax is
-        // dropped here. Set it via the new SAML SP servlet response or quarkus.http config if needed.
+        // dropped here. Set it via the new SAML SP servlet response or quarkus.http config if
+        // needed.
         Cookie cookie = new Cookie(SPA_REDIRECT_COOKIE, "");
         cookie.setPath("/");
         cookie.setMaxAge(0);

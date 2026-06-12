@@ -6,15 +6,14 @@ import java.util.List;
  * RFC 8707 audience binding: a JWT at the MCP endpoint must list this server's resource id in its
  * {@code aud} claim. Fails closed when the resource id is unset.
  *
- * <p>TODO: Migration required - this was a Spring Security
- * {@code OAuth2TokenValidator<Jwt>}. Quarkus-oidc has no equivalent validator SPI; the standard way
- * to enforce audience binding is configuration:
- * {@code quarkus.oidc.token.audience=<resource-id>} (combined with
- * {@code mp.jwt.verify.audiences} for smallrye-jwt). The fail-closed behaviour when no resource id
- * is configured must be reproduced either by making that config mandatory or by augmenting the
- * {@code io.quarkus.security.identity.SecurityIdentity} via a
- * {@code SecurityIdentityAugmentor}. The pure audience-check logic below is preserved so it can be
- * invoked from such an augmentor or a custom {@code jakarta.ws.rs.container.ContainerRequestFilter}.
+ * <p>TODO: Migration required - this was a Spring Security {@code OAuth2TokenValidator<Jwt>}.
+ * Quarkus-oidc has no equivalent validator SPI; the standard way to enforce audience binding is
+ * configuration: {@code quarkus.oidc.token.audience=<resource-id>} (combined with {@code
+ * mp.jwt.verify.audiences} for smallrye-jwt). The fail-closed behaviour when no resource id is
+ * configured must be reproduced either by making that config mandatory or by augmenting the {@code
+ * io.quarkus.security.identity.SecurityIdentity} via a {@code SecurityIdentityAugmentor}. The pure
+ * audience-check logic below is preserved so it can be invoked from such an augmentor or a custom
+ * {@code jakarta.ws.rs.container.ContainerRequestFilter}.
  */
 public class McpAudienceValidator {
 

@@ -6,14 +6,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-// TODO: Migration required - authentication state currently flows through the
-// stirling.software.common.security compat shims (SecurityContextHolder/Authentication) backed by
-// the collaborator APIs (UserService, SessionPersistentRegistry, ApiKeyAuthenticationToken). Once
-// those collaborators move to io.quarkus.security.identity (SecurityIdentity) + a
-// SecurityIdentityAugmentor, replace SecurityContextHolder/Authentication with an injected
-// SecurityIdentity (or @Context jakarta.ws.rs.core.SecurityContext). The principal-type dispatch
-// (UserDetails/OAuth2User/CustomSaml2AuthenticatedPrincipal) must then be re-expressed via
-// SecurityIdentity attributes/roles.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -38,14 +30,14 @@ import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.security.SessionInformation;
 import stirling.software.common.security.UserDetails;
 import stirling.software.common.util.RequestUriUtils;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
 // TODO: Migration required - @Profile("!saas") had no direct annotation equivalent here. Gate this
-// filter's activation on the "saas" build profile (e.g. via @io.quarkus.arc.profile.UnlessBuildProfile
+// filter's activation on the "saas" build profile (e.g. via
+// @io.quarkus.arc.profile.UnlessBuildProfile
 // or a runtime check) and register it through Quarkus (quarkus-undertow @WebFilter or a
 // jakarta.ws.rs.container.ContainerRequestFilter @Provider). Registration ordering relative to the
 // other security filters (JwtAuthenticationFilter, *RateLimitingFilter) must be preserved.
@@ -122,9 +114,21 @@ public class UserAuthenticationFilter implements Filter {
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
+                    // ApiKeyAuthenticationToken is a plain POJO (not Authentication); wrap in
+                    // UsernamePasswordAuthenticationToken so the Authentication variable stays
+                    // typed.
                     authentication =
-                            new ApiKeyAuthenticationToken(
-                                    user.get(), apiKey, user.get().getAuthorities());
+                            new stirling.software.common.security
+                                    .UsernamePasswordAuthenticationToken(
+                                    user.get(),
+                                    apiKey,
+                                    user.get().getAuthorities().stream()
+                                            .map(
+                                                    a ->
+                                                            new stirling.software.common.security
+                                                                    .SimpleGrantedAuthority(
+                                                                    a.getAuthority()))
+                                            .collect(java.util.stream.Collectors.toSet()));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request

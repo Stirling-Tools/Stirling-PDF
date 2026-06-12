@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 import org.eclipse.microprofile.config.Config;
 
 import io.github.pixee.security.SystemCommand;
-
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.StartupEvent;
@@ -68,16 +67,19 @@ public class SPDFApplication implements QuarkusApplication {
                     customSettingsPath.toString());
         }
 
-        // TODO: Migration required - the Spring "spring.config.additional-location" property used to
+        // TODO: Migration required - the Spring "spring.config.additional-location" property used
+        // to
         // load the external settings/customSettings YAML files into the environment. Quarkus uses
-        // SmallRye Config; wire these files via a config source instead, e.g. set the system property
+        // SmallRye Config; wire these files via a config source instead, e.g. set the system
+        // property
         // "smallrye.config.locations" to the (comma-separated) file: URLs before this point, or
         // register a custom ConfigSourceFactory. The directories/log lines above are preserved.
 
         // TODO: Migration required - profile auto-detection (former getActiveProfile / Spring
         // setAdditionalProfiles) must be expressed via "quarkus.profile". The classpath-shape
         // detection logic is retained below in getActiveProfile(); translate its result into the
-        // "quarkus.profile" system property (e.g. System.setProperty("quarkus.profile", ...)) before
+        // "quarkus.profile" system property (e.g. System.setProperty("quarkus.profile", ...))
+        // before
         // Quarkus.run if profile-based config layering is required.
         getActiveProfile(args);
 
@@ -105,9 +107,7 @@ public class SPDFApplication implements QuarkusApplication {
 
         @Inject
         public StartupObserver(
-                AppConfig appConfig,
-                Config config,
-                ApplicationProperties applicationProperties) {
+                AppConfig appConfig, Config config, ApplicationProperties applicationProperties) {
             this.appConfig = appConfig;
             this.config = config;
             this.applicationProperties = applicationProperties;
@@ -144,7 +144,8 @@ public class SPDFApplication implements QuarkusApplication {
                         parentPid != null ? parentPid : "not set");
             }
             // Standard browser opening logic
-            String browserOpenEnv = config.getOptionalValue("BROWSER_OPEN", String.class).orElse(null);
+            String browserOpenEnv =
+                    config.getOptionalValue("BROWSER_OPEN", String.class).orElse(null);
             boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
             if (browserOpen) {
                 try {
@@ -153,8 +154,7 @@ public class SPDFApplication implements QuarkusApplication {
 
                     if (os.contains("win")) {
                         // For Windows
-                        SystemCommand.runCommand(
-                                rt, "rundll32 url.dll,FileProtocolHandler " + url);
+                        SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
                     } else if (os.contains("mac")) {
                         SystemCommand.runCommand(rt, "open " + url);
                     } else if (os.contains("nix") || os.contains("nux")) {
@@ -172,8 +172,7 @@ public class SPDFApplication implements QuarkusApplication {
             // runtime port (relevant for server.port=0 / "auto" port assignment). In Quarkus read
             // the resolved port from config "quarkus.http.port" (or observe an HTTP-started event)
             // and update serverPortStatic here. Falling back to the configured value for now.
-            String port =
-                    config.getOptionalValue("quarkus.http.port", String.class).orElse(null);
+            String port = config.getOptionalValue("quarkus.http.port", String.class).orElse(null);
             if (port != null) {
                 serverPortStatic = port;
             }

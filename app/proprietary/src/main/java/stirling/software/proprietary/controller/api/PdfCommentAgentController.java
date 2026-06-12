@@ -2,6 +2,9 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,9 +18,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import org.jboss.resteasy.reactive.RestForm;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -99,9 +99,7 @@ public class PdfCommentAgentController {
                 .header(HttpHeaders.CONTENT_LENGTH, annotated.bytes().length)
                 .header(
                         "Content-Disposition",
-                        "form-data; name=\"attachment\"; filename=\""
-                                + annotated.fileName()
-                                + "\"")
+                        "form-data; name=\"attachment\"; filename=\"" + annotated.fileName() + "\"")
                 .header(AiToolResponseHeaders.TOOL_REPORT, buildReportHeader(annotated))
                 .build();
     }

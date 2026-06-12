@@ -4,12 +4,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.Config;
 
 import io.smallrye.config.SmallRyeConfig;
 
-import org.eclipse.microprofile.config.Config;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -50,8 +50,7 @@ public class FolderAccessGuard {
     public FolderAccessGuard(ApplicationProperties applicationProperties, Config config) {
         // Spring's Environment.getActiveProfiles() maps to SmallRye's profile list; the "saas"
         // build/runtime profile is matched the same way Spring matched the "saas" Spring profile.
-        this.saasActive =
-                config.unwrap(SmallRyeConfig.class).getProfiles().contains("saas");
+        this.saasActive = config.unwrap(SmallRyeConfig.class).getProfiles().contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));

@@ -31,8 +31,10 @@ import stirling.software.common.model.io.Resource;
 // TODO: Migration required - the original Spring routes excluded a fixed set of asset prefixes
 // (api/static/pipeline/pdfjs/.../samples) via regex lookahead and matched only path segments that
 // contain no '.'. Quarkus serves those static assets via quarkus.http static-resources, so they no
-// longer collide with these routes. If a new SPA top-level route is added that is NOT covered by the
-// {path} / {path}/{subpath} templates below, add it explicitly or introduce a ContainerRequestFilter
+// longer collide with these routes. If a new SPA top-level route is added that is NOT covered by
+// the
+// {path} / {path}/{subpath} templates below, add it explicitly or introduce a
+// ContainerRequestFilter
 // fallback that serves index.html for unmatched non-API, extension-less GETs.
 @Path("")
 @ApplicationScoped
@@ -43,8 +45,10 @@ public class ReactRoutingController {
     private static final Pattern BASE_HREF_PATTERN =
             Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
 
-    // server.servlet.context-path has no direct Quarkus equivalent (it maps to quarkus.http.root-path
-    // at build time). Kept as a configurable property so the index.html base href rewrite still works.
+    // server.servlet.context-path has no direct Quarkus equivalent (it maps to
+    // quarkus.http.root-path
+    // at build time). Kept as a configurable property so the index.html base href rewrite still
+    // works.
     // TODO: Migration required - consider sourcing this from quarkus.http.root-path instead.
     @ConfigProperty(name = "server.servlet.context-path", defaultValue = "/")
     String contextPath;
@@ -248,7 +252,8 @@ public class ReactRoutingController {
     // TODO: Migration required - the original Spring route used a negative-lookahead regex to
     // exclude asset prefixes (api/static/robots.txt/favicon.ico/manifest*.json/pipeline/pdfjs/
     // pdfjs-legacy/pdfium/vendor/fonts/images/css/js/assets/locales/modern-logo/classic-logo/Login/
-    // og_images/samples) and to match only single segments containing no '.'. RESTEasy Reactive does
+    // og_images/samples) and to match only single segments containing no '.'. RESTEasy Reactive
+    // does
     // not allow such regex constraints in @Path. Those excluded prefixes are now served by Quarkus
     // static-resources (higher precedence) so they no longer reach this method. This template still
     // matches a dot-bearing single segment (e.g. "/foo.txt"); if that must be excluded, add a
@@ -260,7 +265,8 @@ public class ReactRoutingController {
         return serveIndexHtml();
     }
 
-    // TODO: Migration required - same regex-exclusion caveat as forwardRootPaths above. The original
+    // TODO: Migration required - same regex-exclusion caveat as forwardRootPaths above. The
+    // original
     // route matched a nested two-segment SPA path where the second segment contains no '.'.
     @GET
     @Path("/{path}/{subpath}")

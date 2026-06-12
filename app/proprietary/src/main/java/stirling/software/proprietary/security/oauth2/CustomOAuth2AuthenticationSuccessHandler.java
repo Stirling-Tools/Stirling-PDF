@@ -31,7 +31,8 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
 
 // TODO: Migration required - this class extended Spring Security's
-// SavedRequestAwareAuthenticationSuccessHandler, which has no Quarkus equivalent. Under quarkus-oidc
+// SavedRequestAwareAuthenticationSuccessHandler, which has no Quarkus equivalent. Under
+// quarkus-oidc
 // there is no AuthenticationSuccessHandler concept; the post-login OAuth2 success flow must be
 // rehosted, e.g. via a SecurityIdentityAugmentor plus a JAX-RS callback resource (or a
 // jakarta.servlet endpoint) that performs the redirect/JWT-issuance below. The Spring
@@ -52,7 +53,8 @@ public class CustomOAuth2AuthenticationSuccessHandler {
 
     // TODO: Migration required - the original signature took a Spring Security
     // org.springframework.security.core.Authentication. Under quarkus-oidc this should receive an
-    // io.quarkus.security.identity.SecurityIdentity (or the OIDC IdToken/UserInfo). The "authentication"
+    // io.quarkus.security.identity.SecurityIdentity (or the OIDC IdToken/UserInfo). The
+    // "authentication"
     // parameter is now typed as Object so the body still compiles; replace it with the real
     // quarkus-oidc principal type and re-implement principal extraction below when wiring the
     // success flow.
@@ -97,13 +99,12 @@ public class CustomOAuth2AuthenticationSuccessHandler {
         String contextPath = request.getContextPath();
         // TODO: Migration required - SavedRequest / "SPRING_SECURITY_SAVED_REQUEST" is a Spring
         // Security web construct. Under quarkus-oidc the original target URL is preserved via the
-        // OIDC state/restore-path mechanism (quarkus.oidc.authentication.restore-path-after-redirect)
+        // OIDC state/restore-path mechanism
+        // (quarkus.oidc.authentication.restore-path-after-redirect)
         // rather than a session attribute. Re-implement saved-request resolution accordingly; the
         // session attribute read below is left as a placeholder and will currently be null.
         Object savedRequest =
-                (session != null)
-                        ? session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
-                        : null;
+                (session != null) ? session.getAttribute("SPRING_SECURITY_SAVED_REQUEST") : null;
 
         if (savedRequest != null
                 && !RequestUriUtils.isStaticResource(
@@ -152,7 +153,8 @@ public class CustomOAuth2AuthenticationSuccessHandler {
                 }
                 // TODO: Migration required - SSO provider/claims extraction relied on Spring
                 // Security's OAuth2User attributes and OAuth2AuthenticationToken. Re-derive the
-                // OIDC "sub" claim and the provider registration id from the quarkus-oidc principal.
+                // OIDC "sub" claim and the provider registration id from the quarkus-oidc
+                // principal.
                 String ssoProviderId = extractSubClaim(authentication);
                 String ssoProvider = extractProviderFromAuthentication(authentication);
                 if (ssoProviderId != null || ssoProvider != null) {
@@ -184,8 +186,10 @@ public class CustomOAuth2AuthenticationSuccessHandler {
                                 desktopExpiryMinutes / 1440);
                     } else {
                         // Web: Use default expiry
-                        // TODO: Migration required - JwtServiceInterface.generateToken(Authentication,
-                        // claims) takes a Spring Security Authentication. Until JwtServiceInterface is
+                        // TODO: Migration required -
+                        // JwtServiceInterface.generateToken(Authentication,
+                        // claims) takes a Spring Security Authentication. Until JwtServiceInterface
+                        // is
                         // migrated, issue the token by username (same identity) to avoid the Spring
                         // dependency here.
                         jwt = jwtService.generateToken(username, claims);
@@ -385,9 +389,7 @@ public class CustomOAuth2AuthenticationSuccessHandler {
         // org.springframework.http.ResponseCookie. Replaced with a manually built RFC 6265
         // Set-Cookie string to drop the Spring HTTP dependency. Consider switching to
         // jakarta.servlet.http.Cookie / response.addCookie once SameSite handling is confirmed.
-        String cookie =
-                TauriOAuthUtils.SPA_REDIRECT_COOKIE
-                        + "=; Path=/; Max-Age=0; SameSite=Lax";
+        String cookie = TauriOAuthUtils.SPA_REDIRECT_COOKIE + "=; Path=/; Max-Age=0; SameSite=Lax";
         response.addHeader(HttpHeaders.SET_COOKIE, cookie);
     }
 

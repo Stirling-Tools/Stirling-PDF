@@ -21,7 +21,8 @@ public class PdfMetadataService {
 
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
-    // MIGRATION: Spring's @Autowired(required=false) optional bean -> CDI Instance<> (UserServiceInterface
+    // MIGRATION: Spring's @Autowired(required=false) optional bean -> CDI Instance<>
+    // (UserServiceInterface
     // is only present in security-enabled flavors). Resolve via isResolvable()/get().
     private final Instance<UserServiceInterface> userService;
     private final boolean runningProOrHigher;

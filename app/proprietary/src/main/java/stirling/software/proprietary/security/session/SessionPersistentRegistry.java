@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import stirling.software.common.security.OAuth2User;
-import stirling.software.common.security.SessionInformation;
-import stirling.software.common.security.SessionRegistry;
-import stirling.software.common.security.UserDetails;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.SessionRegistry;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;

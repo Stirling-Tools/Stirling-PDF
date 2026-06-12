@@ -112,7 +112,8 @@ public class CustomOAuth2UserService {
                 String internalUsername = internalUser.get().getUsername();
                 if (loginAttemptService.isBlocked(internalUsername)) {
                     // TODO: Migration required - was org.springframework.security.authentication
-                    // .LockedException; surface this as io.quarkus.security.AuthenticationFailedException
+                    // .LockedException; surface this as
+                    // io.quarkus.security.AuthenticationFailedException
                     // (or a custom locked-account exception) from the SecurityIdentityAugmentor.
                     throw new IllegalStateException(
                             "The account "

@@ -32,18 +32,20 @@ import stirling.software.common.model.ApplicationProperties;
  * <p>MIGRATION NOTES (Spring -> Quarkus CDI):
  *
  * <ul>
- *   <li>{@code @Bean} -> {@code @Produces}; {@code @Bean(name="x")} -> {@code @Produces @Named("x")}.
+ *   <li>{@code @Bean} -> {@code @Produces}; {@code @Bean(name="x")} ->
+ *       {@code @Produces @Named("x")}.
  *   <li>{@code @Value} -> {@code @ConfigProperty}; Spring {@code Environment} -> MicroProfile
  *       {@code Config}.
- *   <li>{@code @Profile("default")} flavor-default beans -> {@code @DefaultBean}: the :proprietary /
- *       :saas modules provide the "real" producer and automatically win when present, exactly like
- *       the old profile override (this is the Quarkus idiom for "default unless overridden").
+ *   <li>{@code @Profile("default")} flavor-default beans -> {@code @DefaultBean}: the :proprietary
+ *       / :saas modules provide the "real" producer and automatically win when present, exactly
+ *       like the old profile override (this is the Quarkus idiom for "default unless overridden").
  *   <li>{@code @Scope("request")} on {@code boolean} producers -> {@code @Dependent}. CDI normal
  *       scopes (e.g. {@code @RequestScoped}) require a client proxy, which is impossible for
- *       primitives/finals, so Spring's request-scoped primitive beans cannot be reproduced directly.
- *       {@code @Dependent} recomputes the value at each injection point, which is the closest
- *       behaviour. TODO: Migration required - if true per-HTTP-request semantics are needed, wrap the
- *       value in a {@code @RequestScoped} holder object instead of producing a bare boolean.
+ *       primitives/finals, so Spring's request-scoped primitive beans cannot be reproduced
+ *       directly. {@code @Dependent} recomputes the value at each injection point, which is the
+ *       closest behaviour. TODO: Migration required - if true per-HTTP-request semantics are
+ *       needed, wrap the value in a {@code @RequestScoped} holder object instead of producing a
+ *       bare boolean.
  *   <li>{@code @Lazy} dropped - CDI beans are initialised lazily by default.
  * </ul>
  */

@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.Collection;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.userdetails.UserDetails}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.userdetails.UserDetails}.
  *
  * <p>Provides core user information used by the authentication layer.
  */

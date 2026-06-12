@@ -25,7 +25,6 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +53,8 @@ public class PrintFileController {
     //                "Input of PDF or Image along with a printer name/URL/IP to match against to
     // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
     public Response printFile(
-            @RestForm("fileInput") FileUpload fileUpload, @RestForm("printerName") String printerName)
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("printerName") String printerName)
             throws IOException {
         PrintFileRequest request = new PrintFileRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));

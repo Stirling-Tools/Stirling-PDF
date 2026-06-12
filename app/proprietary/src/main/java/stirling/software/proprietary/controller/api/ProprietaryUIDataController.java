@@ -6,6 +6,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import io.quarkus.security.identity.SecurityIdentity;
+import io.swagger.v3.oas.annotations.Operation;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -14,10 +17,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.security.identity.SecurityIdentity;
-
-import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -166,7 +165,7 @@ public class ProprietaryUIDataController {
         boolean isFirstTimeSetup = false;
         boolean showDefaultCredentials = false;
 
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userRepository.findAll().list();
         List<User> realUsers =
                 allUsers.stream()
                         .filter(
@@ -490,7 +489,7 @@ public class ProprietaryUIDataController {
     public Response getTeamDetailsData(@PathParam("id") Long id) {
         Team team =
                 teamRepository
-                        .findById(id)
+                        .findByIdOptional(id)
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
         if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {

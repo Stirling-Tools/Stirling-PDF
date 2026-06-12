@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.Date;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.session.SessionInformation}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.session.SessionInformation}.
  *
  * <p>Represents a record of a session within the application's session registry.
  */

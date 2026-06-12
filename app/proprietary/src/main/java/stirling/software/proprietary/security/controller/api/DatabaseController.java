@@ -62,10 +62,7 @@ public class DatabaseController {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(
                             java.util.Map.of(
-                                    "error",
-                                    "fileNullOrEmpty",
-                                    "message",
-                                    "File is null or empty"))
+                                    "error", "fileNullOrEmpty", "message", "File is null or empty"))
                     .build();
         }
         log.info("Received file: {}", file.getOriginalFilename());
@@ -111,7 +108,8 @@ public class DatabaseController {
     @GET
     @jakarta.ws.rs.Path("/import-database-file/{fileName}")
     public Response importDatabaseFromBackupUI(
-            @Parameter(description = "Name of the file to import", required = true) @PathParam("fileName")
+            @Parameter(description = "Name of the file to import", required = true)
+                    @PathParam("fileName")
                     String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -166,7 +164,8 @@ public class DatabaseController {
     @GET
     @jakarta.ws.rs.Path("/delete/{fileName}")
     public Response deleteFile(
-            @Parameter(description = "Name of the file to delete", required = true) @PathParam("fileName")
+            @Parameter(description = "Name of the file to delete", required = true)
+                    @PathParam("fileName")
                     String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -181,7 +180,8 @@ public class DatabaseController {
         try {
             if (databaseService.deleteBackupFile(fileName)) {
                 log.info("Deleted file: {}", fileName);
-                return Response.ok(java.util.Map.of("message", "File deleted successfully")).build();
+                return Response.ok(java.util.Map.of("message", "File deleted successfully"))
+                        .build();
             } else {
                 log.error("Failed to delete file: {}", fileName);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -213,7 +213,8 @@ public class DatabaseController {
     @GET
     @jakarta.ws.rs.Path("/download/{fileName}")
     public Response downloadFile(
-            @Parameter(description = "Name of the file to download", required = true) @PathParam("fileName")
+            @Parameter(description = "Name of the file to download", required = true)
+                    @PathParam("fileName")
                     String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");

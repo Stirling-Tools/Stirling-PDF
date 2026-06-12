@@ -96,8 +96,7 @@ public class CustomOAuth2AuthenticationFailureHandler {
 
     private void clearRedirectCookie(HttpServletResponse response) {
         // Replaces Spring's ResponseCookie/HttpHeaders.SET_COOKIE with a plain servlet header.
-        String cookie =
-                TauriOAuthUtils.SPA_REDIRECT_COOKIE + "=; Path=/; Max-Age=0; SameSite=Lax";
+        String cookie = TauriOAuthUtils.SPA_REDIRECT_COOKIE + "=; Path=/; Max-Age=0; SameSite=Lax";
         response.addHeader("Set-Cookie", cookie);
     }
 

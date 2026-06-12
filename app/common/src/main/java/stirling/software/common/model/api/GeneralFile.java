@@ -5,12 +5,12 @@ package stirling.software.common.model.api;
 // consumed by controllers/services across the codebase; changing the type (e.g. to
 // byte[]/InputStream or jakarta.ws.rs form params) would ripple to every caller.
 // Keep the Spring type for now and rebind during the web-layer migration.
-import stirling.software.common.model.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import stirling.software.common.model.MultipartFile;
 
 @Data
 @EqualsAndHashCode

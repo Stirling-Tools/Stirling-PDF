@@ -59,7 +59,8 @@ public class PipelineController {
 
     private final TempFileManager tempFileManager;
 
-    // MIGRATION (Spring -> JAX-RS): @AutoJobPostMapping is now a CDI interceptor binding and no longer
+    // MIGRATION (Spring -> JAX-RS): @AutoJobPostMapping is now a CDI interceptor binding and no
+    // longer
     // provides routing, so the explicit @POST + @Path + @Consumes are added alongside it.
     // The former @ModelAttribute HandleDataRequest is bound here as multipart @RestForm fields: the
     // file array as List<FileUpload> and the JSON config as a String form field.
@@ -86,9 +87,12 @@ public class PipelineController {
         // MIGRATION (Spring -> JAX-RS): adapt the inbound multipart uploads to the migration shim
         // MultipartFile so they can be passed to the existing service layer.
         // TODO: Migration required - PipelineProcessor.generateInputFiles still declares the Spring
-        // org.springframework.web.multipart.MultipartFile[] parameter type. When that collaborator is
-        // migrated to stirling.software.common.model.MultipartFile[], this array type lines up. Until
-        // then this controller will not compile against the processor; the adapter call below targets
+        // org.springframework.web.multipart.MultipartFile[] parameter type. When that collaborator
+        // is
+        // migrated to stirling.software.common.model.MultipartFile[], this array type lines up.
+        // Until
+        // then this controller will not compile against the processor; the adapter call below
+        // targets
         // the migrated shim type.
         stirling.software.common.model.MultipartFile[] files =
                 new stirling.software.common.model.MultipartFile[fileInput.size()];

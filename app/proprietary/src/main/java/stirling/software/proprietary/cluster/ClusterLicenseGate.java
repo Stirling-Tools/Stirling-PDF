@@ -24,7 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClusterLicenseGate {
 
-    // @ConditionalOnProperty(name = "cluster.enabled", havingValue = "true") -> runtime guard below.
+    // @ConditionalOnProperty(name = "cluster.enabled", havingValue = "true") -> runtime guard
+    // below.
     @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
     boolean clusterEnabled;
 

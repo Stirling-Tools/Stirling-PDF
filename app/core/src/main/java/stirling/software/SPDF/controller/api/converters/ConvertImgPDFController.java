@@ -249,9 +249,7 @@ public class ConvertImgPDFController {
             } else {
                 String zipFilename = filename + "_convertedToImages.zip";
                 return WebResponseUtils.bytesToWebResponse(
-                        result,
-                        zipFilename,
-                        MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
+                        result, zipFilename, MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
             }
 
         } finally {
@@ -392,8 +390,7 @@ public class ConvertImgPDFController {
             request.setDpi(dpiParam);
         }
 
-        stirling.software.common.model.MultipartFile file =
-                FileUploadMultipartFile.of(fileUpload);
+        stirling.software.common.model.MultipartFile file = FileUploadMultipartFile.of(fileUpload);
         int dpi = request.getDpi();
 
         if (dpi <= 0) {

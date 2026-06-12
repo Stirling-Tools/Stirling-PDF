@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,8 +30,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 
 import lombok.extern.slf4j.Slf4j;
-
-import io.quarkus.security.identity.SecurityIdentity;
 
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.proprietary.security.model.User;
@@ -60,7 +59,8 @@ public class FileStorageController {
     @Inject FileStorageService fileStorageService;
     @Inject StorageProvider storageProvider;
 
-    // TODO: Migration required - SecurityIdentity replaces Spring's Authentication. The collaborator
+    // TODO: Migration required - SecurityIdentity replaces Spring's Authentication. The
+    // collaborator
     // FileStorageService still exposes canAccessShareLink(FileShare, org.springframework.security
     // .core.Authentication) and recordShareAccess(FileShare, Authentication, boolean). Once that
     // service is migrated those methods should accept SecurityIdentity (or io.quarkus.security
@@ -226,9 +226,7 @@ public class FileStorageController {
         // migrated to SecurityIdentity; once migrated, pass `securityIdentity` through instead.
         if (!fileStorageService.canAccessShareLink(share, null)) {
             Response.Status status =
-                    isAuthenticated()
-                            ? Response.Status.FORBIDDEN
-                            : Response.Status.UNAUTHORIZED;
+                    isAuthenticated() ? Response.Status.FORBIDDEN : Response.Status.UNAUTHORIZED;
             String message =
                     status == Response.Status.FORBIDDEN
                             ? "Access denied for this share link"
@@ -252,9 +250,7 @@ public class FileStorageController {
         // `securityIdentity` once FileStorageService is migrated.
         if (!fileStorageService.canAccessShareLink(share, null)) {
             Response.Status status =
-                    isAuthenticated()
-                            ? Response.Status.FORBIDDEN
-                            : Response.Status.UNAUTHORIZED;
+                    isAuthenticated() ? Response.Status.FORBIDDEN : Response.Status.UNAUTHORIZED;
             String message =
                     status == Response.Status.FORBIDDEN
                             ? "Access denied for this share link"
@@ -304,11 +300,8 @@ public class FileStorageController {
     }
 
     private Response buildFileResponse(StoredFile file, boolean inline) {
-        // TODO: Migration required - FileStorageService.loadFile(...) still returns Spring
-        // org.springframework.core.io.Resource. Once migrated to
-        // stirling.software.common.model.io.Resource the local variable type below can be the shim
-        // and the getInputStream()/contentLength() calls remain identical.
-        final org.springframework.core.io.Resource resource = fileStorageService.loadFile(file);
+        final stirling.software.common.model.io.Resource resource =
+                fileStorageService.loadFile(file);
         String contentType =
                 file.getContentType() == null
                         ? MediaType.APPLICATION_OCTET_STREAM
@@ -356,7 +349,8 @@ public class FileStorageController {
             if (signed.isEmpty()) {
                 return Optional.empty();
             }
-            Response response = Response.status(Response.Status.FOUND).location(signed.get()).build();
+            Response response =
+                    Response.status(Response.Status.FOUND).location(signed.get()).build();
             return Optional.of(response);
         } catch (IOException e) {
             log.warn(

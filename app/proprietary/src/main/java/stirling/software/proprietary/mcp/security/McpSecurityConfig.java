@@ -17,36 +17,40 @@ import stirling.software.proprietary.security.service.UserService;
  * security DSL has been removed; the equivalent behaviour must be rebuilt on Quarkus primitives:
  *
  * <ul>
- *   <li>HTTP path matching ({@code /mcp}, {@code /mcp/**}, {@code /.well-known/oauth-protected-resource})
- *       and authenticated-vs-permitAll policy -> declare via {@code quarkus.http.auth.permission.*}
- *       in application.properties (permit GET on the metadata path, authenticate the rest), or via a
- *       {@code jakarta.ws.rs.container.ContainerRequestFilter}.
- *   <li>Stateless session ({@code SessionCreationPolicy.STATELESS}) and CSRF-disabled -> Quarkus REST
- *       is stateless by default; no CSRF filter is added unless quarkus-csrf-reactive is enabled.
+ *   <li>HTTP path matching ({@code /mcp}, {@code /mcp/**}, {@code
+ *       /.well-known/oauth-protected-resource}) and authenticated-vs-permitAll policy -> declare
+ *       via {@code quarkus.http.auth.permission.*} in application.properties (permit GET on the
+ *       metadata path, authenticate the rest), or via a {@code
+ *       jakarta.ws.rs.container.ContainerRequestFilter}.
+ *   <li>Stateless session ({@code SessionCreationPolicy.STATELESS}) and CSRF-disabled -> Quarkus
+ *       REST is stateless by default; no CSRF filter is added unless quarkus-csrf-reactive is
+ *       enabled.
  *   <li>OAuth2 resource-server JWT validation (issuer/JWKS + RFC 8707 audience + scope->authority
  *       mapping) -> quarkus-oidc in {@code service} application type, or quarkus-smallrye-jwt for
- *       bearer validation. Wire {@code quarkus.oidc.auth-server-url}=issuer-uri,
- *       {@code quarkus.oidc.token.audience}=resource-id; map the {@code scope} claim to roles via a
- *       {@code io.quarkus.security.identity.SecurityIdentityAugmentor} (replacing
- *       {@code JwtGrantedAuthoritiesConverter} with prefix {@code SCOPE_} and the {@code AUDIENCE_}
- *       authorities added below). The fail-closed behaviour when issuer-uri is blank is preserved by
- *       NOT configuring quarkus.oidc when blank (every bearer request then 401s).
+ *       bearer validation. Wire {@code quarkus.oidc.auth-server-url}=issuer-uri, {@code
+ *       quarkus.oidc.token.audience}=resource-id; map the {@code scope} claim to roles via a {@code
+ *       io.quarkus.security.identity.SecurityIdentityAugmentor} (replacing {@code
+ *       JwtGrantedAuthoritiesConverter} with prefix {@code SCOPE_} and the {@code AUDIENCE_}
+ *       authorities added below). The fail-closed behaviour when issuer-uri is blank is preserved
+ *       by NOT configuring quarkus.oidc when blank (every bearer request then 401s).
  *   <li>API-key mode ({@code mcp.auth.mode=apikey}) -> register {@link McpApiKeyAuthFilter} as a
  *       {@code jakarta.ws.rs.container.ContainerRequestFilter @Provider} (or a jakarta.servlet
- *       Filter via quarkus-undertow) that validates the X-API-KEY / Bearer key against
- *       {@link UserService} and returns the 401 + {@code WWW-Authenticate} response below.
+ *       Filter via quarkus-undertow) that validates the X-API-KEY / Bearer key against {@link
+ *       UserService} and returns the 401 + {@code WWW-Authenticate} response below.
  *   <li>RFC 9728 protected-resource metadata ({@code /.well-known/oauth-protected-resource} with
  *       resource/authorizationServer/scopes mcp.tools.read + mcp.tools.write) -> serve from a small
  *       JAX-RS resource returning the JSON document.
- *   <li>Pre-auth body-size cap ({@link McpRequestSizeFilter}) and post-auth user binding
- *       ({@link McpUserBindingFilter}) -> register as ContainerRequestFilters with explicit
- *       {@code @Priority} so size-cap runs before auth and user-binding runs after; ordering matters.
- *   <li>Reused CORS source ({@code corsConfigurationSource}) -> configure via {@code quarkus.http.cors.*}.
+ *   <li>Pre-auth body-size cap ({@link McpRequestSizeFilter}) and post-auth user binding ({@link
+ *       McpUserBindingFilter}) -> register as ContainerRequestFilters with explicit
+ *       {@code @Priority} so size-cap runs before auth and user-binding runs after; ordering
+ *       matters.
+ *   <li>Reused CORS source ({@code corsConfigurationSource}) -> configure via {@code
+ *       quarkus.http.cors.*}.
  * </ul>
  *
- * The helper components ({@link McpApiKeyAuthFilter}, {@link McpUserBindingFilter},
- * {@link McpRequestSizeFilter}, {@link McpAudienceValidator}, {@link McpAuthenticationEntryPoint})
- * are preserved unchanged and should be wired in by the new Quarkus security plumbing. The
+ * The helper components ({@link McpApiKeyAuthFilter}, {@link McpUserBindingFilter}, {@link
+ * McpRequestSizeFilter}, {@link McpAudienceValidator}, {@link McpAuthenticationEntryPoint}) are
+ * preserved unchanged and should be wired in by the new Quarkus security plumbing. The
  * configuration-reading and fail-closed warning logic below is kept verbatim.
  */
 @Slf4j
@@ -68,8 +72,7 @@ public class McpSecurityConfig {
 
     private static final String BASE_PATH = "/mcp";
 
-    public McpSecurityConfig(
-            ApplicationProperties applicationProperties, UserService userService) {
+    public McpSecurityConfig(ApplicationProperties applicationProperties, UserService userService) {
         this.applicationProperties = applicationProperties;
         this.userService = userService;
     }
@@ -120,10 +123,12 @@ public class McpSecurityConfig {
     //   securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath);
     //   CSRF disabled; SessionCreationPolicy.STATELESS;
     //   GET metadataPath permitAll, anyRequest().authenticated();
-    //   addFilterBefore(new McpRequestSizeFilter(maxRequestBytes), BearerTokenAuthenticationFilter.class);
+    //   addFilterBefore(new McpRequestSizeFilter(maxRequestBytes),
+    // BearerTokenAuthenticationFilter.class);
     //   addFilterAfter(new McpUserBindingFilter(userService, auth.getUsernameClaim(),
     //     auth.isRequireExistingAccount()), BearerTokenAuthenticationFilter.class);
-    //   oauth2ResourceServer: authenticationEntryPoint = new McpAuthenticationEntryPoint(metadataPath);
+    //   oauth2ResourceServer: authenticationEntryPoint = new
+    // McpAuthenticationEntryPoint(metadataPath);
     //     RFC 9728 protected-resource metadata -> resource=auth.getResourceId() (if non-blank),
     //       authorizationServer=auth.getIssuerUri() (if non-blank), scopes mcp.tools.read +
     //       mcp.tools.write;
@@ -138,8 +143,10 @@ public class McpSecurityConfig {
     //   McpAudienceValidator's audience logic in a custom validator if OIDC's audience check is
     //   insufficient. Do NOT configure when issuer-uri is blank to preserve fail-closed behaviour.
 
-    // JWT authentication converter (scope -> authority mapping): map the "scope" claim to authorities
+    // JWT authentication converter (scope -> authority mapping): map the "scope" claim to
+    // authorities
     //   with prefix "SCOPE_", and additionally add "AUDIENCE_<aud>" for each audience entry on the
-    //   token. -> Re-implement in a io.quarkus.security.identity.SecurityIdentityAugmentor that adds
+    //   token. -> Re-implement in a io.quarkus.security.identity.SecurityIdentityAugmentor that
+    // adds
     //   roles "SCOPE_<scope>" and "AUDIENCE_<aud>" to the SecurityIdentity.
 }

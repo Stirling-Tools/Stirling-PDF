@@ -9,11 +9,11 @@ package stirling.software.common.configuration;
  * Quarkus' {@code quarkus-scheduler} extension owns the scheduling thread pool, so no application
  * bean is required. To keep the "each scheduled task on its own virtual thread" behaviour, annotate
  * the individual {@code @io.quarkus.scheduler.Scheduled} methods with
- * {@code @io.smallrye.common.annotation.RunOnVirtualThread} (or configure
- * {@code quarkus.scheduler.use-virtual-threads=true} where supported).
+ * {@code @io.smallrye.common.annotation.RunOnVirtualThread} (or configure {@code
+ * quarkus.scheduler.use-virtual-threads=true} where supported).
  *
- * <p>TODO: Migration required - any injection point that received the former Spring
- * {@code TaskScheduler} bean must be rewritten to use the Quarkus scheduler API or a CDI-managed
- * {@code java.util.concurrent.ScheduledExecutorService}.
+ * <p>TODO: Migration required - any injection point that received the former Spring {@code
+ * TaskScheduler} bean must be rewritten to use the Quarkus scheduler API or a CDI-managed {@code
+ * java.util.concurrent.ScheduledExecutorService}.
  */
 public class SchedulingConfig {}

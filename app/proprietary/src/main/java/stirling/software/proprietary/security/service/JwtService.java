@@ -13,10 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import stirling.software.common.security.Authentication;
-import stirling.software.common.security.OAuth2User;
-import stirling.software.common.security.UserDetails;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -33,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -62,6 +61,15 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
+    public String generateToken(
+            io.quarkus.security.identity.SecurityIdentity identity, Map<String, Object> claims) {
+        String username =
+                (identity != null && identity.getPrincipal() != null)
+                        ? identity.getPrincipal().getName()
+                        : "";
+        return generateToken(username, claims);
+    }
+
     public String generateToken(Authentication authentication, Map<String, Object> claims) {
         Object principal = authentication.getPrincipal();
         String username = "";

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;

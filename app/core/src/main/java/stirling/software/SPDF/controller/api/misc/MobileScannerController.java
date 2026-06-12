@@ -8,17 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -29,6 +18,16 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -101,7 +100,8 @@ public class MobileScannerController {
     @ApiResponse(responseCode = "400", description = "Invalid session ID")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     public Response createSession(
-            @Parameter(description = "Session ID for QR code", required = true) @PathParam("sessionId")
+            @Parameter(description = "Session ID for QR code", required = true)
+                    @PathParam("sessionId")
                     String sessionId) {
 
         Response featureCheck = checkFeatureEnabled();
@@ -148,7 +148,8 @@ public class MobileScannerController {
     @ApiResponse(responseCode = "404", description = "Session not found or expired")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     public Response validateSession(
-            @Parameter(description = "Session ID to validate", required = true) @PathParam("sessionId")
+            @Parameter(description = "Session ID to validate", required = true)
+                    @PathParam("sessionId")
                     String sessionId) {
 
         Response featureCheck = checkFeatureEnabled();
@@ -196,7 +197,8 @@ public class MobileScannerController {
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "500", description = "Upload failed")
     public Response uploadFiles(
-            @Parameter(description = "Session ID from QR code", required = true) @PathParam("sessionId")
+            @Parameter(description = "Session ID from QR code", required = true)
+                    @PathParam("sessionId")
                     String sessionId,
             @Parameter(description = "Files to upload", required = true) @RestForm("files")
                     List<FileUpload> fileUploads) {
@@ -345,7 +347,8 @@ public class MobileScannerController {
     @ApiResponse(responseCode = "200", description = "Session deleted successfully")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     public Response deleteSession(
-            @Parameter(description = "Session ID to delete", required = true) @PathParam("sessionId")
+            @Parameter(description = "Session ID to delete", required = true)
+                    @PathParam("sessionId")
                     String sessionId) {
 
         Response featureCheck = checkFeatureEnabled();
@@ -356,7 +359,13 @@ public class MobileScannerController {
         mobileScannerService.deleteSession(sessionId);
 
         return Response.ok(
-                        Map.of("success", true, "sessionId", sessionId, "message", "Session deleted"))
+                        Map.of(
+                                "success",
+                                true,
+                                "sessionId",
+                                sessionId,
+                                "message",
+                                "Session deleted"))
                 .build();
     }
 

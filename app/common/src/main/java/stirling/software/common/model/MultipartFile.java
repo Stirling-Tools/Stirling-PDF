@@ -9,7 +9,8 @@ import java.nio.file.Path;
 import stirling.software.common.model.io.Resource;
 
 /**
- * Migration compatibility shim for Spring's {@code org.springframework.web.multipart.MultipartFile}.
+ * Migration compatibility shim for Spring's {@code
+ * org.springframework.web.multipart.MultipartFile}.
  *
  * <p>Quarkus/JAX-RS has no drop-in equivalent for the {@code MultipartFile} abstraction that the
  * service layer relies on (it exposes {@code org.jboss.resteasy.reactive.multipart.FileUpload} at
@@ -20,8 +21,8 @@ import stirling.software.common.model.io.Resource;
  * {@link stirling.software.common.model.multipart.FileUploadMultipartFile}) and pass it down
  * unchanged.
  *
- * <p>TODO: Migration required - longer term, the REST boundary should standardise on
- * {@code FileUpload}/{@code @RestForm} and this shim can be retired.
+ * <p>TODO: Migration required - longer term, the REST boundary should standardise on {@code
+ * FileUpload}/{@code @RestForm} and this shim can be retired.
  */
 public interface MultipartFile {
 

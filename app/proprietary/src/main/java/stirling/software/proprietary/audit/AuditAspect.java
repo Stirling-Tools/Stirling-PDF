@@ -31,19 +31,19 @@ import stirling.software.proprietary.service.AuditService;
  * populates MDC before the job interceptor - matching the original ordering intent (audit captures
  * principal/origin/IP on the request thread before the job is dispatched).
  *
- * <p>TODO: Migration required - the {@code @Audited} annotation
- * ({@code stirling.software.proprietary.audit.Audited}) must be made a CDI
+ * <p>TODO: Migration required - the {@code @Audited} annotation ({@code
+ * stirling.software.proprietary.audit.Audited}) must be made a CDI
  * {@code @jakarta.interceptor.InterceptorBinding} (and its members marked
  * {@code @jakarta.enterprise.util.Nonbinding}) for this {@code @Interceptor} to bind to it; see the
  * already-migrated {@code AutoJobPostMapping}. That is a separate file and is intentionally left
  * untouched here.
  *
- * <p>TODO: Migration required - {@code AuditService}'s helper methods
- * ({@code createBaseAuditData}, {@code addFileData}, {@code addMethodArguments},
- * {@code resolveEventType}) currently accept an AspectJ {@code ProceedingJoinPoint} /
- * {@code joinPoint.getTarget()} / {@code joinPoint.getArgs()}. They must be migrated to accept a CDI
- * {@link InvocationContext} (use {@code ctx.getTarget()}, {@code ctx.getParameters()},
- * {@code ctx.getMethod()}). The call sites below pass {@code ctx} on that assumption.
+ * <p>TODO: Migration required - {@code AuditService}'s helper methods ({@code createBaseAuditData},
+ * {@code addFileData}, {@code addMethodArguments}, {@code resolveEventType}) currently accept an
+ * AspectJ {@code ProceedingJoinPoint} / {@code joinPoint.getTarget()} / {@code
+ * joinPoint.getArgs()}. They must be migrated to accept a CDI {@link InvocationContext} (use {@code
+ * ctx.getTarget()}, {@code ctx.getParameters()}, {@code ctx.getMethod()}). The call sites below
+ * pass {@code ctx} on that assumption.
  */
 @Interceptor
 @Audited
@@ -94,7 +94,8 @@ public class AuditAspect {
         }
 
         // MIGRATION: Spring's RequestContextHolder/ServletRequestAttributes -> CDI-injected
-        // jakarta HttpServletRequest/HttpServletResponse (quarkus-undertow). When invoked outside an
+        // jakarta HttpServletRequest/HttpServletResponse (quarkus-undertow). When invoked outside
+        // an
         // HTTP request scope the injected proxy resolves to null, so we treat a null request the
         // same way the original treated a null ServletRequestAttributes.
         HttpServletRequest req = request;

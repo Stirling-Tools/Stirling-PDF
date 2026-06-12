@@ -2,9 +2,9 @@ package stirling.software.proprietary.workflow.repository;
 
 import java.util.Optional;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.workflow.model.UserServerCertificateEntity;
 

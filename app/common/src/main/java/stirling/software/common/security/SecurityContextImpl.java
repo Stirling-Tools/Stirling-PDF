@@ -1,8 +1,8 @@
 package stirling.software.common.security;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.context.SecurityContextImpl}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.context.SecurityContextImpl}.
  *
  * <p>Basic concrete implementation of {@link SecurityContext}.
  */

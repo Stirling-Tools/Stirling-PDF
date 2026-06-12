@@ -40,7 +40,8 @@ public class MetricsController {
     private final ApplicationProperties applicationProperties;
     private final MeterRegistry meterRegistry;
     private final EndpointInspector endpointInspector;
-    // @Autowired(required=false) Optional<WeeklyActiveUsersService> -> CDI Instance<T> (optional bean)
+    // @Autowired(required=false) Optional<WeeklyActiveUsersService> -> CDI Instance<T> (optional
+    // bean)
     private final Instance<WeeklyActiveUsersService> wauService;
     private boolean metricsEnabled;
 

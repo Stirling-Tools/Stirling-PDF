@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import io.github.pixee.security.Filenames;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -514,8 +514,7 @@ public class AiWorkflowService {
         String safeFilename = Filenames.toSimpleFileName(filename);
         byte[] bytes = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         Resource resource =
-                new InputStreamResource(
-                        new java.io.ByteArrayInputStream(bytes), safeFilename);
+                new InputStreamResource(new java.io.ByteArrayInputStream(bytes), safeFilename);
         return new WorkflowState.Terminal(
                 buildCompletedResponse(response.getSummary(), List.of(resource), List.of(), null));
     }
@@ -580,12 +579,14 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
-        // TODO: Migration required - the dedicated catch for Spring's
-        // org.springframework.web.client.HttpServerErrorException was dropped: the migrated
-        // PolicyExecutor surfaces internal-API HTTP failures as a plain IOException (see
-        // PolicyExecutor#invoke), so no Spring HTTP exception ever reaches here. If the engine's
-        // structured "detail" error body needs to surface in chat again, have PolicyExecutor throw
-        // a typed exception carrying the response body and re-add a catch that extracts it.
+            // TODO: Migration required - the dedicated catch for Spring's
+            // org.springframework.web.client.HttpServerErrorException was dropped: the migrated
+            // PolicyExecutor surfaces internal-API HTTP failures as a plain IOException (see
+            // PolicyExecutor#invoke), so no Spring HTTP exception ever reaches here. If the
+            // engine's
+            // structured "detail" error body needs to surface in chat again, have PolicyExecutor
+            // throw
+            // a typed exception carrying the response body and re-add a catch that extracts it.
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(

@@ -48,7 +48,9 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     boolean enabled;
 
     @Inject
-    @ConfigProperty(name = "system.serverCertificate.organizationName", defaultValue = "Stirling-PDF")
+    @ConfigProperty(
+            name = "system.serverCertificate.organizationName",
+            defaultValue = "Stirling-PDF")
     String organizationName;
 
     @Inject

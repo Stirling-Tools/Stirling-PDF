@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.authentication.AbstractAuthenticationToken}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.authentication.AbstractAuthenticationToken}.
  *
  * <p>Base implementation of {@link Authentication} holding authorities, details and an
  * authenticated flag.

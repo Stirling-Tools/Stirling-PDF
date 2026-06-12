@@ -3,10 +3,10 @@ package stirling.software.proprietary.mcp.tools;
 import java.io.IOException;
 import java.util.Base64;
 
+import io.quarkus.arc.lookup.LookupIfProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
-
-import io.quarkus.arc.lookup.LookupIfProperty;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;

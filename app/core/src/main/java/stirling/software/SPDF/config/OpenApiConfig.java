@@ -7,9 +7,7 @@ import org.eclipse.microprofile.openapi.OASFactory;
 import org.eclipse.microprofile.openapi.OASFilter;
 import org.eclipse.microprofile.openapi.models.Components;
 import org.eclipse.microprofile.openapi.models.OpenAPI;
-import org.eclipse.microprofile.openapi.models.info.Contact;
 import org.eclipse.microprofile.openapi.models.info.Info;
-import org.eclipse.microprofile.openapi.models.info.License;
 import org.eclipse.microprofile.openapi.models.media.Schema;
 import org.eclipse.microprofile.openapi.models.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.models.security.SecurityScheme;
@@ -24,8 +22,8 @@ import stirling.software.common.model.ApplicationProperties;
  * Quarkus replacement for the former SpringDoc {@code OpenApiConfig}.
  *
  * <p>Under quarkus-smallrye-openapi the per-controller {@code @Tag}/{@code @Operation} annotations
- * are read automatically, so this class is now an {@link OASFilter} (registered via
- * {@code mp.openapi.filter} in application.properties) that reproduces the old programmatic
+ * are read automatically, so this class is now an {@link OASFilter} (registered via {@code
+ * mp.openapi.filter} in application.properties) that reproduces the old programmatic
  * customizations:
  *
  * <ul>

@@ -4,8 +4,6 @@ package stirling.software.common.model.api;
 // servlet/JAX-RS drop-in for a DTO field type. Changing this public field type to
 // byte[]/InputStream or a JAX-RS multipart type would ripple to all callers and the
 // API binding layer, so the type is kept until callers are migrated together.
-import stirling.software.common.model.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.AssertTrue;
@@ -13,6 +11,8 @@ import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import stirling.software.common.model.MultipartFile;
 
 @Data
 @NoArgsConstructor

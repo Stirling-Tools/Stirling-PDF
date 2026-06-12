@@ -28,7 +28,8 @@ import stirling.software.proprietary.security.service.UserService;
 // (org.springframework.security.oauth2.client.*) with NO direct Quarkus equivalent. In Quarkus the
 // OIDC/OAuth2 client is configured declaratively via quarkus-oidc (quarkus.oidc.* and named tenants
 // quarkus.oidc.<tenant>.* in application.properties), not by programmatically building a
-// ClientRegistrationRepository. This class previously @Produces'd a ClientRegistrationRepository and
+// ClientRegistrationRepository. This class previously @Produces'd a ClientRegistrationRepository
+// and
 // a GrantedAuthoritiesMapper. Those producer beans have been removed because the Spring types they
 // returned do not exist on the Quarkus classpath. The provider-resolution logic (reading
 // ApplicationProperties and validating each provider via validateProvider/isStringEmpty) is
@@ -67,12 +68,13 @@ public class OAuth2Configuration {
      * these providers.
      *
      * <p>TODO: Migration required - the return type was
-     * org.springframework.security.oauth2.client.registration.ClientRegistrationRepository, produced
-     * via Spring @Bean. quarkus-oidc does not consume a ClientRegistrationRepository; instead each
-     * validated Provider below must be emitted as a named OIDC tenant config
+     * org.springframework.security.oauth2.client.registration.ClientRegistrationRepository,
+     * produced via Spring @Bean. quarkus-oidc does not consume a ClientRegistrationRepository;
+     * instead each validated Provider below must be emitted as a named OIDC tenant config
      * (quarkus.oidc.&lt;name&gt;.auth-server-url / client-id / credentials.secret /
      * authentication.scopes / authentication.redirect-path, etc.). The validated providers are
-     * returned here so the wiring layer can register them; this method no longer produces a CDI bean.
+     * returned here so the wiring layer can register them; this method no longer produces a CDI
+     * bean.
      */
     public List<Provider> resolveValidatedProviders() throws NoProviderFoundException {
         List<Provider> providers = new ArrayList<>();

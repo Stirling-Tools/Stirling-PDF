@@ -5,15 +5,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.security.identity.SecurityIdentity;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.arc.lookup.LookupIfProperty;
-import io.quarkus.security.identity.SecurityIdentity;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -210,7 +210,8 @@ public class McpServerController {
 
     private McpCallContext resolveContext() {
         boolean scopesEnabled = applicationProperties.getMcp().isScopesEnabled();
-        // Spring SecurityContextHolder.getContext().getAuthentication() -> Quarkus SecurityIdentity.
+        // Spring SecurityContextHolder.getContext().getAuthentication() -> Quarkus
+        // SecurityIdentity.
         // Fail closed: an anonymous/unauthenticated identity yields an empty context so scoped ops
         // are refused.
         if (securityIdentity == null

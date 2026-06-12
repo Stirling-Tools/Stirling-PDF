@@ -23,7 +23,6 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -79,7 +78,8 @@ public class ConvertPdfJsonController {
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("lightweight") Boolean lightweightParam)
             throws Exception {
-        // TODO: Migration - PDFFile (@ModelAttribute) is not yet migrated to a multipart @BeanParam,
+        // TODO: Migration - PDFFile (@ModelAttribute) is not yet migrated to a multipart
+        // @BeanParam,
         // so the request model is rebuilt here from individual @RestForm fields. Once the model
         // carries @RestForm annotations, switch to @BeanParam binding.
         PDFFile request = new PDFFile();
@@ -174,8 +174,10 @@ public class ConvertPdfJsonController {
                             + " authenticated user. Input:PDF Output:JSON Type:SISO")
     public Response extractPdfMetadata(@RestForm("fileInput") FileUpload fileUpload)
             throws Exception {
-        // TODO: Migration - PDFFile (@ModelAttribute) is not yet migrated to a multipart @BeanParam,
-        // so the request model is rebuilt here from the @RestForm file field. Once the model carries
+        // TODO: Migration - PDFFile (@ModelAttribute) is not yet migrated to a multipart
+        // @BeanParam,
+        // so the request model is rebuilt here from the @RestForm file field. Once the model
+        // carries
         // @RestForm annotations, switch to @BeanParam binding.
         PDFFile request = new PDFFile();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));

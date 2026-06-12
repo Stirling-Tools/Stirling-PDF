@@ -84,8 +84,9 @@ public class PostHogService {
             // Application version
             metrics.put("app_version", appVersion);
             String deploymentType = "JAR"; // default
-            if ("true".equalsIgnoreCase(
-                    config.getOptionalValue("BROWSER_OPEN", String.class).orElse(null))) {
+            if ("true"
+                    .equalsIgnoreCase(
+                            config.getOptionalValue("BROWSER_OPEN", String.class).orElse(null))) {
                 deploymentType = "EXE";
             } else if (isRunningInDocker()) {
                 deploymentType = "DOCKER";

@@ -338,7 +338,8 @@ public class RedactController {
         request.setFileInput(FileUploadMultipartFile.of(fileInput));
         request.setFileId(fileId);
         request.setTextValues(parseJsonList(textValues, new TypeReference<List<String>>() {}));
-        request.setRegexPatterns(parseJsonList(regexPatterns, new TypeReference<List<String>>() {}));
+        request.setRegexPatterns(
+                parseJsonList(regexPatterns, new TypeReference<List<String>>() {}));
         request.setWipePages(parseJsonList(wipePages, new TypeReference<List<Integer>>() {}));
         request.setRanges(parseJsonList(ranges, new TypeReference<List<TextRange>>() {}));
         request.setImageBoxes(parseJsonList(imageBoxes, new TypeReference<List<ImageBox>>() {}));

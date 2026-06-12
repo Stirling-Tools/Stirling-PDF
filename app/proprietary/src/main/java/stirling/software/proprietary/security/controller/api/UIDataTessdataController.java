@@ -142,7 +142,9 @@ public class UIDataTessdataController {
         if (!downloaded.isEmpty() && failed.isEmpty()) {
             return Response.ok(response).build();
         } else if (!downloaded.isEmpty()) {
-            return Response.status(207).entity(response).build(); // Multi-Status for partial success
+            return Response.status(207)
+                    .entity(response)
+                    .build(); // Multi-Status for partial success
         } else {
             return Response.status(Response.Status.BAD_GATEWAY).entity(response).build();
         }

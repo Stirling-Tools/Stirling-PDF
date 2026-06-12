@@ -35,15 +35,19 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
 // DI/config mapping applied here:
 //   @Configuration                          -> @ApplicationScoped (producer bean class)
 //   @Bean                                   -> @Produces (+ @Named for the string-command accessor)
-//   @ConditionalOnProperty(cluster.enabled) -> @LookupIfProperty(name="cluster.enabled", stringValue="true")
-//   @ConditionalOnProperty(backplane=valkey)-> @LookupIfProperty(name="cluster.backplane", stringValue="valkey")
+//   @ConditionalOnProperty(cluster.enabled) -> @LookupIfProperty(name="cluster.enabled",
+// stringValue="true")
+//   @ConditionalOnProperty(backplane=valkey)-> @LookupIfProperty(name="cluster.backplane",
+// stringValue="valkey")
 //   @DependsOn("clusterLicenseGate")        -> TODO: ordering; CDI has no @DependsOn (use @Observes
 //                                              ordering or an explicit @Inject of the gate bean).
-//   @Bean(destroyMethod="destroy")          -> RedisDataSource lifecycle is managed by Quarkus, so the
+//   @Bean(destroyMethod="destroy")          -> RedisDataSource lifecycle is managed by Quarkus, so
+// the
 //                                              former factory.destroy() wiring is no longer needed.
 //
 // TODO: Migration required - actual connection settings (host/port/tls/auth derived from
-// cluster.valkey.url and tls.skip-cert-verification) must be propagated to quarkus.redis.* config so
+// cluster.valkey.url and tls.skip-cert-verification) must be propagated to quarkus.redis.* config
+// so
 // the injected RedisDataSource targets the right Valkey. parseUrl/buildClientConfiguration are kept
 // to validate the URL and to drive that config mapping once it is wired.
 @Slf4j
@@ -54,10 +58,13 @@ public class ValkeyConnectionConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
-    // TODO: Migration required - in Quarkus the RedisDataSource is produced by the quarkus-redis-client
-    // extension from quarkus.redis.* config rather than constructed here. This producer simply hands
+    // TODO: Migration required - in Quarkus the RedisDataSource is produced by the
+    // quarkus-redis-client
+    // extension from quarkus.redis.* config rather than constructed here. This producer simply
+    // hands
     // back the container-managed RedisDataSource so existing @Inject points keep compiling. The
-    // URL/TLS validation that used to build the LettuceConnectionFactory is still performed (and the
+    // URL/TLS validation that used to build the LettuceConnectionFactory is still performed (and
+    // the
     // boot handshake attempted) so misconfiguration fails fast.
     @Inject RedisDataSource redisDataSource;
 
@@ -87,9 +94,9 @@ public class ValkeyConnectionConfiguration {
     record Endpoint(String host, int port, boolean tls, String username, String password) {}
 
     /**
-     * Minimal framework-agnostic replacement for the former Lettuce client configuration. Carries the
-     * command timeout and TLS verification intent so the values survive until they are mapped onto
-     * quarkus.redis.* config.
+     * Minimal framework-agnostic replacement for the former Lettuce client configuration. Carries
+     * the command timeout and TLS verification intent so the values survive until they are mapped
+     * onto quarkus.redis.* config.
      */
     record ClientConfiguration(Duration commandTimeout, boolean tls, boolean verifyModeFull) {}
 
@@ -148,8 +155,7 @@ public class ValkeyConnectionConfiguration {
      * Package-private for testing. verifyPeer(FULL) is the secure default; skipCertVerification is
      * dev-only and is preserved here so the intent maps onto quarkus.redis.tls.* once wired.
      */
-    static ClientConfiguration buildClientConfiguration(
-            boolean tls, boolean skipCertVerification) {
+    static ClientConfiguration buildClientConfiguration(boolean tls, boolean skipCertVerification) {
         // Bound every backplane command. Without this a partitioned or slow Valkey would stall
         // hot-path calls (e.g. JobController.guardNonOwner -> jobStore.get on each request);
         // all backplane ops are non-blocking single commands, so a short timeout is safe.
@@ -168,12 +174,11 @@ public class ValkeyConnectionConfiguration {
      * immediately; only transport errors get the loop. Package-private for testing.
      *
      * <p>TODO: Migration required - this previously issued PING via a spring-data-redis
-     * RedisConnection. With Quarkus it should issue {@code ds.execute("PING")} (string command). The
-     * loop structure and auth short-circuit are retained; the actual ping call is stubbed so the file
-     * compiles until the RedisDataSource command surface is wired in.
+     * RedisConnection. With Quarkus it should issue {@code ds.execute("PING")} (string command).
+     * The loop structure and auth short-circuit are retained; the actual ping call is stubbed so
+     * the file compiles until the RedisDataSource command surface is wired in.
      */
-    static void eagerHandshake(
-            RedisDataSource ds, String host, int port, boolean tls) {
+    static void eagerHandshake(RedisDataSource ds, String host, int port, boolean tls) {
         RuntimeException last = null;
         for (int attempt = 1; attempt <= 10; attempt++) {
             try {
@@ -237,9 +242,9 @@ public class ValkeyConnectionConfiguration {
     }
 
     /**
-     * Walks the cause chain for WRONGPASS/NOAUTH/NOPERM replies. Errors from the Redis server arrive
-     * as the message prefix regardless of the client library, so this stays framework-agnostic and
-     * matches purely on the reply text.
+     * Walks the cause chain for WRONGPASS/NOAUTH/NOPERM replies. Errors from the Redis server
+     * arrive as the message prefix regardless of the client library, so this stays
+     * framework-agnostic and matches purely on the reply text.
      */
     static boolean isAuthFailure(Throwable t) {
         for (Throwable cur = t; cur != null; cur = cur.getCause()) {
@@ -276,7 +281,8 @@ public class ValkeyConnectionConfiguration {
     }
 
     // TODO: Migration required - StringRedisTemplate was spring-data-redis. Consumers should inject
-    // the Quarkus RedisDataSource and issue string commands via ds.value(String.class). This producer
+    // the Quarkus RedisDataSource and issue string commands via ds.value(String.class). This
+    // producer
     // now simply exposes the container-managed RedisDataSource under the legacy @Named qualifier so
     // existing injection points keep compiling during the migration.
     @Produces

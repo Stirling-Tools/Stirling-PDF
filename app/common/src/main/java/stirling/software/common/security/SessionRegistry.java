@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import java.util.List;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.core.session.SessionRegistry}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.core.session.SessionRegistry}.
  *
  * <p>Maintains a registry of currently known principals and their sessions.
  */

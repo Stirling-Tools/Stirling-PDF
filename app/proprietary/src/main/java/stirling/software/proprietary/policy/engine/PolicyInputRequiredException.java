@@ -2,9 +2,9 @@ package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
 
-import stirling.software.common.model.io.Resource;
-
 import lombok.Getter;
+
+import stirling.software.common.model.io.Resource;
 
 /**
  * Thrown by a step to signal that the run cannot proceed without further user input, pausing the

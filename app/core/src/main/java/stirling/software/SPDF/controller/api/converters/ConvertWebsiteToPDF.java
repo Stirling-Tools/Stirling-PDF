@@ -76,8 +76,7 @@ public class ConvertWebsiteToPDF {
             description =
                     "This endpoint fetches content from a URL and converts it to a PDF format."
                             + " Input:N/A Output:PDF Type:SISO")
-    public Response urlToPdf(
-            @RestForm("urlInput") String urlInput, @Context UriInfo uriInfo)
+    public Response urlToPdf(@RestForm("urlInput") String urlInput, @Context UriInfo uriInfo)
             throws IOException, InterruptedException {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput(urlInput);

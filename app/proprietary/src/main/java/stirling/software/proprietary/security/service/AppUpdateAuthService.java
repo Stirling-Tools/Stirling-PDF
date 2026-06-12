@@ -2,9 +2,9 @@ package stirling.software.proprietary.security.service;
 
 import java.util.Optional;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,9 +37,10 @@ class AppUpdateAuthService implements ShowAdminInterface {
         if (securityIdentity == null || securityIdentity.isAnonymous()) {
             return !showUpdateOnlyAdmin;
         }
-        String name = securityIdentity.getPrincipal() != null
-                ? securityIdentity.getPrincipal().getName()
-                : null;
+        String name =
+                securityIdentity.getPrincipal() != null
+                        ? securityIdentity.getPrincipal().getName()
+                        : null;
         if (name == null || "anonymousUser".equalsIgnoreCase(name)) {
             return !showUpdateOnlyAdmin;
         }

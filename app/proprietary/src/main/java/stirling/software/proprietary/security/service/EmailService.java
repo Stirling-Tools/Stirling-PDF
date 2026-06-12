@@ -132,10 +132,7 @@ public class EmailService {
 
         ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
 
-        Mail mail =
-                isHtml
-                        ? Mail.withHtml(to, subject, body)
-                        : Mail.withText(to, subject, body);
+        Mail mail = isHtml ? Mail.withHtml(to, subject, body) : Mail.withText(to, subject, body);
         mail.setFrom(mailProperties.getFrom());
 
         // Sends the email via the configured mailer

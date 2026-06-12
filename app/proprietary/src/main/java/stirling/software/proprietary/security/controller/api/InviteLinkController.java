@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.resteasy.reactive.RestForm;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -15,14 +15,11 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
-
-import org.jboss.resteasy.reactive.RestForm;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -178,7 +175,7 @@ public class InviteLinkController {
                     effectiveTeamId = defaultTeam.getId();
                 }
             } else {
-                Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
+                Team selectedTeam = teamRepository.findByIdOptional(effectiveTeamId).orElse(null);
                 if (selectedTeam != null
                         && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                     return Response.status(Response.Status.BAD_REQUEST)
@@ -206,7 +203,7 @@ public class InviteLinkController {
             inviteToken.setExpiresAt(expiresAt);
             inviteToken.setCreatedBy(principal.getName());
 
-            inviteTokenRepository.save(inviteToken);
+            inviteTokenRepository.persist(inviteToken);
 
             // Build invite URL: system.frontendUrl → caller's frontendBaseUrl → system.backendUrl →
             // request URL
@@ -335,7 +332,7 @@ public class InviteLinkController {
     @jakarta.ws.rs.Path("/revoke/{inviteId}")
     public Response revokeInviteLink(@PathParam("inviteId") Long inviteId) {
         try {
-            Optional<InviteToken> inviteOpt = inviteTokenRepository.findById(inviteId);
+            Optional<InviteToken> inviteOpt = inviteTokenRepository.findByIdOptional(inviteId);
             if (inviteOpt.isEmpty()) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity(Map.of("error", "Invite not found"))
@@ -345,7 +342,8 @@ public class InviteLinkController {
             inviteTokenRepository.deleteById(inviteId);
             log.info("Revoked invite link ID: {}", inviteId);
 
-            return Response.ok(Map.of("message", "Invite link revoked successfully"),
+            return Response.ok(
+                            Map.of("message", "Invite link revoked successfully"),
                             MediaType.APPLICATION_JSON)
                     .build();
 
@@ -368,12 +366,12 @@ public class InviteLinkController {
     public Response cleanupExpiredInvites() {
         try {
             List<InviteToken> expiredInvites =
-                    inviteTokenRepository.findAll().stream()
+                    inviteTokenRepository.findAll().list().stream()
                             .filter(invite -> !invite.isValid())
                             .collect(Collectors.toList());
 
             int count = expiredInvites.size();
-            inviteTokenRepository.deleteAll(expiredInvites);
+            expiredInvites.forEach(inviteTokenRepository::delete);
 
             log.info("Cleaned up {} expired invite tokens", count);
 
@@ -508,7 +506,7 @@ public class InviteLinkController {
             // Mark invite as used
             invite.setUsed(true);
             invite.setUsedAt(LocalDateTime.now());
-            inviteTokenRepository.save(invite);
+            inviteTokenRepository.persist(invite);
 
             log.info(
                     "User account created via invite link: {} with role: {}",

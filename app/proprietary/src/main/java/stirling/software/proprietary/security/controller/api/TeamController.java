@@ -47,7 +47,7 @@ public class TeamController {
         }
         Team team = new Team();
         team.setName(name);
-        teamRepository.save(team);
+        teamRepository.persist(team);
         return Response.ok(Map.of("message", "Team created successfully")).build();
     }
 
@@ -57,7 +57,7 @@ public class TeamController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response renameTeam(
             @QueryParam("teamId") Long teamId, @QueryParam("newName") String newName) {
-        Optional<Team> existing = teamRepository.findById(teamId);
+        Optional<Team> existing = teamRepository.findByIdOptional(teamId);
         if (existing.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "Team not found."))
@@ -78,7 +78,7 @@ public class TeamController {
         }
 
         team.setName(newName);
-        teamRepository.save(team);
+        teamRepository.persist(team);
         return Response.ok(Map.of("message", "Team renamed successfully")).build();
     }
 
@@ -88,7 +88,7 @@ public class TeamController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
     public Response deleteTeam(@QueryParam("teamId") Long teamId) {
-        Optional<Team> teamOpt = teamRepository.findById(teamId);
+        Optional<Team> teamOpt = teamRepository.findByIdOptional(teamId);
         if (teamOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "Team not found."))
@@ -127,7 +127,7 @@ public class TeamController {
             @QueryParam("teamId") Long teamId, @QueryParam("userId") Long userId) {
 
         // Find the team
-        Optional<Team> teamOpt = teamRepository.findById(teamId);
+        Optional<Team> teamOpt = teamRepository.findByIdOptional(teamId);
         if (teamOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "Team not found."))
@@ -143,7 +143,7 @@ public class TeamController {
         }
 
         // Find the user
-        Optional<User> userOpt = userRepository.findById(userId);
+        Optional<User> userOpt = userRepository.findByIdOptional(userId);
         if (userOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "User not found."))
@@ -161,7 +161,7 @@ public class TeamController {
 
         // Assign user to team
         user.setTeam(team);
-        userRepository.save(user);
+        userRepository.persist(user);
 
         return Response.ok(Map.of("message", "User added to team successfully")).build();
     }

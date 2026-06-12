@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.quarkus.security.identity.SecurityIdentity;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.security.identity.SecurityIdentity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -428,7 +428,8 @@ public class FolderService {
      */
     private User requireAuthenticatedUser() {
         if (securityIdentity == null || securityIdentity.isAnonymous()) {
-            throw new WebApplicationException("Authentication required", Response.Status.UNAUTHORIZED);
+            throw new WebApplicationException(
+                    "Authentication required", Response.Status.UNAUTHORIZED);
         }
         Principal principal = securityIdentity.getPrincipal();
         // TODO: Migration required - a Quarkus SecurityIdentityAugmentor/IdentityProvider must
@@ -440,7 +441,6 @@ public class FolderService {
         if (principal instanceof User user) {
             return user;
         }
-        throw new WebApplicationException(
-                "Authentication required", Response.Status.UNAUTHORIZED);
+        throw new WebApplicationException("Authentication required", Response.Status.UNAUTHORIZED);
     }
 }

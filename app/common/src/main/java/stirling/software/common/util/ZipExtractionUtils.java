@@ -10,19 +10,13 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-// TODO: Migration required - org.springframework.core.io.Resource / FileSystemResource have no
-// Quarkus/Jakarta drop-in equivalent. These types appear in the public signatures of this utility
-// (isZip(Resource), extractZip(...) -> List<Resource>) and are consumed by other modules
-// (PipelineProcessor, AiWorkflowService). Replacing them with InputStream/java.nio would ripple
-// across callers that this single-file migration is not permitted to edit. Keeping the Spring core
-// io abstraction until callers are migrated together.
-import stirling.software.common.model.io.FileSystemResource;
-import stirling.software.common.model.io.Resource;
-
 import io.github.pixee.security.ZipSecurity;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 /**
  * Helpers for detecting and extracting ZIP-formatted responses returned from Stirling API

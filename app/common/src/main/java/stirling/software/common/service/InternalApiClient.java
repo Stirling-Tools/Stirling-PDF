@@ -23,7 +23,6 @@ import org.eclipse.microprofile.config.Config;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.ServletContext;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +39,12 @@ import stirling.software.common.util.TempFileManager;
  * PipelineProcessor and AiWorkflowService to execute tool operations programmatically without
  * leaving the JVM network stack.
  *
- * <p>MIGRATION (Spring -> Quarkus): the HTTP dispatch was rebuilt on {@link java.net.http.HttpClient}
- * (replacing Spring's {@code RestTemplate}/{@code SimpleClientHttpRequestFactory}). The multipart
- * body is encoded manually; {@code MultiValueMap<String,Object>} became {@code
- * Map<String,List<Object>>} and {@code ResponseEntity<Resource>} became {@link Response}.
- * {@code ResourceAccessException} timeout handling is now driven by {@link HttpTimeoutException}.
+ * <p>MIGRATION (Spring -> Quarkus): the HTTP dispatch was rebuilt on {@link
+ * java.net.http.HttpClient} (replacing Spring's {@code RestTemplate}/{@code
+ * SimpleClientHttpRequestFactory}). The multipart body is encoded manually; {@code
+ * MultiValueMap<String,Object>} became {@code Map<String,List<Object>>} and {@code
+ * ResponseEntity<Resource>} became {@link Response}. {@code ResourceAccessException} timeout
+ * handling is now driven by {@link HttpTimeoutException}.
  */
 @ApplicationScoped
 @Slf4j
@@ -133,10 +133,9 @@ public class InternalApiClient {
                         extractFilename(
                                 response.headers().firstValue("Content-Disposition").orElse(null));
                 TempFileResource resource = new TempFileResource(tempFile, filename);
-                Response.ResponseBuilder rb = Response.status(response.statusCode()).entity(resource);
-                response.headers()
-                        .map()
-                        .forEach((k, vs) -> vs.forEach(v -> rb.header(k, v)));
+                Response.ResponseBuilder rb =
+                        Response.status(response.statusCode()).entity(resource);
+                response.headers().map().forEach((k, vs) -> vs.forEach(v -> rb.header(k, v)));
                 return rb.build();
             }
         } catch (HttpTimeoutException e) {
@@ -151,7 +150,9 @@ public class InternalApiClient {
         }
     }
 
-    /** Encode a multipart/form-data body. File parts are {@link Resource}; others are form fields. */
+    /**
+     * Encode a multipart/form-data body. File parts are {@link Resource}; others are form fields.
+     */
     private static byte[] encodeMultipart(Map<String, List<Object>> body, String boundary) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -177,8 +178,7 @@ public class InternalApiClient {
                         baos.write(
                                 ("Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n")
                                         .getBytes(StandardCharsets.UTF_8));
-                        baos.write(
-                                String.valueOf(value).getBytes(StandardCharsets.UTF_8));
+                        baos.write(String.valueOf(value).getBytes(StandardCharsets.UTF_8));
                         baos.write("\r\n".getBytes(StandardCharsets.UTF_8));
                     }
                 }

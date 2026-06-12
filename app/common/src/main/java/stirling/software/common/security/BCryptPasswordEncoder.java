@@ -3,8 +3,8 @@ package stirling.software.common.security;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
 /**
- * Migration compatibility shim for
- * {@code org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder}.
+ * Migration compatibility shim for {@code
+ * org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder}.
  *
  * <p>Implementation of {@link PasswordEncoder} backed by the {@code at.favre.lib:bcrypt} library.
  */

@@ -12,8 +12,8 @@ import java.util.Optional;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.hash.HashCommands;
 import io.quarkus.redis.datasource.keys.KeyCommands;
+import io.quarkus.redis.datasource.keys.KeyScanArgs;
 import io.quarkus.redis.datasource.keys.KeyScanCursor;
-import io.quarkus.redis.datasource.keys.ScanArgs;
 import io.quarkus.redis.datasource.transactions.TransactionResult;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -71,8 +71,7 @@ public class ValkeyInstanceRegistry implements InstanceRegistry {
     public Collection<ClusterNode> activeNodes() {
         List<ClusterNode> nodes = new ArrayList<>();
         KeyCommands<String> keys = redis.key(String.class);
-        KeyScanCursor<String> cursor =
-                keys.scan(new ScanArgs().match(PREFIX + "*").count(256));
+        KeyScanCursor<String> cursor = keys.scan(new KeyScanArgs().match(PREFIX + "*").count(256));
         while (cursor.hasNext()) {
             for (String key : cursor.next()) {
                 readNode(key).ifPresent(nodes::add);

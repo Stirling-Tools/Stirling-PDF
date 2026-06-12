@@ -17,15 +17,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
-// JAX-RS/servlet drop-in. It is used in public static method signatures
-// (convertPdfToCbr/validatePdfFile/isPdfFile) consumed by callers; changing it to
-// byte[]/InputStream would ripple widely, so the type is intentionally kept until callers
-// are migrated.
-import stirling.software.common.model.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 

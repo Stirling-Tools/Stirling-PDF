@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-
-import io.quarkus.runtime.StartupEvent;
 
 import lombok.extern.slf4j.Slf4j;
 
