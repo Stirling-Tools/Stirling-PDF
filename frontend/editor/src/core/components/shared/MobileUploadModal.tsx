@@ -8,7 +8,8 @@ import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import { withBasePath } from "@app/constants/app";
+import { BASE_PATH } from "@app/constants/app";
+import { buildMobileScannerUrl } from "@app/utils/mobileScannerUrl";
 import { convertImageToPdf, isImageFile } from "@app/utils/imageToPdfUtils";
 import apiClient from "@app/services/apiClient";
 
@@ -83,27 +84,15 @@ export default function MobileUploadModal({
   const timerIntervalRef = useRef<number | null>(null);
   const processedFiles = useRef<Set<string>>(new Set());
 
-  // A configured server_url/frontendUrl already includes any subpath, so append
-  // the route directly; only the bare-origin fallback needs withBasePath.
-  const configuredUrl = (
-    localStorage.getItem("server_url") ||
-    config?.frontendUrl ||
-    ""
-  ).trim();
-  let mobileBase = "";
-  if (configuredUrl) {
-    try {
-      const parsed = new URL(configuredUrl);
-      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-        mobileBase = configuredUrl.replace(/\/$/, "");
-      }
-    } catch {
-      // invalid configured URL — fall back to origin
-    }
-  }
-  const mobileUrl = mobileBase
-    ? `${mobileBase}/mobile-scanner?session=${sessionId}`
-    : `${window.location.origin}${withBasePath("/mobile-scanner")}?session=${sessionId}`;
+  // Build the QR-code URL the phone opens. It must land on the public
+  // /mobile-scanner route under the app's base path, otherwise the phone hits
+  // the auth-gated catch-all route and is bounced to the login page.
+  const mobileUrl = buildMobileScannerUrl({
+    configuredUrl: localStorage.getItem("server_url") || config?.frontendUrl || "",
+    sessionId,
+    origin: window.location.origin,
+    basePath: BASE_PATH,
+  });
 
   // Create session on backend
   const createSession = useCallback(

@@ -1,7 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
+import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
@@ -13,6 +15,7 @@ import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
+import MobileScannerPage from "@app/pages/MobileScannerPage";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
@@ -29,6 +32,17 @@ import "@app/utils/fileIdSafety";
 
 function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
+}
+
+// Minimal providers for the mobile scanner: no AppProviders, so no auth and no
+// backend bootstrap. The page is opened on a phone via a QR code and must work
+// without a logged-in session, the same way it does in the proprietary build.
+function MobileScannerProviders({ children }: { children: ReactNode }) {
+  return (
+    <PreferencesProvider>
+      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+    </PreferencesProvider>
+  );
 }
 
 /**
@@ -54,22 +68,42 @@ function NonAuthBootstraps() {
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <AppProviders
-        appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-      >
-        <AppLayout>
-          <NonAuthBootstraps />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/auth/reset" element={<ResetPassword />} />
-            <Route path="/oauth/consent" element={<OAuthConsent />} />
-            <Route path="/*" element={<Landing />} />
-          </Routes>
-          <OnboardingTour />
-        </AppLayout>
-      </AppProviders>
+      <Routes>
+        {/* Mobile scanner - public, no auth. Opened on a phone via the QR code,
+            so it must render without a logged-in session. Kept outside
+            AppProviders or it falls through to the auth-gated catch-all. */}
+        <Route
+          path="/mobile-scanner"
+          element={
+            <MobileScannerProviders>
+              <MobileScannerPage />
+            </MobileScannerProviders>
+          }
+        />
+
+        {/* Everything else needs the auth/backend providers. */}
+        <Route
+          path="*"
+          element={
+            <AppProviders
+              appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+            >
+              <AppLayout>
+                <NonAuthBootstraps />
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/reset" element={<ResetPassword />} />
+                  <Route path="/oauth/consent" element={<OAuthConsent />} />
+                  <Route path="/*" element={<Landing />} />
+                </Routes>
+                <OnboardingTour />
+              </AppLayout>
+            </AppProviders>
+          }
+        />
+      </Routes>
     </Suspense>
   );
 }
