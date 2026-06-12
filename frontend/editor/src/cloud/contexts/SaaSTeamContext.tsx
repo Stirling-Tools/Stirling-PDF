@@ -7,12 +7,16 @@ import {
   useCallback,
 } from "react";
 import apiClient from "@app/services/apiClient";
-import { useAuth } from "@app/auth/UseSession";
-import { isUserAnonymous } from "@app/auth/supabase";
+import { useTeamAuth } from "@app/auth/teamSession";
 
 /**
- * SaaS web implementation of SaaS Team Context
- * Provides team management for authenticated (non-anonymous) users
+ * Shared (cloud) SaaS Team Context.
+ *
+ * Provides team management for authenticated (non-anonymous) users. The
+ * platform-specific auth bits — whether teams may be used at all, and how to
+ * refresh derived auth state after a membership change — come from the
+ * {@code @app/auth/teamSession} seam (Supabase web session on saas, authService
+ * on desktop), keeping this context free of any platform auth coupling.
  */
 
 interface Team {
@@ -92,8 +96,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   >([]);
   const [loading, setLoading] = useState(true);
 
-  const { user, refreshCredits, refreshSession } = useAuth();
-  const canUseTeams = !!user && !isUserAnonymous(user);
+  const { canUseTeams, refreshAfterMembershipChange } = useTeamAuth();
 
   const fetchMyTeams = useCallback(async () => {
     if (!canUseTeams) return null;
@@ -223,8 +226,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     await apiClient.post(`/api/v1/team/invitations/${token}/accept`);
     await fetchReceivedInvitations();
     await refreshTeams();
-    await refreshCredits();
-    await refreshSession();
+    await refreshAfterMembershipChange();
   };
 
   const rejectInvitation = async (token: string) => {
@@ -255,8 +257,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
 
     await apiClient.post(`/api/v1/team/${currentTeam.teamId}/leave`);
     await refreshTeams();
-    await refreshCredits();
-    await refreshSession();
+    await refreshAfterMembershipChange();
   };
 
   const isTeamLeader = currentTeam?.isLeader ?? false;

@@ -7,7 +7,7 @@ import {
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
 import { SaasPlanSection } from "@app/components/shared/config/configSections/SaasPlanSection";
-import { SaaSTeamsSection } from "@app/components/shared/config/configSections/SaaSTeamsSection";
+import TeamSection from "@app/components/shared/config/configSections/TeamSection";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
 
@@ -120,7 +120,7 @@ export const useConfigNavSections = (
           key: "teams",
           label: t("settings.team.title", "Team"),
           icon: "groups-rounded",
-          component: <SaaSTeamsSection />,
+          component: <TeamSection />,
         },
       ],
     });

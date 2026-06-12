@@ -18,7 +18,7 @@ export function CloudBadge({ className }: CloudBadgeProps) {
     <Tooltip
       label={t(
         "cloudBadge.tooltip",
-        "This operation will use your cloud credits",
+        "Runs in the cloud — included, no extra charge",
       )}
       position="top"
       withArrow

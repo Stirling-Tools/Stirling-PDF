@@ -11,6 +11,7 @@ import {
 } from "@app/components/onboarding/saasOnboardingFlowConfig";
 import { resolveSaasFlow } from "@app/components/onboarding/saasFlowResolver";
 import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import { openExternal } from "@app/platform/openExternal";
 
 interface UseSaasOnboardingStateResult {
   currentStep: number;
@@ -136,10 +137,11 @@ export function useSaasOnboardingState({
           onClose();
           return;
         case "download-selected": {
-          // Open download URL in new tab
+          // Open the download URL in the user's browser via the platform seam
+          // (saas opens a new tab, desktop hands off to the OS shell).
           const downloadUrl = selectedDownloadUrlRef.current || os.url;
           if (downloadUrl) {
-            window.open(downloadUrl, "_blank", "noopener,noreferrer");
+            void openExternal(downloadUrl);
           }
           // Then advance to next slide or close if last
           if (currentStep === maxIndex) {
