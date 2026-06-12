@@ -75,6 +75,8 @@ interface AuthContextType {
    *   consumers can fall back to whatever makes sense.
    */
   displayName: string | null;
+  /** Whether the current session is an anonymous (Supabase `is_anonymous`) guest. */
+  isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
   creditBalance: number | null;
@@ -99,6 +101,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   displayName: null,
+  isAnonymous: false,
   loading: true,
   error: null,
   creditBalance: null,
@@ -671,6 +674,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user,
     displayName: deriveDisplayName(user, t),
+    isAnonymous: Boolean(user?.is_anonymous),
     loading,
     error,
     creditBalance,
