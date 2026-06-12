@@ -519,7 +519,7 @@ t("common.uploadCount", { count: files.length });
 
 Do not translate the suffix names themselves. They are CLDR plural categories,
 not English words. Add only the forms required by the target language, but keep
-the plural key set aligned with `en-GB` unless the target language needs
+the plural key set aligned with `en-US` unless the target language needs
 additional CLDR forms such as `_few` or `_many`.
 
 ## Key Features
