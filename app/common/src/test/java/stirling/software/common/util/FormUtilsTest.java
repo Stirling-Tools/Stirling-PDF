@@ -77,7 +77,7 @@ class FormUtilsTest {
 
             List<FormUtils.FormFieldInfo> fields = FormUtils.extractFormFields(document);
             assertEquals(1, fields.size());
-            FormUtils.FormFieldInfo info = fields.getFirst();
+            FormUtils.FormFieldInfo info = fields.get(0);
             assertEquals("firstName", info.name());
             assertEquals("text", info.type());
             assertEquals(0, info.pageIndex());

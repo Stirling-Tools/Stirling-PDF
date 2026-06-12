@@ -60,40 +60,54 @@ public class Provider {
     }
 
     private UsernameAttribute validateUsernameAttribute(UsernameAttribute usernameAttribute) {
-        return switch (name) {
-            case "google" -> validateGoogleUsernameAttribute(usernameAttribute);
-            case "github" -> validateGitHubUsernameAttribute(usernameAttribute);
-            case "keycloak" -> validateKeycloakUsernameAttribute(usernameAttribute);
-            default -> usernameAttribute;
-        };
+        switch (name) {
+            case "google" -> {
+                return validateGoogleUsernameAttribute(usernameAttribute);
+            }
+            case "github" -> {
+                return validateGitHubUsernameAttribute(usernameAttribute);
+            }
+            case "keycloak" -> {
+                return validateKeycloakUsernameAttribute(usernameAttribute);
+            }
+            default -> {
+                return usernameAttribute;
+            }
+        }
     }
 
     private UsernameAttribute validateKeycloakUsernameAttribute(
             UsernameAttribute usernameAttribute) {
-        return switch (usernameAttribute) {
-            case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME, PREFERRED_USERNAME -> usernameAttribute;
+        switch (usernameAttribute) {
+            case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME, PREFERRED_USERNAME -> {
+                return usernameAttribute;
+            }
             default ->
                     throw new UnsupportedClaimException(
                             String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
-        };
+        }
     }
 
     private UsernameAttribute validateGoogleUsernameAttribute(UsernameAttribute usernameAttribute) {
-        return switch (usernameAttribute) {
-            case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME -> usernameAttribute;
+        switch (usernameAttribute) {
+            case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME -> {
+                return usernameAttribute;
+            }
             default ->
                     throw new UnsupportedClaimException(
                             String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
-        };
+        }
     }
 
     private UsernameAttribute validateGitHubUsernameAttribute(UsernameAttribute usernameAttribute) {
-        return switch (usernameAttribute) {
-            case LOGIN, EMAIL, NAME -> usernameAttribute;
+        switch (usernameAttribute) {
+            case LOGIN, EMAIL, NAME -> {
+                return usernameAttribute;
+            }
             default ->
                     throw new UnsupportedClaimException(
                             String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
-        };
+        }
     }
 
     @Override

@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.configuration;
 
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -18,6 +19,7 @@ public class CacheConfig {
 
     private final ApplicationProperties applicationProperties;
 
+    @Autowired
     public CacheConfig(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }

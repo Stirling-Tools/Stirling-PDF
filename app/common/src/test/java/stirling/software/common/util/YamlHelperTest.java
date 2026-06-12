@@ -106,7 +106,7 @@ class YamlHelperTest {
         assertInstanceOf(List.class, value);
         List<?> list = (List<?>) value;
         assertEquals(3, list.size());
-        assertEquals("alpha", list.getFirst());
+        assertEquals("alpha", list.get(0));
     }
 
     // --- Static type check methods ---

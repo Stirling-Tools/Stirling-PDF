@@ -85,7 +85,7 @@ class VerifyPDFControllerTest {
             assertNotNull(response.getBody());
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertEquals(1, response.getBody().size());
-            assertTrue(response.getBody().getFirst().isCompliant());
+            assertTrue(response.getBody().get(0).isCompliant());
         }
 
         @Test

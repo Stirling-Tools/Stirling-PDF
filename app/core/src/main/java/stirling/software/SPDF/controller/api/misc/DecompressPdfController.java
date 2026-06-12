@@ -87,13 +87,12 @@ public class DecompressPdfController {
         if (obj == null || processed.contains(obj)) return;
         processed.add(obj);
 
-        switch (obj) {
-            case COSObject cosObj -> processObject(cosObj.getObject(), processed);
-            case COSDictionary dict -> processDictionary(dict, processed);
-            case COSArray array -> processArray(array, processed);
-            default -> {
-                // Scalar COS values have no nested objects to traverse.
-            }
+        if (obj instanceof COSObject cosObj) {
+            processObject(cosObj.getObject(), processed);
+        } else if (obj instanceof COSDictionary dict) {
+            processDictionary(dict, processed);
+        } else if (obj instanceof COSArray array) {
+            processArray(array, processed);
         }
     }
 

@@ -120,23 +120,21 @@ public class PdfOverlayController {
             int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles)
             throws IOException {
         Map<Integer, String> overlayGuide = new HashMap<>();
-        return switch (mode) {
-            case "SequentialOverlay" -> {
+        switch (mode) {
+            case "SequentialOverlay":
                 sequentialOverlay(overlayGuide, overlayFiles, basePageCount, tempFiles);
-                yield overlayGuide;
-            }
-            case "InterleavedOverlay" -> {
+                break;
+            case "InterleavedOverlay":
                 interleavedOverlay(overlayGuide, overlayFiles, basePageCount);
-                yield overlayGuide;
-            }
-            case "FixedRepeatOverlay" -> {
+                break;
+            case "FixedRepeatOverlay":
                 fixedRepeatOverlay(overlayGuide, overlayFiles, counts, basePageCount);
-                yield overlayGuide;
-            }
-            default ->
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", mode);
-        };
+                break;
+            default:
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", mode);
+        }
+        return overlayGuide;
     }
 
     private void sequentialOverlay(

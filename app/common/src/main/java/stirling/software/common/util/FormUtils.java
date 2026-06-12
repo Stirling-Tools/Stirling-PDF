@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -87,16 +88,28 @@ public class FormUtils {
      *     text)
      */
     public String detectFieldType(PDField field) {
-        return switch (field) {
-            case PDSignatureField ignored -> FIELD_TYPE_SIGNATURE;
-            case PDPushButton ignored -> FIELD_TYPE_BUTTON;
-            case PDTextField ignored -> FIELD_TYPE_TEXT;
-            case PDCheckBox ignored -> FIELD_TYPE_CHECKBOX;
-            case PDComboBox ignored -> FIELD_TYPE_COMBOBOX;
-            case PDListBox ignored -> FIELD_TYPE_LISTBOX;
-            case PDRadioButton ignored -> FIELD_TYPE_RADIO;
-            case null, default -> FIELD_TYPE_TEXT;
-        };
+        if (field instanceof PDSignatureField) {
+            return FIELD_TYPE_SIGNATURE;
+        }
+        if (field instanceof PDPushButton) {
+            return FIELD_TYPE_BUTTON;
+        }
+        if (field instanceof PDTextField) {
+            return FIELD_TYPE_TEXT;
+        }
+        if (field instanceof PDCheckBox) {
+            return FIELD_TYPE_CHECKBOX;
+        }
+        if (field instanceof PDComboBox) {
+            return FIELD_TYPE_COMBOBOX;
+        }
+        if (field instanceof PDListBox) {
+            return FIELD_TYPE_LISTBOX;
+        }
+        if (field instanceof PDRadioButton) {
+            return FIELD_TYPE_RADIO;
+        }
+        return FIELD_TYPE_TEXT;
     }
 
     public List<FormFieldInfo> extractFormFields(PDDocument document) {
@@ -570,17 +583,22 @@ public class FormUtils {
                 continue;
             }
             String type = info.type();
-            Object value =
-                    switch (type) {
-                        case FIELD_TYPE_CHECKBOX ->
-                                isChecked(info.value()) ? Boolean.TRUE : Boolean.FALSE;
-                        case FIELD_TYPE_LISTBOX ->
-                                info.multiSelect() ? new ArrayList<>() : safeDefault(info.value());
-                        case FIELD_TYPE_BUTTON, FIELD_TYPE_SIGNATURE -> null;
-                        default -> safeDefault(info.value());
-                    };
-            if (value == null) {
-                continue; // skip non-fillable
+            Object value;
+            switch (type) {
+                case FIELD_TYPE_CHECKBOX:
+                    value = isChecked(info.value()) ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case FIELD_TYPE_LISTBOX:
+                    if (info.multiSelect()) {
+                        value = new ArrayList<>();
+                    } else {
+                        value = safeDefault(info.value());
+                    }
+                    break;
+                case FIELD_TYPE_BUTTON, FIELD_TYPE_SIGNATURE:
+                    continue; // skip non-fillable
+                default:
+                    value = safeDefault(info.value());
             }
             record.put(info.name(), value);
         }
@@ -936,43 +954,39 @@ public class FormUtils {
 
     private void applyValueToField(PDField field, String value, boolean strict) throws IOException {
         try {
-            switch (field) {
-                case PDTextField textField -> setTextValue(textField, value);
-                case PDCheckBox checkBox -> {
-                    LinkedHashSet<String> candidateStates = collectCheckBoxStates(checkBox);
-                    boolean shouldCheck = shouldCheckBoxBeChecked(value, candidateStates);
-                    try {
-                        if (shouldCheck) {
-                            checkBox.check();
-                        } else {
-                            checkBox.unCheck();
-                        }
-                    } catch (IOException checkProblem) {
-                        log.warn(
-                                "Failed to set checkbox state for '{}': {}",
-                                field.getFullyQualifiedName(),
-                                checkProblem.getMessage(),
-                                checkProblem);
-                        if (strict) {
-                            throw checkProblem;
-                        }
-                    }
-                }
-                case PDRadioButton radioButton -> {
-                    if (value != null && !value.isBlank()) {
-                        radioButton.setValue(value);
-                    }
-                }
-                case PDChoice choiceField -> applyChoiceValue(choiceField, value);
-                case null, default -> {
-                    if (field instanceof PDPushButton) {
-                        log.debug("Ignore Push button");
-                    } else if (field instanceof PDSignatureField) {
-                        log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
+            if (field instanceof PDTextField textField) {
+                setTextValue(textField, value);
+            } else if (field instanceof PDCheckBox checkBox) {
+                LinkedHashSet<String> candidateStates = collectCheckBoxStates(checkBox);
+                boolean shouldCheck = shouldCheckBoxBeChecked(value, candidateStates);
+                try {
+                    if (shouldCheck) {
+                        checkBox.check();
                     } else {
-                        field.setValue(value != null ? value : "");
+                        checkBox.unCheck();
+                    }
+                } catch (IOException checkProblem) {
+                    log.warn(
+                            "Failed to set checkbox state for '{}': {}",
+                            field.getFullyQualifiedName(),
+                            checkProblem.getMessage(),
+                            checkProblem);
+                    if (strict) {
+                        throw checkProblem;
                     }
                 }
+            } else if (field instanceof PDRadioButton radioButton) {
+                if (value != null && !value.isBlank()) {
+                    radioButton.setValue(value);
+                }
+            } else if (field instanceof PDChoice choiceField) {
+                applyChoiceValue(choiceField, value);
+            } else if (field instanceof PDPushButton) {
+                log.debug("Ignore Push button");
+            } else if (field instanceof PDSignatureField) {
+                log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
+            } else {
+                field.setValue(value != null ? value : "");
             }
         } catch (Exception e) {
             log.warn(
@@ -1292,40 +1306,36 @@ public class FormUtils {
 
     List<String> resolveOptions(PDTerminalField field) {
         try {
-            switch (field) {
-                case PDChoice choice -> {
-                    LinkedHashSet<String> allowed = new LinkedHashSet<>();
-                    List<String> exportValues = choice.getOptionsExportValues();
-                    List<String> displayValues = choice.getOptionsDisplayValues();
-                    if (exportValues != null) {
-                        exportValues.stream()
-                                .filter(Objects::nonNull)
-                                .map(String::trim)
-                                .filter(s -> !s.isEmpty())
-                                .forEach(allowed::add);
-                    }
-                    if (displayValues != null) {
-                        displayValues.stream()
-                                .filter(Objects::nonNull)
-                                .map(String::trim)
-                                .filter(s -> !s.isEmpty())
-                                .forEach(allowed::add);
-                    }
-                    return new ArrayList<>(allowed);
+            if (field instanceof PDChoice choice) {
+                LinkedHashSet<String> allowed = new LinkedHashSet<>();
+                List<String> exportValues = choice.getOptionsExportValues();
+                List<String> displayValues = choice.getOptionsDisplayValues();
+
+                if (exportValues != null) {
+                    exportValues.stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .forEach(allowed::add);
                 }
-                case PDRadioButton radio -> {
-                    List<String> exports = radio.getExportValues();
-                    if (exports != null && !exports.isEmpty()) {
-                        return new ArrayList<>(exports);
-                    }
+                if (displayValues != null) {
+                    displayValues.stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .forEach(allowed::add);
                 }
-                case PDCheckBox checkBox -> {
-                    List<String> exports = checkBox.getExportValues();
-                    if (exports != null && !exports.isEmpty()) {
-                        return new ArrayList<>(exports);
-                    }
+                return new ArrayList<>(allowed);
+            } else if (field instanceof PDRadioButton radio) {
+                List<String> exports = radio.getExportValues();
+                if (exports != null && !exports.isEmpty()) {
+                    return new ArrayList<>(exports);
                 }
-                case null, default -> {}
+            } else if (field instanceof PDCheckBox checkBox) {
+                List<String> exports = checkBox.getExportValues();
+                if (exports != null && !exports.isEmpty()) {
+                    return new ArrayList<>(exports);
+                }
             }
         } catch (Exception e) {
             log.debug(
@@ -2074,6 +2084,65 @@ public class FormUtils {
             }
         }
         return map;
+    }
+
+    private Map<PDAnnotationWidget, Integer> buildWidgetPageFallbackMap(PDDocument document) {
+        if (document == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<PDAnnotationWidget, Integer> widgetToPage = new IdentityHashMap<>();
+        int pageCount = document.getNumberOfPages();
+        for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+            PDPage page;
+            try {
+                page = document.getPage(pageIndex);
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to access page {} while building widget map: {}",
+                        pageIndex,
+                        e.getMessage());
+                continue;
+            }
+
+            List<PDAnnotation> annotations;
+            try {
+                annotations = page.getAnnotations();
+            } catch (IOException e) {
+                log.debug(
+                        "Failed to access annotations for page {}: {}", pageIndex, e.getMessage());
+                continue;
+            }
+
+            if (annotations == null || annotations.isEmpty()) {
+                continue;
+            }
+
+            for (PDAnnotation annotation : annotations) {
+                if (!(annotation instanceof PDAnnotationWidget widget)) {
+                    continue;
+                }
+
+                COSDictionary widgetDictionary;
+                try {
+                    widgetDictionary = widget.getCOSObject();
+                } catch (Exception e) {
+                    log.debug(
+                            "Failed to access widget dictionary while building fallback map: {}",
+                            e.getMessage());
+                    continue;
+                }
+
+                if (widgetDictionary == null
+                        || widgetDictionary.getDictionaryObject(COSName.P) != null) {
+                    continue;
+                }
+
+                widgetToPage.putIfAbsent(widget, pageIndex);
+            }
+        }
+
+        return widgetToPage.isEmpty() ? Collections.emptyMap() : widgetToPage;
     }
 
     private Set<String> collectExistingFieldNames(PDAcroForm acroForm) {

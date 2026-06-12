@@ -194,75 +194,63 @@ public class CertSignController {
                     "certificate type");
         }
 
+        KeyStore ks = null;
         String keystorePassword = password;
-        KeyStore ks =
-                switch (certType) {
-                    case "PEM" -> {
-                        privateKeyFile =
-                                validateFilePresent(
-                                        privateKeyFile,
-                                        "PEM private key",
-                                        "private key file is required");
-                        certFile =
-                                validateFilePresent(
-                                        certFile,
-                                        "PEM certificate",
-                                        "certificate file is required");
-                        KeyStore pemKeyStore = KeyStore.getInstance("JKS");
-                        pemKeyStore.load(null);
-                        PrivateKey privateKey =
-                                getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
-                        Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
-                        pemKeyStore.setKeyEntry(
-                                "alias",
-                                privateKey,
-                                password.toCharArray(),
-                                new Certificate[] {cert});
-                        yield pemKeyStore;
-                    }
-                    case "PKCS12", "PFX" -> {
-                        p12File =
-                                validateFilePresent(
-                                        p12File,
-                                        "PKCS12 keystore",
-                                        "PKCS12/PFX keystore file is required");
-                        KeyStore pkcs12Store = KeyStore.getInstance("PKCS12");
-                        pkcs12Store.load(p12File.getInputStream(), password.toCharArray());
-                        yield pkcs12Store;
-                    }
-                    case "JKS" -> {
-                        jksfile =
-                                validateFilePresent(
-                                        jksfile, "JKS keystore", "JKS keystore file is required");
-                        KeyStore jksStore = KeyStore.getInstance("JKS");
-                        jksStore.load(jksfile.getInputStream(), password.toCharArray());
-                        yield jksStore;
-                    }
-                    case "SERVER" -> {
-                        if (serverCertificateService == null) {
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.serverCertificateNotAvailable",
-                                    "Server certificate service is not available in this edition");
-                        }
-                        if (!serverCertificateService.isEnabled()) {
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.serverCertificateDisabled",
-                                    "Server certificate feature is disabled");
-                        }
-                        if (!serverCertificateService.hasServerCertificate()) {
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.serverCertificateNotFound",
-                                    "No server certificate configured");
-                        }
-                        keystorePassword = serverCertificateService.getServerCertificatePassword();
-                        yield serverCertificateService.getServerKeyStore();
-                    }
-                    default ->
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.invalidArgument",
-                                    "Invalid argument: {0}",
-                                    "certificate type: " + certType);
-                };
+
+        switch (certType) {
+            case "PEM":
+                privateKeyFile =
+                        validateFilePresent(
+                                privateKeyFile, "PEM private key", "private key file is required");
+                certFile =
+                        validateFilePresent(
+                                certFile, "PEM certificate", "certificate file is required");
+                ks = KeyStore.getInstance("JKS");
+                ks.load(null);
+                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
+                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                ks.setKeyEntry(
+                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
+                break;
+            case "PKCS12":
+            case "PFX":
+                p12File =
+                        validateFilePresent(
+                                p12File, "PKCS12 keystore", "PKCS12/PFX keystore file is required");
+                ks = KeyStore.getInstance("PKCS12");
+                ks.load(p12File.getInputStream(), password.toCharArray());
+                break;
+            case "JKS":
+                jksfile =
+                        validateFilePresent(
+                                jksfile, "JKS keystore", "JKS keystore file is required");
+                ks = KeyStore.getInstance("JKS");
+                ks.load(jksfile.getInputStream(), password.toCharArray());
+                break;
+            case "SERVER":
+                if (serverCertificateService == null) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.serverCertificateNotAvailable",
+                            "Server certificate service is not available in this edition");
+                }
+                if (!serverCertificateService.isEnabled()) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.serverCertificateDisabled",
+                            "Server certificate feature is disabled");
+                }
+                if (!serverCertificateService.hasServerCertificate()) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.serverCertificateNotFound", "No server certificate configured");
+                }
+                ks = serverCertificateService.getServerKeyStore();
+                keystorePassword = serverCertificateService.getServerCertificatePassword();
+                break;
+            default:
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "certificate type: " + certType);
+        }
 
         CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");

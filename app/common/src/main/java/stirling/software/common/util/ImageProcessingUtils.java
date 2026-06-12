@@ -26,56 +26,56 @@ import lombok.extern.slf4j.Slf4j;
 public class ImageProcessingUtils {
 
     static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
-        return switch (colorType) {
-            case "greyscale" -> {
-                BufferedImage convertedImage =
+        BufferedImage convertedImage;
+        switch (colorType) {
+            case "greyscale":
+                convertedImage =
                         new BufferedImage(
                                 sourceImage.getWidth(),
                                 sourceImage.getHeight(),
                                 BufferedImage.TYPE_BYTE_GRAY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
-                yield convertedImage;
-            }
-            case "blackwhite" -> {
-                BufferedImage convertedImage =
+                break;
+            case "blackwhite":
+                convertedImage =
                         new BufferedImage(
                                 sourceImage.getWidth(),
                                 sourceImage.getHeight(),
                                 BufferedImage.TYPE_BYTE_BINARY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
-                yield convertedImage;
-            }
-            default -> sourceImage; // full color
-        };
+                break;
+            default: // full color
+                convertedImage = sourceImage;
+                break;
+        }
+        return convertedImage;
     }
 
     public static byte[] getImageData(BufferedImage image) {
         DataBuffer dataBuffer = image.getRaster().getDataBuffer();
-        return switch (dataBuffer) {
-            case DataBufferByte dataBufferByte -> dataBufferByte.getData();
-            case DataBufferInt dataBufferInt -> {
-                int[] intData = dataBufferInt.getData();
-                ByteBuffer byteBuffer = ByteBuffer.allocate(intData.length * 4);
-                byteBuffer.asIntBuffer().put(intData);
-                yield byteBuffer.array();
-            }
-            default -> {
-                int width = image.getWidth();
-                int height = image.getHeight();
-                int[] pixels = new int[width * height];
+        if (dataBuffer instanceof DataBufferByte dataBufferByte) {
+            return dataBufferByte.getData();
+        } else if (dataBuffer instanceof DataBufferInt dataBufferInt) {
+            int[] intData = dataBufferInt.getData();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(intData.length * 4);
+            byteBuffer.asIntBuffer().put(intData);
+            return byteBuffer.array();
+        } else {
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[] pixels = new int[width * height];
 
-                image.getRGB(0, 0, width, height, pixels, 0, width);
+            image.getRGB(0, 0, width, height, pixels, 0, width);
 
-                byte[] data = new byte[width * height * 3];
-                int index = 0;
-                for (int rgb : pixels) {
-                    data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
-                    data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
-                    data[index++] = (byte) (rgb & 0xFF); // Blue
-                }
-                yield data;
+            byte[] data = new byte[width * height * 3];
+            int index = 0;
+            for (int rgb : pixels) {
+                data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
+                data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
+                data[index++] = (byte) (rgb & 0xFF); // Blue
             }
-        };
+            return data;
+        }
     }
 
     public static double extractImageOrientation(InputStream is) throws IOException {

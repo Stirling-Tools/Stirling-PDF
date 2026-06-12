@@ -34,11 +34,11 @@ class AttachmentServiceTest {
         try (var document = new PDDocument()) {
             document.setDocumentId(100L);
             var attachments = List.of(mock(MultipartFile.class));
-            when(attachments.getFirst().getOriginalFilename()).thenReturn("test.txt");
-            when(attachments.getFirst().getInputStream())
+            when(attachments.get(0).getOriginalFilename()).thenReturn("test.txt");
+            when(attachments.get(0).getInputStream())
                     .thenReturn(new ByteArrayInputStream("Test content".getBytes()));
-            when(attachments.getFirst().getSize()).thenReturn(12L);
-            when(attachments.getFirst().getContentType()).thenReturn("text/plain");
+            when(attachments.get(0).getSize()).thenReturn(12L);
+            when(attachments.get(0).getContentType()).thenReturn("text/plain");
             PDDocument result = attachmentService.addAttachment(document, attachments);
             assertNotNull(result);
             assertEquals(document.getDocumentId(), result.getDocumentId());
@@ -74,11 +74,11 @@ class AttachmentServiceTest {
         try (var document = new PDDocument()) {
             document.setDocumentId(100L);
             var attachments = List.of(mock(MultipartFile.class));
-            when(attachments.getFirst().getOriginalFilename()).thenReturn("image.jpg");
-            when(attachments.getFirst().getInputStream())
+            when(attachments.get(0).getOriginalFilename()).thenReturn("image.jpg");
+            when(attachments.get(0).getInputStream())
                     .thenReturn(new ByteArrayInputStream("Image content".getBytes()));
-            when(attachments.getFirst().getSize()).thenReturn(25L);
-            when(attachments.getFirst().getContentType()).thenReturn("");
+            when(attachments.get(0).getSize()).thenReturn(25L);
+            when(attachments.get(0).getContentType()).thenReturn("");
             PDDocument result = attachmentService.addAttachment(document, attachments);
             assertNotNull(result);
             assertNotNull(result.getDocumentCatalog().getNames());
@@ -89,11 +89,11 @@ class AttachmentServiceTest {
     void addAttachmentToPDF_WithNullContentType() throws IOException {
         try (var document = new PDDocument()) {
             var attachments = List.of(mock(MultipartFile.class));
-            when(attachments.getFirst().getOriginalFilename()).thenReturn("file.bin");
-            when(attachments.getFirst().getInputStream())
+            when(attachments.get(0).getOriginalFilename()).thenReturn("file.bin");
+            when(attachments.get(0).getInputStream())
                     .thenReturn(new ByteArrayInputStream("binary".getBytes()));
-            when(attachments.getFirst().getSize()).thenReturn(6L);
-            when(attachments.getFirst().getContentType()).thenReturn(null);
+            when(attachments.get(0).getSize()).thenReturn(6L);
+            when(attachments.get(0).getContentType()).thenReturn(null);
             PDDocument result = attachmentService.addAttachment(document, attachments);
             assertNotNull(result);
         }
@@ -104,9 +104,9 @@ class AttachmentServiceTest {
         try (var document = new PDDocument()) {
             var attachments = List.of(mock(MultipartFile.class));
             var ioException = new IOException("Failed to read attachment stream");
-            when(attachments.getFirst().getOriginalFilename()).thenReturn("test.txt");
-            when(attachments.getFirst().getInputStream()).thenThrow(ioException);
-            when(attachments.getFirst().getSize()).thenReturn(10L);
+            when(attachments.get(0).getOriginalFilename()).thenReturn("test.txt");
+            when(attachments.get(0).getInputStream()).thenThrow(ioException);
+            when(attachments.get(0).getSize()).thenReturn(10L);
             PDDocument result = attachmentService.addAttachment(document, attachments);
             assertNotNull(result);
             assertNotNull(result.getDocumentCatalog().getNames());
@@ -260,7 +260,7 @@ class AttachmentServiceTest {
             attachmentService.addAttachment(document, List.of(file));
             List<AttachmentInfo> result = attachmentService.listAttachments(document);
             assertEquals(1, result.size());
-            AttachmentInfo info = result.getFirst();
+            AttachmentInfo info = result.get(0);
             assertEquals("report.pdf", info.getFilename());
             assertNotNull(info.getSize());
             assertEquals(MediaType.APPLICATION_PDF_VALUE, info.getContentType());
@@ -279,7 +279,7 @@ class AttachmentServiceTest {
             assertNotNull(result);
             List<AttachmentInfo> attachments = attachmentService.listAttachments(result);
             assertEquals(1, attachments.size());
-            assertEquals("new.txt", attachments.getFirst().getFilename());
+            assertEquals("new.txt", attachments.get(0).getFilename());
         }
     }
 
@@ -350,7 +350,7 @@ class AttachmentServiceTest {
             attachmentService.deleteAttachment(document, "remove.txt");
             List<AttachmentInfo> remaining = attachmentService.listAttachments(document);
             assertEquals(1, remaining.size());
-            assertEquals("keep.txt", remaining.getFirst().getFilename());
+            assertEquals("keep.txt", remaining.get(0).getFilename());
         }
     }
 
@@ -367,7 +367,7 @@ class AttachmentServiceTest {
             attachmentService.addAttachment(document, List.of(file));
             List<AttachmentInfo> listed = attachmentService.listAttachments(document);
             assertEquals(1, listed.size());
-            assertEquals("roundtrip.txt", listed.getFirst().getFilename());
+            assertEquals("roundtrip.txt", listed.get(0).getFilename());
             Optional<byte[]> extracted = attachmentService.extractAttachments(document);
             assertTrue(extracted.isPresent());
             attachmentService.deleteAttachment(document, "roundtrip.txt");

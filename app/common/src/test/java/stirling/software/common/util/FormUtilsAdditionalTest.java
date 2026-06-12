@@ -98,9 +98,9 @@ class FormUtilsAdditionalTest {
 
             List<FormUtils.FormFieldInfo> fields = FormUtils.extractFormFields(doc);
             assertEquals(1, fields.size());
-            assertEquals("firstName", fields.getFirst().name());
-            assertEquals("text", fields.getFirst().type());
-            assertEquals(0, fields.getFirst().pageIndex());
+            assertEquals("firstName", fields.get(0).name());
+            assertEquals("text", fields.get(0).type());
+            assertEquals(0, fields.get(0).pageIndex());
         }
     }
 

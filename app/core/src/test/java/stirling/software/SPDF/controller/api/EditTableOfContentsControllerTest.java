@@ -112,7 +112,7 @@ class EditTableOfContentsControllerTest {
         List<Map<String, Object>> result = response.getBody();
         assertEquals(1, result.size());
 
-        Map<String, Object> bookmark = result.getFirst();
+        Map<String, Object> bookmark = result.get(0);
         assertEquals("Chapter 1", bookmark.get("title"));
         assertEquals(1, bookmark.get("pageNumber")); // 1-based
         assertInstanceOf(List.class, bookmark.get("children"));
@@ -174,7 +174,7 @@ class EditTableOfContentsControllerTest {
         List<Map<String, Object>> result = response.getBody();
         assertEquals(1, result.size());
 
-        Map<String, Object> parentBookmark = result.getFirst();
+        Map<String, Object> parentBookmark = result.get(0);
         assertEquals("Chapter 1", parentBookmark.get("title"));
         assertEquals(1, parentBookmark.get("pageNumber"));
 
@@ -183,7 +183,7 @@ class EditTableOfContentsControllerTest {
                 (List<Map<String, Object>>) parentBookmark.get("children");
         assertEquals(1, children.size());
 
-        Map<String, Object> childBookmark = children.getFirst();
+        Map<String, Object> childBookmark = children.get(0);
         assertEquals("Section 1.1", childBookmark.get("title"));
         assertEquals(2, childBookmark.get("pageNumber"));
 
@@ -213,7 +213,7 @@ class EditTableOfContentsControllerTest {
         List<Map<String, Object>> result = response.getBody();
         assertEquals(1, result.size());
 
-        Map<String, Object> bookmark = result.getFirst();
+        Map<String, Object> bookmark = result.get(0);
         assertEquals("Chapter 1", bookmark.get("title"));
         assertEquals(1, bookmark.get("pageNumber")); // Default to page 1
 

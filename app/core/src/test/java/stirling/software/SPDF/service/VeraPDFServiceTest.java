@@ -157,7 +157,7 @@ class VeraPDFServiceTest {
         assertEquals(1, result.getTotalFailures());
         assertEquals(
                 "Document does not declare PDF/A compliance in its XMP metadata.",
-                result.getFailures().getFirst().getMessage());
+                result.getFailures().get(0).getMessage());
     }
 
     @Test
@@ -174,7 +174,7 @@ class VeraPDFServiceTest {
         assertNotNull(result);
         assertFalse(result.isCompliant());
         assertEquals(1, result.getTotalFailures());
-        assertEquals("Test error", result.getFailures().getFirst().getMessage());
+        assertEquals("Test error", result.getFailures().get(0).getMessage());
     }
 
     @Test

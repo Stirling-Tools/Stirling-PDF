@@ -164,9 +164,9 @@ class FormPayloadParserTest {
             List<FormUtils.ModifyFormFieldDefinition> result =
                     FormPayloadParser.parseModificationDefinitions(objectMapper, json);
             assertThat(result).hasSize(1);
-            assertThat(result.getFirst().targetName()).isEqualTo("field1");
-            assertThat(result.getFirst().name()).isEqualTo("newName");
-            assertThat(result.getFirst().defaultValue()).isEqualTo("newVal");
+            assertThat(result.get(0).targetName()).isEqualTo("field1");
+            assertThat(result.get(0).name()).isEqualTo("newName");
+            assertThat(result.get(0).defaultValue()).isEqualTo("newVal");
         }
     }
 

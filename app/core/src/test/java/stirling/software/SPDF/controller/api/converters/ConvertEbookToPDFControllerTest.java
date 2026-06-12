@@ -159,7 +159,7 @@ class ConvertEbookToPDFControllerTest {
 
             List<String> command = commandCaptor.getValue();
             assertEquals(6, command.size());
-            assertEquals("ebook-convert", command.getFirst());
+            assertEquals("ebook-convert", command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertEquals("--embed-all-fonts", command.get(3));

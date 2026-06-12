@@ -820,8 +820,10 @@ public class SigningFinalizationService {
         String certType = submission.getCertType();
         String password = submission.getPassword();
 
-        return switch (certType) {
-            case "P12", "PKCS12", "PFX" -> {
+        switch (certType) {
+            case "P12":
+            case "PKCS12":
+            case "PFX":
                 if (submission.getP12Keystore() == null) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "P12 keystore data is required");
@@ -831,14 +833,14 @@ public class SigningFinalizationService {
                     p12Store.load(
                             new ByteArrayInputStream(submission.getP12Keystore()),
                             password != null ? password.toCharArray() : new char[0]);
-                    yield p12Store;
+                    return p12Store;
                 } catch (Exception e) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
                             "Failed to open P12 keystore — check that the file is valid and the password is correct");
                 }
-            }
-            case "JKS" -> {
+
+            case "JKS":
                 if (submission.getJksKeystore() == null) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "JKS keystore data is required");
@@ -848,14 +850,14 @@ public class SigningFinalizationService {
                     jksStore.load(
                             new ByteArrayInputStream(submission.getJksKeystore()),
                             password != null ? password.toCharArray() : new char[0]);
-                    yield jksStore;
+                    return jksStore;
                 } catch (Exception e) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
                             "Failed to open JKS keystore — check that the file is valid and the password is correct");
                 }
-            }
-            case "SERVER" -> {
+
+            case "SERVER":
                 if (serverCertificateService == null
                         || !serverCertificateService.isEnabled()
                         || !serverCertificateService.hasServerCertificate()) {
@@ -863,9 +865,9 @@ public class SigningFinalizationService {
                             HttpStatus.BAD_REQUEST,
                             "Server certificate is not available or not configured");
                 }
-                yield serverCertificateService.getServerKeyStore();
-            }
-            case "USER_CERT" -> {
+                return serverCertificateService.getServerKeyStore();
+
+            case "USER_CERT":
                 if (userServerCertificateService == null) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "User certificate service is not available");
@@ -877,7 +879,7 @@ public class SigningFinalizationService {
                 try {
                     userServerCertificateService.getOrCreateUserCertificate(
                             participant.getUser().getId());
-                    yield userServerCertificateService.getUserKeyStore(
+                    return userServerCertificateService.getUserKeyStore(
                             participant.getUser().getId());
                 } catch (Exception e) {
                     log.error(
@@ -888,11 +890,11 @@ public class SigningFinalizationService {
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             "Failed to generate or retrieve user certificate: " + e.getMessage());
                 }
-            }
-            default ->
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
-        };
+
+            default:
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
+        }
     }
 
     private void validateCertificateNotExpired(KeyStore keystore, String participantEmail)

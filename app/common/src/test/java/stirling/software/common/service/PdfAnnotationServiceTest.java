@@ -48,7 +48,7 @@ class PdfAnnotationServiceTest {
                 assertEquals(1, textAnnotations(reloaded.getPage(1).getAnnotations()).size());
 
                 PDAnnotationText first =
-                        textAnnotations(reloaded.getPage(0).getAnnotations()).getFirst();
+                        textAnnotations(reloaded.getPage(0).getAnnotations()).get(0);
                 assertEquals("First comment", first.getContents());
                 assertEquals("alice", first.getTitlePopup(), "author override propagates");
                 assertNotNull(first.getSubject(), "subject falls back to default when null");
@@ -146,7 +146,7 @@ class PdfAnnotationServiceTest {
             byte[] saved = save(doc);
             try (PDDocument reloaded = Loader.loadPDF(saved)) {
                 PDAnnotationText annot =
-                        textAnnotations(reloaded.getPage(0).getAnnotations()).getFirst();
+                        textAnnotations(reloaded.getPage(0).getAnnotations()).get(0);
                 assertTrue(
                         annot.getTitlePopup() != null && !annot.getTitlePopup().isBlank(),
                         "Default author should be applied");

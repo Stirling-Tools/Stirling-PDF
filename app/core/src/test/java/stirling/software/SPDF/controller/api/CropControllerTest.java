@@ -214,7 +214,7 @@ class CropControllerTest {
                     .extracting(ResponseEntity::getStatusCode, ResponseEntity::getBody)
                     .satisfies(
                             tuple -> {
-                                assertThat(tuple.getFirst()).isEqualTo(HttpStatus.OK);
+                                assertThat(tuple.get(0)).isEqualTo(HttpStatus.OK);
                                 assertThat(tuple.get(1)).isNotNull();
                             });
 

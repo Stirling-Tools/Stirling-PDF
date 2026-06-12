@@ -133,7 +133,7 @@ public class JobChargeService {
         List<Path> paths = inputs.stream().map(JobInput::path).toList();
         DocumentMetrics metrics =
                 multiparts.size() == 1
-                        ? classifier.classify(multiparts.get(0), paths.get(0), policy)
+                        ? classifier.classify(multiparts.getFirst(), paths.getFirst(), policy)
                         : classifier.classify(multiparts, paths, policy);
         // Apply the policy-level minChargeUnits floor per design § 3.4. The classifier returns
         // raw docUnits with a "non-empty input → ≥1" floor; the charge formula's

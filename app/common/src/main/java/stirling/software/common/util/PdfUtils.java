@@ -71,13 +71,11 @@ public class PdfUtils {
         for (COSName name : resources.getXObjectNames()) {
             PDXObject object = resources.getXObject(name);
 
-            switch (object) {
-                case PDImageXObject imageXObject -> images.add(imageXObject.getImage());
-                case PDFormXObject formXObject ->
-                        images.addAll(getAllImages(formXObject.getResources()));
-                default -> {
-                    // Ignore other XObject types.
-                }
+            if (object instanceof PDImageXObject) {
+                images.add(((PDImageXObject) object).getImage());
+
+            } else if (object instanceof PDFormXObject) {
+                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
             }
         }
 

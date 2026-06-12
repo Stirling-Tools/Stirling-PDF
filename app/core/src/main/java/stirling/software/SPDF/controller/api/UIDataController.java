@@ -122,14 +122,21 @@ public class UIDataController {
                                 .toList();
 
                 for (Path jsonFile : jsonFiles) {
-                    String config = Files.readString(jsonFile, StandardCharsets.UTF_8);
-                    pipelineConfigs.add(config);
+                    String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
+                    pipelineConfigs.add(content);
+                }
+
+                for (String config : pipelineConfigs) {
                     Map<String, Object> jsonContent =
                             objectMapper.readValue(
                                     config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.length() < 1) {
-                        String filename = jsonFile.getFileName().toString();
+                        String filename =
+                                jsonFiles
+                                        .get(pipelineConfigs.indexOf(config))
+                                        .getFileName()
+                                        .toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();

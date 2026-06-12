@@ -177,7 +177,7 @@ class AnalysisControllerTest {
         @SuppressWarnings("unchecked")
         List<Map<String, Float>> body = (List<Map<String, Float>>) response.getBody();
         assertThat(body).hasSize(2);
-        assertThat(body.getFirst()).containsEntry("width", 612f);
+        assertThat(body.get(0)).containsEntry("width", 612f);
         assertThat(body.get(1)).containsEntry("width", 842f);
     }
 

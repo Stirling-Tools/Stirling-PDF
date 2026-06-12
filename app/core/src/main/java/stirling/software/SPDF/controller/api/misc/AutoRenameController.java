@@ -122,7 +122,9 @@ public class AutoRenameController {
                                     : (useFirstTextAsFallback
                                             ? (mergedLineInfos.isEmpty()
                                                     ? null
-                                                    : mergedLineInfos.getLast().text)
+                                                    : mergedLineInfos.get(
+                                                                    mergedLineInfos.size() - 1)
+                                                            .text)
                                             : null);
                         }
 

@@ -141,16 +141,19 @@ public class ChecksumUtils {
         for (String algorithm : algorithms) {
             String key = algorithm; // keep original key for output
             switch (algorithm.toUpperCase(Locale.ROOT)) {
-                case "CRC32" -> checksums.put(key, new CRC32());
-                case "ADLER32" -> checksums.put(key, new Adler32());
-                default -> {
+                case "CRC32":
+                    checksums.put(key, new CRC32());
+                    break;
+                case "ADLER32":
+                    checksums.put(key, new Adler32());
+                    break;
+                default:
                     try {
                         // For MessageDigest, pass the original name (case-insensitive per JCA)
                         digests.put(key, MessageDigest.getInstance(algorithm));
                     } catch (NoSuchAlgorithmException e) {
                         throw new IllegalStateException("Unsupported algorithm: " + algorithm, e);
                     }
-                }
             }
         }
 

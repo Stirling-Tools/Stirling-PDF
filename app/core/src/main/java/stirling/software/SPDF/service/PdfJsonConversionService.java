@@ -1474,26 +1474,27 @@ public class PdfJsonConversionService {
             return;
         }
         switch (value.getType()) {
-            case STREAM -> {
+            case STREAM:
                 if (value.getStream() != null) {
                     value.getStream().setRawData(null);
                 }
-            }
-            case ARRAY -> {
+                break;
+            case ARRAY:
                 if (value.getItems() != null) {
                     for (PdfJsonCosValue item : value.getItems()) {
                         stripStreamRawData(item, visited);
                     }
                 }
-            }
-            case DICTIONARY -> {
+                break;
+            case DICTIONARY:
                 if (value.getEntries() != null) {
                     for (PdfJsonCosValue entry : value.getEntries().values()) {
                         stripStreamRawData(entry, visited);
                     }
                 }
-            }
-            default -> {}
+                break;
+            default:
+                break;
         }
     }
 
@@ -1782,15 +1783,20 @@ public class PdfJsonConversionService {
         if (format == null) {
             return 5;
         }
-        return switch (format) {
-            case "ttf" -> 0;
-            case "truetype" -> 1;
-            case "otf", "cff", "type1c", "cidfonttype0c" -> 2;
-            default -> {
+        switch (format) {
+            case "ttf":
+                return 0;
+            case "truetype":
+                return 1;
+            case "otf":
+            case "cff":
+            case "type1c":
+            case "cidfonttype0c":
+                return 2;
+            default:
                 log.debug("[FONT-DEBUG] Unknown font format '{}' from {}", format, origin);
-                yield 4;
-            }
-        };
+                return 4;
+        }
     }
 
     private record FontModelCacheEntry(
@@ -3748,7 +3754,7 @@ public class PdfJsonConversionService {
             return;
         }
         switch (space) {
-            case "DeviceRGB" -> {
+            case "DeviceRGB":
                 if (components.length >= 3) {
                     if (nonStroking) {
                         contentStream.setNonStrokingColor(
@@ -3757,8 +3763,8 @@ public class PdfJsonConversionService {
                         contentStream.setStrokingColor(components[0], components[1], components[2]);
                     }
                 }
-            }
-            case "DeviceCMYK" -> {
+                break;
+            case "DeviceCMYK":
                 if (components.length >= 4) {
                     if (nonStroking) {
                         contentStream.setNonStrokingColor(
@@ -3768,8 +3774,8 @@ public class PdfJsonConversionService {
                                 components[0], components[1], components[2], components[3]);
                     }
                 }
-            }
-            case "DeviceGray" -> {
+                break;
+            case "DeviceGray":
                 if (components.length >= 1) {
                     if (nonStroking) {
                         contentStream.setNonStrokingColor(components[0]);
@@ -3777,8 +3783,9 @@ public class PdfJsonConversionService {
                         contentStream.setStrokingColor(components[0]);
                     }
                 }
-            }
-            default -> log.debug("[ColorApply] Skipping unsupported color space {}", space);
+                break;
+            default:
+                log.debug("[ColorApply] Skipping unsupported color space {}", space);
         }
     }
 
@@ -3933,7 +3940,7 @@ public class PdfJsonConversionService {
                 }
                 String operatorName = operator.getName();
                 switch (operatorName) {
-                    case "Tf" -> {
+                    case "Tf":
                         if (i >= 2 && tokens.get(i - 2) instanceof COSName fontResourceName) {
                             currentFont = resources.getFont(fontResourceName);
                             currentFontName = fontResourceName.getName();
@@ -3952,8 +3959,8 @@ public class PdfJsonConversionService {
                             log.debug(
                                     "Tf operator missing resource operand; clearing current font");
                         }
-                    }
-                    case "Tj" -> {
+                        break;
+                    case "Tj":
                         if (i == 0 || !(tokens.get(i - 1) instanceof COSString)) {
                             log.debug(
                                     "Encountered Tj without preceding string operand; aborting rewrite");
@@ -3975,8 +3982,8 @@ public class PdfJsonConversionService {
                             log.debug("Failed to rewrite Tj operator; aborting rewrite");
                             return false;
                         }
-                    }
-                    case "TJ" -> {
+                        break;
+                    case "TJ":
                         if (i == 0 || !(tokens.get(i - 1) instanceof COSArray array)) {
                             log.debug("Encountered TJ without array operand; aborting rewrite");
                             return false;
@@ -3996,8 +4003,9 @@ public class PdfJsonConversionService {
                             log.debug("Failed to rewrite TJ operator; aborting rewrite");
                             return false;
                         }
-                    }
-                    default -> {}
+                        break;
+                    default:
+                        break;
                 }
             }
 
@@ -5974,17 +5982,26 @@ public class PdfJsonConversionService {
         if (renderingMode == null) {
             return null;
         }
-        return switch (renderingMode) {
-            case 0 -> RenderingMode.FILL;
-            case 1 -> RenderingMode.STROKE;
-            case 2 -> RenderingMode.FILL_STROKE;
-            case 3 -> RenderingMode.NEITHER;
-            case 4 -> RenderingMode.FILL_CLIP;
-            case 5 -> RenderingMode.STROKE_CLIP;
-            case 6 -> RenderingMode.FILL_STROKE_CLIP;
-            case 7 -> RenderingMode.NEITHER_CLIP;
-            default -> null;
-        };
+        switch (renderingMode) {
+            case 0:
+                return RenderingMode.FILL;
+            case 1:
+                return RenderingMode.STROKE;
+            case 2:
+                return RenderingMode.FILL_STROKE;
+            case 3:
+                return RenderingMode.NEITHER;
+            case 4:
+                return RenderingMode.FILL_CLIP;
+            case 5:
+                return RenderingMode.STROKE_CLIP;
+            case 6:
+                return RenderingMode.FILL_STROKE_CLIP;
+            case 7:
+                return RenderingMode.NEITHER_CLIP;
+            default:
+                return null;
+        }
     }
 
     /**
@@ -6897,33 +6914,31 @@ public class PdfJsonConversionService {
         if (!visited.add(value)) {
             return false;
         }
-        return switch (value.getType()) {
-            case STREAM -> {
+        switch (value.getType()) {
+            case STREAM:
                 PdfJsonStream stream = value.getStream();
-                yield stream == null || stream.getRawData() == null;
-            }
-            case ARRAY -> {
+                return stream == null || stream.getRawData() == null;
+            case ARRAY:
                 if (value.getItems() != null) {
                     for (PdfJsonCosValue item : value.getItems()) {
                         if (hasMissingStreamData(item, visited)) {
-                            yield true;
+                            return true;
                         }
                     }
                 }
-                yield false;
-            }
-            case DICTIONARY -> {
+                return false;
+            case DICTIONARY:
                 if (value.getEntries() != null) {
                     for (PdfJsonCosValue entry : value.getEntries().values()) {
                         if (hasMissingStreamData(entry, visited)) {
-                            yield true;
+                            return true;
                         }
                     }
                 }
-                yield false;
-            }
-            default -> false;
-        };
+                return false;
+            default:
+                return false;
+        }
     }
 
     /** Schedules automatic cleanup of cached documents after 30 minutes. */

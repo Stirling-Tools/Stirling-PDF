@@ -440,7 +440,7 @@ class ConvertPDFToPDFATest {
 
                     assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
                     PDOutputIntent retrieved =
-                            document.getDocumentCatalog().getOutputIntents().getFirst();
+                            document.getDocumentCatalog().getOutputIntents().get(0);
                     assertThat(retrieved.getInfo()).contains("sRGB");
                 }
             }
