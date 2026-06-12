@@ -15,13 +15,13 @@ const FreeEditorBody = () => (
     <Trans
       i18nKey="onboarding.saas.freeEditor.premium"
       components={{ strong: <strong /> }}
-      defaults="We've added a whole host of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+      defaults="We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
     />
     <span className={styles.freeLine}>
       <Trans
         i18nKey="onboarding.saas.freeEditor.freeLine"
         components={{ free: <strong className={styles.freeHighlight} /> }}
-        defaults="And the best part? The editor is now <free>completely free</free>."
+        defaults="The editor is now <free>completely free</free>."
       />
     </span>
   </span>

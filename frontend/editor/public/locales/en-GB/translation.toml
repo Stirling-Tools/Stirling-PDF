@@ -4898,19 +4898,19 @@ userBody = "Invite teammates, assign roles, and keep your documents organised in
 userTitle = "Plan Overview"
 
 [onboarding.saas.freeEditor]
-freeLine = "And the best part? The editor is now <free>completely free</free>."
-premium = "We've added a whole host of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+freeLine = "The editor is now <free>completely free</free>."
+premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
 title = "Welcome to Stirling"
 
 [onboarding.saas.team]
 addButton = "Add"
-createBody = "Work on documents together — teammates share files, automations and your plan. Add the first member by email to create your team."
+createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
 createTitle = "Create your team"
-inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email — they'll get an invite right away."
+inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
 inviteTitle = "Invite members to your team"
 
 [onboarding.saas.usage]
-body = "Automations, AI and API requests draw from your one-time free allowance. Here's where you stand - manual editing never counts against it."
+body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
 title = "Your free Processor allowance"
 
 [onboarding.securityCheck]
@@ -5261,7 +5261,6 @@ freeTitle = "Unlimited PDF editing"
 [payg.free.hero]
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
-neverResets = "One-time, never resets"
 
 [payg.free.member]
 ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."

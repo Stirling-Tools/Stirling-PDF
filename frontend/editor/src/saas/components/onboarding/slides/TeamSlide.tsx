@@ -16,7 +16,7 @@ function useHasTeamMembers(): boolean {
     (invitation) => invitation.status === "PENDING",
   );
   // The leader themselves is always in teamMembers, so "has a team" means
-  // anyone beyond them — or an invite already on its way.
+  // anyone beyond them, or an invite already on its way.
   return teamMembers.length > 1 || pendingInvitations.length > 0;
 }
 
@@ -110,7 +110,7 @@ const TeamSlideBody = () => {
     (invitation) => invitation.status === "PENDING",
   );
 
-  // Onboarding shows right after first login — make sure team data is fresh.
+  // Onboarding shows right after first login, so make sure team data is fresh.
   useEffect(() => {
     refreshTeams();
   }, []);
@@ -120,11 +120,11 @@ const TeamSlideBody = () => {
       {hasTeam
         ? t(
             "onboarding.saas.team.inviteBody",
-            "Everyone on your team shares files, automations and your plan. Add teammates by email — they'll get an invite right away.",
+            "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invite.",
           )
         : t(
             "onboarding.saas.team.createBody",
-            "Work on documents together — teammates share files, automations and your plan. Add the first member by email to create your team.",
+            "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team.",
           )}
       <span className={styles.teamCard} style={{ display: "block" }}>
         {hasTeam && (

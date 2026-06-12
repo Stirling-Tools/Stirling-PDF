@@ -19,7 +19,7 @@ const UsageSnapshotBody = () => {
     <span>
       {t(
         "onboarding.saas.usage.body",
-        "Automations, AI and API requests draw from your one-time free allowance. Here's where you stand - manual editing never counts against it.",
+        "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it.",
       )}
       {/* .payg provides the CSS variables the meter styles are scoped to */}
       <span
