@@ -388,7 +388,7 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
-                SYSTEM_DEFAULTLOCALE: en-GB
+                SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF PR#${PR_NUMBER}"
                 UI_HOMEDESCRIPTION: "PR#${PR_NUMBER} for Stirling-PDF Latest"
                 UI_APPNAMENAVBAR: "PR#${PR_NUMBER}"

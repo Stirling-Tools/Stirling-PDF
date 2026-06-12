@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -175,7 +176,6 @@ public class AiWorkflowService {
         initialRequest.setFiles(files);
         initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
         WorkflowState state = new WorkflowState.Pending(initialRequest);
@@ -580,6 +580,10 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
+        } catch (HttpServerErrorException e) {
+            String reason = extractDetailFromHttpError(e);
+            log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
+            return new WorkflowState.Terminal(cannotContinue(reason));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -603,6 +607,27 @@ public class AiWorkflowService {
         String reason =
                 cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
         return String.format("The %s tool failed: %s", endpointPath, reason);
+    }
+
+    /**
+     * Extracts the {@code detail} field from an HTTP error response body if it is valid JSON,
+     * otherwise falls back to the exception message. This lets controller-level error messages
+     * (e.g. missing system dependency) surface cleanly in the chat response.
+     */
+    private String extractDetailFromHttpError(HttpServerErrorException e) {
+        try {
+            String body = e.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode detail = node.get("detail");
+                if (detail != null && detail.isTextual() && !detail.asText().isBlank()) {
+                    return detail.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to generic message
+        }
+        return "The request could not be completed. Please try again or contact your system administrator.";
     }
 
     /**

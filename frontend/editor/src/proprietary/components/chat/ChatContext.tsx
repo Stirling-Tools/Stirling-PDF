@@ -361,6 +361,7 @@ interface ChatContextValue {
   /** Ordered log of every progress event for the current in-flight request. */
   progressLog: AiWorkflowProgress[];
   sendMessage: (content: string) => Promise<void>;
+  cancelMessage: () => void;
   /** Abort any in-flight request and reset the chat to an empty conversation. */
   clearChat: () => void;
 }
@@ -422,32 +423,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       const files = await Promise.all(descriptors.map(downloadFile));
 
-      const operation: ToolOperation = {
-        toolId: "ai-workflow",
-        timestamp: Date.now(),
-      };
-      const isVersionMapping =
-        sourceStubs.length > 0 && files.length === sourceStubs.length;
-      const stubs = files.map((file, i) =>
-        isVersionMapping
-          ? createChildStub(sourceStubs[i], operation, file)
-          : createNewStirlingFileStub(file),
-      );
-      const stirlingFiles = files.map((file, i) =>
-        createStirlingFile(file, stubs[i].id),
-      );
-
       if (sourceStubs.length > 0) {
         // Always consume the inputs so merge/split inputs are removed from the workbench.
         // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
         // merge/split they're fresh roots.
+        const operation: ToolOperation = {
+          toolId: "ai-workflow",
+          timestamp: Date.now(),
+        };
+        const isVersionMapping = files.length === sourceStubs.length;
+        const stubs = files.map((file, i) =>
+          isVersionMapping
+            ? createChildStub(sourceStubs[i], operation, file)
+            : createNewStirlingFileStub(file),
+        );
+        const stirlingFiles = files.map((file, i) =>
+          createStirlingFile(file, stubs[i].id),
+        );
         await fileActions.consumeFiles(
           sourceStubs.map((s) => s.id),
           stirlingFiles,
           stubs,
         );
       } else {
-        // No inputs were provided (unlikely for completed workflows, but handle it safely).
+        // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
+        // here would cause a fileId mismatch in filesRef, making getFiles() clone the file
+        // on every render and breaking useFileWithUrl's memoisation (continuous PDF reloads).
         await fileActions.addFiles(files, { selectFiles: true });
       }
     },
@@ -637,6 +638,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         progress: state.progress,
         progressLog: state.progressLog,
         sendMessage,
+        cancelMessage,
         clearChat,
       }}
     >

@@ -5,6 +5,7 @@ description = "AI Document Engine"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.116.0",
+    "jinja2>=3.1.0",
     "pgvector>=0.3.6",
     "psycopg[binary,pool]>=3.2",
     "pydantic>=2.0.0",
