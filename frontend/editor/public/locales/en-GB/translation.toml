@@ -162,7 +162,7 @@ logOut = "Log out"
 signedInAs = "Signed in as: {{email}}"
 
 [add-page-numbers]
-tags = "paginate,label,organize,index"
+tags = "paginate,label,organise,index"
 
 [addAttachments]
 tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
@@ -271,7 +271,7 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-customize = "Customize Appearance"
+customize = "Customise Appearance"
 customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
 fontName = "Font Name"
 fontSize = "Font Size"
@@ -386,7 +386,7 @@ stampText = "Stamp Text"
 stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 stampType = "Stamp Type"
 submit = "Submit"
-tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise"
+tags = "Stamp, Add image, centre image, Watermark, PDF, Embed, Customise,Customise"
 timeDesc = "Current time"
 title = "Stamp PDF"
 totalPagesDesc = "Total number of pages"
@@ -487,10 +487,10 @@ saved = "Saved"
 text = "Text"
 
 [adjust-contrast]
-tags = "color-correction,tune,modify,enhance,colour-correction"
+tags = "colour-correction,tune,modify,enhance,colour-correction"
 
 [adjustContrast]
-adjustColors = "Adjust Colors"
+adjustColors = "Adjust Colours"
 basic = "Basic Adjustments"
 blue = "Blue"
 brightness = "Brightness:"
@@ -500,11 +500,11 @@ green = "Green"
 noPreview = "Select a PDF to preview"
 red = "Red"
 saturation = "Saturation:"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
-title = "Adjust Colors/Contrast"
+tags = "contrast,brightness,saturation,adjust colours,colour correction,enhance,lighten,darken,improve quality,colour balance,hue,vibrance"
+title = "Adjust Colours/Contrast"
 
 [adjustContrast.error]
-failed = "Failed to adjust colors/contrast"
+failed = "Failed to adjust colours/contrast"
 
 [adjustContrast.results]
 title = "Adjusted PDF"
@@ -578,8 +578,8 @@ processing = "Processing"
 title = "Advanced"
 
 [admin.settings.advanced.disableSanitize]
-description = "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
-label = "Disable HTML Sanitization"
+description = "WARNING: Security risk - disabling HTML sanitisation can lead to XSS vulnerabilities"
+label = "Disable HTML Sanitisation"
 
 [admin.settings.advanced.enableAlphaFunctionality]
 description = "Enable experimental and alpha-stage features (may be unstable)"
@@ -621,7 +621,7 @@ description = "Maximum execution time"
 label = "Timeout (minutes)"
 
 [admin.settings.advanced.tempFileManagement]
-description = "Configure temporary file storage and cleanup behavior"
+description = "Configure temporary file storage and cleanup behaviour"
 label = "Temp File Management"
 
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
@@ -703,7 +703,7 @@ mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" s
 mobileScannerPageFormat = "Page Format"
 mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
 mobileScannerStretchToFit = "Stretch to Fit"
-mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centred with preserved aspect ratio."
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
 pageFormatLetter = "Letter (8.5×11in)"
@@ -724,7 +724,7 @@ mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" s
 mobileScannerPageFormat = "Page Format"
 mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
 mobileScannerStretchToFit = "Stretch to Fit"
-mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centred with preserved aspect ratio."
 note = "Note: Requires Frontend URL to be configured. "
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
@@ -903,8 +903,8 @@ label = "Disabled Endpoints"
 placeholder = "Select endpoints to disable"
 
 [admin.settings.enterpriseRequired]
-message = "An Enterprise license is required to access {{featureName}}. You are viewing demo data for reference."
-title = "Enterprise License Required"
+message = "An Enterprise licence is required to access {{featureName}}. You are viewing demo data for reference."
+title = "Enterprise Licence Required"
 
 [admin.settings.features]
 description = "Configure optional features and functionality."
@@ -919,8 +919,8 @@ description = "Enable server-side certificate for \"Sign with Stirling-PDF\" opt
 label = "Enable Server Certificate"
 
 [admin.settings.features.serverCertificate.organizationName]
-description = "Organization name for generated certificates"
-label = "Organization Name"
+description = "Organisation name for generated certificates"
+label = "Organisation Name"
 
 [admin.settings.features.serverCertificate.regenerateOnStartup]
 description = "Generate new certificate on each application startup"
@@ -1063,7 +1063,7 @@ description = "URL or filename to cookie policy"
 label = "Cookie Policy"
 
 [admin.settings.legal.disclaimer]
-message = "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
+message = "By customising these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
 title = "Legal Responsibility Warning"
 
 [admin.settings.legal.impressum]
@@ -1161,7 +1161,7 @@ tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. T
 title = "Connect an MCP client"
 
 [admin.settings.mcp.issuerUri]
-description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
+description = "Your OAuth2 authorisation server (must publish /.well-known/openid-configuration). Required when enabled."
 label = "OAuth Issuer URL"
 
 [admin.settings.mcp.jwksUri]
@@ -1194,55 +1194,55 @@ message = "Plans data is not available at the moment."
 title = "No data available"
 
 [admin.settings.premium]
-description = "Configure your premium or enterprise license key."
-license = "License Configuration"
-noInput = "Please provide a license key or file"
+description = "Configure your premium or enterprise licence key."
+license = "Licence Configuration"
+noInput = "Please provide a licence key or file"
 title = "Premium & Enterprise"
 
 [admin.settings.premium.currentLicense]
-file = "Source: License file ({{path}})"
-key = "Source: License key"
-noInput = "Please provide a license key or upload a certificate file"
+file = "Source: Licence file ({{path}})"
+key = "Source: Licence key"
+noInput = "Please provide a licence key or upload a certificate file"
 success = "Success"
-title = "Active License"
+title = "Active Licence"
 type = "Type: {{type}}"
 
 [admin.settings.premium.enabled]
-description = "Enable license key checks for pro/enterprise features"
+description = "Enable licence key checks for pro/enterprise features"
 label = "Enable Premium Features"
 
 [admin.settings.premium.file]
-choose = "Choose License File"
-description = "Upload your .lic or .cert license file from offline purchases"
-label = "License Certificate File"
+choose = "Choose Licence File"
+description = "Upload your .lic or .cert licence file from offline purchases"
+label = "Licence Certificate File"
 selected = "Selected: {{filename}} ({{size}})"
-successMessage = "License file uploaded and activated successfully. No restart required."
+successMessage = "Licence file uploaded and activated successfully. No restart required."
 
 [admin.settings.premium.inputMethod]
 file = "Certificate File"
-text = "License Key"
+text = "Licence Key"
 
 [admin.settings.premium.key]
-description = "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided."
-label = "License Key"
-success = "License Key Saved"
-successMessage = "Your license key has been activated successfully. No restart required."
+description = "Enter your premium or enterprise licence key. Premium features will be automatically enabled when a key is provided."
+label = "Licence Key"
+success = "Licence Key Saved"
+successMessage = "Your licence key has been activated successfully. No restart required."
 
 [admin.settings.premium.key.overwriteWarning]
-line1 = "Overwriting your current license key cannot be undone."
-line2 = "Your previous license will be permanently lost unless you have backed it up elsewhere."
-line3 = "Important: Keep license keys private and secure. Never share them publicly."
-title = "⚠️ Warning: Existing License Detected"
+line1 = "Overwriting your current licence key cannot be undone."
+line2 = "Your previous licence will be permanently lost unless you have backed it up elsewhere."
+line3 = "Important: Keep licence keys private and secure. Never share them publicly."
+title = "⚠️ Warning: Existing Licence Detected"
 
 [admin.settings.premium.licenseKey]
-info = "If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features."
-toggle = "Got a license key or certificate file?"
+info = "If you have a licence key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features."
+toggle = "Got a licence key or certificate file?"
 
 [admin.settings.premium.movedFeatures]
 auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
 customMetadata = "<0>Custom Metadata</0> (PRO) - General"
 databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
-message = "Premium and Enterprise features are now organized in their respective sections:"
+message = "Premium and Enterprise features are now organised in their respective sections:"
 title = "Premium Features Distributed"
 
 [admin.settings.privacy]
@@ -1469,7 +1469,7 @@ description = "Allow users to create multi-participant document signing sessions
 label = "Enable Group Signing (Alpha)"
 
 [admin.settings.telegram]
-description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+description = "Configure Telegram bot connectivity, access controls, and feedback behaviour."
 title = "Telegram Bot"
 
 [admin.settings.telegram.accessControl]
@@ -1682,8 +1682,8 @@ configureAudit = "Configure Audit Logging"
 configureAuditMessage = "Adjust audit logging level, retention period, and other settings in the Security & Authentication section."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
-enterpriseRequired = "Enterprise License Required"
-enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
+enterpriseRequired = "Enterprise Licence Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise licence to access audit logs and analytics."
 goToSettings = "Go to Audit Settings"
 notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
@@ -1813,7 +1813,7 @@ user = "User"
 [auto-rename]
 description = "Automatically finds the title from your PDF content and uses it as the filename."
 submit = "Auto Rename"
-tags = "auto-detect,header-based,organize,relabel"
+tags = "auto-detect,header-based,organise,relabel"
 title = "Auto Rename"
 
 [auto-rename.error]
@@ -1935,8 +1935,8 @@ unnamed = "Unnamed Automation"
 [automation.suggested]
 emailPreparation = "Email Preparation"
 emailPreparationDesc = "Optimises PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy."
-prePublishSanitization = "Pre-publish Sanitization"
-prePublishSanitizationDesc = "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."
+prePublishSanitization = "Pre-publish Sanitisation"
+prePublishSanitizationDesc = "Sanitisation workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."
 processImages = "Process Images"
 processImagesDesc = "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
 securePdfIngestion = "Secure PDF Ingestion"
@@ -1946,15 +1946,15 @@ secureWorkflowDesc = "Secures PDF documents by removing potentially malicious co
 
 [autoRename]
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+tags = "auto-detect,header-based,organise,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
-tags = "pdf,split,document,organization"
+tags = "pdf,split,document,organisation"
 
 [autoSplitPDF]
 dividerDownload2 = "Download 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "Duplex Mode (Front and back scanning)"
-tags = "QR-based,separate,scan-segment,organize"
+tags = "QR-based,separate,scan-segment,organise"
 title = "Auto Split PDF"
 
 [backendHealth]
@@ -2155,11 +2155,11 @@ header = "Certificate Types"
 
 [certificateChoice.tooltip.organization]
 bullet1 = "Managed by system administrators"
-bullet2 = "Shared across authorized users"
+bullet2 = "Shared across authorised users"
 bullet3 = "Represents company identity, not individual"
 bullet4 = "Best for: Official documents, team signatures"
-description = "A shared certificate provided by your organization. Used for company-wide signing authority."
-title = "Organization Certificate"
+description = "A shared certificate provided by your organisation. Used for company-wide signing authority."
+title = "Organisation Certificate"
 
 [certificateChoice.tooltip.personal]
 bullet1 = "Generated automatically on first use"
@@ -2186,7 +2186,7 @@ choosePfxFile = "Choose PFX File"
 choosePrivateKey = "Choose Private Key File"
 declined = "Declined"
 fetchFailed = "Failed to load signing data"
-finalized = "Finalized"
+finalized = "Finalised"
 location = "Location"
 logoTitle = "Logo"
 name = "Name"
@@ -2196,7 +2196,7 @@ pageNumber = "Page Number"
 password = "Certificate Password"
 passwordOptional = "Leave empty if no password"
 pending = "Pending"
-readyToFinalize = "Ready to finalize"
+readyToFinalize = "Ready to finalise"
 reason = "Reason"
 serverCertMessage = "Using server certificate - no files or password required"
 showLogo = "Show Logo"
@@ -2264,8 +2264,8 @@ reasonHelp = "Pre-set a signing reason for these participants (optional, they ca
 reasonPlaceholder = "e.g. Approval, Review..."
 
 [certSign.collab.finalize]
-button = "Finalize and Load Signed PDF"
-early = "Finalize with Current Signatures"
+button = "Finalise and Load Signed PDF"
+early = "Finalise with Current Signatures"
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2288,7 +2288,7 @@ deleted = "Session deleted"
 deleteError = "Failed to delete session"
 deleteSession = "Delete Session"
 dueDate = "Due Date"
-finalizeError = "Failed to finalize session"
+finalizeError = "Failed to finalise session"
 loadPdfError = "Failed to load signed PDF"
 loadSignedPdf = "Load Signed PDF into Active Files"
 messageLabel = "Message"
@@ -2304,7 +2304,7 @@ workbenchTitle = "Session Management"
 
 [certSign.collab.sessionList]
 active = "Active"
-finalized = "Finalized"
+finalized = "Finalised"
 
 [certSign.collab.signatureSettings]
 description = "Configure how signatures will appear for all participants"
@@ -2336,7 +2336,7 @@ noCertificate = "Please select a certificate file"
 noSignatures = "Please place at least one signature on the PDF"
 p12File = "P12/PFX Certificate File"
 password = "Certificate Password"
-penColor = "Pen Color"
+penColor = "Pen Colour"
 penSize = "Pen Size: {{size}}px"
 reason = "Reason (Optional)"
 reasonPlaceholder = "Why are you signing?"
@@ -2351,15 +2351,15 @@ signatureTextPlaceholder = "Enter your name..."
 signatureTypeLabel = "Signature Type"
 signButton = "Sign Document"
 signingTitle = "Signing"
-textColor = "Text Color"
+textColor = "Text Colour"
 typeSignature = "Type your name to create a signature"
 uploadCert = "Custom Certificate"
 uploadCertDesc = "Use your own P12/PFX certificate"
 uploadSignature = "Upload your signature image"
 usePersonalCert = "Personal Certificate"
 usePersonalCertDesc = "Auto-generated for your account"
-useServerCert = "Organization Certificate"
-useServerCertDesc = "Shared organization certificate"
+useServerCert = "Organisation Certificate"
+useServerCertDesc = "Shared organisation certificate"
 workbenchTitle = "Sign Request"
 
 [certSign.collab.signRequest.canvas]
@@ -2427,7 +2427,7 @@ visible = "Visible"
 yourSignatures = "Your Signatures ({{count}})"
 
 [certSign.collab.signRequest.text]
-colorLabel = "Color"
+colorLabel = "Colour"
 fontLabel = "Font"
 fontSizeLabel = "Size"
 fontSizePlaceholder = "16"
@@ -2453,7 +2453,7 @@ panelPeople = "People"
 [certSign.sessions]
 deleted = "Session deleted"
 fetchFailed = "Failed to load session details"
-finalized = "Session finalized"
+finalized = "Session finalised"
 loaded = "Signed PDF loaded"
 pdfNotReady = "PDF Not Ready"
 pdfNotReadyDesc = "The signed PDF is being generated. Please try again in a moment."
@@ -2902,7 +2902,7 @@ message = "These documents appear highly dissimilar. Comparison was stopped to s
 [compress]
 desc = "Compress PDFs to reduce their file size."
 submit = "Compress"
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
+tags = "shrink,reduce,optimise,compress,smaller,downsize,file size,reduce size,minimise,make smaller,decrease size,optimise size"
 title = "Compress"
 
 [compress.compressionLevel]
@@ -2914,7 +2914,7 @@ range7to9 = "Higher values reduce file size significantly but may reduce image c
 failed = "An error occurred while compressing the PDF."
 
 [compress.grayscale]
-label = "Apply Grayscale for Compression"
+label = "Apply Greyscale for Compression"
 
 [compress.linearize]
 label = "Linearize PDF for fast web viewing"
@@ -2944,7 +2944,7 @@ title = "Description"
 
 [compress.tooltip.grayscale]
 text = "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
-title = "Grayscale"
+title = "Greyscale"
 
 [compress.tooltip.header]
 title = "Compress Settings Overview"
@@ -2981,7 +2981,7 @@ signedInAs = "Signed in as"
 title = "Account Settings"
 
 [config.account.profilePicture]
-description = "Upload an image to personalize your account."
+description = "Upload an image to personalise your account."
 help = "PNG, JPG, or WebP up to 2MB."
 remove = "Remove"
 sizeError = "Please select an image smaller than 2MB."
@@ -3135,7 +3135,7 @@ includeAttachments = "Include email attachments"
 maintainAspectRatio = "Maintain Aspect Ratio"
 maxAttachmentSize = "Maximum attachment size (MB)"
 multiple = "Multiple"
-optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
+optimizeForEbook = "Optimise PDF for ebook readers (uses Ghostscript)"
 output = "Output"
 outputFormat = "Output Format"
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
@@ -3167,18 +3167,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
 includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
-optimizeForEbookPdf = "Optimize for ebook readers"
-optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+optimizeForEbookPdf = "Optimise for ebook readers"
+optimizeForEbookPdfDesc = "Optimise the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [convert.epubOptions]
 detectChapters = "Detect chapters"
 detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
-kindleEink = "Kindle e-Ink (text optimized)"
+kindleEink = "Kindle e-Ink (text optimised)"
 outputFormat = "Output format"
 outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
-targetDeviceDesc = "Choose an output profile optimized for the reader device"
+targetDeviceDesc = "Choose an output profile optimised for the reader device"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Okay"
@@ -3197,7 +3197,7 @@ closeIconLabel = "Close modal"
 savePreferencesBtn = "Save preferences"
 serviceCounterLabel = "Service|Services"
 subtitle = "Cookie Usage"
-title = "Consent Preferences Center"
+title = "Consent Preferences Centre"
 
 [cookieBanner.preferencesModal.analytics]
 description = "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured-Stirling PDF cannot and will never track the content of the documents you work with."
@@ -3281,7 +3281,7 @@ teamSubscription = "Team"
 titleExhausted = "You've used your free credits"
 titleExhaustedPro = "You have run out of credits"
 unlimitedApiAccess = "Unlimited API access"
-unlimitedMonthlyCredits = "Site License"
+unlimitedMonthlyCredits = "Site Licence"
 unlimitedSeats = "Unlimited seats"
 
 [crop]
@@ -3929,7 +3929,7 @@ welcomeTitle = "Welcome!"
 
 [flatten]
 submit = "Flatten"
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalise form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 
 [flatten.error]
@@ -4133,13 +4133,13 @@ header = "About Group Signing"
 
 [groupSigning.tooltip.finalization]
 bullet1 = "All signatures are applied in the participant order you specified"
-bullet2 = "You can finalize with partial signatures if needed"
-bullet3 = "Once finalized, the session cannot be modified"
-description = "Once all participants have signed (or you choose to finalize early), you can generate the final signed PDF."
-title = "Finalization Process"
+bullet2 = "You can finalise with partial signatures if needed"
+bullet3 = "Once finalised, the session cannot be modified"
+description = "Once all participants have signed (or you choose to finalise early), you can generate the final signed PDF."
+title = "Finalisation Process"
 
 [groupSigning.tooltip.roles]
-bullet1 = "Owner (you): Creates session, configures signature defaults, finalizes document"
+bullet1 = "Owner (you): Creates session, configures signature defaults, finalises document"
 bullet2 = "Participants: Create their signature, choose certificate, place on PDF"
 bullet3 = "Participants cannot modify signature visibility, reason, or location settings"
 description = "You control the signature appearance settings for all participants."
@@ -4189,8 +4189,8 @@ tags = "text,annotation,label,add text,insert text,place text,text box,add label
 title = "Add Text"
 
 [home.adjustContrast]
-desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
+desc = "Adjust Colours/Contrast, Saturation and Brightness of a PDF"
+tags = "contrast,brightness,saturation,adjust colours,colour correction,enhance,lighten,darken,improve quality,colour balance,hue,vibrance"
 title = "Adjust Colours/Contrast"
 
 [home.annotate]
@@ -4205,7 +4205,7 @@ title = "Automate"
 
 [home.autoRename]
 desc = "Auto renames a PDF file based on its detected header"
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+tags = "auto-detect,header-based,organise,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
 
 [home.autoSizeSplitPDF]
@@ -4243,7 +4243,7 @@ title = "Compare"
 
 [home.compress]
 desc = "Compress PDFs to reduce their file size."
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
+tags = "shrink,reduce,optimise,compress,smaller,downsize,file size,reduce size,minimise,make smaller,decrease size,optimise size"
 title = "Compress"
 
 [home.convert]
@@ -4293,7 +4293,7 @@ title = "Extract Pages"
 
 [home.flatten]
 desc = "Remove all interactive elements and forms from a PDF"
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalise form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 
 [home.formFill]
@@ -4326,12 +4326,12 @@ workspace = "Workspace"
 
 [home.multiTool]
 desc = "Merge, Rotate, Rearrange, Split, and Remove pages"
-tags = "multiple,tools,multi-tool,all-in-one,swiss army,page organizer,page editor,edit pages,manage pages,organize,reorganize"
+tags = "multiple,tools,multi-tool,all-in-one,swiss army,page organiser,page editor,edit pages,manage pages,organise,reorganize"
 title = "PDF Multi Tool"
 
 [home.ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
-tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognize text,read scanned"
+tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognise text,read scanned"
 title = "OCR / Cleanup scans"
 
 [home.overlay-pdfs]
@@ -4350,7 +4350,7 @@ tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
 title = "Add AI comments"
 
 [home.pdfOrganiser]
-tags = "organize,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,page organiser,resequence"
+tags = "organise,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organiser,page organiser,resequence"
 title = "Organise"
 
 [home.pdfTextEditor]
@@ -4405,7 +4405,7 @@ title = "Remove Password"
 
 [home.reorganizePages]
 desc = "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
+tags = "rearrange,reorder,organise,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 title = "Reorganize Pages"
 
 [home.repair]
@@ -4415,7 +4415,7 @@ title = "Repair"
 
 [home.replaceColor]
 desc = "Replace or invert colours in PDF documents"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "replace colour,invert colour,colour replacement,swap colours,change colour,invert,negative,colour swap,find and replace colour,convert colour,colour change"
 title = "Replace & Invert Colour"
 
 [home.rotate]
@@ -4425,7 +4425,7 @@ title = "Rotate"
 
 [home.sanitize]
 desc = "Remove potentially harmful elements from PDF files"
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
+tags = "clean,purge,remove,sanitise,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sanitise"
 
 [home.scalePages]
@@ -4450,7 +4450,7 @@ title = "Show Javascript"
 
 [home.sign]
 desc = "Adds signature to PDF by drawing, text or image"
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorise,endorse,ink signature,handwriting"
 title = "Sign"
 
 [home.split]
@@ -4747,16 +4747,16 @@ approving = "Allowing..."
 decisionFailed = "Could not submit your decision. Please try again."
 deny = "Deny"
 denying = "Denying..."
-loadFailed = "This authorization request is invalid or has expired. Close this tab and try connecting again from the app."
-loading = "Loading authorization request..."
-missingId = "Missing authorization request. Start the connection from your app and try again."
+loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorisation request..."
+missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Returning you to the app..."
 requesting = "{{app}} wants to access your Stirling PDF account"
 scopesIntro = "This will allow {{app}} to:"
 signedInAs = "Signed in as {{name}}"
 signInButton = "Sign in to continue"
 signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
-title = "Authorize access"
+title = "Authorise access"
 unknownApp = "A third-party application"
 
 [oauthConsent.access]
@@ -4894,7 +4894,7 @@ qrCodeLoading = "Generating your QR code…"
 adminBodyLoginDisabled = "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
 adminBodyLoginEnabled = "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
 adminTitle = "Admin Overview"
-userBody = "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
+userBody = "Invite teammates, assign roles, and keep your documents organised in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
 userTitle = "Plan Overview"
 
 [onboarding.saas.freeEditor]
@@ -4921,9 +4921,9 @@ roleUser = "User"
 
 [onboarding.serverLicense]
 freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
-freeTitle = "Server License"
+freeTitle = "Server Licence"
 overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
-overLimitTitle = "Server License Needed"
+overLimitTitle = "Server Licence Needed"
 seePlans = "See Plans →"
 upgrade = "Upgrade now →"
 
@@ -5040,7 +5040,7 @@ right = "Right Margin"
 rows = "Rows"
 rowsPlaceholder = "Enter rows"
 submit = "Submit"
-tags = "merge,composite,single-view,organize"
+tags = "merge,composite,single-view,organise"
 title = "Multi Page Layout"
 top = "Top Margin"
 
@@ -5398,34 +5398,34 @@ checkoutInstructions = "Complete your purchase in the browser window that just o
 checkoutOpened = "Checkout Opened in Browser"
 closeLater = "I'll Do This Later"
 error = "Payment Error"
-generatingLicense = "Generating your license key..."
-licenseActivated = "License activated! Your license key has been saved. A confirmation email has been sent to your registered email address."
-licenseDelayed = "Payment successful! Your license is being generated. You will receive an email with your license key shortly. If you don't receive it within 10 minutes, please contact support."
-licenseDelayedMessage = "Your license key is being generated. Please check your email shortly or contact support."
+generatingLicense = "Generating your licence key..."
+licenseActivated = "Licence activated! Your licence key has been saved. A confirmation email has been sent to your registered email address."
+licenseDelayed = "Payment successful! Your licence is being generated. You will receive an email with your licence key shortly. If you don't receive it within 10 minutes, please contact support."
+licenseDelayedMessage = "Your licence key is being generated. Please check your email shortly or contact support."
 licenseInstructions = "This has been added to your installation. You will receive a copy in your email as well."
-licenseKey = "Your License Key"
-licensePollingError = "Payment successful but we couldn't retrieve your license key automatically. Please check your email or contact support with your payment confirmation."
-licenseRetrievalError = "Payment successful but license retrieval failed. You will receive your license key via email. Please contact support if you don't receive it within 10 minutes."
-licenseSaveError = "Failed to save license key. Please contact support with your license key to complete activation."
+licenseKey = "Your Licence Key"
+licensePollingError = "Payment successful but we couldn't retrieve your licence key automatically. Please check your email or contact support with your payment confirmation."
+licenseRetrievalError = "Payment successful but licence retrieval failed. You will receive your licence key via email. Please contact support if you don't receive it within 10 minutes."
+licenseSaveError = "Failed to save licence key. Please contact support with your licence key to complete activation."
 monthly = "Monthly"
-paymentCanceled = "Payment was canceled. No charges were made."
+paymentCanceled = "Payment was cancelled. No charges were made."
 perMonth = "/month"
 preparing = "Preparing your checkout..."
 redirecting = "Redirecting to secure checkout..."
 refreshBilling = "I've Completed Payment - Refresh Billing"
 success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
-syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
-syncingLicense = "Syncing your upgraded license..."
+syncError = "Payment successful but licence sync failed. Your licence will be updated shortly. Please contact support if issues persist."
+syncingLicense = "Syncing your upgraded licence..."
 upgradeComplete = "Upgrade Complete"
-upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your existing license key has been updated."
-upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
+upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your existing licence key has been updated."
+upgradeSuccess = "Payment successful! Your subscription has been upgraded. The licence has been updated on your server. You will receive a confirmation email shortly."
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
 
 [payment.emailStage]
 continue = "Continue"
-description = "We'll use this to send your license key and receipts."
+description = "We'll use this to send your licence key and receipts."
 emailLabel = "Email Address"
 emailPlaceholder = "your@email.com"
 modalTitle = "Get Started - {{planName}}"
@@ -5489,7 +5489,7 @@ REMOVE_FIRST = "Remove the first page from the document."
 REMOVE_FIRST_AND_LAST = "Remove both the first and last pages from the document."
 REMOVE_LAST = "Remove the last page from the document."
 REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
-SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
+SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimised for binding on the side)."
 
 [pdfTextEditor]
 conversionFailed = "Failed to convert PDF. Please try again."
@@ -5737,7 +5737,7 @@ highlight3 = "Latest features"
 name = "Enterprise"
 requiresServer = "Requires Server"
 requiresServerMessage = "Please upgrade to the Server plan first before upgrading to Enterprise."
-siteLicense = "Site License"
+siteLicense = "Site Licence"
 
 [plan.feature]
 api = "API Access"
@@ -5820,9 +5820,9 @@ message = "You've made the most of this month's cap. That's a load of automation
 title = "You're on a Roll!"
 
 [plan.static]
-activateLicense = "Activate Your License"
-contactToUpgrade = "Contact us to upgrade or customize your plan"
-getLicense = "Get Server License"
+activateLicense = "Activate Your Licence"
+contactToUpgrade = "Contact us to upgrade or customise your plan"
+getLicense = "Get Server Licence"
 monthlyBilling = "Monthly Billing"
 selectPeriod = "Select Billing Period"
 upgradeToEnterprise = "Upgrade to Enterprise"
@@ -5834,14 +5834,14 @@ message = "You will need to verify your email address in the Stripe billing port
 title = "Email Verification Required"
 
 [plan.static.licenseActivation]
-activate = "Activate License"
+activate = "Activate Licence"
 checkoutOpened = "Checkout Opened in New Tab"
 doLater = "I'll do this later"
-enterKey = "Enter your license key below to activate your plan:"
-instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
-keyDescription = "Paste the license key from your email"
-success = "License Activated!"
-successMessage = "Your license has been successfully activated. You can now close this window."
+enterKey = "Enter your licence key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your licence key."
+keyDescription = "Paste the licence key from your email"
+success = "Licence Activated!"
+successMessage = "Your licence has been successfully activated. You can now close this window."
 
 [plan.team]
 name = "Team"
@@ -5869,7 +5869,7 @@ security = "Security"
 [policies.detail]
 editSettings = "Edit Settings"
 enforces = "Enforces"
-managedByOrg = "Managed by your organization. Contact a team leader to change this policy."
+managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
 noActivityDescription = "Documents will appear here once this policy runs."
 noActivityTitle = "No activity yet"
 onEveryUpload = "On every upload"
@@ -5932,7 +5932,7 @@ filenameSuffix = "Suffix"
 filenameTextAria = "Filename text"
 filenameTextPlaceholder = "Text to add (optional)"
 lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organization"
+lockedTitle = "Managed by your organisation"
 maxRetriesLabel = "Max retries"
 noToolsError = "Add at least one configured tool to the workflow first."
 outputAsLabel = "Output as"
@@ -6504,7 +6504,7 @@ description = "Removing password protection requires the password that was used 
 
 [reorganizePages]
 submit = "Reorganize Pages"
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
+tags = "rearrange,reorder,organise,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Failed to reorganize pages"
@@ -6529,13 +6529,13 @@ title = "Repair Results"
 
 [replace-color]
 submit = "Replace"
-title = "Replace-Invert-Color"
+title = "Replace-Invert-Colour"
 
 [replace-color.selectText]
 1 = "Replace or invert colour options"
-10 = "Choose text Color"
-11 = "Choose background Color"
-5 = "High contrast color options"
+10 = "Choose text Colour"
+11 = "Choose background Colour"
+5 = "High contrast colour options"
 6 = "White text on black background"
 7 = "Black text on white background"
 8 = "Yellow text on black background"
@@ -6558,7 +6558,7 @@ highContrast = "High contrast"
 invertAll = "Invert all colours"
 
 [replaceColor.tooltip.cmyk]
-text = "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
+text = "Convert the PDF from RGB colour space to CMYK colour space, optimised for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
 title = "Convert to CMYK"
 
 [replaceColor.tooltip.custom]
@@ -6614,7 +6614,7 @@ title = "Rotate Settings Overview"
 desc = "Remove potentially harmful elements from PDF files."
 sanitizationResults = "Sanitisation Results"
 submit = "Sanitise PDF"
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
+tags = "clean,purge,remove,sanitise,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sanitise"
 
 [sanitize.error]
@@ -6678,7 +6678,7 @@ tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look sca
 
 [scannerImageSplit]
 submit = "Extract Image Scans"
-tags = "separate,auto-detect,scans,multi-photo,organize"
+tags = "separate,auto-detect,scans,multi-photo,organise"
 title = "Extracted Images"
 
 [scannerImageSplit.error]
@@ -6729,18 +6729,18 @@ header = "Managing Signing Sessions"
 
 [sessionManagement.tooltip.addParticipants]
 bullet1 = "New participants added to the end of signing order"
-bullet2 = "Cannot add participants after session is finalized"
+bullet2 = "Cannot add participants after session is finalised"
 bullet3 = "Each participant receives a notification when it's their turn"
-description = "You can add more participants to an active session at any time before finalization."
+description = "You can add more participants to an active session at any time before finalisation."
 title = "Adding Participants"
 
 [sessionManagement.tooltip.finalization]
-bullet1 = "<b>Full finalization</b>: All participants have signed"
-bullet2 = "<b>Partial finalization</b>: Some participants haven't signed yet"
+bullet1 = "<b>Full finalisation</b>: All participants have signed"
+bullet2 = "<b>Partial finalisation</b>: Some participants haven't signed yet"
 bullet3 = "Unsigned participants will be excluded from the final document"
-bullet4 = "Once finalized, you can load the signed PDF into active files"
-description = "Finalization combines all signatures into a single signed PDF. This action cannot be undone."
-title = "Session Finalization"
+bullet4 = "Once finalised, you can load the signed PDF into active files"
+description = "Finalisation combines all signatures into a single signed PDF. This action cannot be undone."
+title = "Session Finalisation"
 
 [sessionManagement.tooltip.participantRemoval]
 bullet1 = "Cannot remove participants who have already signed"
@@ -6850,12 +6850,12 @@ modeDisabled = "Don't check for updates"
 modePrompt = "Ask me before installing updates"
 serverNeedsUpdate = "Server needs to be updated by administrator"
 title = "Software Updates"
-updateBehavior = "Update behavior"
+updateBehavior = "Update behaviour"
 updateBehaviorDescription = "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely."
-updateBehaviorError = "Could not change update behavior"
+updateBehaviorError = "Could not change update behaviour"
 updateBehaviorErrorLocked = "This setting is locked by your administrator."
 updateBehaviorLockedDescription = "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this."
-updateBehaviorSaved = "Update behavior saved."
+updateBehaviorSaved = "Update behaviour saved."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "View Details"
 
@@ -6889,7 +6889,7 @@ capturing = "Press keys… (Esc to cancel)"
 change = "Change shortcut"
 customBadge = "Custom"
 defaultLabel = "Default: {{shortcut}}"
-description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
+description = "Customise keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
 errorConflict = "Shortcut already used by {{tool}}."
 none = "Not assigned"
 noShortcut = "No shortcut set"
@@ -6946,7 +6946,7 @@ retry = "Retry"
 
 [settings.planBilling.status]
 active = "Active"
-canceled = "Canceled"
+canceled = "Cancelled"
 pastDue = "Past Due"
 trial = "Trial"
 
@@ -7025,7 +7025,7 @@ title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Enable login mode first"
-requiresEnterprise = "Requires Enterprise license"
+requiresEnterprise = "Requires Enterprise licence"
 
 [settings.workspace]
 people = "People"
@@ -7119,7 +7119,7 @@ redo = "Redo"
 save = "Save Signature"
 sharedSigs = "Shared Signatures"
 submit = "Sign Document"
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorise,endorse,ink signature,handwriting"
 title = "Sign"
 undo = "Undo"
 updateAndPlace = "Update and Place"
@@ -7362,7 +7362,7 @@ bullet4 = "You can change methods at any time before processing"
 title = "Choose Your Split Method"
 
 [split.methodSelection.tooltip.header]
-text = "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types."
+text = "Choose how you want to split your PDF document. Each method is optimised for different use cases and document types."
 title = "Split Method Selection"
 
 [split.poster]
@@ -7460,7 +7460,7 @@ placeholder = "e.g. 5, 10"
 
 [split-by-sections]
 merge = "Merge Into One PDF"
-tags = "Section Split, Divide, Customize,Customise"
+tags = "Section Split, Divide, Customise,Customise"
 title = "Split PDF by Sections"
 
 [split-by-sections.customPages]
@@ -7498,7 +7498,7 @@ includeMetadata = "Include Metadata"
 title = "Split PDF by Chapters"
 
 [splitPdfByChapters]
-tags = "split,chapters,bookmarks,organize"
+tags = "split,chapters,bookmarks,organise"
 
 [storageShare]
 accessDenied = "You do not have access to this shared file. Ask the owner to share it with you."
@@ -7653,7 +7653,7 @@ roleColumn = "Role"
 title = "Team Members"
 
 [textAlign]
-center = "Center"
+center = "Centre"
 left = "Left"
 right = "Right"
 
@@ -7823,7 +7823,7 @@ urgent = "Urgent"
 
 [upgradeBanner]
 attentionBody = "Your admin needs to sign in to see more info. Please contact them immediately."
-attentionBodyAdmin = "Review the license requirements to keep this server compliant."
+attentionBodyAdmin = "Review the licence requirements to keep this server compliant."
 attentionTitle = "This server needs admin attention"
 message = "Get the most out of Stirling PDF with unlimited users and advanced features"
 seeInfo = "See info"
@@ -8125,7 +8125,7 @@ autoScanHelp = "New PDF files in this folder are processed automatically every 1
 changeFolder = "Change"
 chooseFolder = "Choose"
 clearFolder = "Clear"
-color = "Accent color"
+color = "Accent colour"
 createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
@@ -8372,7 +8372,7 @@ text = "Text"
 header = "Signature Creation Methods"
 
 [wetSignature.tooltip.draw]
-bullet1 = "Customize pen color and thickness"
+bullet1 = "Customise pen colour and thickness"
 bullet2 = "Clear and redraw until satisfied"
 bullet3 = "Works on touch devices (tablets, phones)"
 description = "Create a handwritten signature using your mouse or touchscreen. Best for personal, authentic signatures."
@@ -8380,8 +8380,8 @@ title = "Draw Signature"
 
 [wetSignature.tooltip.type]
 bullet1 = "Choose from multiple fonts"
-bullet2 = "Customize text size and color"
-bullet3 = "Perfect for standardized signatures"
+bullet2 = "Customise text size and colour"
+bullet3 = "Perfect for standardised signatures"
 description = "Generate a signature from typed text. Fast and consistent, suitable for business documents."
 title = "Type Signature"
 
@@ -8592,7 +8592,7 @@ username = "Username"
 
 [workspace.people.license]
 currentUsage = "Currently using {{current}} of {{max}} user licences"
-fromLicense = "from license"
+fromLicense = "from licence"
 grandfathered = "Grandfathered"
 grandfatheredShort = "{{count}} grandfathered"
 noSlotsAvailable = "No slots available"
@@ -8623,7 +8623,7 @@ confirmDelete = "Are you sure you want to delete this team? This team must be em
 confirmRemove = "Remove user from this team?"
 createNewTeam = "Create New Team"
 deleteTeamLabel = "Delete Team"
-description = "Manage teams and organize workspace members"
+description = "Manage teams and organise workspace members"
 loadError = "Failed to load team details"
 loading = "Loading teams..."
 loadingDetails = "Loading team details..."
