@@ -910,7 +910,8 @@ public class PdfMarkdownConverter {
         }
         // Only merge a sentence continuation between two text paragraphs, never into/out of a
         // table.
-        if (!(output.getLast() instanceof String last) || !(pageItems.getFirst() instanceof String first)) {
+        if (!(output.getLast() instanceof String last)
+                || !(pageItems.getFirst() instanceof String first)) {
             return;
         }
         if (!first.isEmpty()

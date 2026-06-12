@@ -88,28 +88,16 @@ public class FormUtils {
      *     text)
      */
     public String detectFieldType(PDField field) {
-        if (field instanceof PDSignatureField) {
-            return FIELD_TYPE_SIGNATURE;
-        }
-        if (field instanceof PDPushButton) {
-            return FIELD_TYPE_BUTTON;
-        }
-        if (field instanceof PDTextField) {
-            return FIELD_TYPE_TEXT;
-        }
-        if (field instanceof PDCheckBox) {
-            return FIELD_TYPE_CHECKBOX;
-        }
-        if (field instanceof PDComboBox) {
-            return FIELD_TYPE_COMBOBOX;
-        }
-        if (field instanceof PDListBox) {
-            return FIELD_TYPE_LISTBOX;
-        }
-        if (field instanceof PDRadioButton) {
-            return FIELD_TYPE_RADIO;
-        }
-        return FIELD_TYPE_TEXT;
+        return switch (field) {
+            case PDSignatureField ignored -> FIELD_TYPE_SIGNATURE;
+            case PDPushButton ignored -> FIELD_TYPE_BUTTON;
+            case PDTextField ignored -> FIELD_TYPE_TEXT;
+            case PDCheckBox ignored -> FIELD_TYPE_CHECKBOX;
+            case PDComboBox ignored -> FIELD_TYPE_COMBOBOX;
+            case PDListBox ignored -> FIELD_TYPE_LISTBOX;
+            case PDRadioButton ignored -> FIELD_TYPE_RADIO;
+            case null, default -> FIELD_TYPE_TEXT;
+        };
     }
 
     public List<FormFieldInfo> extractFormFields(PDDocument document) {
@@ -583,22 +571,17 @@ public class FormUtils {
                 continue;
             }
             String type = info.type();
-            Object value;
-            switch (type) {
-                case FIELD_TYPE_CHECKBOX:
-                    value = isChecked(info.value()) ? Boolean.TRUE : Boolean.FALSE;
-                    break;
-                case FIELD_TYPE_LISTBOX:
-                    if (info.multiSelect()) {
-                        value = new ArrayList<>();
-                    } else {
-                        value = safeDefault(info.value());
-                    }
-                    break;
-                case FIELD_TYPE_BUTTON, FIELD_TYPE_SIGNATURE:
-                    continue; // skip non-fillable
-                default:
-                    value = safeDefault(info.value());
+            Object value =
+                    switch (type) {
+                        case FIELD_TYPE_CHECKBOX ->
+                                isChecked(info.value()) ? Boolean.TRUE : Boolean.FALSE;
+                        case FIELD_TYPE_LISTBOX ->
+                                info.multiSelect() ? new ArrayList<>() : safeDefault(info.value());
+                        case FIELD_TYPE_BUTTON, FIELD_TYPE_SIGNATURE -> null;
+                        default -> safeDefault(info.value());
+                    };
+            if (value == null) {
+                continue; // skip non-fillable
             }
             record.put(info.name(), value);
         }
@@ -954,39 +937,38 @@ public class FormUtils {
 
     private void applyValueToField(PDField field, String value, boolean strict) throws IOException {
         try {
-            if (field instanceof PDTextField textField) {
-                setTextValue(textField, value);
-            } else if (field instanceof PDCheckBox checkBox) {
-                LinkedHashSet<String> candidateStates = collectCheckBoxStates(checkBox);
-                boolean shouldCheck = shouldCheckBoxBeChecked(value, candidateStates);
-                try {
-                    if (shouldCheck) {
-                        checkBox.check();
-                    } else {
-                        checkBox.unCheck();
-                    }
-                } catch (IOException checkProblem) {
-                    log.warn(
-                            "Failed to set checkbox state for '{}': {}",
-                            field.getFullyQualifiedName(),
-                            checkProblem.getMessage(),
-                            checkProblem);
-                    if (strict) {
-                        throw checkProblem;
+            switch (field) {
+                case PDTextField textField -> setTextValue(textField, value);
+                case PDCheckBox checkBox -> {
+                    LinkedHashSet<String> candidateStates = collectCheckBoxStates(checkBox);
+                    boolean shouldCheck = shouldCheckBoxBeChecked(value, candidateStates);
+                    try {
+                        if (shouldCheck) {
+                            checkBox.check();
+                        } else {
+                            checkBox.unCheck();
+                        }
+                    } catch (IOException checkProblem) {
+                        log.warn(
+                                "Failed to set checkbox state for '{}': {}",
+                                field.getFullyQualifiedName(),
+                                checkProblem.getMessage(),
+                                checkProblem);
+                        if (strict) {
+                            throw checkProblem;
+                        }
                     }
                 }
-            } else if (field instanceof PDRadioButton radioButton) {
-                if (value != null && !value.isBlank()) {
-                    radioButton.setValue(value);
+                case PDRadioButton radioButton -> {
+                    if (value != null && !value.isBlank()) {
+                        radioButton.setValue(value);
+                    }
                 }
-            } else if (field instanceof PDChoice choiceField) {
-                applyChoiceValue(choiceField, value);
-            } else if (field instanceof PDPushButton) {
-                log.debug("Ignore Push button");
-            } else if (field instanceof PDSignatureField) {
-                log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
-            } else {
-                field.setValue(value != null ? value : "");
+                case PDChoice choiceField -> applyChoiceValue(choiceField, value);
+                case PDPushButton ignored -> log.debug("Ignore Push button");
+                case PDSignatureField ignored ->
+                        log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
+                case null, default -> field.setValue(value != null ? value : "");
             }
         } catch (Exception e) {
             log.warn(
@@ -1306,37 +1288,42 @@ public class FormUtils {
 
     List<String> resolveOptions(PDTerminalField field) {
         try {
-            if (field instanceof PDChoice choice) {
-                LinkedHashSet<String> allowed = new LinkedHashSet<>();
-                List<String> exportValues = choice.getOptionsExportValues();
-                List<String> displayValues = choice.getOptionsDisplayValues();
+            return switch (field) {
+                case PDChoice choice -> {
+                    LinkedHashSet<String> allowed = new LinkedHashSet<>();
+                    List<String> exportValues = choice.getOptionsExportValues();
+                    List<String> displayValues = choice.getOptionsDisplayValues();
 
-                if (exportValues != null) {
-                    exportValues.stream()
-                            .filter(Objects::nonNull)
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .forEach(allowed::add);
+                    if (exportValues != null) {
+                        exportValues.stream()
+                                .filter(Objects::nonNull)
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .forEach(allowed::add);
+                    }
+                    if (displayValues != null) {
+                        displayValues.stream()
+                                .filter(Objects::nonNull)
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .forEach(allowed::add);
+                    }
+                    yield new ArrayList<>(allowed);
                 }
-                if (displayValues != null) {
-                    displayValues.stream()
-                            .filter(Objects::nonNull)
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .forEach(allowed::add);
+                case PDRadioButton radio -> {
+                    List<String> exports = radio.getExportValues();
+                    yield exports != null && !exports.isEmpty()
+                            ? new ArrayList<>(exports)
+                            : Collections.emptyList();
                 }
-                return new ArrayList<>(allowed);
-            } else if (field instanceof PDRadioButton radio) {
-                List<String> exports = radio.getExportValues();
-                if (exports != null && !exports.isEmpty()) {
-                    return new ArrayList<>(exports);
+                case PDCheckBox checkBox -> {
+                    List<String> exports = checkBox.getExportValues();
+                    yield exports != null && !exports.isEmpty()
+                            ? new ArrayList<>(exports)
+                            : Collections.emptyList();
                 }
-            } else if (field instanceof PDCheckBox checkBox) {
-                List<String> exports = checkBox.getExportValues();
-                if (exports != null && !exports.isEmpty()) {
-                    return new ArrayList<>(exports);
-                }
-            }
+                case null, default -> Collections.emptyList();
+            };
         } catch (Exception e) {
             log.debug(
                     "Failed to resolve options for field '{}': {}",

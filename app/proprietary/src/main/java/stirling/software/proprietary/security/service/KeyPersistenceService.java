@@ -263,8 +263,8 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 nativeCache.asMap().size());
 
         return nativeCache.asMap().values().stream()
-                .filter(value -> value instanceof JwtVerificationKey)
-                .map(value -> (JwtVerificationKey) value)
+                .filter(JwtVerificationKey.class::isInstance)
+                .map(JwtVerificationKey.class::cast)
                 .filter(
                         key -> {
                             boolean eligible = key.getCreatedAt().isBefore(cutoffDate);
