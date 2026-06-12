@@ -94,9 +94,29 @@ export default function McpSection() {
   const clients = useMemo(
     () => [
       {
-        value: "claude",
+        value: "claude-desktop",
         label: "Claude Desktop",
         file: "claude_desktop_config.json",
+        // Claude Desktop loads only stdio servers from this file, so the remote
+        // HTTP endpoint is bridged through the `mcp-remote` npm package (run via
+        // npx - needs Node.js installed). First launch opens a browser to sign in.
+        config: JSON.stringify(
+          {
+            mcpServers: {
+              "stirling-pdf": {
+                command: "npx",
+                args: ["-y", "mcp-remote", mcpUrl],
+              },
+            },
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        value: "claude-code",
+        label: "Claude Code",
+        file: ".mcp.json",
         config: JSON.stringify(
           { mcpServers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
           null,
@@ -198,7 +218,12 @@ export default function McpSection() {
                     "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy.",
                   )}
                 </Text>
-                <Tabs defaultValue="claude" variant="pills" radius="md" mt={4}>
+                <Tabs
+                  defaultValue="claude-desktop"
+                  variant="pills"
+                  radius="md"
+                  mt={4}
+                >
                   <Tabs.List>
                     {clients.map((c) => (
                       <Tabs.Tab key={c.value} value={c.value}>
