@@ -10,12 +10,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.arc.All;
 import io.quarkus.arc.profile.IfBuildProfile;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 

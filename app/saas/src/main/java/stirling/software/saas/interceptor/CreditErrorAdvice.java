@@ -37,10 +37,10 @@ import stirling.software.saas.util.CreditHeaderUtils;
  * <p>// TODO: Migration required - was a Spring {@code @RestControllerAdvice(annotations =
  * AutoJobPostMapping.class)} with {@code @Profile("saas")} and {@code @Order(1)}, handling
  * exceptions via {@code @ExceptionHandler(Throwable.class)}. Re-express as a JAX-RS
- * {@code @jakarta.ws.rs.ext.Provider ExceptionMapper<Throwable>} (scoped/gated to AutoJobPostMapping
- * endpoints), wiring the saas profile gating via build profile. The {@code handleThrowable} body has
- * been translated from Spring {@code ResponseEntity} to JAX-RS {@code Response} but the
- * registration/scoping as an ExceptionMapper still needs wiring.
+ * {@code @jakarta.ws.rs.ext.Provider ExceptionMapper<Throwable>} (scoped/gated to
+ * AutoJobPostMapping endpoints), wiring the saas profile gating via build profile. The {@code
+ * handleThrowable} body has been translated from Spring {@code ResponseEntity} to JAX-RS {@code
+ * Response} but the registration/scoping as an ExceptionMapper still needs wiring.
  */
 @ApplicationScoped
 @Slf4j
@@ -84,7 +84,8 @@ public class CreditErrorAdvice {
     }
 
     // TODO: Migration required - was @ExceptionHandler(Throwable.class) on a @RestControllerAdvice.
-    // Convert to ExceptionMapper<Throwable>.toResponse(Throwable); HttpServletRequest access must be
+    // Convert to ExceptionMapper<Throwable>.toResponse(Throwable); HttpServletRequest access must
+    // be
     // replaced by an injected JAX-RS request context (e.g. @Context ContainerRequestContext) since
     // ExceptionMapper does not receive the servlet request as a parameter.
     public Response handleThrowable(HttpServletRequest request, Throwable ex) {

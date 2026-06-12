@@ -2,13 +2,14 @@ package stirling.software.saas.config;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 
-// TODO: Migration required - @ConfigurationProperties(prefix="credits"); bind via @ConfigProperty or @ConfigMapping
+// TODO: Migration required - @ConfigurationProperties(prefix="credits"); bind via @ConfigProperty
+// or @ConfigMapping
 @Data
 @ApplicationScoped
 @IfBuildProfile("saas")

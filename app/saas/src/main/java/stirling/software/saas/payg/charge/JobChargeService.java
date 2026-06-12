@@ -8,15 +8,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import io.quarkus.arc.profile.IfBuildProfile;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.MultipartFile;
-
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;

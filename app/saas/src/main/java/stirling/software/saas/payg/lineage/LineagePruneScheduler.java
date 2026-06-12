@@ -4,12 +4,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.arc.profile.IfBuildProfile;
 import io.quarkus.scheduler.Scheduled;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +44,8 @@ public class LineagePruneScheduler {
         this.retention = retention;
     }
 
-    // TODO: Migration required - Spring 6-field cron "0 0 * * * *" (top of every hour) translated to
+    // TODO: Migration required - Spring 6-field cron "0 0 * * * *" (top of every hour) translated
+    // to
     // Quartz cron "0 0 * ? * *" (day-of-month set to ? per Quartz day-of-week/day-of-month
     // mutual-exclusion). Configurability is preserved via the {payg.lineage.prune-cron} config
     // expression; set that property to a Quartz-syntax cron (default below) to override.

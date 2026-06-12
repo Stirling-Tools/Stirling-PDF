@@ -1,8 +1,9 @@
 package stirling.software.saas.payg.filter;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.arc.profile.IfBuildProfile;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,7 +21,8 @@ import lombok.Setter;
  *       OUTPUT recording in {@code afterCompletion}. {@code null} = unbounded.
  * </ul>
  */
-// TODO: Migration required - @ConfigurationProperties(prefix="payg.filter"); bind via @ConfigProperty or @ConfigMapping
+// TODO: Migration required - @ConfigurationProperties(prefix="payg.filter"); bind via
+// @ConfigProperty or @ConfigMapping
 @ApplicationScoped
 @IfBuildProfile("saas")
 @Getter

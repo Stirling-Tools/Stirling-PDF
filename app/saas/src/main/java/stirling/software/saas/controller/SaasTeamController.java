@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
@@ -15,8 +17,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.arc.profile.IfBuildProfile;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -166,7 +166,7 @@ public class SaasTeamController {
 
             invitation.setStatus(
                     stirling.software.common.model.enumeration.InvitationStatus.REJECTED);
-            invitationRepository.save(invitation);
+            invitationRepository.persist(invitation);
 
             return Response.ok(Map.of("message", "Invitation rejected")).build();
         } catch (IllegalArgumentException e) {
@@ -195,7 +195,7 @@ public class SaasTeamController {
             User currentUser = getCurrentUser();
             TeamInvitation invitation =
                     invitationRepository
-                            .findById(invitationId)
+                            .findByIdOptional(invitationId)
                             .orElseThrow(
                                     () -> new IllegalArgumentException("Invitation not found"));
 
@@ -221,7 +221,7 @@ public class SaasTeamController {
 
             invitation.setStatus(
                     stirling.software.common.model.enumeration.InvitationStatus.CANCELLED);
-            invitationRepository.save(invitation);
+            invitationRepository.persist(invitation);
 
             return Response.ok(Map.of("message", "Invitation cancelled")).build();
         } catch (IllegalArgumentException e) {
@@ -392,9 +392,9 @@ public class SaasTeamController {
             // Get the user being removed before removing them
             User userToRemove =
                     userRepository
-                            .findById(memberId)
+                            .findByIdOptional(memberId)
                             .orElseThrow(() -> new IllegalArgumentException("Member not found"));
-            Team oldTeam = teamRepository.findById(teamId).orElseThrow();
+            Team oldTeam = teamRepository.findByIdOptional(teamId).orElseThrow();
 
             // Remove the user from the team
             saasTeamService.removeTeamMember(teamId, memberId, currentUser);
@@ -443,7 +443,7 @@ public class SaasTeamController {
             User currentUser = getCurrentUser();
 
             // Get the team before leaving
-            Team oldTeam = teamRepository.findById(teamId).orElseThrow();
+            Team oldTeam = teamRepository.findByIdOptional(teamId).orElseThrow();
 
             // Leave the team
             saasTeamService.leaveTeam(teamId, currentUser);
@@ -498,7 +498,7 @@ public class SaasTeamController {
 
             Team team =
                     teamRepository
-                            .findById(teamId)
+                            .findByIdOptional(teamId)
                             .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
             // Prevent renaming personal teams
@@ -516,7 +516,7 @@ public class SaasTeamController {
             }
 
             team.setName(request.newName.trim());
-            teamRepository.save(team);
+            teamRepository.persist(team);
 
             log.info(
                     "Team {} renamed to {} by leader {}",
@@ -641,12 +641,11 @@ public class SaasTeamController {
     @Path("/{teamId}/seats")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("ADMIN")
-    public Response updateTeamSeats(
-            @PathParam("teamId") Long teamId, UpdateSeatsRequest request) {
+    public Response updateTeamSeats(@PathParam("teamId") Long teamId, UpdateSeatsRequest request) {
         try {
             saasTeamService.updateTeamSeats(teamId, request.maxSeats);
 
-            Team team = teamRepository.findById(teamId).orElseThrow();
+            Team team = teamRepository.findByIdOptional(teamId).orElseThrow();
             int maxSeats = saasTeamExtensionService.getMaxSeats(team);
             int seatsUsed = saasTeamExtensionService.getSeatsUsed(team);
             return Response.ok(
@@ -734,7 +733,7 @@ public class SaasTeamController {
         try {
             Team team =
                     teamRepository
-                            .findById(teamId)
+                            .findByIdOptional(teamId)
                             .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);

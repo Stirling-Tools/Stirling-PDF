@@ -611,9 +611,7 @@ public class SaasTeamService {
                             .uri(java.net.URI.create(url))
                             .header("Content-Type", "application/json")
                             .header("Authorization", "Bearer " + edgeFunctionSecret)
-                            .POST(
-                                    java.net.http.HttpRequest.BodyPublishers.ofString(
-                                            requestJson))
+                            .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestJson))
                             .build();
 
             java.net.http.HttpClient.newHttpClient()

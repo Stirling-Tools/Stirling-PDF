@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.arc.profile.IfBuildProfile;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -108,8 +107,6 @@ public class AiCreateController {
 
     // TODO: Migration required - @Transactional(readOnly = true): jakarta.transaction.Transactional
     // has no readOnly attribute; using a plain transaction.
-    // TODO: Migration required - org.springframework.data.domain.PageRequest is Spring Data; replace
-    // with Hibernate ORM Panache paging when the repository layer is migrated.
     @GET
     @Path("/sessions")
     @Transactional
@@ -121,8 +118,7 @@ public class AiCreateController {
         int safeSize = Math.max(1, Math.min(size, 50));
         List<AiCreateSessionRepository.AiCreateSessionSummaryProjection> sessions =
                 sessionService.listSessionSummariesForCurrentUser(
-                        org.springframework.data.domain.PageRequest.of(safePage, safeSize),
-                        includeDrafts);
+                        safePage, safeSize, includeDrafts);
         return Response.ok(sessions.stream().map(this::toSummary).toList()).build();
     }
 

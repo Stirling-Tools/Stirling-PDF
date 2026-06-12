@@ -56,9 +56,9 @@ import stirling.software.saas.util.LogRedactionUtils;
  * Quarkus OIDC/auth processing. The {@code doFilterInternal}/{@code shouldNotFilter} servlet
  * signatures are retained here; the request/response handling and entry-point error path
  * (previously Spring's {@code BearerTokenAuthenticationEntryPoint}) must be reattached during that
- * conversion. JWT decoding/validation (previously Spring {@code JwtDecoder}/{@code NimbusJwtDecoder})
- * must move to Quarkus OIDC; the {@link JwtDecoder} functional interface below is a placeholder so
- * the decode call site keeps compiling.
+ * conversion. JWT decoding/validation (previously Spring {@code JwtDecoder}/{@code
+ * NimbusJwtDecoder}) must move to Quarkus OIDC; the {@link JwtDecoder} functional interface below
+ * is a placeholder so the decode call site keeps compiling.
  */
 @Slf4j
 public class SupabaseAuthenticationFilter {
@@ -135,8 +135,10 @@ public class SupabaseAuthenticationFilter {
             processJwtAuthentication(request);
         } catch (AuthenticationException e) {
             SecurityContextHolder.clearContext();
-            // TODO: Migration required - was authenticationEntryPoint.commence(request, response, e)
-            // (Spring BearerTokenAuthenticationEntryPoint). Emit the 401 challenge response here when
+            // TODO: Migration required - was authenticationEntryPoint.commence(request, response,
+            // e)
+            // (Spring BearerTokenAuthenticationEntryPoint). Emit the 401 challenge response here
+            // when
             // converting to a JAX-RS @Provider filter.
             log.debug("JWT authentication failed: {}", e.getMessage());
             return;
@@ -181,7 +183,16 @@ public class SupabaseAuthenticationFilter {
 
             EnhancedJwtAuthenticationToken authToken =
                     new EnhancedJwtAuthenticationToken(
-                            jwt, user.getAuthorities(), user.getUsername(), supabaseId);
+                            jwt,
+                            user.getAuthorities().stream()
+                                    .map(
+                                            a ->
+                                                    new stirling.software.common.security
+                                                            .SimpleGrantedAuthority(
+                                                            a.getAuthority()))
+                                    .collect(java.util.stream.Collectors.toSet()),
+                            user.getUsername(),
+                            supabaseId);
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
             // Hot path: runs on every authenticated request (>10 per page on a typical SPA),
@@ -290,7 +301,8 @@ public class SupabaseAuthenticationFilter {
         try {
             return userService.saveUser(user);
         } catch (PersistenceException e) {
-            // TODO: Migration required - was Spring's DataIntegrityViolationException (email-collision
+            // TODO: Migration required - was Spring's DataIntegrityViolationException
+            // (email-collision
             // race). jakarta.persistence.PersistenceException is broader; narrow to the
             // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
             log.warn(
@@ -384,7 +396,8 @@ public class SupabaseAuthenticationFilter {
             supabaseUserService.createSupabaseUser(supabaseId, isAnon ? null : email, isAnon);
         } catch (PersistenceException ignored) {
             // Concurrent creation; fall through, the row exists.
-            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to the
+            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to
+            // the
             // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
         } catch (Exception e) {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
@@ -396,7 +409,8 @@ public class SupabaseAuthenticationFilter {
             savedUser = userService.saveUser(newUser);
         } catch (PersistenceException dup) {
             // Parallel filter won the race; fetch the winning row.
-            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to the
+            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to
+            // the
             // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
             weCreatedThisUser = false;
             savedUser =
@@ -453,8 +467,19 @@ public class SupabaseAuthenticationFilter {
 
         userService.trackApiKeyFirstUse(user.get());
 
-        ApiKeyAuthenticationToken authToken =
-                new ApiKeyAuthenticationToken(user.get(), apiKey, user.get().getAuthorities());
+        // TODO: Migration required - ApiKeyAuthenticationToken is a plain POJO that does not
+        // implement the Authentication shim. Wrap the principal/credentials/authorities in a
+        // UsernamePasswordAuthenticationToken (which does) so it can be set on the SecurityContext.
+        // Re-wire to a Quarkus SecurityIdentity when the API-key auth path is migrated.
+        java.util.Collection<stirling.software.common.security.GrantedAuthority> mappedAuthorities =
+                user.get().getAuthorities().stream()
+                        .map(
+                                a ->
+                                        new stirling.software.common.security.SimpleGrantedAuthority(
+                                                a.getAuthority()))
+                        .collect(java.util.stream.Collectors.toList());
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(user.get(), apiKey, mappedAuthorities);
         SecurityContextHolder.getContext().setAuthentication(authToken);
         return true;
     }
@@ -466,7 +491,8 @@ public class SupabaseAuthenticationFilter {
     // ---------------------------------------------------------------------------------------------
     // TODO: Migration required - claim accessor adapters. Spring's Jwt exposed typed claim getters
     // (getClaimAsString/getClaimAsStringList/getClaimAsInstant/getClaimAsBoolean). MicroProfile
-    // JsonWebToken only exposes a generic getClaim(name); these helpers reproduce the original typed
+    // JsonWebToken only exposes a generic getClaim(name); these helpers reproduce the original
+    // typed
     // semantics so the validation/user-creation logic is preserved unchanged.
     // ---------------------------------------------------------------------------------------------
 

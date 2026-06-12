@@ -8,10 +8,9 @@ import jakarta.inject.Named;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.SecurityContextHolder;
-
-import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.repository.TeamMembershipRepository;

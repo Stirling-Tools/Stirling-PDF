@@ -28,11 +28,12 @@ import stirling.software.saas.util.CreditHeaderUtils;
  * beforeBodyWrite(...)}. Spring's {@code ResponseBodyAdvice}, {@code MethodParameter}, {@code
  * HttpMessageConverter}, {@code ServerHttpRequest/Response} and {@code
  * ServletServerHttpRequest/Response} have no Quarkus equivalent. Re-express the body-write
- * interception as a JAX-RS {@code @jakarta.ws.rs.ext.Provider ContainerResponseFilter}. The original
- * {@code supports(...)} returned true for all REST bodies. The credit-consumption logic from {@code
- * beforeBodyWrite} is preserved verbatim in {@link #onBeforeBodyWrite(HttpServletRequest,
- * HttpServletResponse)} below, operating on the servlet request/response that the original obtained
- * via {@code ServletServerHttpRequest.getServletRequest()} / {@code
+ * interception as a JAX-RS {@code @jakarta.ws.rs.ext.Provider ContainerResponseFilter}. The
+ * original {@code supports(...)} returned true for all REST bodies. The credit-consumption logic
+ * from {@code beforeBodyWrite} is preserved verbatim in {@link
+ * #onBeforeBodyWrite(HttpServletRequest, HttpServletResponse)} below, operating on the servlet
+ * request/response that the original obtained via {@code
+ * ServletServerHttpRequest.getServletRequest()} / {@code
  * ServletServerHttpResponse.getServletResponse()}.
  */
 @ApplicationScoped
@@ -70,7 +71,8 @@ public class CreditSuccessAdvice {
                         .register(meterRegistry);
     }
 
-    // TODO: Migration required - was ResponseBodyAdvice#beforeBodyWrite(Object body, MethodParameter,
+    // TODO: Migration required - was ResponseBodyAdvice#beforeBodyWrite(Object body,
+    // MethodParameter,
     // MediaType, Class<? extends HttpMessageConverter<?>>, ServerHttpRequest, ServerHttpResponse).
     // Re-wire as ContainerResponseFilter.filter(ContainerRequestContext, ContainerResponseContext).
     // The original returned `body` unchanged; this side-effects credit consumption + response

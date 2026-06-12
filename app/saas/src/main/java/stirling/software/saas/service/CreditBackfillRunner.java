@@ -23,7 +23,8 @@ import stirling.software.proprietary.security.model.User;
  */
 @ApplicationScoped
 @IfBuildProfile("saas")
-// TODO: Migration required - @ConditionalOnProperty(credits.enabled, matchIfMissing=true) gating not
+// TODO: Migration required - @ConditionalOnProperty(credits.enabled, matchIfMissing=true) gating
+// not
 // translated; backfill always runs under the saas profile
 @RequiredArgsConstructor
 @Slf4j

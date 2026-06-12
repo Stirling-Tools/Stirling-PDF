@@ -17,15 +17,14 @@ import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.transaction.TransactionSynchronizationRegistry;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.security.UsernamePasswordAuthenticationToken;
-
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;

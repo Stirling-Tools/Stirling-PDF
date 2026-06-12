@@ -34,9 +34,9 @@ import stirling.software.saas.service.SupabaseUserService;
  * <p>// TODO: Migration required - this class was a Spring {@code @Configuration} with
  * {@code @EnableWebSecurity}, {@code @EnableMethodSecurity}, {@code @Profile("saas")} and
  * {@code @Order(1)}. The {@code SecurityFilterChain} bean (CSRF/CORS/session/oauth2ResourceServer
- * wiring) has no Quarkus equivalent and must be re-expressed declaratively via
- * {@code quarkus.http.auth.*} config plus Quarkus OIDC/SmallRye-JWT. The {@code SecurityFilterChain}
- * bean method has been removed; the JWKS issuer/audience/clock-skew validation logic and the
+ * wiring) has no Quarkus equivalent and must be re-expressed declaratively via {@code
+ * quarkus.http.auth.*} config plus Quarkus OIDC/SmallRye-JWT. The {@code SecurityFilterChain} bean
+ * method has been removed; the JWKS issuer/audience/clock-skew validation logic and the
  * CORS/authority-mapping helpers are retained below so the policy can be re-applied during native
  * security wiring. The {@code JwtDecoder}/{@code NimbusJwtDecoder}/{@code OAuth2TokenValidator}
  * Spring OAuth2 resource-server types are not available; the token decoding/validation must move to
@@ -65,16 +65,20 @@ public class SupabaseSecurityConfig {
     @ConfigProperty(name = "app.supabase.clock-skew-seconds", defaultValue = "120")
     long clockSkewSeconds;
 
-    // TODO: Migration required - the original @Bean SecurityFilterChain saasSecurityFilterChain(...)
+    // TODO: Migration required - the original @Bean SecurityFilterChain
+    // saasSecurityFilterChain(...)
     // configured CSRF-disabled, CORS, STATELESS sessions, permitAll matchers for
-    // OPTIONS/actuator-health/config/static/public-auth/frontend routes, anyRequest().authenticated(),
+    // OPTIONS/actuator-health/config/static/public-auth/frontend routes,
+    // anyRequest().authenticated(),
     // registered SupabaseAuthenticationFilter before BearerTokenAuthenticationFilter, set a
     // BearerTokenAuthenticationEntryPoint + BearerTokenAccessDeniedHandler, and wired
-    // oauth2ResourceServer().jwt() with this JwtDecoder and SupabaseSecurityConfig::toAuthentication.
+    // oauth2ResourceServer().jwt() with this JwtDecoder and
+    // SupabaseSecurityConfig::toAuthentication.
     // Re-express this via quarkus.http.auth.permission.* + quarkus.http.cors.* config and Quarkus
     // OIDC (mp.jwt). SupabaseAuthenticationFilter must be registered as a JAX-RS @Provider filter.
 
-    // TODO: Migration required - original @Bean JwtDecoder jwtDecoder() built a NimbusJwtDecoder from
+    // TODO: Migration required - original @Bean JwtDecoder jwtDecoder() built a NimbusJwtDecoder
+    // from
     // the Supabase JWKS endpoint (issuer + "/.well-known/jwks.json") and attached a
     // SupabaseTokenValidator (iss/exp/aud enforcement with clock skew), failing closed when the
     // issuer was unusable. NimbusJwtDecoder / JwtDecoder are Spring OAuth2 types with no Quarkus

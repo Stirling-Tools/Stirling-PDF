@@ -1,8 +1,8 @@
 package stirling.software.saas.config;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 

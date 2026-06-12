@@ -4,6 +4,10 @@ import java.io.InputStream;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.GET;
@@ -14,11 +18,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
-
-import io.quarkus.arc.profile.IfBuildProfile;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -109,8 +108,7 @@ public class AiProxyController {
 
     @GET
     @Path("/versions/{userId}")
-    public Response versions(
-            @PathParam("userId") String userId, HttpServletRequest request) {
+    public Response versions(@PathParam("userId") String userId, HttpServletRequest request) {
         return proxy("GET", "/api/versions/" + userId, request, false, false);
     }
 
@@ -122,8 +120,7 @@ public class AiProxyController {
 
     @POST
     @Path("/style/{userId}")
-    public Response updateStyle(
-            @PathParam("userId") String userId, HttpServletRequest request) {
+    public Response updateStyle(@PathParam("userId") String userId, HttpServletRequest request) {
         return proxy("POST", "/api/style/" + userId, request, false, false);
     }
 
@@ -221,8 +218,7 @@ public class AiProxyController {
                     };
 
             Response.ResponseBuilder builder = Response.status(statusCode).entity(body);
-            boolean hasContentType =
-                    copyHeader(aiResponse, builder, "Content-Type");
+            boolean hasContentType = copyHeader(aiResponse, builder, "Content-Type");
             copyHeader(aiResponse, builder, "Cache-Control");
             copyHeader(aiResponse, builder, "X-Accel-Buffering");
             copyHeader(aiResponse, builder, "Content-Disposition");

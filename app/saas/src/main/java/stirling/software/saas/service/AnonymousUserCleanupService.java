@@ -69,7 +69,7 @@ public class AnonymousUserCleanupService {
 
             idStream.collect(Collectors.groupingBy(id -> counter.getAndIncrement() / batchSize))
                     .values()
-                    .forEach(supabaseUserRepository::deleteAllByIdInBatch);
+                    .forEach(batch -> supabaseUserRepository.delete("id in ?1", batch));
         }
     }
 
@@ -80,7 +80,7 @@ public class AnonymousUserCleanupService {
 
             idStream.collect(Collectors.groupingBy(id -> counter.getAndIncrement() / batchSize))
                     .values()
-                    .forEach(userRepository::deleteAllByIdInBatch);
+                    .forEach(batch -> userRepository.delete("id in ?1", batch));
         }
     }
 }

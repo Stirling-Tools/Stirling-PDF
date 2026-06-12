@@ -10,9 +10,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Set;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * SHA-256 of the file's bytes. The simplest universally-applicable signature — works for every

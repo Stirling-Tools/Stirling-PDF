@@ -1,11 +1,11 @@
 package stirling.software.saas.config;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-
-import io.quarkus.arc.profile.IfBuildProfile;
 
 /** Saas mode is unconditionally ENTERPRISE (every tenant is a paying Stripe customer). */
 @ApplicationScoped

@@ -38,10 +38,10 @@ import stirling.software.saas.util.AuthenticationUtils;
  * HandlerInterceptor}, {@code HandlerMethod} and {@code ModelAndView} have no Quarkus equivalent.
  * Convert this to a JAX-RS {@code @jakarta.ws.rs.ext.Provider ContainerRequestFilter} (preHandle ->
  * filter, with abort responses replacing the {@code return false} short-circuits). The handler
- * introspection that read {@code @AutoJobPostMapping} off the resolved {@code HandlerMethod} must be
- * replaced by JAX-RS {@code ResourceInfo#getResourceMethod()} (injected via {@code @Context}). The
- * method bodies are preserved; {@code handler} is now an opaque {@code Object} and the
- * {@code HandlerMethod} cast has been replaced by a reflective {@link Method} fallback (see TODOs).
+ * introspection that read {@code @AutoJobPostMapping} off the resolved {@code HandlerMethod} must
+ * be replaced by JAX-RS {@code ResourceInfo#getResourceMethod()} (injected via {@code @Context}).
+ * The method bodies are preserved; {@code handler} is now an opaque {@code Object} and the {@code
+ * HandlerMethod} cast has been replaced by a reflective {@link Method} fallback (see TODOs).
  */
 @ApplicationScoped
 @Slf4j
@@ -368,8 +368,10 @@ public class UnifiedCreditInterceptor {
         log.debug("[CREDIT-DEBUG] postHandle: Success path will be handled by CreditSuccessAdvice");
     }
 
-    // TODO: Migration required - was @Override HandlerInterceptor#afterCompletion(request, response,
-    // handler, Exception). Re-wire via a JAX-RS ContainerResponseFilter if afterCompletion semantics
+    // TODO: Migration required - was @Override HandlerInterceptor#afterCompletion(request,
+    // response,
+    // handler, Exception). Re-wire via a JAX-RS ContainerResponseFilter if afterCompletion
+    // semantics
     // are needed; the error path is handled by CreditErrorAdvice.
     public void afterCompletion(
             HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
@@ -385,7 +387,8 @@ public class UnifiedCreditInterceptor {
         }
     }
 
-    // TODO: Migration required - was @Override AsyncHandlerInterceptor#afterConcurrentHandlingStarted.
+    // TODO: Migration required - was @Override
+    // AsyncHandlerInterceptor#afterConcurrentHandlingStarted.
     // JAX-RS handles async dispatch differently; no direct equivalent required.
     public void afterConcurrentHandlingStarted(
             HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -397,10 +400,11 @@ public class UnifiedCreditInterceptor {
     }
 
     /**
-     * // TODO: Migration required - resolves the resource {@link Method} that the original code read
-     * from Spring's {@code HandlerMethod}. Until this is wired to JAX-RS {@code ResourceInfo}, it
-     * supports a handler that is already a {@link Method} or exposes a no-arg {@code getMethod()}
-     * returning one (reflective best-effort), so the {@code @AutoJobPostMapping} gating still works.
+     * // TODO: Migration required - resolves the resource {@link Method} that the original code
+     * read from Spring's {@code HandlerMethod}. Until this is wired to JAX-RS {@code ResourceInfo},
+     * it supports a handler that is already a {@link Method} or exposes a no-arg {@code
+     * getMethod()} returning one (reflective best-effort), so the {@code @AutoJobPostMapping}
+     * gating still works.
      */
     private Method resolveResourceMethod(Object handler) {
         if (handler instanceof Method m) {

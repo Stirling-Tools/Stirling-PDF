@@ -25,6 +25,8 @@ import jakarta.servlet.http.Part;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -38,8 +40,6 @@ import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStepStatus;
 import stirling.software.saas.payg.model.ProcessType;
-import stirling.software.common.security.Authentication;
-import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -64,8 +64,8 @@ import stirling.software.saas.util.AuthenticationUtils;
  * {@code @jakarta.ws.rs.ext.Provider} request/response filter pair. The Spring MVC types {@code
  * HandlerMethod}, {@code HandlerMapping}, {@code MultiValueMap}, {@code MultipartFile} and {@code
  * MultipartHttpServletRequest} have been removed: handler-annotation introspection now uses a
- * reflective {@link Method} fallback (see {@link #resolveResourceMethod}); multipart access now uses
- * the servlet-native {@link Part} API ({@code request.getParts()}); the best-matching-pattern
+ * reflective {@link Method} fallback (see {@link #resolveResourceMethod}); multipart access now
+ * uses the servlet-native {@link Part} API ({@code request.getParts()}); the best-matching-pattern
  * attribute now uses a literal key constant ({@link #BEST_MATCHING_PATTERN_ATTRIBUTE}).
  *
  * <p>// TODO: Migration required - {@link JobInput}'s {@code multipart} component is still typed as
@@ -212,7 +212,8 @@ public class PaygChargeInterceptor {
         }
 
         // TODO: Migration required - was `request instanceof MultipartHttpServletRequest mreq` +
-        // mreq.getMultiFileMap(). Now uses servlet-native request.getParts(). A non-multipart request
+        // mreq.getMultiFileMap(). Now uses servlet-native request.getParts(). A non-multipart
+        // request
         // yields no file parts and short-circuits, preserving the original behavior.
         List<Part> nonEmpty = new ArrayList<>();
         try {
@@ -291,9 +292,9 @@ public class PaygChargeInterceptor {
      * // TODO: Migration required - the {@link JobInput} record's first component is still Spring's
      * {@code MultipartFile} (owned by another module). This interceptor now sources inputs from the
      * servlet {@link Part} API. Once {@code JobInput} is migrated to carry a {@link Part} (or a
-     * neutral size+content-type holder), construct it directly here:
-     * {@code return new JobInput(part, path);}. Kept as a single adaptation seam so the rest of the
-     * charge flow is untouched.
+     * neutral size+content-type holder), construct it directly here: {@code return new
+     * JobInput(part, path);}. Kept as a single adaptation seam so the rest of the charge flow is
+     * untouched.
      */
     private JobInput buildJobInput(Part part, Path path) {
         return new JobInput(part, path);
@@ -482,10 +483,10 @@ public class PaygChargeInterceptor {
     }
 
     /**
-     * // TODO: Migration required - resolves the resource {@link Method} the original code read from
-     * Spring's {@code HandlerMethod} (via {@code hm.getMethodAnnotation(...)}). Until wired to JAX-RS
-     * {@code ResourceInfo}, supports a handler that is already a {@link Method} or exposes a no-arg
-     * {@code getMethod()} returning one, preserving the {@code @AutoJobPostMapping} gating.
+     * // TODO: Migration required - resolves the resource {@link Method} the original code read
+     * from Spring's {@code HandlerMethod} (via {@code hm.getMethodAnnotation(...)}). Until wired to
+     * JAX-RS {@code ResourceInfo}, supports a handler that is already a {@link Method} or exposes a
+     * no-arg {@code getMethod()} returning one, preserving the {@code @AutoJobPostMapping} gating.
      */
     private Method resolveResourceMethod(Object handler) {
         if (handler instanceof Method m) {

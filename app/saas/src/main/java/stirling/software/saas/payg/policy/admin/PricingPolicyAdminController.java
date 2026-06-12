@@ -3,7 +3,11 @@ package stirling.software.saas.payg.policy.admin;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -15,12 +19,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.arc.profile.IfBuildProfile;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +86,9 @@ public class PricingPolicyAdminController {
                     .entity(PolicyResponse.from(saved))
                     .build();
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(error(e.getMessage())).build();
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(error(e.getMessage()))
+                    .build();
         }
     }
 
@@ -118,8 +118,7 @@ public class PricingPolicyAdminController {
             description =
                     "Payload {policyId: <id>} sets the override; {policyId: null} clears it"
                             + " (team falls back to default).")
-    public Response setTeamOverride(
-            @PathParam("teamId") Long teamId, TeamOverrideRequest req) {
+    public Response setTeamOverride(@PathParam("teamId") Long teamId, TeamOverrideRequest req) {
         try {
             policyService.setTeamOverride(teamId, req == null ? null : req.policyId());
             return Response.noContent().build();

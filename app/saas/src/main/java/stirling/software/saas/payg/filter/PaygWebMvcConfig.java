@@ -1,8 +1,9 @@
 package stirling.software.saas.payg.filter;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.arc.profile.IfBuildProfile;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -19,7 +20,8 @@ import lombok.RequiredArgsConstructor;
  * </ul>
  */
 // TODO: Migration required - interceptor registration moved to @Provider JAX-RS filters; filter
-// registration (PaygResponseBodyWrapperFilter on /api/*) now via @WebFilter or quarkus filter config
+// registration (PaygResponseBodyWrapperFilter on /api/*) now via @WebFilter or quarkus filter
+// config
 @ApplicationScoped
 @IfBuildProfile("saas")
 @RequiredArgsConstructor

@@ -1,13 +1,15 @@
 package stirling.software.saas.config;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.arc.profile.IfBuildProfile;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /** Supabase configuration ({@code app.supabase.*}) for saas mode. */
-// TODO: Migration required - @ConfigurationProperties(prefix="app.supabase"); bind via @ConfigProperty or @ConfigMapping
+// TODO: Migration required - @ConfigurationProperties(prefix="app.supabase"); bind via
+// @ConfigProperty or @ConfigMapping
 @Slf4j
 @Data
 @ApplicationScoped

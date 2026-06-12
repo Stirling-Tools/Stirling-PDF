@@ -6,16 +6,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.swagger.v3.oas.annotations.Hidden;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
-
-import io.quarkus.arc.profile.IfBuildProfile;
-
-import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

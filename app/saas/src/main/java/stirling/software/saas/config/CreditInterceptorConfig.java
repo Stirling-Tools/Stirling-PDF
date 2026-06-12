@@ -1,8 +1,9 @@
 package stirling.software.saas.config;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkus.arc.profile.IfBuildProfile;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.saas.interceptor.UnifiedCreditInterceptor;
