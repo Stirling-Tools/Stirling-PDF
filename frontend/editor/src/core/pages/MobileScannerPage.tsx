@@ -23,11 +23,7 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { loadJscanify } from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
 
-// The mobile-scanner API calls must target the same backend base URL the rest
-// of the app uses. On SaaS the API base is configurable (VITE_API_BASE_URL) and
-// is not necessarily the page origin, so an origin-relative fetch would miss it
-// and the phone would get "Session not found". Read it straight off the
-// configured client so we stay consistent across build variants.
+// Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
 
 /**

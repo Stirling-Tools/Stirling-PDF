@@ -7,9 +7,7 @@ declare global {
   }
 }
 
-// The vendor scripts are static assets served alongside the app, so they live
-// under the app's base path (e.g. /app on SaaS). An origin-absolute path would
-// 404 on a sub-path deploy.
+// Served under the app's base path (handles sub-path deploys like /app).
 const OPENCV_SRC = withBasePath("/vendor/jscanify/opencv.js");
 const JSCANIFY_SRC = withBasePath("/vendor/jscanify/jscanify.js");
 
