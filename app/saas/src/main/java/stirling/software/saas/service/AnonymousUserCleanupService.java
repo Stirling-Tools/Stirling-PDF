@@ -6,13 +6,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import lombok.RequiredArgsConstructor;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -23,22 +24,21 @@ import stirling.software.saas.repository.SupabaseUserRepository;
  * recommendation for anonymous user management.
  */
 @Slf4j
-@Service
-@Profile("saas")
-@RequiredArgsConstructor
+@ApplicationScoped
 public class AnonymousUserCleanupService {
 
-    @Value("${app.auth.anonymous.enabled:true}")
-    private boolean anonEnabled;
+    @ConfigProperty(name = "app.auth.anonymous.enabled", defaultValue = "true")
+    boolean anonEnabled;
 
-    @Value("${app.auth.anonymous.retention-days:30}")
-    private int retentionDays;
+    @ConfigProperty(name = "app.auth.anonymous.retention-days", defaultValue = "30")
+    int retentionDays;
 
-    @Value("${app.auth.anonymous.cleanup-batch-size:100}")
-    private int batchSize;
+    @ConfigProperty(name = "app.auth.anonymous.cleanup-batch-size", defaultValue = "100")
+    int batchSize;
 
-    private final UserRepository userRepository;
-    private final SupabaseUserRepository supabaseUserRepository;
+    @Inject UserRepository userRepository;
+
+    @Inject SupabaseUserRepository supabaseUserRepository;
 
     /**
      * Scheduled task that runs daily to clean up anonymous users based on configured retention

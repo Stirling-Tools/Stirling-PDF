@@ -4,23 +4,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.saas.payg.job.ProcessingJob;
 import stirling.software.saas.payg.model.JobStatus;
 
-@Repository
-public interface ProcessingJobRepository extends JpaRepository<ProcessingJob, UUID> {
+@ApplicationScoped
+public class ProcessingJobRepository implements PanacheRepositoryBase<ProcessingJob, UUID> {
 
-    List<ProcessingJob> findByOwnerUserIdAndStatus(Long ownerUserId, JobStatus status);
+    public List<ProcessingJob> findByOwnerUserIdAndStatus(Long ownerUserId, JobStatus status) {
+        return find("ownerUserId = ?1 and status = ?2", ownerUserId, status).list();
+    }
 
-    /**
-     * Jobs left {@code OPEN} past the workflow window; the stale-close scheduler picks these up.
-     */
-    @Query("SELECT j FROM ProcessingJob j WHERE j.status = :status AND j.lastStepAt < :cutoff")
-    List<ProcessingJob> findStale(
-            @Param("status") JobStatus status, @Param("cutoff") LocalDateTime cutoff);
+    /** Jobs left OPEN past the workflow window; the stale-close scheduler picks these up. */
+    public List<ProcessingJob> findStale(JobStatus status, LocalDateTime cutoff) {
+        return find("status = ?1 and lastStepAt < ?2", status, cutoff).list();
+    }
 }

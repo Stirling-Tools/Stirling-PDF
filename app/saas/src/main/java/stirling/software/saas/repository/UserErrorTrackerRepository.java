@@ -4,38 +4,43 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.UserErrorTracker;
 
-public interface UserErrorTrackerRepository extends JpaRepository<UserErrorTracker, Long> {
+@ApplicationScoped
+public class UserErrorTrackerRepository implements PanacheRepositoryBase<UserErrorTracker, Long> {
 
-    Optional<UserErrorTracker> findByUserAndEndpoint(User user, String endpoint);
+    public Optional<UserErrorTracker> findByUserAndEndpoint(User user, String endpoint) {
+        return find("user = ?1 and endpoint = ?2", user, endpoint).firstResultOptional();
+    }
 
-    Optional<UserErrorTracker> findByUserIdAndEndpoint(Long userId, String endpoint);
+    public Optional<UserErrorTracker> findByUserIdAndEndpoint(Long userId, String endpoint) {
+        return find("user.id = ?1 and endpoint = ?2", userId, endpoint).firstResultOptional();
+    }
 
-    @Query(
-            "SELECT uet FROM UserErrorTracker uet WHERE uet.user.apiKey = :apiKey AND uet.endpoint = :endpoint")
-    Optional<UserErrorTracker> findByUserApiKeyAndEndpoint(
-            @Param("apiKey") String apiKey, @Param("endpoint") String endpoint);
+    public Optional<UserErrorTracker> findByUserApiKeyAndEndpoint(String apiKey, String endpoint) {
+        return find("user.apiKey = ?1 and endpoint = ?2", apiKey, endpoint).firstResultOptional();
+    }
 
-    @Query("SELECT uet FROM UserErrorTracker uet WHERE uet.resetAfter <= :currentDateTime")
-    List<UserErrorTracker> findExpiredErrorTrackers(
-            @Param("currentDateTime") LocalDateTime currentDateTime);
+    public List<UserErrorTracker> findExpiredErrorTrackers(LocalDateTime currentDateTime) {
+        return find("resetAfter <= ?1", currentDateTime).list();
+    }
 
-    @Modifying
-    @Query("DELETE FROM UserErrorTracker uet WHERE uet.resetAfter <= :currentDateTime")
-    int deleteExpiredErrorTrackers(@Param("currentDateTime") LocalDateTime currentDateTime);
+    @Transactional
+    public int deleteExpiredErrorTrackers(LocalDateTime currentDateTime) {
+        return (int) delete("resetAfter <= ?1", currentDateTime);
+    }
 
-    @Query(
-            "SELECT uet FROM UserErrorTracker uet WHERE uet.user = :user AND uet.processingErrorCount >= 3")
-    List<UserErrorTracker> findHighErrorCountForUser(@Param("user") User user);
+    public List<UserErrorTracker> findHighErrorCountForUser(User user) {
+        return find("user = ?1 and processingErrorCount >= 3", user).list();
+    }
 
-    @Query(
-            "SELECT COUNT(uet) FROM UserErrorTracker uet WHERE uet.processingErrorCount >= :threshold")
-    Long countUsersWithHighErrorCount(@Param("threshold") int threshold);
+    public Long countUsersWithHighErrorCount(int threshold) {
+        return count("processingErrorCount >= ?1", threshold);
+    }
 }

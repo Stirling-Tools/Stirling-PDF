@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -37,6 +38,7 @@ import stirling.software.common.model.ApplicationProperties;
  *
  * <p>Skips unless the env var is set, so it never runs in normal CI. No secrets are committed.
  */
+@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
 @EnabledIfEnvironmentVariable(named = "STIRLING_TEST_VALKEY_URL", matches = "rediss?://.+")
 class LiveExternalClusterTest {
 

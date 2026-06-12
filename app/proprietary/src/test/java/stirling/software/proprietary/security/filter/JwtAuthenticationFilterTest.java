@@ -41,7 +41,7 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
-@Disabled
+@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
 

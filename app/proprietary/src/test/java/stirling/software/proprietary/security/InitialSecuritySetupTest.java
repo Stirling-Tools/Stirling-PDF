@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Optional;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
@@ -101,8 +101,10 @@ class InitialSecuritySetupTest {
     }
 
     @Test
-    void configureJwtSettingsDisablesKeyCleanupWhenJwtDisabled() {
-        ReflectionTestUtils.setField(initialSecuritySetup, "v2Enabled", true);
+    void configureJwtSettingsDisablesKeyCleanupWhenJwtDisabled() throws Exception {
+        Field _f = InitialSecuritySetup.class.getDeclaredField("v2Enabled");
+        _f.setAccessible(true);
+        _f.set(initialSecuritySetup, true);
         applicationProperties.getSecurity().getJwt().setEnableKeystore(false);
         when(userService.hasUsers()).thenReturn(true);
         when(userService.getUsersWithoutTeam()).thenReturn(Collections.emptyList());

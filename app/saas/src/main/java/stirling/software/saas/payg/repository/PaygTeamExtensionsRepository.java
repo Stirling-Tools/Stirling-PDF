@@ -2,13 +2,17 @@ package stirling.software.saas.payg.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 
-@Repository
-public interface PaygTeamExtensionsRepository extends JpaRepository<PaygTeamExtensions, Long> {
+@ApplicationScoped
+public class PaygTeamExtensionsRepository
+        implements PanacheRepositoryBase<PaygTeamExtensions, Long> {
 
-    Optional<PaygTeamExtensions> findByStripeCustomerId(String stripeCustomerId);
+    public Optional<PaygTeamExtensions> findByStripeCustomerId(String stripeCustomerId) {
+        return find("stripeCustomerId = ?1", stripeCustomerId).firstResultOptional();
+    }
 }

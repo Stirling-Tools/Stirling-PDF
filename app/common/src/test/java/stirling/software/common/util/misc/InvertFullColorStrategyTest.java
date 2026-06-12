@@ -21,12 +21,11 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 
 class InvertFullColorStrategyTest {
 
@@ -58,8 +57,7 @@ class InvertFullColorStrategyTest {
         // Create a simple PDF document for testing
         byte[] pdfBytes = createSimplePdfWithRectangle();
         MultipartFile mockPdfFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new ByteArrayMultipartFile("file", "test.pdf", "application/pdf", pdfBytes);
 
         // Create the strategy instance
         strategy = new InvertFullColorStrategy(mockPdfFile, ReplaceAndInvert.FULL_INVERSION);

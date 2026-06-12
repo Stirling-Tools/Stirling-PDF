@@ -3,18 +3,21 @@ package stirling.software.saas.repository;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.saas.model.SaasUserExtensions;
 
-@Repository
-public interface SaasUserExtensionsRepository extends JpaRepository<SaasUserExtensions, Long> {
+@ApplicationScoped
+public class SaasUserExtensionsRepository
+        implements PanacheRepositoryBase<SaasUserExtensions, Long> {
 
-    Optional<SaasUserExtensions> findByUserId(Long userId);
+    public Optional<SaasUserExtensions> findByUserId(Long userId) {
+        return find("user.id = ?1", userId).firstResultOptional();
+    }
 
-    @Query("SELECT e FROM SaasUserExtensions e WHERE e.user.supabaseId = :supabaseId")
-    Optional<SaasUserExtensions> findBySupabaseId(@Param("supabaseId") UUID supabaseId);
+    public Optional<SaasUserExtensions> findBySupabaseId(UUID supabaseId) {
+        return find("user.supabaseId = ?1", supabaseId).firstResultOptional();
+    }
 }
