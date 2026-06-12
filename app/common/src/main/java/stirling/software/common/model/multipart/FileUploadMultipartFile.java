@@ -72,6 +72,9 @@ public class FileUploadMultipartFile implements MultipartFile {
 
     @Override
     public void transferTo(Path dest) throws IOException {
-        Files.copy(delegate.uploadedFile(), dest);
+        // Overwrite semantics like Spring's MultipartFile#transferTo; callers often pass a
+        // Files.createTempFile(...) path that already exists, so REPLACE_EXISTING is required.
+        Files.copy(
+                delegate.uploadedFile(), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
 }

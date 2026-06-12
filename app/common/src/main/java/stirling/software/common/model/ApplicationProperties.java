@@ -854,7 +854,10 @@ public class ApplicationProperties {
         private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
         private boolean disableSanitize;
-        private int maxDPI;
+        // Default mirrors settings.yml.template (maxDPI: 500). Without an explicit default this
+        // primitive is 0, which makes every DPI check (dpi > maxDPI) fail with "maximum safe limit
+        // of 0" when the value is not populated from settings.
+        private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
