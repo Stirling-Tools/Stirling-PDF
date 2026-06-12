@@ -234,17 +234,11 @@ export default function MobileUploadModal({
     }
   }, [opened, sessionId, onFilesReceived, t]);
 
-  // Create session when modal opens
-  useEffect(() => {
-    if (opened) {
-      createSession(sessionId);
-      setFilesReceived(0);
-      setError(null);
-      setShowExpiryWarning(false);
-      processedFiles.current.clear();
-    }
-  }, [opened, sessionId]); // Only run when opened changes
-
+  // Create the session when the modal opens, and delete it on close/unmount.
+  // A single effect (this used to be two, which created the session twice and
+  // spammed duplicate sessions on the backend). Runs only when the modal opens
+  // or its session id changes - not when the i18n-bound createSession identity
+  // changes - so we create exactly one session per open.
   useEffect(() => {
     if (!opened) return;
 
@@ -262,7 +256,7 @@ export default function MobileUploadModal({
           console.warn("[MobileUploadModal] Cleanup failed:", err),
         );
     };
-  }, [opened, sessionId, createSession]);
+  }, [opened, sessionId]); // Only run when the modal opens / session id changes
 
   // Start polling for files when modal opens
   useEffect(() => {
