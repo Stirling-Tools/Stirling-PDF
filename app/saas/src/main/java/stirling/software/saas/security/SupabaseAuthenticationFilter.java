@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.AuthenticationException;
 import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.common.util.RequestUriUtils;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
@@ -475,8 +475,8 @@ public class SupabaseAuthenticationFilter {
                 user.get().getAuthorities().stream()
                         .map(
                                 a ->
-                                        new stirling.software.common.security.SimpleGrantedAuthority(
-                                                a.getAuthority()))
+                                        new stirling.software.common.security
+                                                .SimpleGrantedAuthority(a.getAuthority()))
                         .collect(java.util.stream.Collectors.toList());
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(user.get(), apiKey, mappedAuthorities);
