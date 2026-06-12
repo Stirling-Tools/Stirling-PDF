@@ -1,3 +1,5 @@
+import { withBasePath } from "@app/constants/app";
+
 declare global {
   interface Window {
     cv?: any;
@@ -5,8 +7,11 @@ declare global {
   }
 }
 
-const OPENCV_SRC = "/vendor/jscanify/opencv.js";
-const JSCANIFY_SRC = "/vendor/jscanify/jscanify.js";
+// The vendor scripts are static assets served alongside the app, so they live
+// under the app's base path (e.g. /app on SaaS). An origin-absolute path would
+// 404 on a sub-path deploy.
+const OPENCV_SRC = withBasePath("/vendor/jscanify/opencv.js");
+const JSCANIFY_SRC = withBasePath("/vendor/jscanify/jscanify.js");
 
 let loadPromise: Promise<void> | null = null;
 
