@@ -108,8 +108,6 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
         <span>
           {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
         </span>
-        <span className="payg-hero__meta-dot">•</span>
-        <span>{t("payg.free.hero.neverResets", "One-time, never resets")}</span>
       </div>
     </div>
   );
