@@ -10,6 +10,8 @@ import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import io.quarkus.narayana.jta.QuarkusTransaction;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.transaction.Transactional;
@@ -56,23 +58,49 @@ public class UserLicenseSettingsService {
      *
      * @return The current settings
      */
+    // Serializes singleton creation within this JVM so two concurrent callers (e.g. the startup
+    // license sync racing with the first inbound request) cannot both INSERT id=1.
+    private static final Object CREATE_LOCK = new Object();
+
     @Transactional
     public UserLicenseSettings getOrCreateSettings() {
+        Optional<UserLicenseSettings> existing = settingsRepository.findSettings();
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        // MIGRATION: Spring Data save() on this manually-@Id'd singleton did an upsert; the
+        // migrated
+        // persist() is INSERT-only and a PK violation when two transactions create id=1 at once
+        // (startup sync vs first request). Create the row in its OWN committed transaction, guarded
+        // by a JVM lock with a fresh-tx re-check, so exactly one INSERT happens; then reload it
+        // into
+        // the current transaction so callers that modify+persist operate on a managed entity.
+        synchronized (CREATE_LOCK) {
+            boolean alreadyCreated =
+                    QuarkusTransaction.requiringNew()
+                            .call(() -> settingsRepository.findSettings().isPresent());
+            if (!alreadyCreated) {
+                log.info("Initializing user license settings");
+                QuarkusTransaction.requiringNew()
+                        .run(
+                                () -> {
+                                    UserLicenseSettings settings = new UserLicenseSettings();
+                                    settings.setId(UserLicenseSettings.SINGLETON_ID);
+                                    settings.setGrandfatheredUserCount(0);
+                                    settings.setLicenseMaxUsers(0);
+                                    settings.setGrandfatheringLocked(false);
+                                    settings.setIntegritySalt(UUID.randomUUID().toString());
+                                    settings.setGrandfatheredUserSignature("");
+                                    settingsRepository.persist(settings);
+                                });
+            }
+        }
         return settingsRepository
                 .findSettings()
-                .orElseGet(
-                        () -> {
-                            log.info("Initializing user license settings");
-                            UserLicenseSettings settings = new UserLicenseSettings();
-                            settings.setId(UserLicenseSettings.SINGLETON_ID);
-                            settings.setGrandfatheredUserCount(0);
-                            settings.setLicenseMaxUsers(0);
-                            settings.setGrandfatheringLocked(false);
-                            settings.setIntegritySalt(UUID.randomUUID().toString());
-                            settings.setGrandfatheredUserSignature("");
-                            settingsRepository.persist(settings);
-                            return settings;
-                        });
+                .orElseThrow(
+                        () ->
+                                new IllegalStateException(
+                                        "User license settings missing immediately after creation"));
     }
 
     /**

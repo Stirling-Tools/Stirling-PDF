@@ -9,12 +9,13 @@ import java.util.function.Supplier;
 
 import org.slf4j.MDC;
 
+import io.quarkus.vertx.http.runtime.CurrentVertxRequest;
+
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
-import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,17 +42,54 @@ public class AutoJobAspect {
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
 
     private final JobExecutorService jobExecutorService;
-    private final HttpServletRequest request;
+    // Reactive-safe access to the current request. The undertow HttpServletRequest proxy throws
+    // UT000048 ("No request is currently active") on RESTEasy Reactive worker threads, so query
+    // params / method / path / attributes are read from the Vert.x request instead, degrading to
+    // null/empty when no request is active.
+    private final CurrentVertxRequest currentVertxRequest;
     private final FileStorage fileStorage;
 
     @Inject
     public AutoJobAspect(
             JobExecutorService jobExecutorService,
-            HttpServletRequest request,
+            CurrentVertxRequest currentVertxRequest,
             FileStorage fileStorage) {
         this.jobExecutorService = jobExecutorService;
-        this.request = request;
+        this.currentVertxRequest = currentVertxRequest;
         this.fileStorage = fileStorage;
+    }
+
+    private io.vertx.core.http.HttpServerRequest vertxRequest() {
+        try {
+            var current = currentVertxRequest.getCurrent();
+            return current != null ? current.request() : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private String requestParam(String name) {
+        io.vertx.core.http.HttpServerRequest req = vertxRequest();
+        return req != null ? req.getParam(name) : null;
+    }
+
+    private String requestMethod() {
+        io.vertx.core.http.HttpServerRequest req = vertxRequest();
+        return req != null ? req.method().name() : "";
+    }
+
+    private String requestUri() {
+        io.vertx.core.http.HttpServerRequest req = vertxRequest();
+        return req != null ? req.path() : "";
+    }
+
+    private Object requestAttribute(String name) {
+        try {
+            var current = currentVertxRequest.getCurrent();
+            return current != null ? current.get(name) : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     @AroundInvoke
@@ -59,11 +97,11 @@ public class AutoJobAspect {
         AutoJobPostMapping autoJobPostMapping =
                 ctx.getMethod().getAnnotation(AutoJobPostMapping.class);
         // Extract parameters from the request and annotation
-        boolean async = Boolean.parseBoolean(request.getParameter("async"));
+        boolean async = Boolean.parseBoolean(requestParam("async"));
         log.debug(
                 "AutoJobAspect: Processing {} {} with async={}",
-                request.getMethod(),
-                request.getRequestURI(),
+                requestMethod(),
+                requestUri(),
                 async);
         long timeout = autoJobPostMapping.timeout();
         int retryCount = autoJobPostMapping.retryCount();
@@ -310,7 +348,7 @@ public class AutoJobAspect {
 
     private String getJobIdFromContext() {
         try {
-            return (String) request.getAttribute("jobId");
+            return (String) requestAttribute("jobId");
         } catch (Exception e) {
             log.debug("Could not retrieve job ID from context: {}", e.getMessage());
             return null;

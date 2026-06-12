@@ -95,8 +95,27 @@ public class ControllerAuditAspect {
      */
     @AroundInvoke
     public Object auditEndpoint(InvocationContext ctx) throws Throwable {
-        String httpMethod = request != null ? request.getMethod() : "POST";
+        // Reactive-safe: the injected HttpServletRequest proxy is never null but throws UT000048
+        // ("No request is currently active") when touched on a RESTEasy Reactive worker thread.
+        // Resolve the verb through the guarded AuditService.getCurrentRequest() (returns null off a
+        // servlet request) and fall back to POST, mirroring the original non-web behaviour.
+        HttpServletRequest current = auditService.getCurrentRequest();
+        String httpMethod = current != null ? current.getMethod() : "POST";
         return auditController(ctx, httpMethod != null ? httpMethod : "POST");
+    }
+
+    // Reactive-safe accessor for the response proxy: touching it off an active servlet request
+    // throws UT000048, so treat that (and an unsatisfied proxy) as "no response available".
+    private HttpServletResponse safeResponse() {
+        try {
+            if (response == null) {
+                return null;
+            }
+            response.getStatus();
+            return response;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     private Object auditController(InvocationContext joinPoint, String httpMethod)
@@ -135,8 +154,8 @@ public class ControllerAuditAspect {
             }
         }
 
-        HttpServletRequest req = request;
-        HttpServletResponse resp = response;
+        HttpServletRequest req = auditService.getCurrentRequest();
+        HttpServletResponse resp = safeResponse();
 
         String previousPrincipal = MDC.get("auditPrincipal");
         String previousOrigin = MDC.get("auditOrigin");
@@ -271,9 +290,12 @@ public class ControllerAuditAspect {
     // Using AuditUtils.determineAuditEventType instead
 
     private String getRequestPath(Method method, String httpMethod) {
-        // Prefer actual request URI over annotation patterns (which may contain regex)
-        if (request != null) {
-            return request.getRequestURI();
+        // Prefer actual request URI over annotation patterns (which may contain regex).
+        // Reactive-safe: go through the guarded accessor (the raw proxy throws UT000048
+        // off-thread).
+        HttpServletRequest current = auditService.getCurrentRequest();
+        if (current != null) {
+            return current.getRequestURI();
         }
         // Fallback: try JAX-RS @Path annotation on method/class; return empty string if not present
         // TODO: Migration required - resolve path from jakarta.ws.rs.@Path on the declaring class

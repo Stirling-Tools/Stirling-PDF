@@ -13,7 +13,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -36,7 +35,10 @@ public class JobExecutorService {
 
     private final TaskManager taskManager;
     private final FileStorage fileStorage;
-    private final HttpServletRequest request;
+    // Reactive-safe: the undertow HttpServletRequest proxy throws UT000048 on RESTEasy Reactive
+    // worker threads, so the per-request "jobId" attribute is stored on the Vert.x RoutingContext
+    // instead (read back via AutoJobAspect). Off a live request this degrades to a no-op.
+    private final io.quarkus.vertx.http.runtime.CurrentVertxRequest currentVertxRequest;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final ExecutorService executor = ExecutorFactory.newVirtualThreadExecutor();
@@ -47,7 +49,7 @@ public class JobExecutorService {
     public JobExecutorService(
             TaskManager taskManager,
             FileStorage fileStorage,
-            HttpServletRequest request,
+            io.quarkus.vertx.http.runtime.CurrentVertxRequest currentVertxRequest,
             ResourceMonitor resourceMonitor,
             JobQueue jobQueue,
             @ConfigProperty(name = "spring.mvc.async.request-timeout", defaultValue = "1200000")
@@ -56,7 +58,7 @@ public class JobExecutorService {
                     String sessionTimeout) {
         this.taskManager = taskManager;
         this.fileStorage = fileStorage;
-        this.request = request;
+        this.currentVertxRequest = currentVertxRequest;
         this.resourceMonitor = resourceMonitor;
         this.jobQueue = jobQueue;
 
@@ -85,8 +87,13 @@ public class JobExecutorService {
 
         log.debug("Generated jobId: {} (base: {})", scopedJobKey, baseJobId);
 
-        if (request != null) {
-            request.setAttribute("jobId", scopedJobKey);
+        try {
+            var current = currentVertxRequest.getCurrent();
+            if (current != null) {
+                current.put("jobId", scopedJobKey);
+            }
+        } catch (RuntimeException ignored) {
+            // No active request (e.g. async/background execution) - jobId attribute is optional.
         }
 
         String jobId = scopedJobKey;

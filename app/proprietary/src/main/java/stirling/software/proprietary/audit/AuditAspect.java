@@ -98,7 +98,10 @@ public class AuditAspect {
         // an
         // HTTP request scope the injected proxy resolves to null, so we treat a null request the
         // same way the original treated a null ServletRequestAttributes.
-        HttpServletRequest req = request;
+        // Reactive-safe: the injected proxy is non-null but throws UT000048 when touched off an
+        // active servlet request (RESTEasy Reactive worker threads). Resolve via the guarded
+        // AuditService.getCurrentRequest(), which returns null outside a live servlet request.
+        HttpServletRequest req = auditService.getCurrentRequest();
         boolean isHttpRequest = req != null;
 
         String capturedIp = MDC.get("auditIp");
