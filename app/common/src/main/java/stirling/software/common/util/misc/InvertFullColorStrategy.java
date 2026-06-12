@@ -21,7 +21,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 // drop-in here. The abstract parent ReplaceAndInvertColorStrategy.replace() returns
 // InputStreamResource and editing that signature would ripple to all subclasses and callers; per
 // task rules, only this file may change, so the type is kept until the parent is migrated.
-import org.springframework.core.io.InputStreamResource;
+import stirling.software.common.model.io.InputStreamResource;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS drop-in
 // for these constructor params. The parent class ReplaceAndInvertColorStrategy declares the same
 // MultipartFile constructor parameter; changing the public signature here would diverge from the

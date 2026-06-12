@@ -6,7 +6,7 @@ import java.io.IOException;
 // type of the public abstract replace() method, implemented by subclasses and consumed by
 // callers. Replacing it (e.g. with InputStream/StreamingOutput) would ripple across the
 // strategy subclasses and their callers, so it is kept until they are migrated together.
-import org.springframework.core.io.InputStreamResource;
+import stirling.software.common.model.io.InputStreamResource;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile is required by
 // the inherited PDFFile.setFileInput(MultipartFile) (PDFFile keeps this type for the same
 // reason); changing this constructor parameter would ripple to callers and the API binding

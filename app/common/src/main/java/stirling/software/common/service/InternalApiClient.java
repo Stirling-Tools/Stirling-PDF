@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
 // non-trivial and would ripple to callers (PipelineProcessor, AiWorkflowService) that pass
 // MultiValueMap bodies and consume ResponseEntity<Resource>. These Spring imports are
 // intentionally retained until that cross-file migration is scheduled.
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.MultiValueMap;

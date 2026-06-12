@@ -27,7 +27,7 @@ import org.apache.commons.io.IOUtils;
 // org.springframework.http.MediaType -> jakarta.ws.rs.core.MediaType,
 // HttpStatus.BAD_REQUEST -> Response.Status.BAD_REQUEST,
 // MultipartFile -> byte[]/InputStream or a JAX-RS multipart type.
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

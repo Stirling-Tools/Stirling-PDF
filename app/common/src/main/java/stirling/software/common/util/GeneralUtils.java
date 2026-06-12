@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 // resource API. Resource/ResourceLoader/ResourcePatternUtils remain in getResourcesFromLocationPattern
 // because that method's public signature and the Spring resource-pattern resolver are used by
 // callers; converting it requires a filesystem/classpath glob rewrite that ripples to callers.
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
 

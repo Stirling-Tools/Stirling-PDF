@@ -24,9 +24,9 @@ import java.util.UUID;
 // custom ConfigSource, and java.nio / ClassLoader#getResourceAsStream for resources).
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

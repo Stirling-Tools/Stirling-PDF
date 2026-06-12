@@ -16,8 +16,8 @@ import java.util.zip.ZipInputStream;
 // (PipelineProcessor, AiWorkflowService). Replacing them with InputStream/java.nio would ripple
 // across callers that this single-file migration is not permitted to edit. Keeping the Spring core
 // io abstraction until callers are migrated together.
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 import io.github.pixee.security.ZipSecurity;
 

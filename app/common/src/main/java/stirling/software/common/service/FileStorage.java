@@ -14,7 +14,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 // TODO: Migration required - org.springframework.core.io.Resource is used in public method
 // signatures (storeFile, storeFromResource) and for behavior (isFile()/getFile()/getInputStream()).
 // No drop-in JAX-RS/Jakarta equivalent; converting would ripple into callers. Keeping the type.
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.Resource;
 // TODO: Migration required - org.springframework.web.multipart.MultipartFile is used in public
 // method signatures (storeFile, retrieveFile). No servlet/JAX-RS drop-in for utility method
 // params; changing it would ripple widely into callers. Keeping the type.

@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 // because they are consumed via ResponseEntity#getHeaders()/getBody() and built
 // via ResponseEntity builders. These imports are intentionally retained until the
 // callers are migrated as a unit.
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
