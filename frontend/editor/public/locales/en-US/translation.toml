@@ -50,12 +50,9 @@ help = "Help"
 imgPrompt = "Select Image(s)"
 incorrectPasswordMessage = "Current password is incorrect."
 info = "Info"
-insufficientCredits = "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}"
 invalidUndoData = "Cannot undo: invalid operation data"
 keepWorking = "Keep Working"
 loading = "Loading..."
-loadingCredits = "Checking credits..."
-loadingProStatus = "Checking subscription status..."
 logOut = "Log out"
 marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
@@ -66,7 +63,6 @@ noFileSelected = "No file loaded. Please upload one."
 noFilesToUndo = "Cannot undo: no files were processed in the last operation"
 noOperationToUndo = "No operation to undo"
 nothingToUndo = "Nothing to undo"
-noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
 noValidFiles = "No valid files to process"
 oops = "Oops!"
 openInNewWindow = "Open in new window"
@@ -1579,30 +1575,7 @@ admin = "Admin"
 title = "User Control Settings"
 
 [agents]
-auto_redaction_description = "Redact PII automatically"
-auto_redaction_name = "Auto Redaction"
-back_to_tools = "Back to tools"
-coming_soon = "Coming soon"
-compliance_description = "Audit documents for compliance"
-compliance_name = "Compliance Check"
-data_extraction_description = "Extract tables & structured data"
-data_extraction_name = "Data Extraction"
-doc_summary_description = "Summarize long documents"
-doc_summary_name = "Summarizer"
-form_filler_description = "Fill PDF forms intelligently"
-form_filler_name = "Form Filler"
-pdf_to_markdown_description = "Convert PDFs to clean Markdown"
-pdf_to_markdown_name = "PDF to Markdown"
-section_title = "Agents"
-show_less = "Show less"
-start_chat = "Start chatting"
-stirling_description = "Your general-purpose PDF assistant"
-stirling_full_name = "Stirling General Agent"
-stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
 stirling_name = "Stirling"
-stirling_running = "Running..."
-stirling_tooltip = "Stirling agent"
-view_all = "View all agents"
 
 [analytics]
 learnMore = "Learn more about our analytics"
@@ -2682,9 +2655,6 @@ title = "Change Permissions"
 [changePermissions.tooltip.warning]
 text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
-[chat]
-resize = "Resize chat panel"
-
 [chat.actions]
 copy = "Copy message"
 
@@ -2734,8 +2704,6 @@ mergeMany = "Merge these {{count}} documents into 1"
 moreFiles = "+{{count}} more"
 openFromComputer = "Open from computer"
 removeFile = "Remove {{name}}"
-rotateMany = "Rotate these documents"
-rotateOne = "Rotate this document"
 splitOne = "Split this document"
 
 [chat.responses]
@@ -2772,7 +2740,6 @@ copy = "Copy"
 done = "Done"
 error = "Error"
 expand = "Expand"
-learnMore = "Learn more"
 loading = "Loading..."
 next = "Next"
 operation = "this operation"
@@ -3087,14 +3054,6 @@ label = "Your MCP endpoint"
 addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
 title = "Connect your AI assistant"
-
-[config.mcp.tools]
-ai = "AI"
-convert = "Convert"
-misc = "Misc"
-pages = "Pages"
-security = "Security"
-title = "What your assistant can do"
 
 [config.overview]
 description = "Current application settings and configuration details."
@@ -4901,15 +4860,6 @@ body = "Stirling works best as a desktop app. You can use it offline, access doc
 title = "Download"
 titleWithOs = "Download for {{osLabel}}"
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "After your trial ends, you'll continue with our free tier. Add a payment method to keep Pro access."
-afterTrialWithPayment = "Your Pro subscription will start automatically when the trial ends."
-body = "You have full access to Stirling PDF Pro features during your trial. Enjoy unlimited conversions, larger file sizes, and priority processing."
-daysRemaining = "{{days}} days remaining"
-daysRemainingSingular = "{{days}} day remaining"
-title = "Your 30-Day Pro Trial"
-trialEnds = "Trial ends {{date}}"
-
 [onboarding.mfa]
 authenticationCode = "Authentication code"
 qrCodeLoading = "Generating your QR code…"
@@ -5257,11 +5207,6 @@ toggle = "What counts as a PDF?"
 [payg.error]
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
-
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
 
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
@@ -5738,27 +5683,16 @@ manage = "Manage"
 perMonth = "/month"
 perSeat = "/seat"
 popular = "Popular"
-purchase = "Purchase"
-selectCredits = "Select Credit Amount"
 selectPlan = "Select Plan"
 showComparison = "Compare All Features"
-totalCost = "Total Cost"
 upgrade = "Upgrade"
 withServer = "+ Server Plan"
-
-[plan.activePlan]
-subtitle = "Your current subscription details"
-title = "Active Plan"
 
 [plan.api]
 large = "5,000 Credits"
 medium = "1,000 Credits"
 small = "500 Credits"
 xsmall = "100 Credits"
-
-[plan.apiPackages]
-subtitle = "Purchase API credits for your applications"
-title = "API Credit Packages"
 
 [plan.availablePlans]
 loadError = "Unable to load plan pricing. Using default values."
@@ -5882,18 +5816,12 @@ successMessage = "Your license has been successfully activated. You can now clos
 name = "Team"
 
 [plan.trial]
-badge = "Trial"
 continueWithFree = "Continue with Free"
-daysRemaining = "Your trial ends in {{days}} days"
-endDate = "Expires: {{date}}"
 expired = "Your Trial Has Ended"
 expiredMessage = "Your 30-day Pro trial has expired. Subscribe to Pro to continue accessing premium features, or continue with our free tier."
 freeTierLimitations = "Free tier includes basic PDF tools with usage limits."
-message = ""
 subscribe = "Subscribe to Pro"
 subscribeToPro = "Subscribe to Pro"
-subscriptionScheduled = "Subscription scheduled - starts {{date}}"
-title = "Free Trial Active"
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7641,7 +7569,6 @@ updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
 [survey]
-nav = "Survey"
 title = "Stirling-PDF Survey"
 
 [swagger]
@@ -7674,28 +7601,6 @@ removeError = "Failed to remove member"
 renameError = "Failed to rename team"
 renameSuccess = "Team renamed successfully"
 
-[team.features]
-badge = "Team Features"
-subtitle = "Collaborate with your team"
-title = "Team Collaboration"
-viewPlans = "View Plans"
-
-[team.features.billing]
-description = "Manage billing and subscriptions"
-title = "Billing Management"
-
-[team.features.credits]
-description = "Shared credit pool for all members"
-title = "Shared Credits"
-
-[team.features.dashboard]
-description = "View team activity and usage"
-title = "Team Dashboard"
-
-[team.features.invite]
-description = "Add members to your team"
-title = "Invite Members"
-
 [team.invitationBanner]
 acceptButton = "Accept"
 message = "has invited you to join"
@@ -7716,11 +7621,6 @@ pending = "Pending"
 remove = "Remove"
 roleColumn = "Role"
 title = "Team Members"
-
-[team.upgrade]
-button = "Upgrade to Team"
-description = "Unlock team collaboration features"
-title = "Upgrade to Team Plan"
 
 [textAlign]
 center = "Center"

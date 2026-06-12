@@ -30,7 +30,9 @@ export async function savePolicy(
 
 /** List all stored policies. */
 export async function listPolicies(): Promise<BackendPolicy[]> {
-  const res = await apiClient.get<BackendPolicy[]>("/api/v1/policies");
+  const res = await apiClient.get<BackendPolicy[]>("/api/v1/policies", {
+    suppressErrorToast: true,
+  });
   return res.data;
 }
 
