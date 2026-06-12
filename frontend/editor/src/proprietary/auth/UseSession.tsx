@@ -34,6 +34,8 @@ interface AuthContextType {
    *   consumers can fall back to whatever makes sense.
    */
   displayName: string | null;
+  /** Whether the current session is an anonymous (login-disabled) one. */
+  isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
   signOut: () => Promise<void>;
@@ -61,6 +63,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   displayName: null,
+  isAnonymous: false,
   loading: true,
   error: null,
   signOut: async () => {},
@@ -292,6 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user,
     displayName: deriveDisplayName(user, t),
+    isAnonymous: user?.is_anonymous === true,
     loading,
     error,
     signOut,

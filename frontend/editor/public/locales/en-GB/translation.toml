@@ -2693,9 +2693,9 @@ agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "What do you want to do?"
 send = "Send message"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analysing your request..."
@@ -3060,6 +3060,7 @@ warning = "⚠️ Warning: This action will generate new API keys and make your 
 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation."
 title = "MCP Server"
@@ -3778,6 +3779,7 @@ selectFile = "Select file {{name}}"
 shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
 shareManage = "Manage sharing"
 showDetails = "Show details"
+signInRequired = "Sign in to use cloud storage."
 summary = "{{count}} items"
 tree = "Folders"
 upload = "Upload"
@@ -5957,7 +5959,6 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
-
 
 [printFile]
 title = "Print File"
