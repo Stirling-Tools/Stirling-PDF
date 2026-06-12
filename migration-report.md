@@ -25,7 +25,15 @@
 | Module | Status | Notes |
 |--------|--------|-------|
 | Build (Gradle + config) | ✅ Done | Plugins, BOM, extension mapping, `application.properties`. `./gradlew :stirling-pdf:help` succeeds. |
-| Code: DI/REST/scheduling | 🟡 ~80% of common | common: 62 of 77 Spring files converted (DI, scheduling, markers, AppConfig producers, MultipartFile shim). 15 hard residual files remain (Resource, ResponseEntity util, RestTemplate, StreamingResponseBody, AutoJob AOP, Spring config infra). core/proprietary/saas controllers not started. |
+| Code: DI/REST/scheduling | 🟡 ~90% of common | common: 69 of 77 Spring files converted and compiling cleanly (DI, scheduling, markers, AppConfig producers, MultipartFile + Resource shims, WebResponseUtils/PDFToFile/FileStorage/ErrorUtils → JAX-RS Response/StreamingOutput). `:common:compileJava` errors (104) are isolated to the 8 framework-level files below. core/proprietary/saas controllers not started. |
+
+### common: 8 remaining files (cross-module-coupled framework pieces)
+These cannot be finished within `common` alone - they ripple into other modules or need new infra, so they are best completed alongside the modules that depend on them:
+- `aop/AutoJobAspect.java` + `annotations/AutoJobPostMapping.java` - Spring AOP `@Around` + composed `@RequestMapping`/`@AliasFor` async-job framework → CDI `@Interceptor` + JAX-RS routing. `@AutoJobPostMapping` is consumed by controllers in core/proprietary.
+- `service/InternalApiClient.java` - `RestTemplate` → `java.net.http.HttpClient`; `post()` signature (`ResponseEntity<Resource>` / `MultiValueMap`) is called by `McpOperationExecutor`/`PolicyExecutor` in proprietary.
+- `service/JobExecutorService.java` - depends on `FileStorage#storeFromStreamingBody` still typed with Spring `StreamingResponseBody`.
+- `util/GeneralUtils.java` - Spring `ResourceLoader`/`ResourcePatternUtils` classpath glob scanning → Quarkus classpath utils.
+- `model/ApplicationProperties.java` + `configuration/YamlPropertySourceFactory.java` - Spring `Environment`/`PropertySourceFactory` runtime YAML property-source plumbing → SmallRye `ConfigSource`.
 | Code: Data JPA → Panache | ⬜ Not started | Repositories/entities across proprietary + saas. |
 | Code: Security/OAuth2/JWT/SAML | ⬜ Not started | ~200 files. SAML2 on OpenSAML 5; OAuth2→quarkus-oidc; JWT→smallrye-jwt; filters→JAX-RS. |
 | Frontend (static/SPA routing) | ⬜ Not started | Move `static/`→`META-INF/resources/`; replace `ReactRoutingController`. |
