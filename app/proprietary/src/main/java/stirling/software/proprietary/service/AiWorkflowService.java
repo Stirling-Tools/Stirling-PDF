@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -66,6 +67,7 @@ import tools.jackson.databind.ObjectMapper;
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
+    private static final String PDF_TO_MARKDOWN_ENDPOINT = "/api/v1/convert/pdf/markdown";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
@@ -174,7 +176,6 @@ public class AiWorkflowService {
         initialRequest.setFiles(files);
         initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
         WorkflowState state = new WorkflowState.Pending(initialRequest);
@@ -194,6 +195,7 @@ public class AiWorkflowService {
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
+            case CONVERT_MARKDOWN -> onConvertMarkdown(response, filesById, listener);
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
@@ -328,6 +330,77 @@ public class AiWorkflowService {
         nextRequest.setConversationHistory(request.getConversationHistory());
         nextRequest.setResumeWith(response.getResumeWith());
         return new WorkflowState.Pending(nextRequest);
+    }
+
+    /**
+     * Deterministically convert each requested PDF to Markdown via the {@code
+     * /convert/pdf/markdown} endpoint (backed by {@code PdfMarkdownConverter}) and return the
+     * {@code .md} file(s) as a completed result. No AI resume — the conversion output is the final
+     * answer.
+     */
+    private WorkflowState onConvertMarkdown(
+            AiWorkflowResponse response,
+            Map<String, MultipartFile> filesById,
+            ProgressListener listener) {
+        List<AiFile> filesToConvert = response.getFilesToIngest();
+        if (filesToConvert == null || filesToConvert.isEmpty()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "AI engine requested markdown conversion without listing any files."));
+        }
+
+        try {
+            List<Resource> resultFiles = new ArrayList<>();
+            List<String> inputNames = new ArrayList<>();
+            for (int i = 0; i < filesToConvert.size(); i++) {
+                AiFile file = filesToConvert.get(i);
+                MultipartFile multipartFile = filesById.get(file.getId());
+                if (multipartFile == null) {
+                    return new WorkflowState.Terminal(
+                            cannotContinue(
+                                    "AI engine requested markdown conversion for unknown file: "
+                                            + file.getName()));
+                }
+                listener.onProgress(
+                        AiWorkflowProgressEvent.executingTool(
+                                PDF_TO_MARKDOWN_ENDPOINT, i + 1, filesToConvert.size()));
+                Resource input = toResource(multipartFile);
+                PipelineDefinition definition =
+                        new PipelineDefinition(
+                                "convert-markdown",
+                                List.of(new PipelineStep(PDF_TO_MARKDOWN_ENDPOINT, Map.of())),
+                                null);
+                PolicyExecutionResult result =
+                        policyExecutor.execute(
+                                definition,
+                                PolicyInputs.of(List.of(input)),
+                                PolicyProgressListener.NOOP);
+                resultFiles.addAll(result.files());
+                inputNames.add(multipartFile.getOriginalFilename());
+            }
+            return new WorkflowState.Terminal(
+                    buildCompletedResponse(null, resultFiles, inputNames, null));
+        } catch (InternalApiTimeoutException e) {
+            log.error("PDF to Markdown conversion timed out: {}", e.getMessage());
+            return new WorkflowState.Terminal(
+                    cannotContinue(toolTimeoutMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
+        } catch (Exception e) {
+            log.error("Failed to convert PDF to Markdown: {}", e.getMessage(), e);
+            return new WorkflowState.Terminal(
+                    cannotContinue(toolFailureMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
+        }
+    }
+
+    private Resource toResource(MultipartFile file) throws IOException {
+        TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
+        file.transferTo(tempFile.getPath());
+        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
+        return new FileSystemResource(tempFile.getFile()) {
+            @Override
+            public String getFilename() {
+                return originalName;
+            }
+        };
     }
 
     private void ingestFile(AiFile file, MultipartFile multipartFile) throws IOException {
@@ -507,6 +580,10 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
+        } catch (HttpServerErrorException e) {
+            String reason = extractDetailFromHttpError(e);
+            log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
+            return new WorkflowState.Terminal(cannotContinue(reason));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -533,6 +610,27 @@ public class AiWorkflowService {
     }
 
     /**
+     * Extracts the {@code detail} field from an HTTP error response body if it is valid JSON,
+     * otherwise falls back to the exception message. This lets controller-level error messages
+     * (e.g. missing system dependency) surface cleanly in the chat response.
+     */
+    private String extractDetailFromHttpError(HttpServerErrorException e) {
+        try {
+            String body = e.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode detail = node.get("detail");
+                if (detail != null && detail.isTextual() && !detail.asText().isBlank()) {
+                    return detail.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to generic message
+        }
+        return "The request could not be completed. Please try again or contact your system administrator.";
+    }
+
+    /**
      * Adapt the AI workflow's {@link ProgressListener} to the engine's {@link
      * PolicyProgressListener}: each step start maps to an {@code EXECUTING_TOOL} progress event
      * carrying the tool path and 1-based step position, preserving the event shape the frontend
@@ -551,16 +649,7 @@ public class AiWorkflowService {
     private List<Resource> toResources(Map<String, MultipartFile> filesById) throws IOException {
         List<Resource> resources = new ArrayList<>();
         for (MultipartFile file : filesById.values()) {
-            TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
-            file.transferTo(tempFile.getPath());
-            final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
-            resources.add(
-                    new FileSystemResource(tempFile.getFile()) {
-                        @Override
-                        public String getFilename() {
-                            return originalName;
-                        }
-                    });
+            resources.add(toResource(file));
         }
         return resources;
     }

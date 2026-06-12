@@ -50,7 +50,7 @@ export function TrialStatusBanner() {
     }
 
     const trialEndDate = new Date(trialStatus.trialEnd).toLocaleDateString(
-      "en-GB",
+      "en-US",
       {
         month: "short",
         day: "numeric",

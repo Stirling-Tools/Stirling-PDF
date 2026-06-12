@@ -50,7 +50,6 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 
@@ -93,7 +92,7 @@ class PolicyEngineTest {
                         toolMetadataService,
                         tempFileManager,
                         JsonMapper.builder().build());
-        registry = new PolicyRunRegistry(30);
+        registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
         engine =
                 new PolicyEngine(
@@ -190,7 +189,7 @@ class PolicyEngineTest {
                         "rotate",
                         "owner",
                         true,
-                        TriggerConfig.manual(),
+                        null,
                         List.of(new PipelineStep(ROTATE, Map.of())),
                         OutputSpec.inline());
 

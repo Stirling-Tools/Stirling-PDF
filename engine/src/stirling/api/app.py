@@ -18,8 +18,10 @@ from stirling.agents import (
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
+from stirling.api.engine_auth import EngineSharedSecretMiddleware
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
+    agent_capabilities_router,
     agent_draft_router,
     document_router,
     execution_router,
@@ -115,6 +117,7 @@ async def lifespan(fast_api: FastAPI):
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
 app.add_middleware(UserIdMiddleware)
+app.add_middleware(EngineSharedSecretMiddleware)
 app.include_router(orchestrator_router)
 app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
@@ -123,6 +126,7 @@ app.include_router(execution_router)
 app.include_router(document_router)
 app.include_router(ledger_router)
 app.include_router(pdf_comments_router)
+app.include_router(agent_capabilities_router)
 
 
 @app.get("/health", response_model=HealthResponse)

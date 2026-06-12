@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --color-bg: #ffffff;
+    --color-primary: #1e3a5f;
+    --color-subtitle: #475569;
+    --color-ref: #6b7280;
+    --color-label: #374151;
+    --color-body: #1a1a1a;
+    --color-border-light: #e2e8f0;
+    --color-border-heading: #cbd5e1;
+    --font-body: "Helvetica Neue", Arial, sans-serif;
+    --font-size-base: 10pt;
+  }
+
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    color: var(--color-body);
+    background: var(--color-bg);
+  }
+
+  /* ── Header ── */
+  .doc-header {
+    margin-bottom: 20pt;
+    padding-bottom: 10pt;
+    border-bottom: 2pt solid var(--color-primary);
+  }
+  .doc-title {
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1.2;
+  }
+  .doc-subtitle {
+    font-size: 11pt;
+    color: var(--color-subtitle);
+    margin-top: 3pt;
+  }
+  .doc-reference {
+    font-size: 9pt;
+    color: var(--color-ref);
+    margin-top: 4pt;
+  }
+
+  /* ── Sections ── */
+  section {
+    margin-bottom: 16pt;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  section.line-items-section {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+  section h2 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--color-primary);
+    border-bottom: 0.5pt solid var(--color-border-heading);
+    padding-bottom: 3pt;
+    margin-bottom: 8pt;
+  }
+
+  /* ── Text ── */
+  .text-body p {
+    margin-bottom: 6pt;
+  }
+  .text-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Key-value ── */
+  .kv-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .kv-table td {
+    padding: 3pt 0;
+    vertical-align: top;
+  }
+  .kv-table td.kv-label {
+    font-weight: 600;
+    color: var(--color-label);
+    width: 36%;
+    padding-right: 10pt;
+  }
+  .kv-table td.kv-value {
+    color: var(--color-body);
+  }
+
+  /* ── Line items ── */
+  .line-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+  .line-items-table thead tr {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+  .line-items-table thead th {
+    padding: 5pt 8pt;
+    text-align: left;
+    font-weight: 600;
+  }
+  .line-items-table thead th:not(:first-child) {
+    text-align: right;
+  }
+  .line-items-table tbody td {
+    padding: 4pt 8pt;
+    border-bottom: 0.5pt solid var(--color-border-light);
+    vertical-align: top;
+  }
+  .line-items-table tbody td:not(:first-child) {
+    text-align: right;
+  }
+  .line-items-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .line-items-table tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .line-items-table tr.total-row td {
+    padding: 5pt 8pt;
+    font-weight: 700;
+    border-top: 1pt solid var(--color-primary);
+  }
+  .line-items-table tr.total-row td:not(:first-child) {
+    text-align: right;
+  }
+
+  /* ── Bullet list ── */
+  .bullet-list {
+    padding-left: 14pt;
+  }
+  .bullet-list li {
+    margin-bottom: 3pt;
+  }
+  .bullet-list li:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Signature ── */
+  .signature-grid {
+    width: 100%;
+    margin-top: 8pt;
+  }
+  .signatory {
+    display: inline-block;
+    width: 44%;
+    margin-right: 5%;
+    margin-bottom: 8pt;
+    vertical-align: top;
+  }
+  .sig-line {
+    border-bottom: 1pt solid var(--color-label);
+    height: 28pt;
+    margin-bottom: 4pt;
+  }
+  .sig-name {
+    font-size: 9pt;
+    color: var(--color-label);
+  }
+</style>
+{%- if doc.style %}
+<style>
+  :root {
+    {%- if doc.style.primary_color %}
+    --color-primary: {{ doc.style.primary_color }};
+    {%- endif %}
+    {%- if doc.style.background_color %}
+    --color-bg: {{ doc.style.background_color }};
+    {%- endif %}
+    {%- if doc.style.body_text_color %}
+    --color-body: {{ doc.style.body_text_color }};
+    --color-label: {{ doc.style.body_text_color }};
+    {%- endif %}
+  }
+</style>
+{%- endif %}
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-title">{{ doc.title }}</div>
+  {%- if doc.subtitle %}
+  <div class="doc-subtitle">{{ doc.subtitle }}</div>
+  {%- endif %}
+  {%- if doc.reference_number %}
+  <div class="doc-reference">{{ doc.reference_number }}</div>
+  {%- endif %}
+</div>
+
+{%- for section in doc.sections %}
+
+{%- if section.type == "text" %}
+<section>
+  {%- if section.heading %}
+  <h2>{{ section.heading }}</h2>
+  {%- endif %}
+  <div class="text-body">
+    {%- for para in section.body.split('\n\n') %}
+    <p>{{ para | replace('\n', ' ') }}</p>
+    {%- endfor %}
+  </div>
+</section>
+
+{%- elif section.type == "key_value" %}
+<section>
+  {%- if section.heading %}
+  <h2>{{ section.heading }}</h2>
+  {%- endif %}
+  <table class="kv-table">
+    <tbody>
+      {%- for label, value in section.pairs %}
+      <tr>
+        <td class="kv-label">{{ label }}</td>
+        <td class="kv-value">{{ value }}</td>
+      </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+</section>
+
+{%- elif section.type == "line_items" %}
+<section class="line-items-section">
+  {%- if section.heading %}
+  <h2>{{ section.heading }}</h2>
+  {%- endif %}
+  <table class="line-items-table">
+    <thead>
+      <tr>
+        {%- for col in section.columns %}
+        <th>{{ col }}</th>
+        {%- endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {%- for row in section.rows %}
+      <tr>
+        {%- for cell in row %}
+        <td>{{ cell }}</td>
+        {%- endfor %}
+      </tr>
+      {%- endfor %}
+      {%- if section.total_row %}
+      <tr class="total-row">
+        {%- for cell in section.total_row %}
+        <td>{{ cell }}</td>
+        {%- endfor %}
+      </tr>
+      {%- endif %}
+    </tbody>
+  </table>
+</section>
+
+{%- elif section.type == "bullet_list" %}
+<section>
+  {%- if section.heading %}
+  <h2>{{ section.heading }}</h2>
+  {%- endif %}
+  <ul class="bullet-list">
+    {%- for item in section.items %}
+    <li>{{ item }}</li>
+    {%- endfor %}
+  </ul>
+</section>
+
+{%- elif section.type == "signature" %}
+<section>
+  {%- if section.heading %}
+  <h2>{{ section.heading }}</h2>
+  {%- endif %}
+  <div class="signature-grid">
+    {%- for signatory in section.signatories %}
+    <div class="signatory">
+      <div class="sig-line"></div>
+      <div class="sig-name">{{ signatory }}</div>
+    </div>
+    {%- endfor %}
+  </div>
+</section>
+
+{%- endif %}
+{%- endfor %}
+
+</body>
+</html>
