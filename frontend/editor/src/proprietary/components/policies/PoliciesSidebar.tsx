@@ -18,6 +18,8 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { usePolicyCatalog } from "@app/hooks/usePolicyCatalog";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
 import { getPolicyAutomation } from "@app/services/policyFolders";
 import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
 import { runsToActivity, runsToStats } from "@app/services/policyLiveData";
@@ -60,6 +62,25 @@ export function usePoliciesEnabled(): boolean {
 }
 
 /**
+ * Whether the current user is a guest who can't open or configure policies —
+ * an anonymous user on a login-enabled deployment (i.e. a SaaS sign-up prompt
+ * candidate). The policy list stays visible but its rows don't open; the guest
+ * sign-up banner explains why. A login-disabled single-user deployment has an
+ * anonymous local operator with full access, so it is not gated.
+ */
+export function usePolicyGuestBlocked(): boolean {
+  const { config } = useAppConfig();
+  const { user } = useAuth();
+  return config?.enableLogin === true && user?.is_anonymous === true;
+}
+
+/** Re-summon the guest sign-up banner (the saas GuestUserBanner listens for this;
+ *  a no-op on builds without it). Used when a guest clicks a gated policy. */
+function promptGuestSignup(): void {
+  window.dispatchEvent(new CustomEvent("stirling:show-guest-banner"));
+}
+
+/**
  * Whether a policy is open — i.e. its detail view should take over the rail in
  * place of the tool list. False when the feature is off or nothing is selected.
  */
@@ -79,6 +100,7 @@ export function PoliciesSection({
   const { t } = useTranslation();
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
+  const guestBlocked = usePolicyGuestBlocked();
   // Persist the expand/collapse state across refreshes.
   const [expanded, setExpanded] = useState(() => {
     try {
@@ -179,7 +201,9 @@ export function PoliciesSection({
                   key={cat.id}
                   type="button"
                   className="pol-row"
-                  onClick={() => selectPolicy(cat.id)}
+                  onClick={() =>
+                    guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
+                  }
                 >
                   <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
                     {cat.icon}
@@ -429,6 +453,7 @@ export function PoliciesCollapsedButton({
   const { t } = useTranslation();
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
+  const guestBlocked = usePolicyGuestBlocked();
 
   if (!POLICIES_ENABLED) return null;
 
@@ -468,6 +493,10 @@ export function PoliciesCollapsedButton({
                     { label, status: statusLabel },
                   )}
                   onClick={() => {
+                    if (guestBlocked) {
+                      promptGuestSignup();
+                      return;
+                    }
                     selectPolicy(cat.id);
                     onExpand();
                   }}
