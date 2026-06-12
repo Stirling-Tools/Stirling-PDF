@@ -52,14 +52,14 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
     /**
      * The {@code EntitlementGuard} runs BEFORE the charge interceptor. Spring runs interceptors in
      * ascending order on the way in and skips a later interceptor's {@code preHandle} (and its
-     * {@code afterCompletion}) entirely once an earlier one returns {@code false} — so a request the
-     * guard refuses (over its free allowance / spending cap, or with no subscription to bill)
+     * {@code afterCompletion}) entirely once an earlier one returns {@code false} — so a request
+     * the guard refuses (over its free allowance / spending cap, or with no subscription to bill)
      * short-circuits with its 402 before the charge interceptor ever runs. A blocked request
      * therefore never opens a process, materialises inputs, or writes a charge: a refused operation
      * must not bill, and running the guard first guarantees that structurally rather than by
      * compensating after the fact. Stays above the legacy {@code UnifiedCreditInterceptor} (default
-     * order 0, only registered under the {@code legacy-credits} profile) so a legacy rejection still
-     * wins.
+     * order 0, only registered under the {@code legacy-credits} profile) so a legacy rejection
+     * still wins.
      */
     public static final int ENTITLEMENT_GUARD_ORDER = 900;
 
