@@ -424,6 +424,11 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  /* The collapsed-rail dividers carry 8px of space below them only, so the
+     divider above gives the row 8px of headroom while the one below (rendered
+     straight after) hugs it. Match that 8px underneath so the row sits centred
+     between the two dividers. */
+  margin-bottom: 8px;
 }
 .pol-crail-btn {
   position: relative;
