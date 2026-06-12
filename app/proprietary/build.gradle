@@ -9,10 +9,7 @@ ext {
     testcontainersMinioVersion = '1.21.4'
 }
 
-bootRun {
-    enabled = false
-}
-
+// REMOVED: bootRun{enabled=false} - Spring Boot plugin task. :proprietary is a Quarkus library module.
 spotless {
         java {
         target 'src/**/java/**/*.java'
@@ -43,23 +40,49 @@ dependencies {
     implementation project(':common')
     api 'com.google.guava:guava:33.6.0-jre'
 
-    api 'org.springframework:spring-jdbc'
-    api 'org.springframework:spring-webmvc'
-    api 'org.springframework.session:spring-session-core'
-    api "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
-    api "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
-    api 'org.springframework.boot:spring-boot-starter-jetty'
-    api 'org.springframework.boot:spring-boot-starter-security'
-    api 'org.springframework.boot:spring-boot-starter-data-jpa'
-    api 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
-    // MCP server (RFC 8707 audience binding + RFC 9728 metadata) - resource-server side only.
-    // Brings nimbus-jose-jwt onto the proprietary classpath if not already transitive via
-    // oauth2-client; on Boot 4.0.6 the delta is around 130KB because nimbus is already pulled.
-    api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    api 'org.springframework.boot:spring-boot-starter-mail'
-    api 'org.springframework.boot:spring-boot-starter-cache'
+    // ---- Spring -> Quarkus extension mapping (full native migration) ----
+    // spring-jdbc -> Agroal datasource (transitive via hibernate-orm). JdbcTemplate usage, if any,
+    //   must be rewritten to plain JDBC / Panache.
+    // TODO: Migration required - replace any org.springframework.jdbc.core.JdbcTemplate usage.
+    // spring-webmvc -> quarkus-rest (inherited api-scoped from :common).
+    api 'io.quarkus:quarkus-security'
+    // spring-boot-starter-data-jpa -> Hibernate ORM with Panache.
+    api 'io.quarkus:quarkus-hibernate-orm-panache'
+    // spring-boot-starter-oauth2-client AND -oauth2-resource-server -> quarkus-oidc handles both the
+    //   authorization-code (login) flow and bearer-token resource-server validation.
+    api 'io.quarkus:quarkus-oidc'
+    // spring-boot-starter-mail -> quarkus-mailer (reactive mailer; blocking API available).
+    api 'io.quarkus:quarkus-mailer'
+    // spring-boot-starter-cache -> quarkus-cache (Caffeine-backed).
+    api 'io.quarkus:quarkus-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // spring-boot-starter-data-redis -> quarkus-redis-client (used by the optional Valkey backplane).
+    // TODO: Migration required - rewrite RedisTemplate/Lettuce usage on the Quarkus Redis client API.
+    implementation 'io.quarkus:quarkus-redis-client'
+
+    // REMOVED: spring-session-core - Quarkus has no Spring Session. Server-side session state
+    //   (SessionPersistentRegistry, SessionRegistry) must be rewritten on Quarkus' HTTP session
+    //   (quarkus-undertow servlet session) or a custom store.
+    // TODO: Migration required - port Spring Session usage (session registry / persistence).
+
+    // REMOVED: spring-boot-starter-jetty - Quarkus uses its own Vert.x HTTP server.
+
+    // ---- SAML2: no native Quarkus extension. Rehosted on OpenSAML 5 (already pinned via
+    //      openSamlVersion) following the dnulnets/quarkus-saml example. spring-security-saml2-
+    //      service-provider and spring-security-core are removed; the SAML wiring is reimplemented
+    //      on a Jakarta servlet + OpenSAML 5 (quarkus-undertow provides the servlet runtime).
+    // TODO: Migration required - reimplement Saml2Configuration / CustomSaml2* on OpenSAML 5. ----
+    api "org.opensaml:opensaml-core-api:$openSamlVersion"
+    api "org.opensaml:opensaml-core-impl:$openSamlVersion"
+    api "org.opensaml:opensaml-saml-api:$openSamlVersion"
+    api "org.opensaml:opensaml-saml-impl:$openSamlVersion"
+    api "org.opensaml:opensaml-security-api:$openSamlVersion"
+    api "org.opensaml:opensaml-security-impl:$openSamlVersion"
+    api "org.opensaml:opensaml-xmlsec-api:$openSamlVersion"
+    api "org.opensaml:opensaml-xmlsec-impl:$openSamlVersion"
+    api "org.opensaml:opensaml-messaging-api:$openSamlVersion"
+    api "org.opensaml:opensaml-messaging-impl:$openSamlVersion"
+
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
@@ -72,13 +95,21 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.13.2'
 
-    api 'io.micrometer:micrometer-registry-prometheus'
+    // micrometer-registry-prometheus -> Quarkus Micrometer Prometheus extension.
+    api 'io.quarkus:quarkus-micrometer-registry-prometheus'
 
     api "io.jsonwebtoken:jjwt-api:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
-    runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+
+    // JDBC drivers via Quarkus extensions (wire into the Agroal datasource).
+    // NOTE: H2 is pinned to 2.3.232 because the on-disk file format is incompatible with 2.4.x and
+    //   upgrading would break existing user databases. quarkus-jdbc-h2's BOM-managed H2 version may
+    //   differ, so the explicit pin is forced below to preserve file compatibility.
+    // TODO: Migration required - verify the H2 version Quarkus resolves still reads 2.3.232 files.
+    runtimeOnly 'io.quarkus:quarkus-jdbc-h2'
+    runtimeOnly 'com.h2database:h2:2.3.232'
+    runtimeOnly 'io.quarkus:quarkus-jdbc-postgresql'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }

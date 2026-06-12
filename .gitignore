@@ -273,8 +273,23 @@ docs/type3/signatures/
 
 **/application-dev-local.properties
 
-# Claude
+# AI agent session/local files - may contain tokens and secrets
 .claude/
+.agents/
+.cursor/
+.codex/
+.opencode/
+.copilot/
+.cline/
+.continue/
+.windsurf/
+.junie/
+.pi/
+.roo/
+.augment/
+.aider*
+CLAUDE.local.md
+skills-lock.json
 
 # Playwright MCP screenshots / traces
 .playwright-mcp/

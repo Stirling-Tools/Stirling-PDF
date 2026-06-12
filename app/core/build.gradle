@@ -1,13 +1,12 @@
-apply plugin: 'org.springframework.boot'
+// :stirling-pdf is the runnable Quarkus application module (replaces org.springframework.boot).
+plugins {
+    id 'io.quarkus'
+}
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-configurations {
-    developmentOnly
-    runtimeClasspath {
-        extendsFrom developmentOnly
-    }
-}
+// REMOVED: developmentOnly configuration - it existed only to carry spring-boot-devtools.
+// Quarkus dev mode (quarkusDev) provides live reload built-in.
 
 spotless {
     java {
@@ -48,9 +47,9 @@ dependencies {
     }
 
     implementation project(':common')
-    implementation 'org.springframework.boot:spring-boot-starter-jetty'
-    implementation 'org.eclipse.jetty.http2:jetty-http2-server'
-    implementation 'org.eclipse.jetty:jetty-alpn-java-server'
+    // REMOVED: spring-boot-starter-jetty + jetty-http2-server + jetty-alpn-java-server.
+    // Quarkus runs on its own embedded Vert.x HTTP server (HTTP/2 enabled via
+    // quarkus.http.http2=true), so an external servlet container is neither needed nor compatible.
     implementation ('org.telegram:telegrambots:6.9.7.1') {
         // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
         // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
@@ -122,7 +121,12 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    // REMOVED: spring-boot-devtools - replaced by Quarkus dev mode (quarkusDev) live reload.
+
+    // Datasource driver for the app (H2 by default; see application.properties).
+    // The Spring data-jpa starter that used to pull H2 transitively now lives in :proprietary;
+    // the core app still needs a JDBC driver extension present for Quarkus datasource wiring.
+    runtimeOnly 'io.quarkus:quarkus-jdbc-h2'
 }
 
 sourceSets {
@@ -137,41 +141,14 @@ sourceSets {
 }
 
 
-// Disable regular jar
-jar {
-    enabled = false
-}
-
-// Configure and enable bootJar for this project
-bootJar {
-    enabled = true
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    zip64 = true
-
-    // Don't include all dependencies directly like the old jar task did
-    // from {
-    //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    // }
-
-    // Exclude signature files to prevent "Invalid signature file digest" errors
-    exclude 'META-INF/*.SF'
-    exclude 'META-INF/*.DSA'
-    exclude 'META-INF/*.RSA'
-    exclude 'META-INF/*.EC'
-
-    manifest {
-        attributes(
-            'Implementation-Title': 'Stirling-PDF',
-            'Implementation-Version': project.version,
-            'Enable-Native-Access': 'ALL-UNNAMED'
-        )
-    }
-}
-
-// Configure main class for Spring Boot
-springBoot {
-    mainClass = 'stirling.software.SPDF.SPDFApplication'
-}
+// REMOVED: jar{enabled=false}, bootJar{...}, and springBoot{mainClass=...} - all Spring Boot plugin
+// constructs. Under Quarkus the runnable artifact (fast-jar / uber-jar) is produced by the
+// io.quarkus plugin's quarkusBuild task. Packaging options that lived in bootJar move to
+// application.properties:
+//   quarkus.package.jar.type=uber-jar            (single runnable jar, like the old bootJar)
+//   quarkus.package.jar.manifest.attributes."Enable-Native-Access"=ALL-UNNAMED
+// The application entry point is the @QuarkusMain class (see SPDFApplication migration) rather
+// than springBoot{mainClass}.
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
@@ -358,10 +335,62 @@ if (buildWithFrontend) {
     processResources.dependsOn copyApiLandingPage
 }
 
-bootJar.dependsOn ':common:jar'
+// The Quarkus build must see the library modules' jars (and their Jandex indexes) on the
+// classpath so their CDI beans / JAX-RS resources are discovered. quarkusBuild replaces bootJar.
+quarkusBuild.dependsOn ':common:jar'
 if (!gradle.ext.disableAdditional) {
-    bootJar.dependsOn ':proprietary:jar'
+    quarkusBuild.dependsOn ':proprietary:jar'
 }
 if (gradle.ext.enableSaas) {
-    bootJar.dependsOn ':saas:jar'
+    quarkusBuild.dependsOn ':saas:jar'
+}
+
+// bootRun JVM tuning -> quarkusDev. Configured here (not in the root subprojects{} block) because
+// the quarkusDev task only exists after the io.quarkus plugin above is applied to this module.
+// OpenAPI note: springdoc's build-time SwaggerDoc.json generation was removed; quarkus-smallrye-openapi
+// serves the schema at runtime (path overridden to /v1/api-docs in application.properties).
+tasks.named("quarkusDev") {
+    def runtimeArgs = [
+        "-XX:+UseG1GC",
+        "-XX:MaxGCPauseMillis=200",
+        "-XX:G1HeapRegionSize=4m",
+        "-XX:+ExplicitGCInvokesConcurrent",
+        "-XX:+UseStringDeduplication",
+        "-XX:+UseCompactObjectHeaders",
+        "--enable-native-access=ALL-UNNAMED"
+    ]
+
+    // Optional JaCoCo agent for e2e/cucumber backend coverage.
+    // Enabled with `-PjacocoAgent=true`. Default destfile lives outside the source tree.
+    if (rootProject.hasProperty('jacocoAgent') &&
+        rootProject.property('jacocoAgent').toString() == 'true') {
+        def agentJar = rootProject.layout.buildDirectory
+                .file('jacoco/jacocoagent.jar').get().asFile.absolutePath
+        def execFile = (rootProject.findProperty('jacocoExec') ?:
+                rootProject.layout.projectDirectory
+                        .file('.test-state/playwright/jacoco.exec').asFile.absolutePath
+                ).toString()
+        // The JaCoCo agent argument is a comma-separated key=value list, so a path that
+        // itself contains ',' or '=' would smuggle extra agent options. Validate defensively.
+        def hasBadChar = execFile.find(/[,= ]/) != null ||
+                execFile.contains('\r') ||
+                execFile.contains('\n') ||
+                execFile.contains('\t')
+        if (hasBadChar) {
+            throw new GradleException(
+                    "jacocoExec='" + execFile + "' contains characters " +
+                    "(',', '=', whitespace, or control chars) that " +
+                    "would break -javaagent option parsing. Choose " +
+                    "a different path."
+            )
+        }
+        runtimeArgs.add("-javaagent:${agentJar}=destfile=${execFile},output=file,append=false,dumponexit=true")
+        dependsOn(rootProject.tasks.named('copyJacocoAgent'))
+        doFirst {
+            new File(execFile).parentFile?.mkdirs()
+            logger.lifecycle("JaCoCo agent attached: ${execFile}")
+        }
+    }
+
+    jvmArgs = runtimeArgs
 }

@@ -1,7 +1,4 @@
-// Configure bootRun to disable it or point to a main class
-bootRun {
-    enabled = false
-}
+// REMOVED: bootRun{enabled=false} - Spring Boot plugin task. :common is a Quarkus library module.
 spotless {
     java {
         target 'src/**/java/**/*.java'
@@ -30,8 +27,23 @@ spotless {
 }
 dependencies {
     api 'com.google.guava:guava:33.6.0-jre'
-    api 'org.springframework.boot:spring-boot-starter-webmvc'
-    api 'org.springframework.boot:spring-boot-starter-aspectj'
+
+    // spring-boot-starter-webmvc -> Quarkus REST stack (api-scoped so downstream modules inherit it).
+    api 'io.quarkus:quarkus-rest'
+    api 'io.quarkus:quarkus-rest-jackson'
+    // Servlet bridge: large amounts of controller/filter code use jakarta.servlet (HttpServletRequest,
+    // Filter, etc.). quarkus-undertow provides a servlet container on Quarkus so that API resolves and
+    // runs. TODO: Migration required - longer term, port servlet usage to JAX-RS (ContainerRequestContext)
+    //       and drop quarkus-undertow.
+    api 'io.quarkus:quarkus-undertow'
+    // Bean Validation (was transitively in spring-boot-starter-webmvc).
+    api 'io.quarkus:quarkus-hibernate-validator'
+    // Swagger/OpenAPI annotations (io.swagger.v3.oas.annotations.*) used by common's API marker
+    // interfaces; was transitive via springdoc. Quarkus' SmallRye OpenAPI also understands these.
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
+    // REMOVED: spring-boot-starter-aspectj. Quarkus has no AspectJ weaving; quarkus-arc provides
+    // CDI interceptors (@AroundInvoke / interceptor bindings) instead.
+    // TODO: Migration required - any @Aspect/@Around advice must be rewritten as CDI interceptors.
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
@@ -45,7 +57,8 @@ dependencies {
     api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    // springdoc-openapi-starter-webmvc-ui -> SmallRye OpenAPI (schema at /q/openapi, UI at /q/swagger-ui)
+    api 'io.quarkus:quarkus-smallrye-openapi'
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:8.12.6'
     api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support
@@ -77,6 +90,14 @@ dependencies {
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.2"
     }
+
+    // Jackson 3 (tools.jackson) - retained because ~100 files migrated to the Jackson 3 namespace
+    // under Spring Boot 4. Quarkus integrates Jackson 2 for REST bodies; Jackson 3 coexists here as a
+    // plain library so those files compile and can still build/parse JSON directly.
+    // api-scoped so downstream modules (core, proprietary, saas) that import tools.jackson inherit it.
+    // TODO: Migration required - converge the codebase on a single Jackson major version.
+    api 'tools.jackson.core:jackson-databind:3.0.0'
+    api 'tools.jackson.core:jackson-core:3.0.0'
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'

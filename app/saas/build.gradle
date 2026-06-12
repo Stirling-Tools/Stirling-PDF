@@ -1,7 +1,4 @@
-bootRun {
-    enabled = false
-}
-
+// REMOVED: bootRun{enabled=false} - Spring Boot plugin task. :saas is a Quarkus library module.
 spotless {
     java {
         target 'src/**/java/**/*.java'
@@ -32,13 +29,16 @@ dependencies {
     implementation project(':common')
     implementation project(':proprietary')
 
-    api 'org.springframework.boot:spring-boot-starter-security'
-    api 'org.springframework.boot:spring-boot-starter-data-jpa'
-    api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    api 'org.springframework.boot:spring-boot-starter-webmvc'
-    api 'org.springframework.boot:spring-boot-starter-aspectj'
+    // Spring -> Quarkus extension mapping (full native migration):
+    api 'io.quarkus:quarkus-security'                 // spring-boot-starter-security
+    api 'io.quarkus:quarkus-hibernate-orm-panache'    // spring-boot-starter-data-jpa
+    api 'io.quarkus:quarkus-oidc'                      // spring-boot-starter-oauth2-resource-server (bearer)
+    // spring-boot-starter-webmvc -> quarkus-rest (inherited api-scoped from :common).
+    // REMOVED: spring-boot-starter-aspectj - no AspectJ in Quarkus; use quarkus-arc CDI interceptors.
+    // TODO: Migration required - rewrite any @Aspect advice (e.g. CreditSuccessAdvice) as CDI interceptors.
 
-    api 'org.flywaydb:flyway-core'
+    // flyway-core -> quarkus-flyway (runs migrations at startup; see quarkus.flyway.* config).
+    api 'io.quarkus:quarkus-flyway'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
