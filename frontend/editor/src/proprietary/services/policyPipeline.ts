@@ -56,24 +56,6 @@ export interface BackendPolicy {
   output: BackendOutputSpec;
 }
 
-/**
- * Window event fired when a policy run is blocked by a usage limit (its tool call got a 402
- * entitlement sentinel). Dispatched from the proprietary auto-run poll; a saas-layer listener
- * reads the wallet and opens the matching usage-limit modal. Kept here (proprietary) so both
- * layers share one name — proprietary can't import the saas modal API directly.
- */
-export const POLICY_LIMIT_REACHED_EVENT = "payg:policyLimitReached";
-
-/** Detail carried on {@link POLICY_LIMIT_REACHED_EVENT}. */
-export interface PolicyLimitReachedDetail {
-  /**
-   * Whether the blocked team was subscribed (over its spending cap) vs un-subscribed (free
-   * allowance spent), from the blocking 402. The listener uses it to choose the spend-cap vs
-   * free-limit modal. Null when unknown → treat as free-limit.
-   */
-  subscribed: boolean | null;
-}
-
 /** Lifecycle states of a backend run (mirrors PolicyRunStatus). */
 export type PolicyRunStatus =
   | "PENDING"
