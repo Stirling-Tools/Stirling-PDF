@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["src/saas/*", "src/proprietary/*", "src/core/*"],
+      "@app/*": ["src/saas/*", "src/cloud/*", "src/proprietary/*", "src/core/*"],
+      "@cloud/*": ["src/cloud/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"],
       "@shared/*": ["../shared/*"]
@@ -13,6 +14,8 @@
     "src/core/**/*.spec.ts*",
     "src/proprietary/**/*.test.ts*",
     "src/proprietary/**/*.spec.ts*",
+    "src/cloud/**/*.test.ts*",
+    "src/cloud/**/*.spec.ts*",
     "src/desktop"
   ]
 }

@@ -78,6 +78,7 @@ const VALID_MODES = [
   "proprietary",
   "saas",
   "desktop",
+  "cloud",
   "prototypes",
 ] as const;
 type BuildMode = (typeof VALID_MODES)[number];
@@ -87,6 +88,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   proprietary: "./tsconfig.proprietary.vite.json",
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
+  cloud: "./tsconfig.cloud.vite.json",
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 

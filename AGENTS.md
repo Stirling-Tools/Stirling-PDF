@@ -169,7 +169,29 @@ import { useFileContext } from "@proprietary/contexts/FileContext";
 - Building layer-specific override that wraps a lower layer's component
 - Example: `import { AppProviders as CoreAppProviders } from "@core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
 
-The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/desktop) and handles the fallback cascade.
+The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
+
+#### Frontend `cloud/` Layer
+
+`@app/*` resolves through a per-flavor cascade — first existing file wins (shadow/override):
+
+- **core** → core
+- **proprietary** → proprietary → core
+- **saas** → saas → cloud → proprietary → core
+- **desktop** → desktop → cloud → proprietary → core
+- **cloud** → cloud → proprietary → core
+
+What goes where:
+
+- **core** — OSS base.
+- **proprietary** — licensed / offline features.
+- **cloud** — the SHARED hosted/SaaS experience used by BOTH saas + desktop: PAYG, wallet, plan, billing, usage meters, cloud config/team/onboarding.
+- **saas** — web-only: Supabase web auth, AuthCallback, avatar canvas, `window.location`.
+- **desktop** — Tauri-only: keyring authService, tauriHttpClient, native files/windows, backend routing.
+
+`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (enforced by ESLint). It reaches platform-specific things only via `@app/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
+
+Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
 
 #### Component Override Pattern (Stub/Shadow)
 Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
