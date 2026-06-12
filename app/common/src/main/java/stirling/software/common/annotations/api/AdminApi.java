@@ -5,19 +5,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Combined annotation for Admin Settings API controllers.
- * Includes @RestController, @RequestMapping("/api/v1/admin/settings"), and OpenAPI @Tag.
+ *
+ * <p>MIGRATION (Spring -> JAX-RS): JAX-RS/RESTEasy does NOT process {@code @Path} via custom
+ * meta-annotations (Spring honoured composed {@code @RestController}/{@code @RequestMapping} through
+ * {@code @AliasFor}; JAX-RS has no equivalent). This annotation therefore now carries only the
+ * OpenAPI {@code @Tag}. Each controller annotated with {@code @AdminApi} MUST additionally declare
+ * its own {@code @jakarta.ws.rs.Path("/api/v1/admin/settings")} (the path the removed
+ * {@code @RequestMapping} used to supply).
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@RestController
-@RequestMapping("/api/v1/admin/settings")
 @Tag(
         name = "Admin Settings",
         description =

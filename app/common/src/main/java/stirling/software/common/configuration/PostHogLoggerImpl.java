@@ -1,13 +1,13 @@
 package stirling.software.common.configuration;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import com.posthog.java.PostHogLogger;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Component
+@ApplicationScoped
 public class PostHogLoggerImpl implements PostHogLogger {
 
     @Override

@@ -38,6 +38,9 @@ dependencies {
     api 'io.quarkus:quarkus-undertow'
     // Bean Validation (was transitively in spring-boot-starter-webmvc).
     api 'io.quarkus:quarkus-hibernate-validator'
+    // @Scheduled support (was spring-context scheduling). quarkus-scheduler manages its own
+    // executor; the former SchedulingConfig TaskScheduler bean is no longer needed.
+    api 'io.quarkus:quarkus-scheduler'
     // Swagger/OpenAPI annotations (io.swagger.v3.oas.annotations.*) used by common's API marker
     // interfaces; was transitive via springdoc. Quarkus' SmallRye OpenAPI also understands these.
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'

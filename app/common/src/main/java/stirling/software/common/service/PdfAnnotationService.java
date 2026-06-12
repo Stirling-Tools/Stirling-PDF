@@ -9,7 +9,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +28,7 @@ import stirling.software.common.model.api.comments.StickyNoteSpec;
  * </ul>
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class PdfAnnotationService {
 
     /** Yellow sticky-note fill colour (R, G, B in 0..1 range). */

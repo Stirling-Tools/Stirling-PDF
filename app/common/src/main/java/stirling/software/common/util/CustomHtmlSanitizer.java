@@ -4,12 +4,12 @@ import org.owasp.html.AttributePolicy;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
-@Component
+@ApplicationScoped
 public class CustomHtmlSanitizer {
 
     private final SsrfProtectionService ssrfProtectionService;

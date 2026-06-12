@@ -15,39 +15,44 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.Config;
 
 import com.posthog.java.PostHog;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
 import stirling.software.common.model.ApplicationProperties;
 
-@Service
+@ApplicationScoped
 public class PostHogService {
     private final PostHog postHog;
     private final String uniqueId;
     private final String appVersion;
     private final ApplicationProperties applicationProperties;
-    private final UserServiceInterface userService;
-    private final Environment env;
+    // MIGRATION: optional bean (@Autowired(required=false)) -> CDI Instance<>.
+    private final Instance<UserServiceInterface> userService;
+    // MIGRATION: Spring Environment -> MicroProfile Config.
+    private final Config config;
     private boolean configDirMounted;
 
+    @Inject
     public PostHogService(
             PostHog postHog,
-            @Qualifier("UUID") String uuid,
-            @Qualifier("configDirMounted") boolean configDirMounted,
-            @Qualifier("appVersion") String appVersion,
+            @Named("UUID") String uuid,
+            @Named("configDirMounted") boolean configDirMounted,
+            @Named("appVersion") String appVersion,
             ApplicationProperties applicationProperties,
-            @Autowired(required = false) UserServiceInterface userService,
-            Environment env) {
+            Instance<UserServiceInterface> userService,
+            Config config) {
         this.postHog = postHog;
         this.uniqueId = uuid;
         this.appVersion = appVersion;
         this.applicationProperties = applicationProperties;
         this.userService = userService;
-        this.env = env;
+        this.config = config;
         this.configDirMounted = configDirMounted;
         captureSystemInfo();
     }
@@ -79,7 +84,8 @@ public class PostHogService {
             // Application version
             metrics.put("app_version", appVersion);
             String deploymentType = "JAR"; // default
-            if ("true".equalsIgnoreCase(env.getProperty("BROWSER_OPEN"))) {
+            if ("true".equalsIgnoreCase(
+                    config.getOptionalValue("BROWSER_OPEN", String.class).orElse(null))) {
                 deploymentType = "EXE";
             } else if (isRunningInDocker()) {
                 deploymentType = "DOCKER";
@@ -148,8 +154,8 @@ public class PostHogService {
             }
             metrics.put("application_properties", captureApplicationProperties());
 
-            if (userService != null) {
-                metrics.put("total_users_created", userService.getTotalUsersCount());
+            if (userService.isResolvable()) {
+                metrics.put("total_users_created", userService.get().getTotalUsersCount());
             }
 
         } catch (Exception e) {

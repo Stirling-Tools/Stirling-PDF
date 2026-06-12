@@ -5,8 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.stereotype.Component;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,12 +14,12 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileRegistry;
 
 /**
- * Handles cleanup of temporary files on application shutdown. Implements Spring's DisposableBean
- * interface to ensure cleanup happens during normal application shutdown.
+ * Handles cleanup of temporary files on application shutdown. Uses a CDI {@code @PreDestroy} method
+ * (migrated from Spring's {@code DisposableBean}) to ensure cleanup happens during normal shutdown.
  */
 @Slf4j
-@Component
-public class TempFileShutdownHook implements DisposableBean {
+@ApplicationScoped
+public class TempFileShutdownHook {
 
     private final TempFileRegistry registry;
 
@@ -31,8 +31,8 @@ public class TempFileShutdownHook implements DisposableBean {
         Runtime.getRuntime().addShutdownHook(new Thread(this::cleanupTempFiles));
     }
 
-    /** Spring's DisposableBean interface method. Called during normal application shutdown. */
-    @Override
+    /** CDI pre-destroy callback (was DisposableBean#destroy). Called during normal shutdown. */
+    @PreDestroy
     public void destroy() {
         log.info("Application shutting down, cleaning up temporary files");
         cleanupTempFiles();
