@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useParams } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -15,6 +15,8 @@ import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
+import ShareLinkPage from "@app/routes/ShareLinkPage";
+import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
@@ -43,6 +45,15 @@ function MobileScannerProviders({ children }: { children: ReactNode }) {
       <RainbowThemeProvider>{children}</RainbowThemeProvider>
     </PreferencesProvider>
   );
+}
+
+// Participant signing page - public, token-gated, no login required. The
+// participant API (/api/v1/workflow/participant/*) authenticates via the share
+// token, so it works without a Supabase session.
+function ParticipantViewPage() {
+  const { token } = useParams<{ token: string }>();
+  if (!token) return null;
+  return <ParticipantView token={token} />;
 }
 
 /**
@@ -81,6 +92,17 @@ export default function App() {
           }
         />
 
+        {/* Participant signing - public, token-gated, no login required. Same
+            reasoning as the mobile scanner (kept outside AppProviders). */}
+        <Route
+          path="/workflow/sign/:token"
+          element={
+            <MobileScannerProviders>
+              <ParticipantViewPage />
+            </MobileScannerProviders>
+          }
+        />
+
         {/* Everything else needs the auth/backend providers. */}
         <Route
           path="*"
@@ -96,6 +118,11 @@ export default function App() {
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/auth/reset" element={<ResetPassword />} />
                   <Route path="/oauth/consent" element={<OAuthConsent />} />
+                  {/* Shared-file links. Team invites are NOT routed here: on
+                      SaaS they are accepted in-app via the Supabase team
+                      invitation banner, not the Spring password-based
+                      /invite/:token page used by the self-hosted build. */}
+                  <Route path="/share/:token" element={<ShareLinkPage />} />
                   <Route path="/*" element={<Landing />} />
                 </Routes>
                 <OnboardingTour />

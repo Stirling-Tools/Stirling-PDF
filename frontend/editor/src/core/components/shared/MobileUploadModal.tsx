@@ -88,7 +88,8 @@ export default function MobileUploadModal({
   // /mobile-scanner route under the app's base path, otherwise the phone hits
   // the auth-gated catch-all route and is bounced to the login page.
   const mobileUrl = buildMobileScannerUrl({
-    configuredUrl: localStorage.getItem("server_url") || config?.frontendUrl || "",
+    configuredUrl:
+      localStorage.getItem("server_url") || config?.frontendUrl || "",
     sessionId,
     origin: window.location.origin,
     basePath: BASE_PATH,
