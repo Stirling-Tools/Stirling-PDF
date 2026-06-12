@@ -50,7 +50,7 @@ Installed Quarkus features at boot: agroal, cache, cdi, hibernate-orm, hibernate
 ## Known Issues / Follow-up
 | Area | Status | Notes |
 |------|--------|-------|
-| `:saas` flavor | Main compiles (a few files finishing); full augmentation/boot not yet verified | Optional non-default flavor. AOP credit interceptors, Supabase second datasource, RestTemplate->REST Client carry `// TODO: Migration required`. |
+| `:saas` flavor | Main source **compiles** (`STIRLING_FLAVOR=saas :saas:compileJava` = SUCCESS); full augmentation **not** yet passing (28 Arc deployment problems) | Optional non-default flavor (opt-in via `STIRLING_FLAVOR=saas`); the default `proprietary` build is unaffected. Remaining augmentation work is design-level, not mechanical: Supabase second datasource (`quarkus.datasource."supabase".*`), Spring `SecurityFilterChain`/`JwtDecoder` -> `quarkus.http.auth.*` + OIDC, MVC `HandlerInterceptor`/`@RestControllerAdvice` credit interceptors -> JAX-RS `@Provider` filters/`ExceptionMapper`, `@ConfigurationProperties` POJOs -> `@ConfigMapping`, RestTemplate -> REST Client. ~90 `// TODO: Migration required` markers across 34 saas files capture each. |
 | `/q/openapi` endpoint | 500 at runtime | `UT000048: No request is currently active` - known Quarkus issue mixing quarkus-undertow (servlet) with the smallrye-openapi route. Swagger-UI loads; the live API works; SPA catch-all also shadows `/q/openapi.yaml`. Affects API-doc tooling only. |
 | Jackson 2 vs 3 | Coexisting | ~100 files use `tools.jackson` (Jackson 3, from Spring Boot 4); REST (de)serialization uses Quarkus' Jackson 2. Converge later. |
 | Excluded tests | ~180 test files | Excluded from compilation pending port to `@QuarkusTest`; sources preserved on disk. |
