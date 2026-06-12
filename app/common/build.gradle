@@ -41,6 +41,9 @@ dependencies {
     // @Scheduled support (was spring-context scheduling). quarkus-scheduler manages its own
     // executor; the former SchedulingConfig TaskScheduler bean is no longer needed.
     api 'io.quarkus:quarkus-scheduler'
+    // BCrypt implementation backing the Spring Security PasswordEncoder compatibility shim
+    // (replaces spring-security-crypto's BCryptPasswordEncoder). Standalone, no framework.
+    api 'at.favre.lib:bcrypt:0.10.2'
     // Swagger/OpenAPI annotations (io.swagger.v3.oas.annotations.*) used by common's API marker
     // interfaces; was transitive via springdoc. Quarkus' SmallRye OpenAPI also understands these.
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'

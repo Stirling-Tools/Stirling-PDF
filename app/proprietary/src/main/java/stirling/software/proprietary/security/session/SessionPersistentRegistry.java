@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.SessionRegistry;
+import stirling.software.common.security.UserDetails;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -22,14 +22,14 @@ import stirling.software.proprietary.security.database.repository.SessionReposit
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
-// TODO: Migration required - this class implements Spring Security's SessionRegistry
-//   (org.springframework.security.core.session.SessionRegistry) and exposes SessionInformation,
-//   UserDetails and OAuth2User from spring-security. Quarkus has no equivalent session-registry
-//   abstraction. The Spring Security imports below are kept ONLY because un-migrated collaborators
+// TODO: Migration required - this class implements the SessionRegistry compatibility shim
+//   (stirling.software.common.security.SessionRegistry) and exposes SessionInformation,
+//   UserDetails and OAuth2User from the same compat package. Quarkus has no equivalent
+//   session-registry abstraction. These shim types are kept ONLY because un-migrated collaborators
 //   (UserAuthenticationFilter, UserService, SessionRegistryConfig) still consume this interface and
 //   its return types. Once those collaborators are migrated to Quarkus security
 //   (io.quarkus.security.identity.SecurityIdentity), this class should drop the SessionRegistry
-//   contract and the spring-security types, replacing them with a plain CDI service over the
+//   contract and the compat security types, replacing them with a plain CDI service over the
 //   SessionEntity table.
 @ApplicationScoped
 @RequiredArgsConstructor

@@ -2,12 +2,8 @@ package stirling.software.proprietary.service;
 
 import java.io.IOException;
 
-// TODO: Migration required - AiEngineClient (a collaborator, not yet migrated) still throws
-// org.springframework.web.server.ResponseStatusException, so this import must stay until that file
-// is converted. Once AiEngineClient throws jakarta.ws.rs.WebApplicationException, swap this catch.
-import org.springframework.web.server.ResponseStatusException;
-
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +44,8 @@ public class AiUserDataService {
         try {
             aiEngineClient.delete(PURGE_PATH, userId);
             log.debug("Requested document purge for user {}", userId);
-        } catch (ResponseStatusException e) {
-            log.warn("AI engine refused document purge for {}: {}", userId, e.getReason());
+        } catch (WebApplicationException e) {
+            log.warn("AI engine refused document purge for {}: {}", userId, e.getMessage());
         } catch (IOException e) {
             log.warn("Failed to purge documents for {}: {}", userId, e.getMessage());
         }

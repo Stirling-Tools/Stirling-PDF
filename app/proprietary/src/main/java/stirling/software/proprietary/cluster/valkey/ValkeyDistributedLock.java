@@ -1,19 +1,17 @@
 package stirling.software.proprietary.cluster.valkey;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
-
 import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.redis.datasource.RedisDataSource;
+import io.quarkus.redis.datasource.value.SetArgs;
+import io.quarkus.redis.datasource.value.ValueCommands;
+import io.vertx.mutiny.redis.client.Response;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,14 +25,12 @@ import stirling.software.common.cluster.DistributedLock;
 //                                    propagate @LookupIfProperty through the meta-annotation, so the
 //                                    guards are repeated directly on this consumer).
 //
-// TODO: Migration required - this class still depends on spring-data-redis types
-// (StringRedisTemplate, RedisScript, DefaultRedisScript). Quarkus has no spring-data-redis; once
-// ValkeyConnectionConfiguration migrates its producer onto io.quarkus.redis.datasource.RedisDataSource,
-// this lock should be reworked to use RedisDataSource: SET NX PX for tryAcquire and EVAL of the
-// release/renew Lua scripts (redisDataSource.execute("EVAL", script, "1", key, value[, ttlMillis])).
-// The injected bean is the @Named("valkeyTemplate") StringRedisTemplate produced there, so this file
-// and that producer must migrate in lockstep; the spring-data-redis imports are retained until then.
-// The Lua scripts and the acquire/release/renew control flow are framework-agnostic and carry over.
+// Migrated off spring-data-redis (StringRedisTemplate / RedisScript / DefaultRedisScript) onto
+// io.quarkus.redis.datasource.RedisDataSource:
+//   - tryAcquire -> SET key value NX PX <leaseMillis> via ValueCommands.setAndChanged(..., SetArgs)
+//   - release/renew -> EVAL of the Lua scripts via RedisDataSource.execute("EVAL", ...).
+// The injected bean is now the RedisDataSource that ValkeyConnectionConfiguration produces; the Lua
+// scripts and the acquire/release/renew control flow are framework-agnostic and carry over unchanged.
 @ApplicationScoped
 @LookupIfProperty(name = "cluster.enabled", stringValue = "true")
 @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
@@ -43,42 +39,44 @@ public class ValkeyDistributedLock implements DistributedLock {
 
     private static final String PREFIX = "stirling:lock:";
 
-    private static final RedisScript<Long> RELEASE_SCRIPT =
-            new DefaultRedisScript<>(
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
-                    Long.class);
+    private static final String RELEASE_SCRIPT =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
 
-    private static final RedisScript<Long> RENEW_SCRIPT =
-            new DefaultRedisScript<>(
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end",
-                    Long.class);
+    private static final String RENEW_SCRIPT =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end";
 
-    private final StringRedisTemplate template;
+    private final RedisDataSource redis;
+    private final ValueCommands<String, String> values;
 
     @Inject
-    public ValkeyDistributedLock(@Named("valkeyTemplate") StringRedisTemplate template) {
-        this.template = template;
+    public ValkeyDistributedLock(RedisDataSource redis) {
+        this.redis = redis;
+        this.values = redis.value(String.class, String.class);
     }
 
     @Override
     public Optional<LockHandle> tryAcquire(String lockKey, Duration leaseTime) {
         String key = PREFIX + lockKey;
         String value = UUID.randomUUID().toString();
-        Boolean ok = template.opsForValue().setIfAbsent(key, value, leaseTime);
-        if (Boolean.TRUE.equals(ok)) {
-            return Optional.of(new ValkeyHandle(template, key, value));
+        // SET key value NX PX <leaseMillis>: setAndChanged returns true only when the value was
+        // actually written, i.e. the NX guard succeeded and we hold the lock.
+        boolean acquired =
+                values.setAndChanged(
+                        key, value, new SetArgs().nx().px(leaseTime.toMillis()));
+        if (acquired) {
+            return Optional.of(new ValkeyHandle(redis, key, value));
         }
         return Optional.empty();
     }
 
     private static final class ValkeyHandle implements LockHandle {
-        private final StringRedisTemplate template;
+        private final RedisDataSource redis;
         private final String key;
         private final String value;
         private boolean released;
 
-        ValkeyHandle(StringRedisTemplate template, String key, String value) {
-            this.template = template;
+        ValkeyHandle(RedisDataSource redis, String key, String value) {
+            this.redis = redis;
             this.key = key;
             this.value = value;
         }
@@ -93,7 +91,8 @@ public class ValkeyDistributedLock implements DistributedLock {
             // try-with-resources. An uncaught Valkey error here would mask the body's exception.
             // The lease TTL-expires anyway, so a failed explicit release is safe.
             try {
-                template.execute(RELEASE_SCRIPT, Collections.singletonList(key), value);
+                // EVAL <script> numkeys=1 key value
+                redis.execute("EVAL", RELEASE_SCRIPT, "1", key, value);
             } catch (RuntimeException ex) {
                 log.warn(
                         "Lock release failed for {} (lease will TTL-expire): {}",
@@ -108,12 +107,16 @@ public class ValkeyDistributedLock implements DistributedLock {
                 return false;
             }
             try {
-                Long result =
-                        template.execute(
+                // EVAL <script> numkeys=1 key value ttlMillis
+                Response response =
+                        redis.execute(
+                                "EVAL",
                                 RENEW_SCRIPT,
-                                Collections.singletonList(key),
+                                "1",
+                                key,
                                 value,
                                 Long.toString(leaseTime.toMillis()));
+                Long result = response == null ? null : response.toLong();
                 return result != null && result == 1L;
             } catch (RuntimeException ex) {
                 log.warn(

@@ -15,14 +15,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 
-// TODO: Migration required - CustomUserDetailsService (a collaborator not yet migrated) still
-// returns org.springframework.security.core.userdetails.UserDetails and throws
-// UsernameNotFoundException; UserService.isPasswordCorrect path may surface a Spring
-// AuthenticationException. These Spring-security types are kept until those collaborators migrate
-// (e.g. to a Quarkus IdentityProvider / plain user-loading service). Remove these imports then.
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.UserDetails;
+import stirling.software.common.security.UsernameNotFoundException;
 
 import io.quarkus.security.identity.SecurityIdentity;
 

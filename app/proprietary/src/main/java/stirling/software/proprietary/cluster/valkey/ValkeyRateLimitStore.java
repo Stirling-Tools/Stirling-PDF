@@ -3,14 +3,6 @@ package stirling.software.proprietary.cluster.valkey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
-// TODO: Migration required - LettuceConnectionFactory is a spring-data-redis type produced by the
-// not-yet-migrated ValkeyConnectionConfiguration collaborator. This store only needs the raw
-// io.lettuce.core.RedisClient that Bucket4j's Lettuce ProxyManager builds on. Once
-// ValkeyConnectionConfiguration is migrated to a Quarkus producer, switch this injection point to a
-// produced io.lettuce.core.RedisClient (or io.quarkus.redis.datasource.RedisDataSource) and delete
-// the getNativeClient() unwrap in initProxyManager(). Kept for now so the Bucket4j logic stays intact.
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.BucketProxy;
@@ -44,17 +36,24 @@ public class ValkeyRateLimitStore implements RateLimitStore {
 
     private static final String PREFIX = "stirling:rl:";
 
-    private final LettuceConnectionFactory connectionFactory;
+    // TODO: Migration required - this previously received a spring-data-redis
+    // LettuceConnectionFactory (produced by the not-yet-migrated ValkeyConnectionConfiguration)
+    // and unwrapped its native io.lettuce.core.RedisClient. Bucket4j's Lettuce ProxyManager only
+    // needs that raw RedisClient. Once ValkeyConnectionConfiguration is migrated to a Quarkus
+    // producer (exposing a RedisClient or io.quarkus.redis.datasource.RedisDataSource), inject it
+    // here directly and drop the AbstractRedisClient unwrap below. The RedisClient is injected as a
+    // CDI bean for now so the Bucket4j logic stays intact and the file compiles.
+    private final AbstractRedisClient nativeRedisClient;
     private ProxyManager<byte[]> proxyManager;
 
     @Inject
-    public ValkeyRateLimitStore(LettuceConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
+    public ValkeyRateLimitStore(AbstractRedisClient nativeRedisClient) {
+        this.nativeRedisClient = nativeRedisClient;
     }
 
     @PostConstruct
     void initProxyManager() {
-        AbstractRedisClient client = connectionFactory.getNativeClient();
+        AbstractRedisClient client = nativeRedisClient;
         if (!(client instanceof RedisClient redisClient)) {
             throw new IllegalStateException(
                     "ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "

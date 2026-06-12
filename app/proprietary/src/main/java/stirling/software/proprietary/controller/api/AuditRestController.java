@@ -18,16 +18,8 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-// TODO: Migration required - PersistentAuditEventRepository is a not-yet-migrated collaborator
-// (Spring Data JPA, task: Code: Spring Data JPA -> Hibernate ORM Panache). It still returns Spring
-// org.springframework.data.domain.Page and accepts Pageable. These four Spring Data imports must
-// stay until that repository is ported to PanacheRepositoryBase. Once it is, replace Pageable with
-// io.quarkus.panache.common.Page, Sort.by("timestamp").descending() with
-// io.quarkus.panache.common.Sort.descending("timestamp"), and Page<...> with PanacheQuery<...>.
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,9 +73,6 @@ public class AuditRestController {
         LocalDate startDate = parseIsoDate(startDateStr);
         LocalDate endDate = parseIsoDate(endDateStr);
 
-        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("timestamp").descending());
-        Page<PersistentAuditEvent> events;
-
         // Convert arrays to lists
         List<String> eventTypeList =
                 (eventTypes != null && !eventTypes.isEmpty()) ? eventTypes : null;
@@ -96,47 +85,58 @@ public class AuditRestController {
             endInstant = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         }
 
-        // Apply filters based on provided parameters
+        // Apply filters based on provided parameters. The repository finders now return a Panache
+        // PanacheQuery instead of a Spring Data Page; paging and sorting are applied here.
+        PanacheQuery<PersistentAuditEvent> query;
         if (eventTypeList != null
                 && usernameList != null
                 && startInstant != null
                 && endInstant != null) {
-            events =
+            query =
                     auditRepository.findByTypeInAndPrincipalInAndTimestampBetween(
-                            eventTypeList, usernameList, startInstant, endInstant, pageable);
+                            eventTypeList, usernameList, startInstant, endInstant);
         } else if (eventTypeList != null && usernameList != null) {
-            events =
-                    auditRepository.findByTypeInAndPrincipalIn(
-                            eventTypeList, usernameList, pageable);
+            query = auditRepository.findByTypeInAndPrincipalIn(eventTypeList, usernameList);
         } else if (eventTypeList != null && startInstant != null && endInstant != null) {
-            events =
+            query =
                     auditRepository.findByTypeInAndTimestampBetween(
-                            eventTypeList, startInstant, endInstant, pageable);
+                            eventTypeList, startInstant, endInstant);
         } else if (usernameList != null && startInstant != null && endInstant != null) {
-            events =
+            query =
                     auditRepository.findByPrincipalInAndTimestampBetween(
-                            usernameList, startInstant, endInstant, pageable);
+                            usernameList, startInstant, endInstant);
         } else if (startInstant != null && endInstant != null) {
-            events = auditRepository.findByTimestampBetween(startInstant, endInstant, pageable);
+            query = auditRepository.findByTimestampBetween(startInstant, endInstant);
         } else if (eventTypeList != null) {
-            events = auditRepository.findByTypeIn(eventTypeList, pageable);
+            query = auditRepository.findByTypeIn(eventTypeList);
         } else if (usernameList != null) {
-            events = auditRepository.findByPrincipalIn(usernameList, pageable);
+            query = auditRepository.findByPrincipalIn(usernameList);
         } else {
-            events = auditRepository.findAll(pageable);
+            query = auditRepository.findAll();
         }
+
+        // Apply the requested page window.
+        // TODO: Migration required - PanacheQuery has no sort() method; the timestamp-descending
+        // ordering (formerly Sort.by("timestamp").descending() on the Spring Pageable) must be
+        // baked into the repository finder queries (e.g. add "ORDER BY e.timestamp DESC" / pass an
+        // io.quarkus.panache.common.Sort when the finder is built). Tracked under task: Spring Data
+        // JPA -> Hibernate ORM Panache.
+        query.page(Page.of(page, pageSize));
+
+        long totalElements = query.count();
+        int totalPages = query.pageCount();
 
         // Convert to response format expected by frontend
         List<AuditEventDto> eventDtos =
-                events.getContent().stream().map(this::convertToDto).collect(Collectors.toList());
+                query.list().stream().map(this::convertToDto).collect(Collectors.toList());
 
         AuditEventsResponse response =
                 AuditEventsResponse.builder()
                         .events(eventDtos)
-                        .totalEvents((int) events.getTotalElements())
-                        .page(events.getNumber())
-                        .pageSize(events.getSize())
-                        .totalPages(events.getTotalPages())
+                        .totalEvents((int) totalElements)
+                        .page(page)
+                        .pageSize(pageSize)
+                        .totalPages(totalPages)
                         .build();
 
         return Response.ok(response).build();

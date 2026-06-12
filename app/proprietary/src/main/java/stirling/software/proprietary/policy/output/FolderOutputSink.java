@@ -12,14 +12,11 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.apache.commons.io.FilenameUtils;
-// TODO: Migration required - the PolicyOutputSink interface (a collaborator) still declares
-// List<Resource> using Spring's org.springframework.core.io.Resource; this import stays until that
-// interface is migrated to stirling.software.common.model.io.Resource.
-import org.springframework.core.io.Resource;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;

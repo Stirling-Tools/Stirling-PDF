@@ -8,29 +8,21 @@ import static stirling.software.proprietary.security.model.AuthenticationType.WE
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 // TODO: Migration required - Spring Security glue. This filter populates the
-// Spring SecurityContextHolder, which has no Quarkus equivalent. In Quarkus the
-// authenticated principal is exposed as io.quarkus.security.identity.SecurityIdentity
-// and is produced by an IdentityProvider / SecurityIdentityAugmentor, NOT written
-// imperatively from a servlet filter. The remaining org.springframework.security.*
-// imports below stay only because the collaborators (JwtServiceInterface,
-// CustomUserDetailsService, UserService, JwtAuthenticationEntryPoint,
-// ApiKeyAuthenticationToken) still expose Spring Security types and have not yet
-// been migrated. Once those are ported to Quarkus security, this filter should
-// register the user via a custom IdentityProvider keyed off the validated JWT claims
-// (prefer quarkus-smallrye-jwt for bearer validation) instead of UsernamePasswordAuthenticationToken.
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-
+// SecurityContextHolder (now a compat shim in stirling.software.common.security),
+// which has no Quarkus equivalent. In Quarkus the authenticated principal is exposed
+// as io.quarkus.security.identity.SecurityIdentity and is produced by an
+// IdentityProvider / SecurityIdentityAugmentor, NOT written imperatively from a
+// servlet filter. The Spring Security imports have been replaced with the
+// stirling.software.common.security compat shims so this file compiles; once the
+// collaborators are ported to Quarkus security, this filter should register the user
+// via a custom IdentityProvider keyed off the validated JWT claims (prefer
+// quarkus-smallrye-jwt for bearer validation) instead of
+// UsernamePasswordAuthenticationToken.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
@@ -45,7 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.common.security.UsernameNotFoundException;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
+import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -67,10 +66,10 @@ public class JwtAuthenticationFilter implements Filter {
     @Inject JwtServiceInterface jwtService;
     @Inject UserService userService;
     @Inject CustomUserDetailsService userDetailsService;
-    // TODO: Migration required - AuthenticationEntryPoint is a Spring Security type.
-    // JwtAuthenticationEntryPoint is still a Spring @Component; once migrated this should
-    // be injected as a plain CDI bean (it only writes a 401 JSON/error to the response).
-    @Inject AuthenticationEntryPoint authenticationEntryPoint;
+    // JwtAuthenticationEntryPoint is now a plain CDI bean (it only writes a 401
+    // JSON/error to the response); inject the concrete type instead of the former
+    // Spring Security AuthenticationEntryPoint interface.
+    @Inject JwtAuthenticationEntryPoint authenticationEntryPoint;
     @Inject ApplicationProperties.Security securityProperties;
 
     @Override
@@ -171,9 +170,21 @@ public class JwtAuthenticationFilter implements Filter {
                         return false;
                     }
 
+                    // TODO: Migration required - the previous ApiKeyAuthenticationToken
+                    // extended Spring Security's AbstractAuthenticationToken. It is now a
+                    // plain POJO that does not implement the security-compat Authentication
+                    // contract, so it cannot be stored in the SecurityContext. Build a
+                    // compat UsernamePasswordAuthenticationToken from the user's authorities
+                    // to keep the API-key authentication intent; in Quarkus this should be a
+                    // SecurityIdentity produced by a custom IdentityProvider for the API key.
+                    List<GrantedAuthority> authorities =
+                            user.get().getAuthorities().stream()
+                                    .map(a -> (GrantedAuthority) new SimpleGrantedAuthority(
+                                            a.getAuthority()))
+                                    .toList();
                     authentication =
-                            new ApiKeyAuthenticationToken(
-                                    user.get(), apiKey, user.get().getAuthorities());
+                            new UsernamePasswordAuthenticationToken(
+                                    user.get(), apiKey, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     return true;
                 } catch (AuthenticationException e) {
@@ -202,14 +213,24 @@ public class JwtAuthenticationFilter implements Filter {
         // (userDetailsService.loadUserByUsername) can be kept as a plain service call.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             processUserAuthenticationType(claims, username);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            // loadUserByUsername now returns the User entity directly (the former
+            // UserDetailsService/UserDetails Spring contract was dropped during migration).
+            User userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
+                List<GrantedAuthority> authorities =
+                        userDetails.getAuthorities().stream()
+                                .map(a -> (GrantedAuthority) new SimpleGrantedAuthority(
+                                        a.getAuthority()))
+                                .toList();
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                // TODO: Migration required - Spring's WebAuthenticationDetailsSource
+                // (remote address + session id) has no Quarkus equivalent. Storing the
+                // request as the details object keeps the call compile-safe; in Quarkus
+                // this metadata is available from the RoutingContext / SecurityIdentity.
+                authToken.setDetails(request);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
                 throw new UsernameNotFoundException("User not found: " + username);
@@ -244,10 +265,11 @@ public class JwtAuthenticationFilter implements Filter {
         }
     }
 
+    // Accepts any Exception so both the application's AuthenticationFailureException
+    // (extends RuntimeException) and the security-compat AuthenticationException can be
+    // passed through to the entry point, which shapes the 401 response.
     private void handleAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, Exception authException)
             throws IOException, ServletException {
         authenticationEntryPoint.commence(request, response, authException);
     }

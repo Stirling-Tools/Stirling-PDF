@@ -21,17 +21,13 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
 
-// TODO: Migration required - org.springframework.boot.actuate.audit.AuditEvent and
-// AuditEventRepository are Spring Boot Actuator types with no Quarkus equivalent. They are kept
-// here because this is a coordinated migration: stirling.software.proprietary.config
-// .CustomAuditEventRepository implements AuditEventRepository and several controllers/services
-// (AuditRestController, AuditDashboardController, AuditCleanupService, PersistentAuditEventRepository)
-// share these types. Replace them across that set with a plain audit-record DTO + a CDI-managed
-// repository (PanacheRepository over the existing PersistentAuditEvent entity) when that set is
-// migrated; the persistence logic below (repository.add(new AuditEvent(...))) is preserved verbatim.
-import org.springframework.boot.actuate.audit.AuditEvent;
-import org.springframework.boot.actuate.audit.AuditEventRepository;
-
+// Migration: org.springframework.boot.actuate.audit.AuditEvent and AuditEventRepository were Spring
+// Boot Actuator types with no Quarkus equivalent. The write side has already been ported to a plain
+// CDI bean (stirling.software.proprietary.config.CustomAuditEventRepository) whose add(principal,
+// type, timestamp, data) method persists a PersistentAuditEvent. This service now depends on that
+// bean directly; the old `repository.add(new AuditEvent(principal, type, data))` calls have been
+// rewritten to `repository.add(principal, type, Instant.now(), data)`, preserving persistence
+// behavior without the Actuator DTO.
 import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -53,6 +49,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
+import stirling.software.proprietary.config.CustomAuditEventRepository;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 /**
@@ -63,7 +60,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 @ApplicationScoped
 public class AuditService {
 
-    private final AuditEventRepository repository;
+    private final CustomAuditEventRepository repository;
     private final AuditConfigurationProperties auditConfig;
     private final boolean runningEE;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -81,7 +78,7 @@ public class AuditService {
 
     @Inject
     public AuditService(
-            AuditEventRepository repository,
+            CustomAuditEventRepository repository,
             AuditConfigurationProperties auditConfig,
             @Named("runningEE") boolean runningEE,
             CustomPDFDocumentFactory pdfDocumentFactory,
@@ -121,7 +118,7 @@ public class AuditService {
         Map<String, Object> enrichedData = new java.util.HashMap<>(data);
         enrichedData.put("__origin", determineOrigin());
 
-        repository.add(new AuditEvent(principal, type.name(), enrichedData));
+        repository.add(principal, type.name(), Instant.now(), enrichedData);
     }
 
     /**
@@ -152,7 +149,7 @@ public class AuditService {
             return;
         }
 
-        repository.add(new AuditEvent(principal, type.name(), data));
+        repository.add(principal, type.name(), Instant.now(), data);
     }
 
     /**
@@ -188,7 +185,7 @@ public class AuditService {
         Map<String, Object> enrichedData = new java.util.HashMap<>(data);
         enrichedData.put("__origin", determineOrigin());
 
-        repository.add(new AuditEvent(principal, type, enrichedData));
+        repository.add(principal, type, Instant.now(), enrichedData);
     }
 
     /**
@@ -218,7 +215,7 @@ public class AuditService {
             return;
         }
 
-        repository.add(new AuditEvent(principal, type, data));
+        repository.add(principal, type, Instant.now(), data);
     }
 
     /**
@@ -257,7 +254,7 @@ public class AuditService {
             enrichedData.put("__ipAddress", ipAddress);
         }
 
-        repository.add(new AuditEvent(principal, type.name(), enrichedData));
+        repository.add(principal, type.name(), Instant.now(), enrichedData);
     }
 
     /**
@@ -284,7 +281,7 @@ public class AuditService {
             enrichedData.put("__ipAddress", ipAddress);
         }
 
-        repository.add(new AuditEvent(principal, type, enrichedData));
+        repository.add(principal, type, Instant.now(), enrichedData);
     }
 
     // ========== DATA COLLECTION METHODS ==========

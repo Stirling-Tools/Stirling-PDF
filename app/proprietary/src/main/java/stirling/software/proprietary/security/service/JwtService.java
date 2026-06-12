@@ -13,14 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-// TODO: Migration required - JwtServiceInterface still declares generateToken(Authentication, ...)
-// using org.springframework.security.core.Authentication. The interface (a separate file) must be
-// migrated too; once it switches to io.quarkus.security.identity.SecurityIdentity, update the
-// implementation below and drop these Spring Security imports. Kept here to satisfy the interface
-// contract without changing a collaborator file.
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.UserDetails;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

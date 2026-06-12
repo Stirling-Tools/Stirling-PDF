@@ -1,19 +1,11 @@
 package stirling.software.proprietary.security.service;
 
-// TODO: Migration required - org.springframework.mail.javamail.* is Spring's mail abstraction (NOT
-// Spring DI) and Quarkus has no drop-in equivalent. quarkus-mailer (io.quarkus.mailer.Mailer /
-// ReactiveMailer) exposes a different API and would require migrating the collaborator MailConfig
-// (which still produces a JavaMailSender) together with this service. The JavaMailSender /
-// MimeMessage / MimeMessageHelper logic is kept unchanged until that joint migration; only the DI
-// glue has been converted. When migrating, swap to quarkus.mailer.* config + io.quarkus.mailer.Mail.
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import io.quarkus.mailer.Mail;
+import io.quarkus.mailer.Mailer;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.util.ByteArrayDataSource;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,32 +14,31 @@ import stirling.software.common.model.MultipartFile;
 import stirling.software.proprietary.security.model.api.Email;
 
 /**
- * Service class responsible for sending emails, including those with attachments. It uses
- * JavaMailSender to send the email and is designed to handle both the message content and file
- * attachments.
+ * Service class responsible for sending emails, including those with attachments. It uses the
+ * Quarkus {@link Mailer} to send the email and is designed to handle both the message content and
+ * file attachments.
  */
 // TODO: Migration required - the original class was guarded by
 // @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false).
 // Quarkus has no @ConditionalOnProperty. mail.enabled is a runtime property
 // (ApplicationProperties.Mail#isEnabled) rather than a build-time flag, so the bean is always
-// produced and callers must guard on applicationProperties.getMail().isEnabled() at call time
-// (matching the decision already made in the MailConfig producer).
+// produced and callers must guard on applicationProperties.getMail().isEnabled() at call time.
+// SMTP connection settings now live under quarkus.mailer.* config instead of MailConfig.
 @Slf4j
 @ApplicationScoped
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final Mailer mailer;
     private final ApplicationProperties applicationProperties;
 
     @Inject
-    public EmailService(JavaMailSender mailSender, ApplicationProperties applicationProperties) {
-        this.mailSender = mailSender;
+    public EmailService(Mailer mailer, ApplicationProperties applicationProperties) {
+        this.mailer = mailer;
         this.applicationProperties = applicationProperties;
     }
 
     /**
-     * Sends an email with an attachment asynchronously. This method is annotated with @Async, which
-     * means it will be executed asynchronously.
+     * Sends an email with an attachment.
      *
      * @param email The Email object containing the recipient, subject, body, and file attachment.
      * @throws MessagingException If there is an issue with creating or sending the email.
@@ -73,35 +64,24 @@ public class EmailService {
 
         ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
 
-        // Creates a MimeMessage to represent the email
-        MimeMessage message = mailSender.createMimeMessage();
+        // Build an HTML mail (the "true" body content is HTML).
+        Mail mail =
+                Mail.withHtml(email.getTo(), email.getSubject(), email.getBody())
+                        .setFrom(mailProperties.getFrom());
 
-        // Helper class to set up the message content and attachments
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-        // Sets the recipient, subject, body, and sender email
-        helper.addTo(email.getTo());
-        helper.setSubject(email.getSubject());
-        helper.setText(
-                email.getBody(),
-                true); // The "true" here indicates that the body contains HTML content.
-        helper.setFrom(mailProperties.getFrom());
-
-        // Adds the attachment to the email. The common MultipartFile shim is not a Spring
-        // InputStreamSource, so wrap its bytes in a jakarta.mail DataSource (pure Jakarta Mail API).
+        // Adds the attachment to the email using the Quarkus Mail attachment API.
         try {
             String contentType = file.getContentType();
-            ByteArrayDataSource dataSource =
-                    new ByteArrayDataSource(
-                            file.getBytes(),
-                            contentType != null ? contentType : "application/octet-stream");
-            helper.addAttachment(file.getOriginalFilename(), dataSource);
+            mail.addAttachment(
+                    file.getOriginalFilename(),
+                    file.getBytes(),
+                    contentType != null ? contentType : "application/octet-stream");
         } catch (java.io.IOException e) {
             throw new MessagingException("Failed to read attachment content", e);
         }
 
-        // Sends the email via the configured mail sender
-        mailSender.send(message);
+        // Sends the email via the configured mailer
+        mailer.send(mail);
         log.debug(
                 "Email sent successfully to {} with subject: {} body: {}",
                 email.getTo(),
@@ -110,7 +90,7 @@ public class EmailService {
     }
 
     /**
-     * Sends a simple email without attachments asynchronously.
+     * Sends a simple plain-text email without attachments.
      *
      * @param to the recipient address
      * @param subject subject line
@@ -124,13 +104,8 @@ public class EmailService {
         }
 
         ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, false);
-        helper.addTo(to);
-        helper.setSubject(subject);
-        helper.setText(body, false);
-        helper.setFrom(mailProperties.getFrom());
-        mailSender.send(message);
+        Mail mail = Mail.withText(to, subject, body).setFrom(mailProperties.getFrom());
+        mailer.send(mail);
         log.debug(
                 "Simple email sent successfully to {} with subject: {} body: {}",
                 to,
@@ -139,7 +114,7 @@ public class EmailService {
     }
 
     /**
-     * Sends a plain text/HTML email without attachments asynchronously.
+     * Sends a plain text/HTML email without attachments.
      *
      * @param to The recipient email address
      * @param subject The email subject
@@ -157,20 +132,14 @@ public class EmailService {
 
         ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
 
-        // Creates a MimeMessage to represent the email
-        MimeMessage message = mailSender.createMimeMessage();
+        Mail mail =
+                isHtml
+                        ? Mail.withHtml(to, subject, body)
+                        : Mail.withText(to, subject, body);
+        mail.setFrom(mailProperties.getFrom());
 
-        // Helper class to set up the message content
-        MimeMessageHelper helper = new MimeMessageHelper(message, false);
-
-        // Sets the recipient, subject, body, and sender email
-        helper.addTo(to);
-        helper.setSubject(subject);
-        helper.setText(body, isHtml);
-        helper.setFrom(mailProperties.getFrom());
-
-        // Sends the email via the configured mail sender
-        mailSender.send(message);
+        // Sends the email via the configured mailer
+        mailer.send(mail);
     }
 
     /**

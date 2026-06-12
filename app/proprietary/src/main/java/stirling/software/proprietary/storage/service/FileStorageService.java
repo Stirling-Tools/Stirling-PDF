@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 // io.quarkus.security.identity.SecurityIdentity (injected) or @Context
 // jakarta.ws.rs.core.SecurityContext once the storage controllers are migrated; the principal is
 // expected to be a stirling.software.proprietary.security.model.User instance.
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.mail.MessagingException;

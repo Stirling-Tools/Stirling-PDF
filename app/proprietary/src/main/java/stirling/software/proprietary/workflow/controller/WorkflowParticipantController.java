@@ -7,12 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Migration required - org.springframework.web.server.ResponseStatusException is still
-// thrown by the not-yet-migrated CertificateSubmissionValidator service (validateAndExtractInfo).
-// Keep catching it here until that collaborator is converted to throw WebApplicationException;
-// then this import and the catch blocks below can be replaced.
-import org.springframework.web.server.ResponseStatusException;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -219,14 +213,9 @@ public class WorkflowParticipantController {
             return Response.ok(WorkflowMapper.toParticipantResponse(participant, false)).build();
 
         } catch (WebApplicationException e) {
+            // CertificateSubmissionValidator now throws WebApplicationException on validation
+            // failure (post Spring->Quarkus migration); propagate as-is.
             throw e;
-        } catch (ResponseStatusException e) {
-            // Thrown by the not-yet-migrated CertificateSubmissionValidator on validation failure.
-            // TODO: Migration required - replace with WebApplicationException once that service is
-            // converted.
-            throw new WebApplicationException(
-                    e.getReason(),
-                    Response.Status.fromStatusCode(e.getStatusCode().value()));
         } catch (Exception e) {
             log.error("Error submitting signature for participant {}", participant.getEmail(), e);
             throw new WebApplicationException(
@@ -399,13 +388,13 @@ public class WorkflowParticipantController {
                                     null))
                     .build();
 
-        } catch (ResponseStatusException e) {
+        } catch (WebApplicationException e) {
             // Validation failure — return 200 with valid:false so the frontend can display inline.
-            // TODO: Migration required - CertificateSubmissionValidator still throws Spring's
-            // ResponseStatusException; switch to WebApplicationException once it is converted.
+            // CertificateSubmissionValidator throws WebApplicationException (post migration); use
+            // its message as the inline error reason.
             return Response.ok(
                             new CertificateValidationResponse(
-                                    false, null, null, null, null, false, e.getReason()))
+                                    false, null, null, null, null, false, e.getMessage()))
                     .build();
         } catch (IOException e) {
             log.error("Error reading certificate file during pre-validation", e);

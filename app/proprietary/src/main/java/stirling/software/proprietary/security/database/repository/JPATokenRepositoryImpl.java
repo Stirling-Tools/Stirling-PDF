@@ -6,17 +6,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-// TODO: Migration required - this class implements Spring Security's
-// org.springframework.security.web.authentication.rememberme.PersistentTokenRepository
-// (remember-me persistent login) and exchanges
-// org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken
-// objects. Quarkus has no direct remember-me equivalent. The OpenSAML/JWT logic here is
-// trivial token persistence, so the body is preserved unchanged. Once the remember-me
-// mechanism is rehosted (custom Quarkus form-auth + persistent token store, or quarkus-oidc
-// session), re-implement the interface against the new abstraction. The Spring Security
-// imports below are intentionally KEPT until that abstraction exists.
-import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import stirling.software.common.security.PersistentRememberMeToken;
+import stirling.software.common.security.PersistentTokenRepository;
 
 import stirling.software.proprietary.security.model.PersistentLogin;
 

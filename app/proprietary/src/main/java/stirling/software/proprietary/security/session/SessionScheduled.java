@@ -5,11 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
-// TODO: Migration required - SessionInformation is a Spring Security type
-// (org.springframework.security.core.session.SessionInformation) still returned by the
-// not-yet-migrated collaborator SessionPersistentRegistry. Keep this import until that
-// collaborator and the session-registry abstraction are migrated off Spring Security.
-import org.springframework.security.core.session.SessionInformation;
+import stirling.software.common.security.SessionInformation;
 
 import io.quarkus.scheduler.Scheduled;
 

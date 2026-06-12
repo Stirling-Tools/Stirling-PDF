@@ -10,13 +10,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 // TODO: Migration required - SessionPersistentRegistry (a not-yet-migrated collaborator) still
-// exposes Spring Security session types (SessionInformation) and Spring principal types
-// (UserDetails, OAuth2User) through its API. These imports are kept until that collaborator is
-// migrated; the principal-type instanceof checks below must be revisited once the session registry
-// returns Quarkus SecurityIdentity-based principals.
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+// exposes session types (SessionInformation) and principal types (UserDetails, OAuth2User)
+// through its API. These now reference the common compat shims; the principal-type instanceof
+// checks below must be revisited once the session registry returns Quarkus SecurityIdentity-based
+// principals.
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.UserDetails;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;

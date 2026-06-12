@@ -21,31 +21,19 @@ import jakarta.transaction.Transactional;
 
 import org.slf4j.MDC;
 
-// TODO: Migration required - Spring Security glue retained until the security layer is migrated.
-// SecurityContextHolder/Authentication should become io.quarkus.security.identity.SecurityIdentity
-// (injected) or @Context jakarta.ws.rs.core.SecurityContext; UsernamePasswordAuthenticationToken /
-// GrantedAuthority / UserDetails / UsernameNotFoundException / OAuth2User / SessionInformation are
-// produced and consumed by collaborators not yet ported (SessionPersistentRegistry, the auth
-// filters, CustomUserDetailsService). These types are kept so the public bridge methods
-// (getAuthentication, getCurrentUsername, invalidateUserSessions, isCurrentUserAdmin) keep working
-// until those collaborators are converted together.
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-// TODO: Migration required - spring-security-crypto is the agreed temporary shim. PasswordEncoder is
-// produced by PasswordEncoderConfig (see that file's class-level note); replace this import once a
-// Quarkus-compatible BCrypt abstraction is wired across UserService + PasswordEncoderConfig +
-// SecurityConfiguration together.
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.PasswordEncoder;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.UserDetails;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
+import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -170,7 +158,11 @@ public class UserService implements UserServiceInterface {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        return user.getAuthorities();
+        // User.getAuthorities() returns Set<Authority> (a JPA entity) which does not implement the
+        // GrantedAuthority shim; adapt each Authority's role string into a SimpleGrantedAuthority.
+        return user.getAuthorities().stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+                .toList();
     }
 
     private String generateApiKey() {
@@ -672,7 +664,11 @@ public class UserService implements UserServiceInterface {
                 } else if (principal instanceof User domainUser) {
                     return domainUser.getUsername();
                 } else if (principal instanceof OAuth2User oAuth2User) {
-                    return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
+                    // OAuth2User shim exposes getAttributes() (Map) but not the singular
+                    // getAttribute(String) convenience accessor; read from the map directly.
+                    Object usernameAttr =
+                            oAuth2User.getAttributes().get(oAuth2.getUseAsUsername());
+                    return usernameAttr != null ? usernameAttr.toString() : null;
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                     return saml2User.name();
                 } else if (principal instanceof String stringUser) {

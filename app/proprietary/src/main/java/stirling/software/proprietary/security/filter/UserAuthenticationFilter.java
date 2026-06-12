@@ -6,20 +6,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-// TODO: Migration required - the following Spring Security core types are still on the
-// collaborator APIs (UserService, SessionPersistentRegistry, ApiKeyAuthenticationToken) which are
-// NOT yet migrated to Quarkus. Once those collaborators move to io.quarkus.security.identity
-// (SecurityIdentity) + a SecurityIdentityAugmentor, replace SecurityContextHolder/Authentication
-// with an injected SecurityIdentity (or @Context jakarta.ws.rs.core.SecurityContext) and drop these
-// imports. The principal-type dispatch (UserDetails/OAuth2User/CustomSaml2AuthenticatedPrincipal)
-// must then be re-expressed via SecurityIdentity attributes/roles.
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-
+// TODO: Migration required - authentication state currently flows through the
+// stirling.software.common.security compat shims (SecurityContextHolder/Authentication) backed by
+// the collaborator APIs (UserService, SessionPersistentRegistry, ApiKeyAuthenticationToken). Once
+// those collaborators move to io.quarkus.security.identity (SecurityIdentity) + a
+// SecurityIdentityAugmentor, replace SecurityContextHolder/Authentication with an injected
+// SecurityIdentity (or @Context jakarta.ws.rs.core.SecurityContext). The principal-type dispatch
+// (UserDetails/OAuth2User/CustomSaml2AuthenticatedPrincipal) must then be re-expressed via
+// SecurityIdentity attributes/roles.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -37,6 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.UserDetails;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
