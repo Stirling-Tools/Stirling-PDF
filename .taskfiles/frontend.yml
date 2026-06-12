@@ -194,6 +194,8 @@ tasks:
   lint:eslint:
     desc: "Run ESLint linting"
     deps: [install]
+    env:
+      NODE_OPTIONS: "--max-old-space-size=8192"
     cmds:
       - npx eslint --max-warnings=0
 
@@ -208,6 +210,8 @@ tasks:
   lint:fix:
     desc: "Auto-fix lint issues"
     deps: [install]
+    env:
+      NODE_OPTIONS: "--max-old-space-size=8192"
     cmds:
       - npx eslint --fix
 
