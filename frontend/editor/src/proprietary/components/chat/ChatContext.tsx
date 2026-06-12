@@ -455,6 +455,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [fileActions, downloadFile],
   );
 
+  const cancelMessage = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
   const clearChat = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -495,7 +499,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].role`, message.role);
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
-
         const response = await fetch(
           `${getApiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
