@@ -1,15 +1,16 @@
 /**
  * saas (web) implementation of the @app/platform/openExternal seam.
  *
- * On the web there is no embedded webview to escape: handing the URL to the
- * browser is enough. We open in a new tab with noopener/noreferrer (the same
- * pattern saas already uses for the desktop-download link in
- * useSaasOnboardingState) so the opened page cannot reach back into our window.
- * Same-tab Stripe redirects that need location.assign keep doing that at their
- * own call sites — this seam is the generic "send the user to an external URL".
+ * The seam's consumers are cloud-layer "leave-and-return" redirects — Stripe
+ * Checkout / customer portal — which mint a session with a return_url and expect
+ * the user to come back to the app afterwards. On the web that means a SAME-TAB
+ * full-page navigation (window.location.assign): the return_url then lands the
+ * user back in the originating tab. (A post-await window.open would also be
+ * popup-blocked as a non-user-gesture.) The desktop impl instead hands the URL
+ * to the system browser and the app is re-entered via its deep-link return.
  */
 import type { OpenExternal } from "@cloud/platform/openExternal";
 
 export const openExternal: OpenExternal = async (url: string): Promise<void> => {
-  window.open(url, "_blank", "noopener,noreferrer");
+  window.location.assign(url);
 };

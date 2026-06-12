@@ -37,15 +37,19 @@
  * When the hook is rendered outside the saas app (e.g. on {@code
  * /dev/payg-preview} during local design work) the {@code AppConfigContext}
  * provider is not mounted and no backend is available. The hook detects that
- * via {@code import.meta.env.DEV} + the {@code /dev/} path and falls back to
- * a synthesised snapshot whose subscription state is read from
- * {@code localStorage} (key {@code stirling.payg.devSubscription}). Both
- * conditions are required so a production tenant whose URL happens to start
- * with {@code /dev/} can't trigger the fallback.
+ * via the {@code @app/hooks/walletDevPreview} seam and, when it returns a live
+ * channel, falls back to a synthesised snapshot whose subscription state is
+ * read from {@code localStorage}. The detection + synthesis (which read
+ * {@code import.meta.env}, {@code window.location} and web storage — all banned
+ * in cloud/) live in the saas leaf's impl of that seam; this hook just consults
+ * it. Desktop's cascade falls through to the cloud default (no dev preview), so
+ * it always fetches the real wallet.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import apiClient from "@app/services/apiClient";
-import { supabase } from "@app/auth/supabase";
+import { createPortalSession } from "@app/services/billing";
+import { openExternal } from "@app/platform/openExternal";
+import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
 
 // ─── Public types ───────────────────────────────────────────────────────
 
@@ -185,23 +189,19 @@ export interface UseWalletResult {
    */
   updateCap: (capUsd: number | null) => Promise<void>;
   /**
-   * Mint a Stripe Customer Portal session and navigate to it. Calls
-   * the {@code create-customer-portal-session} Supabase edge function
-   * directly with the user's JWT (same pattern as checkout — no backend
-   * proxy; the function's RPC enforces team membership) and assigns
-   * {@code window.location} to the returned URL — same-tab redirect.
-   * We do not use {@code window.open(...,"_blank")} after an {@code await}
-   * because browsers treat it as non-user-gesture and silently popup-block
-   * it; the portal is a full-page experience anyway and Stripe redirects
-   * back to {@code return_url} on close. Throws on error so the caller can
-   * show a friendly toast — notably 404 {@code team_not_subscribed}.
+   * Mint a Stripe Customer Portal session and send the user to it. Mints the
+   * session via the {@code @app/services/billing} seam (passing the caller's
+   * {@code teamId}, which the PAYG portal edge function needs to resolve the
+   * team outside Spring Security) and opens the returned URL via the
+   * {@code @app/platform/openExternal} seam — so web and desktop each route it
+   * the platform-appropriate way (new tab on web, system browser on desktop).
+   * Throws on error so the caller can show a friendly toast — notably 404
+   * {@code team_not_subscribed}.
    */
   openPortal: () => Promise<void>;
 }
 
 // ─── Implementation ─────────────────────────────────────────────────────
-
-const STORAGE_KEY = "stirling.payg.devSubscription";
 
 /**
  * Stable reference reuse — if the new payload deep-equals the previous one,
@@ -263,87 +263,13 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   return prev;
 }
 
-/**
- * Synthesise a wallet snapshot for the dev preview route. Mirrors the same
- * shape the backend returns. Subscription state comes from localStorage so
- * the modal's "mark subscribed" action survives a reload.
- */
-function buildDevPreviewWallet(role: WalletRole): Wallet {
-  const subscribed =
-    typeof window !== "undefined" &&
-    (() => {
-      try {
-        return window.localStorage.getItem(STORAGE_KEY) === "subscribed";
-      } catch {
-        return false;
-      }
-    })();
-
-  const now = new Date();
-  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const isoDay = (d: Date) => d.toISOString().slice(0, 10);
-
-  return {
-    teamId: null,
-    status: subscribed ? "subscribed" : "free",
-    role,
-    billingPeriodStart: isoDay(periodStart),
-    billingPeriodEnd: isoDay(periodEnd),
-    billableUsed: 62,
-    billableLimit: subscribed ? 1250 : 500,
-    freeAllowance: 500,
-    // One-time grant: a free team has used 62 of 500 (438 left); the dev
-    // subscribed team is shown with its grant fully spent (kept across the
-    // subscribe — it just no longer gates them).
-    freeRemaining: subscribed ? 0 : 438,
-    // Free teams also carry a rate now — the backend resolves it from the
-    // default policy's USD Price so the upgrade-flow cap estimate ("≈ N paid
-    // PDFs/month") can render before subscribing. Mirror that here.
-    pricePerDocMinor: 2,
-    currency: "usd",
-    estimatedBillMinor: subscribed ? 0 : null,
-    capUsd: subscribed ? 25 : null,
-    noCap: false,
-    stripeSubscriptionId: subscribed ? "sub_devpreview" : null,
-    spendUnitsThisPeriod: 62,
-    // Wave 1 backend (PR #6574) returns a per-category breakdown so the
-    // hero panel can split AI / automation / API. Use realistic but
-    // tier-distinguishable mock values so the dev preview shows a
-    // different visual when the localStorage flip toggles subscribed.
-    categoryBreakdown: subscribed
-      ? { api: 12, ai: 35, automation: 15 }
-      : { api: 5, ai: 40, automation: 17 },
-    // Members are populated in the leader view by the real backend
-    // (joining team_memberships); the dev preview returns an empty
-    // array — Plan.tsx + PaygLeader still resolve role via wallet.role,
-    // so empty members just hides the sub-caps card.
-    members: [],
-    // Activity feed is V1 = [], the backend ships this in Wave 2 once
-    // payg_meter_event_log is read-accessible from the wallet endpoint.
-    recent: [],
-  };
-}
-
-/** True when we're rendered outside the real saas app (e.g. dev preview route). */
-function isDevPreviewContext(): boolean {
-  // Both checks required: production builds drop the path check, so a real
-  // tenant whose URL begins with /dev/ can't accidentally hit the synthesised
-  // fallback.
-  if (!import.meta.env.DEV) return false;
-  if (typeof window === "undefined") return false;
-  return window.location.pathname.startsWith("/dev/");
-}
-
-/** Best-effort role read for dev preview — flips per query string ?role=member. */
-function devPreviewRole(): WalletRole {
-  if (typeof window === "undefined") return "leader";
-  const url = new URL(window.location.href);
-  return url.searchParams.get("role") === "member" ? "member" : "leader";
-}
-
 export function useWallet(): UseWalletResult {
-  const devPreview = useRef<boolean>(isDevPreviewContext()).current;
+  // Resolved once: the dev-preview side-channel when rendered outside the real
+  // app (saas /dev/payg-preview route), else null (every real build + desktop).
+  // The detection + synthesis live behind the @app/hooks/walletDevPreview seam
+  // because they read import.meta.env / window.location / localStorage, which
+  // cloud/ may not touch directly.
+  const devPreview = useRef(getWalletDevPreview()).current;
 
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -369,7 +295,7 @@ export function useWallet(): UseWalletResult {
       setError(null);
 
       if (devPreview) {
-        const synth = buildDevPreviewWallet(devPreviewRole());
+        const synth = devPreview.buildWallet(devPreview.role());
         if (cancelled || reqId !== latestReqId.current) return;
         setWallet((prev) => reuseIfEqual(prev, synth));
         setLoading(false);
@@ -417,11 +343,7 @@ export function useWallet(): UseWalletResult {
   const markSubscribed = useCallback(
     async (capUsd: number | null) => {
       if (devPreview) {
-        try {
-          window.localStorage.setItem(STORAGE_KEY, "subscribed");
-        } catch {
-          /* storage unavailable */
-        }
+        devPreview.markSubscribed();
         await refetch();
         return;
       }
@@ -479,39 +401,22 @@ export function useWallet(): UseWalletResult {
 
   const openPortal = useCallback(async () => {
     if (devPreview) {
-      // No real Stripe in dev preview — navigate to a placeholder so the
-      // click still feels alive. Same-tab to match the real-flow behaviour.
-      window.location.assign("https://billing.stripe.com/p/login/mock");
+      // No real Stripe in dev preview — open a placeholder so the click still
+      // feels alive. Routed through the openExternal seam to stay portable.
+      await openExternal("https://billing.stripe.com/p/login/mock");
       return;
     }
-    // Direct edge-fn invocation with the user's JWT — same pattern as
-    // create-checkout-session. The payg_get_checkout_context RPC inside the
-    // fn enforces team membership, so no backend proxy is needed; team_id
-    // must be a NUMBER (the fn type-checks and rejects strings).
+    // Mint the portal session through the billing seam, passing teamId: the
+    // PAYG portal edge function needs it to resolve the caller's team outside
+    // Spring Security (its RPC enforces team membership). Then hand the URL to
+    // the openExternal seam so each platform routes it appropriately. The seam
+    // throws on error (e.g. 404 team_not_subscribed) so callers can toast.
     const teamId = wallet?.teamId;
     if (teamId == null) {
       throw new Error("No team resolved yet");
     }
-    const { data, error: invokeError } = await supabase.functions.invoke<{
-      url?: string;
-      error?: string;
-    }>("create-customer-portal-session", {
-      body: { team_id: teamId, return_url: window.location.href },
-    });
-    if (invokeError) {
-      // FunctionsHttpError etc. — the StripePortalLink caller catches and
-      // shows a friendly toast (404 team_not_subscribed, 403, outage).
-      throw invokeError;
-    }
-    if (!data?.url) {
-      throw new Error(data?.error ?? "Portal session response missing url");
-    }
-    // Same-tab navigation rather than window.open(...,"_blank"): Stripe's
-    // customer portal is a full-page experience and brings the user back
-    // via return_url, so a popup buys us nothing — and window.open after
-    // an awaited promise is treated as non-user-gesture and silently
-    // popup-blocked by most browsers.
-    window.location.assign(data.url);
+    const { url } = await createPortalSession({ teamId });
+    await openExternal(url);
   }, [devPreview, wallet?.teamId]);
 
   return {
