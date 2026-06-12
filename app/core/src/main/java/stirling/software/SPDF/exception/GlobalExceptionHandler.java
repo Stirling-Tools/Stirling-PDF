@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
@@ -118,51 +118,66 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
     // no Spring Environment is needed.
     private Boolean isDevelopmentMode;
 
-    @Context HttpServletRequest request;
+    @Context UriInfo uriInfo;
+
+    /**
+     * Resolve the current request path in a way that never throws while an exception is being
+     * handled. On RESTEasy Reactive request threads {@link UriInfo} is safe to inject (unlike the
+     * servlet {@code HttpServletRequest}, which throws UT000048 because no servlet request context
+     * is active). Returns the absolute path with leading slash to preserve the old servlet {@code
+     * getRequestURI()} behavior, or an empty string if the URI cannot be resolved.
+     */
+    private String requestUri() {
+        try {
+            return uriInfo != null ? uriInfo.getRequestUri().getPath() : "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
 
     @Override
     public Response toResponse(Throwable exception) {
-        HttpServletRequest req = request;
+        String requestUri = requestUri();
 
         if (exception instanceof PdfPasswordException ex) {
-            return handlePdfPassword(ex, req);
+            return handlePdfPassword(ex, requestUri);
         }
         if (exception instanceof GhostscriptException ex) {
-            return handleGhostscriptException(ex, req);
+            return handleGhostscriptException(ex, requestUri);
         }
         if (exception instanceof FfmpegRequiredException ex) {
-            return handleFfmpegRequired(ex, req);
+            return handleFfmpegRequired(ex, requestUri);
         }
         if (exception instanceof PdfCorruptedException
                 || exception instanceof PdfEncryptionException
                 || exception instanceof OutOfMemoryDpiException) {
-            return handlePdfAndDpiExceptions((BaseAppException) exception, req);
+            return handlePdfAndDpiExceptions((BaseAppException) exception, requestUri);
         }
         if (exception instanceof CbrFormatException
                 || exception instanceof CbzFormatException
                 || exception instanceof EmlFormatException) {
-            return handleFormatExceptions((BaseValidationException) exception, req);
+            return handleFormatExceptions((BaseValidationException) exception, requestUri);
         }
         if (exception instanceof BaseValidationException ex) {
-            return handleValidation(ex, req);
+            return handleValidation(ex, requestUri);
         }
         if (exception instanceof BaseAppException ex) {
-            return handleBaseApp(ex, req);
+            return handleBaseApp(ex, requestUri);
         }
         if (exception instanceof IllegalArgumentException ex) {
-            return handleIllegalArgument(ex, req);
+            return handleIllegalArgument(ex, requestUri);
         }
         if (exception instanceof IOException ex) {
-            return handleIOException(ex, req);
+            return handleIOException(ex, requestUri);
         }
         if (exception instanceof RuntimeException ex) {
-            return handleRuntimeException(ex, req);
+            return handleRuntimeException(ex, requestUri);
         }
         if (exception instanceof Exception ex) {
-            return handleGenericException(ex, req);
+            return handleGenericException(ex, requestUri);
         }
         // Throwable (Error etc.) - treat as unexpected.
-        return handleGenericException(new Exception(exception), req);
+        return handleGenericException(new Exception(exception), requestUri);
     }
 
     /**
@@ -170,16 +185,16 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      *
      * @param status the HTTP status code
      * @param detail the problem detail message
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return a mutable, ordered map with status/detail/timestamp/path set
      */
     private static Map<String, Object> createBaseProblemDetail(
-            Response.Status status, String detail, HttpServletRequest request) {
+            Response.Status status, String detail, String requestUri) {
         Map<String, Object> problemDetail = new LinkedHashMap<>();
         problemDetail.put("status", status.getStatusCode());
         problemDetail.put("detail", detail);
         problemDetail.put("timestamp", java.time.Instant.now());
-        problemDetail.put("path", request.getRequestURI());
+        problemDetail.put("path", requestUri);
         return problemDetail;
     }
 
@@ -219,7 +234,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * @param status the HTTP status
      * @param typeUri the problem type URI
      * @param title the problem title
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return a Response with a problem+json body including errorCode property
      */
     private static Response createProblemDetailResponse(
@@ -227,10 +242,10 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
             Response.Status status,
             String typeUri,
             String title,
-            HttpServletRequest request) {
+            String requestUri) {
 
         Map<String, Object> problemDetail =
-                createBaseProblemDetail(status, ex.getMessage(), request);
+                createBaseProblemDetail(status, ex.getMessage(), requestUri);
         problemDetail.put("type", typeUri);
         problemDetail.put("title", title);
         problemDetail.put("errorCode", ex.getErrorCode());
@@ -246,24 +261,19 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      *
      * @param level the log level ("debug", "warn", "error")
      * @param category the error category (e.g., "Validation", "PDF")
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @param ex the exception to log
      * @param errorCode the error code (optional)
      */
     private static void logException(
-            String level,
-            String category,
-            HttpServletRequest request,
-            Exception ex,
-            String errorCode) {
+            String level, String category, String requestUri, Exception ex, String errorCode) {
         String message =
                 errorCode != null
                         ? String.format(
                                 "%s error at %s: %s (%s)",
-                                category, request.getRequestURI(), ex.getMessage(), errorCode)
+                                category, requestUri, ex.getMessage(), errorCode)
                         : String.format(
-                                "%s error at %s: %s",
-                                category, request.getRequestURI(), ex.getMessage());
+                                "%s error at %s: %s", category, requestUri, ex.getMessage());
 
         switch (level.toLowerCase()) {
             case "warn" -> log.warn(message);
@@ -296,45 +306,48 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * Handle PDF password exceptions.
      *
      * @param ex the PdfPasswordException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 400 BAD_REQUEST
      */
-    public Response handlePdfPassword(PdfPasswordException ex, HttpServletRequest request) {
-        logException("warn", "PDF password", request, ex, ex.getErrorCode());
+    public Response handlePdfPassword(PdfPasswordException ex, String requestUri) {
+        logException("warn", "PDF password", requestUri, ex, ex.getErrorCode());
 
         String title =
                 getLocalizedMessage("error.pdfPassword.title", ErrorTitles.PDF_PASSWORD_DEFAULT);
         return createProblemDetailResponse(
-                ex, Response.Status.BAD_REQUEST, ErrorTypes.PDF_PASSWORD, title, request);
+                ex, Response.Status.BAD_REQUEST, ErrorTypes.PDF_PASSWORD, title, requestUri);
     }
 
     /**
      * Handle Ghostscript processing exceptions originating from external binaries.
      *
      * @param ex the GhostscriptException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 500 INTERNAL_SERVER_ERROR (external process failure)
      */
-    public Response handleGhostscriptException(
-            GhostscriptException ex, HttpServletRequest request) {
-        logException("warn", "Ghostscript", request, ex, ex.getErrorCode());
+    public Response handleGhostscriptException(GhostscriptException ex, String requestUri) {
+        logException("warn", "Ghostscript", requestUri, ex, ex.getErrorCode());
 
         String title =
                 getLocalizedMessage(
                         "error.ghostscriptCompression.title", ErrorTitles.GHOSTSCRIPT_DEFAULT);
         return createProblemDetailResponse(
-                ex, Response.Status.INTERNAL_SERVER_ERROR, ErrorTypes.GHOSTSCRIPT, title, request);
+                ex,
+                Response.Status.INTERNAL_SERVER_ERROR,
+                ErrorTypes.GHOSTSCRIPT,
+                title,
+                requestUri);
     }
 
     /**
      * Handle FFmpeg dependency missing errors when media conversion endpoints are invoked.
      *
      * @param ex the FfmpegRequiredException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 503 SERVICE_UNAVAILABLE
      */
-    public Response handleFfmpegRequired(FfmpegRequiredException ex, HttpServletRequest request) {
-        logException("warn", "FFmpeg unavailable", request, ex, ex.getErrorCode());
+    public Response handleFfmpegRequired(FfmpegRequiredException ex, String requestUri) {
+        logException("warn", "FFmpeg unavailable", requestUri, ex, ex.getErrorCode());
 
         String title =
                 getLocalizedMessage(
@@ -344,17 +357,17 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
                 Response.Status.SERVICE_UNAVAILABLE,
                 ErrorTypes.FFMPEG_REQUIRED,
                 title,
-                request);
+                requestUri);
     }
 
     /**
      * Handle PDF and DPI-related BaseAppException subtypes.
      *
      * @param ex the BaseAppException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with appropriate HTTP status
      */
-    public Response handlePdfAndDpiExceptions(BaseAppException ex, HttpServletRequest request) {
+    public Response handlePdfAndDpiExceptions(BaseAppException ex, String requestUri) {
 
         Response.Status status;
         String type;
@@ -392,18 +405,18 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
             category = "Application";
         }
 
-        logException("error", category, request, ex, ex.getErrorCode());
-        return createProblemDetailResponse(ex, status, type, title, request);
+        logException("error", category, requestUri, ex, ex.getErrorCode());
+        return createProblemDetailResponse(ex, status, type, title, requestUri);
     }
 
     /**
      * Handle archive format validation exceptions.
      *
      * @param ex the format exception
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 400 BAD_REQUEST
      */
-    public Response handleFormatExceptions(BaseValidationException ex, HttpServletRequest request) {
+    public Response handleFormatExceptions(BaseValidationException ex, String requestUri) {
 
         String type;
         String title;
@@ -429,38 +442,43 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
             category = "Format";
         }
 
-        logException("warn", category, request, ex, ex.getErrorCode());
-        return createProblemDetailResponse(ex, Response.Status.BAD_REQUEST, type, title, request);
+        logException("warn", category, requestUri, ex, ex.getErrorCode());
+        return createProblemDetailResponse(
+                ex, Response.Status.BAD_REQUEST, type, title, requestUri);
     }
 
     /**
      * Handle generic validation exceptions.
      *
      * @param ex the BaseValidationException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 400 BAD_REQUEST
      */
-    public Response handleValidation(BaseValidationException ex, HttpServletRequest request) {
-        logException("warn", "Validation", request, ex, ex.getErrorCode());
+    public Response handleValidation(BaseValidationException ex, String requestUri) {
+        logException("warn", "Validation", requestUri, ex, ex.getErrorCode());
         String title =
                 getLocalizedMessage("error.validation.title", ErrorTitles.VALIDATION_DEFAULT);
         return createProblemDetailResponse(
-                ex, Response.Status.BAD_REQUEST, ErrorTypes.VALIDATION, title, request);
+                ex, Response.Status.BAD_REQUEST, ErrorTypes.VALIDATION, title, requestUri);
     }
 
     /**
      * Handle all BaseAppException subtypes not handled by specific handlers.
      *
      * @param ex the BaseAppException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 500 INTERNAL_SERVER_ERROR
      */
-    public Response handleBaseApp(BaseAppException ex, HttpServletRequest request) {
-        logException("error", "Application", request, ex, ex.getErrorCode());
+    public Response handleBaseApp(BaseAppException ex, String requestUri) {
+        logException("error", "Application", requestUri, ex, ex.getErrorCode());
         String title =
                 getLocalizedMessage("error.application.title", ErrorTitles.APPLICATION_DEFAULT);
         return createProblemDetailResponse(
-                ex, Response.Status.INTERNAL_SERVER_ERROR, ErrorTypes.APPLICATION, title, request);
+                ex,
+                Response.Status.INTERNAL_SERVER_ERROR,
+                ErrorTypes.APPLICATION,
+                title,
+                requestUri);
     }
 
     // ===========================================================================================
@@ -476,7 +494,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * collaborator should register a mapper that returns this body with status 406 and Content-Type
      * application/problem+json. The body-building logic is preserved here for reuse.
      */
-    private String buildNotAcceptableJson(HttpServletRequest request) {
+    private String buildNotAcceptableJson(String requestUri) {
         // Use ObjectMapper to properly escape JSON values and prevent XSS
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> errorMap = new LinkedHashMap<>();
@@ -486,7 +504,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
         errorMap.put(
                 "detail",
                 "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.");
-        errorMap.put("instance", request.getRequestURI());
+        errorMap.put("instance", requestUri);
         errorMap.put("timestamp", java.time.Instant.now().toString());
         errorMap.put(
                 "hints",
@@ -504,18 +522,18 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * Handle IllegalArgumentException.
      *
      * @param ex the IllegalArgumentException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 400 BAD_REQUEST
      */
-    public Response handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
-        log.warn("Invalid argument at {}: {}", request.getRequestURI(), ex.getMessage());
+    public Response handleIllegalArgument(IllegalArgumentException ex, String requestUri) {
+        log.warn("Invalid argument at {}: {}", requestUri, ex.getMessage());
 
         String title =
                 getLocalizedMessage(
                         "error.invalidArgument.title", ErrorTitles.INVALID_ARGUMENT_DEFAULT);
 
         Map<String, Object> problemDetail =
-                createBaseProblemDetail(Response.Status.BAD_REQUEST, ex.getMessage(), request);
+                createBaseProblemDetail(Response.Status.BAD_REQUEST, ex.getMessage(), requestUri);
         problemDetail.put("type", ErrorTypes.INVALID_ARGUMENT);
         problemDetail.put("title", title);
         addStandardHints(
@@ -544,51 +562,47 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * class-level TODO for its JAX-RS equivalent ({@code jakarta.ws.rs.WebApplicationException}).
      *
      * @param ex the RuntimeException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with appropriate HTTP status
      */
-    public Response handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
+    public Response handleRuntimeException(RuntimeException ex, String requestUri) {
 
         // Check if this RuntimeException wraps a typed exception from job execution
         Throwable cause = ex.getCause();
         if (cause instanceof BaseAppException appEx) {
             // Delegate to specific BaseAppException handlers
             if (appEx instanceof PdfPasswordException) {
-                return handlePdfPassword((PdfPasswordException) appEx, request);
+                return handlePdfPassword((PdfPasswordException) appEx, requestUri);
             } else if (appEx instanceof PdfCorruptedException
                     || appEx instanceof PdfEncryptionException
                     || appEx instanceof OutOfMemoryDpiException) {
-                return handlePdfAndDpiExceptions(appEx, request);
+                return handlePdfAndDpiExceptions(appEx, requestUri);
             } else if (appEx instanceof GhostscriptException) {
-                return handleGhostscriptException((GhostscriptException) appEx, request);
+                return handleGhostscriptException((GhostscriptException) appEx, requestUri);
             } else if (appEx instanceof FfmpegRequiredException) {
-                return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
+                return handleFfmpegRequired((FfmpegRequiredException) appEx, requestUri);
             } else {
-                return handleBaseApp(appEx, request);
+                return handleBaseApp(appEx, requestUri);
             }
         } else if (cause instanceof BaseValidationException valEx) {
             // Delegate to validation exception handlers
             if (valEx instanceof CbrFormatException
                     || valEx instanceof CbzFormatException
                     || valEx instanceof EmlFormatException) {
-                return handleFormatExceptions(valEx, request);
+                return handleFormatExceptions(valEx, requestUri);
             } else {
-                return handleValidation(valEx, request);
+                return handleValidation(valEx, requestUri);
             }
         } else if (cause instanceof IOException) {
             // Unwrap and handle IOException (may contain PDF-specific errors)
-            return handleIOException((IOException) cause, request);
+            return handleIOException((IOException) cause, requestUri);
         } else if (cause instanceof IllegalArgumentException) {
             // Unwrap and handle IllegalArgumentException (business logic validation errors)
-            return handleIllegalArgument((IllegalArgumentException) cause, request);
+            return handleIllegalArgument((IllegalArgumentException) cause, requestUri);
         }
 
         // Not a wrapped exception - treat as unexpected error
-        log.error(
-                "Unexpected RuntimeException at {}: {}",
-                request.getRequestURI(),
-                ex.getMessage(),
-                ex);
+        log.error("Unexpected RuntimeException at {}: {}", requestUri, ex.getMessage(), ex);
 
         String userMessage =
                 getLocalizedMessage(
@@ -600,7 +614,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
         Map<String, Object> problemDetail =
                 createBaseProblemDetail(
-                        Response.Status.INTERNAL_SERVER_ERROR, userMessage, request);
+                        Response.Status.INTERNAL_SERVER_ERROR, userMessage, requestUri);
         problemDetail.put("type", ErrorTypes.UNEXPECTED);
         problemDetail.put("title", title);
 
@@ -633,36 +647,31 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * detect and wrap PDF-specific errors (corruption, encryption, password) before processing.
      *
      * @param ex the IOException
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 500 INTERNAL_SERVER_ERROR
      */
-    public Response handleIOException(IOException ex, HttpServletRequest request) {
+    public Response handleIOException(IOException ex, String requestUri) {
 
         // Broken pipe / connection reset means the client disconnected.
         // Attempting to write a problem response will fail because the
         // response Content-Type may already be committed (e.g. image/png) and
         // the client is gone anyway. Log at WARN and return an empty body.
         if (isClientDisconnectException(ex)) {
-            log.warn("Client disconnected at {}: {}", request.getRequestURI(), ex.getMessage());
+            log.warn("Client disconnected at {}: {}", requestUri, ex.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
         // Check if this is a PDF-specific error and wrap it appropriately
-        IOException processedException =
-                ExceptionUtils.handlePdfException(ex, request.getRequestURI());
+        IOException processedException = ExceptionUtils.handlePdfException(ex, requestUri);
 
         // If it was wrapped as a specific PDF exception, dispatch to the BaseApp handler.
         if (processedException instanceof BaseAppException) {
-            return handleBaseApp((BaseAppException) processedException, request);
+            return handleBaseApp((BaseAppException) processedException, requestUri);
         }
 
         // Check if this is a NoSuchFileException (temp file was deleted prematurely)
         if (ex instanceof java.nio.file.NoSuchFileException) {
-            log.error(
-                    "Temporary file not found at {}: {}",
-                    request.getRequestURI(),
-                    ex.getMessage(),
-                    ex);
+            log.error("Temporary file not found at {}: {}", requestUri, ex.getMessage(), ex);
 
             String message =
                     getLocalizedMessage(
@@ -673,7 +682,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
             Map<String, Object> problemDetail =
                     createBaseProblemDetail(
-                            Response.Status.INTERNAL_SERVER_ERROR, message, request);
+                            Response.Status.INTERNAL_SERVER_ERROR, message, requestUri);
             problemDetail.put("type", "https://stirlingpdf.com/errors/temp-file-not-found");
             problemDetail.put("title", title);
             problemDetail.put("errorCode", "E999");
@@ -687,7 +696,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
                     .build();
         }
 
-        log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        log.error("IO error at {}: {}", requestUri, ex.getMessage(), ex);
 
         String message =
                 getLocalizedMessage(
@@ -699,7 +708,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
         String title = getLocalizedMessage("error.ioError.title", ErrorTitles.IO_ERROR_DEFAULT);
 
         Map<String, Object> problemDetail =
-                createBaseProblemDetail(Response.Status.INTERNAL_SERVER_ERROR, message, request);
+                createBaseProblemDetail(Response.Status.INTERNAL_SERVER_ERROR, message, requestUri);
         problemDetail.put("type", ErrorTypes.IO_ERROR);
         problemDetail.put("title", title);
         addStandardHints(
@@ -721,11 +730,11 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * Handle generic exceptions as a fallback.
      *
      * @param ex the Exception
-     * @param request the HTTP servlet request
+     * @param requestUri the resolved request path
      * @return Response with HTTP 500 INTERNAL_SERVER_ERROR
      */
-    public Response handleGenericException(Exception ex, HttpServletRequest request) {
-        log.error("Unexpected error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+    public Response handleGenericException(Exception ex, String requestUri) {
+        log.error("Unexpected error at {}: {}", requestUri, ex.getMessage(), ex);
 
         // TODO: Migration required - the original Spring handler checked
         // HttpServletResponse.isCommitted() and returned null to let Spring write nothing when the
@@ -744,7 +753,7 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
         Map<String, Object> problemDetail =
                 createBaseProblemDetail(
-                        Response.Status.INTERNAL_SERVER_ERROR, userMessage, request);
+                        Response.Status.INTERNAL_SERVER_ERROR, userMessage, requestUri);
         problemDetail.put("type", ErrorTypes.UNEXPECTED);
         problemDetail.put("title", title);
 

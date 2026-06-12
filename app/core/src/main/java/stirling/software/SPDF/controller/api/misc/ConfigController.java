@@ -8,11 +8,11 @@ import java.util.Map;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import io.vertx.core.http.HttpServerRequest;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
@@ -111,16 +111,21 @@ public class ConfigController {
      * IPv4, then empty.
      */
     // visible for testing
-    String resolveFrontendUrl(HttpServletRequest request, AppConfig appConfig) {
+    String resolveFrontendUrl(HttpServerRequest request, AppConfig appConfig) {
         String configured = applicationProperties.getSystem().getFrontendUrl();
         if (configured != null && !configured.isBlank()) {
             return configured;
         }
-        if (request != null) {
-            String host = request.getServerName();
+        if (request != null && request.authority() != null) {
+            String host = request.authority().host();
             if (host != null && !host.isBlank() && !isLoopbackHost(host)) {
-                String scheme = request.getScheme();
-                int port = request.getServerPort();
+                String scheme = request.scheme();
+                // Vert.x HostAndPort.port() returns -1 when the authority carries no explicit port;
+                // fall back to the scheme default so the comparison/URL stays correct.
+                int port = request.authority().port();
+                if (port <= 0) {
+                    port = "https".equals(scheme) ? 443 : 80;
+                }
                 boolean defaultPort =
                         ("http".equals(scheme) && port == 80)
                                 || ("https".equals(scheme) && port == 443);
@@ -182,7 +187,7 @@ public class ConfigController {
 
     @GET
     @Path("/app-config")
-    public Response getAppConfig(@Context HttpServletRequest request) {
+    public Response getAppConfig(@Context HttpServerRequest request) {
         Map<String, Object> configData = new HashMap<>();
 
         try {

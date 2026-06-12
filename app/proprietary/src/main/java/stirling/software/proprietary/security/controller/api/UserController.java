@@ -11,10 +11,10 @@ import java.util.UUID;
 
 import org.jboss.resteasy.reactive.RestForm;
 
+import io.vertx.core.http.HttpServerRequest;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -185,9 +185,7 @@ public class UserController {
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public Response changeUsername(
             @RestForm(value = "currentPasswordChangeUsername") String currentPassword,
-            @RestForm(value = "newUsername") String newUsername,
-            @Context HttpServletRequest request,
-            @Context HttpServletResponse response)
+            @RestForm(value = "newUsername") String newUsername)
             throws IOException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(newUsername)) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -267,9 +265,7 @@ public class UserController {
     public Response changePasswordOnLogin(
             @RestForm(value = "currentPassword") String currentPassword,
             @RestForm(value = "newPassword") String newPassword,
-            @RestForm(value = "confirmPassword") String confirmPassword,
-            @Context HttpServletRequest request,
-            @Context HttpServletResponse response)
+            @RestForm(value = "confirmPassword") String confirmPassword)
             throws SQLException, UnsupportedProviderException {
         if (securityContext.getUserPrincipal() == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
@@ -356,9 +352,7 @@ public class UserController {
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public Response changePassword(
             @RestForm(value = "currentPassword") String currentPassword,
-            @RestForm(value = "newPassword") String newPassword,
-            @Context HttpServletRequest request,
-            @Context HttpServletResponse response)
+            @RestForm(value = "newPassword") String newPassword)
             throws SQLException, UnsupportedProviderException {
         if (securityContext.getUserPrincipal() == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
@@ -549,7 +543,7 @@ public class UserController {
             @RestForm(value = "emails") String emails,
             @RestForm(value = "role") String role,
             @RestForm(value = "teamId") Long teamId,
-            @Context HttpServletRequest request)
+            @Context HttpServerRequest request)
             throws SQLException, UnsupportedProviderException {
 
         // Default role when not supplied (was @RequestParam defaultValue = "ROLE_USER").
@@ -755,7 +749,7 @@ public class UserController {
             @RestForm(value = "sendEmail") boolean sendEmail,
             @RestForm(value = "includePassword") boolean includePassword,
             @RestForm(value = "forcePasswordChange") boolean forcePasswordChange,
-            @Context HttpServletRequest request)
+            @Context HttpServerRequest request)
             throws SQLException, UnsupportedProviderException, MessagingException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
@@ -965,7 +959,7 @@ public class UserController {
      * @param request The HTTP request
      * @return The login URL
      */
-    private String buildLoginUrl(HttpServletRequest request) {
+    private String buildLoginUrl(HttpServerRequest request) {
         String baseUrl;
         String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
         if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
@@ -975,14 +969,15 @@ public class UserController {
                             ? configuredFrontendUrl.substring(0, configuredFrontendUrl.length() - 1)
                             : configuredFrontendUrl;
         } else {
-            // Fall back to backend URL from request
-            baseUrl =
-                    request.getScheme()
-                            + "://"
-                            + request.getServerName()
-                            + (request.getServerPort() != 80 && request.getServerPort() != 443
-                                    ? ":" + request.getServerPort()
-                                    : "");
+            // Fall back to backend URL from request (RESTEasy Reactive: read scheme/host/port from
+            // the Vert.x request instead of the servlet HttpServletRequest).
+            String scheme = request.scheme();
+            String host = request.authority() != null ? request.authority().host() : "localhost";
+            int port = request.authority() != null ? request.authority().port() : -1;
+            if (port <= 0) {
+                port = "https".equals(scheme) ? 443 : 80;
+            }
+            baseUrl = scheme + "://" + host + (port != 80 && port != 443 ? ":" + port : "");
         }
         return baseUrl + "/login";
     }

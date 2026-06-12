@@ -5,17 +5,17 @@ import java.util.Map;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.vertx.core.http.HttpServerRequest;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
@@ -78,8 +78,8 @@ public class AuthController {
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public Response login(
             UsernameAndPassMfa request,
-            @Context HttpServletRequest httpRequest,
-            @Context HttpServletResponse response) {
+            @Context HttpServerRequest httpRequest,
+            @Context HttpHeaders httpHeaders) {
         try {
             // Check if username/password authentication is allowed
             if (!securityProperties.isUserPass()) {
@@ -111,7 +111,8 @@ public class AuthController {
             }
 
             String username = request.getUsername().trim();
-            String ip = httpRequest.getRemoteAddr();
+            String ip =
+                    httpRequest.remoteAddress() != null ? httpRequest.remoteAddress().host() : null;
 
             // Check if account is blocked due to too many failed attempts
             if (loginAttemptService.isBlocked(username)) {
@@ -194,7 +195,9 @@ public class AuthController {
 
             // Detect desktop client and issue longer-lived tokens for better UX
             // Desktop apps run on personal devices with OS-level encryption (secure storage)
-            boolean isDesktopClient = DesktopClientUtils.isDesktopClient(httpRequest);
+            boolean isDesktopClient =
+                    DesktopClientUtils.isDesktopClientByUserAgent(
+                            httpHeaders.getHeaderString("User-Agent"));
             String token;
             int keyRetentionDays = securityProperties.getJwt().getKeyRetentionDays();
             if (isDesktopClient) {
@@ -309,10 +312,19 @@ public class AuthController {
     // authority check has no direct @RolesAllowed equivalent; enforce via SecurityIdentity/policy.
     @POST
     @Path("/logout")
-    public Response logout(
-            @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    public Response logout(@Context HttpHeaders httpHeaders) {
         try {
-            String username = jwtService.extractUsernameFromRequestAllowExpired(request);
+            // RESTEasy Reactive: the servlet HttpServletRequest is not active on the request
+            // thread,
+            // so extract the bearer token from the Authorization header and resolve the username
+            // via
+            // the String-based JWT API instead of
+            // jwtService.extractUsernameFromRequestAllowExpired.
+            String token = extractBearerToken(httpHeaders);
+            String username =
+                    (token != null && !token.isBlank())
+                            ? jwtService.extractUsernameAllowExpired(token)
+                            : null;
             // TODO: Migration required - SecurityContextHolder.clearContext() has no Quarkus
             // equivalent; SecurityIdentity is request-scoped and not cleared imperatively. Cookie/
             // token invalidation is handled by the JWT cookie being dropped by the client/filter.
@@ -341,10 +353,12 @@ public class AuthController {
     // authority check has no direct @RolesAllowed equivalent; enforce via SecurityIdentity/policy.
     @POST
     @Path("/refresh")
-    public Response refresh(
-            @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    public Response refresh(@Context HttpHeaders httpHeaders) {
         try {
-            String token = jwtService.extractToken(request);
+            // RESTEasy Reactive: extract the bearer token from the Authorization header rather than
+            // calling jwtService.extractToken(HttpServletRequest), which is not active on the
+            // reactive request thread.
+            String token = extractBearerToken(httpHeaders);
 
             if (token == null) {
                 return Response.status(Response.Status.UNAUTHORIZED)
@@ -401,7 +415,9 @@ public class AuthController {
             newClaims.put("role", user.getRolesAsString());
 
             // Detect desktop client and issue longer-lived tokens
-            boolean isDesktopClient = DesktopClientUtils.isDesktopClient(request);
+            boolean isDesktopClient =
+                    DesktopClientUtils.isDesktopClientByUserAgent(
+                            httpHeaders.getHeaderString("User-Agent"));
             String newToken;
             if (isDesktopClient) {
                 int desktopExpiryMinutes =
@@ -805,6 +821,24 @@ public class AuthController {
             log.warn("SHA-256 not available, using hashCode for token tracking", e);
             return String.valueOf(token.hashCode());
         }
+    }
+
+    /**
+     * Extract the JWT bearer token from the Authorization header.
+     *
+     * <p>RESTEasy Reactive helper that mirrors {@code JwtService.extractToken(HttpServletRequest)}
+     * but reads from JAX-RS {@link HttpHeaders} so it works on the reactive request thread (the
+     * servlet request context is not active there).
+     *
+     * @param httpHeaders the JAX-RS request headers
+     * @return the bearer token, or null if no valid Authorization: Bearer header is present
+     */
+    private String extractBearerToken(HttpHeaders httpHeaders) {
+        String authHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
     }
 
     private Response ensureWebAuth(User user) {
