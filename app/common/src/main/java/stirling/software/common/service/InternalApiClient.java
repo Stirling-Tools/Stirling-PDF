@@ -8,18 +8,27 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+// TODO: Migration required - the HTTP dispatch in this class is built entirely on Spring's
+// RestTemplate (with SimpleClientHttpRequestFactory, RequestCallback, ResourceAccessException),
+// and its public API surface uses Spring HTTP types (ResponseEntity<Resource>, MultiValueMap,
+// HttpHeaders, HttpEntity, MediaType, HttpMethod) plus org.springframework.core.io.Resource /
+// FileSystemResource. Converting to the Quarkus REST client or java.net.http.HttpClient is
+// non-trivial and would ripple to callers (PipelineProcessor, AiWorkflowService) that pass
+// MultiValueMap bodies and consume ResponseEntity<Resource>. These Spring imports are
+// intentionally retained until that cross-file migration is scheduled.
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import org.eclipse.microprofile.config.Config;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +43,7 @@ import stirling.software.common.util.TempFileManager;
  * PipelineProcessor and AiWorkflowService to execute tool operations programmatically without
  * leaving the JVM network stack.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class InternalApiClient {
 
@@ -53,20 +62,20 @@ public class InternalApiClient {
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
     private final TempFileManager tempFileManager;
-    private final Environment environment;
+    private final Config config;
     private final Duration readTimeout;
     private final RestTemplate restTemplate;
 
     public InternalApiClient(
             ServletContext servletContext,
-            @Autowired(required = false) UserServiceInterface userService,
+            Instance<UserServiceInterface> userService,
             TempFileManager tempFileManager,
-            Environment environment,
+            Config config,
             ApplicationProperties applicationProperties) {
         this.servletContext = servletContext;
-        this.userService = userService;
+        this.userService = userService.isResolvable() ? userService.get() : null;
         this.tempFileManager = tempFileManager;
-        this.environment = environment;
+        this.config = config;
         ApplicationProperties.InternalApi internalApi = applicationProperties.getInternalApi();
         // A bounded read timeout is what protects the workflow when an internal tool hangs
         // (e.g. an infinite loop in a PDF processing service). The connect timeout is short
@@ -172,9 +181,9 @@ public class InternalApiClient {
         // Resolve the port lazily so desktop mode (server.port=0, OS-assigned) dispatches to the
         // actual bound port. Spring publishes local.server.port once the web server is up; fall
         // back to the configured server.port for early calls (tests, non-web contexts).
-        String port = environment.getProperty("local.server.port");
+        String port = config.getOptionalValue("local.server.port", String.class).orElse(null);
         if (port == null) {
-            port = environment.getProperty("server.port", "8080");
+            port = config.getOptionalValue("server.port", String.class).orElse("8080");
         }
         return "http://localhost:" + port + servletContext.getContextPath();
     }

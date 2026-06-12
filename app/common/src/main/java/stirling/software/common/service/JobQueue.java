@@ -5,10 +5,14 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.SmartLifecycle;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.ws.rs.core.Response;
+
+import io.quarkus.runtime.StartupEvent;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,25 +26,30 @@ import stirling.software.common.util.SpringContextHolder;
  * Manages a queue of jobs with dynamic sizing based on system resources. Used when system resources
  * are limited to prevent overloading.
  */
-@Service
+// TODO: Migration required - the original class implemented Spring's SmartLifecycle, which has no
+// direct Quarkus equivalent. start() is now driven by a StartupEvent observer and stop() by
+// @PreDestroy. The SmartLifecycle phase/auto-startup ordering semantics (getPhase()==10) cannot be
+// expressed in CDI; if precise startup/shutdown ordering relative to other beans is required,
+// revisit using @Priority on the observer or @io.quarkus.runtime.Startup with an ordering strategy.
+@ApplicationScoped
 @Slf4j
-public class JobQueue implements SmartLifecycle {
+public class JobQueue {
 
     private volatile boolean running = false;
 
     private final ResourceMonitor resourceMonitor;
 
-    @Value("${stirling.job.queue.base-capacity:10}")
-    private int baseQueueCapacity = 10;
+    @ConfigProperty(name = "stirling.job.queue.base-capacity", defaultValue = "10")
+    int baseQueueCapacity;
 
-    @Value("${stirling.job.queue.min-capacity:2}")
-    private int minQueueCapacity = 2;
+    @ConfigProperty(name = "stirling.job.queue.min-capacity", defaultValue = "2")
+    int minQueueCapacity;
 
-    @Value("${stirling.job.queue.check-interval-ms:1000}")
-    private long queueCheckIntervalMs = 1000;
+    @ConfigProperty(name = "stirling.job.queue.check-interval-ms", defaultValue = "1000")
+    long queueCheckIntervalMs;
 
-    @Value("${stirling.job.queue.max-wait-time-ms:600000}")
-    private long maxWaitTimeMs = 600000; // 10 minutes
+    @ConfigProperty(name = "stirling.job.queue.max-wait-time-ms", defaultValue = "600000")
+    long maxWaitTimeMs; // 10 minutes
 
     private volatile BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();
@@ -67,21 +76,21 @@ public class JobQueue implements SmartLifecycle {
         private final Supplier<Object> work;
         private final long timeoutMs;
         private final Instant queuedAt;
-        private CompletableFuture<ResponseEntity<?>> future;
+        private CompletableFuture<Response> future;
         private volatile boolean cancelled = false;
     }
 
     public JobQueue(ResourceMonitor resourceMonitor) {
         this.resourceMonitor = resourceMonitor;
+    }
 
-        // Initialize with dynamic capacity
+    private void initializeSchedulers() {
+        // Initialize with dynamic capacity. Done here (not in the ctor) because @ConfigProperty
+        // fields are injected after construction.
         int capacity =
                 resourceMonitor.calculateDynamicQueueCapacity(baseQueueCapacity, minQueueCapacity);
         this.jobQueue = new LinkedBlockingQueue<>(capacity);
-    }
 
-    // Remove @PostConstruct to let SmartLifecycle control startup
-    private void initializeSchedulers() {
         log.debug(
                 "Starting job queue with base capacity {}, min capacity {}",
                 baseQueueCapacity,
@@ -99,7 +108,6 @@ public class JobQueue implements SmartLifecycle {
                 TimeUnit.MILLISECONDS);
     }
 
-    // Remove @PreDestroy to let SmartLifecycle control shutdown
     private void shutdownSchedulers() {
         log.info("Shutting down job queue");
         shuttingDown = true;
@@ -136,9 +144,12 @@ public class JobQueue implements SmartLifecycle {
                 rejectedJobs);
     }
 
-    // SmartLifecycle methods
+    // Lifecycle methods (migrated from Spring SmartLifecycle)
 
-    @Override
+    void onStart(@Observes StartupEvent event) {
+        start();
+    }
+
     public void start() {
         log.info("Starting JobQueue lifecycle");
         if (!running) {
@@ -147,27 +158,15 @@ public class JobQueue implements SmartLifecycle {
         }
     }
 
-    @Override
+    @PreDestroy
     public void stop() {
         log.info("Stopping JobQueue lifecycle");
         shutdownSchedulers();
         running = false;
     }
 
-    @Override
     public boolean isRunning() {
         return running;
-    }
-
-    @Override
-    public int getPhase() {
-        // Start earlier than most components, but shutdown later
-        return 10;
-    }
-
-    @Override
-    public boolean isAutoStartup() {
-        return true;
     }
 
     /**
@@ -179,11 +178,11 @@ public class JobQueue implements SmartLifecycle {
      * @param timeoutMs The timeout in milliseconds
      * @return A CompletableFuture that will complete when the job is executed
      */
-    public CompletableFuture<ResponseEntity<?>> queueJob(
+    public CompletableFuture<Response> queueJob(
             String jobId, int resourceWeight, Supplier<Object> work, long timeoutMs) {
 
         // Create a CompletableFuture to track this job's completion
-        CompletableFuture<ResponseEntity<?>> future = new CompletableFuture<>();
+        CompletableFuture<Response> future = new CompletableFuture<>();
 
         // Create the queued job
         QueuedJob job =
@@ -378,10 +377,10 @@ public class JobQueue implements SmartLifecycle {
                         Object result = executeWithTimeout(job.work, job.timeoutMs);
 
                         // Process the result
-                        if (result instanceof ResponseEntity) {
-                            job.future.complete((ResponseEntity<?>) result);
+                        if (result instanceof Response) {
+                            job.future.complete((Response) result);
                         } else {
-                            job.future.complete(ResponseEntity.ok(result));
+                            job.future.complete(Response.ok(result).build());
                         }
 
                     } catch (Exception e) {

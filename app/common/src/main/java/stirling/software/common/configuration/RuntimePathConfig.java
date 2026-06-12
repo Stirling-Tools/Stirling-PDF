@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Configuration;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.UnoServerPool;
 
 @Slf4j
-@Configuration
+@ApplicationScoped
 @Getter
 public class RuntimePathConfig {
     private final ApplicationProperties properties;

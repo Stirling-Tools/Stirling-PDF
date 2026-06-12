@@ -15,10 +15,20 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.ClassPathResource;
+// TODO: Migration required - org.springframework.core.io.{ClassPathResource,Resource,ResourceLoader}
+// and org.springframework.core.io.support.ResourcePatternUtils have no direct Quarkus/Jakarta
+// equivalent. ClassPathResource usages below have been converted to the JDK ClassLoader
+// resource API. Resource/ResourceLoader/ResourcePatternUtils remain in getResourcesFromLocationPattern
+// because that method's public signature and the Spring resource-pattern resolver are used by
+// callers; converting it requires a filesystem/classpath glob rewrite that ripples to callers.
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
+
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no servlet/JAX-RS
+// drop-in for these utility method params. The public signatures of convertMultipartFileToFile and
+// multipartToFile are used by many callers, so the type is kept to avoid a wide ripple. Revisit to
+// accept InputStream/byte[] or a JAX-RS form-data type once callers are migrated.
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -983,14 +993,12 @@ public class GeneralUtils {
                 throw new IllegalArgumentException("Invalid pipeline file name: " + name);
             }
             Path target = pipelineDir.resolve(name);
-            ClassPathResource res =
-                    new ClassPathResource(
-                            "static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name);
-            if (!res.exists()) {
-                log.error("Resource not found: {}", res.getPath());
-                throw new IOException("Resource not found: " + res.getPath());
+            String resourcePath = "static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name;
+            if (GeneralUtils.class.getClassLoader().getResource(resourcePath) == null) {
+                log.error("Resource not found: {}", resourcePath);
+                throw new IOException("Resource not found: " + resourcePath);
             }
-            copyResourceToFile(res, target);
+            copyResourceToFile(resourcePath, target);
         }
     }
 
@@ -1028,27 +1036,29 @@ public class GeneralUtils {
         Files.createDirectories(scriptsDir);
 
         Path target = scriptsDir.resolve(scriptName);
-        ClassPathResource res =
-                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
-        if (!res.exists()) {
-            log.error("Resource not found: {}", res.getPath());
-            throw new IOException("Resource not found: " + res.getPath());
+        String resourcePath = "static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName;
+        if (GeneralUtils.class.getClassLoader().getResource(resourcePath) == null) {
+            log.error("Resource not found: {}", resourcePath);
+            throw new IOException("Resource not found: " + resourcePath);
         }
-        copyResourceToFile(res, target);
+        copyResourceToFile(resourcePath, target);
         return target;
     }
 
     /*
-     * Copies a resource from the classpath to a specified target file.
+     * Copies a classpath resource to a specified target file.
      *
-     * @param resource the ClassPathResource to copy
+     * @param resourcePath the classpath resource location to copy
      * @param target the target Path where the resource will be copied
      * @throws IOException if an I/O error occurs during the copy operation
      */
-    private void copyResourceToFile(ClassPathResource resource, Path target) throws IOException {
+    private void copyResourceToFile(String resourcePath, Path target) throws IOException {
         Path dir = target.getParent();
         Path tmp = Files.createTempFile(dir, target.getFileName().toString(), ".tmp");
-        try (InputStream in = resource.getInputStream()) {
+        try (InputStream in = GeneralUtils.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new IOException("Resource not found: " + resourcePath);
+            }
             Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
             try {
                 Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);

@@ -38,7 +38,15 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.MediaType;
+
+import jakarta.ws.rs.core.MediaType;
+
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
+// drop-in. It is used here only as an internal data carrier (created by createMultipartFile and
+// consumed by private methods within this file). Migrating it would mean replacing the anonymous
+// MultipartFile implementation with a custom byte[]/InputStream holder and reworking the private
+// addAttachmentsToDocumentWithMapping signature. Kept as-is to preserve behavior; revisit to
+// introduce a Quarkus-friendly attachment abstraction.
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.Data;
@@ -120,7 +128,7 @@ public class PdfAttachmentHandler {
             public String getContentType() {
                 return attachment.getContentType() != null
                         ? attachment.getContentType()
-                        : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                        : MediaType.APPLICATION_OCTET_STREAM;
             }
 
             @Override

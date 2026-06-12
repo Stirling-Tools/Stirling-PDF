@@ -9,9 +9,19 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+// TODO: Migration required - org.springframework.core.io.Resource is used in public method
+// signatures (storeFile, storeFromResource) and for behavior (isFile()/getFile()/getInputStream()).
+// No drop-in JAX-RS/Jakarta equivalent; converting would ripple into callers. Keeping the type.
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile is used in public
+// method signatures (storeFile, retrieveFile). No servlet/JAX-RS drop-in for utility method
+// params; changing it would ripple widely into callers. Keeping the type.
 import org.springframework.web.multipart.MultipartFile;
+// TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
+// .StreamingResponseBody is used in the public storeFromStreamingBody signature. No Quarkus/JAX-RS
+// drop-in; converting would ripple into callers. Keeping the type.
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +34,7 @@ import stirling.software.common.util.JobContext;
  * Service for storing and retrieving files with unique file IDs. Used by the AutoJobPostMapping
  * system to handle file references. Disk I/O is delegated to the injected {@link FileStore} bean.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class FileStorage {
@@ -34,6 +44,12 @@ public class FileStorage {
 
     private final FileOrUploadService fileOrUploadService;
     private final FileStore fileStore;
+
+    // TODO: Migration required - in Spring this optional dependency is constructor-injected via
+    // Lombok's @RequiredArgsConstructor. CDI does not inject java.util.Optional<T>; the equivalent
+    // is jakarta.enterprise.inject.Instance<JobOwnershipService> with isResolvable()/get(). That
+    // change alters the field type and the resolveOwner()/enforceOwnership() Optional usage below,
+    // so it is left intact here to avoid rippling logic changes.
     private final Optional<JobOwnershipService> jobOwnershipService;
 
     public String storeFile(MultipartFile file) throws IOException {

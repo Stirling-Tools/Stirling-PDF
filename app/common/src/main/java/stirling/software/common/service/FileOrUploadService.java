@@ -4,18 +4,24 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
+// JAX-RS/servlet drop-in. It is used as a public method return type and implemented by the
+// inner CustomMultipartFile class; converting the type would ripple to all callers. Keeping
+// the Spring type for now to preserve the public signature and behavior.
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FileOrUploadService {
 
-    @Value("${stirling.tempDir:/tmp/stirling-files}")
-    private String tempDirPath;
+    @ConfigProperty(name = "stirling.tempDir", defaultValue = "/tmp/stirling-files")
+    String tempDirPath;
 
     public Path resolveFilePath(String fileId) {
         return Path.of(tempDirPath).resolve(fileId);

@@ -10,10 +10,16 @@ import java.util.function.Supplier;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.MDC;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
+// drop-in. The type is used internally via FileStorage (retrieveFile/storeFile return/accept
+// MultipartFile) and PDFFile.getFileInput()/setFileInput(MultipartFile). Changing the type here
+// would ripple into FileStorage and PDFFile public signatures, so the original type is kept until
+// those collaborators are migrated.
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -24,11 +30,18 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 
+// TODO: Migration required - @Aspect / @Around is Spring AOP (AspectJ proxy weaving). Quarkus/Arc
+// has no equivalent for advising arbitrary annotated methods this way; this should be reworked as a
+// CDI @InterceptorBinding + @Interceptor (jakarta.interceptor) or a JAX-RS filter. The aspect
+// pointcut and ProceedingJoinPoint logic are kept intact pending that rework.
 @Aspect
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-@Order(20) // Lower precedence - executes AFTER audit aspects populate MDC
+// @Order(20) -> @Priority: lower precedence, executes AFTER audit aspects populate MDC.
+// TODO: Migration required - @Priority only orders CDI interceptors/decorators, not Spring AOP
+// aspects; ordering here is inert until this class is reworked into a CDI interceptor.
+@Priority(20)
 public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);

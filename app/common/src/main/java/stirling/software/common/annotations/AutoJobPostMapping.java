@@ -2,8 +2,18 @@ package stirling.software.common.annotations;
 
 import java.lang.annotation.*;
 
+import jakarta.ws.rs.core.MediaType;
+
+// TODO: Migration required - Spring meta-annotation machinery has no JAX-RS drop-in.
+// This annotation is a *composed* meta-annotation: it stamps @RequestMapping(method=POST)
+// onto the target method and uses @AliasFor to forward value()/consumes() to that
+// @RequestMapping. JAX-RS meta-annotations do NOT carry @Path/@POST/@Consumes, and there is
+// no @AliasFor equivalent, so the framework code that reads this annotation (the auto-job
+// scanner / endpoint registrar) must be reworked to read these attributes directly and
+// build JAX-RS routing itself. Keeping the Spring imports/annotations below intact preserves
+// current behavior until that caller-side rewrite happens; converting them in isolation here
+// would silently break endpoint registration. Editing callers is out of scope for this file.
 import org.springframework.core.annotation.AliasFor;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -41,7 +51,7 @@ public @interface AutoJobPostMapping {
 
     /** MIME types this endpoint accepts. Defaults to {@code multipart/form-data}. */
     @AliasFor(annotation = RequestMapping.class, attribute = "consumes")
-    String[] consumes() default {MediaType.MULTIPART_FORM_DATA_VALUE};
+    String[] consumes() default {MediaType.MULTIPART_FORM_DATA};
 
     /**
      * Maximum execution time in milliseconds before the job is aborted. A negative value means "use

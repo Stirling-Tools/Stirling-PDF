@@ -32,7 +32,12 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.http.MediaType;
+
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no servlet/JAX-RS
+// drop-in for these utility method params. imageToPdf relies on getContentType(),
+// getOriginalFilename(), getInputStream() and ImageProcessingUtils.loadImageWithExifOrientation(file).
+// Changing the public signature would ripple across all callers, so the type is kept for now and
+// must be re-migrated together with its callers (e.g. to a JAX-RS multipart form / byte[] / InputStream).
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -466,8 +471,11 @@ public class PdfUtils {
                     BufferedImage convertedImage =
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
+                    // org.springframework.http.MediaType.IMAGE_JPEG_VALUE was the String constant
+                    // "image/jpeg"; jakarta.ws.rs.core.MediaType has no equivalent String constant,
+                    // so the literal is used here to preserve behavior.
                     PDImageXObject pdImage =
-                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
+                            (contentType != null && "image/jpeg".equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);

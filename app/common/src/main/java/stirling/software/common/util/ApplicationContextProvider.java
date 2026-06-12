@@ -1,23 +1,17 @@
 package stirling.software.common.util;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.literal.NamedLiteral;
+
+import io.quarkus.arc.Arc;
 
 /**
- * Helper class that provides access to the ApplicationContext. Useful for getting beans in classes
- * that are not managed by Spring.
+ * Helper class that provides access to the CDI container. Useful for getting beans in classes that
+ * are not managed by CDI.
  */
-@Component
-public class ApplicationContextProvider implements ApplicationContextAware {
-
-    private static ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext context) throws BeansException {
-        applicationContext = context;
-    }
+@ApplicationScoped
+public class ApplicationContextProvider {
 
     /**
      * Get a bean by class type.
@@ -27,12 +21,16 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @return The bean instance, or null if not found
      */
     public static <T> T getBean(Class<T> beanClass) {
-        if (applicationContext == null) {
+        if (Arc.container() == null) {
             return null;
         }
         try {
-            return applicationContext.getBean(beanClass);
-        } catch (BeansException e) {
+            Instance<T> instance = Arc.container().select(beanClass);
+            if (instance.isResolvable()) {
+                return instance.get();
+            }
+            return null;
+        } catch (RuntimeException e) {
             return null;
         }
     }
@@ -46,12 +44,16 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @return The bean instance, or null if not found
      */
     public static <T> T getBean(String name, Class<T> beanClass) {
-        if (applicationContext == null) {
+        if (Arc.container() == null) {
             return null;
         }
         try {
-            return applicationContext.getBean(name, beanClass);
-        } catch (BeansException e) {
+            Instance<T> instance = Arc.container().select(beanClass, NamedLiteral.of(name));
+            if (instance.isResolvable()) {
+                return instance.get();
+            }
+            return null;
+        } catch (RuntimeException e) {
             return null;
         }
     }
@@ -63,13 +65,12 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @return true if the bean exists, false otherwise
      */
     public static boolean containsBean(Class<?> beanClass) {
-        if (applicationContext == null) {
+        if (Arc.container() == null) {
             return false;
         }
         try {
-            applicationContext.getBean(beanClass);
-            return true;
-        } catch (BeansException e) {
+            return Arc.container().select(beanClass).isResolvable();
+        } catch (RuntimeException e) {
             return false;
         }
     }

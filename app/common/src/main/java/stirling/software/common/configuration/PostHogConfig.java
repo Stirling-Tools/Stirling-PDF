@@ -1,28 +1,29 @@
 package stirling.software.common.configuration;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.posthog.java.PostHog;
 
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Configuration
+@ApplicationScoped
 @Slf4j
 public class PostHogConfig {
 
-    @Value("${posthog.api.key}")
-    private String posthogApiKey;
+    @ConfigProperty(name = "posthog.api.key")
+    String posthogApiKey;
 
-    @Value("${posthog.host}")
-    private String posthogHost;
+    @ConfigProperty(name = "posthog.host")
+    String posthogHost;
 
     private PostHog postHogClient;
 
-    @Bean
+    @Produces
+    @ApplicationScoped
     public PostHog postHogClient() {
         postHogClient =
                 new PostHog.Builder(posthogApiKey)

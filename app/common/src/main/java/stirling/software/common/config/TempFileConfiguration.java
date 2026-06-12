@@ -3,10 +3,9 @@ package stirling.software.common.config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ import stirling.software.common.util.TempFileRegistry;
  * configures system properties.
  */
 @Slf4j
-@Configuration
+@ApplicationScoped
 @RequiredArgsConstructor
 public class TempFileConfiguration {
 
@@ -30,7 +29,7 @@ public class TempFileConfiguration {
      *
      * @return A new TempFileRegistry instance
      */
-    @Bean
+    @Produces
     public TempFileRegistry tempFileRegistry() {
         return new TempFileRegistry();
     }

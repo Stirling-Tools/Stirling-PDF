@@ -11,8 +11,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.scheduler.Scheduled;
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
+// drop-in. uploadFiles(...) is a public API consumed by callers and relies on isEmpty(),
+// getOriginalFilename(), getSize(), getContentType() and transferTo(Path). Changing it to
+// byte[]/InputStream would ripple to callers, so the Spring type is kept here intentionally.
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * Service for handling mobile scanner file uploads and temporary storage. Files are stored
  * temporarily and automatically cleaned up after 10 minutes or upon retrieval.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class MobileScannerService {
 
@@ -253,7 +258,7 @@ public class MobileScannerService {
     }
 
     /** Scheduled cleanup of expired sessions (runs every 5 minutes) */
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(every = "5m")
     public void cleanupExpiredSessions() {
         long now = System.currentTimeMillis();
         List<String> expiredSessions = new ArrayList<>();

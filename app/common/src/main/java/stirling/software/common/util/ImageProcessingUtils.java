@@ -12,6 +12,10 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS
+// drop-in. loadImageWithExifOrientation(MultipartFile) is a public utility used by callers that
+// pass Spring MultipartFile; converting to byte[]/InputStream would change the public signature
+// and ripple to those callers. Keep the type until callers are migrated.
 import org.springframework.web.multipart.MultipartFile;
 
 import com.drew.imaging.ImageMetadataReader;

@@ -19,7 +19,15 @@ import org.apache.pdfbox.pdmodel.font.PDFontFactory;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.TextPosition;
+// TODO: Migration required - InputStreamResource is the return type of the abstract
+// replace() method declared in the parent ReplaceAndInvertColorStrategy (not in scope for
+// this migration). Changing it here would break the @Override and ripple to all callers, so
+// the Spring type is retained until the parent and its callers are migrated together.
 import org.springframework.core.io.InputStreamResource;
+// TODO: Migration required - MultipartFile is the constructor parameter type that must match
+// the parent ReplaceAndInvertColorStrategy(MultipartFile, ReplaceAndInvert) constructor (not in
+// scope for this migration). There is no JAX-RS drop-in for this widely used public signature;
+// retained until the parent and its callers are migrated together.
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;

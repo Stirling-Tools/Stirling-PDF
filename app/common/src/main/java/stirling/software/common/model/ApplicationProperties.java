@@ -15,22 +15,25 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+// TODO: Migration required - the Spring property-source machinery below
+// (ConfigurableEnvironment, PropertySource, EncodedResource, ClassPathResource,
+// FileSystemResource, Resource) has no direct Quarkus/MicroProfile-Config drop-in.
+// The dynamicYamlPropertySource @Bean equivalent and the SAML2 Resource accessors
+// keep these Spring imports until the YAML-into-config and classpath/file resource
+// lookups are reimplemented (e.g. via @io.smallrye.config.ConfigMapping plus a
+// custom ConfigSource, and java.nio / ClassLoader#getResourceAsStream for resources).
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 import lombok.Getter;
@@ -51,9 +54,12 @@ import stirling.software.common.util.ValidationUtils;
 
 @Data
 @Slf4j
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
-@ConfigurationProperties(prefix = "")
+@ApplicationScoped
+// TODO: Migration required - rebind via @io.smallrye.config.ConfigMapping or
+// @io.quarkus.arc.config.ConfigProperties. Was Spring @ConfigurationProperties(prefix = ""),
+// kept here as a plain CDI bean POJO; the property binding is not yet wired in Quarkus.
+// TODO: Migration required - Spring @Order(Ordered.HIGHEST_PRECEDENCE) controlled
+// configuration-bean ordering; there is no equivalent CDI ordering annotation for this bean.
 public class ApplicationProperties {
 
     private Legal legal = new Legal();
@@ -82,7 +88,13 @@ public class ApplicationProperties {
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
 
-    @Bean
+    // TODO: Migration required - this was a Spring @Bean that injected the
+    // ConfigurableEnvironment and registered an extra YAML PropertySource at runtime so
+    // settings.yml could override (or be overridden by) other property sources. Quarkus has
+    // no ConfigurableEnvironment/PropertySource model; the equivalent is a custom
+    // org.eclipse.microprofile.config.spi.ConfigSource (registered via ConfigSourceProvider
+    // or @io.smallrye.config.ConfigMapping). The original logic is preserved verbatim below
+    // and is currently never invoked by CDI since the @Bean annotation has been removed.
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
@@ -599,8 +611,9 @@ public class ApplicationProperties {
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
-                            .getInputStream();
+                    return getClass()
+                            .getClassLoader()
+                            .getResourceAsStream(idpMetadataUri.substring("classpath:".length()));
                 }
                 try {
                     URI uri = new URI(idpMetadataUri);
@@ -613,6 +626,9 @@ public class ApplicationProperties {
                 }
             }
 
+            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
+            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
+            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getSpCert() {
                 if (spCert == null) return null;
@@ -623,6 +639,9 @@ public class ApplicationProperties {
                 }
             }
 
+            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
+            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
+            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getIdpCert() {
                 if (idpCert == null) return null;
@@ -633,6 +652,9 @@ public class ApplicationProperties {
                 }
             }
 
+            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
+            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
+            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getPrivateKey() {
                 if (privateKey == null) return null;

@@ -13,6 +13,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
+// JAX-RS drop-in for these public static utility method params. Converting to byte[]/
+// InputStream would change widely-used public signatures (convertPdfToCbz, isPdfFile,
+// validatePdfFile) and ripple to callers, so the type is kept until callers are migrated.
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;

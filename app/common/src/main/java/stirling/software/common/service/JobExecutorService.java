@@ -9,17 +9,32 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+// TODO: Migration required - the public API of this service returns Spring
+// org.springframework.http.ResponseEntity, which ripples widely to every caller
+// (controllers and the JobQueue). The Spring HTTP type cluster below
+// (ResponseEntity, HttpHeaders, MediaType) cannot be swapped to
+// jakarta.ws.rs.core equivalents in isolation without breaking those signatures,
+// because they are consumed via ResponseEntity#getHeaders()/getBody() and built
+// via ResponseEntity builders. These imports are intentionally retained until the
+// callers are migrated as a unit.
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
+// JAX-RS drop-in for these utility method params; changing the type would ripple to
+// callers, so it is kept as-is for now.
 import org.springframework.web.multipart.MultipartFile;
+// TODO: Migration required - org.springframework.web.servlet.mvc.method.annotation
+// .StreamingResponseBody is a Spring MVC servlet type with no JAX-RS equivalent here;
+// it is consumed by FileStorage#storeFromStreamingBody and kept as-is for now.
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +43,7 @@ import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.RegexPatternUtils;
 
 /** Service for executing jobs asynchronously or synchronously */
-@Service
+@ApplicationScoped
 @Slf4j
 public class JobExecutorService {
 
@@ -40,8 +55,8 @@ public class JobExecutorService {
     private final ExecutorService executor = ExecutorFactory.newVirtualThreadExecutor();
     private final long effectiveTimeoutMs;
 
-    @Autowired(required = false)
-    private JobOwnershipService jobOwnershipService;
+    @jakarta.inject.Inject
+    Instance<JobOwnershipService> jobOwnershipService;
 
     public JobExecutorService(
             TaskManager taskManager,
@@ -49,8 +64,12 @@ public class JobExecutorService {
             HttpServletRequest request,
             ResourceMonitor resourceMonitor,
             JobQueue jobQueue,
-            @Value("${spring.mvc.async.request-timeout:1200000}") long asyncRequestTimeoutMs,
-            @Value("${server.servlet.session.timeout:30m}") String sessionTimeout) {
+            @ConfigProperty(
+                            name = "spring.mvc.async.request-timeout",
+                            defaultValue = "1200000")
+                    long asyncRequestTimeoutMs,
+            @ConfigProperty(name = "server.servlet.session.timeout", defaultValue = "30m")
+                    String sessionTimeout) {
         this.taskManager = taskManager;
         this.fileStorage = fileStorage;
         this.request = request;
@@ -90,8 +109,8 @@ public class JobExecutorService {
         String jobId = scopedJobKey;
 
         final String jobOwner =
-                jobOwnershipService != null
-                        ? jobOwnershipService.getCurrentUserId().orElse(null)
+                jobOwnershipService.isResolvable()
+                        ? jobOwnershipService.get().getCurrentUserId().orElse(null)
                         : null;
 
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
@@ -463,8 +482,8 @@ public class JobExecutorService {
     }
 
     private String getScopedJobKey(String baseJobId) {
-        if (jobOwnershipService != null) {
-            return jobOwnershipService.createScopedJobKey(baseJobId);
+        if (jobOwnershipService.isResolvable()) {
+            return jobOwnershipService.get().createScopedJobKey(baseJobId);
         }
         return baseJobId;
     }

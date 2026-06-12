@@ -16,6 +16,17 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+// TODO: Migration required - org.springframework.core.io.Resource, org.springframework.http.*
+// (HttpStatus, MediaType, ResponseEntity) and org.springframework.web.multipart.MultipartFile are
+// retained here because the public method signatures return ResponseEntity<Resource> and delegate
+// to WebResponseUtils.fileToWebResponse(TempFile, String, org.springframework.http.MediaType),
+// which is defined in another (not-yet-migrated) file. MultipartFile params are public signatures
+// consumed by many controllers. Converting these would require editing WebResponseUtils and every
+// caller, so per the migration rules they are left intact with this TODO until those files migrate.
+// JAX-RS equivalents would be: ResponseEntity<Resource> -> jakarta.ws.rs.core.Response,
+// org.springframework.http.MediaType -> jakarta.ws.rs.core.MediaType,
+// HttpStatus.BAD_REQUEST -> Response.Status.BAD_REQUEST,
+// MultipartFile -> byte[]/InputStream or a JAX-RS multipart type.
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

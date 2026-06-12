@@ -1,6 +1,9 @@
 package stirling.software.common.model.api;
 
-import org.springframework.http.MediaType;
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
+// servlet/JAX-RS drop-in for a DTO field type. Changing this public field type to
+// byte[]/InputStream or a JAX-RS multipart type would ripple to all callers and the
+// API binding layer, so the type is kept until callers are migrated together.
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,7 +21,7 @@ public class PDFFile {
 
     @Schema(
             description = "The input PDF file",
-            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
+            contentMediaType = "application/pdf",
             format = "binary")
     private MultipartFile fileInput;
 

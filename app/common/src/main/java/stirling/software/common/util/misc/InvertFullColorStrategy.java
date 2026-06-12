@@ -17,7 +17,15 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+// TODO: Migration required - org.springframework.core.io.InputStreamResource has no Quarkus/JAX-RS
+// drop-in here. The abstract parent ReplaceAndInvertColorStrategy.replace() returns
+// InputStreamResource and editing that signature would ripple to all subclasses and callers; per
+// task rules, only this file may change, so the type is kept until the parent is migrated.
 import org.springframework.core.io.InputStreamResource;
+// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no JAX-RS drop-in
+// for these constructor params. The parent class ReplaceAndInvertColorStrategy declares the same
+// MultipartFile constructor parameter; changing the public signature here would diverge from the
+// parent and ripple to callers, so the type is kept until the parent/callers are migrated.
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
