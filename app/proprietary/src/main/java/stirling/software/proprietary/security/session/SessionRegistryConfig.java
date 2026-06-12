@@ -1,9 +1,6 @@
 package stirling.software.proprietary.security.session;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
-
-import stirling.software.proprietary.security.database.repository.SessionRepository;
 
 @ApplicationScoped
 public class SessionRegistryConfig {
@@ -15,14 +12,9 @@ public class SessionRegistryConfig {
     // The original producer was:
     //   @Bean public SessionRegistryImpl sessionRegistry() { return new SessionRegistryImpl(); }
 
-    // Note: SessionPersistentRegistry is a local CDI bean (@ApplicationScoped) and is
-    // auto-discovered by Quarkus, so an explicit producer is no longer required. A producer
-    // is kept here only to preserve the explicit construction with SessionRepository; remove
-    // it if SessionPersistentRegistry is annotated as a CDI bean to avoid an ambiguous bean.
-    @Produces
-    @ApplicationScoped
-    public SessionPersistentRegistry sessionPersistentRegistry(
-            SessionRepository sessionRepository) {
-        return new SessionPersistentRegistry(sessionRepository);
-    }
+    // MIGRATION: the @Produces SessionPersistentRegistry producer was removed. That class is
+    // already an @ApplicationScoped CDI bean with an injectable constructor taking
+    // SessionRepository,
+    // so the producer was a second @Default bean of the same type and made every injection point
+    // ambiguous. Quarkus auto-discovers the bean directly.
 }

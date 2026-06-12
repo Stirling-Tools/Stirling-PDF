@@ -4,13 +4,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.quarkus.redis.datasource.RedisDataSource;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,9 +71,17 @@ public class ValkeyConnectionConfiguration {
     // boot handshake attempted) so misconfiguration fails fast.
     @Inject RedisDataSource redisDataSource;
 
-    @Produces
-    @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
-    public RedisDataSource valkeyConnectionFactory() {
+    // MIGRATION: the former @Produces RedisDataSource methods (valkeyConnectionFactory /
+    // valkeyTemplate) were removed - they only handed back the container-managed RedisDataSource
+    // and
+    // produced two @Default beans of the same type, which Arc flagged as an ambiguous dependency
+    // for
+    // every consumer that injects a plain RedisDataSource. All Valkey* collaborators now inject the
+    // Quarkus-provided RedisDataSource directly.
+    // TODO: Migration required - the eager boot handshake / URL+TLS validation that used to run
+    // inside valkeyConnectionFactory() must be re-wired (e.g. via a @LookupIfProperty StartupEvent
+    // observer) so misconfiguration still fails fast. validateConnection() retains that logic.
+    void validateConnection() {
         Cluster cluster = applicationProperties.getCluster();
         Endpoint endpoint = parseUrl(cluster.getValkey().getUrl());
         boolean skipCertVerification =
@@ -87,7 +98,6 @@ public class ValkeyConnectionConfiguration {
                 endpoint.port(),
                 endpoint.tls(),
                 endpoint.tls() ? clientConfig.verifyModeFull() : "n/a");
-        return redisDataSource;
     }
 
     /** Parsed connection endpoint; username/password are null when absent. */
@@ -280,15 +290,33 @@ public class ValkeyConnectionConfiguration {
         return t.getMessage();
     }
 
-    // TODO: Migration required - StringRedisTemplate was spring-data-redis. Consumers should inject
-    // the Quarkus RedisDataSource and issue string commands via ds.value(String.class). This
-    // producer
-    // now simply exposes the container-managed RedisDataSource under the legacy @Named qualifier so
-    // existing injection points keep compiling during the migration.
+    // MIGRATION: Bucket4j's Lettuce ProxyManager (ValkeyRateLimitStore) needs a raw
+    // io.lettuce.core.RedisClient, which Quarkus' redis extension does not expose. Produce one from
+    // the same cluster.valkey.url the rest of the backplane uses so the injection point for
+    // AbstractRedisClient resolves. Only active when the Valkey backplane is selected.
+    // TODO: Migration required - propagate password/TLS auth from the parsed endpoint onto the
+    // RedisURI once cluster.valkey credentials handling is finalised.
     @Produces
-    @Named("valkeyTemplate")
+    @Singleton
     @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
-    public RedisDataSource valkeyTemplate(RedisDataSource ds) {
-        return ds;
+    public RedisClient nativeRedisClient() {
+        Endpoint endpoint = parseUrl(applicationProperties.getCluster().getValkey().getUrl());
+        RedisURI.Builder uri =
+                RedisURI.builder()
+                        .withHost(endpoint.host())
+                        .withPort(endpoint.port())
+                        .withSsl(endpoint.tls());
+        if (endpoint.password() != null) {
+            if (endpoint.username() != null) {
+                uri.withAuthentication(endpoint.username(), endpoint.password().toCharArray());
+            } else {
+                uri.withPassword(endpoint.password().toCharArray());
+            }
+        }
+        return RedisClient.create(uri.build());
+    }
+
+    void closeNativeRedisClient(@Disposes RedisClient client) {
+        client.shutdown();
     }
 }

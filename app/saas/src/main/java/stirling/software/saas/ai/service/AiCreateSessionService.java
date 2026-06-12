@@ -4,30 +4,36 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
+// TODO: Migration required - org.springframework.data.domain.Pageable is Spring Data; replace with
+// Hibernate ORM Panache paging (Page / range) when the repository layer is migrated.
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
+// TODO: Migration required - org.springframework.web.context.request.RequestContextHolder /
+// ServletRequestAttributes are Spring MVC; replace with a JAX-RS/Quarkus request-scoped lookup
+// (e.g. injected jakarta.ws.rs.core.HttpHeaders / RoutingContext) for session-scoped id resolution.
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.model.AiCreateSessionStatus;
 import stirling.software.saas.ai.repository.AiCreateSessionRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class AiCreateSessionService {
@@ -63,15 +69,15 @@ public class AiCreateSessionService {
                 .findById(sessionId)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "AI session not found"));
+                                new WebApplicationException(
+                                        "AI session not found", Response.Status.NOT_FOUND));
     }
 
     public AiCreateSession getSessionForCurrentUser(String sessionId) {
         AiCreateSession session = getSession(sessionId);
         String userId = resolveUserId();
         if (!userId.equals(session.getUserId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "AI session not found");
+            throw new WebApplicationException("AI session not found", Response.Status.NOT_FOUND);
         }
         return session;
     }

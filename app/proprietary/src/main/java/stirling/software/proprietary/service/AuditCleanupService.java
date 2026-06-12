@@ -87,7 +87,8 @@ public class AuditCleanupService {
 
     /** Finds a batch of IDs to delete. */
     @Transactional
-    private List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
+    // package-private so the CDI @Transactional interceptor applies (was private under Spring)
+    List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
         // Spring Data PageRequest.of(0, BATCH_SIZE, Sort.by("id")) -> Panache Page (first page,
         // BATCH_SIZE rows). The repository's JPQL already applies "ORDER BY e.id".
         Page page = Page.of(0, BATCH_SIZE);
@@ -96,7 +97,8 @@ public class AuditCleanupService {
 
     /** Deletes a batch of events by ID. Each batch is in its own transaction. */
     @Transactional
-    private int deleteBatch(List<Long> batchIds) {
+    // package-private so the CDI @Transactional interceptor applies (was private under Spring)
+    int deleteBatch(List<Long> batchIds) {
         if (batchIds.isEmpty()) {
             return 0;
         }

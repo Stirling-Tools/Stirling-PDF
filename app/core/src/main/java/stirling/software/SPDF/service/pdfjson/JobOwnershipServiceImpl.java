@@ -16,13 +16,18 @@ import stirling.software.common.service.UserServiceInterface;
  * accessible.
  */
 // MIGRATION: Spring's @ConditionalOnProperty(name="security.enable-login", havingValue="true")
-// gated this bean on a runtime property. CDI's @io.quarkus.arc.lookup.LookupIfProperty is the
-// runtime equivalent: the bean is only resolved when security.enable-login=true. Callers that
-// inject stirling.software.common.service.JobOwnershipService must use Instance<> with
-// isResolvable()/get() so they tolerate the bean being absent when login is disabled.
+// gated this bean. It is now @IfBuildProperty(security.enable-login=true) - the exact build-time
+// complement of NoOpJobOwnershipService (@IfBuildProperty security.enable-login=false,
+// enableIfMissing=true). The two are mutually exclusive at build time, so exactly one
+// JobOwnershipService bean exists and callers can inject it directly (no Instance<> needed).
+// A previous @LookupIfProperty here left both impls registered at build time and caused an
+// ambiguous dependency.
+// TODO: Migration required - this trades runtime toggling for a build-time decision; if
+// security.enable-login must be switched without a rebuild, reintroduce @LookupIfProperty on both
+// impls and switch every JobOwnershipService injection point to Instance<>.
 @Slf4j
 @ApplicationScoped
-@io.quarkus.arc.lookup.LookupIfProperty(name = "security.enable-login", stringValue = "true")
+@io.quarkus.arc.properties.IfBuildProperty(name = "security.enable-login", stringValue = "true")
 public class JobOwnershipServiceImpl
         implements stirling.software.common.service.JobOwnershipService {
 

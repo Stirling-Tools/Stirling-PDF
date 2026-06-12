@@ -1,12 +1,8 @@
 package stirling.software.saas.payg.filter;
 
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import jakarta.enterprise.context.ApplicationScoped;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -22,39 +18,20 @@ import lombok.RequiredArgsConstructor;
  *       config.
  * </ul>
  */
-@Configuration
-@Profile("saas")
+// TODO: Migration required - interceptor registration moved to @Provider JAX-RS filters; filter
+// registration (PaygResponseBodyWrapperFilter on /api/*) now via @WebFilter or quarkus filter config
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
-public class PaygWebMvcConfig implements WebMvcConfigurer {
+public class PaygWebMvcConfig {
 
     private final PaygChargeInterceptor paygChargeInterceptor;
-
-    @Bean
-    public FilterRegistrationBean<PaygResponseBodyWrapperFilter>
-            paygResponseBodyWrapperFilterRegistration(PaygResponseBodyWrapperFilter filter) {
-        FilterRegistrationBean<PaygResponseBodyWrapperFilter> reg =
-                new FilterRegistrationBean<>(filter);
-        reg.addUrlPatterns("/api/*");
-        return reg;
-    }
 
     /**
      * Interceptor ordering: the legacy {@code UnifiedCreditInterceptor} (registered with default
      * order = 0 in {@code CreditInterceptorConfig}) must run BEFORE this one so credit rejections
      * short-circuit before we hash inputs. Explicit positive order guarantees this regardless of
-     * {@code WebMvcConfigurer} bean discovery order.
+     * filter discovery order.
      */
     public static final int INTERCEPTOR_ORDER = 1000;
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(paygChargeInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/v1/credits/**",
-                        "/api/v1/config/**",
-                        "/api/v1/info/**",
-                        "/api/v1/admin/**")
-                .order(INTERCEPTOR_ORDER);
-    }
 }

@@ -5,19 +5,20 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.config.CreditsProperties;
 
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 @RequiredArgsConstructor
 public class CreditResetScheduler {
@@ -29,7 +30,10 @@ public class CreditResetScheduler {
      * Reset cycle credits for all users and teams on the 1st of each month at 2 AM UTC This runs
      * monthly, resetting credits based on user roles and team seats
      */
-    @Scheduled(cron = "${credits.reset.cron:0 0 2 1 * *}", zone = "${credits.reset.zone:UTC}")
+    // TODO: Migration required - Spring cron+zone placeholders (${credits.reset.cron:0 0 2 1 * *},
+    // zone ${credits.reset.zone:UTC}) replaced with a Quarkus cron config expression; Quarkus
+    // @Scheduled has no zone attribute, so the reset zone is honoured only in the body logic below.
+    @Scheduled(cron = "{credits.reset.cron:0 0 2 1 * ?}")
     public void resetCycleCredits() {
         log.info(
                 "Starting monthly credit reset for all users and teams (schedule: {}, zone: {})",
@@ -48,8 +52,7 @@ public class CreditResetScheduler {
     }
 
     /** Check for missed resets on application startup */
-    @EventListener(ApplicationReadyEvent.class)
-    public void onApplicationReady() {
+    public void onApplicationReady(@Observes StartupEvent ev) {
         try {
             ZoneId configuredZone = ZoneId.of(creditsProperties.getReset().getZone());
             LocalDateTime now = LocalDateTime.now(configuredZone);
@@ -93,7 +96,8 @@ public class CreditResetScheduler {
      * Cleanup and maintenance task; runs daily at 3 AM UTC. Performs maintenance tasks like
      * cleaning up old data.
      */
-    @Scheduled(cron = "0 0 3 * * *", zone = "UTC")
+    // TODO: Migration required - Quarkus @Scheduled has no zone attribute; original ran in UTC
+    @Scheduled(cron = "0 0 3 * * ?")
     public void performDailyMaintenance() {
         log.debug("Starting daily credit system maintenance");
 

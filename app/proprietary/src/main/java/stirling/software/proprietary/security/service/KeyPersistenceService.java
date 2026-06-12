@@ -188,7 +188,8 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     // method
     // public or extract it to a separate bean.
     @Transactional
-    private JwtVerificationKey generateAndStoreKeypair() {
+    // package-private so the CDI @Transactional interceptor applies (was private under Spring)
+    JwtVerificationKey generateAndStoreKeypair() {
         JwtVerificationKey verifyingKey = null;
 
         try {

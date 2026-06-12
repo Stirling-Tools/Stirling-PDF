@@ -1,23 +1,20 @@
 package stirling.software.saas.interceptor;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.AsyncHandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
+import java.lang.reflect.Method;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -32,10 +29,23 @@ import stirling.software.saas.service.SaasUserExtensionService;
 import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
 
-@Component
-@Profile("saas")
+/**
+ * Pre-flight credit validation for {@code @AutoJobPostMapping} endpoints.
+ *
+ * <p>// TODO: Migration required - was a Spring {@code @Component} ({@code @Profile("saas")})
+ * implementing {@code org.springframework.web.servlet.AsyncHandlerInterceptor} (preHandle /
+ * postHandle / afterCompletion / afterConcurrentHandlingStarted). Spring MVC {@code
+ * HandlerInterceptor}, {@code HandlerMethod} and {@code ModelAndView} have no Quarkus equivalent.
+ * Convert this to a JAX-RS {@code @jakarta.ws.rs.ext.Provider ContainerRequestFilter} (preHandle ->
+ * filter, with abort responses replacing the {@code return false} short-circuits). The handler
+ * introspection that read {@code @AutoJobPostMapping} off the resolved {@code HandlerMethod} must be
+ * replaced by JAX-RS {@code ResourceInfo#getResourceMethod()} (injected via {@code @Context}). The
+ * method bodies are preserved; {@code handler} is now an opaque {@code Object} and the
+ * {@code HandlerMethod} cast has been replaced by a reflective {@link Method} fallback (see TODOs).
+ */
+@ApplicationScoped
 @Slf4j
-public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
+public class UnifiedCreditInterceptor {
 
     private final CreditService creditService;
     private final ErrorTrackingService errorTrackingService;
@@ -93,14 +103,16 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
                         .register(meterRegistry);
     }
 
-    @Override
+    // TODO: Migration required - was @Override HandlerInterceptor#preHandle(request, response,
+    // handler). Convert to ContainerRequestFilter#filter; replace each `return false` (with the
+    // response already written) by ContainerRequestContext.abortWith(Response...).
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
         log.debug(
                 "[CREDIT-DEBUG] UnifiedCreditInterceptor.preHandle() - handler: {}",
-                handler.getClass().getSimpleName());
+                handler == null ? "null" : handler.getClass().getSimpleName());
 
         // Credits system disabled - allow all requests
         if (!creditsProperties.isEnabled()) {
@@ -109,8 +121,12 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
         }
 
         // Only apply to @AutoJobPostMapping endpoints and extract resource weight
-        if (!(handler instanceof HandlerMethod hm)
-                || !hm.getMethod().isAnnotationPresent(AutoJobPostMapping.class)) {
+        // TODO: Migration required - originally `handler instanceof HandlerMethod hm` and
+        // hm.getMethod(). Resolve the JAX-RS resource Method via @Context ResourceInfo instead. The
+        // reflective Method fallback below preserves the @AutoJobPostMapping gating semantics.
+        Method resourceMethod = resolveResourceMethod(handler);
+        if (resourceMethod == null
+                || !resourceMethod.isAnnotationPresent(AutoJobPostMapping.class)) {
             log.debug(
                     "[CREDIT-DEBUG] Handler not eligible for credit validation (no @AutoJobPostMapping)");
             return true;
@@ -187,7 +203,7 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
         }
 
         // Extract resource weight from annotation
-        AutoJobPostMapping annotation = hm.getMethod().getAnnotation(AutoJobPostMapping.class);
+        AutoJobPostMapping annotation = resourceMethod.getAnnotation(AutoJobPostMapping.class);
         int resourceWeight =
                 Math.max(1, Math.min(100, annotation.resourceWeight())); // Clamp to 1-100
 
@@ -342,18 +358,19 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
         return true;
     }
 
-    @Override
-    public void postHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            ModelAndView modelAndView)
+    // TODO: Migration required - was @Override HandlerInterceptor#postHandle(request, response,
+    // handler, ModelAndView). Spring's ModelAndView has been dropped from the signature (it was
+    // unused). No JAX-RS equivalent of postHandle; the success path is handled by
+    // CreditSuccessAdvice.
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         // Success path now handled by CreditSuccessAdvice - no spending in postHandle anymore
         log.debug("[CREDIT-DEBUG] postHandle: Success path will be handled by CreditSuccessAdvice");
     }
 
-    @Override
+    // TODO: Migration required - was @Override HandlerInterceptor#afterCompletion(request, response,
+    // handler, Exception). Re-wire via a JAX-RS ContainerResponseFilter if afterCompletion semantics
+    // are needed; the error path is handled by CreditErrorAdvice.
     public void afterCompletion(
             HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
             throws Exception {
@@ -368,7 +385,8 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
-    @Override
+    // TODO: Migration required - was @Override AsyncHandlerInterceptor#afterConcurrentHandlingStarted.
+    // JAX-RS handles async dispatch differently; no direct equivalent required.
     public void afterConcurrentHandlingStarted(
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
@@ -376,6 +394,31 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
         // The actual postHandle/afterCompletion will be called when async processing completes
         log.debug(
                 "[CREDIT-DEBUG] afterConcurrentHandlingStarted: Async processing started - skipping interceptor logic");
+    }
+
+    /**
+     * // TODO: Migration required - resolves the resource {@link Method} that the original code read
+     * from Spring's {@code HandlerMethod}. Until this is wired to JAX-RS {@code ResourceInfo}, it
+     * supports a handler that is already a {@link Method} or exposes a no-arg {@code getMethod()}
+     * returning one (reflective best-effort), so the {@code @AutoJobPostMapping} gating still works.
+     */
+    private Method resolveResourceMethod(Object handler) {
+        if (handler instanceof Method m) {
+            return m;
+        }
+        if (handler == null) {
+            return null;
+        }
+        try {
+            Method getter = handler.getClass().getMethod("getMethod");
+            Object result = getter.invoke(handler);
+            if (result instanceof Method m) {
+                return m;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // Handler does not expose a resolvable resource method.
+        }
+        return null;
     }
 
     private String maskApiKey(String apiKey) {

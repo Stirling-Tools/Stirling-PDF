@@ -8,9 +8,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.arc.All;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.io.Resource;
@@ -48,7 +50,6 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
  */
 @Slf4j
 @ApplicationScoped
-@RequiredArgsConstructor
 public class PolicyEngine {
 
     /**
@@ -69,6 +70,31 @@ public class PolicyEngine {
     private final JobQueue jobQueue;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
+
+    // MIGRATION: replaced Lombok @RequiredArgsConstructor with an explicit @Inject constructor so
+    // the
+    // @io.quarkus.arc.All qualifier can be applied to the List<PolicyOutputSink> injection point
+    // (Spring auto-collected all beans of the type; CDI needs @All, which also yields an empty list
+    // when there are no sinks instead of an unsatisfied dependency).
+    @Inject
+    public PolicyEngine(
+            PolicyExecutor stepExecutor,
+            TaskManager taskManager,
+            PolicyRunRegistry registry,
+            FileStorage fileStorage,
+            JobOwnershipService jobOwnershipService,
+            @All List<PolicyOutputSink> outputSinks,
+            ResourceMonitor resourceMonitor,
+            JobQueue jobQueue) {
+        this.stepExecutor = stepExecutor;
+        this.taskManager = taskManager;
+        this.registry = registry;
+        this.fileStorage = fileStorage;
+        this.jobOwnershipService = jobOwnershipService;
+        this.outputSinks = outputSinks;
+        this.resourceMonitor = resourceMonitor;
+        this.jobQueue = jobQueue;
+    }
 
     /**
      * Submit a pipeline to run asynchronously. The returned handle's run id scopes a job in {@link

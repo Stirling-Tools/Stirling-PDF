@@ -2,6 +2,8 @@ package stirling.software.proprietary.model.api.audit;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.ws.rs.QueryParam;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,8 +32,10 @@ public class AuditExportRequest extends AuditDateExportRequest {
                 "PDF_PROCESS",
                 "HTTP_REQUEST"
             })
+    @QueryParam("type")
     private String type;
 
+    @QueryParam("principal")
     @Schema(description = "Principal (username) to filter by", example = "admin")
     private String principal;
 }

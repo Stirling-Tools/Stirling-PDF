@@ -91,6 +91,21 @@ public class AppConfig {
         return v2Enabled;
     }
 
+    // MIGRATION: many beans inject tools.jackson.databind.ObjectMapper (Jackson 3, inherited from
+    // Spring Boot 4). Quarkus' container only produces a com.fasterxml.jackson (Jackson 2)
+    // ObjectMapper for REST (de)serialization, so the Jackson 3 type is an unsatisfied CDI
+    // dependency. This producer supplies a single application-scoped Jackson 3 mapper built the
+    // same
+    // way the codebase builds them ad hoc (JsonMapper.builder().build()). REST bodies still go
+    // through Quarkus' Jackson 2 mapper; this is only for code that uses the Jackson 3 API
+    // directly.
+    // TODO: Migration required - converge the codebase on one Jackson line (drop Jackson 3) later.
+    @Produces
+    @ApplicationScoped
+    public tools.jackson.databind.ObjectMapper jackson3ObjectMapper() {
+        return tools.jackson.databind.json.JsonMapper.builder().build();
+    }
+
     @Produces
     @Named("contextPath")
     public String contextPathBean() {
@@ -101,6 +116,15 @@ public class AppConfig {
     @Named("loginEnabled")
     public boolean loginEnabled() {
         return applicationProperties.getSecurity().isEnableLogin();
+    }
+
+    // MIGRATION: CDI has no producer for the nested ApplicationProperties.Security.SAML2 config
+    // object, so beans that inject it directly (e.g. CustomSaml2AuthenticationSuccessHandler) were
+    // unsatisfied. Expose it from the already-injected ApplicationProperties. May be null/disabled;
+    // that is fine for injection.
+    @Produces
+    public ApplicationProperties.Security.SAML2 saml2Config() {
+        return applicationProperties.getSecurity().getSaml2();
     }
 
     @Produces

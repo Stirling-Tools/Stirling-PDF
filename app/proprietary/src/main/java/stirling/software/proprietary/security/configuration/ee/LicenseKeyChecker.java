@@ -57,10 +57,13 @@ public class LicenseKeyChecker {
     }
 
     // TODO: Migration required - Spring used initialDelay=fixedRate=7d. Quarkus @Scheduled has no
-    // initialDelay equivalent for fixed-rate; "every=7d" fires the first run 7 days after start,
+    // initialDelay equivalent for fixed-rate; "every=P7D" fires the first run 7 days after start,
     // which preserves the original initial-delay semantics. delayed="..." could add an extra offset
     // if needed.
-    @Scheduled(every = "7d")
+    // MIGRATION: every="7d" was rejected ("Invalid every() expression") because Quarkus parses the
+    // value as a Duration and a bare "7d" maps to the invalid "PT7d". Use the ISO-8601 period form
+    // P7D (7 days), which Duration.parse accepts.
+    @Scheduled(every = "P7D")
     public void checkLicensePeriodically() {
         try {
             evaluateLicense();

@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -67,7 +68,9 @@ public class FileStorageService {
     private final UserRepository userRepository;
     private final ApplicationProperties applicationProperties;
     private final StorageProvider storageProvider;
-    private final Optional<EmailService> emailService;
+    // MIGRATION: CDI does not inject java.util.Optional<T>; use Instance<EmailService> and resolve
+    // via isResolvable()/get().
+    private final Instance<EmailService> emailService;
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
 
     public void ensureStorageEnabled() {
@@ -1061,7 +1064,7 @@ public class FileStorageService {
 
     private void sendShareNotification(
             User owner, StoredFile file, String email, ShareAccessRole role, String shareLinkUrl) {
-        if (emailService.isEmpty() || !applicationProperties.getMail().isEnabled()) {
+        if (!emailService.isResolvable() || !applicationProperties.getMail().isEnabled()) {
             log.warn("Email sharing configured but mail service is unavailable");
             return;
         }

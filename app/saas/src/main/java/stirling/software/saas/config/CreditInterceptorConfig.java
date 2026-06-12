@@ -1,29 +1,18 @@
 package stirling.software.saas.config;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import jakarta.enterprise.context.ApplicationScoped;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.saas.interceptor.UnifiedCreditInterceptor;
 
-@Configuration
-@Profile("saas")
+// TODO: Migration required - interceptor registration moved to @Provider JAX-RS filters
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
-public class CreditInterceptorConfig implements WebMvcConfigurer {
+public class CreditInterceptorConfig {
 
     private final UnifiedCreditInterceptor unifiedCreditInterceptor;
     private final CreditsProperties creditsProperties;
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        if (creditsProperties.isEnabled()) {
-            registry.addInterceptor(unifiedCreditInterceptor)
-                    .addPathPatterns("/api/**")
-                    .excludePathPatterns(
-                            "/api/v1/credits/**", "/api/v1/config/**", "/api/v1/info/**");
-        }
-    }
 }

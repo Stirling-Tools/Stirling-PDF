@@ -50,9 +50,14 @@ public class McpServerController {
 
     @Inject SecurityIdentity securityIdentity;
 
+    // MIGRATION: Spring auto-collected all McpTool beans into a List<McpTool>. CDI requires the
+    // @io.quarkus.arc.All qualifier to inject every bean of a type as a List (and it resolves to an
+    // empty list when there are no McpTool beans, instead of being unsatisfied).
     @Inject
     public McpServerController(
-            ObjectMapper mapper, ApplicationProperties applicationProperties, List<McpTool> tools) {
+            ObjectMapper mapper,
+            ApplicationProperties applicationProperties,
+            @io.quarkus.arc.All List<McpTool> tools) {
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
         this.toolsByName = new HashMap<>();

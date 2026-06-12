@@ -6,14 +6,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
@@ -34,9 +34,9 @@ import stirling.software.saas.util.LogRedactionUtils;
  * etc.) to call these endpoints with your admin API key.
  */
 @Hidden
-@RestController
-@Profile("saas")
-@RequestMapping("/api/v1/user-role")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/user-role")
 @Slf4j
 @RequiredArgsConstructor
 public class UserRoleWebhookController {
@@ -52,9 +52,10 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID to upgrade
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/upgrade")
-    public ResponseEntity<String> handleUpgrade(@RequestParam("supabaseId") String supabaseId) {
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/upgrade")
+    public Response handleUpgrade(@QueryParam("supabaseId") String supabaseId) {
 
         log.info(
                 "Received upgrade request for Supabase ID: {}",
@@ -63,17 +64,18 @@ public class UserRoleWebhookController {
         try {
             boolean upgraded = saasUserAccountService.handleUpgrade(supabaseId);
             if (upgraded) {
-                return ResponseEntity.ok("User upgraded to PRO successfully");
+                return Response.ok("User upgraded to PRO successfully").build();
             } else {
-                return ResponseEntity.ok("User is already PRO");
+                return Response.ok("User is already PRO").build();
             }
         } catch (IllegalArgumentException e) {
             log.warn("handleUpgrade rejected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid request").build();
         } catch (Exception e) {
             log.error("Error processing upgrade webhook", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing webhook");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error processing webhook")
+                    .build();
         }
     }
 
@@ -84,9 +86,10 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID to downgrade
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/downgrade")
-    public ResponseEntity<String> handleDowngrade(@RequestParam("supabaseId") String supabaseId) {
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/downgrade")
+    public Response handleDowngrade(@QueryParam("supabaseId") String supabaseId) {
 
         log.info(
                 "Received downgrade request for Supabase ID: {}",
@@ -95,17 +98,18 @@ public class UserRoleWebhookController {
         try {
             boolean downgraded = saasUserAccountService.handleDowngrade(supabaseId);
             if (downgraded) {
-                return ResponseEntity.ok("User downgraded to FREE successfully");
+                return Response.ok("User downgraded to FREE successfully").build();
             } else {
-                return ResponseEntity.ok("User is already on FREE tier");
+                return Response.ok("User is already on FREE tier").build();
             }
         } catch (IllegalArgumentException e) {
             log.warn("handleDowngrade rejected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid request").build();
         } catch (Exception e) {
             log.error("Error processing downgrade webhook", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing webhook");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error processing webhook")
+                    .build();
         }
     }
 
@@ -117,10 +121,10 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/enable-metered-billing")
-    public ResponseEntity<String> enableMeteredBilling(
-            @RequestParam("supabaseId") String supabaseId) {
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/enable-metered-billing")
+    public Response enableMeteredBilling(@QueryParam("supabaseId") String supabaseId) {
 
         log.info(
                 "Received request to enable metered billing for Supabase ID: {}",
@@ -129,17 +133,18 @@ public class UserRoleWebhookController {
         try {
             boolean enabled = saasUserAccountService.enableMeteredBilling(supabaseId);
             if (enabled) {
-                return ResponseEntity.ok("Metered billing enabled successfully");
+                return Response.ok("Metered billing enabled successfully").build();
             } else {
-                return ResponseEntity.ok("User already has metered billing enabled");
+                return Response.ok("User already has metered billing enabled").build();
             }
         } catch (IllegalArgumentException e) {
             log.warn("enableMeteredBilling rejected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid request").build();
         } catch (Exception e) {
             log.error("Error enabling metered billing", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing webhook");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error processing webhook")
+                    .build();
         }
     }
 
@@ -150,10 +155,10 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/disable-metered-billing")
-    public ResponseEntity<String> disableMeteredBilling(
-            @RequestParam("supabaseId") String supabaseId) {
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/disable-metered-billing")
+    public Response disableMeteredBilling(@QueryParam("supabaseId") String supabaseId) {
 
         log.info(
                 "Received request to disable metered billing for Supabase ID: {}",
@@ -162,17 +167,18 @@ public class UserRoleWebhookController {
         try {
             boolean disabled = saasUserAccountService.disableMeteredBilling(supabaseId);
             if (disabled) {
-                return ResponseEntity.ok("Metered billing disabled successfully");
+                return Response.ok("Metered billing disabled successfully").build();
             } else {
-                return ResponseEntity.ok("User does not have metered billing enabled");
+                return Response.ok("User does not have metered billing enabled").build();
             }
         } catch (IllegalArgumentException e) {
             log.warn("disableMeteredBilling rejected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid request").build();
         } catch (Exception e) {
             log.error("Error disabling metered billing", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing webhook");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error processing webhook")
+                    .build();
         }
     }
 
@@ -187,11 +193,14 @@ public class UserRoleWebhookController {
      * @param authMethod the authentication method used (e.g., "email", "google", "github")
      * @return ResponseEntity with success or error message
      */
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/promptToAuthUser")
-    public ResponseEntity<Map<String, String>> promptToAuthUser(
-            @RequestParam(value = "authMethod", required = false) String authMethod,
-            Principal principal) {
+    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
+    // authenticated access via JAX-RS SecurityContext / filter.
+    // TODO: Migration required - inject Principal via @jakarta.ws.rs.core.Context SecurityContext
+    // (JAX-RS does not bind a bare java.security.Principal parameter like Spring MVC).
+    @POST
+    @Path("/promptToAuthUser")
+    public Response promptToAuthUser(
+            @QueryParam("authMethod") String authMethod, Principal principal) {
 
         try {
             // Principal is guaranteed to be non-null due to @PreAuthorize
@@ -201,8 +210,9 @@ public class UserRoleWebhookController {
             String normalizedAuthMethod = normalizeAuthMethod(authMethod);
             if (normalizedAuthMethod != null && !isValidAuthMethod(normalizedAuthMethod)) {
                 log.warn("Invalid auth method provided: {}", authMethod);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Invalid authentication method"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "Invalid authentication method"))
+                        .build();
             }
 
             log.debug(
@@ -225,8 +235,9 @@ public class UserRoleWebhookController {
             UUID supabaseId = currentUser.getSupabaseId();
             if (supabaseId == null) {
                 log.error("Current user {} has no linked Supabase ID", currentUsername);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "No Supabase account linked to current user"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "No Supabase account linked to current user"))
+                        .build();
             }
             SupabaseUser supabaseUser = supabaseUserService.getUser(supabaseId);
 
@@ -235,8 +246,9 @@ public class UserRoleWebhookController {
                     .name()
                     .equalsIgnoreCase(currentUser.getAuthenticationType())) {
                 log.warn("User {} is not anonymous, cannot upgrade", currentUsername);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Only anonymous users can be upgraded"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "Only anonymous users can be upgraded"))
+                        .build();
             }
 
             // Derive the canonical email from SupabaseUser
@@ -247,8 +259,9 @@ public class UserRoleWebhookController {
                 if (canonicalEmail == null || canonicalEmail.isBlank()) {
                     log.error(
                             "No email found for user {} in Supabase or local DB", currentUsername);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "No email associated with user account"));
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Map.of("error", "No email associated with user account"))
+                            .build();
                 }
             }
 
@@ -258,25 +271,28 @@ public class UserRoleWebhookController {
                     saasUserAccountService.synchronizeUserUpgrade(
                             supabaseUser, canonicalEmail, normalizedAuthMethod);
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            "User upgrade synchronized successfully",
-                            "userId",
-                            upgradedUser.getId().toString(),
-                            "email",
-                            upgradedUser.getEmail() != null
-                                    ? upgradedUser.getEmail()
-                                    : upgradedUser.getUsername()));
+            return Response.ok(
+                            Map.of(
+                                    "message",
+                                    "User upgrade synchronized successfully",
+                                    "userId",
+                                    upgradedUser.getId().toString(),
+                                    "email",
+                                    upgradedUser.getEmail() != null
+                                            ? upgradedUser.getEmail()
+                                            : upgradedUser.getUsername()))
+                    .build();
 
         } catch (IllegalStateException e) {
             log.error("User not found for upgrade: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found"));
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "User not found"))
+                    .build();
         } catch (Exception e) {
             log.error("Error synchronizing user upgrade", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to synchronize user upgrade"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to synchronize user upgrade"))
+                    .build();
         }
     }
 

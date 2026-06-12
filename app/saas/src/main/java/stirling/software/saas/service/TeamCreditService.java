@@ -4,9 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,8 @@ import stirling.software.saas.repository.TeamMembershipRepository;
  * Service for managing team credit pools. Handles credit initialization, consumption, and cycle
  * resets for teams.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class TeamCreditService {
@@ -58,12 +59,12 @@ public class TeamCreditService {
         credits.setCycleCreditsRemaining(totalCycleAllocation);
         credits.setLastCycleResetAt(LocalDateTime.now());
 
-        TeamCredit saved = teamCreditRepository.save(credits);
+        teamCreditRepository.persist(credits);
         log.info(
                 "Initialized team credits for team {} with {} cycle credits (fixed PRO amount)",
                 team.getId(),
                 totalCycleAllocation);
-        return saved;
+        return credits;
     }
 
     /**
@@ -141,7 +142,7 @@ public class TeamCreditService {
                         .orElseThrow(() -> new IllegalArgumentException("Team credits not found"));
 
         teamCredit.addBoughtCredits(credits);
-        teamCreditRepository.save(teamCredit);
+        teamCreditRepository.persist(teamCredit);
         log.info("Added {} bought credits to team {}", credits, teamId);
     }
 
@@ -160,7 +161,7 @@ public class TeamCreditService {
                         .orElseThrow(() -> new IllegalArgumentException("Team credits not found"));
 
         teamCredit.resetCycleCredits(cycleAllocation, resetTime);
-        teamCreditRepository.save(teamCredit);
+        teamCreditRepository.persist(teamCredit);
         log.info("Reset cycle credits for team {} to {}", teamId, cycleAllocation);
     }
 

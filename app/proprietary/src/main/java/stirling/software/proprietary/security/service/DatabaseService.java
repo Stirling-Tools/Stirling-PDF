@@ -32,6 +32,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,7 +99,11 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps,
-            DataSource dataSource,
+            // MIGRATION: qualify the app's custom DataSource (DatabaseConfig @Produces
+            // @Named("dataSource")) to disambiguate from the @Default DataSource that Quarkus
+            // auto-provides from quarkus.datasource.* config. This DataSource carries the
+            // settings.yml-driven H2/Postgres selection that DatabaseService backups depend on.
+            @Named("dataSource") DataSource dataSource,
             DatabaseNotificationServiceInterface backupNotificationService) {
         this.BACKUP_DIR = Paths.get(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;

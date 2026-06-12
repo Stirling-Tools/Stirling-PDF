@@ -4,27 +4,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.CreditConsumptionResult;
@@ -38,11 +33,17 @@ import stirling.software.saas.util.CreditHeaderUtils;
 /**
  * Scoped to controllers annotated with {@link AutoJobPostMapping} so it doesn't hijack the global
  * exception flow.
+ *
+ * <p>// TODO: Migration required - was a Spring {@code @RestControllerAdvice(annotations =
+ * AutoJobPostMapping.class)} with {@code @Profile("saas")} and {@code @Order(1)}, handling
+ * exceptions via {@code @ExceptionHandler(Throwable.class)}. Re-express as a JAX-RS
+ * {@code @jakarta.ws.rs.ext.Provider ExceptionMapper<Throwable>} (scoped/gated to AutoJobPostMapping
+ * endpoints), wiring the saas profile gating via build profile. The {@code handleThrowable} body has
+ * been translated from Spring {@code ResponseEntity} to JAX-RS {@code Response} but the
+ * registration/scoping as an ExceptionMapper still needs wiring.
  */
-@RestControllerAdvice(annotations = AutoJobPostMapping.class)
-@Profile("saas")
+@ApplicationScoped
 @Slf4j
-@Order(1)
 public class CreditErrorAdvice {
 
     private static final String ATTR_ELIGIBLE = "CREDIT_ELIGIBLE";
@@ -82,9 +83,12 @@ public class CreditErrorAdvice {
                         .register(meterRegistry);
     }
 
-    @ExceptionHandler(Throwable.class)
-    public ResponseEntity<Object> handleThrowable(HttpServletRequest request, Throwable ex) {
-        HttpStatus status = determineHttpStatus(ex);
+    // TODO: Migration required - was @ExceptionHandler(Throwable.class) on a @RestControllerAdvice.
+    // Convert to ExceptionMapper<Throwable>.toResponse(Throwable); HttpServletRequest access must be
+    // replaced by an injected JAX-RS request context (e.g. @Context ContainerRequestContext) since
+    // ExceptionMapper does not receive the servlet request as a parameter.
+    public Response handleThrowable(HttpServletRequest request, Throwable ex) {
+        Response.Status status = determineHttpStatus(ex);
         log.debug(
                 "[CREDIT-DEBUG] CreditErrorAdvice: Handling exception: {} -> {}",
                 ex.getClass().getSimpleName(),
@@ -95,9 +99,9 @@ public class CreditErrorAdvice {
         Map<String, Object> body = new HashMap<>();
         body.put("error", ex.getClass().getSimpleName());
         body.put("message", message);
-        body.put("status", status.value());
+        body.put("status", status.getStatusCode());
 
-        var builder = ResponseEntity.status(status);
+        var builder = Response.status(status);
 
         // Handle credit consumption for errors
         if (Boolean.TRUE.equals(request.getAttribute(ATTR_ELIGIBLE))
@@ -115,7 +119,7 @@ public class CreditErrorAdvice {
                             identifierForErrorTracking,
                             request.getRequestURI(),
                             ex,
-                            status.value())) {
+                            status.getStatusCode())) {
 
                 // Get current user
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -225,10 +229,10 @@ public class CreditErrorAdvice {
         if (isSseRequest(request)) {
             String payload = toJsonPayload(body);
             String sseBody = "event: error\ndata: " + payload + "\n\n";
-            return builder.contentType(MediaType.TEXT_EVENT_STREAM).body(sseBody);
+            return builder.type(MediaType.SERVER_SENT_EVENTS).entity(sseBody).build();
         }
 
-        return builder.body(body);
+        return builder.entity(body).build();
     }
 
     private String maskApiKey(String apiKey) {
@@ -238,47 +242,47 @@ public class CreditErrorAdvice {
         return apiKey.substring(0, 4) + "***" + apiKey.substring(apiKey.length() - 4);
     }
 
-    private HttpStatus determineHttpStatus(Throwable throwable) {
+    private Response.Status determineHttpStatus(Throwable throwable) {
         // Map common exceptions to HTTP status codes
         String exceptionClass = throwable.getClass().getSimpleName();
         switch (exceptionClass) {
             case "IllegalArgumentException":
             case "ValidationException":
             case "MethodArgumentNotValidException":
-                return HttpStatus.BAD_REQUEST;
+                return Response.Status.BAD_REQUEST;
             case "AccessDeniedException":
-                return HttpStatus.FORBIDDEN;
+                return Response.Status.FORBIDDEN;
             case "UsernameNotFoundException":
-                return HttpStatus.UNAUTHORIZED;
+                return Response.Status.UNAUTHORIZED;
             case "HttpMessageNotReadableException":
-                return HttpStatus.BAD_REQUEST;
+                return Response.Status.BAD_REQUEST;
             case "MaxUploadSizeExceededException":
-                return HttpStatus.PAYLOAD_TOO_LARGE;
+                return Response.Status.REQUEST_ENTITY_TOO_LARGE;
             case "UnsupportedOperationException":
-                return HttpStatus.NOT_IMPLEMENTED;
+                return Response.Status.NOT_IMPLEMENTED;
             default:
                 // Check error message for clues
                 String message = throwable.getMessage();
                 if (message != null) {
                     if (message.toLowerCase().contains("validation")
                             || message.toLowerCase().contains("invalid parameter")) {
-                        return HttpStatus.BAD_REQUEST;
+                        return Response.Status.BAD_REQUEST;
                     }
                     if (message.toLowerCase().contains("not found")) {
-                        return HttpStatus.NOT_FOUND;
+                        return Response.Status.NOT_FOUND;
                     }
                 }
-                return HttpStatus.INTERNAL_SERVER_ERROR;
+                return Response.Status.INTERNAL_SERVER_ERROR;
         }
     }
 
     private boolean isSseRequest(HttpServletRequest request) {
         String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains(MediaType.TEXT_EVENT_STREAM_VALUE)) {
+        if (accept != null && accept.contains(MediaType.SERVER_SENT_EVENTS)) {
             return true;
         }
         String contentType = request.getContentType();
-        return contentType != null && contentType.contains(MediaType.TEXT_EVENT_STREAM_VALUE);
+        return contentType != null && contentType.contains(MediaType.SERVER_SENT_EVENTS);
     }
 
     private String toJsonPayload(Map<String, Object> payload) {

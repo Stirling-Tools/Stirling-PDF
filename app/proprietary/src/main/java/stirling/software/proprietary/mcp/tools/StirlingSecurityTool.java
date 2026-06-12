@@ -2,9 +2,9 @@ package stirling.software.proprietary.mcp.tools;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
@@ -12,7 +12,9 @@ import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import tools.jackson.databind.ObjectMapper;
 
 /** Exposes the {@code /api/v1/security/*} namespace as a single MCP tool. */
-@ApplicationScoped
+// MIGRATION: @Singleton (not @ApplicationScoped) - extends AbstractCategoryTool, which has no
+// no-arg constructor, so a proxied normal-scoped bean is impossible. Stateless, so equivalent.
+@Singleton
 @LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class StirlingSecurityTool extends AbstractCategoryTool {
 

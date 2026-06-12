@@ -2,16 +2,16 @@ package stirling.software.saas.config;
 
 import java.util.Map;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import lombok.Data;
 
+// TODO: Migration required - @ConfigurationProperties(prefix="credits"); bind via @ConfigProperty or @ConfigMapping
 @Data
-@Component
-@Profile("saas")
-@ConfigurationProperties(prefix = "credits")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class CreditsProperties {
 
     /** Whether the credits system is enabled */

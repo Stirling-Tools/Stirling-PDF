@@ -1,8 +1,9 @@
 package stirling.software.saas.service;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,8 @@ import stirling.software.saas.config.CreditsProperties;
 import stirling.software.saas.util.LogRedactionUtils;
 
 /** Changes user roles and refreshes their credit allocation. */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class UserRoleService {
@@ -43,11 +44,11 @@ public class UserRoleService {
 
         Authority userAuthority = authorityRepository.findByUserId(user.getId());
         userAuthority.setAuthority(newRole);
-        authorityRepository.save(userAuthority);
+        authorityRepository.persist(userAuthority);
 
         // Update denormalized roleName column in User table
         user.setRoleName(newRole);
-        userRepository.save(user);
+        userRepository.persist(user);
 
         log.info(
                 "Changed role for user {} to {}",

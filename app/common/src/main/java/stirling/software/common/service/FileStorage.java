@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.core.StreamingOutput;
 
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,11 @@ public class FileStorage {
     private final FileOrUploadService fileOrUploadService;
     private final FileStore fileStore;
 
-    // TODO: Migration required - in Spring this optional dependency is constructor-injected via
-    // Lombok's @RequiredArgsConstructor. CDI does not inject java.util.Optional<T>; the equivalent
-    // is jakarta.enterprise.inject.Instance<JobOwnershipService> with isResolvable()/get(). That
-    // change alters the field type and the resolveOwner()/enforceOwnership() Optional usage below,
-    // so it is left intact here to avoid rippling logic changes.
-    private final Optional<JobOwnershipService> jobOwnershipService;
+    // MIGRATION: CDI does not inject java.util.Optional<T>. Optional<JobOwnershipService> is now
+    // jakarta.enterprise.inject.Instance<JobOwnershipService>, resolved via isResolvable()/get().
+    // Exactly one JobOwnershipService impl is selected at build time (Impl vs NoOp), so this is
+    // always resolvable in practice, but Instance<> keeps the previous optional contract.
+    private final Instance<JobOwnershipService> jobOwnershipService;
 
     public String storeFile(MultipartFile file) throws IOException {
         String owner = resolveOwner();
@@ -199,11 +199,14 @@ public class FileStorage {
         if (propagated != null) {
             return propagated;
         }
-        return jobOwnershipService.flatMap(JobOwnershipService::getCurrentUserId).orElse(null);
+        if (!jobOwnershipService.isResolvable()) {
+            return null;
+        }
+        return jobOwnershipService.get().getCurrentUserId().orElse(null);
     }
 
     private void enforceOwnership(String fileId) {
-        if (jobOwnershipService.isEmpty()) {
+        if (!jobOwnershipService.isResolvable()) {
             return;
         }
         Optional<String> currentUser = jobOwnershipService.get().getCurrentUserId();

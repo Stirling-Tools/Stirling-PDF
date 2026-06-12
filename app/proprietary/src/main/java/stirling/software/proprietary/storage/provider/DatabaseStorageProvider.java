@@ -4,9 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.MultipartFile;
@@ -16,8 +13,10 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFileBlob;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
-@ApplicationScoped
-@RequiredArgsConstructor(onConstructor_ = {@Inject})
+// MIGRATION: not a CDI bean; instantiated via `new` by StorageProviderConfig.storageProvider()
+// producer, which selects the configured provider. Keeping @ApplicationScoped here caused an
+// ambiguous dependency with that producer.
+@RequiredArgsConstructor
 public class DatabaseStorageProvider implements StorageProvider {
 
     private final StoredFileBlobRepository storedFileBlobRepository;

@@ -9,20 +9,22 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.MDC;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
@@ -37,8 +39,8 @@ import stirling.software.saas.repository.TeamCreditRepository;
 import stirling.software.saas.repository.UserCreditRepository;
 import stirling.software.saas.util.LogRedactionUtils;
 
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 @Transactional
 public class CreditService {
@@ -52,6 +54,10 @@ public class CreditService {
     private final StripeUsageReportingService stripeUsageReportingService;
     private final SaasUserExtensionService saasUserExtensionService;
     private final SaasTeamExtensionService saasTeamExtensionService;
+
+    // TODO: Migration required - injected for the afterCommit Stripe-report hook that replaced
+    // Spring's TransactionSynchronizationManager.
+    @Inject TransactionSynchronizationRegistry transactionSynchronizationRegistry;
 
     // Telemetry metrics
     private final Counter creditsConsumedCounter;
@@ -157,7 +163,8 @@ public class CreditService {
             if (credits.isCycleResetDue(lastScheduledReset)) {
                 int allocation = getCycleAllocationForUser(user);
                 credits.resetCycleCredits(allocation, lastScheduledReset);
-                return userCreditRepository.save(credits);
+                userCreditRepository.persist(credits);
+                return credits;
             }
             return credits;
         }
@@ -166,7 +173,8 @@ public class CreditService {
         UserCredit newCredits = new UserCredit(user);
         int allocation = getCycleAllocationForUser(user);
         newCredits.resetCycleCredits(allocation, LocalDateTime.now());
-        return userCreditRepository.save(newCredits);
+        userCreditRepository.persist(newCredits);
+        return newCredits;
     }
 
     private LocalDateTime getMostRecentScheduledReset() {
@@ -485,12 +493,25 @@ public class CreditService {
                     }
                 };
 
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
+        // TODO: Migration required - Spring TransactionSynchronizationManager replaced with
+        // Jakarta TransactionSynchronizationRegistry. afterCommit() maps to a Synchronization whose
+        // afterCompletion fires only on STATUS_COMMITTED, preserving the release-lock-before-Stripe
+        // ordering.
+        boolean active =
+                transactionSynchronizationRegistry != null
+                        && transactionSynchronizationRegistry.getTransactionStatus()
+                                == jakarta.transaction.Status.STATUS_ACTIVE;
+        if (active) {
+            transactionSynchronizationRegistry.registerInterposedSynchronization(
+                    new jakarta.transaction.Synchronization() {
                         @Override
-                        public void afterCommit() {
-                            reportToStripe.run();
+                        public void beforeCompletion() {}
+
+                        @Override
+                        public void afterCompletion(int status) {
+                            if (status == jakarta.transaction.Status.STATUS_COMMITTED) {
+                                reportToStripe.run();
+                            }
                         }
                     });
         } else {
@@ -544,7 +565,7 @@ public class CreditService {
         User user = userOpt.get();
         UserCredit userCredits = getOrCreateUserCredits(user);
         userCredits.addBoughtCredits(credits);
-        userCreditRepository.save(userCredits);
+        userCreditRepository.persist(userCredits);
 
         log.info(
                 "Added {} bought credits to user: {}. Total available: {}",
@@ -565,7 +586,7 @@ public class CreditService {
         userCredits.setBoughtCreditsRemaining(credits);
         userCredits.setTotalBoughtCredits(credits); // Also update total bought to match
 
-        userCreditRepository.save(userCredits);
+        userCreditRepository.persist(userCredits);
         log.info(
                 "Set bought credits for user: {} from {} to {}. Total available: {}",
                 username,
@@ -585,7 +606,7 @@ public class CreditService {
         int previousCycle = userCredits.getCycleCreditsRemaining();
         userCredits.setCycleCreditsRemaining(credits);
 
-        userCreditRepository.save(userCredits);
+        userCreditRepository.persist(userCredits);
         log.info(
                 "Set cycle credits for user: {} from {} to {}. Total available: {}",
                 username,
@@ -597,7 +618,7 @@ public class CreditService {
     public void addBoughtCreditsBySupabaseId(String supabaseId, int credits) {
         UserCredit userCredits = getUserCreditsBySupabaseIdWithValidation(supabaseId);
         userCredits.addBoughtCredits(credits);
-        userCreditRepository.save(userCredits);
+        userCreditRepository.persist(userCredits);
 
         log.info(
                 "Added {} bought credits to user with Supabase ID: {}. Total available: {}",
@@ -613,7 +634,7 @@ public class CreditService {
         userCredits.setBoughtCreditsRemaining(credits);
         userCredits.setTotalBoughtCredits(credits); // Also update total bought to match
 
-        userCreditRepository.save(userCredits);
+        userCreditRepository.persist(userCredits);
         log.info(
                 "Set bought credits for user with Supabase ID: {} from {} to {}. Total available: {}",
                 supabaseId,
@@ -628,7 +649,7 @@ public class CreditService {
         int previousCycle = userCredits.getCycleCreditsRemaining();
         userCredits.setCycleCreditsRemaining(credits);
 
-        userCreditRepository.save(userCredits);
+        userCreditRepository.persist(userCredits);
         log.info(
                 "Set cycle credits for user with Supabase ID: {} from {} to {}. Total available: {}",
                 supabaseId,
@@ -644,7 +665,7 @@ public class CreditService {
         for (UserCredit credit : creditsNeedingReset) {
             int allocation = getCycleAllocationForUser(credit.getUser());
             credit.resetCycleCredits(allocation, lastScheduledReset);
-            userCreditRepository.save(credit);
+            userCreditRepository.persist(credit);
             cycleResetCounter.increment();
         }
 
@@ -670,7 +691,7 @@ public class CreditService {
 
         for (TeamCredit credit : creditsNeedingReset) {
             credit.resetCycleCredits(totalCycleAllocation, lastScheduledReset);
-            teamCreditRepository.save(credit);
+            teamCreditRepository.persist(credit);
             cycleResetCounter.increment();
 
             log.info(
@@ -939,12 +960,12 @@ public class CreditService {
                 allocation,
                 LogRedactionUtils.redactEmail(user.getUsername()));
         credits.resetCycleCredits(allocation, LocalDateTime.now());
-        UserCredit saved = userCreditRepository.save(credits);
+        userCreditRepository.persist(credits);
         log.info(
                 "Successfully saved UserCredit for user: {} with allocation: {}",
                 LogRedactionUtils.redactEmail(user.getUsername()),
                 allocation);
-        return saved;
+        return credits;
     }
 
     /**
@@ -981,7 +1002,7 @@ public class CreditService {
         // Full reset: sets both allocation and remaining to the new amount.
         // This gives full credits on upgrade, but removes excess on downgrade.
         credits.resetCycleCredits(newAllocation, LocalDateTime.now());
-        userCreditRepository.save(credits);
+        userCreditRepository.persist(credits);
 
         log.info(
                 "Successfully refreshed credits for user {}: {} cycle credits available",
@@ -1022,7 +1043,7 @@ public class CreditService {
 
         // Full reset: sets both allocation and remaining to the new amount
         credits.resetCycleCredits(newAllocation, LocalDateTime.now());
-        userCreditRepository.save(credits);
+        userCreditRepository.persist(credits);
 
         log.info(
                 "Successfully reset cycle allocation for user ID {}: {} credits available",

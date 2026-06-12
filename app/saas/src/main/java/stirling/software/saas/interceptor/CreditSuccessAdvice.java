@@ -1,23 +1,16 @@
 package stirling.software.saas.interceptor;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.MethodParameter;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.http.server.ServletServerHttpResponse;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.CreditConsumptionResult;
@@ -27,10 +20,24 @@ import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
 import stirling.software.saas.util.CreditHeaderUtils;
 
-@RestControllerAdvice
-@Profile("saas")
+/**
+ * Consumes credits on the success path and sets the remaining-credits response headers.
+ *
+ * <p>// TODO: Migration required - was a Spring {@code @RestControllerAdvice} ({@code @Profile(
+ * "saas")}) implementing {@code ResponseBodyAdvice<Object>} with {@code supports(...)} and {@code
+ * beforeBodyWrite(...)}. Spring's {@code ResponseBodyAdvice}, {@code MethodParameter}, {@code
+ * HttpMessageConverter}, {@code ServerHttpRequest/Response} and {@code
+ * ServletServerHttpRequest/Response} have no Quarkus equivalent. Re-express the body-write
+ * interception as a JAX-RS {@code @jakarta.ws.rs.ext.Provider ContainerResponseFilter}. The original
+ * {@code supports(...)} returned true for all REST bodies. The credit-consumption logic from {@code
+ * beforeBodyWrite} is preserved verbatim in {@link #onBeforeBodyWrite(HttpServletRequest,
+ * HttpServletResponse)} below, operating on the servlet request/response that the original obtained
+ * via {@code ServletServerHttpRequest.getServletRequest()} / {@code
+ * ServletServerHttpResponse.getServletResponse()}.
+ */
+@ApplicationScoped
 @Slf4j
-public class CreditSuccessAdvice implements ResponseBodyAdvice<Object> {
+public class CreditSuccessAdvice {
 
     private static final String ATTR_ELIGIBLE = "CREDIT_ELIGIBLE";
     private static final String ATTR_APIKEY = "CREDIT_API_KEY";
@@ -63,46 +70,29 @@ public class CreditSuccessAdvice implements ResponseBodyAdvice<Object> {
                         .register(meterRegistry);
     }
 
-    @Override
-    public boolean supports(
-            MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        // Only REST bodies; this covers @ResponseBody and ResponseEntity
-        return true;
-    }
+    // TODO: Migration required - was ResponseBodyAdvice#beforeBodyWrite(Object body, MethodParameter,
+    // MediaType, Class<? extends HttpMessageConverter<?>>, ServerHttpRequest, ServerHttpResponse).
+    // Re-wire as ContainerResponseFilter.filter(ContainerRequestContext, ContainerResponseContext).
+    // The original returned `body` unchanged; this side-effects credit consumption + response
+    // headers, so the response transformation is unnecessary - only the header mutation matters.
+    public void onBeforeBodyWrite(HttpServletRequest servletReq, HttpServletResponse response) {
 
-    @Override
-    public Object beforeBodyWrite(
-            Object body,
-            MethodParameter returnType,
-            MediaType selectedContentType,
-            Class<? extends HttpMessageConverter<?>> selectedConverterType,
-            ServerHttpRequest request,
-            ServerHttpResponse response) {
-
-        if (!(request instanceof ServletServerHttpRequest)) {
-            return body;
-        }
-
-        var servletReq = ((ServletServerHttpRequest) request).getServletRequest();
         if (!Boolean.TRUE.equals(servletReq.getAttribute(ATTR_ELIGIBLE))) {
-            return body;
+            return;
         }
 
         if (servletReq.getAttribute(ATTR_CHARGED) != null) {
-            return body;
+            return;
         }
 
-        // If the handler returned an error ResponseEntity (>=400) without throwing,
+        // If the handler returned an error response (>=400) without throwing,
         // don't spend here; the error advice will decide.
-        int status = 200;
-        if (response instanceof ServletServerHttpResponse) {
-            status = ((ServletServerHttpResponse) response).getServletResponse().getStatus();
-        }
+        int status = response.getStatus();
         if (status >= 400) {
             log.debug(
                     "[CREDIT-DEBUG] CreditSuccessAdvice: Error status {} detected, skipping credit consumption",
                     status);
-            return body;
+            return;
         }
 
         var apiKey = (String) servletReq.getAttribute(ATTR_APIKEY);
@@ -125,7 +115,7 @@ public class CreditSuccessAdvice implements ResponseBodyAdvice<Object> {
             if (user == null) {
                 log.error(
                         "[CREDIT-DEBUG] CreditSuccessAdvice: Unable to resolve user - skipping credit consumption");
-                return body;
+                return;
             }
 
             // Check if user is in a non-personal team (must match UnifiedCreditInterceptor logic)
@@ -194,14 +184,13 @@ public class CreditSuccessAdvice implements ResponseBodyAdvice<Object> {
                         creditHeaderUtils.getRemainingCredits(
                                 user, creditService, teamCreditService);
                 if (remainingCredits >= 0) {
-                    response.getHeaders()
-                            .set("X-Credits-Remaining", Integer.toString(remainingCredits));
+                    response.setHeader("X-Credits-Remaining", Integer.toString(remainingCredits));
                     log.warn(
                             "[CREDIT-HEADER] Added X-Credits-Remaining header: {}",
                             remainingCredits);
                 }
                 if (creditSource != null) {
-                    response.getHeaders().set("X-Credit-Source", creditSource);
+                    response.setHeader("X-Credit-Source", creditSource);
                 }
 
                 log.info(
@@ -213,8 +202,6 @@ public class CreditSuccessAdvice implements ResponseBodyAdvice<Object> {
         } else {
             log.warn("[CREDIT-DEBUG] CreditSuccessAdvice: No apiKey attribute found");
         }
-
-        return body;
     }
 
     private String maskApiKey(String apiKey) {

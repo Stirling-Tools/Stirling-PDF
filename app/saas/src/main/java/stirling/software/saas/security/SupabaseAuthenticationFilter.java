@@ -18,26 +18,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -53,12 +47,34 @@ import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 import stirling.software.saas.util.LogRedactionUtils;
 
-/** Stateless JWT authentication filter for the saas profile. */
+/**
+ * Stateless JWT authentication filter for the saas profile.
+ *
+ * <p>// TODO: Migration required - this was a Spring {@code OncePerRequestFilter}. It must be
+ * re-registered as a JAX-RS {@code @jakarta.ws.rs.container.ContainerRequestFilter} with
+ * {@code @jakarta.ws.rs.ext.Provider} (or a {@code jakarta.servlet.Filter}) and ordered before the
+ * Quarkus OIDC/auth processing. The {@code doFilterInternal}/{@code shouldNotFilter} servlet
+ * signatures are retained here; the request/response handling and entry-point error path
+ * (previously Spring's {@code BearerTokenAuthenticationEntryPoint}) must be reattached during that
+ * conversion. JWT decoding/validation (previously Spring {@code JwtDecoder}/{@code NimbusJwtDecoder})
+ * must move to Quarkus OIDC; the {@link JwtDecoder} functional interface below is a placeholder so
+ * the decode call site keeps compiling.
+ */
 @Slf4j
-public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
+public class SupabaseAuthenticationFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String ANON_PREFIX = "anon_";
+
+    /**
+     * // TODO: Migration required - placeholder for Spring's {@code
+     * org.springframework.security.oauth2.jwt.JwtDecoder}. Replace with Quarkus OIDC token parsing
+     * that yields a verified {@link JsonWebToken} (or throws on invalid token).
+     */
+    @FunctionalInterface
+    public interface JwtDecoder {
+        JsonWebToken decode(String token);
+    }
 
     private final TeamService teamService;
     private final UserService userService;
@@ -66,8 +82,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     private final stirling.software.saas.service.CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
-    private final AuthenticationEntryPoint authenticationEntryPoint =
-            new BearerTokenAuthenticationEntryPoint();
+
+    // TODO: Migration required - the Spring AuthenticationEntryPoint
+    // (BearerTokenAuthenticationEntryPoint) that wrote the 401 challenge has no Quarkus equivalent
+    // here. When converting to a JAX-RS @Provider filter, emit the 401 / WWW-Authenticate response
+    // directly (or delegate to Quarkus OIDC) in place of authenticationEntryPoint.commence(...).
 
     public SupabaseAuthenticationFilter(
             TeamService teamService,
@@ -84,7 +103,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         this.jwtDecoder = jwtDecoder;
     }
 
-    @Override
+    // TODO: Migration required - this retains the original OncePerRequestFilter.doFilterInternal
+    // behavior. Wire it into a JAX-RS ContainerRequestFilter / servlet Filter. The error branch
+    // previously called authenticationEntryPoint.commence(request, response, e); emit the 401
+    // response directly during that conversion.
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -113,14 +135,16 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             processJwtAuthentication(request);
         } catch (AuthenticationException e) {
             SecurityContextHolder.clearContext();
-            authenticationEntryPoint.commence(request, response, e);
+            // TODO: Migration required - was authenticationEntryPoint.commence(request, response, e)
+            // (Spring BearerTokenAuthenticationEntryPoint). Emit the 401 challenge response here when
+            // converting to a JAX-RS @Provider filter.
+            log.debug("JWT authentication failed: {}", e.getMessage());
             return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
@@ -146,11 +170,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(BEARER_PREFIX.length()).trim();
 
         try {
-            Jwt jwt = jwtDecoder.decode(token);
+            JsonWebToken jwt = jwtDecoder.decode(token);
             String supabaseId = jwt.getSubject();
 
             if (!validateRequiredClaims(jwt)) {
-                throw new InvalidBearerTokenException("Invalid JWT: missing required claims");
+                throw new AuthenticationFailureException("Invalid JWT: missing required claims");
             }
 
             User user = getOrCreateUser(jwt);
@@ -170,14 +194,19 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                         LogRedactionUtils.redactSupabaseId(supabaseId),
                         LogRedactionUtils.redactEmail(user.getUsername()));
             }
-        } catch (JwtException e) {
-            throw new InvalidBearerTokenException("Invalid JWT", e);
+        } catch (AuthenticationException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            // TODO: Migration required - previously caught Spring's JwtException and rethrew
+            // InvalidBearerTokenException("Invalid JWT", e). Adjust to the exception type thrown by
+            // the Quarkus OIDC token parser.
+            throw new AuthenticationFailureException("Invalid JWT", e);
         }
     }
 
-    private boolean validateRequiredClaims(Jwt jwt) {
+    private boolean validateRequiredClaims(JsonWebToken jwt) {
         boolean isAnonymous = isAnonymous(jwt);
-        if (!isAnonymous && isBlank(jwt.getClaimAsString("email"))) {
+        if (!isAnonymous && isBlank(claimAsString(jwt, "email"))) {
             return false;
         }
 
@@ -185,18 +214,18 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         for (String claim : requiredClaims) {
             switch (claim) {
                 case "iss", "sub", "role", "aal", "session_id" -> {
-                    if (isBlank(jwt.getClaimAsString(claim))) {
+                    if (isBlank(claimAsString(jwt, claim))) {
                         return false;
                     }
                 }
                 case "aud" -> {
-                    List<String> audience = jwt.getClaimAsStringList(claim);
+                    List<String> audience = claimAsStringList(jwt, claim);
                     if (audience == null || audience.isEmpty()) {
                         return false;
                     }
                 }
                 case "exp", "iat" -> {
-                    Instant timestamp = jwt.getClaimAsInstant(claim);
+                    Instant timestamp = claimAsInstant(jwt, claim);
                     if (timestamp == null) {
                         return false;
                     }
@@ -206,10 +235,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 
-    private User getOrCreateUser(Jwt jwt) throws AuthenticationException {
+    private User getOrCreateUser(JsonWebToken jwt) throws AuthenticationException {
         UUID supabaseId = UUID.fromString(jwt.getSubject());
-        String email = jwt.getClaimAsString("email");
-        Object metaObj = jwt.getClaims().get("app_metadata");
+        String email = claimAsString(jwt, "email");
+        Object metaObj = jwt.getClaim("app_metadata");
         @SuppressWarnings("unchecked")
         Map<String, Object> appMetadata =
                 (metaObj instanceof Map<?, ?>) ? (Map<String, Object>) metaObj : null;
@@ -232,11 +261,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
             return createUser(jwt, supabaseId, email, appMetadata);
         } catch (UserNotFoundException e) {
-            throw new InvalidBearerTokenException("User not found", e);
-        } catch (InvalidBearerTokenException e) {
+            throw new AuthenticationFailureException("User not found", e);
+        } catch (AuthenticationException e) {
             throw e;
         } catch (IllegalArgumentException e) {
-            throw new InvalidBearerTokenException(
+            throw new AuthenticationFailureException(
                     "Invalid authentication method: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Failed to process user authentication for {}", supabaseId, e);
@@ -246,7 +275,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
     /** Promote a local anonymous user to the real provider+email carried on the JWT. */
     @Transactional
-    protected User upgradeAnonymousUser(User user, SupabaseUser supabaseUser, Jwt jwt) {
+    protected User upgradeAnonymousUser(User user, SupabaseUser supabaseUser, JsonWebToken jwt) {
         AuthenticationType newType = resolveUpgradedAuthType(jwt);
         log.info(
                 "Upgrading anonymous user {} to {} (Supabase email: {})",
@@ -260,7 +289,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         }
         try {
             return userService.saveUser(user);
-        } catch (DataIntegrityViolationException e) {
+        } catch (PersistenceException e) {
+            // TODO: Migration required - was Spring's DataIntegrityViolationException (email-collision
+            // race). jakarta.persistence.PersistenceException is broader; narrow to the
+            // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
                     user.getId(),
@@ -272,9 +304,9 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /** Maps Supabase's {@code amr} claim to an {@link AuthenticationType}; defaults to WEB. */
-    private AuthenticationType resolveUpgradedAuthType(Jwt jwt) {
+    private AuthenticationType resolveUpgradedAuthType(JsonWebToken jwt) {
         try {
-            Object raw = jwt.getClaims().get("amr");
+            Object raw = jwt.getClaim("amr");
             if (!(raw instanceof List<?> amrList) || amrList.isEmpty()) {
                 return WEB;
             }
@@ -304,7 +336,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
     @Transactional
     protected User createUser(
-            Jwt jwt, UUID supabaseId, String email, Map<String, Object> appMetadata) {
+            JsonWebToken jwt, UUID supabaseId, String email, Map<String, Object> appMetadata) {
 
         User newUser = new User();
         AuthenticationType authenticationType = WEB;
@@ -350,8 +382,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         try {
             boolean isAnon = isAnonymous(jwt);
             supabaseUserService.createSupabaseUser(supabaseId, isAnon ? null : email, isAnon);
-        } catch (DataIntegrityViolationException ignored) {
+        } catch (PersistenceException ignored) {
             // Concurrent creation; fall through, the row exists.
+            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to the
+            // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
         } catch (Exception e) {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
         }
@@ -360,8 +394,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         boolean weCreatedThisUser = true;
         try {
             savedUser = userService.saveUser(newUser);
-        } catch (DataIntegrityViolationException dup) {
+        } catch (PersistenceException dup) {
             // Parallel filter won the race; fetch the winning row.
+            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to the
+            // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
             weCreatedThisUser = false;
             savedUser =
                     userService
@@ -412,7 +448,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
         Optional<User> user = userService.getUserByApiKey(apiKey);
         if (user.isEmpty()) {
-            throw new InvalidBearerTokenException("Invalid API Key.");
+            throw new AuthenticationFailureException("Invalid API Key.");
         }
 
         userService.trackApiKeyFirstUse(user.get());
@@ -423,7 +459,42 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 
-    private static boolean isAnonymous(Jwt jwt) {
-        return Boolean.TRUE.equals(jwt.getClaimAsBoolean("is_anonymous"));
+    private static boolean isAnonymous(JsonWebToken jwt) {
+        return Boolean.TRUE.equals(jwt.<Boolean>getClaim("is_anonymous"));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // TODO: Migration required - claim accessor adapters. Spring's Jwt exposed typed claim getters
+    // (getClaimAsString/getClaimAsStringList/getClaimAsInstant/getClaimAsBoolean). MicroProfile
+    // JsonWebToken only exposes a generic getClaim(name); these helpers reproduce the original typed
+    // semantics so the validation/user-creation logic is preserved unchanged.
+    // ---------------------------------------------------------------------------------------------
+
+    private static String claimAsString(JsonWebToken jwt, String name) {
+        Object value = jwt.getClaim(name);
+        return value == null ? null : value.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> claimAsStringList(JsonWebToken jwt, String name) {
+        Object value = jwt.getClaim(name);
+        if (value instanceof List<?> list) {
+            return (List<String>) list;
+        }
+        if (value instanceof String s) {
+            return List.of(s);
+        }
+        return null;
+    }
+
+    private static Instant claimAsInstant(JsonWebToken jwt, String name) {
+        Object value = jwt.getClaim(name);
+        if (value instanceof Number n) {
+            return Instant.ofEpochSecond(n.longValue());
+        }
+        if (value instanceof Instant i) {
+            return i;
+        }
+        return null;
     }
 }

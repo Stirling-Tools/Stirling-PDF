@@ -1,7 +1,7 @@
 package stirling.software.SPDF.config;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
@@ -23,9 +23,16 @@ class AppUpdateService {
         this.showAdmin = showAdmin;
     }
 
+    // MIGRATION: Spring's request-scoped boolean bean -> @Dependent. A CDI normal scope
+    // (@RequestScoped) requires a client proxy, which is impossible for a primitive producer
+    // ("Producer method for a normal scoped bean must not have a primitive type"). @Dependent
+    // recomputes the value at each injection point, the closest behaviour to per-request
+    // evaluation.
+    // TODO: Migration required - if true per-HTTP-request semantics are needed, wrap the value in a
+    // @RequestScoped holder object instead of producing a bare boolean.
     @Produces
     @Named("shouldShow")
-    @RequestScoped
+    @Dependent
     public boolean shouldShow() {
         boolean showUpdate = applicationProperties.getSystem().isShowUpdate();
         boolean showAdminResult =

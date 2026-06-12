@@ -2,8 +2,9 @@ package stirling.software.saas.util;
 
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,8 @@ import stirling.software.saas.service.TeamCreditService;
  * Resolves the user's remaining credit balance. Uses the team pool for non-personal team members,
  * otherwise the user's individual credits (looked up by Supabase ID or API key).
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class CreditHeaderUtils {

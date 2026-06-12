@@ -4,10 +4,11 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -21,8 +22,8 @@ import stirling.software.saas.model.ProcessingErrorType;
 import stirling.software.saas.model.UserErrorTracker;
 import stirling.software.saas.repository.UserErrorTrackerRepository;
 
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 @Transactional
 public class ErrorTrackingService {
@@ -135,7 +136,7 @@ public class ErrorTrackingService {
         UserErrorTracker tracker = getOrCreateErrorTracker(user, endpoint);
 
         tracker.recordProcessingError(creditsProperties.getErrors().getTtlMinutes());
-        errorTrackerRepository.save(tracker);
+        errorTrackerRepository.persist(tracker);
 
         boolean shouldCharge =
                 tracker.shouldChargeForProcessingError(
@@ -164,7 +165,7 @@ public class ErrorTrackingService {
                 tracker.setResetAfter(
                         LocalDateTime.now()
                                 .plusMinutes(creditsProperties.getErrors().getTtlMinutes()));
-                errorTrackerRepository.save(tracker);
+                errorTrackerRepository.persist(tracker);
                 log.debug(
                         "Persisted error threshold crossing to DB for API key: {}, endpoint: {}",
                         maskApiKey(apiKey),
@@ -222,7 +223,7 @@ public class ErrorTrackingService {
         // Reset if expired
         if (tracker.isExpired()) {
             tracker.resetErrorCount(creditsProperties.getErrors().getTtlMinutes());
-            errorTrackerRepository.save(tracker);
+            errorTrackerRepository.persist(tracker);
             return new ErrorInfo(
                     0, creditsProperties.getErrors().getFreeProcessingErrors(), false, null);
         }
@@ -256,7 +257,7 @@ public class ErrorTrackingService {
     }
 
     /** Clean up expired error trackers every hour */
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 * * * ?")
     public void cleanupExpiredErrorTrackers() {
         try {
             int deleted = errorTrackerRepository.deleteExpiredErrorTrackers(LocalDateTime.now());
