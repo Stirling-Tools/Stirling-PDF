@@ -7,18 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.springframework.core.io.Resource;
-import org.springframework.security.authentication.AuthenticationTrustResolver;
-import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
-import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
-
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -29,6 +22,7 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.UrlUtils;
@@ -36,13 +30,19 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
-import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.service.AiUserDataService;
 
+// TODO: Migration required - this class was a Spring Security
+// SimpleUrlLogoutSuccessHandler wired into the Spring Security logout filter chain.
+// Quarkus has no LogoutSuccessHandler equivalent. The logout endpoint must be rehosted
+// (e.g. a JAX-RS resource or jakarta.servlet endpoint) that invokes onLogoutSuccess(...)
+// after the Quarkus security/session logout has run. Configure HTTP auth/logout policies
+// via quarkus.http.auth.* and quarkus-oidc (for OAuth2/OIDC logout).
 @Slf4j
-@RequiredArgsConstructor
-public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
+@ApplicationScoped
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class CustomLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
 
@@ -54,13 +54,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     private final AiUserDataService aiUserDataService;
 
-    private static final AuthenticationTrustResolver TRUST_RESOLVER =
-            new AuthenticationTrustResolverImpl();
+    // TODO: Migration required - Spring's AuthenticationTrustResolver
+    // (used to filter out the anonymous principal) has no direct Quarkus equivalent.
+    // Under Quarkus, an unauthenticated request yields an anonymous SecurityIdentity
+    // (SecurityIdentity#isAnonymous()); use that check in resolveUsername(...) instead.
 
-    @Override
     @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
     public void onLogoutSuccess(
-            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            HttpServletRequest request, HttpServletResponse response, Object authentication)
             throws IOException {
 
         String username = resolveUsername(request, authentication);
@@ -70,75 +71,80 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
         if (!response.isCommitted()) {
             if (authentication != null) {
-                if (authentication instanceof Saml2Authentication samlAuthentication) {
-                    // Handle SAML2 logout redirection
-                    getRedirect_saml2(request, response, samlAuthentication);
-                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
-                    // Handle OAuth2 logout redirection
-                    getRedirect_oauth2(request, response, oAuthToken);
-                } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
-                    // Handle Username/Password logout
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                } else {
-                    // Handle unknown authentication types
-                    log.error(
-                            "Authentication class unknown: {}",
-                            authentication.getClass().getSimpleName());
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                }
+                // TODO: Migration required - the original code branched on the Spring
+                // Authentication implementation type to choose a logout redirect:
+                //   Saml2Authentication            -> getRedirect_saml2(...)
+                //   OAuth2AuthenticationToken      -> getRedirect_oauth2(...)
+                //   UsernamePasswordAuthentication -> redirect to LOGOUT_PATH
+                //   unknown                        -> log + redirect to LOGOUT_PATH
+                // Under Quarkus the authentication mechanism is identified differently
+                // (SecurityIdentity attributes / quarkus-oidc vs form auth, or the IdP
+                // recorded at login). Re-wire this dispatch to invoke getRedirect_saml2 /
+                // getRedirect_oauth2 once the Quarkus identity model is in place. Until
+                // then we fall through to the default login-page redirect to preserve
+                // safe behavior (a single redirect, never IdP logout with a null subject).
+                response.sendRedirect(LOGOUT_PATH);
             } else {
                 if (jwtService != null) {
                     String token = jwtService.extractToken(request);
                     if (token != null && !token.isBlank()) {
-                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                        response.sendRedirect(LOGOUT_PATH);
                         return;
                     }
                 }
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
-                getRedirectStrategy().sendRedirect(request, response, path);
+                response.sendRedirect(path);
             }
         }
     }
 
     /**
      * Pick the right name to purge under. JWT cookie wins if present and parseable; we fall through
-     * to whatever Spring handed us only when there's no cookie. Spring's anonymous principal is
-     * filtered out via {@link AuthenticationTrustResolver} so we don't purge under that
-     * pseudo-user.
+     * to whatever the authentication handed us only when there's no cookie. The anonymous principal
+     * is filtered out so we don't purge under that pseudo-user.
      */
-    private String resolveUsername(HttpServletRequest request, Authentication authentication) {
+    private String resolveUsername(HttpServletRequest request, Object authentication) {
         if (jwtService != null) {
             String fromCookie = jwtService.extractUsernameFromRequestAllowExpired(request);
             if (fromCookie != null) {
                 return fromCookie;
             }
         }
-        if (authentication == null || TRUST_RESOLVER.isAnonymous(authentication)) {
+        // TODO: Migration required - replace the Spring AuthenticationTrustResolver
+        // anonymous check and Authentication#getName() with SecurityIdentity:
+        //   if (identity == null || identity.isAnonymous()) return null;
+        //   String name = identity.getPrincipal().getName();
+        if (authentication == null) {
             return null;
         }
-        String name = authentication.getName();
-        return (name != null && !name.isBlank()) ? name : null;
+        return null;
     }
 
     // Redirect for SAML2 authentication logout
+    // TODO: Migration required - parameter was Spring Saml2Authentication; the SAML2
+    // principal (CustomSaml2AuthenticatedPrincipal) must be recovered from the Quarkus
+    // identity once the SAML SP is rehosted on OpenSAML 5 (see SAML2 migration plan).
     private void getRedirect_saml2(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Saml2Authentication samlAuthentication)
+            HttpServletRequest request, HttpServletResponse response, Object samlAuthentication)
             throws IOException {
 
         SAML2 samlConf = securityProperties.getSaml2();
         String registrationId = samlConf.getRegistrationId();
 
-        CustomSaml2AuthenticatedPrincipal principal =
-                (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
-
-        String nameIdValue = principal.name();
+        // TODO: Migration required - extract the SAML NameID from the Quarkus identity.
+        // Original:
+        //   CustomSaml2AuthenticatedPrincipal principal =
+        //       (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
+        //   String nameIdValue = principal.name();
+        String nameIdValue = null;
 
         try {
             // Read certificate from the resource
             Resource certificateResource = samlConf.getSpCert();
+            // TODO: Migration required - CertificateUtils still declares
+            // org.springframework.core.io.Resource parameters; once it is migrated to
+            // stirling.software.common.model.io.Resource these calls compile directly.
             X509Certificate certificate = CertificateUtils.readCertificate(certificateResource);
 
             List<X509Certificate> certificates = new ArrayList<>();
@@ -166,22 +172,26 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     samlConf.getProvider(),
                     nameIdValue,
                     e);
-            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+            response.sendRedirect(LOGOUT_PATH);
         }
     }
 
     // Redirect for OAuth2 authentication logout
+    // TODO: Migration required - parameter was Spring OAuth2AuthenticationToken; under
+    // quarkus-oidc the authorized client registration id must be obtained from the OIDC
+    // configuration / SecurityIdentity rather than the token.
     private void getRedirect_oauth2(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            OAuth2AuthenticationToken oAuthToken)
+            HttpServletRequest request, HttpServletResponse response, Object oAuthToken)
             throws IOException {
         String registrationId;
         OAUTH2 oauth = securityProperties.getOauth2();
         String path = checkForErrors(request);
 
         String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
-        registrationId = oAuthToken.getAuthorizedClientRegistrationId();
+        // TODO: Migration required - original:
+        //   registrationId = oAuthToken.getAuthorizedClientRegistrationId();
+        // Resolve the OIDC provider id from quarkus-oidc config / SecurityIdentity instead.
+        registrationId = "";
 
         // Redirect based on OAuth2 provider
         switch (registrationId.toLowerCase(Locale.ROOT)) {

@@ -6,14 +6,14 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.jboss.resteasy.reactive.RestForm;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -39,8 +39,8 @@ import stirling.software.common.util.WebResponseUtils;
  */
 @Slf4j
 @Hidden
-@RestController
-@RequestMapping("/api/v1/ai/tools")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/ai/tools")
 @RequiredArgsConstructor
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class CreatePdfAgentController {
@@ -70,18 +70,17 @@ public class CreatePdfAgentController {
         return false;
     }
 
-    @PostMapping(
-            value = "/create-pdf-from-html-agent",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @jakarta.ws.rs.Path("/create-pdf-from-html-agent")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Convert AI-generated HTML to a PDF",
             description =
                     "Accepts an HTML document as a plain-text parameter and returns a PDF."
                             + " This endpoint is dispatched by the AI workflow orchestrator as a"
                             + " plan step; it is not intended for direct client use.")
-    public ResponseEntity<Resource> createPdfFromHtml(
-            @RequestParam("htmlContent") String htmlContent,
-            @RequestParam("filename") String filename)
+    public Response createPdfFromHtml(
+            @RestForm("htmlContent") String htmlContent, @RestForm("filename") String filename)
             throws Exception {
 
         log.info(

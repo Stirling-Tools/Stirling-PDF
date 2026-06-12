@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +24,7 @@ import stirling.software.proprietary.security.util.Base32Codec;
  * <p>This service handles secret generation, code validation across time steps, and building
  * otpauth:// URIs to provision authenticator apps.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class TotpService {
 

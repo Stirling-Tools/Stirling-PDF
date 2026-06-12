@@ -11,6 +11,17 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
+// TODO: Migration required - Spring Security glue. This filter populates the
+// Spring SecurityContextHolder, which has no Quarkus equivalent. In Quarkus the
+// authenticated principal is exposed as io.quarkus.security.identity.SecurityIdentity
+// and is produced by an IdentityProvider / SecurityIdentityAugmentor, NOT written
+// imperatively from a servlet filter. The remaining org.springframework.security.*
+// imports below stay only because the collaborators (JwtServiceInterface,
+// CustomUserDetailsService, UserService, JwtAuthenticationEntryPoint,
+// ApiKeyAuthenticationToken) still expose Spring Security types and have not yet
+// been migrated. Once those are ported to Quarkus security, this filter should
+// register the user via a custom IdentityProvider keyed off the validated JWT claims
+// (prefer quarkus-smallrye-jwt for bearer validation) instead of UsernamePasswordAuthenticationToken.
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -19,14 +30,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -39,20 +53,32 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
+// TODO: Migration required - registration/ordering. As a Spring OncePerRequestFilter
+// this ran once per request at a Spring-defined position in the security filter chain.
+// On Quarkus (quarkus-undertow) a jakarta.servlet.Filter needs explicit registration
+// and ordering (e.g. a @WebFilter with urlPatterns, or a FilterRegistrationBean-style
+// producer). Confirm this filter is registered ahead of the resource layer and that the
+// once-per-request semantics are preserved (Undertow does not re-enter servlet filters
+// per forward by default, so the OncePerRequestFilter base is not strictly required).
 @Slf4j
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+@ApplicationScoped
+public class JwtAuthenticationFilter implements Filter {
 
-    private final JwtServiceInterface jwtService;
-    private final UserService userService;
-    private final CustomUserDetailsService userDetailsService;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final ApplicationProperties.Security securityProperties;
+    @Inject JwtServiceInterface jwtService;
+    @Inject UserService userService;
+    @Inject CustomUserDetailsService userDetailsService;
+    // TODO: Migration required - AuthenticationEntryPoint is a Spring Security type.
+    // JwtAuthenticationEntryPoint is still a Spring @Component; once migrated this should
+    // be injected as a plain CDI bean (it only writes a 401 JSON/error to the response).
+    @Inject AuthenticationEntryPoint authenticationEntryPoint;
+    @Inject ApplicationProperties.Security securityProperties;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+            FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
         if (!jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
             return;
@@ -124,6 +150,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
+        // TODO: Migration required - SecurityContextHolder has no Quarkus equivalent.
+        // This reads/writes the Spring thread-local security context. On Quarkus, the
+        // identity should come from SecurityIdentity (injected) and API-key auth should be
+        // handled by a custom IdentityProvider rather than imperatively setting the context.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -165,6 +195,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws SQLException, UnsupportedProviderException {
         String username = claims.get("sub").toString();
 
+        // TODO: Migration required - SecurityContextHolder/UsernamePasswordAuthenticationToken.
+        // Building a Spring authentication token and pushing it into the thread-local context
+        // must be replaced by producing a Quarkus SecurityIdentity (via IdentityProvider/
+        // SecurityIdentityAugmentor) from the validated JWT claims. The user-loading logic
+        // (userDetailsService.loadUserByUsername) can be kept as a plain service call.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             processUserAuthenticationType(claims, username);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);

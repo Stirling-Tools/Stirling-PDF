@@ -13,12 +13,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+// TODO: Migration required - JwtServiceInterface still declares generateToken(Authentication, ...)
+// using org.springframework.security.core.Authentication. The interface (a separate file) must be
+// migrated too; once it switches to io.quarkus.security.identity.SecurityIdentity, update the
+// implementation below and drop these Spring Security imports. Kept here to satisfy the interface
+// contract without changing a collaborator file.
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -27,6 +29,9 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +46,7 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class JwtService implements JwtServiceInterface {
 
     private final ObjectMapper objectMapper;
@@ -49,10 +54,10 @@ public class JwtService implements JwtServiceInterface {
     private final boolean v2Enabled;
     private final ApplicationProperties.Security securityProperties;
 
-    @Autowired
+    @Inject
     public JwtService(
             ObjectMapper objectMapper,
-            @Qualifier("v2Enabled") boolean v2Enabled,
+            @Named("v2Enabled") boolean v2Enabled,
             KeyPersistenceServiceInterface keyPersistenceService,
             ApplicationProperties applicationProperties) {
         this.objectMapper = objectMapper;

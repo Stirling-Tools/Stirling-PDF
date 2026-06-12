@@ -7,8 +7,10 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Disposes;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,7 @@ import stirling.software.proprietary.storage.provider.S3StorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
-@Configuration
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class StorageProviderConfig {
@@ -32,7 +34,8 @@ public class StorageProviderConfig {
     private final StoredFileBlobRepository storedFileBlobRepository;
     private final LicenseKeyChecker licenseKeyChecker;
 
-    @Bean(destroyMethod = "close")
+    @Produces
+    @Singleton
     public StorageProvider storageProvider() {
         boolean storageEnabled = applicationProperties.getStorage().isEnabled();
         String providerName =
@@ -79,6 +82,16 @@ public class StorageProviderConfig {
             }
         }
         return new LocalStorageProvider(basePath);
+    }
+
+    // Replaces Spring's @Bean(destroyMethod = "close"): CDI invokes this disposer
+    // when the application-scoped StorageProvider is destroyed.
+    void closeStorageProvider(@Disposes StorageProvider storageProvider) {
+        try {
+            storageProvider.close();
+        } catch (Exception e) {
+            log.warn("Failed to close storage provider", e);
+        }
     }
 
     private S3StorageProvider buildS3Provider(ApplicationProperties.Storage.S3 cfg) {

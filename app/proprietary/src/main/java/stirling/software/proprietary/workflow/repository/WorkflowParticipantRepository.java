@@ -3,73 +3,101 @@ package stirling.software.proprietary.workflow.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.panache.common.Parameters;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 
-@Repository
-public interface WorkflowParticipantRepository extends JpaRepository<WorkflowParticipant, Long> {
+/**
+ * Quarkus Panache repository for {@link WorkflowParticipant}.
+ *
+ * <p>Migrated from a Spring Data {@code JpaRepository<WorkflowParticipant, Long>}. Derived finders
+ * are reimplemented as Panache queries; the {@code @Query}-annotated methods preserve their original
+ * JPQL strings via {@code find(...)} / {@code update(...)} / {@code delete(...)}.
+ */
+@ApplicationScoped
+public class WorkflowParticipantRepository implements PanacheRepository<WorkflowParticipant> {
 
     /** Find participant by share token */
-    Optional<WorkflowParticipant> findByShareToken(String shareToken);
+    public Optional<WorkflowParticipant> findByShareToken(String shareToken) {
+        return find("shareToken", shareToken).firstResultOptional();
+    }
 
     /** Find all participants in a workflow session */
-    List<WorkflowParticipant> findByWorkflowSession(WorkflowSession session);
+    public List<WorkflowParticipant> findByWorkflowSession(WorkflowSession session) {
+        return list("workflowSession", session);
+    }
 
     /** Find participant by session and user */
-    Optional<WorkflowParticipant> findByWorkflowSessionAndUser(WorkflowSession session, User user);
+    public Optional<WorkflowParticipant> findByWorkflowSessionAndUser(
+            WorkflowSession session, User user) {
+        return find("workflowSession = ?1 and user = ?2", session, user).firstResultOptional();
+    }
 
     /** Find participant by session and email */
-    Optional<WorkflowParticipant> findByWorkflowSessionAndEmail(
-            WorkflowSession session, String email);
+    public Optional<WorkflowParticipant> findByWorkflowSessionAndEmail(
+            WorkflowSession session, String email) {
+        return find("workflowSession = ?1 and email = ?2", session, email).firstResultOptional();
+    }
 
     /** Find all participants with a specific status in a session */
-    List<WorkflowParticipant> findByWorkflowSessionAndStatus(
-            WorkflowSession session, ParticipantStatus status);
+    public List<WorkflowParticipant> findByWorkflowSessionAndStatus(
+            WorkflowSession session, ParticipantStatus status) {
+        return list("workflowSession = ?1 and status = ?2", session, status);
+    }
 
     /** Find all sessions where a user is a participant */
-    List<WorkflowParticipant> findByUserOrderByLastUpdatedDesc(User user);
+    public List<WorkflowParticipant> findByUserOrderByLastUpdatedDesc(User user) {
+        return list("user = ?1 order by lastUpdated desc", user);
+    }
 
     /** Find all sessions where an email is a participant */
-    List<WorkflowParticipant> findByEmailOrderByLastUpdatedDesc(String email);
+    public List<WorkflowParticipant> findByEmailOrderByLastUpdatedDesc(String email) {
+        return list("email = ?1 order by lastUpdated desc", email);
+    }
 
     /** Check if a participant exists by share token */
-    boolean existsByShareToken(String shareToken);
+    public boolean existsByShareToken(String shareToken) {
+        return count("shareToken", shareToken) > 0;
+    }
 
     /** Count participants in a session by status */
-    long countByWorkflowSessionAndStatus(WorkflowSession session, ParticipantStatus status);
+    public long countByWorkflowSessionAndStatus(WorkflowSession session, ParticipantStatus status) {
+        return count("workflowSession = ?1 and status = ?2", session, status);
+    }
 
     /** Find expired participants that haven't completed */
-    @Query(
-            "SELECT p FROM WorkflowParticipant p WHERE p.expiresAt < CURRENT_TIMESTAMP AND p.status NOT IN ('SIGNED', 'DECLINED')")
-    List<WorkflowParticipant> findExpiredIncompleteParticipants();
+    public List<WorkflowParticipant> findExpiredIncompleteParticipants() {
+        return list(
+                "expiresAt < CURRENT_TIMESTAMP AND status NOT IN ('SIGNED', 'DECLINED')");
+    }
 
     /** Find all participants pending notification */
-    @Query(
-            "SELECT p FROM WorkflowParticipant p WHERE p.status = 'PENDING' AND p.workflowSession.status = 'IN_PROGRESS'")
-    List<WorkflowParticipant> findPendingNotifications();
+    public List<WorkflowParticipant> findPendingNotifications() {
+        return list("status = 'PENDING' AND workflowSession.status = 'IN_PROGRESS'");
+    }
 
     /** Delete participant by ID and session owner (for authorization) */
-    @Query(
-            "DELETE FROM WorkflowParticipant p WHERE p.id = :participantId AND p.workflowSession.owner = :owner")
-    void deleteByIdAndSessionOwner(
-            @Param("participantId") Long participantId, @Param("owner") User owner);
+    @Transactional
+    public void deleteByIdAndSessionOwner(Long participantId, User owner) {
+        delete(
+                "id = :participantId AND workflowSession.owner = :owner",
+                Parameters.with("participantId", participantId).and("owner", owner));
+    }
 
     /**
      * Null out the user reference for all participants linked to the given user. Used during user
      * deletion to preserve workflow audit history while removing the personal data link.
      * Participants in sessions owned by others are retained but de-linked from the deleted account.
      */
-    @Modifying
     @Transactional
-    @Query("UPDATE WorkflowParticipant wp SET wp.user = null WHERE wp.user = :user")
-    void clearUserReferences(@Param("user") User user);
+    public void clearUserReferences(User user) {
+        update("user = null WHERE user = :user", Parameters.with("user", user));
+    }
 }

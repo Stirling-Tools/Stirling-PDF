@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
-import lombok.RequiredArgsConstructor;
+import io.quarkus.arc.All;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.input.InputSource;
@@ -30,12 +31,17 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
  * yields {@link ResolvedInput units of work}, each carrying its own completion hook.
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
+@ApplicationScoped
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;
     private final List<InputSource> inputSources;
+
+    @jakarta.inject.Inject
+    public PolicyRunner(PolicyEngine policyEngine, @All List<InputSource> inputSources) {
+        this.policyEngine = policyEngine;
+        this.inputSources = inputSources;
+    }
 
     /**
      * Run a policy by pulling from every source it configures: each source yields zero or more

@@ -3,10 +3,12 @@ package stirling.software.proprietary.storage.config;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import jakarta.annotation.PostConstruct;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +23,7 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
  * that any S3-backed configuration ({@code storage.provider=s3} or {@code
  * cluster.artifactStore=s3}) is accompanied by a valid Pro / Enterprise license.
  */
-@Configuration
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class ClusterStorageGate {
@@ -29,13 +31,16 @@ public class ClusterStorageGate {
     private final ApplicationProperties applicationProperties;
     private final LicenseKeyChecker licenseKeyChecker;
 
-    @Value("${cluster.enabled:false}")
-    private boolean clusterEnabled;
+    @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+    boolean clusterEnabled;
 
-    @Value("${cluster.artifactStore:local}")
-    private String clusterArtifactStore;
+    @ConfigProperty(name = "cluster.artifactStore", defaultValue = "local")
+    String clusterArtifactStore;
 
-    @PostConstruct
+    void onStart(@Observes StartupEvent event) {
+        validate();
+    }
+
     void validate() {
         // License enforcement runs regardless of cluster.enabled: even a single-node setup that
         // selects a remote backend must hold a Pro or higher license.

@@ -2,8 +2,6 @@ package stirling.software.proprietary.model.api.audit;
 
 import java.time.LocalDate;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.AllArgsConstructor;
@@ -20,11 +18,12 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 @EqualsAndHashCode
 public class AuditDateExportRequest {
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    // TODO: Migration required - Spring @DateTimeFormat(iso = ISO.DATE) removed; JAX-RS binds
+    // LocalDate via its default ISO-8601 (yyyy-MM-dd) ParamConverter, so ISO.DATE form values
+    // still bind. If a non-ISO format is ever needed, register a jakarta.ws.rs.ext.ParamConverter.
     @Schema(description = "Start date for the export range", example = "2025-01-01")
     private LocalDate startDate;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @Schema(description = "End date for the export range", example = "2025-12-31")
     private LocalDate endDate;
 }

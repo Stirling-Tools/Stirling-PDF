@@ -2,7 +2,7 @@ package stirling.software.proprietary.service;
 
 import java.io.IOException;
 
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Produces stable identifiers for uploaded files. The identifier is opaque to the AI engine and

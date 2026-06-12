@@ -7,13 +7,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -22,18 +22,27 @@ import stirling.software.proprietary.security.database.repository.SessionReposit
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
-@Component
+// TODO: Migration required - this class implements Spring Security's SessionRegistry
+//   (org.springframework.security.core.session.SessionRegistry) and exposes SessionInformation,
+//   UserDetails and OAuth2User from spring-security. Quarkus has no equivalent session-registry
+//   abstraction. The Spring Security imports below are kept ONLY because un-migrated collaborators
+//   (UserAuthenticationFilter, UserService, SessionRegistryConfig) still consume this interface and
+//   its return types. Once those collaborators are migrated to Quarkus security
+//   (io.quarkus.security.identity.SecurityIdentity), this class should drop the SessionRegistry
+//   contract and the spring-security types, replacing them with a plain CDI service over the
+//   SessionEntity table.
+@ApplicationScoped
 @RequiredArgsConstructor
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
 
-    @Value("${server.servlet.session.timeout:30m}")
-    private Duration defaultMaxInactiveInterval;
+    @ConfigProperty(name = "server.servlet.session.timeout", defaultValue = "30m")
+    Duration defaultMaxInactiveInterval;
 
     @Override
     public List<Object> getAllPrincipals() {
-        List<SessionEntity> sessions = sessionRepository.findAll();
+        List<SessionEntity> sessions = sessionRepository.listAll();
         List<Object> principals = new ArrayList<>();
         for (SessionEntity session : sessions) {
             principals.add(session.getPrincipalName());
@@ -102,7 +111,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(Instant.now()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
-            sessionRepository.save(sessionEntity);
+            sessionRepository.persist(sessionEntity);
         }
     }
 
@@ -115,17 +124,17 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Override
     @Transactional
     public void refreshLastRequest(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findByIdOptional(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setLastRequest(Instant.now()); // Update lastRequest to the current date
-            sessionRepository.save(sessionEntity);
+            sessionRepository.persist(sessionEntity);
         }
     }
 
     @Override
     public SessionInformation getSessionInformation(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findByIdOptional(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             return new SessionInformation(
@@ -143,16 +152,17 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
     // Retrieve all sessions
     public List<SessionEntity> getAllSessions() {
-        return sessionRepository.findAll();
+        return sessionRepository.listAll();
     }
 
     // Mark a session as expired
+    @Transactional
     public void expireSession(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findByIdOptional(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setExpired(true); // Set expired to true
-            sessionRepository.save(sessionEntity);
+            sessionRepository.persist(sessionEntity);
         }
     }
 

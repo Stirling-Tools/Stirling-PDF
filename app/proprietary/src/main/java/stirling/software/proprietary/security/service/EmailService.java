@@ -1,19 +1,24 @@
 package stirling.software.proprietary.security.service;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+// TODO: Migration required - org.springframework.mail.javamail.* is Spring's mail abstraction (NOT
+// Spring DI) and Quarkus has no drop-in equivalent. quarkus-mailer (io.quarkus.mailer.Mailer /
+// ReactiveMailer) exposes a different API and would require migrating the collaborator MailConfig
+// (which still produces a JavaMailSender) together with this service. The JavaMailSender /
+// MimeMessage / MimeMessageHelper logic is kept unchanged until that joint migration; only the DI
+// glue has been converted. When migrating, swap to quarkus.mailer.* config + io.quarkus.mailer.Mail.
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.proprietary.security.model.api.Email;
 
 /**
@@ -21,14 +26,24 @@ import stirling.software.proprietary.security.model.api.Email;
  * JavaMailSender to send the email and is designed to handle both the message content and file
  * attachments.
  */
+// TODO: Migration required - the original class was guarded by
+// @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false).
+// Quarkus has no @ConditionalOnProperty. mail.enabled is a runtime property
+// (ApplicationProperties.Mail#isEnabled) rather than a build-time flag, so the bean is always
+// produced and callers must guard on applicationProperties.getMail().isEnabled() at call time
+// (matching the decision already made in the MailConfig producer).
 @Slf4j
-@Service
-@RequiredArgsConstructor
-@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
+@ApplicationScoped
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final ApplicationProperties applicationProperties;
+
+    @Inject
+    public EmailService(JavaMailSender mailSender, ApplicationProperties applicationProperties) {
+        this.mailSender = mailSender;
+        this.applicationProperties = applicationProperties;
+    }
 
     /**
      * Sends an email with an attachment asynchronously. This method is annotated with @Async, which
@@ -37,7 +52,10 @@ public class EmailService {
      * @param email The Email object containing the recipient, subject, body, and file attachment.
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
-    @Async
+    // TODO: Migration required - Spring's @Async ran this on a managed executor. Quarkus has no
+    // @Async; the method now runs synchronously on the caller's thread. To restore async behaviour
+    // wrap the body in io.smallrye.mutiny.Uni or submit to a jakarta.enterprise.concurrent
+    // ManagedExecutor (would change the void signature, so deferred).
     public void sendEmailWithAttachment(Email email) throws MessagingException {
         MultipartFile file = email.getFileInput();
         // 1) Validate recipient email address
@@ -69,8 +87,18 @@ public class EmailService {
                 true); // The "true" here indicates that the body contains HTML content.
         helper.setFrom(mailProperties.getFrom());
 
-        // Adds the attachment to the email
-        helper.addAttachment(file.getOriginalFilename(), file);
+        // Adds the attachment to the email. The common MultipartFile shim is not a Spring
+        // InputStreamSource, so wrap its bytes in a jakarta.mail DataSource (pure Jakarta Mail API).
+        try {
+            String contentType = file.getContentType();
+            ByteArrayDataSource dataSource =
+                    new ByteArrayDataSource(
+                            file.getBytes(),
+                            contentType != null ? contentType : "application/octet-stream");
+            helper.addAttachment(file.getOriginalFilename(), dataSource);
+        } catch (java.io.IOException e) {
+            throw new MessagingException("Failed to read attachment content", e);
+        }
 
         // Sends the email via the configured mail sender
         mailSender.send(message);
@@ -89,7 +117,7 @@ public class EmailService {
      * @param body message body
      * @throws MessagingException if sending fails or address is invalid
      */
-    @Async
+    // TODO: Migration required - @Async dropped (no Quarkus equivalent); now runs synchronously.
     public void sendSimpleMail(String to, String subject, String body) throws MessagingException {
         if (to == null || to.trim().isEmpty()) {
             throw new MessagingException("Invalid Addresses");
@@ -119,7 +147,7 @@ public class EmailService {
      * @param isHtml Whether the body contains HTML content
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
-    @Async
+    // TODO: Migration required - @Async dropped (no Quarkus equivalent); now runs synchronously.
     public void sendPlainEmail(String to, String subject, String body, boolean isHtml)
             throws MessagingException {
         // Validate recipient email address
@@ -154,7 +182,7 @@ public class EmailService {
      * @param loginUrl The URL to the login page
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
-    @Async
+    // TODO: Migration required - @Async dropped (no Quarkus equivalent); now runs synchronously.
     public void sendInviteEmail(
             String to, String username, String temporaryPassword, String loginUrl)
             throws MessagingException {
@@ -214,7 +242,7 @@ public class EmailService {
      * @param expiresAt The expiration timestamp
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
-    @Async
+    // TODO: Migration required - @Async dropped (no Quarkus equivalent); now runs synchronously.
     public void sendInviteLinkEmail(String to, String inviteUrl, String expiresAt)
             throws MessagingException {
         String subject = "You've been invited to Stirling PDF";
@@ -260,7 +288,7 @@ public class EmailService {
         sendPlainEmail(to, subject, body, true);
     }
 
-    @Async
+    // TODO: Migration required - @Async dropped (no Quarkus equivalent); now runs synchronously.
     public void sendPasswordChangedNotification(
             String to, String username, String newPassword, String loginUrl)
             throws MessagingException {

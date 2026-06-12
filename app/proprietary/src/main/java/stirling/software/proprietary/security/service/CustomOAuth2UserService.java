@@ -6,16 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
-import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,10 +15,26 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.UsernameAttribute;
 import stirling.software.proprietary.security.model.User;
 
+// TODO: Migration required - quarkus-oidc has no equivalent of Spring's
+// OAuth2UserService<OidcUserRequest, OidcUser> / OidcUserService delegate. Under quarkus-oidc the
+// OIDC flow is handled by the extension (quarkus.oidc.* config); per-login user mapping and the
+// "useAsUsername" claim selection should be re-implemented in a
+// io.quarkus.security.identity.SecurityIdentityAugmentor (inject the @io.quarkus.oidc.IdToken
+// JsonWebToken / OidcSession), and the blocked-account / hasPassword checks below should run there
+// before the SecurityIdentity is finalized. The claim-dump diagnostics (logClaimDump,
+// appendClaims, suggestUsernameClaims) and the username-resolution + LockedException logic are
+// preserved unchanged so they can be reused by the augmentor.
+// The previous Spring types map roughly to:
+//   OidcUserRequest.getClientRegistration().getRegistrationId() -> the OIDC tenant id
+//   OidcUserService.loadUser(...)        -> handled by quarkus-oidc (UserInfo via
+//                                           quarkus.oidc.authentication.user-info-required=true)
+//   OidcUser.getAttribute(key)/getSubject()/getIdToken()/getUserInfo() -> JsonWebToken claims +
+//                                           io.quarkus.oidc.UserInfo
+//   DefaultOidcUser(...)                 -> the augmented SecurityIdentity
+//   OAuth2AuthenticationException        -> io.quarkus.security.AuthenticationFailedException
 @Slf4j
-public class CustomOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
-
-    private final OidcUserService delegate = new OidcUserService();
+@ApplicationScoped
+public class CustomOAuth2UserService {
 
     private final UserService userService;
 
@@ -34,6 +42,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
 
+    @Inject
     public CustomOAuth2UserService(
             ApplicationProperties.Security.OAUTH2 oauth2Properties,
             UserService userService,
@@ -43,35 +52,53 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         this.loginAttemptService = loginAttemptService;
     }
 
-    @Override
-    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+    /**
+     * Resolves and validates the local user for an OIDC login.
+     *
+     * <p>TODO: Migration required - this method previously implemented Spring's {@code
+     * OAuth2UserService<OidcUserRequest, OidcUser>.loadUser}. Under quarkus-oidc there is no
+     * user-request object handed to application code; instead call this logic from a {@code
+     * SecurityIdentityAugmentor} once quarkus-oidc has produced the {@code SecurityIdentity}.
+     * Provide the registration/tenant id, the merged claim map and the ID-token claim map from the
+     * augmentor's {@code AuthenticationRequestContext} / injected {@code JsonWebToken}.
+     *
+     * @param registrationId the OIDC tenant/registration id
+     * @param subject the standard OIDC {@code sub} claim
+     * @param attributes the merged claim/attribute map (ID token + UserInfo)
+     * @param idTokenClaims the raw ID-token claims (may be null on unexpected failures)
+     * @return the resolved username claim key configured via {@code security.oauth2.useAsUsername}
+     */
+    public String resolveUser(
+            String registrationId,
+            String subject,
+            Map<String, Object> attributes,
+            Map<String, Object> idTokenClaims) {
         boolean debugLogging = Boolean.TRUE.equals(oauth2Properties.getDebugLogging());
         // Resolved inside the try so a bad/null useAsUsername (IllegalArgumentException from
-        // valueOf, or NPE on toUpperCase) is caught and wrapped as OAuth2AuthenticationException
-        // by the existing handlers below, matching the pre-debugLogging behaviour.
+        // valueOf, or NPE on toUpperCase) is caught and wrapped, matching the pre-debugLogging
+        // behaviour.
         String usernameAttributeKey = null;
 
         try {
             usernameAttributeKey =
                     UsernameAttribute.valueOf(oauth2Properties.getUseAsUsername().toUpperCase())
                             .getName();
-            OidcUser user = delegate.loadUser(userRequest);
 
             if (debugLogging) {
                 logClaimDump(
                         "OAuth2/OIDC login claims received",
                         registrationId,
                         usernameAttributeKey,
-                        user.getIdToken(),
-                        user.getUserInfo(),
-                        user.getAttributes(),
+                        idTokenClaims,
+                        attributes,
+                        attributes,
                         false);
             }
 
             // Extract SSO provider information
-            String ssoProviderId = user.getSubject(); // Standard OIDC 'sub' claim
-            String username = user.getAttribute(usernameAttributeKey);
+            String ssoProviderId = subject; // Standard OIDC 'sub' claim
+            String username =
+                    attributes == null ? null : (String) attributes.get(usernameAttributeKey);
 
             log.debug(
                     "OAuth2 login - Provider: {}, ProviderId: {}, Username: {}",
@@ -84,7 +111,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             if (internalUser.isPresent()) {
                 String internalUsername = internalUser.get().getUsername();
                 if (loginAttemptService.isBlocked(internalUsername)) {
-                    throw new LockedException(
+                    // TODO: Migration required - was org.springframework.security.authentication
+                    // .LockedException; surface this as io.quarkus.security.AuthenticationFailedException
+                    // (or a custom locked-account exception) from the SecurityIdentityAugmentor.
+                    throw new IllegalStateException(
                             "The account "
                                     + internalUsername
                                     + " has been locked due to too many failed login attempts.");
@@ -94,47 +124,44 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                 }
             }
 
-            // Return a new OidcUser with adjusted attributes
-            return new DefaultOidcUser(
-                    user.getAuthorities(),
-                    userRequest.getIdToken(),
-                    user.getUserInfo(),
-                    usernameAttributeKey);
+            return usernameAttributeKey;
         } catch (IllegalArgumentException e) {
             log.error("Error loading OIDC user: {}", e.getMessage());
             // Only emit the claim dump if we successfully resolved usernameAttributeKey. A null
             // value here means UsernameAttribute.valueOf rejected the configured useAsUsername
-            // before delegate.loadUser ran — that error message is self-explanatory and a claim
-            // dump would have no resolved-key to compare against.
+            // before the claims were processed - that error message is self-explanatory and a
+            // claim dump would have no resolved-key to compare against.
             if (debugLogging && usernameAttributeKey != null) {
-                // The DefaultOidcUser constructor (or our own checks) rejected the chosen
-                // username attribute. Dump the claims we DID receive so the operator can pick
-                // a different value for security.oauth2.useAsUsername.
+                // The chosen username attribute was rejected. Dump the claims we DID receive so the
+                // operator can pick a different value for security.oauth2.useAsUsername.
                 logClaimDump(
                         "OAuth2/OIDC login FAILED - dumping received claims",
                         registrationId,
                         usernameAttributeKey,
-                        userRequest.getIdToken(),
+                        idTokenClaims,
                         null,
-                        userRequest.getIdToken() == null
-                                ? Collections.emptyMap()
-                                : userRequest.getIdToken().getClaims(),
+                        idTokenClaims == null ? Collections.emptyMap() : idTokenClaims,
                         true);
             }
-            throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);
+            // TODO: Migration required - was wrapped as
+            // org.springframework.security.oauth2.core.OAuth2AuthenticationException(OAuth2Error);
+            // rethrow as io.quarkus.security.AuthenticationFailedException from the augmentor.
+            throw e;
         } catch (Exception e) {
             log.error("Unexpected error loading OIDC user", e);
-            if (debugLogging && usernameAttributeKey != null && userRequest.getIdToken() != null) {
+            if (debugLogging && usernameAttributeKey != null && idTokenClaims != null) {
                 logClaimDump(
                         "OAuth2/OIDC login FAILED (unexpected error) - dumping ID token claims",
                         registrationId,
                         usernameAttributeKey,
-                        userRequest.getIdToken(),
+                        idTokenClaims,
                         null,
-                        userRequest.getIdToken().getClaims(),
+                        idTokenClaims,
                         true);
             }
-            throw new OAuth2AuthenticationException("Unexpected error during authentication");
+            // TODO: Migration required - was OAuth2AuthenticationException("Unexpected error during
+            // authentication"); rethrow as io.quarkus.security.AuthenticationFailedException.
+            throw new IllegalStateException("Unexpected error during authentication", e);
         }
     }
 
@@ -143,19 +170,19 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
      * invoked when {@code security.oauth2.debugLogging=true}.
      *
      * @param banner short title for the log block
-     * @param registrationId Spring client registration id (e.g. "demarest", "keycloak")
+     * @param registrationId client registration / tenant id (e.g. "demarest", "keycloak")
      * @param usernameAttributeKey the claim key the application is configured to use as username
-     * @param idToken the decoded ID token, may be null on unexpected failures
-     * @param userInfo the decoded UserInfo response, may be null if the provider returned none
-     * @param mergedAttributes the merged attribute map Spring uses for {@code getAttribute()}
+     * @param idTokenClaims the ID-token claims, may be null on unexpected failures
+     * @param userInfoClaims the UserInfo response claims, may be null if the provider returned none
+     * @param mergedAttributes the merged attribute map used for {@code getAttribute()}
      * @param failure true if logging in the error path (uses ERROR level), false for INFO
      */
     private void logClaimDump(
             String banner,
             String registrationId,
             String usernameAttributeKey,
-            OidcIdToken idToken,
-            OidcUserInfo userInfo,
+            Map<String, Object> idTokenClaims,
+            Map<String, Object> userInfoClaims,
             Map<String, Object> mergedAttributes,
             boolean failure) {
         StringBuilder sb = new StringBuilder();
@@ -167,23 +194,18 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                 .append(usernameAttributeKey)
                 .append("')\n");
 
-        if (idToken != null) {
-            Map<String, Object> idClaims = idToken.getClaims();
-            sb.append("\n-- ID token claims (")
-                    .append(idClaims == null ? 0 : idClaims.size())
-                    .append(") --\n");
-            appendClaims(sb, idClaims);
-            sb.append("ID token issued at : ").append(idToken.getIssuedAt()).append('\n');
-            sb.append("ID token expires at: ").append(idToken.getExpiresAt()).append('\n');
+        if (idTokenClaims != null) {
+            sb.append("\n-- ID token claims (").append(idTokenClaims.size()).append(") --\n");
+            appendClaims(sb, idTokenClaims);
         } else {
             sb.append("\n-- ID token: <null> --\n");
         }
 
-        if (userInfo != null && userInfo.getClaims() != null) {
+        if (userInfoClaims != null) {
             sb.append("\n-- UserInfo endpoint claims (")
-                    .append(userInfo.getClaims().size())
+                    .append(userInfoClaims.size())
                     .append(") --\n");
-            appendClaims(sb, userInfo.getClaims());
+            appendClaims(sb, userInfoClaims);
         } else {
             sb.append("\n-- UserInfo endpoint claims: none returned --\n");
         }

@@ -1,17 +1,13 @@
 package stirling.software.proprietary.service;
 
-import java.lang.reflect.Method;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+import io.quarkus.runtime.StartupEvent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,37 +20,40 @@ import stirling.software.SPDF.config.EndpointConfiguration;
  * engine considers a tool - we just emit what's enabled here.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class AiEngineEndpointResolver {
 
     private static final String API_PREFIX = "/api/v1/";
 
-    private final ApplicationContext applicationContext;
     private final EndpointConfiguration endpointConfiguration;
-    // Written once on the Spring startup thread during ContextRefreshedEvent, read on HTTP
-    // request threads. Spring's lifecycle establishes happens-before (the servlet container
-    // and its worker threads are started after refresh completes), so no volatile is needed.
+    // Written once on the startup thread during StartupEvent, read on HTTP request threads.
+    // Quarkus' lifecycle establishes happens-before (HTTP serving starts after StartupEvent
+    // observers complete), so no volatile is needed.
     private Set<String> apiUrls = Set.of();
 
-    public AiEngineEndpointResolver(
-            ApplicationContext applicationContext, EndpointConfiguration endpointConfiguration) {
-        this.applicationContext = applicationContext;
+    public AiEngineEndpointResolver(EndpointConfiguration endpointConfiguration) {
         this.endpointConfiguration = endpointConfiguration;
     }
 
-    @EventListener(ContextRefreshedEvent.class)
+    void onStart(@Observes StartupEvent event) {
+        discoverApiUrls();
+    }
+
     public void discoverApiUrls() {
         Set<String> discovered = new TreeSet<>();
-        for (RequestMappingHandlerMapping mapping :
-                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
-            for (RequestMappingInfo info : mapping.getHandlerMethods().keySet()) {
-                for (String pattern : extractPatterns(info)) {
-                    if (pattern.startsWith(API_PREFIX)) {
-                        discovered.add(pattern);
-                    }
-                }
-            }
-        }
+        // TODO: Migration required - this previously enumerated all registered request mappings
+        // via Spring MVC's RequestMappingHandlerMapping
+        // (org.springframework.web.servlet.mvc.method.*) obtained from the ApplicationContext at
+        // ContextRefreshedEvent, keeping every pattern that started with "/api/v1/". Quarkus /
+        // JAX-RS (RESTEasy Reactive) has no equivalent runtime-queryable handler-mapping registry.
+        // Options for porting:
+        //   - Build-time scan of @jakarta.ws.rs.Path methods via a Quarkus build step / Jandex
+        //     index, exposing the discovered "/api/v1/" paths as a startup bean, or
+        //   - Query the OpenAPI model (quarkus-smallrye-openapi) for "/api/v1/" paths, or
+        //   - Maintain an explicit allow-list.
+        // Until one of the above is implemented, no endpoints are discovered and the enabled-URL
+        // list will be empty (preserving the safe "engine drops what it doesn't recognise"
+        // contract described above).
         apiUrls = Set.copyOf(discovered);
         log.debug("Discovered {} /api/v1/ endpoint URLs for AI engine filtering", apiUrls.size());
     }
@@ -64,24 +63,5 @@ public class AiEngineEndpointResolver {
                 .filter(endpointConfiguration::isEndpointEnabledForUri)
                 .sorted()
                 .toList();
-    }
-
-    private static Set<String> extractPatterns(RequestMappingInfo info) {
-        try {
-            Method getDirectPaths = info.getClass().getMethod("getDirectPaths");
-            Object result = getDirectPaths.invoke(info);
-            if (result instanceof Set<?> set) {
-                Set<String> patterns = new HashSet<>();
-                for (Object value : set) {
-                    if (value instanceof String s) {
-                        patterns.add(s);
-                    }
-                }
-                return patterns;
-            }
-        } catch (Exception e) {
-            log.trace("getDirectPaths unavailable on RequestMappingInfo", e);
-        }
-        return Set.of();
     }
 }

@@ -8,13 +8,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiTimeoutException;
@@ -48,7 +47,7 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
  * instead of oversubscribing.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PolicyEngine {
 
@@ -188,7 +187,7 @@ public class PolicyEngine {
         }
     }
 
-    private ResponseEntity<?> failRejectedRun(
+    private jakarta.ws.rs.core.Response failRejectedRun(
             PolicyRun run, CompletableFuture<PolicyRun> completion, Throwable ex) {
         // Only reached if the run never started (e.g. the queue was full). A run that started
         // always resolves its own completion in runToCompletion.

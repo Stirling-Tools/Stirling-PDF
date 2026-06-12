@@ -1,12 +1,12 @@
 package stirling.software.proprietary.config;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /** Configuration for audit system transaction management. */
-@Configuration
-@EnableTransactionManagement
-public class AuditJpaConfig {
-    // Scheduling is enabled on SPDFApplication — no duplicate @EnableScheduling needed.
-    // JPA repositories are now managed by DatabaseConfig to avoid conflicts.
-}
+// TODO: Migration required - Quarkus enables transaction management automatically
+// (Narayana/JTA via quarkus-narayana-jta); the Spring @EnableTransactionManagement is
+// not needed. Use jakarta.transaction.@Transactional on methods/beans as required.
+// Scheduling is enabled on the application — no duplicate @EnableScheduling needed.
+// JPA repositories are auto-discovered by Quarkus (no @EnableJpaRepositories needed).
+@ApplicationScoped
+public class AuditJpaConfig {}

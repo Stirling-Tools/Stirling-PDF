@@ -2,7 +2,7 @@ package stirling.software.proprietary.security.service;
 
 import java.util.Map;
 
-import org.springframework.security.core.Authentication;
+import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -11,10 +11,13 @@ public interface JwtServiceInterface {
     /**
      * Generate a JWT token for the authenticated user
      *
-     * @param authentication Spring Security authentication object
+     * @param identity Quarkus security identity for the authenticated user
      * @return JWT token as a string
      */
-    String generateToken(Authentication authentication, Map<String, Object> claims);
+    // TODO: Migration required - the implementation must derive the username/claims from
+    // SecurityIdentity (getPrincipal()/getRoles()) instead of the former Spring
+    // Authentication.getName()/getAuthorities().
+    String generateToken(SecurityIdentity identity, Map<String, Object> claims);
 
     /**
      * Generate a JWT token for a specific username

@@ -2,11 +2,14 @@ package stirling.software.proprietary.policy.config;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.smallrye.config.SmallRyeConfig;
+
+import org.eclipse.microprofile.config.Config;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -34,7 +37,7 @@ import stirling.software.proprietary.policy.model.Policy;
  * root. (Symlink escape is not defended here; an operator who configures an allowed root containing
  * a symlink to a sensitive location is trusted.)
  */
-@Component
+@ApplicationScoped
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";
@@ -43,8 +46,12 @@ public class FolderAccessGuard {
     private final List<Path> allowedRoots;
     private final List<Path> protectedRoots;
 
-    public FolderAccessGuard(ApplicationProperties applicationProperties, Environment environment) {
-        this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+    @Inject
+    public FolderAccessGuard(ApplicationProperties applicationProperties, Config config) {
+        // Spring's Environment.getActiveProfiles() maps to SmallRye's profile list; the "saas"
+        // build/runtime profile is matched the same way Spring matched the "saas" Spring profile.
+        this.saasActive =
+                config.unwrap(SmallRyeConfig.class).getProfiles().contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));

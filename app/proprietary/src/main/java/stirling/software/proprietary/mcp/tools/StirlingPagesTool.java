@@ -1,8 +1,9 @@
 package stirling.software.proprietary.mcp.tools;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+
+import io.quarkus.arc.lookup.LookupIfProperty;
 
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
@@ -10,14 +11,14 @@ import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import tools.jackson.databind.ObjectMapper;
 
 /** Exposes the {@code /api/v1/general/*} (page operations) namespace as a single MCP tool. */
-@Component
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+@ApplicationScoped
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class StirlingPagesTool extends AbstractCategoryTool {
 
     public StirlingPagesTool(
             ObjectMapper mapper,
-            ObjectProvider<McpToolCatalog> catalog,
-            ObjectProvider<McpOperationExecutor> executor) {
+            Instance<McpToolCatalog> catalog,
+            Instance<McpOperationExecutor> executor) {
         super(mapper, catalog, executor);
     }
 

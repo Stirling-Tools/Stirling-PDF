@@ -2,9 +2,12 @@ package stirling.software.proprietary.service;
 
 import java.io.IOException;
 
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+// TODO: Migration required - AiEngineClient (a collaborator, not yet migrated) still throws
+// org.springframework.web.server.ResponseStatusException, so this import must stay until that file
+// is converted. Once AiEngineClient throws jakarta.ws.rs.WebApplicationException, swap this catch.
 import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +17,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Today: cleanup on logout. The engine also runs a TTL reaper that catches sessions ended
  * without a clean logout (tab close, JWT expiry, engine restart), so this service is the happy-path
- * purge, not a hard guarantee. Calls are fire-and-forget on a background thread (Spring's default
- * {@code @Async} executor) so an unavailable engine never delays the caller's response.
+ * purge, not a hard guarantee. Engine errors are logged and never propagated to the caller.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class AiUserDataService {
 
@@ -32,7 +34,12 @@ public class AiUserDataService {
      * logout handler) returns immediately; engine errors are logged on the worker thread and never
      * propagated. The engine's TTL reaper backstops any miss within ~24h.
      */
-    @Async
+    // TODO: Migration required - Spring's @Async ran this fire-and-forget on a managed executor so
+    // an unavailable engine never delayed the logout response. Quarkus has no @Async; the method
+    // now runs synchronously on the caller's thread. To restore off-thread dispatch, inject a
+    // jakarta.enterprise.concurrent.ManagedExecutorService (or annotate the calling REST endpoint
+    // with @io.smallrye.common.annotation.RunOnVirtualThread). Errors are still swallowed, so the
+    // only behavioural change is that the caller now blocks on the engine call.
     public void purgeUserDocuments(String userId) {
         if (userId == null || userId.isBlank()) {
             log.debug("Skipping user document purge: no user id");

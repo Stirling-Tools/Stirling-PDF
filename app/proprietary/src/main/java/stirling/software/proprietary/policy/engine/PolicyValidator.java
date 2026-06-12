@@ -1,10 +1,8 @@
 package stirling.software.proprietary.policy.engine;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -22,13 +20,16 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  * <p>The trigger is optional (a {@code null} trigger is a manual-only policy and needs no
  * validation); every configured source is validated.
  */
-@Service
-@RequiredArgsConstructor
+@ApplicationScoped
 public class PolicyValidator {
 
-    private final List<PolicyTrigger> triggers;
-    private final List<InputSource> inputSources;
-    private final List<PolicyOutputSink> outputSinks;
+    // Spring injected a List<T> of all beans of each type; CDI collects all beans of a type
+    // via Instance<T>, which is iterable. Field injection is used (instead of constructor
+    // injection via Lombok @RequiredArgsConstructor) because Instance<T> is the CDI-native
+    // collection type and the fields cannot be final.
+    @Inject Instance<PolicyTrigger> triggers;
+    @Inject Instance<InputSource> inputSources;
+    @Inject Instance<PolicyOutputSink> outputSinks;
 
     /**
      * @throws IllegalArgumentException if any facet's type is unknown or its configuration is

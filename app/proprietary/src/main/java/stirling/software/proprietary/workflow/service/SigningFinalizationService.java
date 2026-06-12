@@ -29,15 +29,16 @@ import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfSigningService;
 import stirling.software.common.service.ServerCertificateServiceInterface;
@@ -55,7 +56,7 @@ import tools.jackson.databind.ObjectMapper;
  * (wet signatures, summary page, digital certificate application) that was previously spread across
  * the controller.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class SigningFinalizationService {
@@ -66,11 +67,24 @@ public class SigningFinalizationService {
     private final PdfSigningService pdfSigningService;
     private final MetadataEncryptionService metadataEncryptionService;
 
-    @Autowired(required = false)
-    private final ServerCertificateServiceInterface serverCertificateService;
+    // @Autowired(required = false) -> CDI Instance<T> for optional/unsatisfied beans
+    private final Instance<ServerCertificateServiceInterface> serverCertificateServiceInstance;
 
-    @Autowired(required = false)
-    private final UserServerCertificateService userServerCertificateService;
+    private final Instance<UserServerCertificateService> userServerCertificateServiceInstance;
+
+    /** Resolves the optional server certificate service, or null if no bean is available. */
+    private ServerCertificateServiceInterface serverCertificateService() {
+        return serverCertificateServiceInstance.isResolvable()
+                ? serverCertificateServiceInstance.get()
+                : null;
+    }
+
+    /** Resolves the optional user server certificate service, or null if no bean is available. */
+    private UserServerCertificateService userServerCertificateService() {
+        return userServerCertificateServiceInstance.isResolvable()
+                ? userServerCertificateServiceInstance.get()
+                : null;
+    }
 
     // ===== PUBLIC API =====
 
@@ -128,13 +142,12 @@ public class SigningFinalizationService {
             // Reload from DB to get fresh metadata
             WorkflowParticipant fresh =
                     participantRepository
-                            .findById(participant.getId())
+                            .findByIdOptional(participant.getId())
                             .orElseThrow(
                                     () ->
-                                            new ResponseStatusException(
-                                                    HttpStatus.INTERNAL_SERVER_ERROR,
-                                                    "Participant not found: "
-                                                            + participant.getId()));
+                                            new WebApplicationException(
+                                                    "Participant not found: " + participant.getId(),
+                                                    Response.Status.INTERNAL_SERVER_ERROR));
 
             CertificateSubmission submission = extractCertificateSubmission(fresh);
             if (submission == null) {
@@ -172,6 +185,7 @@ public class SigningFinalizationService {
      * Clears sensitive metadata from all participants after finalization (GDPR compliance). Removes
      * wet signature image data and certificate submission data (keystores + passwords).
      */
+    @jakarta.transaction.Transactional
     public void clearSensitiveMetadata(WorkflowSession session) {
         log.info("Clearing sensitive metadata for session {}", session.getSessionId());
 
@@ -192,7 +206,7 @@ public class SigningFinalizationService {
             }
             if (modified) {
                 participant.setParticipantMetadata(metadata);
-                participantRepository.save(participant);
+                participantRepository.persist(participant);
                 log.debug("Cleared sensitive metadata for participant {}", participant.getEmail());
             }
         }
@@ -248,9 +262,9 @@ public class SigningFinalizationService {
             // Use WetSignatureMetadata.extractBase64Data() to strip data URL prefix
             String base64Data = wetSig.extractBase64Data();
             if (base64Data == null || base64Data.isBlank()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Wet signature image data is missing or empty for participant");
+                throw new WebApplicationException(
+                        "Wet signature image data is missing or empty for participant",
+                        Response.Status.BAD_REQUEST);
             }
             byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
 
@@ -825,8 +839,8 @@ public class SigningFinalizationService {
             case "PKCS12":
             case "PFX":
                 if (submission.getP12Keystore() == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "P12 keystore data is required");
+                    throw new WebApplicationException(
+                            "P12 keystore data is required", Response.Status.BAD_REQUEST);
                 }
                 try {
                     KeyStore p12Store = KeyStore.getInstance("PKCS12");
@@ -835,15 +849,15 @@ public class SigningFinalizationService {
                             password != null ? password.toCharArray() : new char[0]);
                     return p12Store;
                 } catch (Exception e) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Failed to open P12 keystore — check that the file is valid and the password is correct");
+                    throw new WebApplicationException(
+                            "Failed to open P12 keystore - check that the file is valid and the password is correct",
+                            Response.Status.BAD_REQUEST);
                 }
 
             case "JKS":
                 if (submission.getJksKeystore() == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "JKS keystore data is required");
+                    throw new WebApplicationException(
+                            "JKS keystore data is required", Response.Status.BAD_REQUEST);
                 }
                 try {
                     KeyStore jksStore = KeyStore.getInstance("JKS");
@@ -852,29 +866,35 @@ public class SigningFinalizationService {
                             password != null ? password.toCharArray() : new char[0]);
                     return jksStore;
                 } catch (Exception e) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Failed to open JKS keystore — check that the file is valid and the password is correct");
+                    throw new WebApplicationException(
+                            "Failed to open JKS keystore - check that the file is valid and the password is correct",
+                            Response.Status.BAD_REQUEST);
                 }
 
             case "SERVER":
+                ServerCertificateServiceInterface serverCertificateService =
+                        serverCertificateService();
                 if (serverCertificateService == null
                         || !serverCertificateService.isEnabled()
                         || !serverCertificateService.hasServerCertificate()) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Server certificate is not available or not configured");
+                    throw new WebApplicationException(
+                            "Server certificate is not available or not configured",
+                            Response.Status.BAD_REQUEST);
                 }
                 return serverCertificateService.getServerKeyStore();
 
             case "USER_CERT":
+                UserServerCertificateService userServerCertificateService =
+                        userServerCertificateService();
                 if (userServerCertificateService == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "User certificate service is not available");
+                    throw new WebApplicationException(
+                            "User certificate service is not available",
+                            Response.Status.BAD_REQUEST);
                 }
                 if (participant.getUser() == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "User certificate requires authenticated user");
+                    throw new WebApplicationException(
+                            "User certificate requires authenticated user",
+                            Response.Status.BAD_REQUEST);
                 }
                 try {
                     userServerCertificateService.getOrCreateUserCertificate(
@@ -886,14 +906,14 @@ public class SigningFinalizationService {
                             "Failed to get user certificate for user {}: {}",
                             participant.getUser().getId(),
                             e.getMessage());
-                    throw new ResponseStatusException(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Failed to generate or retrieve user certificate: " + e.getMessage());
+                    throw new WebApplicationException(
+                            "Failed to generate or retrieve user certificate: " + e.getMessage(),
+                            Response.Status.INTERNAL_SERVER_ERROR);
                 }
 
             default:
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
+                throw new WebApplicationException(
+                        "Invalid certificate type: " + certType, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -907,17 +927,17 @@ public class SigningFinalizationService {
                 try {
                     x509.checkValidity();
                 } catch (java.security.cert.CertificateExpiredException e) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
+                    throw new WebApplicationException(
                             "Certificate for participant '"
                                     + participantEmail
-                                    + "' has expired. Please upload a valid certificate.");
+                                    + "' has expired. Please upload a valid certificate.",
+                            Response.Status.BAD_REQUEST);
                 } catch (java.security.cert.CertificateNotYetValidException e) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
+                    throw new WebApplicationException(
                             "Certificate for participant '"
                                     + participantEmail
-                                    + "' is not yet valid.");
+                                    + "' is not yet valid.",
+                            Response.Status.BAD_REQUEST);
                 }
             }
         }
@@ -927,10 +947,12 @@ public class SigningFinalizationService {
             CertificateSubmission submission, WorkflowParticipant participant) {
         String certType = submission.getCertType();
 
+        ServerCertificateServiceInterface serverCertificateService = serverCertificateService();
         if ("SERVER".equalsIgnoreCase(certType) && serverCertificateService != null) {
             return serverCertificateService.getServerCertificatePassword();
         }
 
+        UserServerCertificateService userServerCertificateService = userServerCertificateService();
         if ("USER_CERT".equalsIgnoreCase(certType)
                 && userServerCertificateService != null
                 && participant.getUser() != null) {
@@ -1176,7 +1198,7 @@ public class SigningFinalizationService {
             try {
                 fresh =
                         participantRepository
-                                .findById(participant.getId())
+                                .findByIdOptional(participant.getId())
                                 .orElseThrow(
                                         () ->
                                                 new RuntimeException(

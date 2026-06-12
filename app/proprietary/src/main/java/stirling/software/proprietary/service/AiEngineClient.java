@@ -10,24 +10,24 @@ import java.time.Duration;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class AiEngineClient {
 
     private final ApplicationProperties applicationProperties;
     private final HttpClient httpClient;
     private final String engineSharedSecret;
 
-    @Autowired
+    @Inject
     public AiEngineClient(ApplicationProperties applicationProperties) {
         this(
                 applicationProperties,
@@ -73,8 +73,8 @@ public class AiEngineClient {
             throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new WebApplicationException(
+                    "AI engine is not enabled", Response.Status.SERVICE_UNAVAILABLE);
         }
 
         String url = config.getUrl().stripTrailing() + path;
@@ -126,8 +126,8 @@ public class AiEngineClient {
             throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new WebApplicationException(
+                    "AI engine is not enabled", Response.Status.SERVICE_UNAVAILABLE);
         }
 
         String url = config.getUrl().stripTrailing() + path;
@@ -152,21 +152,23 @@ public class AiEngineClient {
         try {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
         } catch (HttpTimeoutException e) {
-            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
+            throw new WebApplicationException(
+                    "AI engine timed out", e, Response.Status.GATEWAY_TIMEOUT);
         } catch (IOException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+            throw new WebApplicationException(
+                    "AI engine unreachable: " + e.getMessage(),
+                    e,
+                    Response.Status.SERVICE_UNAVAILABLE);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+            throw new WebApplicationException(
+                    "AI engine request was interrupted", Response.Status.SERVICE_UNAVAILABLE);
         }
 
         int status = response.statusCode();
         if (status >= 400) {
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(status >= 500 ? 502 : status),
-                    "AI engine returned error: " + status);
+            throw new WebApplicationException(
+                    "AI engine returned error: " + status, status >= 500 ? 502 : status);
         }
 
         try (Stream<String> lines = response.body()) {
@@ -187,8 +189,8 @@ public class AiEngineClient {
     public String delete(String path, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new WebApplicationException(
+                    "AI engine is not enabled", Response.Status.SERVICE_UNAVAILABLE);
         }
 
         String url = config.getUrl().stripTrailing() + path;
@@ -212,8 +214,8 @@ public class AiEngineClient {
     public String get(String path, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new WebApplicationException(
+                    "AI engine is not enabled", Response.Status.SERVICE_UNAVAILABLE);
         }
 
         String url = config.getUrl().stripTrailing() + path;
@@ -238,30 +240,33 @@ public class AiEngineClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (HttpTimeoutException e) {
-            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
+            throw new WebApplicationException(
+                    "AI engine timed out", e, Response.Status.GATEWAY_TIMEOUT);
         } catch (IOException e) {
             // Connection refused, DNS failure, socket reset, etc. — surface as
             // SERVICE_UNAVAILABLE so every caller of this client sees a structured
             // status rather than a raw 500 from an unhandled IOException.
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+            throw new WebApplicationException(
+                    "AI engine unreachable: " + e.getMessage(),
+                    e,
+                    Response.Status.SERVICE_UNAVAILABLE);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+            throw new WebApplicationException(
+                    "AI engine request was interrupted", Response.Status.SERVICE_UNAVAILABLE);
         }
     }
 
     private void checkResponseStatus(HttpResponse<String> response) {
         int status = response.statusCode();
         if (status >= 500) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);
+            throw new WebApplicationException(
+                    "AI engine returned error: " + status, Response.Status.BAD_GATEWAY);
         }
         if (status >= 400) {
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(status),
-                    "AI engine returned client error: " + response.body());
+            // status is a known 4xx client error code; pass it through directly.
+            throw new WebApplicationException(
+                    "AI engine returned client error: " + response.body(), status);
         }
     }
 }

@@ -9,9 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +30,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
  * cleanup, so eviction only frees this map's entry.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class PolicyRunRegistry {
 
     private final Map<String, PolicyRun> runs = new ConcurrentHashMap<>();

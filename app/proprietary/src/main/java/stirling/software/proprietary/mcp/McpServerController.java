@@ -5,16 +5,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.security.identity.SecurityIdentity;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,9 +29,14 @@ import tools.jackson.databind.node.ObjectNode;
 
 /** Streamable-HTTP MCP server endpoint serving JSON-RPC 2.0 frames on {@code POST /mcp}. */
 @Slf4j
-@RestController
-@RequestMapping
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/mcp")
+// @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true") -> LookupIfProperty.
+// LookupIfProperty gates programmatic lookup; for a JAX-RS resource Quarkus always registers the
+// endpoint. TODO: Migration required - to truly disable the /mcp route when mcp.enabled=false,
+// add a runtime guard (e.g. reject in handle() when disabled) or use a build-time conditional;
+// LookupIfProperty alone does not unregister the REST path.
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class McpServerController {
 
     private static final String PREFERRED_PROTOCOL_VERSION = "2025-06-18";
@@ -44,6 +48,9 @@ public class McpServerController {
     private final ApplicationProperties applicationProperties;
     private final Map<String, McpTool> toolsByName;
 
+    @Inject SecurityIdentity securityIdentity;
+
+    @Inject
     public McpServerController(
             ObjectMapper mapper, ApplicationProperties applicationProperties, List<McpTool> tools) {
         this.mapper = mapper;
@@ -58,24 +65,24 @@ public class McpServerController {
                 toolsByName.keySet());
     }
 
-    @PostMapping(
-            path = "/mcp",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> handle(@RequestBody JsonNode body) {
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @jakarta.ws.rs.Produces(MediaType.APPLICATION_JSON)
+    public Response handle(JsonNode body) {
         JsonRpcRequest request = decode(body);
         if (request == null) {
             // Valid JSON but not a JSON-RPC request -> Invalid Request, not Parse error.
-            return ResponseEntity.badRequest()
-                    .body(
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(
                             JsonRpcResponse.failure(
                                     null,
                                     JsonRpcError.invalidRequest(
-                                            "Body is not a valid JSON-RPC 2.0 request")));
+                                            "Body is not a valid JSON-RPC 2.0 request")))
+                    .build();
         }
         if (request.isNotification()) {
             log.debug("Notification received: {}", sanitizeForLog(request.method()));
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            return Response.status(Response.Status.NO_CONTENT).build();
         }
         JsonRpcResponse response;
         try {
@@ -92,17 +99,23 @@ public class McpServerController {
                             JsonRpcError.internalError(
                                     "Internal error handling " + request.method()));
         }
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
-    /** Wrap malformed-JSON failures (caught before {@link #handle}) as a JSON-RPC Parse error. */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<JsonRpcResponse> handleUnreadable(HttpMessageNotReadableException ex) {
-        return ResponseEntity.badRequest()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(
+    // Spring's @ExceptionHandler(HttpMessageNotReadableException.class) wrapped malformed-JSON
+    // failures as a JSON-RPC Parse error. In JAX-RS this maps to a
+    // jakarta.ws.rs.ext.ExceptionMapper provider. TODO: Migration required - move this handling to
+    // a @Provider ExceptionMapper<...> (e.g. mapping the JSON deserialization exception thrown by
+    // the Jackson MessageBodyReader) returning HTTP 400 with
+    // JsonRpcResponse.failure(null, JsonRpcError.parseError("Request body is not valid JSON")).
+    // Kept here for reference; it is no longer wired as an exception handler.
+    private Response handleUnreadable() {
+        return Response.status(Response.Status.BAD_REQUEST)
+                .type(MediaType.APPLICATION_JSON)
+                .entity(
                         JsonRpcResponse.failure(
-                                null, JsonRpcError.parseError("Request body is not valid JSON")));
+                                null, JsonRpcError.parseError("Request body is not valid JSON")))
+                .build();
     }
 
     private static String sanitizeForLog(String value) {
@@ -197,21 +210,32 @@ public class McpServerController {
 
     private McpCallContext resolveContext() {
         boolean scopesEnabled = applicationProperties.getMcp().isScopesEnabled();
-        org.springframework.security.core.Authentication auth =
-                org.springframework.security.core.context.SecurityContextHolder.getContext()
-                        .getAuthentication();
-        // Fail closed: no/unauthenticated principal yields an empty context so scoped ops are
-        // refused.
-        if (auth == null || !auth.isAuthenticated() || auth.getName() == null) {
+        // Spring SecurityContextHolder.getContext().getAuthentication() -> Quarkus SecurityIdentity.
+        // Fail closed: an anonymous/unauthenticated identity yields an empty context so scoped ops
+        // are refused.
+        if (securityIdentity == null
+                || securityIdentity.isAnonymous()
+                || securityIdentity.getPrincipal() == null
+                || securityIdentity.getPrincipal().getName() == null) {
             return new McpCallContext(null, Set.of(), scopesEnabled);
         }
         java.util.Set<String> scopes = new java.util.HashSet<>();
-        for (org.springframework.security.core.GrantedAuthority ga : auth.getAuthorities()) {
-            String authority = ga.getAuthority();
-            if (authority != null && authority.startsWith("SCOPE_")) {
-                scopes.add(authority.substring("SCOPE_".length()));
+        // TODO: Migration required - the Spring code derived scopes from GrantedAuthority values
+        // prefixed with "SCOPE_". Quarkus SecurityIdentity.getRoles() typically already carries the
+        // bare role/scope names (quarkus-oidc maps OIDC scopes to roles without the SCOPE_ prefix).
+        // Confirm the configured quarkus.oidc role/scope mapping; if scopes arrive as a "scope"
+        // claim, read them via securityIdentity.getAttribute("scope")/getClaims() instead. For now
+        // we accept both the bare role and any "SCOPE_"-prefixed authority for parity.
+        for (String role : securityIdentity.getRoles()) {
+            if (role == null) {
+                continue;
+            }
+            if (role.startsWith("SCOPE_")) {
+                scopes.add(role.substring("SCOPE_".length()));
+            } else {
+                scopes.add(role);
             }
         }
-        return new McpCallContext(auth.getName(), scopes, scopesEnabled);
+        return new McpCallContext(securityIdentity.getPrincipal().getName(), scopes, scopesEnabled);
     }
 }

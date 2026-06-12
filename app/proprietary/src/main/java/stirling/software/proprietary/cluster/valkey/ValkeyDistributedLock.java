@@ -8,16 +8,36 @@ import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.DistributedLock;
 
-@Component
-@RequiredArgsConstructor
-@ConditionalOnValkeyBackplane
+// DI mapping applied here:
+//   @Component                  -> @ApplicationScoped
+//   @RequiredArgsConstructor    -> explicit @Inject constructor (single injected collaborator)
+//   @ConditionalOnValkeyBackplane -> the two stacked @LookupIfProperty guards below (per the note in
+//                                    ConditionalOnValkeyBackplane: Quarkus does not transitively
+//                                    propagate @LookupIfProperty through the meta-annotation, so the
+//                                    guards are repeated directly on this consumer).
+//
+// TODO: Migration required - this class still depends on spring-data-redis types
+// (StringRedisTemplate, RedisScript, DefaultRedisScript). Quarkus has no spring-data-redis; once
+// ValkeyConnectionConfiguration migrates its producer onto io.quarkus.redis.datasource.RedisDataSource,
+// this lock should be reworked to use RedisDataSource: SET NX PX for tryAcquire and EVAL of the
+// release/renew Lua scripts (redisDataSource.execute("EVAL", script, "1", key, value[, ttlMillis])).
+// The injected bean is the @Named("valkeyTemplate") StringRedisTemplate produced there, so this file
+// and that producer must migrate in lockstep; the spring-data-redis imports are retained until then.
+// The Lua scripts and the acquire/release/renew control flow are framework-agnostic and carry over.
+@ApplicationScoped
+@LookupIfProperty(name = "cluster.enabled", stringValue = "true")
+@LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
 @Slf4j
 public class ValkeyDistributedLock implements DistributedLock {
 
@@ -34,6 +54,11 @@ public class ValkeyDistributedLock implements DistributedLock {
                     Long.class);
 
     private final StringRedisTemplate template;
+
+    @Inject
+    public ValkeyDistributedLock(@Named("valkeyTemplate") StringRedisTemplate template) {
+        this.template = template;
+    }
 
     @Override
     public Optional<LockHandle> tryAcquire(String lockKey, Duration leaseTime) {

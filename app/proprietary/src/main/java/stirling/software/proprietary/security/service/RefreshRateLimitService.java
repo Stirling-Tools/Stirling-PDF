@@ -5,10 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
+import io.quarkus.scheduler.Scheduled;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
@@ -20,13 +19,12 @@ import stirling.software.common.model.ApplicationProperties;
  * <p>Prevents abuse of expired tokens by tracking and limiting refresh attempts per token. Tokens
  * are identified by a hash to avoid storing actual token values.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class RefreshRateLimitService {
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
-    @Autowired
     public RefreshRateLimitService(ApplicationProperties applicationProperties) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
     }
@@ -89,7 +87,7 @@ public class RefreshRateLimitService {
     }
 
     /** Clean up expired tracking entries every 5 minutes. */
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(every = "300s")
     public void cleanupExpiredEntries() {
         // Use configured grace period with same normalization as runtime checks
         int configuredMinutes = jwtProperties.getRefreshGraceMinutes();

@@ -2,12 +2,15 @@ package stirling.software.proprietary.policy.store;
 
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Repository
-public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+@ApplicationScoped
+public class PolicyRepository implements PanacheRepositoryBase<PolicyEntity, String> {
 
     /** Enabled policies of a given trigger type, for background triggers to activate. */
-    List<PolicyEntity> findByTriggerTypeAndEnabledTrue(String triggerType);
+    public List<PolicyEntity> findByTriggerTypeAndEnabledTrue(String triggerType) {
+        return list("triggerType = ?1 and enabled = true", triggerType);
+    }
 }

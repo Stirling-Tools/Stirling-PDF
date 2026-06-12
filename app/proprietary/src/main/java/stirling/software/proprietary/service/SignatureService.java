@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +29,7 @@ import tools.jackson.databind.ObjectMapper;
  * version enforces per-user quotas and requires authentication. Provides access to personal
  * signatures only (shared signatures handled by core service).
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class SignatureService implements PersonalSignatureServiceInterface {
 

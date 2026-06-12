@@ -8,22 +8,14 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.savedrequest.SavedRequest;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.core.HttpHeaders;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -38,33 +30,42 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
 
+// TODO: Migration required - this class extended Spring Security's
+// SavedRequestAwareAuthenticationSuccessHandler, which has no Quarkus equivalent. Under quarkus-oidc
+// there is no AuthenticationSuccessHandler concept; the post-login OAuth2 success flow must be
+// rehosted, e.g. via a SecurityIdentityAugmentor plus a JAX-RS callback resource (or a
+// jakarta.servlet endpoint) that performs the redirect/JWT-issuance below. The Spring
+// Authentication/OAuth2User/OAuth2AuthenticationToken/SavedRequest types referenced here must be
+// replaced with quarkus-oidc equivalents (io.quarkus.security.identity.SecurityIdentity,
+// io.quarkus.oidc.IdToken/UserInfo, etc.). The user-mapping, eligibility, JWT and redirect logic is
+// preserved verbatim below so it can be re-wired without re-deriving it.
 @Slf4j
-@RequiredArgsConstructor
-public class CustomOAuth2AuthenticationSuccessHandler
-        extends SavedRequestAwareAuthenticationSuccessHandler {
+@ApplicationScoped
+public class CustomOAuth2AuthenticationSuccessHandler {
 
-    private final LoginAttemptService loginAttemptService;
-    private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
-    private final UserService userService;
-    private final JwtServiceInterface jwtService;
-    private final stirling.software.proprietary.service.UserLicenseSettingsService
-            licenseSettingsService;
-    private final ApplicationProperties applicationProperties;
+    @Inject LoginAttemptService loginAttemptService;
+    @Inject ApplicationProperties.Security.OAUTH2 oauth2Properties;
+    @Inject UserService userService;
+    @Inject JwtServiceInterface jwtService;
+    @Inject stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService;
+    @Inject ApplicationProperties applicationProperties;
 
-    @Override
+    // TODO: Migration required - the original signature took a Spring Security
+    // org.springframework.security.core.Authentication. Under quarkus-oidc this should receive an
+    // io.quarkus.security.identity.SecurityIdentity (or the OIDC IdToken/UserInfo). The "authentication"
+    // parameter is now typed as Object so the body still compiles; replace it with the real
+    // quarkus-oidc principal type and re-implement principal extraction below when wiring the
+    // success flow.
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationSuccess(
-            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            HttpServletRequest request, HttpServletResponse response, Object authentication)
             throws ServletException, IOException {
 
-        Object principal = authentication.getPrincipal();
         String username = "";
-
-        if (principal instanceof OAuth2User oAuth2User) {
-            username = oAuth2User.getName();
-        } else if (principal instanceof UserDetails detailsUser) {
-            username = detailsUser.getUsername();
-        }
+        // TODO: Migration required - principal extraction relied on Spring Security OAuth2User /
+        // UserDetails. Derive the username from the quarkus-oidc principal (SecurityIdentity /
+        // IdToken claims) instead.
+        username = extractUsername(authentication);
 
         boolean userExists = userService.usernameExistsIgnoreCase(username);
 
@@ -94,26 +95,40 @@ public class CustomOAuth2AuthenticationSuccessHandler
         // Get the saved request
         HttpSession session = request.getSession(false);
         String contextPath = request.getContextPath();
-        SavedRequest savedRequest =
+        // TODO: Migration required - SavedRequest / "SPRING_SECURITY_SAVED_REQUEST" is a Spring
+        // Security web construct. Under quarkus-oidc the original target URL is preserved via the
+        // OIDC state/restore-path mechanism (quarkus.oidc.authentication.restore-path-after-redirect)
+        // rather than a session attribute. Re-implement saved-request resolution accordingly; the
+        // session attribute read below is left as a placeholder and will currently be null.
+        Object savedRequest =
                 (session != null)
-                        ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
+                        ? session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
                         : null;
 
         if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
-            // Redirect to the original destination
-            super.onAuthenticationSuccess(request, response, authentication);
+                && !RequestUriUtils.isStaticResource(
+                        contextPath, getSavedRedirectUrl(savedRequest))) {
+            // TODO: Migration required - originally delegated to
+            // SavedRequestAwareAuthenticationSuccessHandler.onAuthenticationSuccess to redirect to
+            // the saved request. Reimplement the redirect to the saved/original destination here
+            // once the quarkus-oidc saved-request mechanism is in place.
+            redirectToSavedRequest(request, response, savedRequest);
         } else {
             if (loginAttemptService.isBlocked(username)) {
                 if (session != null) {
                     session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
                 }
-                throw new LockedException(
+                // TODO: Migration required - originally threw Spring Security's
+                // org.springframework.security.authentication.LockedException. Replace with the
+                // exception type the quarkus-oidc success flow expects (or a redirect to a locked
+                // page); throwing a plain IllegalStateException here as a placeholder.
+                throw new IllegalStateException(
                         "Your account has been locked due to too many failed login attempts.");
             }
             if (userService.isUserDisabled(username)) {
-                getRedirectStrategy()
-                        .sendRedirect(request, response, "/logout?userIsDisabled=true");
+                // TODO: Migration required - originally used Spring's RedirectStrategy via
+                // getRedirectStrategy().sendRedirect(...). Using the servlet response directly.
+                response.sendRedirect(contextPath + "/logout?userIsDisabled=true");
                 return;
             }
             boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
@@ -135,13 +150,12 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     response.sendRedirect(contextPath + "/logout?maxUsersReached=true");
                     return;
                 }
-                if (principal instanceof OAuth2User oAuth2User) {
-                    // Extract SSO provider information from OAuth2User
-                    String ssoProviderId = oAuth2User.getAttribute("sub"); // OIDC ID
-                    // Extract provider from authentication - need to get it from the token/request
-                    // For now, we'll extract it in a more generic way
-                    String ssoProvider = extractProviderFromAuthentication(authentication);
-
+                // TODO: Migration required - SSO provider/claims extraction relied on Spring
+                // Security's OAuth2User attributes and OAuth2AuthenticationToken. Re-derive the
+                // OIDC "sub" claim and the provider registration id from the quarkus-oidc principal.
+                String ssoProviderId = extractSubClaim(authentication);
+                String ssoProvider = extractProviderFromAuthentication(authentication);
+                if (ssoProviderId != null || ssoProvider != null) {
                     userService.processSSOPostLogin(
                             username,
                             ssoProviderId,
@@ -170,7 +184,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                 desktopExpiryMinutes / 1440);
                     } else {
                         // Web: Use default expiry
-                        jwt = jwtService.generateToken(authentication, claims);
+                        // TODO: Migration required - JwtServiceInterface.generateToken(Authentication,
+                        // claims) takes a Spring Security Authentication. Until JwtServiceInterface is
+                        // migrated, issue the token by username (same identity) to avoid the Spring
+                        // dependency here.
+                        jwt = jwtService.generateToken(username, claims);
                         log.debug("Issued WEB OAuth2 token for user '{}'", username);
                     }
 
@@ -189,16 +207,47 @@ public class CustomOAuth2AuthenticationSuccessHandler
         }
     }
 
+    // TODO: Migration required - placeholder for principal -> username extraction. Originally used
+    // Spring Security OAuth2User.getName() / UserDetails.getUsername(). Implement against the
+    // quarkus-oidc principal (SecurityIdentity.getPrincipal().getName() / IdToken claims).
+    private String extractUsername(Object authentication) {
+        throw new UnsupportedOperationException(
+                "TODO: Migration required - extract username from the quarkus-oidc principal");
+    }
+
+    // TODO: Migration required - placeholder for the OIDC "sub" claim. Originally
+    // oAuth2User.getAttribute("sub"). Read it from the quarkus-oidc IdToken/UserInfo.
+    private String extractSubClaim(Object authentication) {
+        throw new UnsupportedOperationException(
+                "TODO: Migration required - extract the 'sub' claim from the quarkus-oidc principal");
+    }
+
+    // TODO: Migration required - placeholder for the saved-request redirect URL. Originally
+    // SavedRequest.getRedirectUrl().
+    private String getSavedRedirectUrl(Object savedRequest) {
+        throw new UnsupportedOperationException(
+                "TODO: Migration required - resolve the saved-request redirect URL under quarkus-oidc");
+    }
+
+    // TODO: Migration required - placeholder for delegating to the saved-request redirect.
+    // Originally SavedRequestAwareAuthenticationSuccessHandler.onAuthenticationSuccess(...).
+    private void redirectToSavedRequest(
+            HttpServletRequest request, HttpServletResponse response, Object savedRequest)
+            throws IOException {
+        throw new UnsupportedOperationException(
+                "TODO: Migration required - redirect to the saved/original destination under quarkus-oidc");
+    }
+
     /**
      * Extracts the OAuth2 provider registration ID from the authentication object.
      *
      * @param authentication The authentication object
      * @return The provider registration ID (e.g., "google", "github"), or null if not available
      */
-    private String extractProviderFromAuthentication(Authentication authentication) {
-        if (authentication instanceof OAuth2AuthenticationToken oauth2Token) {
-            return oauth2Token.getAuthorizedClientRegistrationId();
-        }
+    private String extractProviderFromAuthentication(Object authentication) {
+        // TODO: Migration required - originally cast to Spring Security's
+        // OAuth2AuthenticationToken and called getAuthorizedClientRegistrationId(). Derive the OIDC
+        // provider/tenant id from the quarkus-oidc principal instead.
         return null;
     }
 
@@ -332,13 +381,14 @@ public class CustomOAuth2AuthenticationSuccessHandler
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {
-        ResponseCookie cookie =
-                ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
-                        .path("/")
-                        .sameSite("Lax")
-                        .maxAge(0)
-                        .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        // TODO: Migration required - originally built the Set-Cookie value with Spring's
+        // org.springframework.http.ResponseCookie. Replaced with a manually built RFC 6265
+        // Set-Cookie string to drop the Spring HTTP dependency. Consider switching to
+        // jakarta.servlet.http.Cookie / response.addCookie once SameSite handling is confirmed.
+        String cookie =
+                TauriOAuthUtils.SPA_REDIRECT_COOKIE
+                        + "=; Path=/; Max-Age=0; SameSite=Lax";
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie);
     }
 
     /**

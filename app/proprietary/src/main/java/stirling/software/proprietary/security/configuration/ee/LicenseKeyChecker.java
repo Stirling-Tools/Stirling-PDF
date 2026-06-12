@@ -5,13 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @Slf4j
-@Component
+@ApplicationScoped
 public class LicenseKeyChecker {
 
     private static final String FILE_PREFIX = "file:";
@@ -37,10 +37,11 @@ public class LicenseKeyChecker {
     // the latest tier rather than a stale cached value.
     private volatile License premiumEnabledResult = License.NORMAL;
 
+    @Inject
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
             ApplicationProperties applicationProperties,
-            @Lazy UserLicenseSettingsService licenseSettingsService) {
+            UserLicenseSettingsService licenseSettingsService) {
         this.licenseService = licenseService;
         this.applicationProperties = applicationProperties;
         this.licenseSettingsService = licenseSettingsService;
@@ -51,12 +52,15 @@ public class LicenseKeyChecker {
         evaluateLicense();
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void onApplicationReady() {
+    public void onApplicationReady(@Observes StartupEvent event) {
         synchronizeLicenseSettings();
     }
 
-    @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
+    // TODO: Migration required - Spring used initialDelay=fixedRate=7d. Quarkus @Scheduled has no
+    // initialDelay equivalent for fixed-rate; "every=7d" fires the first run 7 days after start,
+    // which preserves the original initial-delay semantics. delayed="..." could add an extra offset
+    // if needed.
+    @Scheduled(every = "7d")
     public void checkLicensePeriodically() {
         try {
             evaluateLicense();

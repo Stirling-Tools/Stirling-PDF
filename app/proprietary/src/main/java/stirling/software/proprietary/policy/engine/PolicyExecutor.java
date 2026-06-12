@@ -3,22 +3,19 @@ package stirling.software.proprietary.policy.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
@@ -47,7 +44,7 @@ import tools.jackson.databind.ObjectMapper;
  * caller.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PolicyExecutor {
 
@@ -162,9 +159,9 @@ public class PolicyExecutor {
             PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles)
             throws IOException {
         String endpointPath = step.operation();
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        Map<String, List<Object>> body = new LinkedHashMap<>();
         for (Resource file : files) {
-            body.add("fileInput", file);
+            addToBody(body, "fileInput", file);
         }
         // Bind supporting files to their named tool fields (e.g. stampImage, overlayFiles). These
         // come from the run's named asset store, not the document stream.
@@ -183,7 +180,7 @@ public class PolicyExecutor {
                                 + "' but no such file was provided");
             }
             for (Resource asset : assets) {
-                body.add(fieldName, asset);
+                addToBody(body, fieldName, asset);
             }
         }
         for (Map.Entry<String, Object> entry : step.parameters().entrySet()) {
@@ -192,22 +189,25 @@ public class PolicyExecutor {
                     // Endpoints binding lists of structured objects (e.g. /security/redact's
                     // redactions, /general/edit-text's edits) parse a single JSON string field via
                     // a property editor. Pre-serialize the whole list so binding succeeds.
-                    body.add(entry.getKey(), objectMapper.writeValueAsString(list));
+                    addToBody(body, entry.getKey(), objectMapper.writeValueAsString(list));
                 } else {
                     for (Object item : list) {
-                        body.add(entry.getKey(), item);
+                        addToBody(body, entry.getKey(), item);
                     }
                 }
             } else {
-                body.add(entry.getKey(), entry.getValue());
+                addToBody(body, entry.getKey(), entry.getValue());
             }
         }
-        ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
-        if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
+        // The migrated InternalApiClient takes a Map<String, List<Object>> (replacing Spring's
+        // MultiValueMap) and returns a jakarta.ws.rs.core.Response.
+        Response response = internalApiClient.post(endpointPath, body);
+        if (response.getStatus() != Response.Status.OK.getStatusCode()
+                || response.getEntity() == null) {
             throw new IOException(
-                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
+                    "Tool returned HTTP " + response.getStatus() + " for " + endpointPath);
         }
-        Resource resource = response.getBody();
+        Resource resource = (Resource) response.getEntity();
 
         // Filter operations return an empty body to signal the file was filtered out: drop it
         // rather than forwarding a zero-byte document.
@@ -215,18 +215,17 @@ public class PolicyExecutor {
             return new ToolResult(List.of(), null);
         }
 
-        HttpHeaders headers = response.getHeaders();
-        MediaType contentType = headers.getContentType();
+        MediaType contentType = response.getMediaType();
 
         // JSON-only response: the whole body is the structured report, no result file.
-        if (contentType != null && MediaType.APPLICATION_JSON.isCompatibleWith(contentType)) {
+        if (contentType != null && MediaType.APPLICATION_JSON_TYPE.isCompatible(contentType)) {
             try (InputStream is = resource.getInputStream()) {
                 JsonNode report = objectMapper.readTree(is);
                 return new ToolResult(List.of(), report);
             }
         }
 
-        JsonNode report = parseReportHeader(headers, endpointPath);
+        JsonNode report = parseReportHeader(response, endpointPath);
         if (toolMetadataService.shouldUnpackZipResponse(endpointPath)) {
             return new ToolResult(ZipExtractionUtils.extractZip(resource, tempFileManager), report);
         }
@@ -237,8 +236,8 @@ public class PolicyExecutor {
      * Parse the optional {@link AiToolResponseHeaders#TOOL_REPORT} header into a {@link JsonNode},
      * or return null.
      */
-    private JsonNode parseReportHeader(HttpHeaders headers, String endpointPath) {
-        String raw = headers.getFirst(AiToolResponseHeaders.TOOL_REPORT);
+    private JsonNode parseReportHeader(Response response, String endpointPath) {
+        String raw = response.getHeaderString(AiToolResponseHeaders.TOOL_REPORT);
         if (raw == null || raw.isBlank()) {
             return null;
         }
@@ -252,6 +251,11 @@ public class PolicyExecutor {
                     e.getMessage());
             return null;
         }
+    }
+
+    /** Append a value to the multi-valued form body (replaces Spring's MultiValueMap#add). */
+    private static void addToBody(Map<String, List<Object>> body, String name, Object value) {
+        body.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
     }
 
     private static boolean containsStructuredElements(List<?> list) {

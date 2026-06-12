@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +25,12 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @Slf4j
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class InitialSecuritySetup {
 
-    @Value("${v2:false}")
-    private boolean v2Enabled = false;
+    @ConfigProperty(name = "v2", defaultValue = "false")
+    boolean v2Enabled;
 
     private final UserService userService;
     private final TeamService teamService;

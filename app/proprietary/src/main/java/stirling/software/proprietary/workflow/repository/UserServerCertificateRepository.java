@@ -2,22 +2,25 @@ package stirling.software.proprietary.workflow.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
 
 import stirling.software.proprietary.workflow.model.UserServerCertificateEntity;
 
-@Repository
-public interface UserServerCertificateRepository
-        extends JpaRepository<UserServerCertificateEntity, Long> {
+@ApplicationScoped
+public class UserServerCertificateRepository
+        implements PanacheRepository<UserServerCertificateEntity> {
 
-    @Query("SELECT c FROM UserServerCertificateEntity c WHERE c.user.id = :userId")
-    Optional<UserServerCertificateEntity> findByUserId(@Param("userId") Long userId);
+    public Optional<UserServerCertificateEntity> findByUserId(Long userId) {
+        return find("user.id = ?1", userId).firstResultOptional();
+    }
 
-    @Query("SELECT c FROM UserServerCertificateEntity c WHERE c.user.username = :username")
-    Optional<UserServerCertificateEntity> findByUsername(@Param("username") String username);
+    public Optional<UserServerCertificateEntity> findByUsername(String username) {
+        return find("user.username = ?1", username).firstResultOptional();
+    }
 
-    boolean existsByUserId(Long userId);
+    public boolean existsByUserId(Long userId) {
+        return count("user.id = ?1", userId) > 0;
+    }
 }

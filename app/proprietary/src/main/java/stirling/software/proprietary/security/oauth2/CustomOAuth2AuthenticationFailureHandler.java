@@ -4,16 +4,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,72 +15,68 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 
+// TODO: Migration required - this class previously extended Spring Security's
+// SimpleUrlAuthenticationFailureHandler and was wired into the OAuth2 login flow as the
+// failure handler. quarkus-oidc has no direct equivalent for a servlet
+// AuthenticationFailureHandler. Under quarkus-oidc the failure path should be handled via
+// quarkus.oidc.* config (e.g. quarkus.oidc.authentication.error-path) plus a
+// jakarta.ws.rs.ext.ExceptionMapper / SecurityIdentityAugmentor or a redirect filter that
+// inspects the OIDC error and applies the same redirect logic below. The redirect-building
+// logic (Tauri handling, cookie clearing, query-param construction) is preserved here as a
+// reusable bean; rewire the actual failure dispatch to call onAuthenticationFailure(...) once
+// the quarkus-oidc wiring is in place. The original Spring exception types
+// (BadCredentialsException / DisabledException / LockedException / OAuth2AuthenticationException
+// + OAuth2Error) were used to branch on the failure cause and must be re-mapped to the
+// quarkus-oidc equivalents (io.quarkus.oidc / io.quarkus.security exceptions).
 @Slf4j
-public class CustomOAuth2AuthenticationFailureHandler
-        extends SimpleUrlAuthenticationFailureHandler {
+@ApplicationScoped
+public class CustomOAuth2AuthenticationFailureHandler {
 
-    @Override
     @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException exception)
+            HttpServletRequest request, HttpServletResponse response, Exception exception)
             throws IOException, ServletException {
 
-        if (exception instanceof BadCredentialsException) {
-            log.error("BadCredentialsException", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
-            return;
-        }
-        if (exception instanceof DisabledException) {
-            log.error("User is deactivated: ", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
-            return;
-        }
-        if (exception instanceof LockedException) {
-            log.error("Account locked: ", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
-            return;
-        }
-        if (exception instanceof OAuth2AuthenticationException oAuth2Exception) {
-            OAuth2Error error = oAuth2Exception.getError();
+        // TODO: Migration required - the original handler branched on Spring Security exception
+        // types to choose a redirect target:
+        //   BadCredentialsException -> "/login?error=badCredentials"
+        //   DisabledException       -> "/logout?userIsDisabled=true"
+        //   LockedException         -> "/logout?error=locked"
+        //   OAuth2AuthenticationException (with OAuth2Error.getErrorCode()) -> OAuth2 error flow
+        // Re-map these branches to the corresponding quarkus-oidc / io.quarkus.security failure
+        // causes. The OAuth2 error-code handling below is preserved but the error code can no
+        // longer be extracted from OAuth2Error and must be sourced from the OIDC failure context.
 
-            String errorCode = error.getErrorCode();
+        String errorCode = null;
+        if ("Password must not be null".equals(errorCode)) {
+            errorCode = "userAlreadyExistsWeb";
+        }
 
-            if ("Password must not be null".equals(error.getErrorCode())) {
-                errorCode = "userAlreadyExistsWeb";
-            }
-
-            log.error(
-                    "OAuth2 Authentication error: {}",
-                    errorCode != null ? errorCode : exception.getMessage(),
-                    exception);
-            String errorValue = errorCode != null ? errorCode : "oauth2AuthenticationError";
-            clearRedirectCookie(response);
-            boolean tauriState = TauriOAuthUtils.isTauriState(request);
-            String redirectUrl;
-            if (tauriState) {
-                String basePath =
-                        TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
-                redirectUrl = basePath;
-                String stateParam = request.getParameter("state");
-                if (stateParam != null && !stateParam.isBlank()) {
-                    redirectUrl = appendQueryParam(redirectUrl, "state", stateParam);
-                    // Extract and pass nonce for CSRF validation
-                    String nonce = TauriOAuthUtils.extractNonceFromState(stateParam);
-                    if (nonce != null) {
-                        redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
-                    }
+        log.error(
+                "OAuth2 Authentication error: {}",
+                errorCode != null ? errorCode : exception.getMessage(),
+                exception);
+        String errorValue = errorCode != null ? errorCode : "oauth2AuthenticationError";
+        clearRedirectCookie(response);
+        boolean tauriState = TauriOAuthUtils.isTauriState(request);
+        String redirectUrl;
+        if (tauriState) {
+            String basePath = TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
+            redirectUrl = basePath;
+            String stateParam = request.getParameter("state");
+            if (stateParam != null && !stateParam.isBlank()) {
+                redirectUrl = appendQueryParam(redirectUrl, "state", stateParam);
+                // Extract and pass nonce for CSRF validation
+                String nonce = TauriOAuthUtils.extractNonceFromState(stateParam);
+                if (nonce != null) {
+                    redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
                 }
-                redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", errorValue);
-            } else {
-                redirectUrl = buildFailureRedirectUrl(request, errorValue);
             }
-            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-            return;
+            redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", errorValue);
+        } else {
+            redirectUrl = buildFailureRedirectUrl(request, errorValue);
         }
-        log.error("Unhandled authentication exception", exception);
-        super.onAuthenticationFailure(request, response, exception);
+        response.sendRedirect(redirectUrl);
     }
 
     private String buildFailureRedirectUrl(HttpServletRequest request, String errorValue) {
@@ -108,13 +95,10 @@ public class CustomOAuth2AuthenticationFailureHandler
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {
-        ResponseCookie cookie =
-                ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
-                        .path("/")
-                        .sameSite("Lax")
-                        .maxAge(0)
-                        .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        // Replaces Spring's ResponseCookie/HttpHeaders.SET_COOKIE with a plain servlet header.
+        String cookie =
+                TauriOAuthUtils.SPA_REDIRECT_COOKIE + "=; Path=/; Max-Age=0; SameSite=Lax";
+        response.addHeader("Set-Cookie", cookie);
     }
 
     private String appendQueryParam(String path, String key, String value) {

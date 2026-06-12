@@ -3,14 +3,14 @@ package stirling.software.proprietary.workflow.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Request object for signing a document. Combines certificate submission data with optional wet

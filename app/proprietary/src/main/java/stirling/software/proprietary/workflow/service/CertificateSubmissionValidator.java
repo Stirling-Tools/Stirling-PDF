@@ -16,9 +16,10 @@ import java.util.Enumeration;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ import stirling.software.proprietary.workflow.dto.CertificateInfo;
  * is caught here first.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class CertificateSubmissionValidator {
 
@@ -58,7 +59,7 @@ public class CertificateSubmissionValidator {
      * @param certType "P12", "PKCS12", "PFX", or "JKS" (case-insensitive)
      * @param password keystore password (may be null or empty)
      * @return {@link CertificateInfo} with subject, issuer, and validity dates on success
-     * @throws ResponseStatusException HTTP 400 with a user-friendly message on any failure
+     * @throws WebApplicationException HTTP 400 with a user-friendly message on any failure
      */
     public CertificateInfo validateAndExtractInfo(
             byte[] keystoreBytes, String certType, String password) {
@@ -99,14 +100,14 @@ public class CertificateSubmissionValidator {
             // PKCS12: wrong password produces an IOException with "keystore password was incorrect"
             // JKS: wrong password produces IOException wrapping UnrecoverableKeyException
             log.debug("Failed to load {} keystore: {}", keystoreType, e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid certificate password or corrupt keystore file");
+            throw new WebApplicationException(
+                    "Invalid certificate password or corrupt keystore file",
+                    Response.Status.BAD_REQUEST);
         } catch (Exception e) {
             log.debug("Failed to instantiate {} keystore: {}", keystoreType, e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid certificate password or corrupt keystore file");
+            throw new WebApplicationException(
+                    "Invalid certificate password or corrupt keystore file",
+                    Response.Status.BAD_REQUEST);
         }
     }
 
@@ -119,9 +120,9 @@ public class CertificateSubmissionValidator {
                 try {
                     key = (PrivateKey) keystore.getKey(alias, password);
                 } catch (UnrecoverableKeyException | java.security.NoSuchAlgorithmException e) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Invalid certificate password or corrupt keystore file");
+                    throw new WebApplicationException(
+                            "Invalid certificate password or corrupt keystore file",
+                            Response.Status.BAD_REQUEST);
                 }
                 if (key == null) continue;
 
@@ -130,30 +131,30 @@ public class CertificateSubmissionValidator {
                     return (X509Certificate) chain[0];
                 }
             }
-        } catch (ResponseStatusException e) {
+        } catch (WebApplicationException e) {
             throw e;
         } catch (KeyStoreException e) {
             log.debug("KeyStore alias enumeration failed: {}", e.getMessage());
         }
-        throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST, "No private key found in the provided keystore");
+        throw new WebApplicationException(
+                "No private key found in the provided keystore", Response.Status.BAD_REQUEST);
     }
 
     private void validateCertValidity(X509Certificate cert) {
         try {
             cert.checkValidity();
         } catch (CertificateExpiredException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new WebApplicationException(
                     "Certificate has expired (expired: "
                             + DATE_FORMAT.format(cert.getNotAfter().toInstant())
-                            + ")");
+                            + ")",
+                    Response.Status.BAD_REQUEST);
         } catch (CertificateNotYetValidException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new WebApplicationException(
                     "Certificate is not yet valid (valid from: "
                             + DATE_FORMAT.format(cert.getNotBefore().toInstant())
-                            + ")");
+                            + ")",
+                    Response.Status.BAD_REQUEST);
         }
     }
 
@@ -162,13 +163,13 @@ public class CertificateSubmissionValidator {
             byte[] blankPdf = createBlankPdf();
             pdfSigningService.signWithKeystore(
                     blankPdf, keystore, password, false, null, signerName, null, null, false);
-        } catch (ResponseStatusException e) {
+        } catch (WebApplicationException e) {
             throw e;
         } catch (Exception e) {
             log.debug("Certificate test-sign failed: {}", e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Certificate is not compatible with the signing algorithm: " + e.getMessage());
+            throw new WebApplicationException(
+                    "Certificate is not compatible with the signing algorithm: " + e.getMessage(),
+                    Response.Status.BAD_REQUEST);
         }
     }
 

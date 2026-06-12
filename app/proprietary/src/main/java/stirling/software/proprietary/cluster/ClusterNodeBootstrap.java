@@ -6,13 +6,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.SmartLifecycle;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,31 +28,49 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
  * Registers the local node with {@link InstanceRegistry} on startup, refreshes the entry at 1/3 of
  * the TTL, and deregisters cleanly on shutdown.
  *
- * <p>Implements {@link SmartLifecycle} with {@code getPhase() == Integer.MAX_VALUE} so Spring tears
- * this bean down before {@code LettuceConnectionFactory} - deregister therefore runs while the
- * Valkey connection is still alive.
+ * <p>Originally implemented Spring's {@code SmartLifecycle} with {@code getPhase() ==
+ * Integer.MAX_VALUE} so Spring tore this bean down before {@code LettuceConnectionFactory} -
+ * deregister therefore ran while the Valkey connection was still alive.
+ *
+ * <p>TODO: Migration required - Quarkus has no SmartLifecycle/getPhase shutdown-ordering
+ * equivalent. Startup now runs via @Observes StartupEvent and shutdown via @PreDestroy. If the
+ * Quarkus Redis/Valkey client is torn down before this bean's @PreDestroy, the deregister call may
+ * fail (it already tolerates that via TTL expiry). If strict ordering is required, observe
+ * io.quarkus.runtime.ShutdownEvent on a bean ordered ahead of the Redis client, or rely on the
+ * heartbeat TTL to clean up the stale entry.
  */
-@Component
+@ApplicationScoped
 @Slf4j
-@ConditionalOnProperty(name = "cluster.enabled", havingValue = "true")
-public class ClusterNodeBootstrap implements SmartLifecycle {
+public class ClusterNodeBootstrap {
 
-    private final Duration heartbeatTtl;
+    // TODO: Migration required - Spring @ConditionalOnProperty(name = "cluster.enabled",
+    // havingValue = "true") was a runtime toggle. Quarkus build-time conditionals
+    // (@IfBuildProfile / @LookupIfProperty) cannot gate a StartupEvent observer at runtime, so the
+    // bean is always instantiated and the toggle is enforced at runtime via clusterEnabled below.
+    @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+    boolean clusterEnabled;
+
+    private Duration heartbeatTtl;
 
     private final ApplicationProperties applicationProperties;
     private final InstanceRegistry instanceRegistry;
 
-    @Value("${server.port:8080}")
-    private int serverPort;
+    @ConfigProperty(name = "server.port", defaultValue = "8080")
+    int serverPort;
 
     private volatile String nodeId;
     private volatile String internalAddress;
     private volatile boolean running = false;
 
+    @Inject
     public ClusterNodeBootstrap(
             ApplicationProperties applicationProperties, InstanceRegistry instanceRegistry) {
         this.applicationProperties = applicationProperties;
         this.instanceRegistry = instanceRegistry;
+    }
+
+    @PostConstruct
+    void init() {
         Cluster cluster = applicationProperties.getCluster();
         // Default must match the @Scheduled fallback below AND the model default
         // (ApplicationProperties.Cluster.Node.heartbeatIntervalMs = 5000); otherwise the TTL is
@@ -60,18 +81,30 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         this.heartbeatTtl = Duration.ofMillis(heartbeatMs * 3);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void registerOnStartup() {
+    void registerOnStartup(@Observes StartupEvent event) {
+        if (!clusterEnabled) {
+            return;
+        }
         nodeId = applicationProperties.getCluster().resolvedNodeId();
         internalAddress = resolveInternalAddress();
+        running = true;
         registerSelf("register");
     }
 
-    @Scheduled(fixedDelayString = "${cluster.node.heartbeat-interval-ms:5000}")
+    // TODO: Migration required - Spring @Scheduled(fixedDelayString =
+    // "${cluster.node.heartbeat-interval-ms:5000}") drove the interval directly from config in
+    // milliseconds. Quarkus @Scheduled "every" expects a Duration string, so the config reference
+    // "{cluster.node.heartbeat-interval-ms}" cannot be reused as-is (it resolves to a bare number).
+    // Hard-coded to 5s to match the model default; if the interval is operator-tunable, expose a
+    // duration-formatted property (e.g. cluster.node.heartbeat-interval=5s) and reference it here.
+    @Scheduled(every = "5s")
     public void heartbeat() {
-        // Heartbeat-after-stop race: SmartLifecycle.stop() deregisters, but the @Scheduled
-        // tick keeps firing during a slow drain. Without this guard, the next tick re-registers
-        // the dead node and the entry resurfaces in the registry until TTL expiry.
+        if (!clusterEnabled) {
+            return;
+        }
+        // Heartbeat-after-stop race: shutdown deregisters, but the @Scheduled tick keeps firing
+        // during a slow drain. Without this guard, the next tick re-registers the dead node and
+        // the entry resurfaces in the registry until TTL expiry.
         if (!running) {
             return;
         }
@@ -100,13 +133,8 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         }
     }
 
-    @Override
-    public void start() {
-        running = true;
-    }
-
-    @Override
-    public void stop() {
+    @PreDestroy
+    void stop() {
         running = false;
         if (nodeId == null) {
             return;
@@ -124,19 +152,8 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         }
     }
 
-    @Override
     public boolean isRunning() {
         return running;
-    }
-
-    @Override
-    public int getPhase() {
-        return Integer.MAX_VALUE;
-    }
-
-    @Override
-    public boolean isAutoStartup() {
-        return true;
     }
 
     /**

@@ -2,17 +2,20 @@ package stirling.software.proprietary.policy.output;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.apache.commons.io.FilenameUtils;
+// TODO: Migration required - the PolicyOutputSink interface (a collaborator) still declares
+// List<Resource> using Spring's org.springframework.core.io.Resource; this import stays until that
+// interface is migrated to stirling.software.common.model.io.Resource.
 import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +34,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * FileStorage} entry, so folder outputs are not downloadable via {@code /files/{id}}.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FolderOutputSink implements PolicyOutputSink {
 
@@ -70,10 +73,11 @@ public class FolderOutputSink implements PolicyOutputSink {
                 Files.copy(is, target);
             }
             long size = Files.size(target);
-            String contentType =
-                    MediaTypeFactory.getMediaType(name)
-                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                            .toString();
+            // Spring's MediaTypeFactory.getMediaType(name) did extension-based content-type
+            // guessing; jakarta.ws.rs.core.MediaType has no equivalent factory, so use the JDK's
+            // URLConnection.guessContentTypeFromName and fall back to application/octet-stream.
+            String guessed = URLConnection.guessContentTypeFromName(name);
+            String contentType = guessed != null ? guessed : "application/octet-stream";
             results.add(
                     ResultFile.builder()
                             .fileId(UUID.randomUUID().toString())

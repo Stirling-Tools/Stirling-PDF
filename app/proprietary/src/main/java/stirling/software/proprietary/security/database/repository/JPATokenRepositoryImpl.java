@@ -2,16 +2,30 @@ package stirling.software.proprietary.security.database.repository;
 
 import java.util.Date;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+
+// TODO: Migration required - this class implements Spring Security's
+// org.springframework.security.web.authentication.rememberme.PersistentTokenRepository
+// (remember-me persistent login) and exchanges
+// org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken
+// objects. Quarkus has no direct remember-me equivalent. The OpenSAML/JWT logic here is
+// trivial token persistence, so the body is preserved unchanged. Once the remember-me
+// mechanism is rehosted (custom Quarkus form-auth + persistent token store, or quarkus-oidc
+// session), re-implement the interface against the new abstraction. The Spring Security
+// imports below are intentionally KEPT until that abstraction exists.
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import stirling.software.proprietary.security.model.PersistentLogin;
 
+@ApplicationScoped
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {
 
     private final PersistentLoginRepository persistentLoginRepository;
 
+    @Inject
     public JPATokenRepositoryImpl(PersistentLoginRepository persistentLoginRepository) {
         this.persistentLoginRepository = persistentLoginRepository;
     }
@@ -24,6 +38,9 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
         newToken.setUsername(token.getUsername());
         newToken.setToken(token.getTokenValue());
         newToken.setLastUsed(token.getDate().toInstant());
+        // TODO: Migration required - PersistentLoginRepository is a collaborator that is not
+        // yet migrated to Quarkus Panache. Once it extends PanacheRepositoryBase, replace
+        // save(...) with persist(...).
         persistentLoginRepository.save(newToken);
     }
 

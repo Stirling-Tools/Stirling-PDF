@@ -3,17 +3,14 @@ package stirling.software.proprietary.storage.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,8 +25,8 @@ import stirling.software.proprietary.storage.service.FolderService;
  * Authentication, storage-gate, ownership checks, and the bulk cap all live on the service (where
  * {@code @Transactional} also lives) so the JDBC connection isn't held through JSON serialization.
  */
-@RestController
-@RequestMapping("/api/v1/storage/files")
+@ApplicationScoped
+@Path("/api/v1/storage/files")
 @RequiredArgsConstructor
 public class FileFolderPlacementController {
 
@@ -38,11 +35,12 @@ public class FileFolderPlacementController {
     private final FolderService folderService;
 
     /** Move a single file to a folder (or to root when folderId is null). */
-    @PatchMapping("/{fileId}/folder")
-    public ResponseEntity<Void> moveFileToFolder(
-            @PathVariable Long fileId, @Valid @RequestBody FolderPlacement body) {
+    @PATCH
+    @Path("/{fileId}/folder")
+    public Response moveFileToFolder(
+            @PathParam("fileId") Long fileId, @Valid FolderPlacement body) {
         folderService.moveFileToFolder(fileId, body.getFolderId());
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
     /**
@@ -50,14 +48,16 @@ public class FileFolderPlacementController {
      * success, 207 (Multi-Status) when some files were skipped (typically because they don't belong
      * to the caller).
      */
-    @PatchMapping("/folder")
-    public ResponseEntity<BulkMoveResponse> bulkMove(@Valid @RequestBody BulkMoveRequest body) {
+    @PATCH
+    @Path("/folder")
+    public Response bulkMove(@Valid BulkMoveRequest body) {
         FolderService.BulkMoveResult result =
                 folderService.bulkMoveFilesToFolder(body.getFolderId(), body.getFileIds());
-        HttpStatus status =
-                result.skippedFileIds().isEmpty() ? HttpStatus.OK : HttpStatus.MULTI_STATUS;
-        return ResponseEntity.status(status)
-                .body(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()));
+        // 207 Multi-Status has no Response.Status constant; use the numeric code directly.
+        int status = result.skippedFileIds().isEmpty() ? Response.Status.OK.getStatusCode() : 207;
+        return Response.status(status)
+                .entity(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()))
+                .build();
     }
 
     @Data

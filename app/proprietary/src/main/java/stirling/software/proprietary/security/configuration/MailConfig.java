@@ -2,13 +2,19 @@ package stirling.software.proprietary.security.configuration;
 
 import java.util.Properties;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+
+// TODO: Migration required - org.springframework.mail.javamail.* is Spring's mail abstraction, NOT
+// Spring DI. There is no Quarkus equivalent that the EmailService collaborator can consume without
+// also migrating EmailService (which uses MimeMessage/MimeMessageHelper). Quarkus ships
+// quarkus-mailer (io.quarkus.mailer.Mailer / ReactiveMailer) with a different API. Keep the Spring
+// Mail types here until EmailService is migrated together, then swap the producer to expose a
+// Quarkus Mailer (configured via quarkus.mailer.* in application.properties).
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -18,15 +24,26 @@ import stirling.software.common.model.ApplicationProperties;
  * email server settings from the configuration (ApplicationProperties) and configures the mail
  * client (JavaMailSender).
  */
-@Configuration
+@ApplicationScoped
 @Slf4j
-@AllArgsConstructor
-@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class MailConfig {
 
     private final ApplicationProperties applicationProperties;
 
-    @Bean
+    @Inject
+    public MailConfig(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
+
+    // TODO: Migration required - the original bean was guarded by
+    // @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false).
+    // There is no @ConditionalOnProperty in Quarkus. A build-time toggle could use
+    // @io.quarkus.arc.lookup.LookupIfProperty(name = "mail.enabled", stringValue = "true"), but
+    // mail.enabled is a runtime property (ApplicationProperties.Mail#isEnabled). Consumers already
+    // guard on applicationProperties.getMail().isEnabled() at call time, so the bean is always
+    // produced and the runtime guard remains the source of truth.
+    @Produces
+    @ApplicationScoped
     public JavaMailSender javaMailSender() {
 
         ApplicationProperties.Mail mailProperties = applicationProperties.getMail();

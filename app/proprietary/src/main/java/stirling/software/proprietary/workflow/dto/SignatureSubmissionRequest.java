@@ -1,6 +1,6 @@
 package stirling.software.proprietary.workflow.dto;
 
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

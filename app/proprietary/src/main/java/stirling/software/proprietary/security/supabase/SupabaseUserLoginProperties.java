@@ -1,14 +1,16 @@
 package stirling.software.proprietary.security.supabase;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 
 /** Config for the optional Supabase login on proprietary deployments. */
+// TODO: Migration required - this was a Spring @ConfigurationProperties(prefix =
+// "security.supabase.user-login") POJO. Rebind the prefixed properties via
+// @io.smallrye.config.ConfigMapping(prefix = "security.supabase.user-login") (interface-based)
+// so the fields are populated from configuration; until then this bean holds defaults only.
 @Data
-@Component
-@ConfigurationProperties(prefix = "security.supabase.user-login")
+@ApplicationScoped
 public class SupabaseUserLoginProperties {
 
     /** Master switch. */

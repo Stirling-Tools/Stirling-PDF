@@ -1,13 +1,14 @@
 package stirling.software.proprietary.security.service;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.repository.TeamRepository;
 
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class TeamService {
 
@@ -16,6 +17,7 @@ public class TeamService {
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
+    @Transactional
     public Team getOrCreateDefaultTeam() {
         return teamRepository
                 .findByName(DEFAULT_TEAM_NAME)
@@ -23,10 +25,12 @@ public class TeamService {
                         () -> {
                             Team defaultTeam = new Team();
                             defaultTeam.setName(DEFAULT_TEAM_NAME);
-                            return teamRepository.save(defaultTeam);
+                            teamRepository.persist(defaultTeam);
+                            return defaultTeam;
                         });
     }
 
+    @Transactional
     public Team getOrCreateInternalTeam() {
         return teamRepository
                 .findByName(INTERNAL_TEAM_NAME)
@@ -34,7 +38,8 @@ public class TeamService {
                         () -> {
                             Team internalTeam = new Team();
                             internalTeam.setName(INTERNAL_TEAM_NAME);
-                            return teamRepository.save(internalTeam);
+                            teamRepository.persist(internalTeam);
+                            return internalTeam;
                         });
     }
 }

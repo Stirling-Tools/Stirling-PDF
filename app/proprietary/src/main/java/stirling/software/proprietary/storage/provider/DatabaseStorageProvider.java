@@ -1,19 +1,23 @@
 package stirling.software.proprietary.storage.provider;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFileBlob;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
-@RequiredArgsConstructor
+@ApplicationScoped
+@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DatabaseStorageProvider implements StorageProvider {
 
     private final StoredFileBlobRepository storedFileBlobRepository;
@@ -24,6 +28,8 @@ public class DatabaseStorageProvider implements StorageProvider {
         StoredFileBlob blob = new StoredFileBlob();
         blob.setStorageKey(storageKey);
         blob.setData(file.getBytes());
+        // TODO: Migration required - StoredFileBlobRepository must extend Panache
+        // PanacheRepositoryBase<StoredFileBlob, String>; once migrated, save(blob) -> persist(blob).
         storedFileBlobRepository.save(blob);
 
         return StoredObject.builder()
@@ -36,15 +42,20 @@ public class DatabaseStorageProvider implements StorageProvider {
 
     @Override
     public Resource load(String storageKey) throws IOException {
+        // TODO: Migration required - once StoredFileBlobRepository is a Panache repository,
+        // findById(storageKey) -> findByIdOptional(storageKey).
         StoredFileBlob blob =
                 storedFileBlobRepository
                         .findById(storageKey)
                         .orElseThrow(() -> new IOException("File not found"));
-        return new ByteArrayResource(blob.getData());
+        // Quarkus/Jakarta has no Spring ByteArrayResource; use the common InputStreamResource shim.
+        return new InputStreamResource(new ByteArrayInputStream(blob.getData()), storageKey);
     }
 
     @Override
     public void delete(String storageKey) throws IOException {
+        // TODO: Migration required - once StoredFileBlobRepository is a Panache repository,
+        // existsById(storageKey) -> count("storageKey", storageKey) > 0.
         if (!storedFileBlobRepository.existsById(storageKey)) {
             return;
         }

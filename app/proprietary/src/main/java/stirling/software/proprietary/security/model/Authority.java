@@ -2,8 +2,6 @@ package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
 
-import org.springframework.security.core.GrantedAuthority;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -18,11 +16,16 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+// TODO: Migration required - this entity previously implemented Spring Security's
+// org.springframework.security.core.GrantedAuthority. That interface only required
+// String getAuthority(), which the Lombok @Getter on the 'authority' field still
+// provides. Quarkus uses its own role model (SecurityIdentity roles); when wiring the
+// IdentityProvider that loads users, map this 'authority' value into the granted roles.
 @Entity
 @Table(name = "authorities")
 @Getter
 @Setter
-public class Authority implements GrantedAuthority, Serializable {
+public class Authority implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -6,14 +6,16 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
+
+import io.quarkus.security.identity.SecurityIdentity;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -45,7 +47,6 @@ import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
 import stirling.software.proprietary.security.repository.TeamRepository;
-import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
@@ -57,6 +58,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
+@ApplicationScoped
+@Path("/api/v1/proprietary/ui-data")
 @ProprietaryUiDataApi
 public class ProprietaryUIDataController {
 
@@ -74,6 +77,9 @@ public class ProprietaryUIDataController {
     private final MfaService mfaService;
     private final LoginAttemptService loginAttemptService;
 
+    @Inject SecurityIdentity securityIdentity;
+
+    @Inject
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
             AuditConfigurationProperties auditConfig,
@@ -83,7 +89,7 @@ public class ProprietaryUIDataController {
             SessionRepository sessionRepository,
             DatabaseServiceInterface databaseService,
             ObjectMapper objectMapper,
-            @Qualifier("runningEE") boolean runningEE,
+            @Named("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
@@ -119,11 +125,12 @@ public class ProprietaryUIDataController {
         return "http://localhost:8080";
     }
 
-    @GetMapping("/audit-dashboard")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/audit-dashboard")
+    @RolesAllowed("ADMIN")
     @EnterpriseEndpoint
     @Operation(summary = "Get audit dashboard data")
-    public ResponseEntity<AuditDashboardData> getAuditDashboardData() {
+    public Response getAuditDashboardData() {
         AuditDashboardData data = new AuditDashboardData();
         data.setAuditEnabled(auditConfig.isEnabled());
         data.setAuditLevel(auditConfig.getAuditLevel());
@@ -139,12 +146,13 @@ public class ProprietaryUIDataController {
         data.setPdfMetadataEnabled(
                 auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/login")
+    @GET
+    @Path("/login")
     @Operation(summary = "Get login page data")
-    public ResponseEntity<LoginData> getLoginData() {
+    public Response getLoginData() {
         LoginData data = new LoginData();
         Map<String, String> providerList = new HashMap<>();
         Security securityProps = applicationProperties.getSecurity();
@@ -247,13 +255,14 @@ public class ProprietaryUIDataController {
         data.setLanguages(applicationProperties.getUi().getLanguages());
         data.setDefaultLocale(applicationProperties.getSystem().getDefaultLocale());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/admin-settings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/admin-settings")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get admin settings data")
-    public ResponseEntity<AdminSettingsData> getAdminSettingsData(Authentication authentication) {
+    public Response getAdminSettingsData() {
         List<User> allUsers = userRepository.findAllWithTeam();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
@@ -375,7 +384,7 @@ public class ProprietaryUIDataController {
 
         AdminSettingsData data = new AdminSettingsData();
         data.setUsers(userSummaries);
-        data.setCurrentUsername(authentication.getName());
+        data.setCurrentUsername(securityIdentity.getPrincipal().getName());
         data.setRoleDetails(roleDetails);
         data.setUserSessions(userSessions);
         data.setUserLastRequest(userLastRequest);
@@ -393,39 +402,37 @@ public class ProprietaryUIDataController {
         data.setUserSettings(userSettings);
         data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/account")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @GET
+    @Path("/account")
+    // TODO: Migration required - Spring "!hasAuthority('ROLE_DEMO_USER')" (negated authority) has
+    // no @RolesAllowed equivalent. Enforce the DEMO_USER exclusion via a Quarkus
+    // SecurityIdentity check below / an augmentor, or quarkus.http.auth.* policy.
     @Operation(summary = "Get account page data")
-    public ResponseEntity<AccountData> getAccountData(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
+    public Response getAccountData() {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
-        Object principal = authentication.getPrincipal();
-        String username = null;
+        // TODO: Migration required - Spring distinguished UserDetails / OAuth2User /
+        // CustomSaml2AuthenticatedPrincipal off authentication.getPrincipal() to set the
+        // oAuth2Login / saml2Login flags. Under Quarkus the auth mechanism is exposed via
+        // SecurityIdentity attributes (e.g. quarkus-oidc IdToken / SAML augmentor). Until OAuth2/
+        // SAML are wired to quarkus-oidc, only the username is resolved and the login-type flags
+        // default to false.
+        String username = securityIdentity.getPrincipal().getName();
         boolean isOAuth2Login = false;
         boolean isSaml2Login = false;
 
-        if (principal instanceof UserDetails detailsUser) {
-            username = detailsUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            username = oAuth2User.getName();
-            isOAuth2Login = true;
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            username = saml2User.name();
-            isSaml2Login = true;
-        }
-
         if (username == null) {
-            return ResponseEntity.status(401).build();
+            return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
         Optional<User> user = userRepository.findByUsernameIgnoreCaseWithSettings(username);
         if (user.isEmpty()) {
-            return ResponseEntity.status(404).build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         String settingsJson;
@@ -433,7 +440,7 @@ public class ProprietaryUIDataController {
             settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
         } catch (JacksonException e) {
             log.error("Error converting settings map", e);
-            return ResponseEntity.status(500).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
         AccountData data = new AccountData();
@@ -446,13 +453,14 @@ public class ProprietaryUIDataController {
         data.setMfaEnabled(mfaService.isMfaEnabled(user.get()));
         data.setMfaRequired(mfaService.isMfaRequired(user.get()));
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/teams")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/teams")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get teams list data")
-    public ResponseEntity<TeamsData> getTeamsData() {
+    public Response getTeamsData() {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
         List<TeamWithUserCountDTO> teamsWithCounts =
                 allTeamsWithCounts.stream()
@@ -472,20 +480,21 @@ public class ProprietaryUIDataController {
         data.setTeamsWithCounts(teamsWithCounts);
         data.setTeamLastRequest(teamLastRequest);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/teams/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/teams/{id}")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get team details data")
-    public ResponseEntity<TeamDetailsData> getTeamDetailsData(@PathVariable("id") Long id) {
+    public Response getTeamDetailsData(@PathParam("id") Long id) {
         Team team =
                 teamRepository
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
         if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
-            return ResponseEntity.status(403).build();
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
 
         List<User> teamUsers = userRepository.findAllByTeamId(id);
@@ -516,13 +525,14 @@ public class ProprietaryUIDataController {
         data.setAvailableUsers(availableUsers);
         data.setUserLastRequest(userLastRequest);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/database")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/database")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get database management data")
-    public ResponseEntity<DatabaseData> getDatabaseData() {
+    public Response getDatabaseData() {
         List<FileInfo> backupList = databaseService.getBackupList();
         String dbVersion = databaseService.getH2Version();
         boolean isVersionUnknown = "Unknown".equalsIgnoreCase(dbVersion);
@@ -532,7 +542,7 @@ public class ProprietaryUIDataController {
         data.setDatabaseVersion(dbVersion);
         data.setVersionUnknown(isVersionUnknown);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
     /**

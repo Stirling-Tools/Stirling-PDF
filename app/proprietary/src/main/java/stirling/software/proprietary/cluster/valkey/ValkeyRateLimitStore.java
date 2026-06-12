@@ -3,8 +3,13 @@ package stirling.software.proprietary.cluster.valkey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+// TODO: Migration required - LettuceConnectionFactory is a spring-data-redis type produced by the
+// not-yet-migrated ValkeyConnectionConfiguration collaborator. This store only needs the raw
+// io.lettuce.core.RedisClient that Bucket4j's Lettuce ProxyManager builds on. Once
+// ValkeyConnectionConfiguration is migrated to a Quarkus producer, switch this injection point to a
+// produced io.lettuce.core.RedisClient (or io.quarkus.redis.datasource.RedisDataSource) and delete
+// the getNativeClient() unwrap in initProxyManager(). Kept for now so the Bucket4j logic stays intact.
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.stereotype.Component;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
@@ -14,9 +19,12 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.RedisClient;
+import io.quarkus.arc.lookup.LookupIfProperty;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.cluster.RateLimitStore;
 
@@ -25,8 +33,13 @@ import stirling.software.common.cluster.RateLimitStore;
  * refills continuously and enforces one global limit across nodes, with the same semantics as the
  * in-process {@code InProcessRateLimitStore} (which also uses Bucket4j).
  */
-@Component
+// @ConditionalOnValkeyBackplane is documentary only under CDI (see that annotation's javadoc);
+// the two guards below must be carried directly so the Valkey beans load only when
+// cluster.enabled=true AND cluster.backplane=valkey, otherwise the in-process @DefaultBean wins.
+@ApplicationScoped
 @ConditionalOnValkeyBackplane
+@LookupIfProperty(name = "cluster.enabled", stringValue = "true")
+@LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
 public class ValkeyRateLimitStore implements RateLimitStore {
 
     private static final String PREFIX = "stirling:rl:";
@@ -34,6 +47,7 @@ public class ValkeyRateLimitStore implements RateLimitStore {
     private final LettuceConnectionFactory connectionFactory;
     private ProxyManager<byte[]> proxyManager;
 
+    @Inject
     public ValkeyRateLimitStore(LettuceConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }

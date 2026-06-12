@@ -4,58 +4,60 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.slf4j.MDC;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.TaskDecorator;
-import org.springframework.core.task.support.TaskExecutorAdapter;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Named;
 
-@Configuration
-@EnableAsync
+import org.slf4j.MDC;
+
+@ApplicationScoped
 public class AsyncConfig {
 
     /**
-     * MDC context-propagating task decorator. Copies MDC context from the caller thread to the
-     * virtual thread executing the task.
+     * Wraps a delegate {@link Executor} so that the caller thread's MDC context is propagated to the
+     * worker (virtual) thread executing the task, then cleared afterwards to avoid leaks.
      */
-    static class MDCContextTaskDecorator implements TaskDecorator {
-        @Override
-        public Runnable decorate(Runnable runnable) {
-            // Capture the MDC context from the current thread
+    static Executor mdcPropagating(Executor delegate) {
+        return command -> {
+            // Capture the MDC context from the current (caller) thread
             Map<String, String> contextMap = MDC.getCopyOfContextMap();
 
-            return () -> {
-                try {
-                    // Set the captured context on the worker thread
-                    if (contextMap != null) {
-                        MDC.setContextMap(contextMap);
-                    }
-                    // Execute the task
-                    runnable.run();
-                } finally {
-                    // Clear the context to prevent memory leaks
-                    MDC.clear();
-                }
-            };
-        }
+            delegate.execute(
+                    () -> {
+                        try {
+                            // Set the captured context on the worker thread
+                            if (contextMap != null) {
+                                MDC.setContextMap(contextMap);
+                            }
+                            // Execute the task
+                            command.run();
+                        } finally {
+                            // Clear the context to prevent memory leaks
+                            MDC.clear();
+                        }
+                    });
+        };
     }
 
-    @Bean(name = "auditExecutor")
+    @Produces
+    @Named("auditExecutor")
+    @ApplicationScoped
     public Executor auditExecutor() {
-        TaskExecutorAdapter adapter =
-                new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
-        adapter.setTaskDecorator(new MDCContextTaskDecorator());
-        return adapter;
+        return mdcPropagating(Executors.newVirtualThreadPerTaskExecutor());
     }
 
     /** Propagates the request's SecurityContext onto background AI-orchestration threads. */
-    @Bean(name = "aiStreamExecutor")
+    @Produces
+    @Named("aiStreamExecutor")
+    @ApplicationScoped
     public Executor aiStreamExecutor() {
-        TaskExecutorAdapter adapter =
-                new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
-        adapter.setTaskDecorator(new MDCContextTaskDecorator());
-        return new DelegatingSecurityContextExecutor(adapter);
+        // TODO: Migration required - this previously wrapped the executor in Spring Security's
+        // DelegatingSecurityContextExecutor to propagate the SecurityContext onto background
+        // threads. Quarkus has no direct equivalent; the SecurityIdentity must be captured on the
+        // caller thread and re-established on the worker thread (e.g. via a captured
+        // io.quarkus.security.identity.SecurityIdentity or
+        // org.eclipse.microprofile.context.ThreadContext from MicroProfile Context Propagation).
+        // For now only MDC context is propagated; security context propagation is NOT preserved.
+        return mdcPropagating(Executors.newVirtualThreadPerTaskExecutor());
     }
 }

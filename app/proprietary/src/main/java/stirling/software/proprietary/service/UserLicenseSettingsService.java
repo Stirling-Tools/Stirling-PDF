@@ -10,9 +10,9 @@ import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ import stirling.software.proprietary.security.service.UserService;
  *   <li>Without pro license: grandfathered limit
  * </ul>
  */
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class UserLicenseSettingsService {
@@ -49,7 +49,7 @@ public class UserLicenseSettingsService {
     private final UserLicenseSettingsRepository settingsRepository;
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
-    private final ObjectProvider<LicenseKeyChecker> licenseKeyChecker;
+    private final Instance<LicenseKeyChecker> licenseKeyChecker;
 
     /**
      * Gets the current user license settings, creating them if they don't exist.
@@ -547,7 +547,8 @@ public class UserLicenseSettingsService {
     }
 
     private boolean hasPaidLicense() {
-        LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
+        LicenseKeyChecker checker =
+                licenseKeyChecker.isResolvable() ? licenseKeyChecker.get() : null;
         if (checker == null) {
             return false;
         }
@@ -566,7 +567,8 @@ public class UserLicenseSettingsService {
      * @return true if ENTERPRISE license is active
      */
     private boolean hasEnterpriseLicense() {
-        LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
+        LicenseKeyChecker checker =
+                licenseKeyChecker.isResolvable() ? licenseKeyChecker.get() : null;
         if (checker == null) {
             return false;
         }

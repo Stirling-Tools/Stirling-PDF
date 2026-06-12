@@ -1,23 +1,23 @@
 package stirling.software.proprietary.configuration;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+import io.quarkus.runtime.StartupEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.ServerCertificateServiceInterface;
 
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class ServerCertificateInitializer {
 
     private final ServerCertificateServiceInterface serverCertificateService;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void initializeServerCertificate() {
+    public void initializeServerCertificate(@Observes StartupEvent event) {
         try {
             serverCertificateService.initializeServerCertificate();
         } catch (Exception e) {

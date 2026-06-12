@@ -1,10 +1,9 @@
 package stirling.software.proprietary.security.database.service;
 
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.mail.MessagingException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -14,19 +13,20 @@ import stirling.software.common.model.ApplicationProperties.Premium.EnterpriseFe
 import stirling.software.proprietary.security.database.DatabaseNotificationServiceInterface;
 import stirling.software.proprietary.security.service.EmailService;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class DatabaseNotificationService implements DatabaseNotificationServiceInterface {
 
-    private final Optional<EmailService> emailService;
+    private final Instance<EmailService> emailService;
     private final ApplicationProperties props;
     private final boolean runningEE;
     private DatabaseNotifications notifications;
 
+    @Inject
     DatabaseNotificationService(
-            Optional<EmailService> emailService,
+            Instance<EmailService> emailService,
             ApplicationProperties props,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Named("runningEE") boolean runningEE) {
         this.emailService = emailService;
         this.props = props;
         this.runningEE = runningEE;
@@ -62,14 +62,15 @@ public class DatabaseNotificationService implements DatabaseNotificationServiceI
     }
 
     private void sendMail(String subject, String message) {
-        emailService.ifPresent(
-                service -> {
-                    try {
-                        String to = props.getMail().getFrom();
-                        service.sendSimpleMail(to, subject, message);
-                    } catch (MessagingException e) {
-                        log.error("Error sending notification email: {}", e.getMessage(), e);
-                    }
-                });
+        // MIGRATION: Spring Optional<EmailService> optional dependency -> CDI Instance<T>;
+        // ifPresent -> isResolvable() guard + get().
+        if (emailService.isResolvable()) {
+            try {
+                String to = props.getMail().getFrom();
+                emailService.get().sendSimpleMail(to, subject, message);
+            } catch (MessagingException e) {
+                log.error("Error sending notification email: {}", e.getMessage(), e);
+            }
+        }
     }
 }

@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +18,7 @@ import tools.jackson.databind.ObjectMapper;
  * (a datasource is always present). Policies are persisted as JSON via {@link PolicyEntity}; the
  * scalar columns are kept in sync for querying.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class JpaPolicyStore implements PolicyStore {
 
@@ -25,6 +26,7 @@ public class JpaPolicyStore implements PolicyStore {
     private final ObjectMapper objectMapper;
 
     @Override
+    @Transactional
     public Policy save(Policy policy) {
         String id =
                 policy.id() == null || policy.id().isBlank()
@@ -48,18 +50,18 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setEnabled(stored.enabled());
         entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
-        repository.save(entity);
+        repository.persist(entity);
         return stored;
     }
 
     @Override
     public Optional<Policy> get(String id) {
-        return repository.findById(id).map(this::toPolicy);
+        return repository.findByIdOptional(id).map(this::toPolicy);
     }
 
     @Override
     public List<Policy> all() {
-        return repository.findAll().stream().map(this::toPolicy).toList();
+        return repository.listAll().stream().map(this::toPolicy).toList();
     }
 
     @Override
@@ -70,12 +72,9 @@ public class JpaPolicyStore implements PolicyStore {
     }
 
     @Override
+    @Transactional
     public boolean delete(String id) {
-        if (!repository.existsById(id)) {
-            return false;
-        }
-        repository.deleteById(id);
-        return true;
+        return repository.deleteById(id);
     }
 
     private Policy toPolicy(PolicyEntity entity) {

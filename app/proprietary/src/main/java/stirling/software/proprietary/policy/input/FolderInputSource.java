@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -39,7 +39,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * Readiness is checked first (via {@link FileReadinessChecker}) so files mid-write are skipped.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FolderInputSource implements InputSource {
 
@@ -142,7 +142,7 @@ public class FolderInputSource implements InputSource {
 
     private static Resource fileResource(Path path) {
         String name = path.getFileName().toString();
-        return new FileSystemResource(path.toFile()) {
+        return new FileSystemResource(path) {
             @Override
             public String getFilename() {
                 return name;

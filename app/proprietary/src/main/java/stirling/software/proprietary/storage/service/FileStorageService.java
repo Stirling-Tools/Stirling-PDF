@@ -16,20 +16,28 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
+// TODO: Migration required - Spring Security glue retained. SecurityContextHolder /
+// org.springframework.security.core.Authentication back the public auth helpers
+// (requireAuthenticatedUser, canAccessShareLink, recordShareAccess, extractAuthenticatedUser),
+// which controllers in this module still call with a Spring Authentication. Replace with
+// io.quarkus.security.identity.SecurityIdentity (injected) or @Context
+// jakarta.ws.rs.core.SecurityContext once the storage controllers are migrated; the principal is
+// expected to be a stirling.software.proprietary.security.model.User instance.
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
@@ -51,7 +59,7 @@ import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
-@Service
+@ApplicationScoped
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
@@ -72,11 +80,10 @@ public class FileStorageService {
 
     public void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
+            throw new WebApplicationException("Storage requires login to be enabled", Response.Status.FORBIDDEN);
         }
         if (!applicationProperties.getStorage().isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
+            throw new WebApplicationException("Storage is disabled", Response.Status.FORBIDDEN);
         }
     }
 
@@ -85,7 +92,7 @@ public class FileStorageService {
         if (authentication == null
                 || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+            throw new WebApplicationException("Not authenticated", Response.Status.UNAUTHORIZED);
         }
 
         Object principal = authentication.getPrincipal();
@@ -93,7 +100,7 @@ public class FileStorageService {
             return user;
         }
 
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unsupported user principal");
+        throw new WebApplicationException("Unsupported user principal", Response.Status.UNAUTHORIZED);
     }
 
     /**
@@ -164,8 +171,7 @@ public class FileStorageService {
                     file != null ? file.getOriginalFilename() : null,
                     file != null ? file.getSize() : null,
                     e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store file", e);
+            throw new WebApplicationException("Failed to store file", e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -181,7 +187,7 @@ public class FileStorageService {
             MultipartFile auditLog) {
         ensureStorageEnabled();
         if (!isOwner(existing, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can update");
+            throw new WebApplicationException("Only the owner can update", Response.Status.FORBIDDEN);
         }
         validateMainUpload(file);
 
@@ -242,8 +248,7 @@ public class FileStorageService {
                     existing.getId(),
                     owner != null ? owner.getId() : null,
                     e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update file", e);
+            throw new WebApplicationException("Failed to update file", e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -254,8 +259,7 @@ public class FileStorageService {
                         .findByIdWithShares(fileId)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "File not found"));
+                                        new WebApplicationException("File not found", Response.Status.NOT_FOUND));
         if (isOwner(file, user)) {
             return file;
         }
@@ -269,7 +273,7 @@ public class FileStorageService {
                                                         .getId()
                                                         .equals(user.getId()));
         if (!sharedWithUser) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+            throw new WebApplicationException("Access denied", Response.Status.FORBIDDEN);
         }
 
         return file;
@@ -281,16 +285,14 @@ public class FileStorageService {
         }
         ShareAccessRole role = resolveUserShareRole(file, user);
         if (role != ShareAccessRole.EDITOR) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Insufficient permissions to download");
+            throw new WebApplicationException("Insufficient permissions to download", Response.Status.FORBIDDEN);
         }
     }
 
     public void requireEditorAccess(FileShare share) {
         ShareAccessRole role = resolveShareRole(share);
         if (role != ShareAccessRole.EDITOR) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Insufficient permissions to download");
+            throw new WebApplicationException("Insufficient permissions to download", Response.Status.FORBIDDEN);
         }
     }
 
@@ -300,16 +302,14 @@ public class FileStorageService {
         }
         ShareAccessRole role = resolveUserShareRole(file, user);
         if (!hasReadAccess(role)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Insufficient permissions to access this file");
+            throw new WebApplicationException("Insufficient permissions to access this file", Response.Status.FORBIDDEN);
         }
     }
 
     public void requireReadAccess(FileShare share) {
         ShareAccessRole role = resolveShareRole(share);
         if (!hasReadAccess(role)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Insufficient permissions to access this file");
+            throw new WebApplicationException("Insufficient permissions to access this file", Response.Status.FORBIDDEN);
         }
     }
 
@@ -318,7 +318,7 @@ public class FileStorageService {
         return storedFileRepository
                 .findByIdAndOwnerWithShares(fileId, owner)
                 .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+                        () -> new WebApplicationException("File not found", Response.Status.NOT_FOUND));
     }
 
     public StoredFileResponse storeFileResponse(User owner, MultipartFile file) {
@@ -470,7 +470,7 @@ public class FileStorageService {
         try {
             return ShareAccessRole.valueOf(role.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid share role");
+            throw new WebApplicationException("Invalid share role", Response.Status.BAD_REQUEST);
         }
     }
 
@@ -489,7 +489,7 @@ public class FileStorageService {
         return share.map(this::resolveShareRole).orElse(ShareAccessRole.VIEWER);
     }
 
-    public org.springframework.core.io.Resource loadFile(StoredFile file) {
+    public Resource loadFile(StoredFile file) {
         ensureStorageEnabled();
         try {
             return storageProvider.load(file.getStorageKey());
@@ -499,15 +499,14 @@ public class FileStorageService {
                     file != null ? file.getId() : null,
                     file != null ? file.getStorageKey() : null,
                     e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to load file", e);
+            throw new WebApplicationException("Failed to load file", e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     public void deleteFile(User owner, StoredFile file) {
         ensureStorageEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can delete");
+            throw new WebApplicationException("Only the owner can delete", Response.Status.FORBIDDEN);
         }
         validateWorkflowDeletion(file, owner);
         List<String> storageKeys = collectStorageKeys(file);
@@ -526,7 +525,7 @@ public class FileStorageService {
         ensureStorageEnabled();
         ensureSharingEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can share");
+            throw new WebApplicationException("Only the owner can share", Response.Status.FORBIDDEN);
         }
 
         String normalizedUsername = username != null ? username.trim() : "";
@@ -536,8 +535,7 @@ public class FileStorageService {
         if (targetUserOpt.isPresent()) {
             User targetUser = targetUserOpt.get();
             if (targetUser.getId().equals(owner.getId())) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Cannot share with yourself");
+                throw new WebApplicationException("Cannot share with yourself", Response.Status.BAD_REQUEST);
             }
 
             FileShare share =
@@ -559,13 +557,10 @@ public class FileStorageService {
 
             if (isEmail) {
                 if (!isEmailSharingEnabled()) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Email sharing is disabled");
+                    throw new WebApplicationException("Email sharing is disabled", Response.Status.BAD_REQUEST);
                 }
                 if (!isShareLinksEnabled()) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Share links must be enabled for email sharing");
+                    throw new WebApplicationException("Share links must be enabled for email sharing", Response.Status.BAD_REQUEST);
                 }
                 String shareLinkUrl = null;
                 FileShare linkShare = createShareLink(owner, file, role);
@@ -577,14 +572,13 @@ public class FileStorageService {
         }
 
         if (!isEmail) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
         }
         if (!isEmailSharingEnabled()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email sharing is disabled");
+            throw new WebApplicationException("Email sharing is disabled", Response.Status.BAD_REQUEST);
         }
         if (!isShareLinksEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Share links must be enabled for email sharing");
+            throw new WebApplicationException("Share links must be enabled for email sharing", Response.Status.BAD_REQUEST);
         }
 
         FileShare linkShare = createShareLink(owner, file, role);
@@ -595,15 +589,14 @@ public class FileStorageService {
     public void revokeUserShare(User owner, StoredFile file, String username) {
         ensureStorageEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can revoke");
+            throw new WebApplicationException("Only the owner can revoke", Response.Status.FORBIDDEN);
         }
         User targetUser =
                 userRepository
                         .findByUsernameIgnoreCase(username)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "User not found"));
+                                        new WebApplicationException("User not found", Response.Status.NOT_FOUND));
         fileShareRepository
                 .findByFileAndSharedWithUser(file, targetUser)
                 .ifPresent(fileShareRepository::delete);
@@ -612,16 +605,14 @@ public class FileStorageService {
     public void leaveUserShare(User user, StoredFile file) {
         ensureStorageEnabled();
         if (isOwner(file, user)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Owners cannot leave their own file");
+            throw new WebApplicationException("Owners cannot leave their own file", Response.Status.FORBIDDEN);
         }
         FileShare share =
                 fileShareRepository
                         .findByFileAndSharedWithUser(file, user)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "Share not found"));
+                                        new WebApplicationException("Share not found", Response.Status.NOT_FOUND));
         fileShareRepository.delete(share);
     }
 
@@ -629,7 +620,7 @@ public class FileStorageService {
         ensureStorageEnabled();
         ensureShareLinksEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can share");
+            throw new WebApplicationException("Only the owner can share", Response.Status.FORBIDDEN);
         }
 
         FileShare share = new FileShare();
@@ -643,17 +634,16 @@ public class FileStorageService {
     public void revokeShareLink(User owner, StoredFile file, String token) {
         ensureStorageEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can revoke");
+            throw new WebApplicationException("Only the owner can revoke", Response.Status.FORBIDDEN);
         }
         FileShare share =
                 fileShareRepository
                         .findByShareToken(token)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "Share link not found"));
+                                        new WebApplicationException("Share link not found", Response.Status.NOT_FOUND));
         if (!share.getFile().getId().equals(file.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Share link mismatch");
+            throw new WebApplicationException("Share link mismatch", Response.Status.FORBIDDEN);
         }
         fileShareAccessRepository.deleteByFileShare(share);
         fileShareRepository.delete(share);
@@ -666,11 +656,10 @@ public class FileStorageService {
                         .findByShareTokenWithFile(token)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "Share link not found"));
+                                        new WebApplicationException("Share link not found", Response.Status.NOT_FOUND));
         if (isShareLinkExpired(share)) {
             log.debug("Share link access denied: token is expired");
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Share link not found");
+            throw new WebApplicationException("Share link not found", Response.Status.NOT_FOUND);
         }
         return share;
     }
@@ -733,18 +722,16 @@ public class FileStorageService {
     public List<FileShareAccess> listShareAccesses(User owner, StoredFile file, String token) {
         ensureStorageEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Only the owner can view access");
+            throw new WebApplicationException("Only the owner can view access", Response.Status.FORBIDDEN);
         }
         FileShare share =
                 fileShareRepository
                         .findByShareToken(token)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "Share link not found"));
+                                        new WebApplicationException("Share link not found", Response.Status.NOT_FOUND));
         if (!share.getFile().getId().equals(file.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Share link mismatch");
+            throw new WebApplicationException("Share link mismatch", Response.Status.FORBIDDEN);
         }
         return fileShareAccessRepository.findByFileShareWithUserOrderByAccessedAtDesc(share);
     }
@@ -824,14 +811,14 @@ public class FileStorageService {
     public void ensureSharingEnabled() {
         ensureStorageEnabled();
         if (!applicationProperties.getStorage().getSharing().isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sharing is disabled");
+            throw new WebApplicationException("Sharing is disabled", Response.Status.FORBIDDEN);
         }
     }
 
     public void ensureShareLinksEnabled() {
         ensureSharingEnabled();
         if (!isShareLinksEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Share links are disabled");
+            throw new WebApplicationException("Share links are disabled", Response.Status.FORBIDDEN);
         }
     }
 
@@ -877,13 +864,12 @@ public class FileStorageService {
 
     private void validateMainUpload(MultipartFile file) {
         if (!isValidUpload(file)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
+            throw new WebApplicationException("File is required", Response.Status.BAD_REQUEST);
         }
         String contentType = file.getContentType();
         if (contentType != null
                 && BLOCKED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "File type not permitted: " + contentType);
+            throw new WebApplicationException("File type not permitted: " + contentType, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -943,8 +929,7 @@ public class FileStorageService {
         }
         long maxFileBytes = toBytes(quotas.getMaxFileMb());
         if (maxFileBytes > 0 && newBytes > maxFileBytes) {
-            throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE, "Stored file exceeds the maximum size");
+            throw new WebApplicationException("Stored file exceeds the maximum size", 413);
         }
 
         long delta = newBytes - existingBytes;
@@ -956,8 +941,7 @@ public class FileStorageService {
         if (maxUserBytes > 0) {
             long currentBytes = storedFileRepository.sumStorageBytesByOwner(owner);
             if (currentBytes + delta > maxUserBytes) {
-                throw new ResponseStatusException(
-                        HttpStatus.PAYLOAD_TOO_LARGE, "User storage quota exceeded");
+                throw new WebApplicationException("User storage quota exceeded", 413);
             }
         }
 
@@ -965,8 +949,7 @@ public class FileStorageService {
         if (maxTotalBytes > 0) {
             long totalBytes = storedFileRepository.sumStorageBytesTotal();
             if (totalBytes + delta > maxTotalBytes) {
-                throw new ResponseStatusException(
-                        HttpStatus.PAYLOAD_TOO_LARGE, "System storage quota exceeded");
+                throw new WebApplicationException("System storage quota exceeded", 413);
             }
         }
     }
@@ -1170,13 +1153,11 @@ public class FileStorageService {
      *
      * @param file File to validate
      * @param user User attempting deletion
-     * @throws ResponseStatusException if deletion is not allowed
+     * @throws WebApplicationException if deletion is not allowed
      */
     public void validateWorkflowDeletion(StoredFile file, User user) {
         if (isWorkflowFile(file)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Cannot delete file that is part of an active workflow");
+            throw new WebApplicationException("Cannot delete file that is part of an active workflow", Response.Status.BAD_REQUEST);
         }
     }
 }

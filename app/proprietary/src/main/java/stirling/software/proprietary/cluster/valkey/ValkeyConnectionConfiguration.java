@@ -4,10 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -18,23 +14,55 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.SslVerifyMode;
 
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Named;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
 
+// TODO: Migration required - this class still depends on spring-data-redis types
+// (LettuceConnectionFactory, StringRedisTemplate, RedisStandaloneConfiguration,
+// LettuceClientConfiguration, RedisPassword, RedisConnection). Quarkus has no spring-data-redis;
+// the backplane should be reworked onto io.quarkus.redis.datasource.RedisDataSource /
+// ReactiveRedisDataSource configured via quarkus.redis.* in application.properties (hosts, password,
+// tls, timeout=2s). The produced beans below are consumed by ValkeyClusterBackplane and the other
+// Valkey* collaborators in this package; migrating this file requires migrating those consumers in
+// lockstep, so the spring-data-redis imports are retained until that coordinated change lands. The
+// pure URL-parsing / handshake / auth-detection helpers (parseUrl, buildClientConfiguration,
+// eagerHandshake, isAuthFailure) are framework-agnostic and carry over unchanged.
+//
+// DI/config mapping applied here:
+//   @Configuration                         -> @ApplicationScoped (producer bean class)
+//   @Bean                                  -> @Produces (+ @Named for the StringRedisTemplate)
+//   @ConditionalOnProperty(cluster.enabled)-> @LookupIfProperty(name="cluster.enabled", stringValue="true")
+//   @ConditionalOnProperty(backplane=valkey)-> @LookupIfProperty(name="cluster.backplane", stringValue="valkey")
+//   @DependsOn("clusterLicenseGate")       -> TODO: ordering; ensure clusterLicenseGate runs first
+//                                             (CDI has no @DependsOn; use @Observes ordering or an
+//                                             explicit @Inject of the gate bean once migrated).
+//   @Bean(destroyMethod="destroy")         -> @PreDestroy on the produced instance is not expressible
+//                                             on a @Produces method here; rely on factory.destroy()
+//                                             already wired via Spring's destroy lifecycle until the
+//                                             RedisDataSource migration removes this bean. TODO.
 @Slf4j
-@Configuration
+@ApplicationScoped
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "cluster.enabled", havingValue = "true")
-@DependsOn("clusterLicenseGate")
+@LookupIfProperty(name = "cluster.enabled", stringValue = "true")
 public class ValkeyConnectionConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
-    @Bean(destroyMethod = "destroy")
-    @ConditionalOnProperty(name = "cluster.backplane", havingValue = "valkey")
+    // TODO: Migration required - replace LettuceConnectionFactory with a configured
+    // io.quarkus.redis.datasource.RedisDataSource (quarkus.redis.* config). destroyMethod="destroy"
+    // has no @Produces equivalent without a @Disposes method; keep factory.destroy() lifecycle until
+    // the RedisDataSource migration.
+    @Produces
+    @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
     public LettuceConnectionFactory valkeyConnectionFactory() {
         Cluster cluster = applicationProperties.getCluster();
         Endpoint endpoint = parseUrl(cluster.getValkey().getUrl());
@@ -257,8 +285,12 @@ public class ValkeyConnectionConfiguration {
         return t.getMessage();
     }
 
-    @Bean
-    @ConditionalOnProperty(name = "cluster.backplane", havingValue = "valkey")
+    // TODO: Migration required - StringRedisTemplate is spring-data-redis. Once the connection
+    // migrates to RedisDataSource, this producer should be removed and consumers should inject the
+    // Quarkus RedisDataSource (string commands via redisDataSource.value(String.class)) directly.
+    @Produces
+    @Named("valkeyTemplate")
+    @LookupIfProperty(name = "cluster.backplane", stringValue = "valkey")
     public StringRedisTemplate valkeyTemplate(LettuceConnectionFactory factory) {
         return new StringRedisTemplate(factory);
     }

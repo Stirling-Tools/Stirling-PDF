@@ -5,15 +5,19 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Content-addressable id derived from the SHA-256 hash of the uploaded bytes. Same content always
  * hashes to the same id, so re-uploads dedupe naturally in RAG. Suitable for session and SaaS
  * deployments; a folder-watch deployment would use a different strategy keyed by path.
  */
-@Component
+// TODO: Migration required - the FileIdStrategy interface (collaborator file) still imports
+// org.springframework.web.multipart.MultipartFile; it must be switched to
+// stirling.software.common.model.MultipartFile so this implementation's signature matches.
+@ApplicationScoped
 public class ByteHashFileIdStrategy implements FileIdStrategy {
 
     /**

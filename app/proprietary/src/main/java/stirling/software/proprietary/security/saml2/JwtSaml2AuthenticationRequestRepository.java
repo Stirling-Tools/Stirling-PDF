@@ -3,11 +3,6 @@ package stirling.software.proprietary.security.saml2;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.security.saml2.provider.service.authentication.Saml2PostAuthenticationRequest;
-import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
-import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -15,27 +10,38 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
+// TODO: Migration required - this class implemented Spring Security's
+// org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository
+// over Saml2PostAuthenticationRequest / RelyingPartyRegistration(Repository). There is NO Quarkus
+// SAML extension, so the Spring Security SAML glue (interface, Saml2PostAuthenticationRequest,
+// RelyingPartyRegistration[Repository]) has been removed. The SAML SP must be rehosted on a
+// Jakarta @WebServlet using OpenSAML 5 (see the dnulnets/quarkus-saml pattern); this repository
+// should then store/restore the OpenSAML AuthnRequest state instead of the Spring types below.
+//
+// The reusable, provider-agnostic logic is preserved here: the JWT-backed token store keyed by
+// RelayState, plus the serialize/deserialize of the SAML request fields into JWT claims. The
+// methods that referenced the removed Spring types now operate on a plain Map<String, Object>
+// claims representation and a String relayState. Re-wire these to the OpenSAML request model once
+// the SP is rehosted.
 @Slf4j
-public class JwtSaml2AuthenticationRequestRepository
-        implements Saml2AuthenticationRequestRepository<Saml2PostAuthenticationRequest> {
+public class JwtSaml2AuthenticationRequestRepository {
     private final Map<String, String> tokenStore;
     private final JwtServiceInterface jwtService;
-    private final RelyingPartyRegistrationRepository relyingPartyRegistrationRepository;
 
     private static final String SAML_REQUEST_TOKEN = "stirling_saml_request_token";
 
     public JwtSaml2AuthenticationRequestRepository(
-            Map<String, String> tokenStore,
-            JwtServiceInterface jwtService,
-            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
+            Map<String, String> tokenStore, JwtServiceInterface jwtService) {
         this.tokenStore = tokenStore;
         this.jwtService = jwtService;
-        this.relyingPartyRegistrationRepository = relyingPartyRegistrationRepository;
     }
 
-    @Override
+    // TODO: Migration required - original signature was
+    // saveAuthenticationRequest(Saml2PostAuthenticationRequest authRequest, HttpServletRequest,
+    // HttpServletResponse). Pass the OpenSAML-derived claims + relayState once the SP is rehosted.
     public void saveAuthenticationRequest(
-            Saml2PostAuthenticationRequest authRequest,
+            Map<String, Object> claims,
+            String relayState,
             HttpServletRequest request,
             HttpServletResponse response) {
         if (!jwtService.isJwtEnabled()) {
@@ -43,14 +49,12 @@ public class JwtSaml2AuthenticationRequestRepository
             return;
         }
 
-        if (authRequest == null) {
+        if (claims == null) {
             removeAuthenticationRequest(request, response);
             return;
         }
 
-        Map<String, Object> claims = serializeSamlRequest(authRequest);
         String token = jwtService.generateToken("", claims);
-        String relayState = authRequest.getRelayState();
 
         tokenStore.put(relayState, token);
         request.setAttribute(SAML_REQUEST_TOKEN, relayState);
@@ -59,8 +63,9 @@ public class JwtSaml2AuthenticationRequestRepository
         log.debug("Saved SAMLRequest token with RelayState: {}", relayState);
     }
 
-    @Override
-    public Saml2PostAuthenticationRequest loadAuthenticationRequest(HttpServletRequest request) {
+    // TODO: Migration required - original returned Saml2PostAuthenticationRequest. Map the returned
+    // claims back to the OpenSAML AuthnRequest model once the SP is rehosted.
+    public Map<String, Object> loadAuthenticationRequest(HttpServletRequest request) {
         String token = extractTokenFromStore(request);
 
         if (token == null) {
@@ -72,10 +77,10 @@ public class JwtSaml2AuthenticationRequestRepository
         return deserializeSamlRequest(claims);
     }
 
-    @Override
-    public Saml2PostAuthenticationRequest removeAuthenticationRequest(
+    // TODO: Migration required - original returned Saml2PostAuthenticationRequest.
+    public Map<String, Object> removeAuthenticationRequest(
             HttpServletRequest request, HttpServletResponse response) {
-        Saml2PostAuthenticationRequest authRequest = loadAuthenticationRequest(request);
+        Map<String, Object> authRequest = loadAuthenticationRequest(request);
 
         String relayStateId = request.getParameter("RelayState");
         if (relayStateId != null) {
@@ -104,32 +109,32 @@ public class JwtSaml2AuthenticationRequestRepository
         return null;
     }
 
-    private Map<String, Object> serializeSamlRequest(Saml2PostAuthenticationRequest authRequest) {
+    // TODO: Migration required - original signature was
+    // serializeSamlRequest(Saml2PostAuthenticationRequest authRequest). Build this claims map from
+    // the OpenSAML AuthnRequest fields (id, relyingPartyRegistrationId / SP entity id,
+    // authenticationRequestUri / destination, samlRequest, relayState) once the SP is rehosted.
+    private Map<String, Object> serializeSamlRequest(
+            String id,
+            String relyingPartyRegistrationId,
+            String authenticationRequestUri,
+            String samlRequest,
+            String relayState) {
         Map<String, Object> claims = new HashMap<>();
 
-        claims.put("id", authRequest.getId());
-        claims.put("relyingPartyRegistrationId", authRequest.getRelyingPartyRegistrationId());
-        claims.put("authenticationRequestUri", authRequest.getAuthenticationRequestUri());
-        claims.put("samlRequest", authRequest.getSamlRequest());
-        claims.put("relayState", authRequest.getRelayState());
+        claims.put("id", id);
+        claims.put("relyingPartyRegistrationId", relyingPartyRegistrationId);
+        claims.put("authenticationRequestUri", authenticationRequestUri);
+        claims.put("samlRequest", samlRequest);
+        claims.put("relayState", relayState);
 
         return claims;
     }
 
-    private Saml2PostAuthenticationRequest deserializeSamlRequest(Map<String, Object> claims) {
-        String relyingPartyRegistrationId = (String) claims.get("relyingPartyRegistrationId");
-        RelyingPartyRegistration relyingPartyRegistration =
-                relyingPartyRegistrationRepository.findByRegistrationId(relyingPartyRegistrationId);
-
-        if (relyingPartyRegistration == null) {
-            return null;
-        }
-
-        return Saml2PostAuthenticationRequest.withRelyingPartyRegistration(relyingPartyRegistration)
-                .id((String) claims.get("id"))
-                .authenticationRequestUri((String) claims.get("authenticationRequestUri"))
-                .samlRequest((String) claims.get("samlRequest"))
-                .relayState((String) claims.get("relayState"))
-                .build();
+    // TODO: Migration required - original returned Saml2PostAuthenticationRequest rebuilt via
+    // Saml2PostAuthenticationRequest.withRelyingPartyRegistration(...). Resolve the
+    // RelyingPartyRegistration equivalent (SP metadata) and rebuild the OpenSAML AuthnRequest from
+    // these claims once the SP is rehosted. For now the raw claims map is returned unchanged.
+    private Map<String, Object> deserializeSamlRequest(Map<String, Object> claims) {
+        return claims;
     }
 }

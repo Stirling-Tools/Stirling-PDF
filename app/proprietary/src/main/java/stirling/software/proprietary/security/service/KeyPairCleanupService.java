@@ -6,15 +6,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,14 +22,17 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 
 @Slf4j
-@Service
-@ConditionalOnBooleanProperty("v2")
+@ApplicationScoped
+// TODO: Migration required - Spring @ConditionalOnBooleanProperty("v2") dropped; the "v2"
+// runtime toggle has no direct CDI equivalent. Guard activation via a runtime check or
+// @io.quarkus.arc.lookup.LookupIfProperty / quarkus.scheduler config if this bean should be
+// conditionally enabled.
 public class KeyPairCleanupService {
 
     private final KeyPersistenceService keyPersistenceService;
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
-    @Autowired
+    @Inject
     public KeyPairCleanupService(
             KeyPersistenceService keyPersistenceService,
             ApplicationProperties applicationProperties) {
@@ -38,9 +40,14 @@ public class KeyPairCleanupService {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
     }
 
+    // Run cleanup once at application startup (replaces Spring @PostConstruct on the scheduled
+    // method).
+    void onStart(@Observes StartupEvent event) {
+        cleanup();
+    }
+
     @Transactional
-    @PostConstruct
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h")
     public void cleanup() {
         if (!jwtProperties.isEnableKeyCleanup() || !keyPersistenceService.isKeystoreEnabled()) {
             return;

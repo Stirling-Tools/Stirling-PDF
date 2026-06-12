@@ -4,29 +4,39 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.panache.common.Parameters;
 
 import stirling.software.proprietary.security.model.InviteToken;
 
-@Repository
-public interface InviteTokenRepository extends JpaRepository<InviteToken, Long> {
+@ApplicationScoped
+public class InviteTokenRepository implements PanacheRepository<InviteToken> {
 
-    Optional<InviteToken> findByToken(String token);
+    public Optional<InviteToken> findByToken(String token) {
+        return find("token", token).firstResultOptional();
+    }
 
-    Optional<InviteToken> findByEmail(String email);
+    public Optional<InviteToken> findByEmail(String email) {
+        return find("email", email).firstResultOptional();
+    }
 
-    List<InviteToken> findByUsedFalseAndExpiresAtAfter(LocalDateTime now);
+    public List<InviteToken> findByUsedFalseAndExpiresAtAfter(LocalDateTime now) {
+        return find("used = false and expiresAt > ?1", now).list();
+    }
 
-    List<InviteToken> findByCreatedBy(String createdBy);
+    public List<InviteToken> findByCreatedBy(String createdBy) {
+        return find("createdBy", createdBy).list();
+    }
 
-    @Modifying
-    @Query("DELETE FROM InviteToken it WHERE it.expiresAt < :now")
-    void deleteExpiredTokens(@Param("now") LocalDateTime now);
+    @Transactional
+    public void deleteExpiredTokens(LocalDateTime now) {
+        delete("expiresAt < :now", Parameters.with("now", now));
+    }
 
-    @Query("SELECT COUNT(it) FROM InviteToken it WHERE it.used = false AND it.expiresAt > :now")
-    long countActiveInvites(@Param("now") LocalDateTime now);
+    public long countActiveInvites(LocalDateTime now) {
+        return count("used = false and expiresAt > :now", Parameters.with("now", now));
+    }
 }

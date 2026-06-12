@@ -2,31 +2,38 @@ package stirling.software.proprietary.mcp.security;
 
 import java.io.IOException;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Emits 401 + {@code WWW-Authenticate: Bearer resource_metadata="..."} (RFC 9728), preferring
  * X-Forwarded-* headers to build the public-facing metadata URL.
+ *
+ * <p>TODO: Migration required - this was a Spring Security {@code AuthenticationEntryPoint}
+ * (commence(...) invoked by the SecurityFilterChain on authentication failure). Quarkus has no
+ * SecurityFilterChain equivalent. The 401 response must instead be produced by a Quarkus auth
+ * mechanism / failure handler (e.g. an {@link io.quarkus.security.AuthenticationFailedException}
+ * mapper via a {@code jakarta.ws.rs.ext.ExceptionMapper}, or a custom HttpAuthenticationMechanism
+ * sendChallenge). The reusable header-building logic below has been preserved; wire
+ * {@link #commence(HttpServletRequest, HttpServletResponse)} into that handler.
  */
-public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
+@ApplicationScoped
+public class McpAuthenticationEntryPoint {
 
     private final String metadataPath;
+
+    public McpAuthenticationEntryPoint() {
+        this("/.well-known/oauth-protected-resource");
+    }
 
     public McpAuthenticationEntryPoint(String metadataPath) {
         this.metadataPath =
                 metadataPath == null ? "/.well-known/oauth-protected-resource" : metadataPath;
     }
 
-    @Override
-    public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+    public void commence(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String scheme = firstForwarded(request, "X-Forwarded-Proto", request.getScheme());
         String authority = forwardedHost(request, scheme);
@@ -34,7 +41,7 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setHeader(
                 "WWW-Authenticate",
                 "Bearer error=\"invalid_token\", resource_metadata=\"" + metadataUrl + "\"");
-        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode(), "Unauthorized");
     }
 
     /** host[:port] from forwarded headers when present, else the servlet host/port. */
