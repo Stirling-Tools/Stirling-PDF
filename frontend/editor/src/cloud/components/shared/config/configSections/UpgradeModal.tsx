@@ -42,8 +42,11 @@ function dispatchOverlay(open: boolean) {
 
 // Lazy-loaded so the @stripe/stripe-js bundle only downloads when the user
 // reaches step 2. See StripeCheckoutPanel.tsx for the full pattern + the
-// chunk-graph reasoning.
-const StripeCheckoutPanel = React.lazy(() => import("./StripeCheckoutPanel"));
+// chunk-graph reasoning. The panel now lives in the shared cloud/ layer
+// (moved in T8); resolve it via @app so saas + desktop share one copy.
+const StripeCheckoutPanel = React.lazy(
+  () => import("@app/components/shared/config/configSections/StripeCheckoutPanel"),
+);
 
 interface UpgradeModalProps {
   open: boolean;

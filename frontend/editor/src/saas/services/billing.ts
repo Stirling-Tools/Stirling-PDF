@@ -27,14 +27,53 @@ export type {
 } from "@cloud/services/billing";
 
 /**
- * Create a Stripe Checkout Session via the {@code create-checkout} edge
- * function — identical body to StripeCheckoutSaas.createCheckoutSession. The
- * web supabase client attaches the user's JWT; callback_base_url is the
- * browser origin so Stripe returns the user to the current site.
+ * Create a Stripe Checkout Session via the SaaS billing backend. The web
+ * supabase client attaches the user's JWT automatically.
+ *
+ * When {@code teamId} is supplied we drive the PAYG
+ * {@code create-checkout-session} edge function (subscription with metered
+ * overage — see StripeCheckoutPanel); otherwise we use the legacy
+ * {@code create-checkout} flow (subscription / credits — see
+ * StripeCheckoutSaas). Both use the browser origin / current location as the
+ * return URL so Stripe returns the user to the current site.
  */
 export async function createCheckoutSession(
   params: CheckoutParams,
 ): Promise<CheckoutSession> {
+  if (params.teamId != null) {
+    const returnUrl = window.location.href;
+    const { data, error } = await supabase.functions.invoke<{
+      client_secret?: string;
+      url?: string;
+      mock?: boolean;
+    }>("create-checkout-session", {
+      body: {
+        team_id: params.teamId,
+        currency: params.currency ?? "gbp",
+        success_url: returnUrl,
+        cancel_url: returnUrl,
+        ...(params.billingOwnerEmail
+          ? { billing_owner_email: params.billingOwnerEmail }
+          : {}),
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+    if (data?.client_secret) {
+      return {
+        clientSecret: data.client_secret,
+        mock:
+          Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+      };
+    }
+    if (data?.url) {
+      return { url: data.url };
+    }
+    throw new Error("Edge function returned no client_secret");
+  }
+
   const { data, error } = await supabase.functions.invoke("create-checkout", {
     body: {
       purchase_type: params.purchaseType,
@@ -63,6 +102,15 @@ export async function createCheckoutSession(
     return { url: jsonData.url as string };
   }
   throw new Error("No client secret or url received from server");
+}
+
+/**
+ * The Stripe publishable key for embedded checkout. On the web this is the
+ * build-time {@code VITE_STRIPE_PUBLISHABLE_KEY} — the same source
+ * StripeCheckoutSaas / StripeCheckoutPanel read before the seam extraction.
+ */
+export function getStripePublishableKey(): string {
+  return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
 }
 
 /**

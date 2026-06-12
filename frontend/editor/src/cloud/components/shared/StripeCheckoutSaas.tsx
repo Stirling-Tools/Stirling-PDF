@@ -6,10 +6,12 @@ import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
-import { supabase } from "@app/auth/supabase";
+import {
+  createCheckoutSession,
+  getStripePublishableKey,
+} from "@app/services/billing";
+import { openExternal } from "@app/platform/openExternal";
 import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
-
-const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 export type PurchaseType = "subscription" | "credits";
 export type CreditsPack = "xsmall" | "small" | "medium" | "large" | null;
@@ -71,44 +73,41 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   // Load Stripe.js lazily, only when this checkout component mounts. Loading
   // at module scope pulled the Stripe script into every page that imports
   // this file, which triggered the dev "HTTPS required" warning on every
-  // non-payment route.
-  const stripePromise = useMemo(() => loadStripe(STRIPE_KEY), []);
+  // non-payment route. The publishable key is sourced through the billing
+  // seam — cloud code may not read import.meta.env directly.
+  const stripePromise = useMemo(
+    () => loadStripe(getStripePublishableKey()),
+    [],
+  );
 
-  const createCheckoutSession = async () => {
+  const startCheckoutSession = async () => {
     try {
       setState({ status: "loading" });
 
-      const { data, error } = await supabase.functions.invoke(
-        "create-checkout",
-        {
-          body: {
-            purchase_type: purchaseType,
-            ui_mode: "embedded",
-            plan: planId,
-            credits_pack: creditsPack,
-            callback_base_url: window.location.origin,
-            trial_conversion: isTrialConversion || false,
-          },
-        },
-      );
+      const session = await createCheckoutSession({
+        purchaseType,
+        uiMode: "embedded",
+        plan: planId,
+        creditsPack,
+        isTrialConversion: isTrialConversion || false,
+      });
 
-      if (error) {
-        throw new Error(error.message || "Failed to create checkout session");
+      // Embedded checkout returns a clientSecret to mount the iframe; a hosted
+      // url is the fallback path — hand it to the system browser and close.
+      if (session.url && !session.clientSecret) {
+        await openExternal(session.url);
+        setState({ status: "idle" });
+        onClose();
+        return;
       }
 
-      if (!data) {
-        throw new Error("No data received from server");
-      }
-
-      const jsonData = typeof data === "string" ? JSON.parse(data) : data;
-
-      if (!jsonData?.clientSecret) {
+      if (!session.clientSecret) {
         throw new Error("No client secret received from server");
       }
 
       setState({
         status: "ready",
-        clientSecret: jsonData.clientSecret,
+        clientSecret: session.clientSecret,
         sessionParams: {
           purchaseType: purchaseType!,
           planId: planId!,
@@ -165,7 +164,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           planId,
           creditsPack,
         });
-        createCheckoutSession();
+        startCheckoutSession();
       }
     } else if (!opened) {
       // Clean up state when modal closes

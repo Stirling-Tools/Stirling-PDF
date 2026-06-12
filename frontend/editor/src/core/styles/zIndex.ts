@@ -6,6 +6,10 @@ export const Z_INDEX_OVER_FULLSCREEN_SURFACE = 1300;
 export const Z_ANALYTICS_MODAL = 1301;
 // Config/Settings modal - should appear above analytics modal when navigating from onboarding
 export const Z_INDEX_CONFIG_MODAL = 1400;
+// Modal layered directly over the settings/config modal (e.g. the Stripe
+// checkout modal). Consumed by the shared cloud/ checkout component, so it
+// lives in the core base both the saas and cloud cascades resolve.
+export const Z_INDEX_OVER_SETTINGS_MODAL = 1400;
 
 export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 

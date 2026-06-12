@@ -9,7 +9,7 @@
  * <pre>
  * // In UpgradeModal.tsx — only when the user advances to step 2:
  * const StripeCheckoutPanel = React.lazy(
- *   () => import("./StripeCheckoutPanel"),
+ *   () => import("@app/components/shared/config/configSections/StripeCheckoutPanel"),
  * );
  * </pre>
  *
@@ -27,11 +27,12 @@
  *
  * <h2>Architecture</h2>
  *
- * Stripe-touching code lives in Supabase edge functions, not the Java
- * backend. This panel invokes {@code create-checkout-session}
- * directly via {@code supabase.functions.invoke()} — same pattern {@link
- * usePlans} already uses for {@code stripe-price-lookup}. The auth JWT is
- * attached automatically by the Supabase client.
+ * Stripe-touching code lives in Supabase edge functions, not the Java backend.
+ * This panel no longer talks to Supabase directly — it mints the PAYG checkout
+ * session through the {@code @app/services/billing} seam
+ * ({@link createCheckoutSession} with a {@code teamId}), which each platform
+ * implements (web supabase client vs Tauri fetch). The seam drives the
+ * {@code create-checkout-session} edge function.
  *
  * <p>The edge function (SaaS PR #300) is the canonical place Stripe Checkout
  * Sessions get created — it uses the Stripe Sync Engine tables, has dedicated
@@ -42,16 +43,19 @@
  * <h2>Behaviour</h2>
  *
  * <ol>
- *   <li>On mount: calls {@code supabase.functions.invoke("create-checkout-session", {team_id,
- *       currency, success_url, cancel_url})} to obtain a {@code client_secret}. The spending cap is
- *       NOT set here — it's an application-layer setting applied via {@code PATCH /payg/cap} after
- *       the subscription lands.
- *   <li>If no {@code VITE_STRIPE_PUBLISHABLE_KEY} is configured OR the edge
- *       function isn't deployed yet (errors out / returns a {@code cs_mock_}
- *       sentinel), render a clearly-labelled placeholder + "Continue with
- *       mock" button so the post-completion path stays testable.
+ *   <li>On mount: calls {@link createCheckoutSession} with the {@code teamId},
+ *       {@code currency} and billing email to obtain a {@code clientSecret}. The
+ *       spending cap is NOT set here — it's an application-layer setting applied
+ *       via {@code PATCH /payg/cap} after the subscription lands.
+ *   <li>If no Stripe publishable key is configured OR the edge function isn't
+ *       deployed yet (errors out / returns a {@code cs_mock_} sentinel), render
+ *       a clearly-labelled placeholder + "Continue with mock" button so the
+ *       post-completion path stays testable.
+ *   <li>If only a hosted {@code url} comes back (the redirect fallback), hand it
+ *       to the system browser via {@link openExternal}.
  *   <li>Otherwise render the real {@code <EmbeddedCheckoutProvider>} +
- *       {@code <EmbeddedCheckout>} iframe.
+ *       {@code <EmbeddedCheckout>} iframe. The Tauri webview has no CSP, so
+ *       embedded checkout works on desktop too.
  * </ol>
  *
  * The parent {@link UpgradeModal} passes {@code onComplete} which fires when
@@ -60,8 +64,13 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
+import {
+  createCheckoutSession,
+  getStripePublishableKey,
+} from "@app/services/billing";
+import { openExternal } from "@app/platform/openExternal";
+import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
 
 // Eager static imports here are OK because this whole module is itself lazy-
 // imported by the modal. They land in the same lazy chunk.
@@ -87,21 +96,6 @@ export interface StripeCheckoutPanelProps {
   onComplete: () => void;
   /** Called when the call to /api/v1/payg/checkout fails. */
   onError?: (message: string) => void;
-}
-
-/**
- * Response shape from the {@code create-checkout-session} Supabase edge
- * function. Mirrors what the function returns.
- */
-interface CheckoutResponse {
-  /** Stripe Checkout Session client_secret. */
-  client_secret: string;
-  /**
-   * Optional sentinel: edge functions in non-prod environments may return a
-   * stubbed secret prefixed {@code cs_mock_} so the FE knows to render the
-   * placeholder rather than try to mount a real iframe with a bad secret.
-   */
-  mock?: boolean;
 }
 
 // Singleton Stripe promise — created on first use and reused for the lifetime
@@ -148,16 +142,14 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   const tRef = useRef(t);
   tRef.current = t;
 
-  const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
+  const publishableKey = getStripePublishableKey();
 
   // Dev preview route has no backend — skip the API call and go straight
   // to the mock placeholder so the design + completion path stay testable.
-  // Both checks required so a production tenant with a /dev/ URL prefix
-  // can't accidentally trigger the placeholder.
-  const devPreview =
-    import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/dev/");
+  // The dev-preview detection (import.meta.env.DEV + a /dev/ path) lives behind
+  // the walletDevPreview seam since cloud may not read either directly; it is
+  // a saas-only affordance and resolves to null on desktop / prod.
+  const devPreview = getWalletDevPreview() !== null;
 
   useEffect(() => {
     if (devPreview) {
@@ -177,44 +169,37 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     let cancelled = false;
     async function createSession() {
       try {
-        // Direct Supabase edge function invocation. We call
-        // {@code create-checkout-session} (not {@code create-payg-team-subscription} —
-        // that one creates a subscription directly without going through the
-        // hosted Stripe Embedded Checkout iframe and doesn't return a
-        // client_secret). team_id is required because the edge fn runs
-        // outside our Spring Security context and can't resolve it from the
-        // JWT alone. The cap is *not* set during checkout — it's an
-        // application-layer setting, applied via PATCH /payg/cap after the
-        // subscription lands. window.location.href is the success_url so the
-        // user comes back to the Plan tab after Stripe finishes the redirect.
-        const returnUrl = window.location.href;
-        const { data, error: invokeError } =
-          await supabase.functions.invoke<CheckoutResponse>(
-            "create-checkout-session",
-            {
-              body: {
-                team_id: teamId,
-                currency,
-                success_url: returnUrl,
-                cancel_url: returnUrl,
-                // Maps to Stripe's customer_email when the team has no Stripe
-                // customer yet — prefills + locks the email field in Checkout.
-                // Teams with an existing customer get the email locked from the
-                // customer record instead; this field is ignored for them.
-                ...(billingEmail ? { billing_owner_email: billingEmail } : {}),
-              },
-            },
-          );
-        if (invokeError) {
-          throw invokeError;
+        // Mint the PAYG checkout session through the billing seam. Passing a
+        // teamId routes it to the {@code create-checkout-session} edge function
+        // (not {@code create-payg-team-subscription} — that one subscribes
+        // directly without the embedded iframe and returns no client_secret).
+        // team_id is required because the edge fn runs outside our Spring
+        // Security context and can't resolve it from the JWT alone. The cap is
+        // *not* set during checkout — it's applied via PATCH /payg/cap after
+        // the subscription lands. The platform impl supplies the success/cancel
+        // return URL (browser origin on web, deep link on desktop).
+        const session = await createCheckoutSession({
+          teamId,
+          currency,
+          // Maps to Stripe's customer_email when the team has no Stripe
+          // customer yet — prefills + locks the email field in Checkout. Teams
+          // with an existing customer get the email locked from the customer
+          // record instead; this field is ignored for them.
+          billingOwnerEmail: billingEmail,
+        });
+        if (cancelled) return;
+        // Hosted-url fallback: no embedded iframe, hand the URL to the system
+        // browser. The deep-link / origin return URL brings the user back.
+        if (session.url && !session.clientSecret) {
+          await openExternal(session.url);
+          return;
         }
-        if (!data?.client_secret) {
+        if (!session.clientSecret) {
           throw new Error("Edge function returned no client_secret");
         }
-        if (cancelled) return;
-        setClientSecret(data.client_secret);
+        setClientSecret(session.clientSecret);
         setIsMock(
-          Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+          Boolean(session.mock) || session.clientSecret.startsWith("cs_mock_"),
         );
       } catch (e: unknown) {
         if (cancelled) return;

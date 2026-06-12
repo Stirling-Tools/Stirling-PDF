@@ -52,17 +52,56 @@ async function requireToken(): Promise<string> {
 }
 
 /**
- * Create a Stripe Checkout Session via the {@code create-checkout} edge
- * function — same edge function and body shape as the web impl, but routed
- * through Tauri (explicit bearer, deep-link callback). Desktop defaults to
- * hosted checkout because the session is opened in the system browser; an
- * embedded clientSecret is still surfaced if the caller requests it and the
- * webview/CSP supports the Stripe iframe.
+ * Create a Stripe Checkout Session via the SaaS billing backend — same edge
+ * functions and body shapes as the web impl, but routed through Tauri (explicit
+ * bearer, deep-link callback).
+ *
+ * When {@code teamId} is supplied we drive the PAYG
+ * {@code create-checkout-session} edge function (subscription with metered
+ * overage — see StripeCheckoutPanel); otherwise we use the legacy
+ * {@code create-checkout} flow (subscription / credits — see
+ * StripeCheckoutSaas). The Tauri webview has no CSP, so embedded checkout works
+ * — the moved component mounts the Stripe iframe when a clientSecret comes
+ * back, falling back to opening the hosted url in the system browser otherwise.
  */
 export async function createCheckoutSession(
   params: CheckoutParams,
 ): Promise<CheckoutSession> {
   const token = await requireToken();
+
+  if (params.teamId != null) {
+    const { data, error } = await supabase.functions.invoke<{
+      client_secret?: string;
+      url?: string;
+      mock?: boolean;
+    }>("create-checkout-session", {
+      headers: { Authorization: `Bearer ${token}` },
+      body: {
+        team_id: params.teamId,
+        currency: params.currency ?? "gbp",
+        success_url: DESKTOP_BILLING_RETURN_URL,
+        cancel_url: DESKTOP_BILLING_RETURN_URL,
+        ...(params.billingOwnerEmail
+          ? { billing_owner_email: params.billingOwnerEmail }
+          : {}),
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+    if (data?.client_secret) {
+      return {
+        clientSecret: data.client_secret,
+        mock:
+          Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+      };
+    }
+    if (data?.url) {
+      return { url: data.url };
+    }
+    throw new Error("Edge function returned no client_secret");
+  }
 
   const { data, error } = await supabase.functions.invoke(
     "create-checkout",
@@ -141,4 +180,14 @@ export async function createPortalSession(
     throw new Error(data?.error ?? "Portal session response missing url");
   }
   return { url: data.url };
+}
+
+/**
+ * The Stripe publishable key for embedded checkout. Desktop reads the same
+ * build-time {@code VITE_STRIPE_PUBLISHABLE_KEY} the web build uses — it is
+ * baked into the Tauri bundle at build time. import.meta.env is permitted in
+ * the desktop leaf (the ban only applies to cloud/).
+ */
+export function getStripePublishableKey(): string {
+  return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
 }
