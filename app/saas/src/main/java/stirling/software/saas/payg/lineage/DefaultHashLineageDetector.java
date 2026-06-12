@@ -10,9 +10,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +27,8 @@ import stirling.software.saas.payg.model.ArtifactKind;
  * delegates lookup + persistence to a {@link JobLineageStore}.
  */
 @Slf4j
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class DefaultHashLineageDetector implements HashLineageDetector {
 
     private final List<LineageSignatureExtractor> extractors;
@@ -33,9 +36,10 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
     private final Duration workflowWindow;
 
     public DefaultHashLineageDetector(
-            List<LineageSignatureExtractor> extractors,
+            @All List<LineageSignatureExtractor> extractors,
             JobLineageStore store,
-            @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow) {
+            @ConfigProperty(name = "payg.lineage.workflow-window", defaultValue = "PT5M")
+                    Duration workflowWindow) {
         Objects.requireNonNull(extractors, "extractors");
         Objects.requireNonNull(store, "store");
         Objects.requireNonNull(workflowWindow, "workflowWindow");

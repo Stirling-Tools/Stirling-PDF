@@ -4,10 +4,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,8 +23,8 @@ import lombok.extern.slf4j.Slf4j;
  * WHERE created_at < cutoff}, the second seeing zero rows to delete. Idempotent, wasted IO at
  * worst.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class LineagePruneScheduler {
 
@@ -30,7 +32,9 @@ public class LineagePruneScheduler {
     private final Duration retention;
 
     public LineagePruneScheduler(
-            JobLineageStore store, @Value("${payg.lineage.retention:PT1H}") Duration retention) {
+            JobLineageStore store,
+            @ConfigProperty(name = "payg.lineage.retention", defaultValue = "PT1H")
+                    Duration retention) {
         this.store = Objects.requireNonNull(store, "store");
         Objects.requireNonNull(retention, "retention");
         if (retention.isNegative() || retention.isZero()) {
@@ -40,7 +44,11 @@ public class LineagePruneScheduler {
         this.retention = retention;
     }
 
-    @Scheduled(cron = "${payg.lineage.prune-cron:0 0 * * * *}", zone = "UTC")
+    // TODO: Migration required - Spring 6-field cron "0 0 * * * *" (top of every hour) translated to
+    // Quartz cron "0 0 * ? * *" (day-of-month set to ? per Quartz day-of-week/day-of-month
+    // mutual-exclusion). Configurability is preserved via the {payg.lineage.prune-cron} config
+    // expression; set that property to a Quartz-syntax cron (default below) to override.
+    @Scheduled(cron = "{payg.lineage.prune-cron:0 0 * ? * *}", timeZone = "UTC")
     public void prune() {
         Instant cutoff = Instant.now().minus(retention);
         int deleted = store.pruneOlderThan(cutoff);

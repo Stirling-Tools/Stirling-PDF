@@ -1,8 +1,9 @@
 package stirling.software.saas.payg.job;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,15 +19,19 @@ import lombok.extern.slf4j.Slf4j;
  * § 9 as a separate cleanup. The underlying {@code closeStale()} call is idempotent — duplicate
  * firings read an empty stale set on the second pod, no data corruption risk.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class StaleJobCloser {
 
     private final JobService jobService;
 
-    @Scheduled(fixedRateString = "${payg.job.stale-close-interval-ms:60000}")
+    // TODO: Migration required - was configurable via property payg.job.stale-close-interval-ms
+    // (default 60000ms). io.quarkus.scheduler.Scheduled#every is a fixed string; restore
+    // configurability with @Scheduled(every = "{payg.job.stale-close-interval}") + a Duration
+    // config property if the interval must stay tunable.
+    @Scheduled(every = "60s")
     public void closeStale() {
         int closed = jobService.closeStale();
         if (closed > 0) {

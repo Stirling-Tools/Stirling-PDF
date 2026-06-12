@@ -59,107 +59,126 @@ public class AiProxyController {
         this.creditHeaderUtils = creditHeaderUtils;
     }
 
-    @PostMapping("/generate_section")
-    public ResponseEntity<StreamingResponseBody> generateSection(HttpServletRequest request) {
+    @POST
+    @Path("/generate_section")
+    public Response generateSection(HttpServletRequest request) {
         return proxy("POST", "/api/generate_section", request, false, false);
     }
 
-    @PostMapping("/generate_all_sections")
-    public ResponseEntity<StreamingResponseBody> generateAllSections(HttpServletRequest request) {
+    @POST
+    @Path("/generate_all_sections")
+    public Response generateAllSections(HttpServletRequest request) {
         return proxy("POST", "/api/generate_all_sections", request, false, false);
     }
 
-    @PostMapping("/intent/check")
-    public ResponseEntity<StreamingResponseBody> intentCheck(HttpServletRequest request) {
+    @POST
+    @Path("/intent/check")
+    public Response intentCheck(HttpServletRequest request) {
         return proxy("POST", "/api/intent/check", request, false, false);
     }
 
-    @PostMapping("/chat/route")
-    public ResponseEntity<StreamingResponseBody> chatRoute(HttpServletRequest request) {
+    @POST
+    @Path("/chat/route")
+    public Response chatRoute(HttpServletRequest request) {
         return proxy("POST", "/api/chat/route", request, false, true);
     }
 
-    @PostMapping("/chat/create-smart-folder")
-    public ResponseEntity<StreamingResponseBody> createSmartFolder(HttpServletRequest request) {
+    @POST
+    @Path("/chat/create-smart-folder")
+    public Response createSmartFolder(HttpServletRequest request) {
         return proxy("POST", "/api/chat/create-smart-folder", request, false, true);
     }
 
-    @PostMapping("/chat/info")
-    public ResponseEntity<StreamingResponseBody> chatInfo(HttpServletRequest request) {
+    @POST
+    @Path("/chat/info")
+    public Response chatInfo(HttpServletRequest request) {
         return proxy("POST", "/api/chat/info", request, false, true);
     }
 
-    @PostMapping("/pdf/answer")
-    public ResponseEntity<StreamingResponseBody> pdfAnswer(HttpServletRequest request) {
+    @POST
+    @Path("/pdf/answer")
+    public Response pdfAnswer(HttpServletRequest request) {
         return proxy("POST", "/api/pdf/answer", request, false, false);
     }
 
-    @PostMapping("/progressive_render")
-    public ResponseEntity<StreamingResponseBody> progressiveRender(HttpServletRequest request) {
+    @POST
+    @Path("/progressive_render")
+    public Response progressiveRender(HttpServletRequest request) {
         return proxy("POST", "/api/progressive_render", request, false, false);
     }
 
-    @GetMapping("/versions/{userId}")
-    public ResponseEntity<StreamingResponseBody> versions(
-            @PathVariable("userId") String userId, HttpServletRequest request) {
+    @GET
+    @Path("/versions/{userId}")
+    public Response versions(
+            @PathParam("userId") String userId, HttpServletRequest request) {
         return proxy("GET", "/api/versions/" + userId, request, false, false);
     }
 
-    @GetMapping("/style/{userId}")
-    public ResponseEntity<StreamingResponseBody> style(
-            @PathVariable("userId") String userId, HttpServletRequest request) {
+    @GET
+    @Path("/style/{userId}")
+    public Response style(@PathParam("userId") String userId, HttpServletRequest request) {
         return proxy("GET", "/api/style/" + userId, request, false, false);
     }
 
-    @PostMapping("/style/{userId}")
-    public ResponseEntity<StreamingResponseBody> updateStyle(
-            @PathVariable("userId") String userId, HttpServletRequest request) {
+    @POST
+    @Path("/style/{userId}")
+    public Response updateStyle(
+            @PathParam("userId") String userId, HttpServletRequest request) {
         return proxy("POST", "/api/style/" + userId, request, false, false);
     }
 
-    @PostMapping("/import_template")
-    public ResponseEntity<StreamingResponseBody> importTemplate(HttpServletRequest request) {
+    @POST
+    @Path("/import_template")
+    public Response importTemplate(HttpServletRequest request) {
         return proxy("POST", "/api/import_template", request, false, false);
     }
 
-    @PostMapping("/edit/sessions")
-    public ResponseEntity<StreamingResponseBody> createEditSession(HttpServletRequest request) {
+    @POST
+    @Path("/edit/sessions")
+    public Response createEditSession(HttpServletRequest request) {
         return proxy("POST", "/api/edit/sessions", request, false, false);
     }
 
-    @PostMapping("/edit/sessions/{sessionId}/messages")
-    public ResponseEntity<StreamingResponseBody> editSessionMessage(
-            @PathVariable("sessionId") String sessionId, HttpServletRequest request) {
+    @POST
+    @Path("/edit/sessions/{sessionId}/messages")
+    public Response editSessionMessage(
+            @PathParam("sessionId") String sessionId, HttpServletRequest request) {
         return proxy("POST", "/api/edit/sessions/" + sessionId + "/messages", request, false, true);
     }
 
-    @PostMapping("/edit/sessions/{sessionId}/attachments")
-    public ResponseEntity<StreamingResponseBody> editSessionAttachment(
-            @PathVariable("sessionId") String sessionId, HttpServletRequest request) {
+    @POST
+    @Path("/edit/sessions/{sessionId}/attachments")
+    public Response editSessionAttachment(
+            @PathParam("sessionId") String sessionId, HttpServletRequest request) {
         return proxy(
                 "POST", "/api/edit/sessions/" + sessionId + "/attachments", request, false, false);
     }
 
-    @PostMapping(
-            value = "/edit/sessions/{sessionId}/run",
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<StreamingResponseBody> runEditSession(
-            @PathVariable("sessionId") String sessionId, HttpServletRequest request) {
+    @POST
+    @Path("/edit/sessions/{sessionId}/run")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public Response runEditSession(
+            @PathParam("sessionId") String sessionId, HttpServletRequest request) {
         return proxy("POST", "/api/edit/sessions/" + sessionId + "/run", request, true, false);
     }
 
-    @GetMapping("/pdf-editor/document")
-    public ResponseEntity<StreamingResponseBody> pdfEditorDocument(HttpServletRequest request) {
+    @GET
+    @Path("/pdf-editor/document")
+    public Response pdfEditorDocument(HttpServletRequest request) {
         return proxy("GET", "/api/pdf-editor/document", request, false, false);
     }
 
-    @PostMapping("/pdf-editor/upload")
-    public ResponseEntity<StreamingResponseBody> pdfEditorUpload(HttpServletRequest request) {
+    @POST
+    @Path("/pdf-editor/upload")
+    public Response pdfEditorUpload(HttpServletRequest request) {
         return proxy("POST", "/api/pdf-editor/upload", request, false, false);
     }
 
-    @GetMapping("/output/**")
-    public ResponseEntity<StreamingResponseBody> output(HttpServletRequest request) {
+    // TODO: Migration required - Spring's "/output/**" wildcard mapping has no direct JAX-RS
+    // equivalent; using a {path:.*} regex template to capture the trailing path segments.
+    @GET
+    @Path("/output/{path:.*}")
+    public Response output(HttpServletRequest request) {
         String requestUri = request.getRequestURI();
         String prefix = request.getContextPath() + "/api/v1/ai/output/";
         String path = requestUri.startsWith(prefix) ? requestUri.substring(prefix.length()) : "";
@@ -178,7 +197,7 @@ public class AiProxyController {
      * @param acceptEventStream Whether to accept event stream responses
      * @param includeCreditsHeader Whether to add credit balance header
      */
-    private ResponseEntity<StreamingResponseBody> proxy(
+    private Response proxy(
             String method,
             String path,
             HttpServletRequest request,
@@ -189,67 +208,75 @@ public class AiProxyController {
             HttpResponse<InputStream> aiResponse =
                     aiProxyService.forward(method, path, request, acceptEventStream);
 
-            // Build response headers
-            HttpHeaders headers = new HttpHeaders();
-            copyHeader(aiResponse, headers, HttpHeaders.CONTENT_TYPE);
-            copyHeader(aiResponse, headers, HttpHeaders.CACHE_CONTROL);
-            copyHeader(aiResponse, headers, "X-Accel-Buffering");
-            copyHeader(aiResponse, headers, HttpHeaders.CONTENT_DISPOSITION);
-            copyHeader(aiResponse, headers, HttpHeaders.CONTENT_LENGTH);
-            if (acceptEventStream && !headers.containsHeader(HttpHeaders.CONTENT_TYPE)) {
-                headers.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_EVENT_STREAM_VALUE);
+            int statusCode = aiResponse.statusCode();
+            if (statusCode < 100 || statusCode > 599) {
+                statusCode = Response.Status.BAD_GATEWAY.getStatusCode();
             }
 
-            // Add credit headers if requested (after AI processing completes)
-            if (includeCreditsHeader) {
-                addCreditHeaders(headers);
-            }
-
-            StreamingResponseBody body =
+            StreamingOutput body =
                     outputStream -> {
                         try (InputStream inputStream = aiResponse.body()) {
                             inputStream.transferTo(outputStream);
                         }
                     };
-            HttpStatus status =
-                    Optional.ofNullable(HttpStatus.resolve(aiResponse.statusCode()))
-                            .orElse(HttpStatus.BAD_GATEWAY);
-            return new ResponseEntity<>(body, headers, status);
+
+            Response.ResponseBuilder builder = Response.status(statusCode).entity(body);
+            boolean hasContentType =
+                    copyHeader(aiResponse, builder, "Content-Type");
+            copyHeader(aiResponse, builder, "Cache-Control");
+            copyHeader(aiResponse, builder, "X-Accel-Buffering");
+            copyHeader(aiResponse, builder, "Content-Disposition");
+            copyHeader(aiResponse, builder, "Content-Length");
+            if (acceptEventStream && !hasContentType) {
+                builder.header("Content-Type", MediaType.SERVER_SENT_EVENTS);
+            }
+
+            // Add credit headers if requested (after AI processing completes)
+            if (includeCreditsHeader) {
+                addCreditHeaders(builder);
+            }
+
+            return builder.build();
         } catch (Exception exc) {
             log.error("AI proxy failed path={}", path, exc);
-            StreamingResponseBody body =
+            StreamingOutput body =
                     outputStream ->
                             outputStream.write("{\"error\":\"AI backend unavailable\"}".getBytes());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            return new ResponseEntity<>(body, headers, HttpStatus.SERVICE_UNAVAILABLE);
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity(body)
+                    .header("Content-Type", MediaType.APPLICATION_JSON)
+                    .build();
         }
     }
 
-    private void copyHeader(HttpResponse<?> response, HttpHeaders headers, String headerName) {
+    /** Copies a single header onto the response builder; returns true if a value was copied. */
+    private boolean copyHeader(
+            HttpResponse<?> response, Response.ResponseBuilder builder, String headerName) {
         if (headerName == null || headerName.isBlank()) {
-            return;
+            return false;
         }
-        response.headers()
-                .firstValue(headerName)
-                .filter(value -> value != null && !value.isBlank())
-                .filter(value -> !value.contains("\r") && !value.contains("\n"))
-                .ifPresent(
-                        value -> {
-                            try {
-                                headers.set(headerName, value);
-                            } catch (IllegalArgumentException exc) {
-                                log.warn("Skipping invalid header {}: {}", headerName, value);
-                            }
-                        });
+        Optional<String> value =
+                response.headers()
+                        .firstValue(headerName)
+                        .filter(v -> v != null && !v.isBlank())
+                        .filter(v -> !v.contains("\r") && !v.contains("\n"));
+        if (value.isPresent()) {
+            try {
+                builder.header(headerName, value.get());
+                return true;
+            } catch (IllegalArgumentException exc) {
+                log.warn("Skipping invalid header {}: {}", headerName, value.get());
+            }
+        }
+        return false;
     }
 
     /**
-     * Add credit headers to the response headers.
+     * Add credit headers to the response builder.
      *
-     * @param headers The headers to add credit information to
+     * @param builder The response builder to add credit information to
      */
-    private void addCreditHeaders(HttpHeaders headers) {
+    private void addCreditHeaders(Response.ResponseBuilder builder) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth == null || !auth.isAuthenticated()) {
@@ -261,10 +288,10 @@ public class AiProxyController {
             int remainingCredits =
                     creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService);
             if (remainingCredits >= 0) {
-                headers.set("X-Credits-Remaining", Integer.toString(remainingCredits));
+                builder.header("X-Credits-Remaining", Integer.toString(remainingCredits));
                 log.warn("[AI-PROXY] Added X-Credits-Remaining header: {}", remainingCredits);
             }
-            headers.set("X-Credit-Source", "AI_TOOL_CALL");
+            builder.header("X-Credit-Source", "AI_TOOL_CALL");
         } catch (Exception e) {
             log.error("[AI-PROXY] Failed to add credit header: {}", e.getMessage(), e);
         }

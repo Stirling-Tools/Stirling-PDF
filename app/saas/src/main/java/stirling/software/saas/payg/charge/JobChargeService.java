@@ -8,12 +8,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.MultipartFile;
 
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
@@ -45,8 +47,8 @@ import stirling.software.saas.payg.shadow.PaygShadowCharge;
  * becomes available and {@code diffPct} can be computed against it; until then the shadow row
  * captures the PAYG units only.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class JobChargeService {
 
@@ -153,7 +155,7 @@ public class JobChargeService {
         row.setLegacyCreditsCharged(0);
         row.setDiffPct(0);
         row.setStatus(ShadowChargeStatus.CHARGED);
-        shadowRepository.save(row);
+        shadowRepository.persist(row);
     }
 
     /**
@@ -181,11 +183,11 @@ public class JobChargeService {
                 row.setStatus(ShadowChargeStatus.REFUNDED);
                 row.setRefundedAt(now);
                 row.setRefundReason(trimReason(refundReason));
-                shadowRepository.save(row);
+                shadowRepository.persist(row);
             }
         }
 
-        ProcessingJob job = jobRepository.findById(jobId).orElse(null);
+        ProcessingJob job = jobRepository.findByIdOptional(jobId).orElse(null);
         if (job == null) {
             log.warn("markFirstStepFailed: no ProcessingJob with id {}", jobId);
             return;
@@ -193,7 +195,7 @@ public class JobChargeService {
         if (job.getStatus() == JobStatus.OPEN) {
             job.setStatus(JobStatus.CLOSED);
             job.setClosedAt(now);
-            jobRepository.save(job);
+            jobRepository.persist(job);
         }
     }
 
@@ -208,7 +210,7 @@ public class JobChargeService {
     @Transactional
     public void decrementStepCount(UUID jobId) {
         Objects.requireNonNull(jobId, "jobId");
-        ProcessingJob job = jobRepository.findById(jobId).orElse(null);
+        ProcessingJob job = jobRepository.findByIdOptional(jobId).orElse(null);
         if (job == null) {
             log.warn("decrementStepCount: no ProcessingJob with id {}", jobId);
             return;
@@ -222,7 +224,7 @@ public class JobChargeService {
             return;
         }
         job.setStepCount(current - 1);
-        jobRepository.save(job);
+        jobRepository.persist(job);
     }
 
     private static String trimReason(String reason) {

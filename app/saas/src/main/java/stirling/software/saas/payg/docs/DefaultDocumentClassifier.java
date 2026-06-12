@@ -8,13 +8,14 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
@@ -34,8 +35,8 @@ import stirling.software.saas.payg.policy.PricingPolicy;
  * "non-empty input → at least 1 unit".
  */
 @Slf4j
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class DefaultDocumentClassifier implements DocumentClassifier {
 

@@ -22,7 +22,9 @@ public class RateLimitResetScheduler {
     private final IPRateLimitingFilter rateLimitingFilter;
 
     // Quarkus @Scheduled cron supports the "{property:default}" placeholder syntax (no '$').
-    @Scheduled(cron = "{security.rate-limit.reset-schedule:0 0 0 * * MON}")
+    // Quartz cron requires '?' for day-of-month when a day-of-week is given (it rejects '*' in both
+    // fields); Spring's parser tolerated '*' here. Weekly on Monday at midnight.
+    @Scheduled(cron = "{security.rate-limit.reset-schedule:0 0 0 ? * MON}")
     public void resetRateLimit() {
         rateLimitingFilter.resetRequestCounts();
     }

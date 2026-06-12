@@ -1,6 +1,8 @@
 package stirling.software.saas.payg.test;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -64,6 +66,9 @@ public class PaygCucumberThrowController {
     // TODO: Migration required - declared return type was ResponseEntity<Void> so the AutoJobAspect
     // @Around 500 reached the wire (see class javadoc). Verify the JAX-RS return-value handling of
     // Response preserves the advice's 500 status under Quarkus.
+    @POST
+    @Path("/throw-500")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/throw-500",
             consumes = MediaType.MULTIPART_FORM_DATA,
