@@ -14,10 +14,12 @@ import {
   ActionIcon,
   Button,
   Text,
+  Alert,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 export interface EditableFieldProps {
   name?: string;
@@ -121,6 +123,23 @@ export function FormFieldPropertyEditor({
 
   return (
     <Stack gap="xs">
+      {isSignature && (
+        <Alert
+          color="blue"
+          variant="light"
+          p="xs"
+          radius="sm"
+          icon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}
+        >
+          <Text size="xs">
+            {t(
+              "formFill.editor.signatureNote",
+              "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed.",
+            )}
+          </Text>
+        </Alert>
+      )}
+
       {showName && (
         <TextInput
           size="xs"

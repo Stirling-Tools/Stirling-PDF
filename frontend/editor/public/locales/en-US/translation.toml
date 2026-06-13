@@ -4021,6 +4021,7 @@ optionsEmpty = "Add at least one option."
 readOnly = "Read-only"
 removeOption = "Remove option"
 required = "Required"
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
 tooltip = "Tooltip"
 type = "Type"
 

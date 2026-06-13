@@ -233,6 +233,20 @@ test.describe("Form field editor", () => {
     await expect(page.getByPlaceholder("Option 2")).toHaveValue("Option 2");
   });
 
+  test("create mode: signature field explains it is a placeholder", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page);
+    await openFormTool(page);
+
+    await selectMode(page, "Create");
+    await page.getByTestId("form-create-type-signature").click();
+    await drawField(page);
+
+    // The editor makes clear you don't sign here - it's a placeholder a signer fills.
+    await expect(page.getByText(/Placeholder only/i)).toBeVisible();
+  });
+
   test("modify mode: lists fields and deletes one via /edit-fields", async ({
     page,
   }) => {
