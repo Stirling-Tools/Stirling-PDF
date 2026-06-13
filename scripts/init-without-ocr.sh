@@ -953,13 +953,12 @@ JAVA_CMD=(
 if [ -f "/app.jar" ]; then
   JAVA_CMD+=("-jar" "/app.jar")
 elif [ -f "/app/app.jar" ]; then
-  # Spring Boot 4 layered JAR structure (exploded via extract --layers).
-  # Use -cp (not -jar) so the classpath matches the AOT cache exactly.
-  JAVA_CMD+=("-cp" "/app/app.jar:/app/lib/*" "stirling.software.SPDF.SPDFApplication")
+  # Quarkus uber runner-jar (self-contained, all dependencies inside). Launched via -jar;
+  # the manifest Main-Class bootstraps the Quarkus application (@QuarkusMain SPDFApplication).
+  JAVA_CMD+=("-jar" "/app/app.jar")
 else
-  # Legacy fallback for Spring Boot 3 layered layout
-  export JAVA_MAIN_CLASS=org.springframework.boot.loader.launch.JarLauncher
-  JAVA_CMD+=("org.springframework.boot.loader.launch.JarLauncher")
+  log "ERROR: no application jar found at /app.jar or /app/app.jar"
+  exit 1
 fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
@@ -1032,15 +1031,11 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
       while [ "$_attempt" -le "$_max_attempts" ]; do
         log "AOT: Background cache generation attempt ${_attempt}/${_max_attempts}..."
         _gen_rc=0
-        if [ -f /app/app.jar ] && [ -d /app/lib ]; then
-          generate_aot_cache "$AOT_CACHE" \
-            -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication || _gen_rc=$?
+        if [ -f /app/app.jar ]; then
+          # Quarkus uber runner-jar (self-contained); mirror the runtime -jar launch.
+          generate_aot_cache "$AOT_CACHE" -jar /app/app.jar || _gen_rc=$?
         elif [ -f /app.jar ]; then
           generate_aot_cache "$AOT_CACHE" -jar /app.jar || _gen_rc=$?
-        elif [ -d /app/BOOT-INF ]; then
-          # Spring Boot exploded layer layout, mirror the exact JAVA_CMD classpath
-          generate_aot_cache "$AOT_CACHE" \
-            -cp /app org.springframework.boot.loader.launch.JarLauncher || _gen_rc=$?
         else
           log "AOT: Cannot determine JAR layout; skipping cache generation."
           exit 0

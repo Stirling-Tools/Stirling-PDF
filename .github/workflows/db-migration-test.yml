@@ -58,16 +58,18 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-        run: ./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon
+        run: ./gradlew :stirling-pdf:quarkusBuild -PnoSpotless --no-daemon
 
       - name: Locate built JAR
         id: jar
         run: |
-          jar=$(find app/core/build/libs -maxdepth 1 -name 'Stirling-PDF*.jar' -o -name 'stirling-pdf*.jar' 2>/dev/null \
-              | grep -vE '(-plain|-sources)\.jar$' | head -n 1)
+          # Quarkus (quarkus.package.jar.type=uber-jar) emits a standalone runnable
+          # jar at app/core/build/<name>-runner.jar, replacing the Spring Boot bootJar
+          # that used to land in app/core/build/libs.
+          jar=$(find app/core/build -maxdepth 1 -name '*-runner.jar' 2>/dev/null | head -n 1)
           if [[ -z "$jar" ]]; then
-            echo "::error::No JAR under app/core/build/libs"
-            ls -lah app/core/build/libs || true
+            echo "::error::No *-runner.jar under app/core/build"
+            ls -lah app/core/build || true
             exit 1
           fi
           # Absolute path - the migration script pushd's into a temp workdir

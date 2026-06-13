@@ -13,8 +13,7 @@ import java.util.stream.Stream;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import io.quarkus.arc.DefaultBean;
-import io.quarkus.arc.profile.UnlessBuildProfile;
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
@@ -318,29 +317,28 @@ public class AppConfig {
         return applicationProperties.getSystem().getDatasource();
     }
 
-    // @UnlessBuildProfile("saas"): in the saas flavor SaasLicenseOverride provides these @Named
-    // beans (every tenant is ENTERPRISE). @DefaultBean alone is not enough - Qute's named-bean
-    // validation still sees this @DefaultBean producer alongside the saas one and rejects the
-    // duplicate @Named key, so this default must be vetoed outright under the saas profile.
+    // @IfBuildProfile("core"): these NORMAL/default license @Named beans apply only to the core
+    // flavor. In proprietary EEAppConfig provides them (security profile) and in saas
+    // SaasLicenseOverride does (saas profile); registering this producer alongside those trips
+    // Qute's named-bean validation ("Duplicate key runningEE"), which does not honour @DefaultBean
+    // suppression - so gate to core outright. (In core, EEAppConfig/SaasLicenseOverride are not
+    // even on the classpath.)
     @Produces
-    @DefaultBean
-    @UnlessBuildProfile("saas")
+    @IfBuildProfile("core")
     @Named("runningProOrHigher")
     public boolean runningProOrHigher() {
         return false;
     }
 
     @Produces
-    @DefaultBean
-    @UnlessBuildProfile("saas")
+    @IfBuildProfile("core")
     @Named("runningEE")
     public boolean runningEnterprise() {
         return false;
     }
 
     @Produces
-    @DefaultBean
-    @UnlessBuildProfile("saas")
+    @IfBuildProfile("core")
     @Named("license")
     public String licenseType() {
         return "NORMAL";

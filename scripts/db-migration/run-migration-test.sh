@@ -32,9 +32,8 @@ find_jar() {
         [[ -f "$STIRLING_JAR" ]] || fail "STIRLING_JAR='$STIRLING_JAR' not found"
         candidate="$STIRLING_JAR"
     else
-        candidate=$(find "$REPO_ROOT/app/core/build/libs" -maxdepth 1 -name 'Stirling-PDF*.jar' -o -name 'stirling-pdf*.jar' 2>/dev/null \
-            | grep -vE '(-plain|-sources)\.jar$' | head -n 1 || true)
-        [[ -n "$candidate" ]] || fail "No JAR under app/core/build/libs - run './gradlew :stirling-pdf:bootJar' first"
+        candidate=$(find "$REPO_ROOT/app/core/build" -maxdepth 1 -name '*-runner.jar' 2>/dev/null | head -n 1 || true)
+        [[ -n "$candidate" ]] || fail "No *-runner.jar under app/core/build - run './gradlew :stirling-pdf:quarkusBuild' first"
     fi
     # Resolve to an absolute path: test_fixture pushd's into a temp workdir
     # before launching java, so a relative path here would dangle.
@@ -86,13 +85,17 @@ test_fixture() {
     # to cwd, and we want to make sure we hit the fixture's configs/ and not
     # whatever happens to live at the runner's working directory.
     pushd "$workdir" >/dev/null
-    java -Xmx1g -jar "$jar" \
-        "--server.port=$port" \
-        "--spring.datasource.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
-        "--spring.jpa.show-sql=false" \
-        "--logging.level.root=WARN" \
-        "--logging.level.stirling=INFO" \
-        "--logging.level.org.hibernate.tool.schema=INFO" \
+    # Quarkus reads config from -D system properties (which must precede -jar),
+    # not Spring's post-jar --key=value args. Translated 1:1 from the former
+    # Spring properties; system properties override application.properties.
+    java -Xmx1g \
+        "-Dquarkus.http.port=$port" \
+        "-Dquarkus.datasource.jdbc.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
+        "-Dquarkus.hibernate-orm.log.sql=false" \
+        "-Dquarkus.log.level=WARN" \
+        "-Dquarkus.log.category.stirling.level=INFO" \
+        '-Dquarkus.log.category."org.hibernate.tool.schema".level=INFO' \
+        -jar "$jar" \
         > "$log_file" 2>&1 &
     local pid=$!
     popd >/dev/null

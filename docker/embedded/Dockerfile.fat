@@ -46,25 +46,19 @@ RUN DISABLE_ADDITIONAL_FEATURES=false \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
-# Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble AS jar-extract
-WORKDIR /tmp
-COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
-RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
-
-
-# Stage 3: Final runtime image on top of pre-built base
+# Stage 2: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
 ARG VERSION_TAG
 
 WORKDIR /app
 
-# Application layers
-COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+# Quarkus uber runner-jar (self-contained, all dependencies inside). init-without-ocr.sh launches
+# it via `java -jar /app/app.jar`. Replaces the former Spring Boot layered-jar extraction
+# (java -Djarmode=tools extract --layers + spring-boot-loader layers), which the Quarkus uber-jar
+# does not support; build/libs/*.jar is only the thin (non-runnable) jar.
+COPY --link --from=app-build --chown=1000:1000 \
+     /app/app/core/build/stirling-pdf-*-runner.jar /app/app.jar
 
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar

@@ -399,14 +399,18 @@ public class UserService implements UserServiceInterface {
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.persist(user);
+        // Spring Data save() upserted; Panache persist() rejects an already-persisted (detached)
+        // entity ("Detached entity passed to persist"). The user was loaded in the request context,
+        // so re-attach via merge to update it.
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changeFirstUse(User user, boolean firstUse)
             throws SQLException, UnsupportedProviderException {
         user.setFirstLogin(firstUse);
-        userRepository.persist(user);
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 

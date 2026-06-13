@@ -341,8 +341,20 @@ if (buildWithFrontend) {
 // DatabaseService/NoOpDatabaseService both stay active (ambiguous). The profile is fixed at build
 // time by @IfBuildProfile, so this must be set before quarkusBuild runs; doing it at configuration
 // time (guarded by the flavor) keeps core/proprietary builds on the default profile.
+// Map the build flavor to a Quarkus feature profile, replacing Spring's runtime profile
+// auto-detection (former getActiveProfile() -> setAdditionalProfiles). @IfBuildProfile/@Unless
+// gate beans on these. Set as the profile PARENT (not the profile itself) for security/core so the
+// run-mode profile (prod for quarkusBuild, dev for quarkusDev) - and dev services/live reload -
+// stay intact; saas keeps using its own "saas" profile.
+//   core         -> "core"      (default license beans only)
+//   proprietary  -> "security"  (EEAppConfig: security & !saas)
+//   saas         -> "saas"      (SaasLicenseOverride)
 if (gradle.ext.enableSaas) {
     System.setProperty('quarkus.profile', 'saas')
+} else if (!gradle.ext.disableAdditional) {
+    System.setProperty('quarkus.config.profile.parent', 'security')
+} else {
+    System.setProperty('quarkus.config.profile.parent', 'core')
 }
 
 // The Quarkus build must see the library modules' jars (and their Jandex indexes) on the
@@ -403,4 +415,57 @@ tasks.named("quarkusDev") {
     }
 
     jvmArgs = runtimeArgs
+}
+
+// ---------------------------------------------------------------------------
+// Compatibility aliases for the Spring Boot Gradle tasks removed in the Quarkus
+// migration. CI workflows, the Taskfile and desktop builds still invoke these
+// task names; each delegates to the Quarkus equivalent so those callers keep
+// working without a sweeping rename across the build scripts.
+// ---------------------------------------------------------------------------
+
+// bootRun -> quarkusDev: run the application from source (used by the e2e and
+// dev tasks to boot a live :8080 server).
+tasks.register('bootRun') {
+    group = 'application'
+    description = 'Compatibility alias for the removed Spring Boot bootRun; runs quarkusDev.'
+    dependsOn 'quarkusDev'
+}
+
+// bootJar -> quarkusBuild: produce the runnable uber-jar at
+// app/core/build/<name>-runner.jar (quarkus.package.jar.type=uber-jar).
+tasks.register('bootJar') {
+    group = 'build'
+    description = 'Compatibility alias for the removed Spring Boot bootJar; runs quarkusBuild.'
+    dependsOn 'quarkusBuild'
+}
+
+// OpenAPI doc generation replacing springdoc's generateOpenApiDocs/copySwaggerDoc. quarkusBuild
+// exports the SmallRye schema (quarkus.smallrye-openapi.store-schema-directory) during augmentation;
+// copySwaggerDoc publishes that openapi.json to SwaggerDoc.json at the repo root, which the
+// check-openapi workflow and the ai-engine tool-models step consume.
+tasks.register('copySwaggerDoc') {
+    group = 'documentation'
+    description = 'Publish the SmallRye OpenAPI schema to SwaggerDoc.json at the repo root.'
+    dependsOn 'quarkusBuild'
+    doLast {
+        def schema = fileTree(layout.buildDirectory)
+                .matching { include '**/openapi-schema/openapi.json' }
+                .files
+                .find { it != null }
+        if (schema == null) {
+            throw new GradleException(
+                    "No openapi-schema/openapi.json found under ${layout.buildDirectory.get()}; " +
+                    "check quarkus.smallrye-openapi.store-schema-directory.")
+        }
+        def target = new File(rootProject.projectDir, 'SwaggerDoc.json')
+        target.text = schema.text
+        logger.lifecycle("Wrote OpenAPI schema (${schema.length()} bytes) to ${target}")
+    }
+}
+
+tasks.register('generateOpenApiDocs') {
+    group = 'documentation'
+    description = 'Compatibility alias for the removed springdoc generateOpenApiDocs.'
+    dependsOn 'copySwaggerDoc'
 }
