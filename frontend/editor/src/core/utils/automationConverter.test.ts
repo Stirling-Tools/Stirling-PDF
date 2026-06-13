@@ -3,6 +3,7 @@
  */
 
 import { describe, test, expect } from "vitest";
+import { expectConsole } from "@app/tests/failOnConsole";
 import {
   convertToAutomationConfig,
   convertToFolderScanningConfig,
@@ -111,6 +112,7 @@ describe("automationConverter", () => {
     });
 
     test("falls back to operation key when no endpoint is registered", () => {
+      expectConsole.warn(/No endpoint found for operation "unknownTool"/);
       const automation: AutomationConfig = {
         ...sampleAutomation,
         operations: [{ operation: "unknownTool", parameters: {} }],

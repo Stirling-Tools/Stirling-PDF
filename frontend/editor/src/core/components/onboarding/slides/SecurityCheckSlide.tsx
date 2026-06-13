@@ -37,11 +37,20 @@ export default function SecurityCheckSlide({
           </div>
 
           <Select
-            placeholder="Confirm your role"
+            placeholder={i18n.t(
+              "onboarding.securityCheck.rolePlaceholder",
+              "Confirm your role",
+            )}
             value={selectedRole}
             data={[
-              { value: "admin", label: "Admin" },
-              { value: "user", label: "User" },
+              {
+                value: "admin",
+                label: i18n.t("onboarding.securityCheck.roleAdmin", "Admin"),
+              },
+              {
+                value: "user",
+                label: i18n.t("onboarding.securityCheck.roleUser", "User"),
+              },
             ]}
             onChange={(value) =>
               onRoleSelect((value as "admin" | "user") ?? null)

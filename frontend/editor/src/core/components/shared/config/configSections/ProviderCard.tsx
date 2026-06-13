@@ -101,7 +101,7 @@ export default function ProviderCard({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {field.label}
               </Text>

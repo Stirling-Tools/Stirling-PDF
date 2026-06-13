@@ -252,6 +252,35 @@ class JwtServiceTest {
     }
 
     @Test
+    void testExtractUsernameFromRequestAllowExpiredReturnsUsername() throws Exception {
+        String username = "alice";
+        when(keystoreService.getActiveKey()).thenReturn(testVerificationKey);
+        when(keystoreService.getKeyPair("test-key-id")).thenReturn(Optional.of(testKeyPair));
+
+        String token = jwtService.generateToken(username, Collections.emptyMap());
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+
+        assertEquals(username, jwtService.extractUsernameFromRequestAllowExpired(request));
+    }
+
+    @Test
+    void testExtractUsernameFromRequestAllowExpiredReturnsNullWhenNoToken() {
+        when(request.getHeader("Authorization")).thenReturn(null);
+
+        assertNull(jwtService.extractUsernameFromRequestAllowExpired(request));
+    }
+
+    @Test
+    void testExtractUsernameFromRequestAllowExpiredReturnsNullOnGarbageToken() {
+        // The logout path depends on this helper returning null - never throwing - so a
+        // malformed JWT never blocks a user from logging out. Any parse/validation problem
+        // collapses to "no resolvable user".
+        when(request.getHeader("Authorization")).thenReturn("Bearer not-a-real-jwt");
+
+        assertNull(jwtService.extractUsernameFromRequestAllowExpired(request));
+    }
+
+    @Test
     void testGenerateTokenWithKeyId() throws Exception {
         String username = "testuser";
         Map<String, Object> claims = new HashMap<>();

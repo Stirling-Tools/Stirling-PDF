@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -40,6 +41,8 @@ public class ReactRoutingController {
     private boolean indexHtmlExists = false;
     private boolean useExternalIndexHtml = false;
     private boolean loggedMissingIndex = false;
+    private String cachedSaasLandingHtml;
+    private boolean saasLandingExists = false;
 
     @PostConstruct
     public void init() {
@@ -47,6 +50,20 @@ public class ReactRoutingController {
 
         // Always initialize callback HTML (used for OAuth desktop flow)
         this.cachedCallbackHtml = buildCallbackHtml();
+
+        // SaaS landing page: only present on the classpath when the :saas module is bundled
+        // (app/saas/src/main/resources/static/saas-landing.html). When present it replaces the
+        // root page so the SaaS API host shows its own landing instead of the OSS API-only page.
+        ClassPathResource saasLanding = new ClassPathResource("static/saas-landing.html");
+        if (saasLanding.exists()) {
+            try (InputStream in = saasLanding.getInputStream()) {
+                this.cachedSaasLandingHtml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                this.saasLandingExists = true;
+                log.info("SaaS landing page detected; serving it at '/' and '/index.html'");
+            } catch (Exception ex) {
+                log.warn("Failed to read saas-landing.html; falling back to index.html", ex);
+            }
+        }
 
         // Check for external index.html first (customFiles/static/)
         Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
@@ -131,16 +148,37 @@ public class ReactRoutingController {
     @GetMapping(
             value = {"/", "/index.html"},
             produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveRootPage(HttpServletRequest request) {
+        // Swap ONLY the root page for SaaS. SPA entry points that delegate to serveIndexHtml
+        // (/auth/callback, /share/{token}, forwarded routes) keep serving the normal shell.
+        if (saasLandingExists && cachedSaasLandingHtml != null) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(cachedSaasLandingHtml);
+        }
+        return serveIndexHtml(request);
+    }
+
     public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
-                return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedIndexHtml);
+                return ResponseEntity.ok()
+                        .cacheControl(CacheControl.noCache().mustRevalidate())
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(cachedIndexHtml);
             }
             // Fallback: process on each request (dev mode or cache failed)
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(processIndexHtml());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(processIndexHtml());
         } catch (Exception ex) {
             log.error("Failed to serve index.html, returning fallback", ex);
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(buildFallbackHtml());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildFallbackHtml());
         }
     }
 

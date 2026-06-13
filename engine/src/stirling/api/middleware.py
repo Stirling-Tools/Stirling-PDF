@@ -4,6 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
+from stirling.models import UserId
 from stirling.services.tracking import current_user_id
 
 _USER_ID_HEADER = "X-User-Id"
@@ -15,7 +16,7 @@ class UserIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         user_id = request.headers.get(_USER_ID_HEADER)
         if user_id:
-            token = current_user_id.set(user_id)
+            token = current_user_id.set(UserId(user_id))
             try:
                 return await call_next(request)
             finally:

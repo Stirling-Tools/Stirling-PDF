@@ -1,0 +1,70 @@
+.sui-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+.sui-status--sm {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+}
+.sui-status--md {
+  font-size: 0.75rem;
+  padding: 0.1875rem 0.625rem;
+}
+.sui-status--lg {
+  font-size: 0.8125rem;
+  padding: 0.3125rem 0.75rem;
+}
+
+.sui-status__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+  position: relative;
+}
+.sui-status__dot--pulse::after {
+  content: "";
+  position: absolute;
+  inset: -0.125rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: pulseRing 1.4s ease-out infinite;
+}
+
+.sui-status--neutral {
+  color: var(--color-text-3);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-light);
+}
+.sui-status--success {
+  color: var(--color-green);
+  background: var(--color-green-light);
+  border-color: var(--color-green-border);
+}
+.sui-status--warning {
+  color: var(--color-amber-dark);
+  background: var(--color-amber-light);
+  border-color: var(--color-amber-border);
+}
+.sui-status--danger {
+  color: var(--color-red);
+  background: var(--color-red-light);
+  border-color: var(--color-red-border);
+}
+.sui-status--info {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+  border-color: var(--color-blue-border);
+}
+.sui-status--purple {
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+  border-color: var(--color-purple-border);
+}

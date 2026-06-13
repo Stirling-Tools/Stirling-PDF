@@ -14,6 +14,8 @@ import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -80,6 +82,7 @@ export default function App() {
                   <Route path="/*" element={<Landing />} />
                 </Routes>
                 <Onboarding />
+                {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
               </AppLayout>
             </AppProviders>
           }
