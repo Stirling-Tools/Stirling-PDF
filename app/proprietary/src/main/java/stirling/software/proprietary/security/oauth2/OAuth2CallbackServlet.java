@@ -111,10 +111,7 @@ public class OAuth2CallbackServlet extends HttpServlet {
                             Map.of(
                                     "authType", AuthenticationType.OAUTH2.toString(),
                                     "role", user.getRolesAsString()));
-            Cookie cookie = new Cookie("stirling_jwt", jwt);
-            cookie.setPath("/");
-            cookie.setHttpOnly(true);
-            response.addCookie(cookie);
+            response.addCookie(jwtCookie(jwt, request));
             response.sendRedirect(baseUrl(request) + "/");
         } catch (Exception e) {
             log.error("OAuth2 callback failed", e);
@@ -201,6 +198,17 @@ public class OAuth2CallbackServlet extends HttpServlet {
 
     private String redirectUri(HttpServletRequest request) {
         return baseUrl(request) + "/login/oauth2/code/" + REG_ID;
+    }
+
+    private Cookie jwtCookie(String jwt, HttpServletRequest request) {
+        Cookie cookie = new Cookie("stirling_jwt", jwt);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        // Secure when the request arrived over HTTPS (production); left off for the http localhost
+        // test deployments so the SSO cookie round-trips there.
+        cookie.setSecure(request.isSecure());
+        cookie.setAttribute("SameSite", "Lax");
+        return cookie;
     }
 
     private String baseUrl(HttpServletRequest request) {

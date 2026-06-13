@@ -60,7 +60,8 @@ public interface MultipartFile {
 
     default void transferTo(Path dest) throws IOException {
         try (InputStream in = getInputStream()) {
-            // Spring's MultipartFile#transferTo overwrites an existing destination. Callers commonly
+            // Spring's MultipartFile#transferTo overwrites an existing destination. Callers
+            // commonly
             // pass a path from Files.createTempFile(...) (which has already created an empty file),
             // so REPLACE_EXISTING is required - a plain Files.copy would throw FileAlreadyExists.
             Files.copy(in, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);

@@ -81,10 +81,7 @@ public class SamlSpServlet extends HttpServlet {
                             Map.of(
                                     "authType", AuthenticationType.SSO.toString(),
                                     "role", user.getRolesAsString()));
-            Cookie cookie = new Cookie("stirling_jwt", jwt);
-            cookie.setPath("/");
-            cookie.setHttpOnly(true);
-            response.addCookie(cookie);
+            response.addCookie(jwtCookie(jwt, request));
             response.sendRedirect(baseUrl(request) + "/");
         } catch (Exception e) {
             log.error("SAML ACS validation failed", e);
@@ -115,6 +112,17 @@ public class SamlSpServlet extends HttpServlet {
             log.error("Failed to auto-create SAML user '{}'", username, e);
             return null;
         }
+    }
+
+    private Cookie jwtCookie(String jwt, HttpServletRequest request) {
+        Cookie cookie = new Cookie("stirling_jwt", jwt);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        // Secure when the request arrived over HTTPS (production); left off for the http localhost
+        // test deployments so the SSO cookie round-trips there.
+        cookie.setSecure(request.isSecure());
+        cookie.setAttribute("SameSite", "Lax");
+        return cookie;
     }
 
     private String baseUrl(HttpServletRequest request) {
