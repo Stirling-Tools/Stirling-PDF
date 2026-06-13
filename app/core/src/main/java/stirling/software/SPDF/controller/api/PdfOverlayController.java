@@ -68,9 +68,6 @@ public class PdfOverlayController {
             @RestForm("counts") int[] counts,
             @RestForm("overlayPosition") int overlayPosition)
             throws IOException {
-        // TODO: Migration required - collaborator edit. OverlayPdfsRequest still imports Spring's
-        // MultipartFile for its overlayFiles[] field, so the form fields are bound directly here
-        // and a populated request object is rebuilt rather than reusing @ModelAttribute binding.
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileInput));
         request.setOverlayMode(overlayMode);

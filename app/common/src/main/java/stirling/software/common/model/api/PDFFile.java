@@ -1,9 +1,5 @@
 package stirling.software.common.model.api;
 
-// TODO: Migration required - org.springframework.web.multipart.MultipartFile has no
-// servlet/JAX-RS drop-in for a DTO field type. Changing this public field type to
-// byte[]/InputStream or a JAX-RS multipart type would ripple to all callers and the
-// API binding layer, so the type is kept until callers are migrated together.
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.AssertTrue;

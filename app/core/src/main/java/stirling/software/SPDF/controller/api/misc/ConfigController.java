@@ -143,25 +143,22 @@ public class ConfigController {
     /**
      * The port the embedded server is actually listening on. With {@code server.port=0} (an
      * ephemeral port, which the desktop bundle uses to dodge port clashes) the configured value
-     * stays {@code "0"} while Spring publishes the real bound port as {@code local.server.port}
-     * once the server is up. Advertised URLs (the mobile-scanner QR, share links) must carry the
-     * real port - a literal {@code :0} is unreachable and browsers reject it as ERR_UNSAFE_PORT.
+     * stays {@code "0"}. Advertised URLs (the mobile-scanner QR, share links) must carry a real,
+     * reachable port - a literal {@code :0} is unreachable and browsers reject it as
+     * ERR_UNSAFE_PORT.
      */
     // visible for testing
     String resolveEffectiveServerPort(AppConfig appConfig) {
         String configured = appConfig.getServerPort();
         if (configured == null || "0".equals(configured.trim())) {
-            // TODO: Migration required - Spring exposed the real bound ephemeral port as the
-            // "local.server.port" property. Quarkus binds via quarkus.http.port and does not
-            // publish "local.server.port" by default; verify the actual bound port is surfaced
-            // under this key (or update the key) when server.port=0 is used by the desktop bundle.
-            String actual =
+            // Quarkus binds via quarkus.http.port (not Spring's local.server.port). Read the bound
+            // port from config; if it is itself 0/absent (ephemeral, no static value to advertise)
+            // fall back to the conventional default rather than emitting an unreachable :0 URL.
+            int port =
                     ConfigProvider.getConfig()
-                            .getOptionalValue("local.server.port", String.class)
-                            .orElse(null);
-            if (actual != null && !actual.isBlank()) {
-                return actual;
-            }
+                            .getOptionalValue("quarkus.http.port", Integer.class)
+                            .orElse(0);
+            return port > 0 ? Integer.toString(port) : "8080";
         }
         return configured;
     }

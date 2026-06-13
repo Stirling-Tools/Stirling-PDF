@@ -753,7 +753,9 @@ public class UserController {
                 }
 
                 user.setTeam(team);
-                userRepository.persist(user);
+                // The user was loaded earlier in this request (detached); Panache persist() rejects
+                // a detached entity. Re-attach via merge (the frontend sends teamId here).
+                userRepository.getEntityManager().merge(user);
             }
         }
 
@@ -1095,6 +1097,7 @@ public class UserController {
 
     @POST
     @jakarta.ws.rs.Path("/complete-initial-setup")
+    @Transactional
     public Response completeInitialSetup() {
         try {
             String username = userService.getCurrentUsername();
@@ -1111,7 +1114,8 @@ public class UserController {
 
             User user = userOpt.get();
             user.setHasCompletedInitialSetup(true);
-            userRepository.persist(user);
+            // Detached entity (loaded above) -> merge, not persist (see changeRole).
+            userRepository.getEntityManager().merge(user);
 
             log.info("User {} completed initial setup", username);
             return Response.ok(Map.of("success", true)).build();

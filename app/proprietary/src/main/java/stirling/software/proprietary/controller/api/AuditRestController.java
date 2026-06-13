@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -112,15 +113,12 @@ public class AuditRestController {
         } else if (usernameList != null) {
             query = auditRepository.findByPrincipalIn(usernameList);
         } else {
-            query = auditRepository.findAll();
+            query = auditRepository.findAll(Sort.descending("timestamp"));
         }
 
-        // Apply the requested page window.
-        // TODO: Migration required - PanacheQuery has no sort() method; the timestamp-descending
-        // ordering (formerly Sort.by("timestamp").descending() on the Spring Pageable) must be
-        // baked into the repository finder queries (e.g. add "ORDER BY e.timestamp DESC" / pass an
-        // io.quarkus.panache.common.Sort when the finder is built). Tracked under task: Spring Data
-        // JPA -> Hibernate ORM Panache.
+        // Apply the requested page window. The repository finders (and the unfiltered findAll
+        // above) already sort newest-first via io.quarkus.panache.common.Sort.descending(
+        // "timestamp"), reproducing the former Spring Pageable's Sort.by("timestamp").descending().
         query.page(Page.of(page, pageSize));
 
         long totalElements = query.count();
@@ -593,7 +591,7 @@ public class AuditRestController {
         } else if (usernameList != null) {
             events = auditRepository.findByPrincipalInForExport(usernameList);
         } else {
-            events = auditRepository.findAll().list();
+            events = auditRepository.findAll(Sort.descending("timestamp")).list();
         }
 
         // Export based on format

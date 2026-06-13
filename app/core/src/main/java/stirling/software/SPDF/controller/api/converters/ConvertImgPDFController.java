@@ -290,10 +290,6 @@ public class ConvertImgPDFController {
             @RestForm("colorType") String colorTypeParam,
             @RestForm("autoRotate") Boolean autoRotateParam)
             throws IOException {
-        // TODO: Migration required - ConvertToPdfRequest.fileInput is still typed as Spring's
-        // org.springframework.web.multipart.MultipartFile[]. setFileInput(...) below passes the
-        // common shim (stirling.software.common.model.MultipartFile[]); this will not compile until
-        // ConvertToPdfRequest is migrated to the shim type (collaborator edit on the model file).
         ConvertToPdfRequest request = new ConvertToPdfRequest();
         stirling.software.common.model.MultipartFile[] requestFiles =
                 fileUploads == null
@@ -341,9 +337,6 @@ public class ConvertImgPDFController {
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("optimizeForEbook") Boolean optimizeForEbookParam)
             throws IOException {
-        // TODO: Migration required - ConvertCbzToPdfRequest.fileInput is still typed as Spring's
-        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
-        // and will not compile until that model file is migrated to the shim type.
         ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));
         request.setOptimizeForEbook(Boolean.TRUE.equals(optimizeForEbookParam));
@@ -381,9 +374,6 @@ public class ConvertImgPDFController {
     public Response convertPdfToCbz(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("dpi") Integer dpiParam)
             throws IOException {
-        // TODO: Migration required - ConvertPdfToCbzRequest.fileInput is still typed as Spring's
-        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
-        // and will not compile until that model file is migrated to the shim type.
         ConvertPdfToCbzRequest request = new ConvertPdfToCbzRequest();
         request.setFileInput(fileUpload);
         if (dpiParam != null) {
@@ -421,9 +411,6 @@ public class ConvertImgPDFController {
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("optimizeForEbook") Boolean optimizeForEbookParam)
             throws IOException {
-        // TODO: Migration required - ConvertCbrToPdfRequest.fileInput is still typed as Spring's
-        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
-        // and will not compile until that model file is migrated to the shim type.
         ConvertCbrToPdfRequest request = new ConvertCbrToPdfRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));
         request.setOptimizeForEbook(Boolean.TRUE.equals(optimizeForEbookParam));
@@ -461,9 +448,6 @@ public class ConvertImgPDFController {
     public Response convertPdfToCbr(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("dpi") Integer dpiParam)
             throws IOException {
-        // TODO: Migration required - ConvertPdfToCbrRequest.fileInput is still typed as Spring's
-        // org.springframework.web.multipart.MultipartFile; setFileInput(...) passes the common shim
-        // and will not compile until that model file is migrated to the shim type.
         ConvertPdfToCbrRequest request = new ConvertPdfToCbrRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));
         if (dpiParam != null) {

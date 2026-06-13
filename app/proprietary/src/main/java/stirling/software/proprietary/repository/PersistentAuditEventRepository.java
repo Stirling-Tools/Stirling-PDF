@@ -50,24 +50,25 @@ public class PersistentAuditEventRepository
     public PanacheQuery<PersistentAuditEvent> findByPrincipal(String principal) {
         return find(
                 "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                        + " :principal, '%'))",
+                        + " :principal, '%')) ORDER BY e.timestamp DESC",
                 Parameters.with("principal", principal));
     }
 
     public PanacheQuery<PersistentAuditEvent> findByType(String type) {
-        return find("type", type);
+        return find("type", Sort.descending("timestamp"), type);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByTimestampBetween(
             Instant startDate, Instant endDate) {
-        return find("timestamp BETWEEN ?1 AND ?2", startDate, endDate);
+        return find(
+                "timestamp BETWEEN ?1 AND ?2", Sort.descending("timestamp"), startDate, endDate);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipalAndType(
             String principal, String type) {
         return find(
                 "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                        + " :principal, '%')) AND e.type = :type",
+                        + " :principal, '%')) AND e.type = :type ORDER BY e.timestamp DESC",
                 Parameters.with("principal", principal).and("type", type));
     }
 
@@ -75,7 +76,8 @@ public class PersistentAuditEventRepository
             String principal, Instant startDate, Instant endDate) {
         return find(
                 "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                        + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate",
+                        + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate ORDER"
+                        + " BY e.timestamp DESC",
                 Parameters.with("principal", principal)
                         .and("startDate", startDate)
                         .and("endDate", endDate));
@@ -83,7 +85,12 @@ public class PersistentAuditEventRepository
 
     public PanacheQuery<PersistentAuditEvent> findByTypeAndTimestampBetween(
             String type, Instant startDate, Instant endDate) {
-        return find("type = ?1 AND timestamp BETWEEN ?2 AND ?3", type, startDate, endDate);
+        return find(
+                "type = ?1 AND timestamp BETWEEN ?2 AND ?3",
+                Sort.descending("timestamp"),
+                type,
+                startDate,
+                endDate);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipalAndTypeAndTimestampBetween(
@@ -91,7 +98,7 @@ public class PersistentAuditEventRepository
         return find(
                 "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
                         + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate"
-                        + " AND :endDate",
+                        + " AND :endDate ORDER BY e.timestamp DESC",
                 Parameters.with("principal", principal)
                         .and("type", type)
                         .and("startDate", startDate)
@@ -105,34 +112,36 @@ public class PersistentAuditEventRepository
     public List<PersistentAuditEvent> findAllByPrincipalForExport(String principal) {
         return find(
                         "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE"
-                                + " UPPER(CONCAT('%', :principal, '%'))",
+                                + " UPPER(CONCAT('%', :principal, '%')) ORDER BY e.timestamp DESC",
                         Parameters.with("principal", principal))
                 .list();
     }
 
     public List<PersistentAuditEvent> findByTypeForExport(String type) {
-        return list("type", type);
+        return list("type", Sort.descending("timestamp"), type);
     }
 
     public List<PersistentAuditEvent> findByTypeAndTimestampAfterForExport(
             String type, Instant startDate) {
-        return list("type = ?1 AND timestamp > ?2", type, startDate);
+        return list("type = ?1 AND timestamp > ?2", Sort.descending("timestamp"), type, startDate);
     }
 
     public List<PersistentAuditEvent> findAllByTimestampBetweenForExport(
             Instant startDate, Instant endDate) {
-        return list("timestamp BETWEEN ?1 AND ?2", startDate, endDate);
+        return list(
+                "timestamp BETWEEN ?1 AND ?2", Sort.descending("timestamp"), startDate, endDate);
     }
 
     public List<PersistentAuditEvent> findByTimestampAfter(Instant startDate) {
-        return list("timestamp > ?1", startDate);
+        return list("timestamp > ?1", Sort.descending("timestamp"), startDate);
     }
 
     public List<PersistentAuditEvent> findAllByPrincipalAndTypeForExport(
             String principal, String type) {
         return find(
                         "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE"
-                                + " UPPER(CONCAT('%', :principal, '%')) AND e.type = :type",
+                                + " UPPER(CONCAT('%', :principal, '%')) AND e.type = :type ORDER BY"
+                                + " e.timestamp DESC",
                         Parameters.with("principal", principal).and("type", type))
                 .list();
     }
@@ -142,7 +151,7 @@ public class PersistentAuditEventRepository
         return find(
                         "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE"
                                 + " UPPER(CONCAT('%', :principal, '%')) AND e.timestamp BETWEEN"
-                                + " :startDate AND :endDate",
+                                + " :startDate AND :endDate ORDER BY e.timestamp DESC",
                         Parameters.with("principal", principal)
                                 .and("startDate", startDate)
                                 .and("endDate", endDate))
@@ -151,7 +160,12 @@ public class PersistentAuditEventRepository
 
     public List<PersistentAuditEvent> findAllByTypeAndTimestampBetweenForExport(
             String type, Instant startDate, Instant endDate) {
-        return list("type = ?1 AND timestamp BETWEEN ?2 AND ?3", type, startDate, endDate);
+        return list(
+                "type = ?1 AND timestamp BETWEEN ?2 AND ?3",
+                Sort.descending("timestamp"),
+                type,
+                startDate,
+                endDate);
     }
 
     public List<PersistentAuditEvent> findAllByPrincipalAndTypeAndTimestampBetweenForExport(
@@ -159,7 +173,8 @@ public class PersistentAuditEventRepository
         return find(
                         "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE"
                                 + " UPPER(CONCAT('%', :principal, '%')) AND e.type = :type AND"
-                                + " e.timestamp BETWEEN :startDate AND :endDate",
+                                + " e.timestamp BETWEEN :startDate AND :endDate ORDER BY"
+                                + " e.timestamp DESC",
                         Parameters.with("principal", principal)
                                 .and("type", type)
                                 .and("startDate", startDate)
@@ -320,33 +335,44 @@ public class PersistentAuditEventRepository
     // ---------------------------------------------------------------------
 
     public PanacheQuery<PersistentAuditEvent> findByTypeIn(List<String> types) {
-        return find("type IN ?1", types);
+        return find("type IN ?1", Sort.descending("timestamp"), types);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipalIn(List<String> principals) {
-        return find("principal IN ?1", principals);
+        return find("principal IN ?1", Sort.descending("timestamp"), principals);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByTypeInAndTimestampBetween(
             List<String> types, Instant startDate, Instant endDate) {
-        return find("type IN ?1 AND timestamp BETWEEN ?2 AND ?3", types, startDate, endDate);
+        return find(
+                "type IN ?1 AND timestamp BETWEEN ?2 AND ?3",
+                Sort.descending("timestamp"),
+                types,
+                startDate,
+                endDate);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipalInAndTimestampBetween(
             List<String> principals, Instant startDate, Instant endDate) {
         return find(
-                "principal IN ?1 AND timestamp BETWEEN ?2 AND ?3", principals, startDate, endDate);
+                "principal IN ?1 AND timestamp BETWEEN ?2 AND ?3",
+                Sort.descending("timestamp"),
+                principals,
+                startDate,
+                endDate);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByTypeInAndPrincipalIn(
             List<String> types, List<String> principals) {
-        return find("type IN ?1 AND principal IN ?2", types, principals);
+        return find(
+                "type IN ?1 AND principal IN ?2", Sort.descending("timestamp"), types, principals);
     }
 
     public PanacheQuery<PersistentAuditEvent> findByTypeInAndPrincipalInAndTimestampBetween(
             List<String> types, List<String> principals, Instant startDate, Instant endDate) {
         return find(
                 "type IN ?1 AND principal IN ?2 AND timestamp BETWEEN ?3 AND ?4",
+                Sort.descending("timestamp"),
                 types,
                 principals,
                 startDate,
@@ -358,33 +384,44 @@ public class PersistentAuditEventRepository
     // ---------------------------------------------------------------------
 
     public List<PersistentAuditEvent> findByTypeInForExport(List<String> types) {
-        return list("type IN ?1", types);
+        return list("type IN ?1", Sort.descending("timestamp"), types);
     }
 
     public List<PersistentAuditEvent> findByPrincipalInForExport(List<String> principals) {
-        return list("principal IN ?1", principals);
+        return list("principal IN ?1", Sort.descending("timestamp"), principals);
     }
 
     public List<PersistentAuditEvent> findByTypeInAndTimestampBetweenForExport(
             List<String> types, Instant startDate, Instant endDate) {
-        return list("type IN ?1 AND timestamp BETWEEN ?2 AND ?3", types, startDate, endDate);
+        return list(
+                "type IN ?1 AND timestamp BETWEEN ?2 AND ?3",
+                Sort.descending("timestamp"),
+                types,
+                startDate,
+                endDate);
     }
 
     public List<PersistentAuditEvent> findByPrincipalInAndTimestampBetweenForExport(
             List<String> principals, Instant startDate, Instant endDate) {
         return list(
-                "principal IN ?1 AND timestamp BETWEEN ?2 AND ?3", principals, startDate, endDate);
+                "principal IN ?1 AND timestamp BETWEEN ?2 AND ?3",
+                Sort.descending("timestamp"),
+                principals,
+                startDate,
+                endDate);
     }
 
     public List<PersistentAuditEvent> findByTypeInAndPrincipalInForExport(
             List<String> types, List<String> principals) {
-        return list("type IN ?1 AND principal IN ?2", types, principals);
+        return list(
+                "type IN ?1 AND principal IN ?2", Sort.descending("timestamp"), types, principals);
     }
 
     public List<PersistentAuditEvent> findByTypeInAndPrincipalInAndTimestampBetweenForExport(
             List<String> types, List<String> principals, Instant startDate, Instant endDate) {
         return list(
                 "type IN ?1 AND principal IN ?2 AND timestamp BETWEEN ?3 AND ?4",
+                Sort.descending("timestamp"),
                 types,
                 principals,
                 startDate,
@@ -393,11 +430,15 @@ public class PersistentAuditEventRepository
 
     // Query events excluding a specific type (used for analytics where we want to exclude UI_DATA)
     public List<PersistentAuditEvent> findAllExceptTypeForExport(String excludeType) {
-        return list("type != ?1", excludeType);
+        return list("type != ?1", Sort.descending("timestamp"), excludeType);
     }
 
     public List<PersistentAuditEvent> findAllExceptTypeAndTimestampAfterForExport(
             String excludeType, Instant startDate) {
-        return list("type != ?1 AND timestamp > ?2", excludeType, startDate);
+        return list(
+                "type != ?1 AND timestamp > ?2",
+                Sort.descending("timestamp"),
+                excludeType,
+                startDate);
     }
 }

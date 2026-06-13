@@ -288,10 +288,6 @@ public class MergeController {
             @RestForm("clientFileIds") String clientFileIds,
             @RestForm("fileOrder") String fileOrder)
             throws IOException {
-        // TODO: Migration required - collaborator edit. MergePdfsRequest/MultiplePDFFiles must
-        // declare fileInput as stirling.software.common.model.MultipartFile[] (the shim) for the
-        // setFileInput call below to type-check; MultiplePDFFiles still imports Spring's
-        // MultipartFile.
         MergePdfsRequest request = new MergePdfsRequest();
         if (fileUploads != null) {
             MultipartFile[] mappedFiles =

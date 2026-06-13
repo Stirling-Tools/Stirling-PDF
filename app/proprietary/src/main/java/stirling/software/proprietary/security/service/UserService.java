@@ -5,6 +5,7 @@ import static stirling.software.proprietary.security.service.MfaService.MFA_LAST
 import static stirling.software.proprietary.security.service.MfaService.MFA_REQUIRED_KEY;
 import static stirling.software.proprietary.security.service.MfaService.MFA_SECRET_KEY;
 
+import java.security.Principal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +19,10 @@ import java.util.function.Supplier;
 
 import org.slf4j.MDC;
 
+import io.quarkus.security.identity.SecurityIdentity;
+
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +35,6 @@ import stirling.software.common.security.Authentication;
 import stirling.software.common.security.GrantedAuthority;
 import stirling.software.common.security.OAuth2User;
 import stirling.software.common.security.PasswordEncoder;
-import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.security.SessionInformation;
 import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.common.security.UserDetails;
@@ -93,6 +96,11 @@ public class UserService implements UserServiceInterface {
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
     private final FileShareRepository fileShareRepository;
     private final FileShareAccessRepository fileShareAccessRepository;
+
+    // Quarkus replacement for Spring's SecurityContextHolder: the authenticated principal (the User
+    // entity, via UserSecurityIdentityAugmentor) and its roles live on SecurityIdentity. Field
+    // injection (not a constructor arg) keeps the @RequiredArgsConstructor signature stable.
+    @Inject SecurityIdentity securityIdentity;
 
     @Transactional
     public void processSSOPostLogin(
@@ -669,36 +677,23 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        // TODO: Migration required - SecurityContextHolder/Authentication are Spring Security. The
-        // request-context branch should be replaced by an injected
-        // io.quarkus.security.identity.SecurityIdentity (or @Context SecurityContext) once the
-        // security layer is ported; the MDC fallback below is framework-agnostic and stays.
+        // The authenticated principal is exposed via SecurityIdentity (the User entity, set by
+        // UserSecurityIdentityAugmentor) - Spring's SecurityContextHolder is never populated on
+        // RESTEasy Reactive threads. Guarded so off-request callers (async job threads, where no
+        // request-scoped SecurityIdentity is bound) fall through to the MDC principal instead.
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null) {
-                Object principal = auth.getPrincipal();
-
-                if (principal instanceof UserDetails detailsUser) {
-                    return detailsUser.getUsername();
-                } else if (principal instanceof User domainUser) {
-                    return domainUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    // OAuth2User shim exposes getAttributes() (Map) but not the singular
-                    // getAttribute(String) convenience accessor; read from the map directly.
-                    Object usernameAttr = oAuth2User.getAttributes().get(oAuth2.getUseAsUsername());
-                    return usernameAttr != null ? usernameAttr.toString() : null;
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    return saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    return stringUser;
+            if (securityIdentity != null && !securityIdentity.isAnonymous()) {
+                Principal principal = securityIdentity.getPrincipal();
+                if (principal != null && principal.getName() != null) {
+                    return principal.getName();
                 }
             }
         } catch (Exception e) {
-            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
+            log.trace("No active SecurityIdentity, falling back to MDC", e);
         }
 
-        // Fallback to MDC for async contexts (e.g., when called from async job threads)
-        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it
+        // Fallback to MDC for async contexts (e.g., when called from async job threads).
+        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it.
         String mdcPrincipal = MDC.get("auditPrincipal");
         if (mdcPrincipal != null && !mdcPrincipal.isEmpty()) {
             return mdcPrincipal;
@@ -709,20 +704,20 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public boolean isCurrentUserAdmin() {
-        // TODO: Migration required - SecurityContextHolder/Authentication are Spring Security;
-        // replace with SecurityIdentity#hasRole(Role.ADMIN) once the security layer is ported.
+        // Roles live on SecurityIdentity (assigned by
+        // JwtTokenIdentityProvider/ApiKeyIdentityProvider,
+        // which add both "ROLE_ADMIN" and the prefix-stripped "ADMIN"). Spring's
+        // SecurityContextHolder
+        // is never populated on reactive threads, so reading it always returned false.
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null
-                    && authentication.isAuthenticated()
-                    && !"anonymousUser".equals(authentication.getPrincipal())) {
-                return authentication.getAuthorities().stream()
-                        .anyMatch(auth -> Role.ADMIN.getRoleId().equals(auth.getAuthority()));
-            }
+            return securityIdentity != null
+                    && !securityIdentity.isAnonymous()
+                    && (securityIdentity.hasRole(Role.ADMIN.getRoleId())
+                            || securityIdentity.hasRole("ADMIN"));
         } catch (Exception e) {
             log.debug("Error checking admin status", e);
+            return false;
         }
-        return false;
     }
 
     @Override

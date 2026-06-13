@@ -177,12 +177,6 @@ public class CertSignController {
             @RestForm("pageNumber") Integer pageNumberForm,
             @RestForm("showLogo") Boolean showLogoForm)
             throws Exception {
-        // TODO: Migration required - collaborator edit needed in
-        // SignPDFWithCertRequest (model/api/security): its privateKeyFile/certFile/p12File/jksFile
-        // fields still import org.springframework.web.multipart.MultipartFile. They must be
-        // changed to stirling.software.common.model.MultipartFile so the
-        // FileUploadMultipartFile.of(...) values below type-check and the getBytes/getInputStream/
-        // isEmpty usages in this controller compile. The inherited fileInput already uses the shim.
         SignPDFWithCertRequest request = new SignPDFWithCertRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileInput));
         request.setFileId(fileId);
