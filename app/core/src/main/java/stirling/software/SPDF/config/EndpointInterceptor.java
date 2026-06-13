@@ -11,10 +11,8 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Provider
-@Slf4j
 @RequiredArgsConstructor
 public class EndpointInterceptor implements ContainerRequestFilter, ContainerResponseFilter {
 
@@ -22,10 +20,12 @@ public class EndpointInterceptor implements ContainerRequestFilter, ContainerRes
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        // In JAX-RS the matched path is relative to the application base (no leading servlet
-        // context). getPath() returns the path without a leading slash, so normalise it back to
-        // the absolute-style URI the EndpointConfiguration expects.
-        String requestURI = "/" + requestContext.getUriInfo().getPath();
+        // getUriInfo().getPath() may or may not carry a leading slash depending on the RESTEasy
+        // version / root-path. Normalise to exactly one: a stray double slash shifts
+        // EndpointConfiguration.endpointKeyForUri()'s segment indexing (parts[4]) to the wrong
+        // segment, so a disabled endpoint like "rotate-pdf" resolves as "general" and is never
+        // blocked.
+        String requestURI = normalizeUri(requestContext.getUriInfo().getPath());
 
         boolean isEnabled = endpointConfiguration.isEndpointEnabledForUri(requestURI);
         if (!isEnabled) {
@@ -43,9 +43,13 @@ public class EndpointInterceptor implements ContainerRequestFilter, ContainerRes
         // Prevent API responses from being stored by browsers or intermediary caches by default.
         // In Spring this was keyed off request.getServletPath(); here we use the matched JAX-RS
         // path. The application is served under /api/ so check the request path prefix.
-        String requestURI = "/" + requestContext.getUriInfo().getPath();
+        String requestURI = normalizeUri(requestContext.getUriInfo().getPath());
         if (requestURI.startsWith("/api/")) {
             responseContext.getHeaders().putSingle(HttpHeaders.CACHE_CONTROL, "private, no-store");
         }
+    }
+
+    private static String normalizeUri(String path) {
+        return "/" + (path == null ? "" : path).replaceAll("^/+", "");
     }
 }

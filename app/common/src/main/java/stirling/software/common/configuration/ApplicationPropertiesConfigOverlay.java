@@ -93,6 +93,24 @@ public class ApplicationPropertiesConfigOverlay {
             applyBoolean(config, "premium.enabled", applicationProperties.getPremium()::setEnabled);
             applySecret(config, "premium.key", applicationProperties.getPremium()::setKey);
         }
+
+        // Endpoint enablement. EndpointConfiguration reads
+        // applicationProperties.getEndpoints().getToRemove()/getGroupsToRemove() to disable
+        // individual endpoints / tool groups. settings.yml carries these as YAML lists
+        // (SettingsYamlConfigSource emits them comma-joined) and they may also come from
+        // ENDPOINTS_TO_REMOVE-style env; bind both as Lists here. This overlay runs before
+        // EndpointConfiguration is first constructed, so the values are present when it processes
+        // them.
+        if (applicationProperties.getEndpoints() != null) {
+            applyStringList(
+                    config,
+                    "endpoints.toRemove",
+                    applicationProperties.getEndpoints()::setToRemove);
+            applyStringList(
+                    config,
+                    "endpoints.groupsToRemove",
+                    applicationProperties.getEndpoints()::setGroupsToRemove);
+        }
     }
 
     private void applyBoolean(
@@ -126,6 +144,16 @@ public class ApplicationPropertiesConfigOverlay {
                         value -> {
                             setter.accept(value);
                             log.info("Applied config override {}=<redacted>", key);
+                        });
+    }
+
+    private void applyStringList(
+            Config config, String key, java.util.function.Consumer<java.util.List<String>> setter) {
+        config.getOptionalValues(key, String.class)
+                .ifPresent(
+                        values -> {
+                            setter.accept(values);
+                            log.info("Applied config override {}={} entries", key, values.size());
                         });
     }
 }

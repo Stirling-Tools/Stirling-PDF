@@ -83,9 +83,30 @@ public class SettingsYamlConfigSource implements ConfigSource {
                         prefix.isEmpty() ? String.valueOf(e.getKey()) : prefix + "." + e.getKey();
                 flatten(key, e.getValue(), out);
             }
-        } else if (node instanceof List<?>) {
-            // MicroProfile list binding uses indexed keys; the ApplicationProperties overlay reads
-            // scalar values only, so skip lists rather than emit a malformed "[a, b]" value.
+        } else if (node instanceof List<?> list) {
+            // Emit scalar lists as a comma-separated value so SmallRye binds them via
+            // config.getValues()/getOptionalValues() (e.g. endpoints.toRemove, consumed by
+            // EndpointConfiguration to disable endpoints). Lists containing maps/nested lists have
+            // no
+            // flat scalar form, so skip those - their consumers read them structurally, not through
+            // this overlay. The scalar lists here (endpoint names, group names) contain no commas,
+            // so
+            // a plain join round-trips cleanly.
+            boolean scalarList =
+                    !list.isEmpty()
+                            && list.stream()
+                                    .allMatch(
+                                            e ->
+                                                    e != null
+                                                            && !(e instanceof Map)
+                                                            && !(e instanceof List));
+            if (scalarList) {
+                out.put(
+                        prefix,
+                        list.stream()
+                                .map(String::valueOf)
+                                .collect(java.util.stream.Collectors.joining(",")));
+            }
             return;
         } else if (node != null) {
             out.put(prefix, String.valueOf(node));
