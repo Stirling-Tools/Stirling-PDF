@@ -1,0 +1,62 @@
+.sui-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition:
+    box-shadow var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+.sui-card--pad-none {
+  padding: 0;
+  overflow: hidden;
+}
+.sui-card--pad-tight {
+  padding: 0.75rem;
+}
+.sui-card--pad-default {
+  padding: 1.125rem 1.25rem;
+}
+.sui-card--pad-loose {
+  padding: 1.5rem 1.75rem;
+}
+
+.sui-card--interactive {
+  cursor: pointer;
+}
+.sui-card--interactive:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-0.0625rem);
+}
+
+.sui-card--accent-blue::before,
+.sui-card--accent-purple::before,
+.sui-card--accent-green::before,
+.sui-card--accent-amber::before,
+.sui-card--accent-red::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0.25rem;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+.sui-card--accent-blue::before {
+  background: var(--color-blue);
+}
+.sui-card--accent-purple::before {
+  background: var(--color-purple);
+}
+.sui-card--accent-green::before {
+  background: var(--color-green);
+}
+.sui-card--accent-amber::before {
+  background: var(--color-amber);
+}
+.sui-card--accent-red::before {
+  background: var(--color-red);
+}

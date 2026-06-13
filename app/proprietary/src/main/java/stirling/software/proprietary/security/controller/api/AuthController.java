@@ -44,6 +44,7 @@ import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
+import stirling.software.proprietary.service.AiUserDataService;
 
 /** REST API Controller for authentication operations. */
 @RestController
@@ -62,6 +63,7 @@ public class AuthController {
     private final RefreshRateLimitService refreshRateLimitService;
     private final ApplicationProperties.Security securityProperties;
     private final ApplicationProperties applicationProperties;
+    private final AiUserDataService aiUserDataService;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -281,11 +283,13 @@ public class AuthController {
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
+            String username = jwtService.extractUsernameFromRequestAllowExpired(request);
             SecurityContextHolder.clearContext();
+            aiUserDataService.purgeUserDocuments(username);
 
-            log.debug("User logged out successfully");
+            log.debug("User logged out successfully (username={})", username);
 
             return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
 

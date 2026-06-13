@@ -57,6 +57,8 @@ app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/pdfium/
 app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
+app/core/src/main/resources/static/**/*.gz
+app/core/src/main/resources/static/**/*.br
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
@@ -212,7 +214,7 @@ out/
 *.asc
 
 # Allow test fixture certificates (synthetic, no real credentials)
-!frontend/src/core/tests/test-fixtures/certs/**
+!frontend/editor/src/core/tests/test-fixtures/certs/**
 
 # SSH Keys
 *.pub
@@ -254,7 +256,7 @@ node_modules/
 *compact*.json
 test_batch.json
 *.backup.*.json
-frontend/public/locales/*/translation.backup*.json
+frontend/editor/public/locales/*/translation.backup*.json
 
 # Development/build artifacts
 .gradle-cache/
@@ -279,4 +281,4 @@ docs/type3/signatures/
 *.playwright-mcp.png
 
 # Local screenshot artifacts from *-screenshots.spec.ts
-frontend/screenshots/
+frontend/editor/screenshots/

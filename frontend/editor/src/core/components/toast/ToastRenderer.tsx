@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
@@ -38,6 +39,7 @@ function getDefaultIconName(t: ToastInstance): string {
 }
 
 export default function ToastRenderer() {
+  const { t: translate } = useTranslation();
   const { toasts, dismiss } = useToast();
 
   const grouped = toasts.reduce<Record<ToastLocation, ToastInstance[]>>(
@@ -88,7 +90,10 @@ export default function ToastRenderer() {
                   <div className="toast-controls">
                     {t.expandable && (
                       <button
-                        aria-label="Toggle details"
+                        aria-label={translate(
+                          "toast.toggleDetails",
+                          "Toggle details",
+                        )}
                         onClick={() => {
                           const evt = new CustomEvent("toast:toggle", {
                             detail: { id: t.id },
@@ -101,7 +106,7 @@ export default function ToastRenderer() {
                       </button>
                     )}
                     <button
-                      aria-label="Dismiss"
+                      aria-label={translate("toast.dismiss", "Dismiss")}
                       onClick={() => dismiss(t.id)}
                       className="toast-button"
                     >

@@ -1,0 +1,36 @@
+.sui-method {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.4375rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  line-height: 1.4;
+}
+.sui-method--get {
+  color: var(--color-green);
+  background: var(--color-green-light);
+  border-color: var(--color-green-border);
+}
+.sui-method--post {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+  border-color: var(--color-blue-border);
+}
+.sui-method--put {
+  color: var(--color-amber-dark);
+  background: var(--color-amber-light);
+  border-color: var(--color-amber-border);
+}
+.sui-method--patch {
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+  border-color: var(--color-purple-border);
+}
+.sui-method--delete {
+  color: var(--color-red);
+  background: var(--color-red-light);
+  border-color: var(--color-red-border);
+}

@@ -1,10 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { lazy, Suspense, useEffect, useState, useCallback } from "react";
 import { useBanner } from "@app/contexts/BannerContext";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "react-i18next";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
-import StripeCheckout from "@app/components/shared/StripeCheckoutSaas";
 import { BASE_PATH } from "@app/constants/app";
+
+const StripeCheckout = lazy(
+  () => import("@app/components/shared/StripeCheckoutSaas"),
+);
 
 const SESSION_STORAGE_KEY = "trialBannerDismissed";
 
@@ -47,7 +50,7 @@ export function TrialStatusBanner() {
     }
 
     const trialEndDate = new Date(trialStatus.trialEnd).toLocaleDateString(
-      "en-GB",
+      "en-US",
       {
         month: "short",
         day: "numeric",
@@ -113,18 +116,20 @@ export function TrialStatusBanner() {
 
   return (
     <>
-      {trialStatus && (
-        <StripeCheckout
-          opened={checkoutOpen}
-          onClose={() => setCheckoutOpen(false)}
-          purchaseType="subscription"
-          planId="pro"
-          creditsPack={null}
-          planName="Pro"
-          onSuccess={handleCheckoutSuccess}
-          onError={(error) => console.error("Checkout error:", error)}
-          isTrialConversion={true}
-        />
+      {trialStatus && checkoutOpen && (
+        <Suspense fallback={null}>
+          <StripeCheckout
+            opened={checkoutOpen}
+            onClose={() => setCheckoutOpen(false)}
+            purchaseType="subscription"
+            planId="pro"
+            creditsPack={null}
+            planName="Pro"
+            onSuccess={handleCheckoutSuccess}
+            onError={(error) => console.error("Checkout error:", error)}
+            isTrialConversion={true}
+          />
+        </Suspense>
       )}
     </>
   );
