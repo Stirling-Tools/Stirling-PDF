@@ -4,9 +4,9 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
-from pydantic import RootModel
+from pydantic import Field, RootModel
 
 from stirling.models.base import ApiModel
 
@@ -163,8 +163,16 @@ class EditTableOfContentsParams(ApiModel):
     replace_existing: bool | None = None
 
 
+class EditTextOperation(ApiModel):
+    find: str | None = Field(None, description="The literal text to find.")
+    replace: str | None = Field(None, description="The replacement text. May be empty to delete the matched text.")
+
+
 class EditTextParams(ApiModel):
-    edits: str | None = None
+    edits: list[EditTextOperation] | None = Field(
+        None,
+        description="Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones.",
+    )
     page_numbers: str | None = None
     whole_word_search: bool | None = None
 
@@ -373,8 +381,21 @@ class ReplaceInvertPdfParams(ApiModel):
     text_color: str | None = None
 
 
+class Angle(IntEnum):
+    """
+    The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.
+    """
+
+    integer_0 = 0
+    integer_90 = 90
+    integer_180 = 180
+    integer_270 = 270
+
+
 class RotatePdfParams(ApiModel):
-    angle: int | None = None
+    angle: Angle | None = Field(
+        None, description="The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90."
+    )
 
 
 class SanitizePdfParams(ApiModel):
