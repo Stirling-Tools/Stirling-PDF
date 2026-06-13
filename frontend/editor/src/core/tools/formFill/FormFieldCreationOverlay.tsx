@@ -18,7 +18,6 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { useDocumentState } from "@embedpdf/core/react";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import type { CreatableFieldType } from "@app/tools/formFill/types";
 import {
@@ -33,6 +32,8 @@ import {
   snapMove,
   type SnapGuide,
 } from "@app/tools/formFill/formSnapUtils";
+import { usePageScale, getLocalPoint } from "@app/tools/formFill/usePageScale";
+import { SnapGuides } from "@app/tools/formFill/SnapGuides";
 
 interface FormFieldCreationOverlayProps {
   documentId: string;
@@ -83,25 +84,17 @@ export function FormFieldCreationOverlay({
     forFileId,
   } = useFormFill();
 
-  const documentState = useDocumentState(documentId);
   const rootRef = useRef<HTMLDivElement>(null);
   const [dragRect, setDragRect] = useState<PixelRect | null>(null);
   const [guides, setGuides] = useState<SnapGuide[]>([]);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  const { scaleX, scaleY, pageHeightPts, pageWidthPts } = useMemo(() => {
-    const pdfPage = documentState?.document?.pages?.[pageIndex];
-    if (!pdfPage?.size || !pageWidth || !pageHeight) {
-      const s = documentState?.scale ?? 1;
-      return { scaleX: s, scaleY: s, pageHeightPts: 0, pageWidthPts: 0 };
-    }
-    return {
-      scaleX: pageWidth / pdfPage.size.width,
-      scaleY: pageHeight / pdfPage.size.height,
-      pageHeightPts: pdfPage.size.height,
-      pageWidthPts: pdfPage.size.width,
-    };
-  }, [documentState, pageIndex, pageWidth, pageHeight]);
+  const { scaleX, scaleY, pageHeightPts, pageWidthPts } = usePageScale(
+    documentId,
+    pageIndex,
+    pageWidth,
+    pageHeight,
+  );
 
   // Pixel rects of the OTHER fields on this page, used as snap targets.
   const snapRects = useMemo<PixelRect[]>(() => {
@@ -133,11 +126,10 @@ export function FormFieldCreationOverlay({
   const fileMismatch =
     fileId != null && forFileId != null && fileId !== forFileId;
 
-  const localPoint = useCallback((e: React.PointerEvent) => {
-    const rect = rootRef.current?.getBoundingClientRect();
-    if (!rect) return { x: 0, y: 0 };
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }, []);
+  const localPoint = useCallback(
+    (e: React.PointerEvent) => getLocalPoint(e, rootRef.current),
+    [],
+  );
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -327,32 +319,7 @@ export function FormFieldCreationOverlay({
       )}
 
       {/* Alignment guides */}
-      {guides.map((g, i) => (
-        <div
-          key={i}
-          style={
-            g.orientation === "v"
-              ? {
-                  position: "absolute",
-                  left: g.position,
-                  top: 0,
-                  width: 1,
-                  height: "100%",
-                  background: "#ec4899",
-                  pointerEvents: "none",
-                }
-              : {
-                  position: "absolute",
-                  top: g.position,
-                  left: 0,
-                  height: 1,
-                  width: "100%",
-                  background: "#ec4899",
-                  pointerEvents: "none",
-                }
-          }
-        />
-      ))}
+      <SnapGuides guides={guides} />
     </div>
   );
 }

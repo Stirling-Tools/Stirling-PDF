@@ -31,6 +31,7 @@ import {
   FIELD_TYPE_COLOR,
 } from "@app/tools/formFill/fieldMeta";
 import { FormFieldPropertyEditor } from "@app/tools/formFill/FormFieldPropertyEditor";
+import { useFormCommit } from "@app/tools/formFill/useFormCommit";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 interface FormFieldCreatePanelProps {
@@ -63,8 +64,7 @@ export function FormFieldCreatePanel({
   } = useFormFill();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [committing, setCommitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { committing, error, commit } = useFormCommit(onApplied);
 
   // Auto-expand the property editor of a freshly-drawn field so its settings
   // (especially options for choice/radio) are visible immediately.
@@ -76,24 +76,14 @@ export function FormFieldCreatePanel({
     prevCountRef.current = pendingFields.length;
   }, [pendingFields]);
 
-  const handleCommit = useCallback(async () => {
+  const handleCommit = useCallback(() => {
     if (!currentFile || pendingFields.length === 0) return;
-    setCommitting(true);
-    setError(null);
-    try {
-      const blob = await commitNewFields(currentFile);
-      const event = new CustomEvent("formfill:apply", { detail: { blob } });
-      window.dispatchEvent(event);
-      onApplied?.(blob);
-    } catch (err: any) {
-      setError(
-        err?.message || t("formFill.create.failed", "Failed to add fields"),
-      );
-      console.error("[FormFill] add-fields failed:", err);
-    } finally {
-      setCommitting(false);
-    }
-  }, [currentFile, pendingFields, commitNewFields, onApplied, t]);
+    commit(
+      () => commitNewFields(currentFile),
+      "formFill.create.failed",
+      "Failed to add fields",
+    );
+  }, [currentFile, pendingFields, commitNewFields, commit]);
 
   return (
     <div className={styles.header}>

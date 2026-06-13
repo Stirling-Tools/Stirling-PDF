@@ -6,13 +6,7 @@
  * X/Y/W/H inputs. Fields can be marked for deletion. All staged changes commit
  * in one round-trip.
  */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Text,
   Button,
@@ -42,6 +36,7 @@ import {
   FormFieldPropertyEditor,
   type EditableFieldProps,
 } from "@app/tools/formFill/FormFieldPropertyEditor";
+import { useFormCommit } from "@app/tools/formFill/useFormCommit";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 interface FormFieldModifyPanelProps {
@@ -93,8 +88,7 @@ export function FormFieldModifyPanel({
     hasUncommittedChanges,
   } = useFormFill();
 
-  const [committing, setCommitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { committing, error, commit } = useFormCommit(onApplied);
   const selectedRowRef = useRef<HTMLDivElement>(null);
 
   // Group fields by their first widget's page.
@@ -124,24 +118,14 @@ export function FormFieldModifyPanel({
   const changeCount =
     Object.keys(modifiedFields).length + deletedFieldNames.length;
 
-  const handleCommit = useCallback(async () => {
+  const handleCommit = useCallback(() => {
     if (!currentFile || !hasUncommittedChanges) return;
-    setCommitting(true);
-    setError(null);
-    try {
-      const blob = await commitModifications(currentFile);
-      const event = new CustomEvent("formfill:apply", { detail: { blob } });
-      window.dispatchEvent(event);
-      onApplied?.(blob);
-    } catch (err: any) {
-      setError(
-        err?.message || t("formFill.modify.failed", "Failed to save changes"),
-      );
-      console.error("[FormFill] modify/delete failed:", err);
-    } finally {
-      setCommitting(false);
-    }
-  }, [currentFile, hasUncommittedChanges, commitModifications, onApplied, t]);
+    commit(
+      () => commitModifications(currentFile),
+      "formFill.modify.failed",
+      "Failed to save changes",
+    );
+  }, [currentFile, hasUncommittedChanges, commitModifications, commit]);
 
   const editorValue = useCallback(
     (field: FormField): EditableFieldProps => {

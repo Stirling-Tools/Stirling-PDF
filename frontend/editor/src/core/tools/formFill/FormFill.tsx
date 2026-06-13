@@ -58,6 +58,7 @@ import {
 import type { FormMode } from "@app/tools/formFill/types";
 import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
+import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -231,14 +232,11 @@ const FormFill = (_props: BaseToolProps) => {
       // Track the flatten value at save so toggling it later re-enables Save
       setLastSavedFlatten(flatten);
 
-      // Dispatch to the viewer's handleFormApply via custom event.
-      // This ensures the viewer tracks the new file ID, preserves
-      // scroll position and rotation — instead of our own consumeFiles
-      // call which would lose the viewer's file tracking context.
-      const event = new CustomEvent("formfill:apply", {
-        detail: { blob: filledBlob },
-      });
-      window.dispatchEvent(event);
+      // Hand the filled PDF to the viewer's handleFormApply via custom event.
+      // This ensures the viewer tracks the new file ID and preserves scroll
+      // position and rotation, instead of our own consumeFiles call which
+      // would lose the viewer's file tracking context.
+      dispatchFormApply(filledBlob);
     } catch (err: any) {
       const message =
         err?.response?.status === 413
