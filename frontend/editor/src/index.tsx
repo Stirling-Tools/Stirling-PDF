@@ -17,6 +17,24 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 import { BASE_PATH } from "@app/constants/app";
 
+import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
+
+if (typeof window !== "undefined") {
+  const scheduleCompilation = () => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
+    } else {
+      setTimeout(startEagerWasmCompilation, 1000);
+    }
+  };
+
+  if (document.readyState === "complete") {
+    scheduleCompilation();
+  } else {
+    window.addEventListener("load", scheduleCompilation);
+  }
+}
+
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
   defaults: "2025-05-24",
@@ -30,8 +48,7 @@ posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
 function updatePosthogConsent() {
   if (!posthog.__loaded) return;
   const optIn =
-    (window.CookieConsent as any)?.acceptedService?.("posthog", "analytics") ||
-    false;
+    window.CookieConsent?.acceptedService?.("posthog", "analytics") || false;
   if (optIn) {
     posthog.set_config({ persistence: "localStorage+cookie" });
     posthog.opt_in_capturing();

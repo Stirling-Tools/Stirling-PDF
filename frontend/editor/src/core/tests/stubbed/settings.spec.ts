@@ -121,6 +121,118 @@ test.describe("Settings dialog", () => {
     await restored.click();
   });
 
+  test("intra-modal tab switching updates URL via replaceState, never pushState", async ({
+    page,
+  }) => {
+    // Mechanism test for the "background flash" fix. Before the fix, every
+    // tab click called `navigate(...)` which fired React Router's location
+    // subscribers - HomePage, QuickAccessBar, FileManagerView, ... - and the
+    // layer behind the Mantine overlay repainted, causing backdrop-filter
+    // blur to recompute and visibly flash. After the fix, only the very
+    // first nav into /settings/* is allowed to go through React Router (so
+    // HomePage's location-watching effect opens the modal and the back
+    // button has a real history entry to pop). Every subsequent tab click
+    // updates the URL bar via raw `window.history.replaceState`, which
+    // React Router does NOT subscribe to. We assert this directly by
+    // counting calls.
+    await page.addInitScript(() => {
+      const w = window as unknown as {
+        __historyOps: { push: number; replace: number };
+      };
+      w.__historyOps = { push: 0, replace: 0 };
+      const origPush = window.history.pushState.bind(window.history);
+      const origReplace = window.history.replaceState.bind(window.history);
+      window.history.pushState = function (...args) {
+        w.__historyOps.push++;
+        return origPush(
+          ...(args as Parameters<typeof window.history.pushState>),
+        );
+      };
+      window.history.replaceState = function (...args) {
+        w.__historyOps.replace++;
+        return origReplace(
+          ...(args as Parameters<typeof window.history.replaceState>),
+        );
+      };
+    });
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await openSettings(page);
+
+    const generalNav = page.locator('[data-tour="admin-general-nav"]').first();
+    const hotkeysNav = page.locator('[data-tour="admin-hotkeys-nav"]').first();
+    await expect(generalNav).toBeVisible({ timeout: 5_000 });
+
+    // First nav into /settings/* takes the React Router path (push). We
+    // snapshot both counters AFTER this to isolate the intra-modal delta.
+    await generalNav.click();
+    await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
+    const baseline = await page.evaluate(() => {
+      const w = window as unknown as {
+        __historyOps: { push: number; replace: number };
+      };
+      return { ...w.__historyOps };
+    });
+
+    // Now do 4 round-trips between two tabs - 8 intra-modal clicks total.
+    for (let i = 0; i < 4; i++) {
+      await hotkeysNav.click();
+      await page.waitForURL(/\/settings\/hotkeys/, { timeout: 5_000 });
+      await generalNav.click();
+      await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
+    }
+
+    const after = await page.evaluate(() => {
+      const w = window as unknown as {
+        __historyOps: { push: number; replace: number };
+      };
+      return { ...w.__historyOps };
+    });
+
+    // Zero pushes during 8 intra-modal clicks - the regression would show
+    // up here as `after.push - baseline.push >= 1`.
+    expect(after.push - baseline.push).toBe(0);
+    // Exactly 8 replaces - one per click.
+    expect(after.replace - baseline.replace).toBe(8);
+  });
+
+  test("close returns to origin URL even after switching tabs (no history pile-up)", async ({
+    page,
+  }) => {
+    // Land on / first so the originating URL is unambiguous.
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator('[data-testid="config-button"]').first(),
+    ).toBeVisible({ timeout: 5_000 });
+
+    const originPath = new URL(page.url()).pathname;
+    const dialog = await openSettings(page);
+
+    // Click the same visible nav 3 times. In the buggy code each click
+    // pushed a fresh history entry, so close-by-back popped only the
+    // most recent tab change. The fix uses PUSH for the first nav (when
+    // not yet in /settings/*) and REPLACE for subsequent navs, so the
+    // origin URL stays at history depth 1 regardless of how many tabs
+    // the user clicks through.
+    const generalNav = dialog
+      .locator('[data-tour="admin-general-nav"]')
+      .first();
+    await expect(generalNav).toBeVisible({ timeout: 5_000 });
+    for (let i = 0; i < 3; i++) {
+      await generalNav.click();
+    }
+    // Wait for the URL to settle on /settings/general before closing so
+    // we're not racing the in-modal nav under parallel-worker load.
+    await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
+
+    await closeSettings(page);
+    // Wait for the URL pathname to settle back to origin. Match only
+    // pathname so trailing ?query or #hash don't trip the assertion.
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 5_000 })
+      .toBe(originPath);
+  });
+
   test("config sub-sections (System / Features / Endpoints / API Keys) are reachable when present", async ({
     page,
   }) => {

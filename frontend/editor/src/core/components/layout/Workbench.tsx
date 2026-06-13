@@ -17,6 +17,7 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import { ChatFAB } from "@app/components/chat/ChatFAB";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -27,6 +28,9 @@ const PageEditorControls = lazy(
   () => import("@app/components/pageEditor/PageEditorControls"),
 );
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+const FileManagerView = lazy(
+  () => import("@app/components/filesPage/FileManagerView"),
+);
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -59,6 +63,10 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
+  // Custom workbench views (e.g. Watched Folders) manage their own content and may
+  // have no workbench files, but still need the bar's view switcher so users can
+  // navigate back out.
+  const isCustomViewActive = !isBaseWorkbench(currentView);
 
   // Enable bar transitions after first paint so the initial hidden state shows
   // without animating (landing page on load shouldn't animate the bar up).
@@ -97,6 +105,12 @@ export default function Workbench() {
         const CustomComponent = customView.component;
         return <CustomComponent data={customView.data} />;
       }
+    }
+
+    // The "My Files" workbench is available regardless of whether files are
+    // currently loaded into the workbench - it lives on top of the IDB store.
+    if (currentView === "myFiles") {
+      return <FileManagerView />;
     }
 
     if (activeFiles.length === 0) {
@@ -183,36 +197,48 @@ export default function Workbench() {
       data-tour="workbench"
       style={
         isRainbowMode
-          ? {} // No background color in rainbow mode
-          : { backgroundColor: "var(--bg-background)" }
+          ? // No background color in rainbow mode, but still pin min-width:0
+            // so inner flex children (files-page toolbar, etc.) actually
+            // shrink on narrow viewports.
+            { minWidth: 0 }
+          : { backgroundColor: "var(--bg-background)", minWidth: 0 }
       }
     >
       {/* Workbench Bar - animates in/out based on file presence */}
-      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)
-        ?.hideTopControls && (
-        <div
-          className={styles.workbenchBarWrapper}
-          data-hidden={String(!hasFiles)}
-          data-no-transition={String(!barTransitionEnabled)}
-        >
-          <div className={styles.workbenchBarInner}>
-            <WorkbenchBar
-              currentView={currentView}
-              setCurrentView={setCurrentView}
-              hasFiles={hasFiles}
-            />
+      {currentView !== "myFiles" &&
+        !customWorkbenchViews.find((v) => v.workbenchId === currentView)
+          ?.hideTopControls && (
+          <div
+            className={styles.workbenchBarWrapper}
+            data-hidden={String(!hasFiles && !isCustomViewActive)}
+            data-no-transition={String(!barTransitionEnabled)}
+          >
+            <div className={styles.workbenchBarInner}>
+              <WorkbenchBar
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                hasFiles={hasFiles}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
+
+      {/* Floating AI chat button + panel */}
+      <ChatFAB />
 
       {/* Main content area */}
       <Box
         className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
         style={{
           transition: "opacity 0.15s ease-in-out",
+          // Force min-width:0 so flex children (notably the files page
+          // toolbar with its 5 bulk-action buttons + 2 selects + view
+          // toggle) can shrink below their intrinsic content size on
+          // narrow viewports instead of overflowing horizontally.
+          minWidth: 0,
           ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >

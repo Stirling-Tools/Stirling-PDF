@@ -1,6 +1,11 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { alert } from "@app/components/toast";
-import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
+import {
+  setupApiInterceptors as coreSetup,
+  getAuthHeaders,
+} from "@core/services/apiClientSetup";
+
+export { getAuthHeaders };
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";
@@ -183,10 +188,18 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
-        // If no Authorization header was sent, the user was never authenticated —
-        // the 401 is expected (e.g. endpoint availability checks when not signed in).
-        // Don't attempt a refresh or open the sign-in modal in that case.
+        // No token attached: stay silent for background GETs (endpoint probes
+        // before sign-in), but surface the sign-in modal for mutations so the
+        // user isn't left with a no-op click.
         if (!originalRequest.headers.Authorization) {
+          const method = (originalRequest.method || "get").toLowerCase();
+          if (method !== "get") {
+            window.dispatchEvent(
+              new CustomEvent(OPEN_SIGN_IN_EVENT, {
+                detail: { locked: false },
+              }),
+            );
+          }
           return Promise.reject(error);
         }
         originalRequest._retry = true;

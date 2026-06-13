@@ -196,20 +196,40 @@ if (buildPrototypes) {
 }
 def frontendBuildTask = "frontend:build:${frontendMode}"
 
+// Workspace root holds package.json and node_modules (shared across editor /
+// future portal). Editor-specific paths (src, public, dist, tauri) live one
+// level deeper under frontend/editor/. When the portal lands as an embedded
+// app, add a sibling frontendPortalDir / frontendPortalDistDir alongside.
 def frontendDir = file('../../frontend')
 def frontendEditorDir = file('../../frontend/editor')
-def frontendDistDir = file('../../frontend/editor/dist')
+def frontendEditorDistDir = file('../../frontend/editor/dist')
 def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',
     'index.html',
+    'index.html.gz',
+    'index.html.br',
+    'sw.js',
+    'sw.js.gz',
+    'sw.js.br',
+    'manifest.json.gz',
+    'manifest.json.br',
+    'site.webmanifest.gz',
+    'site.webmanifest.br',
+    'browserconfig.xml.gz',
+    'browserconfig.xml.br',
+    'manifest-classic.json',
+    'manifest-classic.json.gz',
+    'manifest-classic.json.br',
     'locales',
     'Login',
     'classic-logo',
     'modern-logo',
     'og_images',
     'samples',
-    'manifest-classic.json'
+    'pdfium',
+    'vendor',
+    'pdfjs'
 ]
 
 tasks.register('npmInstall', Exec) {
@@ -263,13 +283,13 @@ tasks.register('npmBuild', Exec) {
     doNotTrackState("Frontend build depends on untracked npmInstall task")
     enabled = buildWithFrontend
     group = 'frontend'
-    description = 'Build frontend application'
+    description = 'Build editor frontend application'
     workingDir file('../..')
     commandLine = ['task', frontendBuildTask]
     inputs.dir(new File(frontendEditorDir, 'src'))
     inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
-    outputs.dir(frontendDistDir)
+    outputs.dir(frontendEditorDistDir)
 
     // Show live output
     standardOutput = System.out
@@ -280,17 +300,17 @@ tasks.register('npmBuild', Exec) {
     environment 'VITE_API_BASE_URL', '/'
 
     doFirst {
-        println "Building frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/)"
+        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/)"
     }
 }
 
 tasks.register('copyFrontendAssets', Copy) {
     enabled = buildWithFrontend
     group = 'frontend'
-    description = 'Copy frontend build to static resources'
+    description = 'Copy editor frontend build to static resources'
     dependsOn npmBuild
     dependsOn cleanFrontendAssets
-    from(frontendDistDir) {
+    from(frontendEditorDistDir) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
@@ -298,7 +318,7 @@ tasks.register('copyFrontendAssets', Copy) {
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
     doFirst {
-        println "Copying frontend build from ${frontendDistDir} to ${resourcesStaticDir}..."
+        println "Copying frontend build from ${frontendEditorDistDir} to ${resourcesStaticDir}..."
         println "Backend static resources will be preserved"
     }
     doLast {
@@ -330,7 +350,7 @@ tasks.named('copyFrontendAssets').configure {
 }
 
 if (buildWithFrontend) {
-    println "Frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
+    println "Editor frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
     processResources.dependsOn copyFrontendAssets
 } else {
     println "Frontend build disabled - JAR will be backend-only with API landing page"

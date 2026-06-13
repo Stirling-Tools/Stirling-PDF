@@ -82,10 +82,16 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "update:minor": "node editor/scripts/update-minor.js",
+    "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
-    "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
+    "update:minor-strict": "npx npm-check-updates -u --target minor && npm install",
+    "tauri:setup-dev-update": "bash scripts/dev-update-test/setup-dev-updater.sh",
+    "tauri:build-dev-update": "bash scripts/dev-update-test/build-dev-update.sh",
+    "tauri:serve-dev-update": "bash scripts/dev-update-test/serve-update.sh",
+    "tauri:test-update-e2e": "bash scripts/dev-update-test/test-update-e2e.sh",
+    "tauri:test-update-e2e:install": "bash scripts/dev-update-test/test-update-e2e.sh --install",
+    "tauri:dev-with-update": "cd editor && npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
   },
   "browserslist": {
     "production": [
@@ -104,6 +110,10 @@
     "@iconify-json/material-symbols": "^1.2.53",
     "@iconify/utils": "^3.1.0",
     "@playwright/test": "^1.55.0",
+    "@storybook/addon-a11y": "^9.1.20",
+    "@storybook/addon-docs": "^9.1.20",
+    "@storybook/addon-themes": "^9.1.20",
+    "@storybook/react-vite": "^9.1.20",
     "@tauri-apps/cli": "^2.9.6",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -124,9 +134,12 @@
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
+    "msw": "^2.14.6",
+    "msw-storybook-addon": "^2.0.7",
     "postcss": "^8.5.12",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.18.0",
@@ -134,10 +147,12 @@
     "prettier": "^3.8.1",
     "puppeteer": "^24.25.0",
     "rollup-plugin-visualizer": "^7.0.1",
+    "storybook": "^9.1.20",
     "tsx": "^4.21.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "vite": "^7.3.2",
+    "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
@@ -148,6 +163,14 @@
       "tailwindcss",
       "@testing-library/user-event",
       "@vitest/coverage-v8"
+    ]
+  },
+  "overrides": {
+    "devalue": "^5.8.1"
+  },
+  "msw": {
+    "workerDirectory": [
+      "portal/public"
     ]
   }
 }

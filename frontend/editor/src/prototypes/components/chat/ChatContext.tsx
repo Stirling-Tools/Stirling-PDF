@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import { generateId } from "@app/utils/generateId";
 import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
@@ -301,6 +302,7 @@ interface ChatContextValue {
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
+  cancelMessage: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -317,6 +319,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
+  // Tracks the specific controller the user explicitly cancelled, so we can
+  // distinguish a user-initiated cancel from an abort triggered by a new
+  // message superseding the in-flight one.
+  const userCancelledRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<ChatMessage[]>(state.messages);
   messagesRef.current = state.messages;
 
@@ -359,32 +365,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       const files = await Promise.all(descriptors.map(downloadFile));
 
-      const operation: ToolOperation = {
-        toolId: "ai-workflow",
-        timestamp: Date.now(),
-      };
-      const isVersionMapping =
-        sourceStubs.length > 0 && files.length === sourceStubs.length;
-      const stubs = files.map((file, i) =>
-        isVersionMapping
-          ? createChildStub(sourceStubs[i], operation, file)
-          : createNewStirlingFileStub(file),
-      );
-      const stirlingFiles = files.map((file, i) =>
-        createStirlingFile(file, stubs[i].id),
-      );
-
       if (sourceStubs.length > 0) {
         // Always consume the inputs so merge/split inputs are removed from the workbench.
         // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
         // merge/split they're fresh roots.
+        const operation: ToolOperation = {
+          toolId: "ai-workflow",
+          timestamp: Date.now(),
+        };
+        const isVersionMapping = files.length === sourceStubs.length;
+        const stubs = files.map((file, i) =>
+          isVersionMapping
+            ? createChildStub(sourceStubs[i], operation, file)
+            : createNewStirlingFileStub(file),
+        );
+        const stirlingFiles = files.map((file, i) =>
+          createStirlingFile(file, stubs[i].id),
+        );
         await fileActions.consumeFiles(
           sourceStubs.map((s) => s.id),
           stirlingFiles,
           stubs,
         );
       } else {
-        // No inputs were provided (unlikely for completed workflows, but handle it safely).
+        // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
+        // here would cause a fileId mismatch in filesRef, making getFiles() clone the file
+        // on every render and breaking useFileWithUrl's memoisation (continuous PDF reloads).
         await fileActions.addFiles(files, { selectFiles: true });
       }
     },
@@ -397,6 +403,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const cancelMessage = useCallback(() => {
+    const controller = abortRef.current;
+    if (!controller) return;
+    userCancelledRef.current = controller;
+    controller.abort();
+  }, []);
+
   const sendMessage = useCallback(
     async (content: string) => {
       // Abort any in-flight request
@@ -407,7 +420,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const priorMessages = messagesRef.current;
 
       const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         role: "user",
         content,
         timestamp: Date.now(),
@@ -468,7 +481,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: replyContent,
                 timestamp: Date.now(),
@@ -481,7 +494,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 dispatch({
                   type: "ADD_MESSAGE",
                   message: {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     role: "assistant",
                     content:
                       "The file was processed but I couldn't download it.",
@@ -497,7 +510,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({
               type: "ADD_MESSAGE",
               message: {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 role: "assistant",
                 content: data.message || "Something went wrong.",
                 timestamp: Date.now(),
@@ -510,12 +523,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           throw new Error("Stream ended without a result");
         }
       } catch (e) {
-        if ((e as Error).name === "AbortError") return;
+        if ((e as Error).name === "AbortError") {
+          if (userCancelledRef.current === controller) {
+            userCancelledRef.current = null;
+            dispatch({ type: "SET_PROGRESS", progress: null });
+            dispatch({
+              type: "ADD_MESSAGE",
+              message: {
+                id: generateId(),
+                role: "assistant",
+                content: "Cancelled.",
+                timestamp: Date.now(),
+              },
+            });
+          }
+          return;
+        }
         dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
           message: {
-            id: crypto.randomUUID(),
+            id: generateId(),
             role: "assistant",
             content:
               "Failed to get a response. The AI engine may not be available yet.",
@@ -542,6 +570,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         toggleOpen,
         setOpen,
         sendMessage,
+        cancelMessage,
       }}
     >
       {children}

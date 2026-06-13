@@ -1,14 +1,15 @@
 import React, {
   useState,
   useCallback,
+  useMemo,
   useRef,
   useEffect,
   forwardRef,
 } from "react";
-import { Loader } from "@mantine/core";
+import { Loader, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
 import {
@@ -18,7 +19,11 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { useAuth } from "@app/auth/UseSession";
+import {
+  useIndexedDB,
+  useIndexedDBRevision,
+} from "@app/contexts/IndexedDBContext";
 import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -26,26 +31,69 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import { useFolderMembership } from "@app/hooks/useFolderMembership";
+import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
+import {
+  setWatchedFolderDraggedFileIds,
+  clearWatchedFolderDraggedFileIds,
+} from "@app/components/watchedFolders/watchedFolderDragState";
+import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
 const COLLAPSED_WIDTH = "3.5rem";
 const EXPANDED_WIDTH = "16.25rem"; // ~260px
 
+// Inlined to avoid a circular import with WatchedFoldersRegistration.
+const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
+const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
+
 export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
+  /** Accessible name override for the toggle button. */
+  toggleAriaLabel?: string;
+  /** Icon override for the toggle button (e.g. back-arrow on /files). */
+  toggleIcon?: React.ReactNode;
+  /** Override the Open-from-computer handler (e.g. upload to /files folder). */
+  onUploadFiles?: (files: File[]) => void | Promise<void>;
+  /** Override the Google Drive handler. */
+  onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
+  /** Override the Search row click (e.g. focus the /files search input). */
+  onSearchClick?: () => void;
+  /** Extra action row inserted under Open-from-computer (e.g. New folder). */
+  extraAction?: {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    disabledTooltip?: string;
+    testId?: string;
+  };
 }
 
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
-    { collapsed = false, onToggleCollapse, onOpenSettings },
+    {
+      collapsed = false,
+      onToggleCollapse,
+      onOpenSettings,
+      toggleAriaLabel,
+      toggleIcon,
+      onUploadFiles,
+      onPickGoogleDriveFiles,
+      onSearchClick,
+      extraAction,
+    },
     ref,
   ) {
     const { t } = useTranslation();
@@ -53,12 +101,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
-    // State (not ref) so setting it triggers a re-render — avoids racing addFiles state updates.
+    // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
     );
 
-    const { openFilesModal } = useFilesModalContext();
+    const navigate = useNavigate();
     const { config } = useAppConfig();
     const {
       isEnabled: isGoogleDriveEnabled,
@@ -67,33 +115,106 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
+    const { setCustomWorkbenchViewData, customWorkbenchViews } =
+      useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const isWatchedFoldersActive =
+      currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
+    // The folder currently open in the Watched Folders view (null = folder list/home).
+    const activeWatchedFolderId = (customWorkbenchViews.find(
+      (v) => v.id === WATCHED_FOLDER_VIEW_ID,
+    )?.data?.folderId ?? null) as string | null;
+    // fileId → folderId[] across all watch folders. In the Watched Folders view the
+    // sidebar tick reflects "already in the open folder" instead of workbench
+    // membership (which is meaningless there - a click sends to the folder, not
+    // the workbench). The same map drives the per-file membership dots.
+    const folderMembership = useFolderMembership();
+    const allFolders = useAllWatchedFolders();
+    const folderById = useMemo(
+      () => new Map(allFolders.map((f) => [f.id, f])),
+      [allFolders],
+    );
+
+    const openWatchedFolders = useCallback(() => {
+      if (collapsed && onToggleCollapse) onToggleCollapse();
+      setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+    }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
+
+    // Clicking a file's membership dot jumps straight into that folder.
+    const openWatchedFolder = useCallback(
+      (folderId: string) => {
+        if (collapsed && onToggleCollapse) onToggleCollapse();
+        setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
+        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+      },
+      [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
+    );
+
+    // In Watched Folders view, sidebar files can be dragged onto a folder card / drop
+    // zone (which read the watchedFolderFileId dataTransfer key).
+    const handleWatchedFolderDragStart = useCallback(
+      (e: React.DragEvent, fileId: FileId) => {
+        e.dataTransfer.setData("watchedFolderFileId", String(fileId));
+        e.dataTransfer.effectAllowed = "copy";
+        // Publish the id so drop targets can detect "already in folder" during
+        // dragover (dataTransfer values are unreadable then). Clear on dragend
+        // regardless of whether the drag ended in a drop or was cancelled.
+        setWatchedFolderDraggedFileIds([String(fileId)]);
+        const clear = () => {
+          clearWatchedFolderDraggedFileIds();
+          document.removeEventListener("dragend", clear);
+        };
+        document.addEventListener("dragend", clear);
+      },
+      [],
+    );
     const isMultiTool =
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
-    const [displayName, setDisplayName] = useState<string>("Guest");
+
+    // Each auth layer derives its own displayName from its native user shape.
+    // Fall back to the proprietary REST endpoint only when the auth
+    // context yields nothing - then to "User" as a generic last resort.
+    const { displayName: authDisplayName } = useAuth();
+    const [accountUsername, setAccountUsername] = useState<string | null>(null);
+    const displayName =
+      authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
 
     useEffect(() => {
-      if (!config?.enableLogin) return;
+      if (!config?.enableLogin) {
+        setAccountUsername(null);
+        return;
+      }
+      if (authDisplayName) {
+        // The auth context has a name; don't bother hitting the REST
+        // endpoint, but clear any stale cached value from a prior call.
+        setAccountUsername(null);
+        return;
+      }
       accountService
         .getAccountData()
         .then((data) => {
-          if (data?.username) setDisplayName(data.username);
+          // Always reflect the latest result - including clearing it on
+          // sign-out, when the endpoint returns no username (or 401s into
+          // the catch branch below). Without this, signing out would leave
+          // the old username on screen.
+          setAccountUsername(data?.username ?? null);
         })
         .catch(() => {
-          /* not logged in or security disabled */
+          setAccountUsername(null);
         });
-    }, [config?.enableLogin]);
+    }, [config?.enableLogin, authDisplayName]);
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
     const [stubsLoaded, setStubsLoaded] = useState(false);
 
     const refreshStubs = useCallback(async () => {
-      // Leaf files from IDB — same source as the file selection modal.
+      // Leaf files from IDB - same source as the file selection modal.
       const stubs = await indexedDB.loadLeafMetadata();
       const idbIds = new Set(stubs.map((s) => s.id as string));
 
@@ -113,9 +234,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     }, [indexedDB, state.files.ids, state.files.byId]);
 
     // Refresh on mount, workbench changes, or external IndexedDB writes
+    const indexedDBRevision = useIndexedDBRevision();
     useEffect(() => {
       refreshStubs();
-    }, [refreshStubs, indexedDB.revision]);
+    }, [refreshStubs, indexedDBRevision]);
 
     // Once a pending file lands in state, open it in the viewer.
     useEffect(() => {
@@ -138,11 +260,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     // Handle search activation
     const handleSearchClick = useCallback(() => {
+      if (onSearchClick) {
+        onSearchClick();
+        return;
+      }
       if (collapsed && onToggleCollapse) {
         onToggleCollapse();
       }
       setSearchActive(true);
-    }, [collapsed, onToggleCollapse]);
+    }, [collapsed, onToggleCollapse, onSearchClick]);
 
     const handleSearchClose = useCallback(() => {
       setSearchActive(false);
@@ -159,11 +285,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const handleGoogleDriveClick = useCallback(async () => {
       if (!isGoogleDriveEnabled) return;
       const files = await openGoogleDrivePicker({ multiple: true });
-      if (files.length > 0) {
-        await addFiles(files);
-        if (!isMultiTool) {
-          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-        }
+      if (files.length === 0) return;
+      if (onPickGoogleDriveFiles) {
+        await onPickGoogleDriveFiles(files);
+        return;
+      }
+      await addFiles(files);
+      if (!isMultiTool) {
+        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
     }, [
       isGoogleDriveEnabled,
@@ -171,6 +300,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       addFiles,
       navActions,
       isMultiTool,
+      onPickGoogleDriveFiles,
     ]);
 
     // Toggle file in/out of workbench
@@ -178,6 +308,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
+
+        // In the Watched Folders view a click sends the file into the open folder
+        // (mirrors how a click toggles a file into the active workbench elsewhere).
+        // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
+        if (isWatchedFoldersActive) {
+          if (activeWatchedFolderId) {
+            setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
+              folderId: activeWatchedFolderId,
+              pendingFileId: stub.id,
+            });
+          }
+          return;
+        }
 
         const workbenchFileId = state.files.ids.find(
           (id) => (id as string) === (stub.id as string),
@@ -195,7 +338,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           }
           await fileActions.removeFiles([workbenchFileId], false);
         } else {
-          // Re-add by stub to preserve its ID — addFiles() would create a new UUID + IDB entry.
+          // Re-add by stub to preserve its ID - addFiles() would create a new UUID + IDB entry.
           const workbenchCount = state.files.ids.length;
 
           if (workbenchCount > 0 && currentWorkbench === "viewer") {
@@ -228,10 +371,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         activeFileId,
         requestNavigation,
         isMultiTool,
+        isWatchedFoldersActive,
+        activeWatchedFolderId,
+        setCustomWorkbenchViewData,
       ],
     );
 
-    // Which file is currently open in the viewer — stable ID, never index-derived.
+    // Which file is currently open in the viewer - stable ID, never index-derived.
     const viewedWorkbenchId =
       currentWorkbench === "viewer" ? activeFileId : null;
 
@@ -246,12 +392,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         );
 
         if (isCurrentlyViewed) {
-          // Closing the currently-viewed file — guard against unsaved changes.
+          // Closing the currently-viewed file - guard against unsaved changes.
           navActions.setWorkbench("fileEditor");
           return;
         }
 
-        // Switching to a different file while viewer is open — guard against unsaved changes.
+        // Switching to a different file while viewer is open - guard against unsaved changes.
         const performSwitch = async () => {
           const alreadyInWorkbench = state.files.ids.some(
             (id) => (id as string) === (stub.id as string),
@@ -291,18 +437,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const handleNativeFilePick = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Per-tool validation happens downstream.
         const files = Array.from(e.target.files ?? []);
         if (files.length > 0) {
-          await addFiles(files);
-          if (!isMultiTool) {
-            navActions.setWorkbench(
-              files.length === 1 ? "viewer" : "fileEditor",
-            );
+          if (onUploadFiles) {
+            await onUploadFiles(files);
+          } else {
+            await addFiles(files);
+            if (!isMultiTool) {
+              navActions.setWorkbench(
+                files.length === 1 ? "viewer" : "fileEditor",
+              );
+            }
           }
         }
         e.target.value = "";
       },
-      [addFiles, navActions, isMultiTool],
+      [addFiles, navActions, isMultiTool, onUploadFiles],
     );
 
     const shouldHideGoogleDrive =
@@ -321,29 +472,53 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       >
         <div className="file-sidebar-inner">
           {/* Header: hamburger + branding */}
-          <div
-            className="file-sidebar-header"
-            onClick={() => onToggleCollapse?.()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && onToggleCollapse?.()}
-            aria-label={
-              collapsed
-                ? t("fileSidebar.expand", "Expand sidebar")
-                : t("fileSidebar.collapse", "Collapse sidebar")
-            }
+          <Tooltip
+            label={toggleAriaLabel ?? t("fileSidebar.expand", "Expand sidebar")}
+            position="right"
+            withinPortal
+            disabled={!collapsed}
           >
-            <MenuIcon className="file-sidebar-menu-icon" />
-            {!collapsed && (
-              <Wordmark
-                alt="Stirling PDF"
-                className="file-sidebar-brand-text sidebar-content-fade"
-              />
-            )}
-          </div>
+            <div
+              className="file-sidebar-header"
+              onClick={() => onToggleCollapse?.()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onToggleCollapse?.();
+                }
+              }}
+              aria-label={
+                toggleAriaLabel ??
+                (collapsed
+                  ? t("fileSidebar.expand", "Expand sidebar")
+                  : t("fileSidebar.collapse", "Collapse sidebar"))
+              }
+            >
+              {/* Wrapper carries sizing; data-toggle-flip-rtl flips icon in RTL. */}
+              <span
+                className="file-sidebar-menu-icon"
+                data-toggle-flip-rtl={toggleIcon ? "true" : undefined}
+              >
+                {toggleIcon ?? <MenuIcon />}
+              </span>
+              {!collapsed && (
+                <Wordmark
+                  alt="Stirling PDF"
+                  className="file-sidebar-brand-text sidebar-content-fade"
+                />
+              )}
+            </div>
+          </Tooltip>
 
           {/* Search row */}
-          {
+          <Tooltip
+            label={t("fileSidebar.search", "Search")}
+            position="right"
+            withinPortal
+            disabled={!collapsed}
+          >
             <div
               className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
               onClick={!searchActive ? handleSearchClick : undefined}
@@ -385,70 +560,230 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </span>
                 ))}
             </div>
-          }
+          </Tooltip>
 
           {/* Scrollable content */}
           <div className="file-sidebar-scroll">
-            {/* Open from Computer + Google Drive */}
-            {
-              <>
+            {/* Hidden native file input - kept outside the !collapsed gate so
+                the "Open from computer" row below (always rendered) can fire
+                it in either sidebar state without a silent no-op. */}
+            <input
+              ref={nativeFileInputRef}
+              type="file"
+              multiple
+              // No `accept` filter - this picker feeds the global workspace,
+              // not a specific tool, so users may legitimately upload PNGs,
+              // ZIPs, etc. for the convert/merge/extract tools to handle.
+              style={{ display: "none" }}
+              onChange={handleNativeFilePick}
+              data-testid="file-input"
+            />
+            {/* Open from Computer + My Files + Google Drive */}
+            {/* Tooltips only fire when collapsed - when expanded the visible
+                text label below already identifies each row, so a tooltip
+                would just flash a duplicate. Distinct icons (UploadFile for
+                "Open from computer" vs FolderOpen for "My Files") so the
+                collapsed rail isn't two identical folder icons either. */}
+            <Tooltip
+              label={t("fileSidebar.openFromComputer", "Open from computer")}
+              position="right"
+              withinPortal
+              disabled={!collapsed}
+            >
+              <div
+                className="file-sidebar-action-row"
+                // `files-button` is the long-standing upload entry-point
+                // testid: click + setInputFiles on `file-input` above. Tour
+                // anchor lives here too - the tour now spotlights the native
+                // picker shortcut rather than the old modal.
+                data-testid="files-button"
+                data-tour="files-button"
+                onClick={() => {
+                  // "Open from computer" goes straight to the native OS file
+                  // picker. The full file manager (recent + drives + folders)
+                  // is reachable via "My Files" below.
+                  nativeFileInputRef.current?.click();
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t(
+                  "fileSidebar.openFromComputer",
+                  "Open from computer",
+                )}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    nativeFileInputRef.current?.click();
+                  }
+                }}
+              >
+                <UploadFileIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.openFromComputer", "Open from computer")}
+                  </span>
+                )}
+              </div>
+            </Tooltip>
+
+            {extraAction && (
+              <Tooltip
+                label={extraAction.disabledTooltip ?? extraAction.label}
+                position="right"
+                withinPortal
+                // Only force a wide multiline box when the long disabled
+                // reason is shown; the short label fits one line.
+                multiline={Boolean(
+                  extraAction.disabled && extraAction.disabledTooltip,
+                )}
+                w={
+                  extraAction.disabled && extraAction.disabledTooltip
+                    ? 220
+                    : undefined
+                }
+                disabled={
+                  !collapsed &&
+                  !(extraAction.disabled && extraAction.disabledTooltip)
+                }
+              >
                 <div
-                  className="file-sidebar-action-row"
-                  data-testid="files-button"
-                  data-tour="files-button"
+                  className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
+                  data-testid={extraAction.testId}
                   onClick={() => {
-                    if (collapsed && onToggleCollapse) onToggleCollapse();
-                    openFilesModal();
+                    if (extraAction.disabled) return;
+                    extraAction.onClick();
                   }}
                   role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && openFilesModal()}
+                  tabIndex={extraAction.disabled ? -1 : 0}
+                  aria-disabled={extraAction.disabled}
+                  aria-label={extraAction.label}
+                  onKeyDown={(e) => {
+                    if (extraAction.disabled) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      extraAction.onClick();
+                    }
+                  }}
                 >
-                  <FolderOpenIcon className="file-sidebar-action-icon" />
+                  <span className="file-sidebar-action-icon">
+                    {extraAction.icon}
+                  </span>
                   {!collapsed && (
                     <span className="file-sidebar-action-label sidebar-content-fade">
-                      {t("fileSidebar.openFromComputer", "Open from computer")}
+                      {extraAction.label}
                     </span>
                   )}
                 </div>
+              </Tooltip>
+            )}
 
-                {!shouldHideGoogleDrive && (
-                  <div
-                    className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
-                    onClick={handleGoogleDriveClick}
-                    role="button"
-                    tabIndex={isGoogleDriveEnabled ? 0 : -1}
-                    aria-disabled={!isGoogleDriveEnabled}
-                    title={
-                      !isGoogleDriveEnabled
-                        ? t(
-                            "fileSidebar.googleDriveDisabled",
-                            "Google Drive is not configured",
-                          )
-                        : t("fileSidebar.googleDrive", "Open from Google Drive")
-                    }
-                  >
-                    <div className="file-sidebar-cloud-icon-wrapper">
+            <Tooltip
+              label={t("fileSidebar.myFiles", "My Files")}
+              position="right"
+              withinPortal
+              disabled={!collapsed}
+            >
+              <div
+                className="file-sidebar-action-row"
+                data-testid="my-files-button"
+                onClick={() => {
+                  if (collapsed && onToggleCollapse) onToggleCollapse();
+                  navigate("/files");
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t("fileSidebar.myFiles", "My Files")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/files");
+                  }
+                }}
+              >
+                <FolderOpenIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.myFiles", "My Files")}
+                  </span>
+                )}
+              </div>
+            </Tooltip>
+
+            {!shouldHideGoogleDrive && (
+              <Tooltip
+                label={
+                  !isGoogleDriveEnabled
+                    ? t(
+                        "fileSidebar.googleDriveDisabled",
+                        "Google Drive is not configured",
+                      )
+                    : t("fileSidebar.googleDrive", "Open from Google Drive")
+                }
+                position="right"
+                withinPortal
+                disabled={!collapsed}
+              >
+                <div
+                  className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
+                  onClick={handleGoogleDriveClick}
+                  role="button"
+                  tabIndex={isGoogleDriveEnabled ? 0 : -1}
+                  aria-disabled={!isGoogleDriveEnabled}
+                  aria-label={
+                    !isGoogleDriveEnabled
+                      ? t(
+                          "fileSidebar.googleDriveDisabled",
+                          "Google Drive is not configured",
+                        )
+                      : t("fileSidebar.googleDrive", "Open from Google Drive")
+                  }
+                >
+                  <div className="file-sidebar-cloud-icon-wrapper">
+                    <GoogleDriveIcon
+                      className="file-sidebar-cloud-icon-gray"
+                      style={{ color: "var(--text-secondary)" }}
+                    />
+                    {isGoogleDriveEnabled && (
                       <GoogleDriveIcon
-                        className="file-sidebar-cloud-icon-gray"
-                        style={{ color: "var(--text-secondary)" }}
+                        colored
+                        className="file-sidebar-cloud-icon-color"
                       />
-                      {isGoogleDriveEnabled && (
-                        <GoogleDriveIcon
-                          colored
-                          className="file-sidebar-cloud-icon-color"
-                        />
-                      )}
-                    </div>
-                    {!collapsed && (
-                      <span className="file-sidebar-action-label sidebar-content-fade">
-                        {t("fileSidebar.googleDrive", "Google Drive")}
-                      </span>
                     )}
                   </div>
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.googleDrive", "Google Drive")}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+            )}
+
+            {/* Watched Folders entry */}
+            {WATCHED_FOLDERS_ENABLED && (
+              <div
+                className="file-sidebar-action-row"
+                data-testid="watchedFolders-button"
+                data-active={isWatchedFoldersActive}
+                onClick={openWatchedFolders}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && openWatchedFolders()}
+                aria-label={t("watchedFolders.sidebarTitle", "Watched Folders")}
+                style={
+                  isWatchedFoldersActive
+                    ? { backgroundColor: "var(--active-bg)" }
+                    : undefined
+                }
+              >
+                <FolderSpecialIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("watchedFolders.sidebarTitle", "Watched Folders")}
+                  </span>
                 )}
-              </>
-            }
+              </div>
+            )}
 
             {/* Files section - always visible when expanded */}
             {!collapsed && (
@@ -459,12 +794,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </span>
                   <button
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
-                    onClick={() => openFilesModal()}
+                    onClick={() => navigate("/files")}
                     title={t(
                       "fileSidebar.openFileManager",
-                      "Open file manager",
+                      "Browse all files & folders",
                     )}
                     type="button"
+                    data-testid="open-files-page"
                   >
                     <OpenInNewIcon sx={{ fontSize: "1rem" }} />
                   </button>
@@ -476,14 +812,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   >
                     <AddIcon sx={{ fontSize: "1rem" }} />
                   </button>
-                  <input
-                    ref={nativeFileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf"
-                    style={{ display: "none" }}
-                    onChange={handleNativeFilePick}
-                  />
                 </div>
 
                 {!stubsLoaded ? (
@@ -497,14 +825,42 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         (id) => (id as string) === (stub.id as string),
                       );
                       const isInWorkbench = !!workbenchFileId;
-                      // Both active and viewed-in-viewer are ID-based — never index-based.
+                      // On Watched Folders, the tick means "this file is already in
+                      // the open folder"; on the folder home (no folder open) a
+                      // click is a no-op, so show no tick at all.
+                      const isSelected = isWatchedFoldersActive
+                        ? activeWatchedFolderId != null &&
+                          (folderMembership
+                            .get(stub.id as string)
+                            ?.includes(activeWatchedFolderId) ??
+                            false)
+                        : isInWorkbench;
+                      // Membership dots only on the Watched Folders home (the folder
+                      // grid, no folder open). Inside a specific folder the tick
+                      // already shows "in this folder"; in other views they'd just
+                      // be noise.
+                      const showFolderDots =
+                        WATCHED_FOLDERS_ENABLED &&
+                        isWatchedFoldersActive &&
+                        activeWatchedFolderId === null;
+                      const memberFolders = showFolderDots
+                        ? (folderMembership.get(stub.id as string) ?? [])
+                            .map((fid) => folderById.get(fid))
+                            .filter((f): f is NonNullable<typeof f> => !!f)
+                            .map((f) => ({
+                              id: f.id,
+                              name: f.name,
+                              accentColor: f.accentColor,
+                            }))
+                        : [];
+                      // Both active and viewed-in-viewer are ID-based - never index-based.
                       const isViewedInViewer = !!(
                         viewedWorkbenchId &&
                         viewedWorkbenchId === (stub.id as string)
                       );
                       const isActive = isViewedInViewer;
                       // In-memory thumbnail may be fresher than the IndexedDB stub.
-                      // Encrypted files never get a raster thumbnail — use undefined
+                      // Encrypted files never get a raster thumbnail - use undefined
                       // so the sidebar icon is shown instead of a stale canvas thumbnail.
                       const isEncryptedFile =
                         stub.processedFile?.isEncrypted === true;
@@ -520,12 +876,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           name={stub.name}
                           size={stub.size}
                           lastModified={stub.lastModified}
-                          isSelected={isInWorkbench}
+                          isSelected={isSelected}
                           isActive={isActive}
                           isViewedInViewer={isViewedInViewer}
                           thumbnailUrl={thumbnailUrl}
                           onClick={handleFileClick}
                           onEyeClick={handleEyeClick}
+                          draggable={isWatchedFoldersActive}
+                          onDragStart={handleWatchedFolderDragStart}
+                          folders={memberFolders}
+                          onFolderClick={openWatchedFolder}
                         />
                       );
                     })}
@@ -548,44 +908,53 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         </div>
 
         {/* Bottom bar: user name + settings */}
-        <div
-          className="file-sidebar-bottom-bar"
-          onClick={onOpenSettings}
-          role={onOpenSettings ? "button" : undefined}
-          tabIndex={onOpenSettings ? 0 : undefined}
-          onKeyDown={
+        <Tooltip
+          label={
             onOpenSettings
-              ? (e) => e.key === "Enter" && onOpenSettings()
-              : undefined
+              ? `${displayName} - ${t("fileSidebar.openSettings", "Open settings")}`
+              : displayName
           }
-          data-testid={onOpenSettings ? "config-button" : undefined}
-          data-tour={onOpenSettings ? "config-button" : undefined}
-          aria-label={
-            onOpenSettings
-              ? t("fileSidebar.openSettings", "Open settings")
-              : undefined
-          }
-          title={
-            onOpenSettings
-              ? t("fileSidebar.openSettings", "Open settings")
-              : undefined
-          }
-          style={onOpenSettings ? { cursor: "pointer" } : undefined}
+          position="right"
+          withinPortal
+          disabled={!collapsed}
         >
-          <div className="file-sidebar-bottom-avatar" title={displayName}>
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-          {!collapsed && (
-            <span className="file-sidebar-bottom-name sidebar-content-fade">
-              {displayName}
-            </span>
-          )}
-          {onOpenSettings && !collapsed && (
-            <div className="file-sidebar-bottom-settings">
-              <SettingsIcon sx={{ fontSize: "1.1rem" }} />
+          <div
+            className="file-sidebar-bottom-bar"
+            onClick={onOpenSettings}
+            role={onOpenSettings ? "button" : undefined}
+            tabIndex={onOpenSettings ? 0 : undefined}
+            onKeyDown={
+              onOpenSettings
+                ? (e) => e.key === "Enter" && onOpenSettings()
+                : undefined
+            }
+            data-testid={onOpenSettings ? "config-button" : undefined}
+            data-tour={onOpenSettings ? "config-button" : undefined}
+            aria-label={
+              onOpenSettings
+                ? t("fileSidebar.openSettings", "Open settings")
+                : displayName
+            }
+            style={onOpenSettings ? { cursor: "pointer" } : undefined}
+          >
+            <div
+              className="file-sidebar-bottom-avatar"
+              aria-label={displayName}
+            >
+              {displayName.charAt(0).toUpperCase()}
             </div>
-          )}
-        </div>
+            {!collapsed && (
+              <span className="file-sidebar-bottom-name sidebar-content-fade">
+                {displayName}
+              </span>
+            )}
+            {onOpenSettings && !collapsed && (
+              <div className="file-sidebar-bottom-settings">
+                <SettingsIcon sx={{ fontSize: "1.1rem" }} />
+              </div>
+            )}
+          </div>
+        </Tooltip>
       </div>
     );
   },

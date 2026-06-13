@@ -202,6 +202,8 @@
   --icon-sign-color: #ffffff;
   --icon-automate-bg: #a576e3;
   --icon-automate-color: #ffffff;
+  --icon-watchedFolders-bg: #f59e0b;
+  --icon-watchedFolders-color: #ffffff;
   --icon-files-bg: #d3e7f7;
   --icon-files-color: #0a8bff;
   --icon-activity-bg: #d3e7f7;
@@ -515,7 +517,7 @@
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2a2f36;
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-default: #3a4047;
   --border-strong: #4b5563;
   --hover-bg: #374151;
@@ -535,6 +537,8 @@
   --icon-sign-color: #eaeaea;
   --icon-automate-bg: #4b525a;
   --icon-automate-color: #eaeaea;
+  --icon-watchedFolders-bg: #4b525a;
+  --icon-watchedFolders-color: #eaeaea;
   --icon-files-bg: #4b525a;
   --icon-files-color: #eaeaea;
   --icon-activity-bg: #4b525a;
@@ -1098,4 +1102,18 @@
 ::view-transition-group(*) {
   animation-duration: 160ms;
   animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* Mantine animates a button's background-color and its text/icon colour on
+ * separate transitions, so when a filled button flips state (selected ↔
+ * unselected, enabled ↔ disabled) you briefly see e.g. a blue background
+ * with the old dark-grey label still showing through. Drop the colour
+ * tween — the swap is instant, but transforms/shadows/borders/opacity keep
+ * animating for hover and press feedback. */
+.mantine-Button-root,
+.mantine-ActionIcon-root,
+.mantine-SegmentedControl-control,
+.mantine-SegmentedControl-label,
+.mantine-SegmentedControl-indicator {
+  transition-property: transform, box-shadow, border-color, opacity !important;
 }

@@ -1,61 +1,15 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { useFileManagement } from "@app/contexts/FileContext";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
 import "@app/components/shared/FileSidebarFileItem.css";
-
-const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
-
-/** Generate + persist a thumbnail for a sidebar file that doesn't have one yet. */
-function useLazyThumbnail(
-  fileId: FileId,
-  size: number,
-  thumbnailUrl?: string,
-): string | undefined {
-  const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
-  const attempted = useRef(false);
-  const indexedDB = useIndexedDB();
-  const { updateStirlingFileStub } = useFileManagement();
-
-  // Sync prop changes (e.g. thumbnail arrives after TTL bump)
-  useEffect(() => {
-    if (thumbnailUrl) setThumb(thumbnailUrl);
-  }, [thumbnailUrl]);
-
-  useEffect(() => {
-    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT)
-      return;
-    attempted.current = true;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const file = await indexedDB.loadFile(fileId);
-        if (!file || cancelled) return;
-        const thumbnail = await generateThumbnailForFile(file);
-        if (cancelled || !thumbnail) return;
-        setThumb(thumbnail);
-        void indexedDB.updateThumbnail(fileId, thumbnail);
-        updateStirlingFileStub(fileId, { thumbnailUrl: thumbnail });
-      } catch {
-        // non-critical
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
-
-  return thumb;
-}
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -164,6 +118,13 @@ function getSidebarFileIcon(ext: string): React.ReactElement {
   return <FileDocIcon className={cls} variant={getFileDocVariant(ext)} />;
 }
 
+/** A Watched Folder this file currently belongs to, used for the membership dots. */
+export interface FileItemFolderRef {
+  id: string;
+  name: string;
+  accentColor: string;
+}
+
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -175,7 +136,16 @@ export interface FileItemProps {
   thumbnailUrl?: string;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
+  /** When true, the row can be dragged (e.g. onto a Watched Folder). */
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent, fileId: FileId) => void;
+  /** Watched Folders this file is in — rendered as small accent dots. */
+  folders?: FileItemFolderRef[];
+  /** Clicking a membership dot opens that folder. */
+  onFolderClick?: (folderId: string) => void;
 }
+
+const MAX_VISIBLE_FOLDER_TAGS = 2;
 
 export function FileItem({
   fileId,
@@ -188,10 +158,18 @@ export function FileItem({
   thumbnailUrl,
   onClick,
   onEyeClick,
+  draggable,
+  onDragStart,
+  folders = [],
+  onFolderClick,
 }: FileItemProps) {
+  const { t } = useTranslation();
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
+
+  const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
+  const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
 
   // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
   const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
@@ -225,6 +203,10 @@ export function FileItem({
         ref={itemRef}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
+        draggable={draggable}
+        onDragStart={
+          draggable && onDragStart ? (e) => onDragStart(e, fileId) : undefined
+        }
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
@@ -249,11 +231,61 @@ export function FileItem({
           >
             {name}
           </span>
-          <span className="file-sidebar-file-meta">
-            {dateLabel}
-            {dateLabel && typeLabel ? " · " : ""}
-            {typeLabel}
+          <span className="file-sidebar-file-meta-row">
+            <span className="file-sidebar-file-meta">
+              {dateLabel}
+              {dateLabel && typeLabel ? " · " : ""}
+              {typeLabel}
+            </span>
           </span>
+          {folders.length > 0 && (
+            <span className="file-sidebar-folder-tags" data-no-select>
+              {visibleFolders.map((folder) => (
+                <Tooltip
+                  key={folder.id}
+                  label={folder.name}
+                  withArrow
+                  position="top"
+                  withinPortal
+                >
+                  <span
+                    className="file-sidebar-folder-tag"
+                    style={{
+                      backgroundColor: `${folder.accentColor}1f`,
+                      borderColor: `${folder.accentColor}55`,
+                    }}
+                    role="button"
+                    tabIndex={-1}
+                    aria-label={folder.name}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFolderClick?.(folder.id);
+                    }}
+                  >
+                    <span
+                      className="file-sidebar-folder-tag-dot"
+                      style={{ backgroundColor: folder.accentColor }}
+                    />
+                    <span className="file-sidebar-folder-tag-label">
+                      {folder.name}
+                    </span>
+                  </span>
+                </Tooltip>
+              ))}
+              {overflowFolders.length > 0 && (
+                <Tooltip
+                  label={overflowFolders.map((f) => f.name).join(", ")}
+                  withArrow
+                  position="top"
+                  withinPortal
+                >
+                  <span className="file-sidebar-folder-tag-more">
+                    +{overflowFolders.length}
+                  </span>
+                </Tooltip>
+              )}
+            </span>
+          )}
         </div>
         <button
           className="file-sidebar-eye-btn"
@@ -263,7 +295,11 @@ export function FileItem({
           }}
           tabIndex={-1}
           type="button"
-          aria-label={isViewedInViewer ? "Close viewer" : "Open in viewer"}
+          aria-label={
+            isViewedInViewer
+              ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
+              : t("fileSidebar.fileItem.openInViewer", "Open in viewer")
+          }
         >
           <VisibilityOutlinedIcon
             className="file-sidebar-eye-open"

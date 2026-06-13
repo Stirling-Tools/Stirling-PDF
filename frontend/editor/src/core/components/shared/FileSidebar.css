@@ -8,10 +8,9 @@
   height: 100%;
   position: relative;
   z-index: 10;
-  transition:
-    width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Animating width + min-width + max-width together can leave the flex layout
+     stuck on the pre-animation size in some browsers. Snap instead and rely
+     on the inner content fade for visual smoothness. */
   flex-shrink: 0;
 }
 
@@ -40,13 +39,25 @@
 /* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
 
 .file-sidebar-header:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-menu-icon {
   color: var(--text-muted) !important;
   font-size: 18px !important;
   flex-shrink: 0;
+}
+
+/* Inherits font-size so swap-in icons render at 18px like the original. */
+.file-sidebar-menu-icon > svg {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
+}
+
+/* Flip directional toggle icons in RTL (skipped for the symmetric burger). */
+[dir="rtl"] .file-sidebar-menu-icon[data-toggle-flip-rtl="true"] > svg {
+  transform: scaleX(-1);
 }
 
 .file-sidebar-brand-text {
@@ -70,7 +81,7 @@
 }
 
 .file-sidebar-search-row:not(.active):hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-search-icon {
@@ -105,7 +116,7 @@
 }
 
 /* ---- Scrollable content ---- */
-/* This is a flex column — action rows are fixed, only the file list scrolls */
+/* This is a flex column - action rows are fixed, only the file list scrolls */
 .file-sidebar-scroll {
   flex: 1;
   min-height: 0;
@@ -140,13 +151,36 @@
 }
 
 .file-sidebar-action-row:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
+}
+
+.file-sidebar-action-row.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+.file-sidebar-action-row.disabled:hover {
+  background-color: transparent;
 }
 
 .file-sidebar-action-icon {
   color: var(--text-muted) !important;
   font-size: 18px !important;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+/* When the icon is a wrapper around an SVG (extraAction case), force
+ * the SVG to inherit the wrapper's 18px sizing instead of MUI's default
+ * 1.5rem so it matches the other rail icons. */
+.file-sidebar-action-icon > svg {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
 }
 
 .file-sidebar-action-label {
@@ -171,7 +205,7 @@
 }
 
 .file-sidebar-cloud-row:not(.disabled):hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-cloud-row.disabled {
@@ -296,7 +330,7 @@
 }
 
 .file-sidebar-section-btn:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
   color: var(--text-primary);
 }
 
@@ -376,7 +410,7 @@
 }
 
 .file-sidebar-bottom-bar[role="button"]:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-bottom-bar[role="button"]:focus-visible {

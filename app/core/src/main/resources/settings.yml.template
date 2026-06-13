@@ -20,6 +20,7 @@ security:
     password: "" # initial password for the first login
   oauth2:
     enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    debugLogging: false # set to 'true' to log full ID token and UserInfo claims during OAuth2/OIDC login. Use this to diagnose claim issues (e.g. "Attribute value for 'email' cannot be null" with ADFS). WARNING: writes PII (sub, email, name) to logs; disable after troubleshooting.
     client:
       keycloak:
         issuer: "" # URL of the Keycloak realm's OpenID Connect Discovery endpoint
@@ -93,8 +94,8 @@ premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
   proFeatures:
-    SSOAutoLogin: false
-    CustomMetadata:
+    ssoAutoLogin: false
+    customMetadata:
       autoUpdateMetadata: false
       author: username
       creator: Stirling-PDF
@@ -166,7 +167,7 @@ legal:
   impressum: "" # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
 
 system:
-  defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  defaultLocale: "" # force a default language for new users (e.g. 'en-US', 'de-DE'). Empty string auto-detects from the browser, falling back to en-US
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
   showUpdate: false # see when a new update is available
@@ -245,6 +246,39 @@ storage:
   provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
   local:
     basePath: './storage' # base directory for stored files
+  # ====================================================================================
+  # S3-COMPATIBLE OBJECT STORAGE - PRO / ENTERPRISE LICENSE REQUIRED
+  # storage.provider=s3, storage.provider=database, and cluster.artifactStore=s3 all
+  # require a valid Pro or Enterprise license.
+  # ====================================================================================
+  # Used when provider=s3 (persistent user uploads) and/or cluster.artifactStore=s3
+  # (transient cluster artifacts). The two consumers share this block.
+  # Vendor cheat sheet (set the highlighted flags to taste):
+  #   AWS S3              -> endpoint='' region='<your-region>' pathStyleAccess=false
+  #   Cloudflare R2       -> endpoint='https://<acct>.r2.cloudflarestorage.com' region='auto'
+  #                          pathStyleAccess=false; if uploads fail with 'unsupported header
+  #                          x-amz-checksum-*' set requestChecksumCalculation=WHEN_REQUIRED
+  #   Supabase Storage    -> endpoint='https://<project>.supabase.co/storage/v1/s3'
+  #                          region='<project-region>' pathStyleAccess=true
+  #                          (filenames with non-ASCII display fine - the storage key is opaque)
+  #   MinIO (in-cluster)  -> endpoint='http://minio:9000' region='us-east-1'
+  #                          pathStyleAccess=true allowPrivateEndpoints=true
+  #   Backblaze B2        -> endpoint='https://s3.<region>.backblazeb2.com'
+  #                          If on a B2 deployment older than July-2025 and uploads return
+  #                          'Unsupported header x-amz-checksum-crc32', set
+  #                          requestChecksumCalculation=WHEN_REQUIRED
+  #   DigitalOcean Spaces -> endpoint='https://<region>.digitaloceanspaces.com'
+  #                          Note: 5GB per-object cap (regardless of multipart)
+  s3:
+    endpoint: "" # blank = use AWS regional default; otherwise full URL incl. https://
+    bucket: "" # required when provider=s3 or cluster.artifactStore=s3
+    region: us-east-1
+    accessKey: "" # blank = fall back to AWS DefaultCredentialsProvider (env / profile / IMDS)
+    secretKey: ""
+    pathStyleAccess: false # true for MinIO and Supabase; false for AWS/R2/most CDNs
+    allowPrivateEndpoints: false # true required when endpoint resolves to a private/loopback IP (e.g. in-cluster MinIO). SSRF guard - leave false for any internet-facing vendor.
+    requestChecksumCalculation: WHEN_SUPPORTED # WHEN_SUPPORTED|WHEN_REQUIRED|DISABLED. Set WHEN_REQUIRED if your vendor rejects auto-added x-amz-checksum-* headers (older Backblaze B2, some R2 corner cases).
+    responseChecksumValidation: WHEN_SUPPORTED # WHEN_SUPPORTED|WHEN_REQUIRED|DISABLED. Set WHEN_REQUIRED if you see false-positive checksum-mismatch errors on GET from a vendor that never returns checksum headers.
   quotas:
     maxStorageMbPerUser: -1 # Max storage per user in MB; -1 disables per-user cap
     maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
@@ -329,6 +363,54 @@ aiEngine:
   enabled: false # Set to 'true' to enable the AI engine integration
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
+
+policies:
+  # Folder automations can read from and write to the directories you allow here, so treat this as a
+  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs
+  # entirely; list absolute directories to permit folder access only within them. Stirling's own
+  # config directory is always off-limits, and folder access is always disabled in SaaS mode.
+  allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
+  watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
+  watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
+  streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams
+  runExpiryMinutes: 30 # How long (minutes) a finished run's in-memory state is kept before eviction
+
+# Model Context Protocol (MCP) server. Exposes Stirling's PDF tools (grouped by namespace)
+# plus the AI agents to MCP clients (Inspector, Claude Desktop, custom). OAuth-protected.
+# Disabled by default - enable explicitly per deployment after configuring mcp.auth.
+mcp:
+  enabled: false # Master switch. 'false' (default) means no /mcp endpoint, no metadata, no beans wired.
+  scopesEnabled: true # Enforce mcp.tools.read / mcp.tools.write scopes derived from operation category
+  allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
+  blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
+  auth:
+    mode: oauth # 'oauth' (full OAuth2 resource server) or 'apikey' (Stirling per-user API key via X-API-KEY header; no external IdP needed - the low-friction self-host option)
+    issuerUri: "" # OAuth2 issuer URI (e.g. http://localhost:9000). Required when mode=oauth.
+    jwksUri: "" # JWKS URI. Blank -> derived from issuer's /.well-known/openid-configuration.
+    resourceId: "" # RFC 8707 resource identifier of THIS MCP server (e.g. http://localhost:8080/mcp).
+                   # Required: tokens must list this id in `aud` or the request is rejected.
+    usernameClaim: sub # JWT claim matched against a Stirling username (e.g. 'sub', 'email', 'preferred_username')
+    requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
+  engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
+
+# Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
+cluster:
+  enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
+  backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
+  artifactStore: local # Transient cluster job-artifact backend: 'local' (per-node disk; single-node only) or 's3' (shared object store; required for multi-node). Distinct from 'storage.provider' which controls persistent user uploads - when both are 's3' they share the storage.s3.* credentials block. Multi-node deployments MUST set this to 's3'.
+  s3:
+    keyPrefix: transient/ # Bucket key prefix used by the cluster artifact store when artifactStore=s3. Trailing slash recommended. Lets a single bucket host both persistent uploads (storage.s3.*) and transient job artifacts under separate prefixes.
+  valkey:
+    url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and backplane=valkey.
+    tls:
+      skipCertVerification: false # set to 'true' to skip TLS certificate verification on Valkey connections (dev/test only)
+  node:
+    id: "" # Optional explicit node id. Blank = auto-generated UUID at startup.
+    role: both # 'web' (serves HTTP), 'worker' (runs jobs), or 'both' (default)
+    internalAddress: "" # host:port advertised in the instance registry for peer-to-peer cluster traffic. Blank = derived at startup.
+    scheme: http # 'http' or 'https' - scheme peers use to call this node's /internal/cluster/** endpoints
+    heartbeatIntervalMs: 5000 # Heartbeat publish interval for the instance registry (ms)
 
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font

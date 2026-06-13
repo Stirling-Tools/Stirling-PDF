@@ -5,6 +5,7 @@
  */
 
 import { FileId, BaseFileMetadata } from "@app/types/file";
+import { FolderId } from "@app/types/folder";
 import {
   StirlingFile,
   StirlingFileStub,
@@ -26,7 +27,7 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   fileId: FileId; // Matches runtime StirlingFile.fileId exactly
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
-  thumbnailStoredAt?: number; // Epoch ms — sliding 30-day TTL
+  thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
 }
 
@@ -66,7 +67,7 @@ class FileStorageService {
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () => reject(transaction.error);
 
-      // Issue all gets up front — each onsuccess creates a put before the
+      // Issue all gets up front - each onsuccess creates a put before the
       // transaction can auto-commit, keeping it alive until all puts settle.
       ids.forEach((id) => {
         const req = store.get(id);
@@ -123,6 +124,9 @@ class FileStorageService {
       originalFileId: stub.originalFileId ?? stirlingFile.fileId,
       parentFileId: stub.parentFileId ?? undefined,
       toolHistory: stub.toolHistory ?? [],
+
+      // Folder organisation (root when null)
+      folderId: stub.folderId ?? null,
     };
 
     return new Promise((resolve, reject) => {
@@ -215,9 +219,12 @@ class FileStorageService {
           return;
         }
 
-        // Create StirlingFileStub from metadata (no file data)
+        // No per-id thumbnail TTL bump here - the bulk getAll/leaf paths
+        // already keep TTL fresh, and bumping on every single-id read
+        // generated a writable transaction per call (write amplification).
+        // We still gate thumbnailUrl on freshness so stale thumbnails
+        // don't leak through this read path.
         const fresh = this.isThumbnailFresh(record);
-        void this.bumpThumbnailTTL([record.id], !fresh);
 
         const stub: StirlingFileStub = {
           id: record.id,
@@ -240,6 +247,7 @@ class FileStorageService {
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
           toolHistory: record.toolHistory,
+          folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
         };
 
@@ -295,13 +303,24 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
+              folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });
           }
           cursor.continue();
         } else {
-          void this.bumpThumbnailTTL(tobump);
-          void this.bumpThumbnailTTL(toexpire, true);
+          // Only open the writeback transaction when there's something to do -
+          // previously fired two empty transactions per refresh.
+          if (tobump.length > 0) {
+            void this.bumpThumbnailTTL(tobump).catch((e) =>
+              console.warn("[fileStorage] thumbnail TTL bump failed", e),
+            );
+          }
+          if (toexpire.length > 0) {
+            void this.bumpThumbnailTTL(toexpire, true).catch((e) =>
+              console.warn("[fileStorage] thumbnail expire failed", e),
+            );
+          }
           resolve(stubs);
         }
       };
@@ -372,17 +391,110 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
+              folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
             });
           }
           cursor.continue();
         } else {
-          void this.bumpThumbnailTTL(tobump);
-          void this.bumpThumbnailTTL(toexpire, true);
+          if (tobump.length > 0) {
+            void this.bumpThumbnailTTL(tobump).catch((e) =>
+              console.warn("[fileStorage] thumbnail TTL bump failed", e),
+            );
+          }
+          if (toexpire.length > 0) {
+            void this.bumpThumbnailTTL(toexpire, true).catch((e) =>
+              console.warn("[fileStorage] thumbnail expire failed", e),
+            );
+          }
           resolve(leafStubs);
         }
       };
     });
+  }
+
+  /**
+   * Move one or more files into a folder (or to the root when folderId is null).
+   * Returns the ids of records that were actually updated.
+   */
+  async moveFilesToFolder(
+    fileIds: FileId[],
+    folderId: FolderId | null,
+  ): Promise<FileId[]> {
+    if (fileIds.length === 0) return [];
+    const db = await this.getDatabase();
+    const updated: FileId[] = [];
+
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () =>
+        reject(transaction.error ?? new Error("Move transaction aborted"));
+
+      fileIds.forEach((id) => {
+        const request = store.get(id);
+        request.onsuccess = () => {
+          const record = request.result as StoredStirlingFileRecord | undefined;
+          if (!record) return;
+          record.folderId = folderId;
+          store.put(record);
+          updated.push(id);
+        };
+        request.onerror = () => reject(request.error);
+      });
+    });
+
+    return updated;
+  }
+
+  /**
+   * Clear the folderId for every file currently inside any of the given
+   * folders. Used when a folder (or subtree) is deleted so the contents
+   * fall back to the root rather than dangling against a missing folder.
+   */
+  async clearFolderForFiles(folderIds: FolderId[]): Promise<number> {
+    if (folderIds.length === 0) return 0;
+    const db = await this.getDatabase();
+    let cleared = 0;
+
+    // Use the `folderId` index (declared on the files store in
+    // indexedDBManager DATABASE_CONFIGS) with one keyRange-bounded cursor
+    // per folderId. The previous full-store openCursor() was O(total files);
+    // this is O(files-in-affected-folders + folderIds.length). On users
+    // with thousands of files and a single deleted folder this is a 100x+
+    // win and keeps the UI responsive while the transaction runs.
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const index = store.index("folderId");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () =>
+        reject(
+          transaction.error ?? new Error("Clear folder transaction aborted"),
+        );
+
+      for (const folderId of folderIds) {
+        const cursorRequest = index.openCursor(
+          IDBKeyRange.only(folderId as string),
+        );
+        cursorRequest.onerror = () => reject(cursorRequest.error);
+        cursorRequest.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest)
+            .result as IDBCursorWithValue | null;
+          if (!cursor) return;
+          const record = cursor.value as StoredStirlingFileRecord;
+          record.folderId = null;
+          cursor.update(record);
+          cleared += 1;
+          cursor.continue();
+        };
+      }
+    });
+
+    return cleared;
   }
 
   /**
@@ -628,6 +740,11 @@ class FileStorageService {
 
   /**
    * Update metadata fields for a stored file record.
+   *
+   * Resolves on transaction.oncomplete, NOT on the individual put's onsuccess,
+   * so callers only receive `true` once the write actually commits. If the
+   * transaction aborts after put() succeeded but before commit, we return false
+   * - the previous behavior incorrectly claimed success in that window.
    */
   async updateFileMetadata(
     fileId: FileId,
@@ -635,29 +752,31 @@ class FileStorageService {
   ): Promise<boolean> {
     try {
       const db = await this.getDatabase();
-      const transaction = db.transaction([this.storeName], "readwrite");
-      const store = transaction.objectStore(this.storeName);
-      const record = await new Promise<StoredStirlingFileRecord | undefined>(
-        (resolve, reject) => {
-          const request = store.get(fileId);
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () =>
-            resolve(request.result as StoredStirlingFileRecord | undefined);
-        },
-      );
+      return await new Promise<boolean>((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readwrite");
+        const store = transaction.objectStore(this.storeName);
+        let recordFound = false;
 
-      if (!record) {
-        return false;
-      }
+        const getRequest = store.get(fileId);
+        getRequest.onsuccess = () => {
+          const record = getRequest.result as
+            | StoredStirlingFileRecord
+            | undefined;
+          if (!record) {
+            // Don't commit anything; caller wants false.
+            return;
+          }
+          recordFound = true;
+          const updatedRecord = { ...record, ...updates };
+          store.put(updatedRecord);
+        };
+        getRequest.onerror = () => reject(getRequest.error);
 
-      const updatedRecord = { ...record, ...updates };
-      await new Promise<void>((resolve, reject) => {
-        const request = store.put(updatedRecord);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        transaction.oncomplete = () => resolve(recordFound);
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () =>
+          reject(transaction.error ?? new Error("updateFileMetadata aborted"));
       });
-
-      return true;
     } catch (error) {
       console.error("Failed to update file metadata:", error);
       return false;

@@ -287,12 +287,13 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/data:/usr/share/tessdata:rw
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
+                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
-                SYSTEM_DEFAULTLOCALE: en-GB
+                SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
                 UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Embedded Architecture"
                 UI_APPNAMENAVBAR: "V2 PR#${{ needs.check-pr.outputs.pr_number }}"
@@ -309,7 +310,7 @@ jobs:
 
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             # Create V2 PR-specific directories
-            mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs}
+            mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs,storage}
 
             # Move docker-compose file to correct location
             mv /tmp/docker-compose-v2.yml /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/docker-compose.yml

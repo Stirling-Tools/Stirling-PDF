@@ -44,13 +44,27 @@
 }
 
 .workbench-bar-view-btn:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
   color: var(--text-primary);
 }
 
 .workbench-bar-view-btn.active {
   background-color: var(--mantine-color-blue-light, rgba(59, 130, 246, 0.12));
   color: var(--mantine-color-blue-6, #3b82f6);
+}
+
+.workbench-bar-view-btn.workbench-bar-back-btn {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.workbench-bar-view-btn.workbench-bar-back-btn:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--accent-interactive, #4a90e2) 12%,
+    transparent
+  );
+  color: var(--accent-interactive, #4a90e2);
 }
 
 .workbench-bar-view-btn svg {
@@ -83,9 +97,16 @@
   order: 3;
   flex: 0 0 100%;
   height: auto;
-  overflow: visible;
   padding: 4px 0;
   border-top: 1px solid var(--border-subtle);
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
+  flex-shrink: 0;
 }
 
 /* ---- Right: global buttons (theme / language / download) ---- */
@@ -105,7 +126,7 @@
   margin-left: auto;
 }
 
-/* Shared action icon style — applies to both center and global buttons */
+/* Shared action icon style - applies to both center and global buttons */
 .workbench-bar-action-icon {
   color: var(--text-secondary) !important;
   width: 28px !important;
@@ -121,7 +142,7 @@
 
 .workbench-bar-action-icon:hover {
   color: var(--text-primary) !important;
-  background-color: var(--bg-hover) !important;
+  background-color: var(--hover-bg) !important;
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {

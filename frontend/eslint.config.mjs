@@ -5,18 +5,30 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-const srcGlobs = ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"];
+const srcGlobs = [
+  "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
+  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
+  "portal/main.tsx",
+  "shared/**/*.{js,mjs,jsx,ts,tsx}",
+];
 const nodeGlobs = [
-  "editor/scripts/**/*.{js,ts,mjs}",
+  "scripts/**/*.{js,ts,mjs,mts}",
+  "editor/scripts/**/*.{js,ts,mjs,mts}",
   "editor/*.config.{js,ts,mjs}",
+  "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
+  ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
 
 const baseRestrictedImportPatterns = [
-  { regex: "^\\.", message: "Use @app/* imports instead of relative imports." },
+  {
+    regex: "^\\.",
+    message:
+      "Use a workspace alias (@app/* for editor, @portal/* for portal, @shared/*) instead of relative imports.",
+  },
   {
     regex: "^src/",
-    message: "Use @app/* imports instead of absolute src/ imports.",
+    message: "Use a workspace alias instead of absolute src/ imports.",
   },
 ];
 
@@ -35,6 +47,7 @@ export default defineConfig(
       "editor/src-tauri",
       "editor/playwright-report",
       "editor/test-results",
+      "portal/public",
     ],
   },
   eslint.configs.recommended,
@@ -91,23 +104,64 @@ export default defineConfig(
       ],
     },
   },
-  // Folders that have been cleaned up and are now conformant - stricter rules enforced here
+  // The shared/ layer is the seed of a future packages/shared-ui — it must
+  // only depend on third-party packages and on itself. If it ever imports
+  // from editor or portal layers, extraction to a standalone package later
+  // becomes a rewrite instead of a `git mv`.
   {
-    files: [
-      "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
+    files: ["shared/**/*.{js,mjs,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@app/",
+              message:
+                "shared/ must not depend on the editor layer (@app/* resolves into editor/src/).",
+            },
+            {
+              regex: "^@portal/",
+              message:
+                "shared/ must not depend on the portal layer. Use @shared/* or third-party imports only.",
+            },
+            {
+              regex: "^@core/",
+              message: "shared/ must not depend on editor/src/core/.",
+            },
+            {
+              regex: "^@proprietary/",
+              message: "shared/ must not depend on editor/src/proprietary/.",
+            },
+            {
+              regex: "^@tauri-apps/",
+              message: "shared/ must remain web-compatible (no Tauri APIs).",
+            },
+          ],
+        },
+      ],
     },
+  },
+  // Stricter rules that not all sub-folders are conformant to yet.
+  // Keep this non-type-aware: `parserOptions.project`/`projectService` here OOMs
+  // the lint step (builds the whole TS program); tsc covers type correctness.
+  {
+    files: srcGlobs,
+    ignores: [
+      "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
+    ],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unnecessary-type-assertion": "error",
     },
   },
   // Config for browser scripts

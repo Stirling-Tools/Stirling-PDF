@@ -33,6 +33,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 
 const SIDEBAR_WIDTH = "18rem";
 
@@ -125,7 +126,7 @@ const TOOL_ICON_MAP: Record<string, string> = {
   squiggly: "show-chart",
   ink: "edit",
   inkHighlighter: "brush",
-  square: "crop-square",
+  square: "crop-square-outline",
   circle: "radio-button-unchecked",
   line: "show-chart",
   lineArrow: "show-chart",
@@ -144,7 +145,7 @@ function getIconByType(type: number | undefined): string {
   if (type === 1) return "comment";
   if (type === 3) return "sticky-note-2";
   if (type === 4 || type === 8) return "show-chart";
-  if (type === 5) return "crop-square";
+  if (type === 5) return "crop-square-outline";
   if (type === 6) return "radio-button-unchecked";
   if (type === 7 || type === 8) return "change-history";
   if (type === 9) return "highlight";
@@ -362,9 +363,9 @@ export function CommentsSidebar({
       const all = getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
       const filtered: typeof all = {};
       for (const [page, entries] of Object.entries(all)) {
-        const commentEntries = entries.filter((e) =>
-          isCommentAnnotation(e.annotation.object),
-        );
+        const commentEntries = entries
+          .filter((e) => isCommentAnnotation(e.annotation.object))
+          .sort(compareEntriesByVisualOrder);
         if (commentEntries.length > 0) {
           filtered[Number(page)] = commentEntries;
         }

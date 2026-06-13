@@ -60,7 +60,7 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    api 'com.stirling:jpdfium:1.0.0'
+    api 'com.stirling:jpdfium:1.0.2'
 
     // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
@@ -75,8 +75,11 @@ dependencies {
     }
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms.join(', ')}")
     jpdfiumPlatforms.each { platform ->
-        runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.0"
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.2"
     }
+
+    // Bucket4j (local in-process token bucket for RateLimitStore default impl)
+    implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'

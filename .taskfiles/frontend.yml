@@ -112,6 +112,12 @@ tasks:
       - task: dev:_run
         vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
+  dev:portal:
+    desc: "Start developer portal dev server"
+    deps: [install]
+    cmds:
+      - npx vite portal --port {{.PORT | default "5173"}}{{if .OPEN}} --open{{end}}
+
   # ============================================================
   # Build
   # ============================================================
@@ -156,6 +162,24 @@ tasks:
     cmds:
       - npx vite build editor --mode prototypes
 
+  build:portal:
+    desc: "Build developer portal"
+    deps: [install]
+    cmds:
+      - npx vite build portal
+
+  storybook:
+    desc: "Start Storybook dev server"
+    deps: [install]
+    cmds:
+      - npx storybook dev -p 6006 {{.CLI_ARGS}}
+
+  storybook:build:
+    desc: "Build static Storybook"
+    deps: [install]
+    cmds:
+      - npx storybook build {{.CLI_ARGS}}
+
   # ============================================================
   # Code quality
   # ============================================================
@@ -164,8 +188,22 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
+      - task: lint:eslint
+      - task: lint:dpdm
+
+  lint:eslint:
+    desc: "Run ESLint linting"
+    deps: [install]
+    cmds:
       - npx eslint --max-warnings=0
-      - npx dpdm editor/src --circular --no-warning --no-tree --exit-code circular:1
+
+  lint:dpdm:
+    desc: "Run circular import linting"
+    deps: [install]
+    cmds:
+      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
+      # shell-agnostic. Covers editor, portal, and the shared design system.
+      - npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -236,6 +274,18 @@ tasks:
     cmds:
       - npx tsc --noEmit --project editor/src/prototypes/tsconfig.json
 
+  typecheck:portal:
+    desc: "Typecheck developer portal build variant"
+    deps: [install]
+    cmds:
+      - npx tsc --noEmit --project portal/tsconfig.json
+
+  typecheck:shared:
+    desc: "Typecheck the shared design system"
+    deps: [install]
+    cmds:
+      - npx tsc --noEmit --project shared/tsconfig.json
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -245,6 +295,8 @@ tasks:
       - task: typecheck:desktop
       - task: typecheck:scripts
       - task: typecheck:prototypes
+      - task: typecheck:portal
+      - task: typecheck:shared
 
   # ============================================================
   # Quality Gate
@@ -265,7 +317,9 @@ tasks:
       - task: lint
       - task: format:check
       - task: build
+      - task: build:portal
       - task: test
+      - task: storybook:build
 
   # ============================================================
   # Test
@@ -273,21 +327,36 @@ tasks:
 
   test:
     desc: "Run tests"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx vitest run --root editor
 
   test:watch:
     desc: "Run tests in watch mode"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx vitest --watch --root editor
 
   test:coverage:
-    desc: "Run tests with coverage"
-    deps: [install]
+    desc: "Run tests with coverage (one-shot; CI-friendly)."
+    deps: [prepare]
     cmds:
-      - npx vitest --coverage --root editor
+      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
+      # mode). Explicit reporter list because v8 + json-summary is what the
+      # coverage-summary.py helper consumes; html/text are kept for humans.
+      #
+      # reportsDirectory is pinned to ./coverage relative to vitest's root
+      # (--root editor), so output lands at frontend/editor/coverage/. The
+      # CI upload step reads from that path. An earlier attempt with
+      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
+      # pinning future-proofs against vitest changing the default.
+      - >
+        npx vitest run --root editor --coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage
 
   # ============================================================
   # Code Generation
