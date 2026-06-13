@@ -372,6 +372,7 @@ public class UserService implements UserServiceInterface {
         return user;
     }
 
+    @Transactional
     public Optional<User> findByUsernameIgnoreCase(String username) {
         return userRepository.findByUsernameIgnoreCase(username);
     }
