@@ -56,6 +56,12 @@ public class JwtBearerAuthenticationMechanism implements HttpAuthenticationMecha
                 return token;
             }
         }
+        // Browser SSO (OAuth2/SAML) stores the issued app JWT in this cookie rather than an
+        // Authorization header.
+        io.vertx.core.http.Cookie cookie = context.request().getCookie("stirling_jwt");
+        if (cookie != null && cookie.getValue() != null && !cookie.getValue().isBlank()) {
+            return cookie.getValue().trim();
+        }
         return null;
     }
 }

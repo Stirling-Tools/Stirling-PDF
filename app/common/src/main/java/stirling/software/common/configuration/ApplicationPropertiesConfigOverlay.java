@@ -51,12 +51,24 @@ public class ApplicationPropertiesConfigOverlay {
         applyString(config, "security.customGlobalAPIKey", security::setCustomGlobalAPIKey);
         applyBoolean(config, "storage.enabled", applicationProperties.getStorage()::setEnabled);
 
-        // SSO toggles - the detailed provider config is bound by the OIDC/SAML wiring.
+        // SSO toggles. The detailed OAuth2 provider config (issuer/clientId/...) is read directly
+        // from MicroProfile config by OAuth2LoginController; the SAML provider config likewise by
+        // the
+        // SAML SP. Only the booleans the service layer reads via ApplicationProperties are bound
+        // here.
         if (security.getSaml2() != null) {
             applyBoolean(config, "security.saml2.enabled", security.getSaml2()::setEnabled);
+            applyBoolean(
+                    config,
+                    "security.saml2.autoCreateUser",
+                    security.getSaml2()::setAutoCreateUser);
         }
         if (security.getOauth2() != null) {
             applyBoolean(config, "security.oauth2.enabled", security.getOauth2()::setEnabled);
+            applyBoolean(
+                    config,
+                    "security.oauth2.autoCreateUser",
+                    security.getOauth2()::setAutoCreateUser);
         }
     }
 
