@@ -15,17 +15,13 @@ import lombok.Data;
 // orchestrate / orchestrateStream). RESTEasy Reactive binds @BeanParam from annotated FIELDS, so
 // each multipart part needs an explicit @RestForm; without any annotated field augmentation fails
 // with "No annotations found on fields ...".
-// TODO: Migration required - fileInputs binding is still incomplete: AiWorkflowFileInput.fileInput
-// is the Spring-compat stirling.software.common.model.MultipartFile, which RESTEasy cannot
-// populate. It must be ported to org.jboss.resteasy.reactive.multipart.FileUpload (wrapped via
-// FileUploadMultipartFile.of(...)) before the uploaded PDFs actually bind from the form body.
 @Data
 @Schema(description = "Run an AI workflow")
 public class AiWorkflowRequest {
 
-    // TODO: Migration required - not yet @RestForm-bound. fileInputs is a list of multipart files
-    // (blocked on the MultipartFile -> FileUpload port noted above); annotating it as @RestForm now
-    // makes RESTEasy look for a body converter and fail augmentation.
+    // Not bound directly from the bean - RESTEasy Reactive cannot map a List of POJOs-with-files
+    // from multipart. The controller binds the repeated "fileInput" parts as List<FileUpload> and
+    // populates this via setFileInputs(...).
     @Schema(description = "The input PDF files")
     private List<AiWorkflowFileInput> fileInputs = new ArrayList<>();
 

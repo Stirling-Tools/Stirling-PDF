@@ -1,11 +1,14 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +37,7 @@ import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
@@ -120,16 +124,30 @@ public class AiEngineController {
                     "Accepts PDF uploads and a user message and returns an AI workflow result."
                             + " When the workflow produces files, they are registered with the job"
                             + " system and downloadable via GET /api/v1/general/files/{fileId}.")
-    // TODO: Migration required - @BeanParam multipart binding depends on collaborator changes:
-    // AiWorkflowRequest / AiWorkflowFileInput must have their multipart fields annotated with
-    // @org.jboss.resteasy.reactive.RestForm and the nested AiWorkflowFileInput.fileInput must be
-    // ported off Spring's MultipartFile to FileUpload + FileUploadMultipartFile.of(...). Until then
-    // RESTEasy Reactive cannot populate this request from the multipart form body.
-    public AiWorkflowResponse orchestrate(@Valid @BeanParam AiWorkflowRequest request)
+    // The @BeanParam binds userMessage; the repeated multipart "fileInput" parts bind as a separate
+    // List<FileUpload> (RESTEasy Reactive cannot map a List of POJOs-with-files), which we wrap
+    // into
+    // the request's fileInputs.
+    public AiWorkflowResponse orchestrate(
+            @Valid @BeanParam AiWorkflowRequest request,
+            @RestForm("fileInput") List<FileUpload> fileInputs)
             throws IOException {
+        request.setFileInputs(toFileInputs(fileInputs));
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
         return result;
+    }
+
+    private static List<AiWorkflowFileInput> toFileInputs(List<FileUpload> uploads) {
+        List<AiWorkflowFileInput> inputs = new ArrayList<>();
+        if (uploads != null) {
+            for (FileUpload upload : uploads) {
+                if (upload != null) {
+                    inputs.add(new AiWorkflowFileInput(upload));
+                }
+            }
+        }
+        return inputs;
     }
 
     @POST
@@ -141,13 +159,12 @@ public class AiEngineController {
             description =
                     "Accepts a PDF upload and a user message, returns SSE events with progress"
                             + " updates followed by the final AI workflow result")
-    // TODO: Migration required - same @BeanParam multipart binding dependency as orchestrate():
-    // AiWorkflowRequest / AiWorkflowFileInput need @RestForm fields and a FileUpload-based file
-    // model before RESTEasy Reactive can bind this request from the multipart body.
     public void orchestrateStream(
             @Valid @BeanParam AiWorkflowRequest request,
+            @RestForm("fileInput") List<FileUpload> fileInputs,
             @Context Sse sse,
             @Context SseEventSink sink) {
+        request.setFileInputs(toFileInputs(fileInputs));
         // The JAX-RS SseEventSink replaces Spring's SseEmitter. There is no onTimeout/onError
         // callback registration; sink.send(...) returns a CompletionStage and a disconnected
         // client surfaces as a failed send / closed sink, which the orchestration loop detects

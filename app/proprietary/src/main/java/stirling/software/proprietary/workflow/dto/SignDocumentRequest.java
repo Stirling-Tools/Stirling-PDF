@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -13,6 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 
 /**
  * Request object for signing a document. Combines certificate submission data with optional wet
@@ -35,18 +37,34 @@ public class SignDocumentRequest {
             message = "Invalid certificate type")
     private String certType;
 
-    // TODO: Migration required - p12File/privateKeyFile/certFile are the Spring-compat
-    // stirling.software.common.model.MultipartFile shim, which RESTEasy cannot bind. Port to
-    // org.jboss.resteasy.reactive.multipart.FileUpload (wrapped via
-    // FileUploadMultipartFile.of(...))
-    // and add @RestForm before these upload parts will populate.
-    private MultipartFile p12File;
+    // Certificate/key upload parts. RESTEasy Reactive only populates @RestForm FileUpload fields
+    // (not the common MultipartFile shim), so they are bound as FileUpload here and adapted back to
+    // MultipartFile via the getP12File()/getPrivateKeyFile()/getCertFile() accessors below, leaving
+    // the signing service unchanged. The frontend posts these exact part names (p12File for
+    // PKCS12/PFX/JKS keystores; privateKeyFile + certFile for PEM).
+    @RestForm("p12File")
+    private FileUpload p12FileUpload;
 
     @RestForm("password")
     private String password;
 
-    private MultipartFile privateKeyFile;
-    private MultipartFile certFile;
+    @RestForm("privateKeyFile")
+    private FileUpload privateKeyFileUpload;
+
+    @RestForm("certFile")
+    private FileUpload certFileUpload;
+
+    public MultipartFile getP12File() {
+        return FileUploadMultipartFile.of(p12FileUpload);
+    }
+
+    public MultipartFile getPrivateKeyFile() {
+        return FileUploadMultipartFile.of(privateKeyFileUpload);
+    }
+
+    public MultipartFile getCertFile() {
+        return FileUploadMultipartFile.of(certFileUpload);
+    }
 
     // Signature metadata (participant can override owner defaults)
     @RestForm("reason")

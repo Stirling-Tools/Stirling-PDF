@@ -107,12 +107,6 @@ public class SigningSessionController {
                             + " participants. Input:PDF Output:JSON Type:SISO")
     public Response createSession(
             @RestForm("file") FileUpload file,
-            // TODO: Migration required - WorkflowCreationRequest is bound here via Spring's
-            // @ModelAttribute. RESTEasy Reactive @MultipartForm/@BeanParam can populate this POJO
-            // only if its fields are annotated with @RestForm (and any file fields are
-            // FileUpload, not the common MultipartFile shim). Verify/annotate
-            // WorkflowCreationRequest's fields in the DTO (a collaborator-owned file) for form
-            // binding to work.
             @org.jboss.resteasy.reactive.MultipartForm WorkflowCreationRequest request)
             throws Exception {
         workflowSessionService.ensureSigningEnabled();
@@ -420,12 +414,10 @@ public class SigningSessionController {
     @Consumes({MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
     public Response signDocument(
             @PathParam("sessionId") @NotBlank String sessionId,
-            // TODO: Migration required - SignDocumentRequest is bound here via Spring's
-            // @ModelAttribute. Its file fields (p12File/privateKeyFile/certFile) are typed as the
-            // common MultipartFile shim, which RESTEasy Reactive @MultipartForm cannot populate
-            // directly (it binds FileUpload + @RestForm). The DTO (collaborator-owned) must expose
-            // FileUpload fields with @RestForm and adapt to MultipartFile, or this method must
-            // accept the individual @RestForm parts and build the DTO here.
+            // SignDocumentRequest binds its file parts (p12File/privateKeyFile/certFile) as
+            // @RestForm FileUpload fields and adapts them to MultipartFile via its accessors, so
+            // the
+            // multipart upload now populates correctly under RESTEasy Reactive.
             @org.jboss.resteasy.reactive.MultipartForm
                     stirling.software.proprietary.workflow.dto.SignDocumentRequest request) {
         workflowSessionService.ensureSigningEnabled();
