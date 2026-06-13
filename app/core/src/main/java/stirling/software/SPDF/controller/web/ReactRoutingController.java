@@ -259,7 +259,8 @@ public class ReactRoutingController {
         return serveIndexHtml();
     }
 
-    // Two-segment SPA routes (e.g. /tools/merge, /files/<uuid>). Both segments are constrained to be
+    // Two-segment SPA routes (e.g. /tools/merge, /files/<uuid>). Both segments are constrained to
+    // be
     // dot-less, so asset requests like /assets/index-abc.js (subpath carries a '.') fall through to
     // the static-resource handler instead of being answered with index.html.
     @GET
