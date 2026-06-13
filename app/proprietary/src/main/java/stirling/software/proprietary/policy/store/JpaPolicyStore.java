@@ -60,12 +60,17 @@ public class JpaPolicyStore implements PolicyStore {
     }
 
     @Override
+    @Transactional
     public List<Policy> all() {
         return repository.listAll().stream().map(this::toPolicy).toList();
     }
 
     @Override
+    @Transactional
     public List<Policy> findByTriggerType(String triggerType) {
+        // @Transactional is required even for reads: the scheduled folder-watch/schedule triggers
+        // call this from a background virtual-thread executor where no request context or
+        // transaction is active, so Panache would otherwise throw ContextNotActiveException.
         return repository.findByTriggerTypeAndEnabledTrue(triggerType).stream()
                 .map(this::toPolicy)
                 .toList();
