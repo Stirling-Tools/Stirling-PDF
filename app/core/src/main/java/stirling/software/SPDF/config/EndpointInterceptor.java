@@ -27,6 +27,14 @@ public class EndpointInterceptor implements ContainerRequestFilter, ContainerRes
         // blocked.
         String requestURI = normalizeUri(requestContext.getUriInfo().getPath());
 
+        // Endpoint disabling applies only to the API surface. SPA clean-URL routes (/rotate-pdf,
+        // /merge-pdfs, ...) share names with API endpoints but must always resolve to the frontend
+        // shell, so never block non-/api paths - otherwise disabling an endpoint also 403s its tool
+        // page. (isEndpointEnabledForUri falls back to treating a non-/api URI as an endpoint key.)
+        if (!requestURI.startsWith("/api/")) {
+            return;
+        }
+
         boolean isEnabled = endpointConfiguration.isEndpointEnabledForUri(requestURI);
         if (!isEnabled) {
             requestContext.abortWith(
