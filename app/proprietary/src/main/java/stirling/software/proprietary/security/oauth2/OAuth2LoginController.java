@@ -68,7 +68,7 @@ public class OAuth2LoginController {
                         + "&redirect_uri="
                         + enc(redirectUri)
                         + "&scope="
-                        + enc(scopes.replace(',', ' '))
+                        + enc(normalizeScopes(scopes))
                         + "&state="
                         + UUID.randomUUID();
         return Response.seeOther(URI.create(authorizeUrl)).build();
@@ -84,5 +84,17 @@ public class OAuth2LoginController {
 
     private static String enc(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    // Accept comma-, space-, or comma+space-separated scope lists - "openid,profile,email" or the
+    // human-friendly "openid, profile, email" the settings.yml template ships - and emit a single
+    // space-delimited OAuth scope parameter. A naive replace(',', ' ') on the comma+space form
+    // produces double spaces, which the IdP parses as empty scope tokens and rejects with
+    // invalid_scope.
+    private static String normalizeScopes(String scopes) {
+        return java.util.Arrays.stream(scopes.split("[,\\s]+"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.joining(" "));
     }
 }
