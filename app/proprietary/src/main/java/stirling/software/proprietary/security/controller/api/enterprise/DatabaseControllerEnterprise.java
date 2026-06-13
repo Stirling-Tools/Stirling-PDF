@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import io.quarkus.arc.profile.UnlessBuildProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -29,6 +30,9 @@ import stirling.software.proprietary.security.service.DatabaseService;
 // that returns 404/disabled when the active datasource is not H2.
 @Slf4j
 @ApplicationScoped
+// Drives the concrete DatabaseService (@UnlessBuildProfile("saas")), so it shares the same gating:
+// no tenant-facing DB backup management in the saas flavor.
+@UnlessBuildProfile("saas")
 @Path("/api/v1/database")
 @RolesAllowed("ADMIN")
 @EnterpriseEndpoint

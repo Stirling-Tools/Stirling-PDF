@@ -1,7 +1,6 @@
 package stirling.software.saas.ai.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import io.quarkus.arc.profile.IfBuildProfile;
@@ -33,7 +32,9 @@ public class AiCreateSessionService {
 
     private final AiCreateSessionRepository repository;
 
-    private final Optional<UserServiceInterface> userService;
+    // Optional dependency: Quarkus CDI does not auto-inject Optional<T>, so use Instance<T> and
+    // resolve it where used (isResolvable()/get()), mirroring the former Optional semantics.
+    private final Instance<UserServiceInterface> userService;
 
     // TODO: Migration required - Spring MVC RequestContextHolder/ServletRequestAttributes replaced
     // with a CDI-injected request-scoped HttpServletRequest (quarkus-undertow). Wrapped in Instance
@@ -233,7 +234,7 @@ public class AiCreateSessionService {
     }
 
     private String resolveFromUserService() {
-        if (userService.isEmpty()) {
+        if (!userService.isResolvable()) {
             return null;
         }
         try {

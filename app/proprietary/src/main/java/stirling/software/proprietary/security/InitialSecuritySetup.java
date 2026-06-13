@@ -45,9 +45,16 @@ public class InitialSecuritySetup {
     // @PostConstruct ran on every boot; a lazy @ApplicationScoped @PostConstruct would never run
     // (nothing injects this bean), leaving no admin user. Observe StartupEvent to restore that.
     // @Transactional: Spring Data implicitly wrapped repository.save() in a transaction; Panache
-    // persist() needs an ambient one, and the StartupEvent observer has none by default.
+    // persist() needs an ambient one, and the StartupEvent observer has none by default. The
+    // interceptor binding sits on the observer (the container-invoked entry point) so the
+    // transaction is active when init() runs; init() stays parameterless so it can be unit-tested
+    // directly.
     @Transactional
-    public void init(@Observes StartupEvent event) {
+    void onStart(@Observes StartupEvent event) {
+        init();
+    }
+
+    public void init() {
         try {
 
             if (!userService.hasUsers()) {

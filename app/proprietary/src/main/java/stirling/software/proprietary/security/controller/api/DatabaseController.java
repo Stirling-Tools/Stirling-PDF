@@ -8,6 +8,7 @@ import java.nio.file.StandardCopyOption;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
+import io.quarkus.arc.profile.UnlessBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,6 +32,10 @@ import stirling.software.proprietary.security.service.DatabaseService;
 
 @Slf4j
 @ApplicationScoped
+// The concrete DatabaseService (H2 backup/restore) is @UnlessBuildProfile("saas"); this controller
+// drives it directly, so it shares the same gating. In the saas flavor there is no tenant-facing
+// DB backup/restore UI (the NoOpDatabaseService serves the interface consumers instead).
+@UnlessBuildProfile("saas")
 @DatabaseApi
 // DatabaseApi carries only @Tag; JAX-RS does not inherit @Path from meta-annotations, so the base
 // path must be declared explicitly here.

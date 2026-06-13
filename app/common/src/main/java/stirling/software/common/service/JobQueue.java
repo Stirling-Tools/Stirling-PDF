@@ -39,17 +39,20 @@ public class JobQueue {
 
     private final ResourceMonitor resourceMonitor;
 
+    // Field-default values mirror the @ConfigProperty defaults so they hold sane values during
+    // construction (the configured values are injected by CDI only after the constructor runs, and
+    // the constructor below sizes the queue from baseQueueCapacity/minQueueCapacity).
     @ConfigProperty(name = "stirling.job.queue.base-capacity", defaultValue = "10")
-    int baseQueueCapacity;
+    int baseQueueCapacity = 10;
 
     @ConfigProperty(name = "stirling.job.queue.min-capacity", defaultValue = "2")
-    int minQueueCapacity;
+    int minQueueCapacity = 2;
 
     @ConfigProperty(name = "stirling.job.queue.check-interval-ms", defaultValue = "1000")
-    long queueCheckIntervalMs;
+    long queueCheckIntervalMs = 1000;
 
     @ConfigProperty(name = "stirling.job.queue.max-wait-time-ms", defaultValue = "600000")
-    long maxWaitTimeMs; // 10 minutes
+    long maxWaitTimeMs = 600000; // 10 minutes
 
     private volatile BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();
@@ -82,15 +85,18 @@ public class JobQueue {
 
     public JobQueue(ResourceMonitor resourceMonitor) {
         this.resourceMonitor = resourceMonitor;
-    }
 
-    private void initializeSchedulers() {
-        // Initialize with dynamic capacity. Done here (not in the ctor) because @ConfigProperty
-        // fields are injected after construction.
+        // Initialize the queue with a dynamic capacity in the constructor (not in
+        // initializeSchedulers) so it is usable immediately after construction, before the
+        // StartupEvent observer starts the schedulers. Uses the field-default capacities since the
+        // configured values are injected only after construction; updateQueueCapacity() re-sizes
+        // once the configured values are available.
         int capacity =
                 resourceMonitor.calculateDynamicQueueCapacity(baseQueueCapacity, minQueueCapacity);
         this.jobQueue = new LinkedBlockingQueue<>(capacity);
+    }
 
+    private void initializeSchedulers() {
         log.debug(
                 "Starting job queue with base capacity {}, min capacity {}",
                 baseQueueCapacity,

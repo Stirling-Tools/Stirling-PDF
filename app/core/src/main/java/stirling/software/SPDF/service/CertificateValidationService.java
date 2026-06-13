@@ -97,9 +97,14 @@ public class CertificateValidationService {
     public CertificateValidationService(
             Instance<ServerCertificateServiceInterface> serverCertificateService,
             ApplicationProperties applicationProperties) {
-        // @Autowired(required = false) -> CDI Instance<T>; resolve the optional bean (null if none)
+        // @Autowired(required = false) -> CDI Instance<T>; resolve the optional bean (null if
+        // none).
+        // Null-tolerant so the parameterless unit test (which passes a null Instance to mean "no
+        // server cert service") behaves exactly as before the CDI migration.
         this.serverCertificateService =
-                serverCertificateService.isResolvable() ? serverCertificateService.get() : null;
+                (serverCertificateService != null && serverCertificateService.isResolvable())
+                        ? serverCertificateService.get()
+                        : null;
         this.applicationProperties = applicationProperties;
     }
 
