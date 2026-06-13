@@ -306,9 +306,9 @@ JWT/admin scenarios run** (run 3, §9):
 
 ## 6. REMAINING WORK (prioritized)
 
-### A. Make the e2e Docker build first-class (do this first)
-- [ ] Commit the working Dockerfile from §3.3 into the repo (e.g. `docker/quarkus/Dockerfile`),
-      and add fonts copy. It must use the runner-jar, not `libs/*.jar`.
+### A. Make the e2e Docker build first-class
+- [x] **DONE (Session 2):** `docker/quarkus/Dockerfile` (+ `README.md`, `build-and-run.sh`) committed,
+      uses the runner-jar, copies fonts; `.dockerignore` re-includes `app/core/build/*-runner.jar`.
 - [ ] Rewrite/replace `docker/embedded/Dockerfile`, `Dockerfile.fat`, `Dockerfile.ultra-lite` for
       Quarkus: drop the Spring-Boot `-Djarmode=tools extract --layers` + `spring-boot-loader` layer
       copies; either copy the uber `-runner.jar` to `/app/app.jar` or use the Quarkus fast-jar
@@ -359,26 +359,65 @@ JobExecutorService, AuthController, UserController, ConfigController. Everything
 High-risk: security filters (`UserAuthenticationFilter`, rate-limit filters, `JwtAuthenticationFilter`),
 anything reading headers/cookies/remote-addr per request.
 
-### E. Auth / JWT / login (needed for the ~80 skipped scenarios)
-- [ ] Bring up the app with login ENABLED + V2 (JWT) + a seeded `admin/stirling` user so
-      `environment.py`'s JWT probe passes and the `@jwt/@login/...` scenarios run.
-- [ ] Verify `AuthController.login` path end-to-end (it currently logs "No user found: admin" because
-      there is no admin user when login is disabled — that's expected, but with login on it must work).
-- [ ] JWT issuance/verification via jjwt + `KeyPersistenceService` (keys load from disk OK at boot).
-- [ ] Security filter registration & ordering: the Spring `OncePerRequestFilter` chain
-      (`UserAuthenticationFilter` + rate-limit + JWT) must be reproduced via Quarkus filter
-      registration (servlet `@WebFilter`/`jakarta.ws.rs ContainerRequestFilter @Provider`) with
-      correct ordering. Several `// TODO: Migration required` mark this.
+### E. Auth / JWT / login — DONE (Session 2)
+The whole Quarkus auth-identity layer is now in place (`app/proprietary/.../security/identity/`):
+- [x] **JWT Bearer** → `JwtBearerAuthenticationMechanism` + `JwtTokenIdentityProvider` (validate via
+      `JwtService`, map `role` claim). Run with `V2=true`.
+- [x] **X-API-KEY** → `ApiKeyAuthenticationMechanism` + `ApiKeyAuthenticationRequest` +
+      `ApiKeyIdentityProvider` (resolve via `userService.getUserByApiKey`). Lets `X-API-KEY` requests
+      authenticate (e.g. `/me`), and lets the suite run `SECURITY_ENABLELOGIN=true`.
+- [x] **User-as-principal** → `UserSecurityIdentityAugmentor` re-loads the `User` and sets it as the
+      `SecurityIdentity` principal; `User implements Principal`. This satisfies the ~7
+      `principal instanceof User` sites (folders, file storage, sessions, audit, UserController) — the
+      augmentor every `// TODO: Migration required` in security/storage asked for.
+- [x] **Config binding** → `ApplicationPropertiesConfigOverlay` overlays env/config onto
+      `ApplicationProperties` at startup (the Spring `@ConfigurationProperties` bind was never
+      migrated, so `SECURITY_ENABLELOGIN` / `SECURITY_CUSTOMGLOBALAPIKEY` / `STORAGE_ENABLED` were
+      ignored — root cause of the maxDPI/loginAttemptCount class too). **Currently a focused subset
+      (auth/storage/SSO toggles); a complete generic bind (all ~445 fields + settings.yml) is still
+      TODO.**
+- Validated on a login-ON probe (`SECURITY_ENABLELOGIN=true V2=true STORAGE_ENABLED=true
+  SECURITY_CUSTOMGLOBALAPIKEY=123456789`): open PDF endpoints (anon), JWT login+/me, X-API-KEY /me,
+  folder list/create all work. The 183 open endpoints stay open (no global `quarkus.http.auth.*`
+  policy), so login-ON does not regress them.
 
-### F. SAML / SSO (the `testing/compose` validate scripts) — NOT started
-- [ ] SAML2 is rehosted on **OpenSAML 5** (deps pinned in `app/proprietary/build.gradle`) but the
-      code wiring is incomplete (`SecurityConfiguration` notes the `org.springframework.security.saml2.*`
-      glue was removed). Needs a Jakarta `@WebServlet` (quarkus-undertow) ACS/metadata endpoint per
-      the dnulnets/quarkus-saml pattern.
-- [ ] OIDC/OAuth2 login: re-enable `quarkus.oidc.enabled=true` + configure a provider; map the
-      `CustomOAuth2*SuccessHandler` logic.
-- [ ] The `testing/compose` SSO/SAML scripts (`docker-compose-keycloak-mcp.yml`, the saml validate
-      scripts) need a Keycloak/IdP container + the above wired before they can pass.
+### F. SAML / SSO (the `testing/compose` validate scripts) — NOT started, now fully scoped
+The auth FOUNDATION (§E) is the hard part and is done; SSO is "add OIDC/SAML providers + the
+Spring-compatible endpoints on top". The `validate-*-test.sh` scripts are **endpoint-existence
+checks** (Keycloak up + Stirling serves the SSO endpoint), not full browser logins.
+
+Prereqs for any run: the compose files use `image: docker.stirlingpdf.com/.../stirling-pdf:latest`
+(the published Spring image) — **repoint to `stirling-pdf-quarkus:jwt`** (or wire
+`docker/quarkus/Dockerfile`). The SAML compose mounts `saml-private-key.key`/`saml-public-cert.crt`/
+`keycloak-saml-cert.pem` which **do not exist in the repo** — generate them (the SP signing
+key/cert; `start-saml-test.sh` may do this). SAML/OAuth need the **Enterprise license** env.
+
+**OAuth2 / OIDC** (more tractable — Quarkus has `quarkus-oidc`):
+- [ ] Extend `ApplicationPropertiesConfigOverlay` for `security.oauth2.*` (client issuer/clientId/
+      clientSecret/scopes/useAsUsername) — currently only the `enabled` toggle is bound.
+- [ ] Serve `GET /oauth2/authorization/{registrationId}` → 302 to the IdP authorize URL (login
+      initiation; the OAuth `validate` script checks this responds). Build from issuer + clientId +
+      redirect-uri `/login/oauth2/code/{registrationId}`.
+- [ ] Serve the callback `GET /login/oauth2/code/{registrationId}` → exchange code (REST Client to
+      the token endpoint), fetch userinfo, auto-create/login the user (reuse `CustomOAuth2UserService`
+      logic), issue the app JWT via `JwtService`. `quarkus.oidc.enabled` is **build-time** and aborts
+      startup with no `auth-server-url`, so either hand-roll the flow (simplest, no build-time gate)
+      or enable oidc with a runtime-disabled default tenant.
+
+**SAML2** (larger — no Quarkus SAML extension; OpenSAML 5 from scratch):
+- [ ] `Saml2Configuration` already loads the SP/IdP certs and computes entityId/ACS/SLO URLs and
+      customizes the AuthnRequest (all preserved). Build on it:
+  - [ ] `GET /saml2/service-provider-metadata/{registrationId}` → SP `EntityDescriptor` XML
+        (ACS=`/login/saml2/sso/{id}`, SP signing cert) marshalled via OpenSAML 5. (The SAML `validate`
+        script checks this.)
+  - [ ] login initiation → build+sign an `AuthnRequest` (use `customizeAuthnRequest`) and
+        redirect/POST to `samlConf.getIdpSingleLoginUrl()`.
+  - [ ] `POST /login/saml2/sso/{registrationId}` (ACS) → validate the SAML response/assertion against
+        the IdP cert, extract the NameID/attributes, auto-create/login the user, issue the app JWT.
+  - Host these as Jakarta `@WebServlet` (quarkus-undertow) or JAX-RS resources; gate on
+        `security.saml2.enabled`.
+- [ ] Both flows then feed the existing `UserSecurityIdentityAugmentor` (principal=User) once they
+      establish the session/JWT.
 
 ### G. `saas` flavor full augmentation (optional, non-default)
 - [ ] `STIRLING_FLAVOR=saas ./gradlew :stirling-pdf:quarkusBuild` → ~28 Arc deployment problems
@@ -441,6 +480,17 @@ grep -rn "TODO: Migration required" app/*/src/main --include=*.java | wc -l
 ---
 
 ## 9. Measured cucumber results — newest first
+
+**Run 5 — LOGIN ON (`SECURITY_ENABLELOGIN=true V2=true STORAGE_ENABLED=true
+SECURITY_CUSTOMGLOBALAPIKEY=123456789`):**
+```
+18 features passed, 7 failed, 0 skipped
+304 scenarios passed, 34 failed, 0 skipped     <-- folders + user-scoped features now pass
+```
+X-API-KEY mechanism + User-principal augmentor + config overlay made login-ON work without
+regressing the open endpoints (0 folder failures). Trajectory: **183 → 223 → 272 → 291 → 304**.
+
+**Run 4 — login off + lockout fix:** `291 passed, 47 failed, 0 skipped`.
 
 **Run 3 — login off + `V2=true` + JWT Bearer mechanism (Session 2):**
 ```
