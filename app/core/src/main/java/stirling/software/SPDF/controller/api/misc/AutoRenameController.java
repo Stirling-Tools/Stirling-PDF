@@ -11,10 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.SPDF.service.misc.AutoRenameService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @Slf4j
@@ -35,6 +37,7 @@ public class AutoRenameController {
     public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request)
             throws Exception {
 
-        return autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        return WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
     }
 }

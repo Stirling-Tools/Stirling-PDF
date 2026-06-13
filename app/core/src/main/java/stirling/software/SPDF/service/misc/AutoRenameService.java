@@ -2,11 +2,9 @@ package stirling.software.SPDF.service.misc;
 
 import java.io.IOException;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 
 public interface AutoRenameService {
-    ResponseEntity<Resource> extractHeader(ExtractHeaderRequest request) throws IOException;
+    FileResponseData extractHeader(ExtractHeaderRequest request) throws IOException;
 }

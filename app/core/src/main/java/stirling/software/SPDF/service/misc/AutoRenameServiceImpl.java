@@ -8,8 +8,7 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,10 +18,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
 @Service
@@ -35,8 +35,10 @@ public class AutoRenameServiceImpl implements AutoRenameService {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    private record LineInfo(String text, float fontSize) {}
+
     @Override
-    public ResponseEntity<Resource> extractHeader(ExtractHeaderRequest request) throws IOException {
+    public FileResponseData extractHeader(ExtractHeaderRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
         boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());
@@ -54,7 +56,10 @@ public class AutoRenameServiceImpl implements AutoRenameService {
                         protected void processTextPosition(TextPosition text) {
                             if (lastY != text.getY() && lineCount < LINE_LIMIT) {
                                 processLine();
-                                lineBuilder = new StringBuilder(text.getUnicode());
+                                //                                lineBuilder = new
+                                // StringBuilder(text.getUnicode());
+                                lineBuilder.setLength(0);
+                                lineBuilder.append(text.getUnicode());
                                 maxFontSizeInLine = text.getFontSizeInPt();
                                 lastY = text.getY();
                                 lineCount++;
@@ -76,7 +81,7 @@ public class AutoRenameServiceImpl implements AutoRenameService {
                         @Override
                         public String getText(PDDocument doc) throws IOException {
                             this.lineInfos.clear();
-                            this.lineBuilder = new StringBuilder();
+                            this.lineBuilder.setLength(0);
                             this.lastY = -1;
                             this.maxFontSizeInLine = 0.0f;
                             this.lineCount = 0;
@@ -112,16 +117,6 @@ public class AutoRenameServiceImpl implements AutoRenameService {
                                                     : mergedLineInfos.getLast().text)
                                             : null);
                         }
-
-                        class LineInfo {
-                            String text;
-                            float fontSize;
-
-                            LineInfo(String text, float fontSize) {
-                                this.text = text;
-                                this.fontSize = fontSize;
-                            }
-                        }
                     };
 
             String header = reader.getText(document);
@@ -134,15 +129,24 @@ public class AutoRenameServiceImpl implements AutoRenameService {
                                 .matcher(header)
                                 .replaceAll("")
                                 .trim();
-                return WebResponseUtils.pdfDocToWebResponse(
-                        document, header + ".pdf", tempFileManager);
+
+                return new FileResponseData(
+                        saveToTempFile(document), header + ".pdf", MediaType.APPLICATION_PDF);
+
             } else {
                 log.info("File has no good title to be found");
-                return WebResponseUtils.pdfDocToWebResponse(
-                        document,
+
+                return new FileResponseData(
+                        saveToTempFile(document),
                         Filenames.toSimpleFileName(file.getOriginalFilename()),
-                        tempFileManager);
+                        MediaType.APPLICATION_PDF);
             }
         }
+    }
+
+    private TempFile saveToTempFile(PDDocument document) throws IOException {
+        TempFile tempFile = tempFileManager.createManagedTempFile(".pdf");
+        document.save(tempFile.getFile());
+        return tempFile;
     }
 }

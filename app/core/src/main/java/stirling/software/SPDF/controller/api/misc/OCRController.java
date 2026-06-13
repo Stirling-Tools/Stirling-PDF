@@ -12,11 +12,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.SPDF.service.misc.OcrService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @Slf4j
@@ -40,6 +42,9 @@ public class OCRController {
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
 
-        return ocrService.processPdfWithOCR(request);
+        FileResponseData result = ocrService.processPdfWithOCR(request);
+
+        return WebResponseUtils.fileToWebResponse(
+                result.tempFile(), result.fileName(), result.mediaType());
     }
 }

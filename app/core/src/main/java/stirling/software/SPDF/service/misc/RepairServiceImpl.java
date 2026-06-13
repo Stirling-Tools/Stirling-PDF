@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
@@ -35,8 +35,7 @@ public class RepairServiceImpl implements RepairService {
     }
 
     @Override
-    public ResponseEntity<Resource> repairPdf(PDFFile file)
-            throws IOException, InterruptedException {
+    public FileResponseData repairPdf(PDFFile file) throws IOException, InterruptedException {
 
         MultipartFile inputFile = file.getFileInput();
 
@@ -103,11 +102,11 @@ public class RepairServiceImpl implements RepairService {
                 }
             }
 
-            // Return the repaired PDF as a streaming response
-            return WebResponseUtils.pdfFileToWebResponse(
+            return new FileResponseData(
                     tempOutputFile,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_repaired.pdf"));
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_repaired.pdf"),
+                    MediaType.APPLICATION_PDF);
+
         } catch (IOException | InterruptedException | RuntimeException e) {
             tempOutputFile.close();
             throw e;

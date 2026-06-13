@@ -18,9 +18,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -70,7 +69,7 @@ public class OcrServiceImpl implements OcrService {
     }
 
     @Override
-    public ResponseEntity<Resource> processPdfWithOCR(ProcessPdfWithOcrRequest request)
+    public FileResponseData processPdfWithOCR(ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
 
         MultipartFile inputFile = request.getFileInput();
@@ -171,19 +170,18 @@ public class OcrServiceImpl implements OcrService {
                     zipOut.finish();
                 }
 
-                // The intermediate PDF temp file is no longer needed; only the zip is streamed.
                 tempOutputFile.close();
+
                 pdfOwnershipTransferred = true;
-                ResponseEntity<Resource> response =
-                        WebResponseUtils.fileToWebResponse(
-                                tempZipFile, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 zipOwnershipTransferred = true;
-                return response;
+
+                return new FileResponseData(
+                        tempZipFile, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
             } else {
-                ResponseEntity<Resource> response =
-                        WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename);
                 pdfOwnershipTransferred = true;
-                return response;
+
+                return new FileResponseData(
+                        tempOutputFile, outputFilename, MediaType.APPLICATION_PDF);
             }
         } finally {
             if (!pdfOwnershipTransferred) {

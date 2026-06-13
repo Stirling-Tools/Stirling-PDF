@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.misc;
+package stirling.software.SPDF.service.misc;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -31,19 +31,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
-import stirling.software.SPDF.service.misc.AutoRenameServiceImpl;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
-class AutoRenameControllerTest {
+class AutoRenameServiceImplTest {
+
     private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
         return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
     private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        assert response.getBody() != null;
         try (java.io.InputStream __in = response.getBody().getInputStream()) {
             __in.transferTo(baos);
         }
@@ -105,7 +108,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(drainBody(response)).isNotEmpty();
@@ -131,7 +136,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -144,7 +151,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -193,7 +202,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         // The largest font text should be used as title (URL-encoded in Content-Disposition)
@@ -211,7 +222,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         // Should fallback to original filename since header is too long
@@ -227,7 +240,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         // Special characters should be sanitized
@@ -253,7 +268,9 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<Resource> response = autoRenameService.extractHeader(request);
+        FileResponseData result = autoRenameService.extractHeader(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(result.tempFile(), result.fileName());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

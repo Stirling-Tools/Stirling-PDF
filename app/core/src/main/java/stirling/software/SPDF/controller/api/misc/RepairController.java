@@ -13,11 +13,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
 import stirling.software.SPDF.service.misc.RepairService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @Slf4j
@@ -41,6 +43,7 @@ public class RepairController {
     public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
 
-        return repairService.repairPdf(file);
+        FileResponseData repaired = repairService.repairPdf(file);
+        return WebResponseUtils.pdfFileToWebResponse(repaired.tempFile(), repaired.fileName());
     }
 }
