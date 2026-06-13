@@ -14,6 +14,7 @@ export function useChat() {
     toggleOpen: () => {},
     setOpen: (_open: boolean) => {},
     sendMessage: async (_content: string) => {},
+    cancelMessage: () => {},
     clearChat: () => {},
   };
 }
