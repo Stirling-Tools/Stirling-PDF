@@ -968,7 +968,8 @@ public class FormUtils {
                 case PDPushButton ignored -> log.debug("Ignore Push button");
                 case PDSignatureField ignored ->
                         log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
-                case null, default -> field.setValue(value != null ? value : "");
+                case null -> log.warn("Attempted to set value on null field");
+                default -> field.setValue(value != null ? value : "");
             }
         } catch (Exception e) {
             log.warn(
