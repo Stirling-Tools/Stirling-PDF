@@ -38,8 +38,7 @@ class ApplicationPropertiesLogicTest {
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-                Path.of(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
-                        .toString();
+                Path.of(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf").toString();
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 
         String expectedLibre = Path.of(expectedBase, "libreoffice").toString();
