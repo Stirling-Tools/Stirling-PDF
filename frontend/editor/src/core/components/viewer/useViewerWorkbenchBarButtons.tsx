@@ -122,7 +122,7 @@ export function useViewerWorkbenchBarButtons(
   const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
-  const formFillLabel = t("workbenchBar.formFill", "Fill Form");
+  const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");

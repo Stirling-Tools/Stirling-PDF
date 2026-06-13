@@ -432,11 +432,11 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             height="1.5rem"
           />
         ),
-        name: t("home.formFill.title", "Fill Form"),
+        name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@app/tools/formFill/FormFill")),
         description: t(
           "home.formFill.desc",
-          "Fill PDF form fields interactively with a visual editor",
+          "Fill, create, edit, and delete PDF form fields with a visual editor",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -444,7 +444,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["form-fill"],
         automationSettings: null,
         supportsAutomate: false,
-        synonyms: ["form", "fill", "fillable", "input", "field", "acroform"],
+        synonyms: [
+          "form",
+          "fill",
+          "fillable",
+          "input",
+          "field",
+          "acroform",
+          "edit",
+          "create",
+          "editor",
+          "modify",
+          "builder",
+        ],
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,

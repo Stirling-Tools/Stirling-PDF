@@ -1,13 +1,11 @@
 /**
- * FormFill: The tool component that renders in the left ToolPanel
- * when the "Fill Form" tool is selected.
+ * FormFill: The "Form Editor" tool component that renders in the left ToolPanel
+ * when the formFill tool is selected.
  *
- * Redesigned with:
- * - Mode tabs for future extensibility (Fill / Make / Batch / Modify)
- * - Clean visual hierarchy with proper spacing
- * - Shared FieldInput component (eliminates duplication)
- * - CSS module for theme-consistent styling
- * - Status bar at bottom for contextual info
+ * Modes:
+ * - Fill: enter values into existing fields
+ * - Create: draw new fields (text/checkbox/dropdown/list/radio/button/signature)
+ * - Modify: select, move/resize, edit properties, and delete existing fields
  */
 import React, {
   useEffect,
