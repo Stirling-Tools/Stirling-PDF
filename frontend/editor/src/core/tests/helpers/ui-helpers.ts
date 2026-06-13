@@ -74,7 +74,10 @@ export async function switchToEditorIfViewerMode(page: Page): Promise<void> {
     name: /go to file editor/i,
   });
   if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-    await goToEditor.click();
+    // This button is sometimes re-mounted during viewer->editor transitions,
+    // especially in WebKit. Dispatching the click directly avoids Playwright's
+    // actionability retry loop getting stuck on a detached node.
+    await goToEditor.dispatchEvent("click");
   }
 }
 
