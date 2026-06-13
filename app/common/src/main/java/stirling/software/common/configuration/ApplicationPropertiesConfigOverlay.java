@@ -1,8 +1,15 @@
 package stirling.software.common.configuration;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
+
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import io.quarkus.arc.ClientProxy;
 import io.quarkus.runtime.StartupEvent;
 
 import jakarta.annotation.Priority;
@@ -16,144 +23,171 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Overlays MicroProfile/Quarkus config (env vars, application.properties) onto {@link
- * ApplicationProperties} at startup.
+ * Binds MicroProfile/Quarkus config (env vars, {@code settings.yml} via {@link
+ * SettingsYamlConfigSource}, {@code application.properties}, system properties) onto the mutable
+ * {@link ApplicationProperties} bean at startup - the Quarkus replacement for the Spring
+ * {@code @ConfigurationProperties(prefix = "")} relaxed binding that was lost in the migration.
  *
- * <p>The Spring {@code @ConfigurationProperties} binding that populated {@code
- * ApplicationProperties} from {@code settings.yml} + env was never migrated, so the POJO otherwise
- * carries only its Java defaults (this is the root cause behind the {@code maxDPI=0} / {@code
- * loginAttemptCount=0} class of bugs and ignored {@code SECURITY_*}/{@code STORAGE_*} env vars).
- * SmallRye maps an env var like {@code SECURITY_ENABLELOGIN} to the property {@code
- * security.enableLogin}, so each key below is pulled from config and applied in place on the shared
- * bean (nested objects are referenced by the {@code AppConfig} producers, so mutating them
- * propagates everywhere).
+ * <p>Rather than hand-listing each property, this walks the whole {@code ApplicationProperties}
+ * object graph by reflection and, for every scalar / enum / scalar-list field, applies the value
+ * from config when one is present (so unset fields keep their Java default). The dotted key for a
+ * field mirrors its path in the tree ({@code security.oauth2.client.keycloak.clientId}, {@code
+ * endpoints.toRemove}, ...); SmallRye then resolves it from any source - e.g. env var {@code
+ * SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTID} or the same key in {@code settings.yml} - with the
+ * usual precedence (sys props &gt; env &gt; settings.yml &gt; application.properties).
  *
- * <p>Runs before {@link stirling.software.proprietary.security.InitialSecuritySetup} (low
- * {@code @Priority}) because that startup step reads {@code customGlobalAPIKey} and {@code
- * enableLogin}.
+ * <p>This is the behaviour Spring had: every settings.yml / {@code SECURITY_*}/{@code STORAGE_*}
+ * /{@code PREMIUM_*} value is honoured, fixing the whole {@code maxDPI=0} / {@code enableLogin}
+ * /{@code endpoints.toRemove} / premium-license class of "ignored config" bugs at once.
  *
- * <p>TODO: this is a focused subset (auth/storage/SSO). A complete migration would bind every
- * ApplicationProperties field generically (e.g. via {@code @ConfigMapping} or a reflective overlay)
- * and also read {@code settings.yml}.
+ * <p>Runs with {@code @Priority(APPLICATION)} so it completes before startup consumers read the
+ * bean: {@code InitialSecuritySetup} (enableLogin / customGlobalAPIKey), {@code
+ * EndpointConfiguration} (endpoints.toRemove), and {@code LicenseKeyChecker.onApplicationReady}
+ * (premium.enabled / premium.key, which has the lower default observer priority 2500).
+ *
+ * <p>Values are never logged - only key names at DEBUG and a total at INFO - because the tree
+ * carries secrets (premium key, client secrets, initial-login password, SMTP/Telegram tokens).
  */
 @Slf4j
 @ApplicationScoped
 public class ApplicationPropertiesConfigOverlay {
 
+    private static final int MAX_DEPTH = 20;
+
     @Inject ApplicationProperties applicationProperties;
 
     void onStart(@Observes @Priority(Interceptor.Priority.APPLICATION) StartupEvent event) {
         Config config = ConfigProvider.getConfig();
-        ApplicationProperties.Security security = applicationProperties.getSecurity();
-
-        applyBoolean(config, "security.enableLogin", security::setEnableLogin);
-        applyString(config, "security.loginMethod", security::setLoginMethod);
-        applyString(config, "security.customGlobalAPIKey", security::setCustomGlobalAPIKey);
-        applyBoolean(config, "storage.enabled", applicationProperties.getStorage()::setEnabled);
-
-        // SSO toggles. The detailed OAuth2 provider config (issuer/clientId/...) is read directly
-        // from MicroProfile config by OAuth2LoginController; the SAML provider config likewise by
-        // the
-        // SAML SP. Only the booleans the service layer reads via ApplicationProperties are bound
-        // here.
-        if (security.getSaml2() != null) {
-            applyBoolean(config, "security.saml2.enabled", security.getSaml2()::setEnabled);
-            applyBoolean(
-                    config,
-                    "security.saml2.autoCreateUser",
-                    security.getSaml2()::setAutoCreateUser);
-            // provider/registrationId drive the SAML login button on /login
-            // (ProprietaryUIDataController
-            // reads them off ApplicationProperties); without these the button path is
-            // "/saml2/authenticate/null" and the SSO option never renders.
-            applyString(config, "security.saml2.provider", security.getSaml2()::setProvider);
-            applyString(
-                    config,
-                    "security.saml2.registrationId",
-                    security.getSaml2()::setRegistrationId);
+        // ApplicationProperties is @ApplicationScoped, so the injected reference is a client proxy;
+        // reflect over the real contextual instance (its getters delegate, but getDeclaredFields()
+        // on the proxy would not see the model fields).
+        Object root = applicationProperties;
+        if (root instanceof ClientProxy proxy) {
+            root = proxy.arc_contextualInstance();
         }
-        if (security.getOauth2() != null) {
-            applyBoolean(config, "security.oauth2.enabled", security.getOauth2()::setEnabled);
-            applyBoolean(
-                    config,
-                    "security.oauth2.autoCreateUser",
-                    security.getOauth2()::setAutoCreateUser);
-        }
+        int[] applied = {0};
+        bind(root, "", config, 0, applied);
+        log.info(
+                "Applied {} configuration override(s) onto ApplicationProperties"
+                        + " (settings.yml + environment)",
+                applied[0]);
+    }
 
-        // Premium/enterprise license. LicenseKeyChecker.evaluateLicense() short-circuits when
-        // premium.enabled is false and otherwise reads premium.key, so both must be overlaid from
-        // config (PREMIUM_ENABLED / PREMIUM_KEY env) before the StartupEvent license evaluation
-        // runs
-        // - otherwise the license never loads (type stays NORMAL) and premium-gated features (SAML
-        // SSO button, audit, teams) stay disabled. This overlay's StartupEvent observer has
-        // @Priority(APPLICATION) (2000), ahead of LicenseKeyChecker.onApplicationReady (default
-        // 2500),
-        // so the re-evaluation there sees the bound values.
-        if (applicationProperties.getPremium() != null) {
-            applyBoolean(config, "premium.enabled", applicationProperties.getPremium()::setEnabled);
-            applySecret(config, "premium.key", applicationProperties.getPremium()::setKey);
+    private void bind(Object node, String prefix, Config config, int depth, int[] applied) {
+        if (node == null || depth > MAX_DEPTH) {
+            return;
         }
-
-        // Endpoint enablement. EndpointConfiguration reads
-        // applicationProperties.getEndpoints().getToRemove()/getGroupsToRemove() to disable
-        // individual endpoints / tool groups. settings.yml carries these as YAML lists
-        // (SettingsYamlConfigSource emits them comma-joined) and they may also come from
-        // ENDPOINTS_TO_REMOVE-style env; bind both as Lists here. This overlay runs before
-        // EndpointConfiguration is first constructed, so the values are present when it processes
-        // them.
-        if (applicationProperties.getEndpoints() != null) {
-            applyStringList(
-                    config,
-                    "endpoints.toRemove",
-                    applicationProperties.getEndpoints()::setToRemove);
-            applyStringList(
-                    config,
-                    "endpoints.groupsToRemove",
-                    applicationProperties.getEndpoints()::setGroupsToRemove);
+        for (Field field : node.getClass().getDeclaredFields()) {
+            int mods = field.getModifiers();
+            if (Modifier.isStatic(mods) || field.isSynthetic()) {
+                continue;
+            }
+            String key = prefix.isEmpty() ? field.getName() : prefix + "." + field.getName();
+            Class<?> type = field.getType();
+            try {
+                field.setAccessible(true);
+                if (isModelType(type)) {
+                    Object child = field.get(node);
+                    if (child == null) {
+                        child = instantiate(type);
+                        if (child != null) {
+                            field.set(node, child);
+                        }
+                    }
+                    bind(child, key, config, depth + 1, applied);
+                } else if (List.class.isAssignableFrom(type)) {
+                    Class<?> element = listElementType(field);
+                    if (element != null && isLeaf(element)) {
+                        config.getOptionalValues(key, element)
+                                .ifPresent(value -> apply(field, node, value, key, applied));
+                    }
+                    // List<model-type> has no flat scalar representation here - skip.
+                } else if (isLeaf(type)) {
+                    config.getOptionalValue(key, box(type))
+                            .ifPresent(value -> apply(field, node, value, key, applied));
+                }
+                // Maps and other container/unsupported types are left to their Java defaults.
+            } catch (Exception ex) {
+                // Per-field best effort: an unconvertible value or inaccessible field must not
+                // abort
+                // the whole overlay. Never include the value (may be a secret).
+                log.debug("Skipped config binding for {} ({})", key, ex.toString());
+            }
         }
     }
 
-    private void applyBoolean(
-            Config config, String key, java.util.function.Consumer<Boolean> setter) {
-        config.getOptionalValue(key, Boolean.class)
-                .ifPresent(
-                        value -> {
-                            setter.accept(value);
-                            log.info("Applied config override {}={}", key, value);
-                        });
+    private void apply(Field field, Object node, Object value, String key, int[] applied) {
+        try {
+            field.set(node, value);
+            applied[0]++;
+            // Key name only - the value may be a secret (license key, password, client secret).
+            log.debug("Applied config override: {}", key);
+        } catch (Exception ex) {
+            log.debug("Failed to set {} ({})", key, ex.toString());
+        }
     }
 
-    private void applyString(
-            Config config, String key, java.util.function.Consumer<String> setter) {
-        config.getOptionalValue(key, String.class)
-                .ifPresent(
-                        value -> {
-                            setter.accept(value);
-                            log.info("Applied config override {}={}", key, value);
-                        });
+    private static boolean isModelType(Class<?> type) {
+        return type.getName().startsWith("stirling.software") && !type.isEnum();
     }
 
-    /**
-     * Like {@link #applyString} but never logs the value - used for secrets (e.g. the premium
-     * license key) so they don't leak into logs or CI artifacts.
-     */
-    private void applySecret(
-            Config config, String key, java.util.function.Consumer<String> setter) {
-        config.getOptionalValue(key, String.class)
-                .ifPresent(
-                        value -> {
-                            setter.accept(value);
-                            log.info("Applied config override {}=<redacted>", key);
-                        });
+    private static boolean isLeaf(Class<?> type) {
+        return type == String.class
+                || type.isEnum()
+                || type.isPrimitive()
+                || type == Boolean.class
+                || type == Integer.class
+                || type == Long.class
+                || type == Double.class
+                || type == Float.class
+                || type == Short.class
+                || type == Byte.class;
     }
 
-    private void applyStringList(
-            Config config, String key, java.util.function.Consumer<java.util.List<String>> setter) {
-        config.getOptionalValues(key, String.class)
-                .ifPresent(
-                        values -> {
-                            setter.accept(values);
-                            log.info("Applied config override {}={} entries", key, values.size());
-                        });
+    private static Class<?> box(Class<?> type) {
+        if (!type.isPrimitive()) {
+            return type;
+        }
+        if (type == boolean.class) {
+            return Boolean.class;
+        }
+        if (type == int.class) {
+            return Integer.class;
+        }
+        if (type == long.class) {
+            return Long.class;
+        }
+        if (type == double.class) {
+            return Double.class;
+        }
+        if (type == float.class) {
+            return Float.class;
+        }
+        if (type == short.class) {
+            return Short.class;
+        }
+        if (type == byte.class) {
+            return Byte.class;
+        }
+        return type;
+    }
+
+    private static Class<?> listElementType(Field field) {
+        Type generic = field.getGenericType();
+        if (generic instanceof ParameterizedType parameterized) {
+            Type[] args = parameterized.getActualTypeArguments();
+            if (args.length == 1 && args[0] instanceof Class<?> element) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    private static Object instantiate(Class<?> type) {
+        try {
+            return type.getDeclaredConstructor().newInstance();
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }
