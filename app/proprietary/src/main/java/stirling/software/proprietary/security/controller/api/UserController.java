@@ -25,6 +25,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriInfo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +77,15 @@ public class UserController {
     // JAX-RS injects the current security context; replaces Spring's Principal/Authentication
     // method parameters. securityContext.getUserPrincipal() is null when unauthenticated.
     @Context SecurityContext securityContext;
+
+    // Spring's @RequestParam bound a value from EITHER the query string OR the form body.
+    // RESTEasy's
+    // @RestForm only reads the body, so admin/account endpoints invoked with query parameters (as
+    // the regression suite and some clients do) would otherwise see null. UriInfo lets the
+    // @RestForm
+    // params fall back to the query string, restoring the original union semantics. See
+    // formOrQuery / formOrQueryLong / formOrQueryBool.
+    @Context UriInfo uriInfo;
 
     // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") is not a simple
     // role check, so it cannot be expressed via @RolesAllowed. Re-implement the DEMO_USER exclusion
@@ -351,9 +361,11 @@ public class UserController {
     @jakarta.ws.rs.Path("/change-password")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public Response changePassword(
-            @RestForm(value = "currentPassword") String currentPassword,
-            @RestForm(value = "newPassword") String newPassword)
+            @RestForm(value = "currentPassword") String currentPasswordForm,
+            @RestForm(value = "newPassword") String newPasswordForm)
             throws SQLException, UnsupportedProviderException {
+        String currentPassword = formOrQuery(currentPasswordForm, "currentPassword");
+        String newPassword = formOrQuery(newPasswordForm, "newPassword");
         if (securityContext.getUserPrincipal() == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(
@@ -423,15 +435,22 @@ public class UserController {
     @POST
     @jakarta.ws.rs.Path("/admin/saveUser")
     public Response saveUser(
-            @RestForm(value = "username") String username,
-            @RestForm(value = "password") String password,
-            @RestForm(value = "role") String role,
-            @RestForm(value = "teamId") Long teamId,
-            @RestForm(value = "authType") String authType,
-            @RestForm(value = "forceChange") boolean forceChange,
-            @RestForm(value = "forceMFA") boolean forceMFA)
+            @RestForm(value = "username") String usernameForm,
+            @RestForm(value = "password") String passwordForm,
+            @RestForm(value = "role") String roleForm,
+            @RestForm(value = "teamId") Long teamIdForm,
+            @RestForm(value = "authType") String authTypeForm,
+            @RestForm(value = "forceChange") Boolean forceChangeForm,
+            @RestForm(value = "forceMFA") Boolean forceMFAForm)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!userService.isUsernameValid(username)) {
+        String username = formOrQuery(usernameForm, "username");
+        String password = formOrQuery(passwordForm, "password");
+        String role = formOrQuery(roleForm, "role");
+        Long teamId = formOrQueryLong(teamIdForm, "teamId");
+        String authType = formOrQuery(authTypeForm, "authType");
+        boolean forceChange = formOrQueryBool(forceChangeForm, "forceChange", false);
+        boolean forceMFA = formOrQueryBool(forceMFAForm, "forceMFA", false);
+        if (username == null || !userService.isUsernameValid(username)) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(
                             Map.of(
@@ -671,10 +690,13 @@ public class UserController {
     @jakarta.ws.rs.Path("/admin/changeRole")
     @Transactional
     public Response changeRole(
-            @RestForm(value = "username") String username,
-            @RestForm(value = "role") String role,
-            @RestForm(value = "teamId") Long teamId)
+            @RestForm(value = "username") String usernameForm,
+            @RestForm(value = "role") String roleForm,
+            @RestForm(value = "teamId") Long teamIdForm)
             throws SQLException, UnsupportedProviderException {
+        String username = formOrQuery(usernameForm, "username");
+        String role = formOrQuery(roleForm, "role");
+        Long teamId = formOrQueryLong(teamIdForm, "teamId");
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
             return Response.status(Response.Status.NOT_FOUND)
@@ -743,14 +765,21 @@ public class UserController {
     @POST
     @jakarta.ws.rs.Path("/admin/changePasswordForUser")
     public Response changePasswordForUser(
-            @RestForm(value = "username") String username,
-            @RestForm(value = "newPassword") String newPassword,
-            @RestForm(value = "generateRandom") boolean generateRandom,
-            @RestForm(value = "sendEmail") boolean sendEmail,
-            @RestForm(value = "includePassword") boolean includePassword,
-            @RestForm(value = "forcePasswordChange") boolean forcePasswordChange,
+            @RestForm(value = "username") String usernameForm,
+            @RestForm(value = "newPassword") String newPasswordForm,
+            @RestForm(value = "generateRandom") Boolean generateRandomForm,
+            @RestForm(value = "sendEmail") Boolean sendEmailForm,
+            @RestForm(value = "includePassword") Boolean includePasswordForm,
+            @RestForm(value = "forcePasswordChange") Boolean forcePasswordChangeForm,
             @Context HttpServerRequest request)
             throws SQLException, UnsupportedProviderException, MessagingException {
+        String username = formOrQuery(usernameForm, "username");
+        String newPassword = formOrQuery(newPasswordForm, "newPassword");
+        boolean generateRandom = formOrQueryBool(generateRandomForm, "generateRandom", false);
+        boolean sendEmail = formOrQueryBool(sendEmailForm, "sendEmail", false);
+        boolean includePassword = formOrQueryBool(includePasswordForm, "includePassword", false);
+        boolean forcePasswordChange =
+                formOrQueryBool(forcePasswordChangeForm, "forcePasswordChange", false);
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
@@ -821,8 +850,10 @@ public class UserController {
     @POST
     @jakarta.ws.rs.Path("/admin/changeUserEnabled/{username}")
     public Response changeUserEnabled(
-            @PathParam("username") String username, @RestForm(value = "enabled") boolean enabled)
+            @PathParam("username") String username,
+            @RestForm(value = "enabled") Boolean enabledForm)
             throws SQLException, UnsupportedProviderException {
+        boolean enabled = formOrQueryBool(enabledForm, "enabled", false);
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
@@ -918,7 +949,8 @@ public class UserController {
     @jakarta.ws.rs.Path("/get-api-key")
     public Response getApiKey() {
         if (securityContext.getUserPrincipal() == null) {
-            return Response.status(Response.Status.FORBIDDEN)
+            // Unauthenticated -> 401 (Spring's auth entry point returned 401 here, not 403).
+            return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(Map.of("error", "User not authenticated."))
                     .build();
         }
@@ -938,7 +970,8 @@ public class UserController {
     @jakarta.ws.rs.Path("/update-api-key")
     public Response updateApiKey() {
         if (securityContext.getUserPrincipal() == null) {
-            return Response.status(Response.Status.FORBIDDEN)
+            // Unauthenticated -> 401 (Spring's auth entry point returned 401 here, not 403).
+            return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(Map.of("error", "User not authenticated."))
                     .build();
         }
@@ -1119,5 +1152,40 @@ public class UserController {
                 user.getUsername(), // Use username as displayName
                 user.getTeam() != null ? user.getTeam().getName() : null,
                 user.isEnabled());
+    }
+
+    // ─── @RequestParam-style binding (query OR form) ──────────────────────────────────────────
+    // These restore Spring's @RequestParam union behavior: prefer the value bound from the form
+    // body (@RestForm), falling back to the same-named query parameter when the body did not carry
+    // it. Keeps the frontend's FormData posts working while also accepting query-string callers.
+
+    private String formOrQuery(String formValue, String name) {
+        if (formValue != null) {
+            return formValue;
+        }
+        return uriInfo != null ? uriInfo.getQueryParameters().getFirst(name) : null;
+    }
+
+    private Long formOrQueryLong(Long formValue, String name) {
+        if (formValue != null) {
+            return formValue;
+        }
+        String raw = uriInfo != null ? uriInfo.getQueryParameters().getFirst(name) : null;
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(raw.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private boolean formOrQueryBool(Boolean formValue, String name, boolean defaultValue) {
+        if (formValue != null) {
+            return formValue;
+        }
+        String raw = uriInfo != null ? uriInfo.getQueryParameters().getFirst(name) : null;
+        return raw != null ? Boolean.parseBoolean(raw.trim()) : defaultValue;
     }
 }

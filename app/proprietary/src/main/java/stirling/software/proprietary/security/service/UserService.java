@@ -414,11 +414,14 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changeRole(User user, String newRole)
             throws SQLException, UnsupportedProviderException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
-        authorityRepository.persist(userAuthority);
+        // The authority was loaded in a prior request/transaction, so it is detached; Panache
+        // persist() rejects a detached entity. Re-attach via merge (see changeUserEnabled).
+        authorityRepository.getEntityManager().merge(userAuthority);
         databaseService.exportDatabase();
     }
 
@@ -426,7 +429,10 @@ public class UserService implements UserServiceInterface {
     public void changeUserEnabled(User user, Boolean enbeled)
             throws SQLException, UnsupportedProviderException {
         user.setEnabled(enbeled);
-        userRepository.persist(user);
+        // The user was loaded in a prior request/transaction, so it is detached here; Panache
+        // persist() rejects a detached entity ("Detached entity passed to persist"). Re-attach via
+        // merge to update it (same fix as changePassword / changeFirstUse).
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 
@@ -436,7 +442,8 @@ public class UserService implements UserServiceInterface {
             team = getDefaultTeam();
         }
         user.setTeam(team);
-        userRepository.persist(user);
+        // Detached entity -> merge, not persist (see changeUserEnabled).
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.storage.service;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -16,8 +17,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.quarkus.security.identity.SecurityIdentity;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -30,7 +34,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.io.Resource;
 import stirling.software.common.security.Authentication;
-import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
@@ -73,6 +76,12 @@ public class FileStorageService {
     private final Instance<EmailService> emailService;
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
 
+    // Field injection (not a constructor arg) so the @RequiredArgsConstructor signature stays
+    // stable
+    // for the unit test that builds this service directly. SecurityIdentity is the Quarkus
+    // replacement for Spring's SecurityContextHolder - see requireAuthenticatedUser.
+    @Inject SecurityIdentity securityIdentity;
+
     public void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
             throw new WebApplicationException(
@@ -84,18 +93,18 @@ public class FileStorageService {
     }
 
     public User requireAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
+        // Spring's SecurityContextHolder is never populated under Quarkus; the authenticated
+        // principal is exposed via SecurityIdentity instead (a SecurityIdentityAugmentor attaches
+        // the
+        // User entity as the principal, the same wiring FolderService.requireAuthenticatedUser
+        // uses).
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
             throw new WebApplicationException("Not authenticated", Response.Status.UNAUTHORIZED);
         }
-
-        Object principal = authentication.getPrincipal();
+        Principal principal = securityIdentity.getPrincipal();
         if (principal instanceof User user) {
             return user;
         }
-
         throw new WebApplicationException(
                 "Unsupported user principal", Response.Status.UNAUTHORIZED);
     }

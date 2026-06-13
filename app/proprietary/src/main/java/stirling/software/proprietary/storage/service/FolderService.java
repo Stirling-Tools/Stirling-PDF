@@ -58,9 +58,9 @@ public class FolderService {
 
     /**
      * Hard cap on bulk-move payload size, mirroring the request-validation cap on {@code
-     * FileFolderPlacementController.BulkMoveRequest.fileIds}. Re-asserted at the service layer
-     * because controller-level @Valid bounds aren't enforced when the service is called directly
-     * (e.g. by future internal callers or tests).
+     * FileStorageController.BulkMoveRequest.fileIds}. Re-asserted at the service layer because
+     * controller-level @Valid bounds aren't enforced when the service is called directly (e.g. by
+     * future internal callers or tests).
      */
     private static final int BULK_MOVE_MAX_FILES = 1000;
 

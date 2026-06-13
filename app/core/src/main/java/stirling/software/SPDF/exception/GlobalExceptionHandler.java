@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
@@ -138,6 +139,17 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
     @Override
     public Response toResponse(Throwable exception) {
         String requestUri = requestUri();
+
+        // A WebApplicationException carries an explicit HTTP status the caller chose (the Quarkus
+        // equivalent of Spring's ResponseStatusException - see the class-level TODO). It must be
+        // honoured rather than collapsed into a generic 500 by the RuntimeException catch-all
+        // below:
+        // application code throws e.g. new WebApplicationException("...", BAD_REQUEST) to signal a
+        // 400/401/403/409, and that intent has to survive. Framework routing failures (404/405) are
+        // resolved before invocation and never reach this mapper, so this does not affect them.
+        if (exception instanceof WebApplicationException ex) {
+            return handleWebApplicationException(ex, requestUri);
+        }
 
         if (exception instanceof PdfPasswordException ex) {
             return handlePdfPassword(ex, requestUri);
@@ -481,6 +493,56 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
                 requestUri);
     }
 
+    /**
+     * Handle a JAX-RS {@link WebApplicationException}, preserving the HTTP status code the thrower
+     * embedded in it and wrapping the message in the standard RFC 7807 problem body. Replaces
+     * Spring's {@code ResponseStatusException} handling: callers across the app (e.g. {@code
+     * FolderService}, {@code FileStorageService}) throw {@code new WebApplicationException(message,
+     * status)} to signal a deliberate 4xx, and the original status must be returned verbatim.
+     *
+     * @param ex the WebApplicationException carrying the intended status
+     * @param requestUri the resolved request path
+     * @return a Response with the embedded status and a problem+json body
+     */
+    public Response handleWebApplicationException(WebApplicationException ex, String requestUri) {
+        Response embedded = ex.getResponse();
+        int statusCode =
+                embedded != null
+                        ? embedded.getStatus()
+                        : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+        Response.Status status = Response.Status.fromStatusCode(statusCode);
+        String reasonPhrase = status != null ? status.getReasonPhrase() : "HTTP " + statusCode;
+
+        if (statusCode >= 500) {
+            log.error("WebApplicationException at {}: {}", requestUri, ex.getMessage(), ex);
+        } else {
+            log.warn(
+                    "WebApplicationException at {}: {} ({})",
+                    requestUri,
+                    ex.getMessage(),
+                    statusCode);
+        }
+
+        String detail = ex.getMessage();
+        if (detail == null || detail.isBlank()) {
+            detail = reasonPhrase;
+        }
+
+        Map<String, Object> problemDetail = new LinkedHashMap<>();
+        problemDetail.put("status", statusCode);
+        problemDetail.put("detail", detail);
+        problemDetail.put("timestamp", java.time.Instant.now());
+        problemDetail.put("path", requestUri);
+        problemDetail.put(
+                "type",
+                status != null
+                        ? "/errors/" + status.name().toLowerCase(Locale.ROOT).replace('_', '-')
+                        : "/errors/http-" + statusCode);
+        problemDetail.put("title", reasonPhrase);
+
+        return Response.status(statusCode).type(PROBLEM_JSON).entity(problemDetail).build();
+    }
+
     // ===========================================================================================
     // 406 NOT ACCEPTABLE - direct write
     // ===========================================================================================
@@ -569,6 +631,11 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
         // Check if this RuntimeException wraps a typed exception from job execution
         Throwable cause = ex.getCause();
+        if (cause instanceof WebApplicationException waEx) {
+            // A deliberate status thrown deeper in the call stack and rewrapped (e.g. by
+            // AutoJobAspect) must still surface with its intended code, not as a generic 500.
+            return handleWebApplicationException(waEx, requestUri);
+        }
         if (cause instanceof BaseAppException appEx) {
             // Delegate to specific BaseAppException handlers
             if (appEx instanceof PdfPasswordException) {

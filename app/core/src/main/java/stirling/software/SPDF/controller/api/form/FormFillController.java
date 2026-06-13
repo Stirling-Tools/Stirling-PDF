@@ -86,11 +86,24 @@ public class FormFillController {
         }
     }
 
-    private static String decodePart(byte[] payload) {
-        if (payload == null || payload.length == 0) {
+    // Read a JSON/text multipart part as a raw UTF-8 string. The part is bound as FileUpload rather
+    // than byte[]/String on purpose: clients send these parts with Content-Type: application/json,
+    // and RESTEasy then routes a byte[]/String target through the Jackson reader, which fails
+    // trying
+    // to deserialize a JSON object (e.g. "{}") into those types and surfaces as a 500. FileUpload
+    // is
+    // always read verbatim, so the raw bytes reach the parser below regardless of the part's
+    // declared content type. An absent or empty part yields null (the no-op path).
+    private static String decodePart(FileUpload upload) throws IOException {
+        MultipartFile part = FileUploadMultipartFile.of(upload);
+        if (part == null || part.isEmpty()) {
             return null;
         }
-        return new String(payload, StandardCharsets.UTF_8);
+        byte[] bytes = part.getBytes();
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     @POST
@@ -241,11 +254,11 @@ public class FormFillController {
             description =
                     "Updates existing fields in the provided PDF and returns the updated file")
     public Response modifyFields(
-            @RestForm("file") FileUpload fileUpload, @RestForm("updates") byte[] updatesPayload)
+            @RestForm("file") FileUpload fileUpload, @RestForm("updates") FileUpload updatesUpload)
             throws IOException {
 
         MultipartFile file = FileUploadMultipartFile.of(fileUpload);
-        String rawUpdates = decodePart(updatesPayload);
+        String rawUpdates = decodePart(updatesUpload);
         List<FormUtils.ModifyFormFieldDefinition> modifications =
                 FormPayloadParser.parseModificationDefinitions(objectMapper, rawUpdates);
         if (modifications.isEmpty()) {
@@ -266,11 +279,11 @@ public class FormFillController {
             summary = "Delete form fields",
             description = "Removes the specified fields from the PDF and returns the updated file")
     public Response deleteFields(
-            @RestForm("file") FileUpload fileUpload, @RestForm("names") byte[] namesPayload)
+            @RestForm("file") FileUpload fileUpload, @RestForm("names") FileUpload namesUpload)
             throws IOException {
 
         MultipartFile file = FileUploadMultipartFile.of(fileUpload);
-        String rawNames = decodePart(namesPayload);
+        String rawNames = decodePart(namesUpload);
         List<String> names = FormPayloadParser.parseNameList(objectMapper, rawNames);
         if (names.isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -291,12 +304,12 @@ public class FormFillController {
                             + " and returns the filled PDF")
     public Response fillForm(
             @RestForm("file") FileUpload fileUpload,
-            @RestForm("data") byte[] valuesPayload,
+            @RestForm("data") FileUpload dataUpload,
             @RestForm("flatten") @DefaultValue("false") boolean flatten)
             throws IOException {
 
         MultipartFile file = FileUploadMultipartFile.of(fileUpload);
-        String rawValues = decodePart(valuesPayload);
+        String rawValues = decodePart(dataUpload);
         Map<String, Object> values = FormPayloadParser.parseValueMap(objectMapper, rawValues);
 
         return processSingleFile(

@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -16,9 +17,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Produces;
@@ -29,6 +34,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
@@ -43,6 +51,7 @@ import stirling.software.proprietary.storage.model.api.ShareWithUserRequest;
 import stirling.software.proprietary.storage.model.api.StoredFileResponse;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
+import stirling.software.proprietary.storage.service.FolderService;
 
 // IMPORTANT: this class also references java.nio-style paths indirectly; @jakarta.ws.rs.Path is
 // fully-qualified on the class/methods to avoid any clash with collaborator types.
@@ -56,8 +65,11 @@ public class FileStorageController {
 
     private static final Duration SIGNED_URL_TTL = Duration.ofMinutes(5);
 
+    private static final int BULK_MOVE_MAX_FILES = 1000;
+
     @Inject FileStorageService fileStorageService;
     @Inject StorageProvider storageProvider;
+    @Inject FolderService folderService;
 
     // TODO: Migration required - SecurityIdentity replaces Spring's Authentication. The
     // collaborator
@@ -120,6 +132,41 @@ public class FileStorageController {
     public StoredFileResponse getFileMetadata(@jakarta.ws.rs.PathParam("fileId") Long fileId) {
         User user = fileStorageService.requireAuthenticatedUser();
         return fileStorageService.getAccessibleFileResponse(user, fileId);
+    }
+
+    // ─── File ↔ folder placement ──────────────────────────────────────────────────────────────
+    // These live here (rather than in a separate @Path("/api/v1/storage/files") resource) so a
+    // single JAX-RS resource owns the whole /api/v1/storage/files sub-tree. Splitting them across
+    // two resource classes made the more-specific class shadow this one, so POST /files (upload)
+    // resolved to a class with only @PATCH methods and returned 405. Authentication, the
+    // storage-gate, ownership checks and the bulk cap all live on FolderService (with
+    // @Transactional)
+    // so the JDBC connection isn't held through JSON serialization.
+
+    /** Move a single file to a folder (or to root when folderId is null). */
+    @PATCH
+    @jakarta.ws.rs.Path("/files/{fileId}/folder")
+    public Response moveFileToFolder(
+            @jakarta.ws.rs.PathParam("fileId") Long fileId, @Valid FolderPlacement body) {
+        folderService.moveFileToFolder(fileId, body.getFolderId());
+        return Response.noContent().build();
+    }
+
+    /**
+     * Bulk move - fewer round-trips than calling the single endpoint N times. Returns 200 on full
+     * success, 207 (Multi-Status) when some files were skipped (typically because they don't belong
+     * to the caller).
+     */
+    @PATCH
+    @jakarta.ws.rs.Path("/files/folder")
+    public Response bulkMove(@Valid BulkMoveRequest body) {
+        FolderService.BulkMoveResult result =
+                folderService.bulkMoveFilesToFolder(body.getFolderId(), body.getFileIds());
+        // 207 Multi-Status has no Response.Status constant; use the numeric code directly.
+        int status = result.skippedFileIds().isEmpty() ? Response.Status.OK.getStatusCode() : 207;
+        return Response.status(status)
+                .entity(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()))
+                .build();
     }
 
     @GET
@@ -360,5 +407,34 @@ public class FileStorageController {
                     e);
             return Optional.empty();
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FolderPlacement {
+        private UUID folderId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BulkMoveRequest {
+        private UUID folderId;
+
+        @NotNull
+        @Size(
+                min = 1,
+                max = BULK_MOVE_MAX_FILES,
+                message = "fileIds must contain between 1 and 1000 entries")
+        private List<Long> fileIds;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BulkMoveResponse {
+        private List<Long> movedFileIds;
+        private List<Long> skippedFileIds;
     }
 }
