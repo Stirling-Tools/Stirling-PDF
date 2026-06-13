@@ -25,17 +25,17 @@ import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
 
 // NOTE: SPA forwarding controller. The forwarding routes below cover the SPA "clean URL" paths the
-// app historically matched with Spring regex path variables. Quarkus/RESTEasy Reactive does not
-// support arbitrary regex constraints on @Path templates, so the original single negative-lookahead
-// regex routes are replaced with explicit @Path templates that forward to serveIndexHtml.
-// TODO: Migration required - the original Spring routes excluded a fixed set of asset prefixes
-// (api/static/pipeline/pdfjs/.../samples) via regex lookahead and matched only path segments that
-// contain no '.'. Quarkus serves those static assets via quarkus.http static-resources, so they no
-// longer collide with these routes. If a new SPA top-level route is added that is NOT covered by
-// the
-// {path} / {path}/{subpath} templates below, add it explicitly or introduce a
-// ContainerRequestFilter
-// fallback that serves index.html for unmatched non-API, extension-less GETs.
+// app historically matched with Spring's negative-lookahead regex route. RESTEasy Reactive DOES
+// support per-segment regex constraints in @Path templates, so each catch-all segment is
+// constrained to {seg:[^/.]+} - one path segment that contains no '.'. This mirrors Spring's
+// "match only dot-less segments" rule: requests for real files (which always carry an extension,
+// e.g. /assets/index-abc.js, /sw.js, /manifest.json) do NOT match these templates and therefore
+// fall through to Quarkus' static-resource handler (META-INF/resources), which serves them with the
+// correct Content-Type. This precedence detail is critical: a matching JAX-RS route is answered
+// BEFORE the static handler runs, so an unconstrained {path} catch-all would shadow every asset and
+// return index.html (text/html) for .js/.css - exactly the "white screen / wrong MIME" bug. Only
+// single- and two-segment SPA routes are matched here; a deeper dot-less SPA route would need an
+// explicit template or a low-priority Vert.x fallback route (none currently required).
 @Path("")
 @ApplicationScoped
 public class ReactRoutingController {
@@ -246,30 +246,24 @@ public class ReactRoutingController {
     // `files` was historically a backend static-asset directory and was therefore
     // in the exclusion list - removing it lets /files and /files/<folder-uuid>
     // forward to the SPA index.html, which is what FileManagerView expects.
-    // (Real storage endpoints live under /api/v1/storage/files, already
-    // excluded by the leading `api` token in the same regex.)
+    // (Real storage endpoints live under /api/v1/storage/files, matched by their own JAX-RS
+    // resources which take precedence over this catch-all.)
     //
-    // TODO: Migration required - the original Spring route used a negative-lookahead regex to
-    // exclude asset prefixes (api/static/robots.txt/favicon.ico/manifest*.json/pipeline/pdfjs/
-    // pdfjs-legacy/pdfium/vendor/fonts/images/css/js/assets/locales/modern-logo/classic-logo/Login/
-    // og_images/samples) and to match only single segments containing no '.'. RESTEasy Reactive
-    // does
-    // not allow such regex constraints in @Path. Those excluded prefixes are now served by Quarkus
-    // static-resources (higher precedence) so they no longer reach this method. This template still
-    // matches a dot-bearing single segment (e.g. "/foo.txt"); if that must be excluded, add a
-    // ContainerRequestFilter that only forwards extension-less, non-API GETs to serveIndexHtml().
+    // The {path:[^/.]+} constraint matches a single dot-less segment, mirroring the original Spring
+    // route's "no '.'" rule. Dot-bearing paths (real static files such as /favicon.ico,
+    // /manifest.json, /sw.js) do not match and fall through to the static-resource handler.
     @GET
-    @Path("/{path}")
+    @Path("/{path:[^/.]+}")
     @Produces(MediaType.TEXT_HTML)
     public Response forwardRootPaths(@PathParam("path") String path) throws IOException {
         return serveIndexHtml();
     }
 
-    // TODO: Migration required - same regex-exclusion caveat as forwardRootPaths above. The
-    // original
-    // route matched a nested two-segment SPA path where the second segment contains no '.'.
+    // Two-segment SPA routes (e.g. /tools/merge, /files/<uuid>). Both segments are constrained to be
+    // dot-less, so asset requests like /assets/index-abc.js (subpath carries a '.') fall through to
+    // the static-resource handler instead of being answered with index.html.
     @GET
-    @Path("/{path}/{subpath}")
+    @Path("/{path:[^/.]+}/{subpath:[^/.]+}")
     @Produces(MediaType.TEXT_HTML)
     public Response forwardNestedPaths(
             @PathParam("path") String path, @PathParam("subpath") String subpath)

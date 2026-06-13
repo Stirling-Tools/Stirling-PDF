@@ -181,6 +181,13 @@ def frontendDir = file('../../frontend')
 def frontendEditorDir = file('../../frontend/editor')
 def frontendEditorDistDir = file('../../frontend/editor/dist')
 def resourcesStaticDir = file('src/main/resources/static')
+// Quarkus serves browser-facing static assets from META-INF/resources (NOT Spring's
+// classpath:/static/, which Quarkus does not expose over HTTP). The React bundle (assets/, pdfjs/,
+// locales/, vendor/, ...) is emitted here so Quarkus' static handler serves it with correct MIME
+// types. index.html is the ONE exception: ReactRoutingController must process it (the
+// <base href="%BASE_URL%"> rewrite + API-base injection), so it is copied into static/ instead -
+// classpath-readable by the controller but NOT auto-served - and the controller owns '/'.
+def resourcesMetaInfDir = file('src/main/resources/META-INF/resources')
 def generatedFrontendPaths = [
     'assets',
     'index.html',
@@ -284,28 +291,49 @@ tasks.register('npmBuild', Exec) {
 tasks.register('copyFrontendAssets', Copy) {
     enabled = buildWithFrontend
     group = 'frontend'
-    description = 'Copy editor frontend build to static resources'
+    description = 'Copy editor frontend build to Quarkus static resources (META-INF/resources)'
     dependsOn npmBuild
     dependsOn cleanFrontendAssets
     from(frontendEditorDistDir) {
-        // Exclude files that conflict with backend static resources
-        exclude 'robots.txt'  // Backend already has this
-        exclude 'favicon.ico' // Backend already has this
+        // index.html is served by ReactRoutingController (base-href rewrite), copied to static/
+        // by copyFrontendIndexHtml - keep the raw, unprocessed copy out of the auto-served root so
+        // the controller unambiguously owns '/' and '/index.html'.
+        exclude 'index.html'
+        exclude 'index.html.gz'
+        exclude 'index.html.br'
     }
-    into resourcesStaticDir
+    into resourcesMetaInfDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
     doFirst {
-        println "Copying frontend build from ${frontendEditorDistDir} to ${resourcesStaticDir}..."
-        println "Backend static resources will be preserved"
+        println "Copying frontend build from ${frontendEditorDistDir} to ${resourcesMetaInfDir}..."
     }
     doLast {
         println "Frontend assets copied successfully!"
     }
 }
 
+tasks.register('copyFrontendIndexHtml', Copy) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Copy editor index.html to static/ for controller-side serving (base-href rewrite)'
+    dependsOn npmBuild
+    dependsOn cleanFrontendAssets
+    from(frontendEditorDistDir) {
+        include 'index.html'
+    }
+    into resourcesStaticDir
+    doFirst {
+        println "Copying frontend index.html from ${frontendEditorDistDir} to ${resourcesStaticDir}..."
+    }
+}
+
 tasks.register('cleanFrontendAssets', Delete) {
     group = 'frontend'
-    description = 'Remove previously generated frontend assets from static resources'
+    description = 'Remove previously generated frontend assets from Quarkus static resources'
+    // The bundle now lives in META-INF/resources (Quarkus-served) and index.html in static/
+    // (controller-served). Earlier builds emitted the whole bundle into static/, so clean BOTH
+    // locations to avoid stale/duplicate assets lingering in the jar.
+    delete generatedFrontendPaths.collect { new File(resourcesMetaInfDir, it) }
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
 }
 
@@ -321,14 +349,18 @@ tasks.register('copyApiLandingPage', Copy) {
     }
 }
 
-// Ensure copyFrontendAssets runs after spotless tasks
+// Ensure frontend copy tasks run after spotless tasks
 tasks.named('copyFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+tasks.named('copyFrontendIndexHtml').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
 
 if (buildWithFrontend) {
     println "Editor frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
     processResources.dependsOn copyFrontendAssets
+    processResources.dependsOn copyFrontendIndexHtml
 } else {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page
