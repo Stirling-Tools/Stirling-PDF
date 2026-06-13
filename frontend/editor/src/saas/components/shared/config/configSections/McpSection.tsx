@@ -1,0 +1,262 @@
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Stack,
+  Paper,
+  Text,
+  Group,
+  Alert,
+  Code,
+  Badge,
+  Button,
+  CopyButton,
+  Tabs,
+  Tooltip,
+  ThemeIcon,
+} from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { openAppSettings } from "@app/utils/appSettings";
+
+/** Strip a single trailing slash so we can safely append paths. */
+function trimTrailingSlash(url: string): string {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
+/** A small copy-to-clipboard button that sits inline next to a URL/snippet. */
+function CopyInline({ value, label }: { value: string; label: string }) {
+  const { t } = useTranslation();
+  return (
+    <CopyButton value={value} timeout={1500}>
+      {({ copied, copy }) => (
+        <Tooltip
+          label={
+            copied
+              ? t("config.mcp.copy.tooltipCopied", "{{label}} copied", {
+                  label,
+                })
+              : t("config.mcp.copy.tooltip", "Copy {{label}}", { label })
+          }
+          withArrow
+        >
+          <Button
+            size="compact-xs"
+            variant="subtle"
+            color={copied ? "teal" : "gray"}
+            onClick={copy}
+            leftSection={
+              <LocalIcon
+                icon={copied ? "check-rounded" : "content-copy-rounded"}
+                width={14}
+                height={14}
+              />
+            }
+          >
+            {copied
+              ? t("config.mcp.copy.copied", "Copied")
+              : t("config.mcp.copy.copy", "Copy")}
+          </Button>
+        </Tooltip>
+      )}
+    </CopyButton>
+  );
+}
+
+// SaaS MCP guide: always shown, explains how to point an AI assistant at the
+// OAuth-protected /mcp endpoint with per-client config.
+export default function McpSection() {
+  const { t } = useTranslation();
+  const { config } = useAppConfig();
+
+  const baseUrl = useMemo(() => {
+    const raw =
+      config?.baseUrl ||
+      (typeof window !== "undefined" ? window.location.origin : "");
+    return trimTrailingSlash(raw);
+  }, [config?.baseUrl]);
+
+  const mcpUrl = `${baseUrl}/mcp`;
+
+  // Per-client connection snippets pointing at this deployment's /mcp endpoint.
+  const clients = useMemo(
+    () => [
+      {
+        value: "claude",
+        label: "Claude Desktop",
+        file: "claude_desktop_config.json",
+        config: JSON.stringify(
+          { mcpServers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
+          null,
+          2,
+        ),
+      },
+      {
+        value: "codex",
+        label: "Codex CLI",
+        file: "~/.codex/config.toml",
+        config: `[mcp_servers.stirling-pdf]\nurl = "${mcpUrl}"`,
+      },
+      {
+        value: "vscode",
+        label: "VS Code",
+        file: ".vscode/mcp.json",
+        config: JSON.stringify(
+          { servers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
+          null,
+          2,
+        ),
+      },
+    ],
+    [mcpUrl],
+  );
+
+  const tools: { icon: string; key: string; fallback: string }[] = [
+    {
+      icon: "sync-alt-rounded",
+      key: "config.mcp.tools.convert",
+      fallback: "Convert",
+    },
+    {
+      icon: "description-rounded",
+      key: "config.mcp.tools.pages",
+      fallback: "Pages",
+    },
+    { icon: "lock", key: "config.mcp.tools.security", fallback: "Security" },
+    {
+      icon: "construction-rounded",
+      key: "config.mcp.tools.misc",
+      fallback: "Misc",
+    },
+    { icon: "smart-toy-rounded", key: "config.mcp.tools.ai", fallback: "AI" },
+  ];
+
+  return (
+    <div className="settings-section-container">
+      <Stack gap="md" className="settings-section-content">
+        <div>
+          <Group gap="sm" align="center">
+            <ThemeIcon variant="light" size="lg" radius="md">
+              <LocalIcon icon="smart-toy-rounded" width={22} height={22} />
+            </ThemeIcon>
+            <Text fw={600} size="lg">
+              {t("config.mcp.title", "MCP Server")}
+            </Text>
+          </Group>
+          <Text size="sm" c="dimmed" mt={6}>
+            {t(
+              "config.mcp.description",
+              "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf.",
+            )}
+          </Text>
+        </div>
+
+        {/* Endpoint */}
+        <Paper withBorder p="sm" radius="md">
+          <Group gap="xs" wrap="nowrap" align="center">
+            <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+              <Text fw={500} size="sm">
+                {t("config.mcp.endpoint.label", "Your MCP endpoint")}
+              </Text>
+              <Code style={{ overflowX: "auto" }}>{mcpUrl}</Code>
+            </Stack>
+            <CopyInline
+              value={mcpUrl}
+              label={t("config.mcp.copy.endpointLabel", "Endpoint URL")}
+            />
+          </Group>
+        </Paper>
+
+        {/* Per-client setup */}
+        <Paper withBorder p="sm" radius="md">
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              {t("config.mcp.setup.title", "Connect your AI assistant")}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t(
+                "config.mcp.setup.hint",
+                "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy.",
+              )}
+            </Text>
+            <Tabs defaultValue="claude" variant="pills" radius="md" mt={4}>
+              <Tabs.List>
+                {clients.map((c) => (
+                  <Tabs.Tab key={c.value} value={c.value}>
+                    {c.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+              {clients.map((c) => (
+                <Tabs.Panel key={c.value} value={c.value} pt="sm">
+                  <Stack gap="xs">
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                      <Text size="xs" c="dimmed">
+                        {t("config.mcp.setup.addTo", "Add to")}{" "}
+                        <Code>{c.file}</Code>
+                      </Text>
+                      <CopyInline
+                        value={c.config}
+                        label={t("config.mcp.copy.configLabel", "Config")}
+                      />
+                    </Group>
+                    <Code block>{c.config}</Code>
+                  </Stack>
+                </Tabs.Panel>
+              ))}
+            </Tabs>
+          </Stack>
+        </Paper>
+
+        {/* Available tools */}
+        <div>
+          <Text fw={500} size="sm" mb="xs">
+            {t("config.mcp.tools.title", "What your assistant can do")}
+          </Text>
+          <Group gap="xs">
+            {tools.map((tool) => (
+              <Badge
+                key={tool.key}
+                variant="light"
+                color="gray"
+                radius="sm"
+                size="lg"
+                leftSection={
+                  <LocalIcon icon={tool.icon} width={13} height={13} />
+                }
+              >
+                {t(tool.key, tool.fallback)}
+              </Badge>
+            ))}
+          </Group>
+        </div>
+
+        {/* Tip / cross-link */}
+        <Alert
+          variant="light"
+          color="blue"
+          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+        >
+          <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+            <Text size="sm">
+              {t(
+                "config.mcp.tip",
+                "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly.",
+              )}
+            </Text>
+            <Button
+              size="xs"
+              variant="light"
+              style={{ flexShrink: 0 }}
+              leftSection={
+                <LocalIcon icon="key-rounded" width={14} height={14} />
+              }
+              onClick={() => openAppSettings("api-keys")}
+            >
+              {t("config.mcp.viewApiKeys", "View API keys")}
+            </Button>
+          </Group>
+        </Alert>
+      </Stack>
+    </div>
+  );
+}

@@ -1,0 +1,234 @@
+.portal-carousel {
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+  border-radius: var(--radius-xl);
+  background: var(--grad-banner);
+  border: 1px solid var(--color-border);
+  isolation: isolate;
+}
+
+.portal-carousel__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  gap: 2rem;
+  align-items: center;
+  animation: fadeInUp var(--motion-enter) both;
+}
+
+@media (max-width: 50rem) {
+  .portal-carousel__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-carousel__text {
+  min-width: 0;
+}
+
+.portal-carousel__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-blue);
+  margin-bottom: 0.5rem;
+}
+
+.portal-carousel__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-text-1);
+}
+
+.portal-carousel__sub {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-text-3);
+  max-width: 36rem;
+}
+
+.portal-carousel__cta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Ornament container */
+.portal-carousel__ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Doc card ornament (slide 0) */
+.portal-carousel__doc {
+  width: 100%;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.portal-carousel__doc-title {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-carousel__doc-sub {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+.portal-carousel__doc-meta {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+/* Code ornament (slide 1) */
+.portal-carousel__code {
+  width: 100%;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: var(--shadow-lg);
+}
+.portal-carousel__code-method {
+  color: var(--code-fn);
+  font-weight: 600;
+}
+.portal-carousel__code-path {
+  color: var(--code-keyword);
+}
+.portal-carousel__code-key {
+  color: var(--code-property);
+}
+.portal-carousel__code-string {
+  color: var(--code-string);
+}
+
+/* Eval ornament (slide 2) */
+.portal-carousel__eval {
+  width: 100%;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.portal-carousel__eval-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.portal-carousel__eval-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-carousel__eval-score {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-green);
+}
+.portal-carousel__eval-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  margin-top: 0.125rem;
+}
+.portal-carousel__eval-bar {
+  margin-top: 0.75rem;
+  height: 0.375rem;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.portal-carousel__eval-fill {
+  height: 100%;
+  background: var(--grad-green-btn);
+}
+.portal-carousel__eval-meta {
+  margin-top: 0.625rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+
+/* Decoration blobs */
+.portal-carousel__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.portal-carousel__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2.5rem);
+}
+.portal-carousel__blob--1 {
+  top: -3rem;
+  right: -2rem;
+  width: 16rem;
+  height: 16rem;
+  background: radial-gradient(circle, var(--color-purple), transparent 70%);
+  opacity: 0.4;
+}
+.portal-carousel__blob--2 {
+  bottom: -4rem;
+  right: 8rem;
+  width: 12rem;
+  height: 12rem;
+  background: radial-gradient(circle, var(--color-blue), transparent 70%);
+  opacity: 0.3;
+}
+
+/* Pagination dots */
+.portal-carousel__dots {
+  position: absolute;
+  bottom: 0.875rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.375rem;
+  z-index: 2;
+}
+.portal-carousel__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--color-text-5);
+  opacity: 0.4;
+  transition:
+    opacity var(--motion-fast),
+    background var(--motion-fast),
+    width var(--motion-fast);
+}
+.portal-carousel__dot:hover {
+  opacity: 0.7;
+}
+.portal-carousel__dot.is-active {
+  width: 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-blue);
+  opacity: 1;
+}

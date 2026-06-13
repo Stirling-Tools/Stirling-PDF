@@ -1,0 +1,77 @@
+.sui-tabs {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.sui-tabs--pill {
+}
+.sui-tabs--underline {
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: var(--space-1);
+  gap: var(--space-3);
+}
+
+.sui-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  padding: var(--space-1_5) var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  background: transparent;
+  border: 1px solid transparent;
+  transition:
+    color var(--motion-fast),
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.sui-tabs__tab:hover:not(.is-disabled) {
+  color: var(--color-text-1);
+  background: var(--color-bg-hover);
+}
+
+.sui-tabs__tab.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Pill variant — rounded chip, filled tint when active. */
+.sui-tabs--pill .sui-tabs__tab {
+  border-radius: var(--radius-pill);
+}
+.sui-tabs--pill .sui-tabs__tab.is-active {
+  color: var(--sui-tab-accent, var(--color-blue));
+  background: var(--color-blue-light);
+  border-color: var(--sui-tab-accent, var(--color-blue-border));
+  font-weight: 500;
+}
+
+/* Underline variant — line-under, no background fill. */
+.sui-tabs--underline .sui-tabs__tab {
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  padding-bottom: var(--space-2);
+  margin-bottom: -1px;
+}
+.sui-tabs--underline .sui-tabs__tab.is-active {
+  color: var(--sui-tab-accent, var(--color-blue));
+  border-bottom-color: var(--sui-tab-accent, var(--color-blue));
+  font-weight: 500;
+}
+
+.sui-tabs__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+}
+
+.sui-tabs__count {
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+}
+
+.sui-tabs__tab.is-active .sui-tabs__count {
+  color: inherit;
+}

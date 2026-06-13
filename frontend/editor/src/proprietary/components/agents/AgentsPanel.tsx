@@ -10,7 +10,6 @@ import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useChat } from "@app/components/chat/ChatContext";
-import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
 import { withViewTransition } from "@app/utils/viewTransition";
@@ -77,7 +76,7 @@ const PREVIEW_COUNT = 3;
 /** Sidebar agents section — Stirling as hero CTA, coming-soon agents below. */
 export function AgentsSection() {
   const { t } = useTranslation();
-  const { isOpen, setOpen } = useChat();
+  const { isOpen, setOpen, isLoading } = useChat();
   const enabled = useAgentsEnabled();
   const [showAll, setShowAll] = useState(false);
 
@@ -92,23 +91,26 @@ export function AgentsSection() {
     <Box className="agents-section" w="100%">
       {/* Main Stirling agent — real and clickable */}
       <UnstyledButton
-        className="agent-button agent-button--hero"
+        className={`agent-button agent-button--hero${isLoading ? " agent-button--running" : ""}`}
         onClick={() => withViewTransition(() => setOpen(true))}
         aria-label={t("agents.stirling_name", "Stirling")}
       >
         <Group gap="sm" wrap="nowrap" align="center">
           <Box className="agent-button__logo">
             <StirlingLogoOutline size={28} />
+            {isLoading && <span className="agent-status-dot" />}
           </Box>
           <Box style={{ minWidth: 0, flex: 1 }}>
             <Text size="sm" fw={600} truncate>
               {t("agents.stirling_name", "Stirling")}
             </Text>
             <Text size="xs" c="dimmed" truncate>
-              {t(
-                "agents.stirling_description",
-                "Your general-purpose PDF assistant",
-              )}
+              {isLoading
+                ? t("agents.stirling_running", "Running...")
+                : t(
+                    "agents.stirling_description",
+                    "Your general-purpose PDF assistant",
+                  )}
             </Text>
           </Box>
         </Group>
@@ -171,7 +173,7 @@ export function AgentsSection() {
 /** Icon-only agent button in the collapsed (minimised) right rail. */
 export function AgentsCollapsedButton({ onExpand }: { onExpand: () => void }) {
   const { t } = useTranslation();
-  const { setOpen } = useChat();
+  const { setOpen, isLoading } = useChat();
   const enabled = useAgentsEnabled();
 
   if (!enabled) return null;
@@ -189,6 +191,7 @@ export function AgentsCollapsedButton({ onExpand }: { onExpand: () => void }) {
         className="agents-collapsed-btn"
       >
         <StirlingLogoOutline size={22} />
+        {isLoading && <span className="agent-status-dot" />}
       </UnstyledButton>
     </AppTooltip>
   );
@@ -268,23 +271,5 @@ export function AgentsFullscreenSection() {
         </div>
       </div>
     </section>
-  );
-}
-
-/** Full-rail chat overlay rendered inside ToolPanel. */
-export function AgentsChatOverlay() {
-  const { t } = useTranslation();
-  const { isOpen, setOpen } = useChat();
-  const enabled = useAgentsEnabled();
-
-  if (!enabled || !isOpen) return null;
-
-  return (
-    <Box className="agents-takeover">
-      <ChatPanel
-        onBack={() => withViewTransition(() => setOpen(false))}
-        backLabel={t("agents.back_to_tools", "Back to tools")}
-      />
-    </Box>
   );
 }

@@ -37,6 +37,10 @@ class AppSettings(BaseSettings):
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
     rag_max_searches: int = Field(validation_alias="STIRLING_RAG_MAX_SEARCHES")
+    documents_reaper_interval_seconds: int = Field(
+        default=900,
+        validation_alias="STIRLING_DOCUMENTS_REAPER_INTERVAL_SECONDS",
+    )
 
     # Chunked reasoner settings (whole-document map-reduce).
     chunked_reasoner_chars_per_slice: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CHARS_PER_SLICE")
@@ -97,6 +101,11 @@ class AppSettings(BaseSettings):
     posthog_enabled: bool = Field(validation_alias="STIRLING_POSTHOG_ENABLED")
     posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
     posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
+
+    # Shared secret enforced by EngineSharedSecretMiddleware. Empty disables enforcement
+    # unless engine_require_auth is set, in which case the engine fails closed (503).
+    engine_shared_secret: str = Field(default="", validation_alias="STIRLING_ENGINE_SHARED_SECRET")
+    engine_require_auth: bool = Field(default=False, validation_alias="STIRLING_ENGINE_REQUIRE_AUTH")
 
 
 def _configure_logging(level_name: str, log_file: str, http_debug: bool) -> None:

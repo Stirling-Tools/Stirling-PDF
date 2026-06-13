@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -56,6 +57,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.policy.engine.PolicyExecutor;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -106,18 +108,22 @@ class AiWorkflowServiceTest {
                 .when(fileIdStrategy.idFor(any(MultipartFile.class)))
                 .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
+        PolicyExecutor policyExecutor =
+                new PolicyExecutor(
+                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
         service =
                 new AiWorkflowService(
                         pdfDocumentFactory,
                         aiEngineClient,
                         pdfContentExtractor,
                         objectMapper,
-                        internalApiClient,
                         fileStorage,
-                        toolMetadataService,
                         tempFileManager,
                         fileIdStrategy,
-                        endpointResolver);
+                        endpointResolver,
+                        policyExecutor,
+                        null,
+                        new ApplicationProperties());
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 
@@ -434,6 +440,35 @@ class AiWorkflowServiceTest {
     }
 
     @Test
+    void convertMarkdownRunsDeterministicConversionAndReturnsMdFile() throws IOException {
+        MockMultipartFile input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
+        when(fileIdStrategy.idFor(any())).thenReturn("doc-1");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"convert_markdown",
+                  "reason":"PDF to Markdown requested.",
+                  "filesToIngest":[{"id":"doc-1","name":"multi-column-test_lorem.pdf"}]
+                }
+                """);
+        when(toolMetadataService.shouldUnpackZipResponse("/api/v1/convert/pdf/markdown"))
+                .thenReturn(false);
+        stubEndpoint(
+                "/api/v1/convert/pdf/markdown",
+                pdfResource("# Title", "multi-column-test_lorem.md"));
+        AtomicInteger ids = stubFileStorage();
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "convert to markdown"));
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        assertEquals(1, result.getResultFiles().size());
+        // Extension changes (pdf -> md), so the converter's response filename wins.
+        assertEquals("multi-column-test_lorem.md", result.getResultFiles().get(0).getFileName());
+        assertEquals(1, ids.get());
+        verify(internalApiClient, times(1)).post(eq("/api/v1/convert/pdf/markdown"), any());
+    }
+
+    @Test
     void toolCallWithoutEndpointFallsBackToCannotContinue() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator("{\"outcome\":\"tool_call\",\"parameters\":{}}");
@@ -479,18 +514,20 @@ class AiWorkflowServiceTest {
                                         {"outcome":"answer","answer":"done","evidence":[]}
                                         """;
                             }
-                            Consumer<String> consumer = inv.getArgument(2);
+                            Consumer<String> consumer = inv.getArgument(3);
                             consumer.accept(wrapAsResultEvent(responseJson));
                             return null;
                         })
                 .when(aiEngineClient)
-                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString());
-        verify(aiEngineClient, times(2)).streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+        verify(aiEngineClient, times(1))
+                .postLongRunning(eq("/api/v1/documents"), anyString(), nullable(String.class));
+        verify(aiEngineClient, times(2))
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
     }
 
     // --- helpers ---
@@ -498,12 +535,12 @@ class AiWorkflowServiceTest {
     private void stubOrchestrator(String responseJson) throws IOException {
         doAnswer(
                         inv -> {
-                            Consumer<String> consumer = inv.getArgument(2);
+                            Consumer<String> consumer = inv.getArgument(3);
                             consumer.accept(wrapAsResultEvent(responseJson));
                             return null;
                         })
                 .when(aiEngineClient)
-                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
     }
 
     /**

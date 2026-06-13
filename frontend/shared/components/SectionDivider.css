@@ -1,0 +1,5 @@
+.sui-divider {
+  height: 0.0625rem;
+  background: var(--color-sidebar-divider);
+  width: 100%;
+}
