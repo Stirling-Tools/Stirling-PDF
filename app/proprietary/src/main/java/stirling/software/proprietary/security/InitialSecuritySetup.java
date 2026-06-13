@@ -7,8 +7,11 @@ import java.util.UUID;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import jakarta.annotation.PostConstruct;
+import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +41,13 @@ public class InitialSecuritySetup {
     private final DatabaseServiceInterface databaseService;
     private final UserLicenseSettingsService licenseSettingsService;
 
-    @PostConstruct
-    public void init() {
+    // Runs eagerly at startup. The original Spring @Component was eagerly instantiated so its
+    // @PostConstruct ran on every boot; a lazy @ApplicationScoped @PostConstruct would never run
+    // (nothing injects this bean), leaving no admin user. Observe StartupEvent to restore that.
+    // @Transactional: Spring Data implicitly wrapped repository.save() in a transaction; Panache
+    // persist() needs an ambient one, and the StartupEvent observer has none by default.
+    @Transactional
+    public void init(@Observes StartupEvent event) {
         try {
 
             if (!userService.hasUsers()) {

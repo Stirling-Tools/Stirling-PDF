@@ -17,6 +17,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +97,11 @@ public class DatabaseConfig {
      * @throws UnsupportedProviderException if the type of database selected is not supported
      */
     @Produces
-    @ApplicationScoped
+    // @Singleton (pseudo-scope), NOT @ApplicationScoped: a normal-scoped producer of
+    // javax.sql.DataSource makes Arc generate a client proxy in the JDK-sealed javax.sql package,
+    // which fails to load (NoClassDefFoundError) the moment the bean is actually instantiated.
+    // @Singleton injects the real instance directly (no proxy) and is still a single shared bean.
+    @Singleton
     @Named("dataSource")
     @UnlessBuildProfile("saas")
     public DataSource dataSource() throws UnsupportedProviderException {

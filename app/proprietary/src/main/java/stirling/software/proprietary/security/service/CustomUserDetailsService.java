@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
@@ -18,10 +19,9 @@ import stirling.software.proprietary.security.model.User;
 // contract; the user-loading logic below should be invoked from a Quarkus IdentityProvider
 // (or SecurityIdentityAugmentor) that turns the returned User into a SecurityIdentity. The method
 // is retained as a plain service returning the User entity. Former Spring exceptions are mapped to
-// plain runtime exceptions: UsernameNotFoundException -> IllegalArgumentException (user not found),
-// LockedException -> IllegalStateException (account locked); the IdentityProvider should translate
-// these into the appropriate io.quarkus.security.AuthenticationFailedException / unauthorized
-// responses.
+// the migration shim runtime exceptions: UsernameNotFoundException (user not found) and
+// LockedException -> IllegalStateException (account locked); the IdentityProvider / AuthController
+// translate these into the appropriate unauthorized responses.
 @ApplicationScoped
 @RequiredArgsConstructor
 public class CustomUserDetailsService {
@@ -39,7 +39,7 @@ public class CustomUserDetailsService {
                         .findByUsername(username)
                         .orElseThrow(
                                 () ->
-                                        new IllegalArgumentException(
+                                        new UsernameNotFoundException(
                                                 "No user found with username: " + username));
 
         if (loginAttemptService.isBlocked(username)) {
