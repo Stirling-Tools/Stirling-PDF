@@ -23,9 +23,10 @@
 - **Stack:** Quarkus 3.33.2 LTS, **Java 25** (mandatory — see §2), Hibernate ORM Panache,
   quarkus-rest (RESTEasy Reactive), quarkus-oidc, quarkus-undertow (servlet, for filters), OpenSAML 5.
 - **`saas` flavor:** compiles but full augmentation has ~28 CDI issues (design-level follow-up).
-- **JWT Bearer login:** ✅ now works end-to-end (token issue + validate → `SecurityIdentity`, role
-  mapping, `@RolesAllowed`). **SAML/SSO + OIDC login:** still not wired (see §6.F). The default e2e
-  Docker image + build helper are committed at `docker/quarkus/` (see §3.3).
+- **JWT Bearer login:** ✅ works end-to-end (token issue + validate → `SecurityIdentity`, role
+  mapping, `@RolesAllowed`). **OAuth2/OIDC + SAML2 SSO:** ✅ both work end-to-end against the
+  `testing/compose` Keycloak stacks; `validate-oauth-test.sh` and `validate-saml-test.sh` both pass
+  (see §6.F). The default e2e Docker image + build helper are committed at `docker/quarkus/` (§3.3).
 
 ---
 
@@ -381,9 +382,39 @@ The whole Quarkus auth-identity layer is now in place (`app/proprietary/.../secu
   folder list/create all work. The 183 open endpoints stay open (no global `quarkus.http.auth.*`
   policy), so login-ON does not regress them.
 
-### F. SAML / SSO (the `testing/compose` validate scripts) — NOT started, now fully scoped
-The auth FOUNDATION (§E) is the hard part and is done; SSO is "add OIDC/SAML providers + the
-Spring-compatible endpoints on top". The `validate-*-test.sh` scripts are **endpoint-existence
+### F. SAML / SSO — DONE (Session 2), both flows work end-to-end
+
+**Both `validate-oauth-test.sh` and `validate-saml-test.sh` pass, and both full login flows were
+verified end-to-end against the Keycloak compose** (login -> IdP -> callback/ACS -> auto-created
+user -> app JWT cookie -> `/me` 200). Run with `PREMIUM_KEY=<your enterprise license key>`. Tag the Quarkus image as
+`docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest` so the compose uses it (or repoint the
+`image:`); `start-saml-test.sh` generates the SP certs + fetches Keycloak's cert.
+
+- **OAuth2 / OIDC** (`security/oauth2/`): `OAuth2LoginController` (JAX-RS) serves
+  `/oauth2/authorization/{id}` -> IdP authorize redirect; `OAuth2CallbackServlet` (`@WebServlet
+  /login/oauth2/code/*`) does the code exchange + userinfo + auto-create + JWT cookie. **Why a
+  servlet for the callback:** quarkus-undertow's default servlet owns the `/login/*` prefix and
+  query-strips/intercepts the extension-less callback before RESTEasy sees it; a registered
+  `@WebServlet` takes precedence. (Same reason the SAML SP endpoints are servlets.)
+- **SAML2** (`security/saml2/`): `Saml2Service` (OpenSAML 5) initialises the library, loads SP
+  key/cert + IdP cert, builds SP metadata, builds+signs the redirect-binding AuthnRequest, and
+  validates the SAMLResponse signature (`SAMLSignatureProfileValidator` + `SignatureValidator`
+  against the IdP cert). `SamlMetadataServlet` -> `/saml2/service-provider-metadata/{id}`;
+  `SamlSpServlet` -> `/saml2/authenticate/{id}` (login init) + `/login/saml2/sso/{id}` (ACS).
+  **Gotcha:** the SP entityId must equal the SP-metadata URL (`{backendUrl}/saml2/service-provider-
+  metadata/{id}`), which is what Keycloak's SAML client is keyed on - NOT the bare
+  `SECURITY_SAML2_SP_ENTITYID` host (`SamlConfig` derives it). Keycloak's realm has
+  `saml.client.signature=false` (AuthnRequest signature optional) + `saml.server.signature=true`
+  (so the ACS validates the response against Keycloak's cert).
+- Both flows finish by issuing the app JWT as the `stirling_jwt` cookie, which
+  `JwtBearerAuthenticationMechanism` now also reads (not just the `Authorization` header) -> feeds
+  the `UserSecurityIdentityAugmentor` (principal = User).
+- Follow-ups: logout/SLO endpoints; encrypted-assertion handling; the `mcp` Keycloak compose;
+  desktop/Tauri RelayState (`TauriSamlUtils` preserved). Multi-provider (google/github) OAuth uses
+  the same pattern keyed by registrationId.
+
+### F-old. (superseded) original SAML/SSO scoping
+The `validate-*-test.sh` scripts are **endpoint-existence
 checks** (Keycloak up + Stirling serves the SSO endpoint), not full browser logins.
 
 Prereqs for any run: the compose files use `image: docker.stirlingpdf.com/.../stirling-pdf:latest`
