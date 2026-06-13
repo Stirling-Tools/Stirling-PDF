@@ -123,6 +123,104 @@ public class Saml2Service {
         return keyInfo;
     }
 
+    /**
+     * Build a signed AuthnRequest and return the IdP SSO URL with the HTTP-Redirect binding query
+     * (SAMLRequest deflated+base64, plus SigAlg/Signature signed with the SP private key).
+     */
+    public String buildAuthnRequestRedirectUrl(String relayState) throws Exception {
+        org.opensaml.saml.saml2.core.AuthnRequest authnRequest =
+                build(org.opensaml.saml.saml2.core.AuthnRequest.DEFAULT_ELEMENT_NAME);
+        authnRequest.setID("ARQ" + java.util.UUID.randomUUID());
+        authnRequest.setIssueInstant(java.time.Instant.now());
+        authnRequest.setDestination(config.idpSingleLoginUrl());
+        authnRequest.setProtocolBinding(SAMLConstants.SAML2_POST_BINDING_URI);
+        authnRequest.setAssertionConsumerServiceURL(config.acsUrl());
+
+        org.opensaml.saml.saml2.core.Issuer issuer =
+                build(org.opensaml.saml.saml2.core.Issuer.DEFAULT_ELEMENT_NAME);
+        issuer.setValue(config.spEntityId());
+        authnRequest.setIssuer(issuer);
+
+        org.opensaml.saml.saml2.core.NameIDPolicy nameIdPolicy =
+                build(org.opensaml.saml.saml2.core.NameIDPolicy.DEFAULT_ELEMENT_NAME);
+        nameIdPolicy.setFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress");
+        nameIdPolicy.setAllowCreate(true);
+        authnRequest.setNameIDPolicy(nameIdPolicy);
+
+        String xml = SerializeSupport.nodeToString(XMLObjectSupport.marshall(authnRequest));
+
+        // HTTP-Redirect binding: DEFLATE (raw) + base64.
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.DeflaterOutputStream deflater =
+                new java.util.zip.DeflaterOutputStream(
+                        baos, new java.util.zip.Deflater(java.util.zip.Deflater.DEFLATED, true))) {
+            deflater.write(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        String samlRequest = Base64.getEncoder().encodeToString(baos.toByteArray());
+
+        String sigAlg = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256";
+        StringBuilder query = new StringBuilder();
+        query.append("SAMLRequest=").append(urlEncode(samlRequest));
+        if (relayState != null && !relayState.isBlank()) {
+            query.append("&RelayState=").append(urlEncode(relayState));
+        }
+        query.append("&SigAlg=").append(urlEncode(sigAlg));
+
+        java.security.Signature signer = java.security.Signature.getInstance("SHA256withRSA");
+        signer.initSign(spPrivateKey);
+        signer.update(query.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        String signature = Base64.getEncoder().encodeToString(signer.sign());
+        query.append("&Signature=").append(urlEncode(signature));
+
+        return config.idpSingleLoginUrl() + "?" + query;
+    }
+
+    /**
+     * Validate a base64 SAMLResponse against the IdP signing cert and return the authenticated
+     * subject's NameID (used as the username).
+     */
+    public String validateResponseAndGetUsername(String samlResponseB64) throws Exception {
+        byte[] decoded = Base64.getDecoder().decode(samlResponseB64);
+        org.opensaml.saml.saml2.core.Response response =
+                (org.opensaml.saml.saml2.core.Response)
+                        XMLObjectSupport.unmarshallFromInputStream(
+                                XMLObjectProviderRegistrySupport.getParserPool(),
+                                new java.io.ByteArrayInputStream(decoded));
+
+        org.opensaml.security.x509.BasicX509Credential idpCredential =
+                new org.opensaml.security.x509.BasicX509Credential(idpCertificate);
+
+        boolean responseSigned = response.isSigned();
+        if (responseSigned) {
+            validateSignature(response.getSignature(), idpCredential);
+        }
+        if (response.getAssertions().isEmpty()) {
+            throw new IllegalStateException("SAML response contained no assertions");
+        }
+        org.opensaml.saml.saml2.core.Assertion assertion = response.getAssertions().get(0);
+        if (assertion.isSigned()) {
+            validateSignature(assertion.getSignature(), idpCredential);
+        } else if (!responseSigned) {
+            throw new IllegalStateException("Neither SAML response nor assertion was signed");
+        }
+        if (assertion.getSubject() == null || assertion.getSubject().getNameID() == null) {
+            throw new IllegalStateException("SAML assertion has no subject NameID");
+        }
+        return assertion.getSubject().getNameID().getValue();
+    }
+
+    private void validateSignature(
+            org.opensaml.xmlsec.signature.Signature signature,
+            org.opensaml.security.x509.BasicX509Credential credential)
+            throws Exception {
+        new org.opensaml.saml.security.impl.SAMLSignatureProfileValidator().validate(signature);
+        org.opensaml.xmlsec.signature.support.SignatureValidator.validate(signature, credential);
+    }
+
+    private static String urlEncode(String value) {
+        return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     @SuppressWarnings("unchecked")
     static <T> T build(QName qname) {
         XMLObjectBuilderFactory factory = XMLObjectProviderRegistrySupport.getBuilderFactory();

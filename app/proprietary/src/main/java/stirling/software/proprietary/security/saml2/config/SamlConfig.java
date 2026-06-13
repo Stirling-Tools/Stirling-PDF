@@ -20,10 +20,25 @@ public record SamlConfig(
         boolean autoCreateUser) {
 
     public static SamlConfig fromConfig(Config mp) {
+        String registrationId = get(mp, "security.saml2.registrationId", "keycloak");
+        String backendUrl = get(mp, "system.backendUrl", "http://localhost:8080");
+        // The SP entityId MUST match the registrationId Keycloak's SAML client is keyed on, which
+        // is
+        // the SP metadata URL (this is what Spring Security's Saml2 default used). The compose's
+        // SECURITY_SAML2_SP_ENTITYID is the bare host and does not match, so derive it here.
+        String spEntityId =
+                backendUrl.replaceAll("/+$", "")
+                        + "/saml2/service-provider-metadata/"
+                        + registrationId;
+        String acsUrl =
+                get(
+                        mp,
+                        "security.saml2.sp.acs",
+                        backendUrl.replaceAll("/+$", "") + "/login/saml2/sso/" + registrationId);
         return new SamlConfig(
-                get(mp, "security.saml2.registrationId", "keycloak"),
-                get(mp, "security.saml2.sp.entityId", null),
-                get(mp, "security.saml2.sp.acs", null),
+                registrationId,
+                spEntityId,
+                acsUrl,
                 get(mp, "security.saml2.idpSingleLoginUrl", null),
                 get(mp, "security.saml2.idp.issuer", null),
                 get(mp, "security.saml2.idp.cert", null),
