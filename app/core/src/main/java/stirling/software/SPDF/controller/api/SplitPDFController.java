@@ -70,7 +70,7 @@ public class SplitPDFController {
                             + " individual numbers, ranges, or 'all' for every page. Input:PDF"
                             + " Output:PDF Type:SIMO")
     public Response splitPdf(
-            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileInput") List<FileUpload> fileUpload,
             @RestForm("fileId") String fileId,
             @RestForm("pageNumbers") String pageNumbersForm)
             throws IOException {

@@ -71,7 +71,7 @@ public class SplitPdfBySizeController {
                             + " (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF"
                             + " Output:ZIP-PDF Type:SISO")
     public Response autoSplitPdf(
-            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileInput") List<FileUpload> fileUpload,
             @RestForm("fileId") String fileId,
             @RestForm("splitType") Integer splitTypeForm,
             @RestForm("splitValue") String splitValueForm)

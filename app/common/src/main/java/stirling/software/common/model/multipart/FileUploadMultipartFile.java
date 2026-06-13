@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -27,6 +28,33 @@ public class FileUploadMultipartFile implements MultipartFile {
     /** Null-safe factory: returns null when the upload is absent. */
     public static MultipartFile of(FileUpload upload) {
         return upload == null ? null : new FileUploadMultipartFile(upload);
+    }
+
+    /**
+     * Null-safe factory for a multipart field that may have multiple parts under the same name.
+     *
+     * <p>Spring's MultipartFile binding picked the actual file part even when a client also sent a
+     * plain text form field of the same name; RESTEasy Reactive's {@code @RestForm FileUpload}
+     * binds the <em>first</em> part by name instead, so a stray {@code name=value} text part sent
+     * before the file would shadow the upload. Prefer the part that carries a real filename (the
+     * file), falling back to the last part, so such requests bind the same way they did under
+     * Spring.
+     */
+    public static MultipartFile of(List<FileUpload> uploads) {
+        if (uploads == null || uploads.isEmpty()) {
+            return null;
+        }
+        FileUpload chosen = null;
+        for (FileUpload upload : uploads) {
+            if (upload.fileName() != null && !upload.fileName().isBlank()) {
+                chosen = upload;
+                break;
+            }
+        }
+        if (chosen == null) {
+            chosen = uploads.get(uploads.size() - 1);
+        }
+        return new FileUploadMultipartFile(chosen);
     }
 
     @Override
