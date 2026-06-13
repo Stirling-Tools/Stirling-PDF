@@ -35,7 +35,7 @@
   --auth-label-text: #2b3230;
   --auth-button-bg: #af3434;
   --auth-button-text: #ffffff;
-  --auth-magic-button-bg: #8b5cf6;
+  --auth-magic-button-bg: #af3434;
   --auth-magic-button-text: #ffffff;
 
   /* Light-only auth colors (no dark mode equivalents) used for login/signup */
@@ -45,7 +45,7 @@
   --auth-label-text-light-only: #2b3230;
   --auth-button-bg-light-only: #af3434;
   --auth-button-text-light-only: #ffffff;
-  --auth-magic-button-bg-light-only: #8b5cf6;
+  --auth-magic-button-bg-light-only: #af3434;
   --auth-magic-button-text-light-only: #ffffff;
   --auth-bg-color-light-only: #ffffff;
   --auth-card-bg-light-only: #ffffff;

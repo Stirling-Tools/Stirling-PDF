@@ -12,7 +12,6 @@ cancel = "İptal"
 changedCredsMessage = "Bilgiler değiştirildi!"
 chooseFile = "Dosya Seç"
 close = "Kapat"
-color = "Renk"
 comingSoon = "Yakında"
 confirm = "Onayla"
 confirmClose = "Kapatmayı Onayla"
@@ -90,6 +89,7 @@ nothingToUndo = "Geri alınacak bir şey yok"
 noticeTopUpOrPlan = "Yeterli kredi yok, lütfen bakiye yükleyin veya bir plana yükseltin"
 noValidFiles = "İşlenecek geçerli dosya yok"
 oops = "Tüh!"
+openInNewWindow = "Yeni pencerede aç"
 openInViewer = "Görüntüleyicide Aç"
 operationCancelled = "İşlem iptal edildi"
 page = "Sayfa"
@@ -198,6 +198,10 @@ ssoDescription = "İki faktörlü kimlik doğrulama, tek oturum açma hesapları
 ssoManaged = "MFA'yı kimlik sağlayıcınız üzerinden yapılandırın."
 title = "İki faktörlü kimlik doğrulama"
 
+[account.overview]
+logOut = "Oturumu kapat"
+signedInAs = "Olarak oturum açıldı: {{email}}"
+
 [add-page-numbers]
 tags = "sayfalandır,etiket,düzenle,dizin"
 
@@ -224,6 +228,9 @@ title = "Ne yapar"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "Ek Ekle Hakkında"
+
+[addFileCard]
+upload = "Yükle"
 
 [addImage]
 applySignatures = "Resimleri Uygula"
@@ -494,6 +501,11 @@ title = "Sayfa Ölçeğini Ayarla"
 [adjustPageScale.error]
 failed = "Sayfa ölçeği ayarlanırken bir hata oluştu."
 
+[adjustPageScale.orientation]
+label = "Sayfa yönü"
+landscape = "Yatay"
+portrait = "Dikey"
+
 [adjustPageScale.pageSize]
 keep = "Orijinal Boyutu Koru"
 label = "Hedef Sayfa Boyutu"
@@ -600,6 +612,7 @@ label = "Geçici Dosya Yönetimi"
 [admin.settings.advanced.tempFileManagement.baseTmpDir]
 description = "Geçici dosyalar için temel dizin (varsayılan için boş bırakın: java.io.tmpdir/stirling-pdf)"
 label = "Temel Geçici Dizin"
+placeholder = "Varsayılan: java.io.tmpdir/stirling-pdf"
 
 [admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
 description = "Temizlemenin ne sıklıkta çalıştırılacağı (dakika cinsinden)"
@@ -612,6 +625,7 @@ label = "Sistem Geçici Dizinini Temizle"
 [admin.settings.advanced.tempFileManagement.libreofficeDir]
 description = "LibreOffice geçici dosyaları için dizin (varsayılan için boş bırakın: baseTmpDir/libreoffice)"
 label = "LibreOffice Geçici Dizini"
+placeholder = "Varsayılan: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Geçici dosyaların temizlenmesinden önceki maksimum saat"
@@ -628,6 +642,7 @@ label = "Başlangıçta Temizle"
 [admin.settings.advanced.tempFileManagement.systemTempDir]
 description = "Temizlenecek sistem geçici dizini (yalnızca cleanupSystemTemp etkinse kullanılır)"
 label = "Sistem Geçici Dizini"
+placeholder = "Sistem geçici dizin yolu"
 
 [admin.settings.advanced.tessdataDir]
 description = "OCR dil dosyaları için tessdata dizininin yolu"
@@ -833,6 +848,7 @@ label = "Veritabanı Adı"
 [admin.settings.database.password]
 description = "Veritabanı kimlik doğrulama parolası"
 label = "Parola"
+placeholder = "Veritabanı parolasını girin"
 
 [admin.settings.database.port]
 description = "Veritabanı sunucusu bağlantı noktası (özel URL sağlanmışsa kullanılmaz)"
@@ -864,10 +880,12 @@ label = "Kullanılamayan araçları varsayılan olarak gizle"
 [admin.settings.endpoints.groupsToRemove]
 description = "Devre dışı bırakılacak uç nokta gruplarını seçin"
 label = "Devre Dışı Uç Nokta Grupları"
+placeholder = "Devre dışı bırakılacak grupları seçin"
 
 [admin.settings.endpoints.toRemove]
 description = "Devre dışı bırakılacak bireysel uç noktaları seçin"
 label = "Devre Dışı Uç Noktalar"
+placeholder = "Devre dışı bırakılacak uç noktaları seçin"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} erişimi için Kurumsal lisans gereklidir. Referans için demo verilerini görüntülüyorsunuz."
@@ -1082,6 +1100,7 @@ label = "SMTP Sunucusu"
 [admin.settings.mail.password]
 description = "SMTP kimlik doğrulama parolası"
 label = "SMTP Parolası"
+placeholder = "SMTP parolasını girin"
 
 [admin.settings.mail.port]
 description = "SMTP bağlantısı için port numarası (genellikle 25, 465 veya 587)"
@@ -1090,6 +1109,10 @@ label = "SMTP Bağlantı Noktası"
 [admin.settings.mail.username]
 description = "SMTP kimlik doğrulama kullanıcı adı"
 label = "SMTP Kullanıcı Adı"
+
+[admin.settings.plan.noData]
+message = "Plan verileri şu anda kullanılamıyor."
+title = "Veri yok"
 
 [admin.settings.premium]
 description = "Premium veya kurumsal lisans anahtarınızı yapılandırın."
@@ -1137,6 +1160,9 @@ info = "Doğrudan satın alma ile bir lisans anahtarı veya sertifika dosyanız 
 toggle = "Lisans anahtarınız veya sertifika dosyanız mı var?"
 
 [admin.settings.premium.movedFeatures]
+auditLogging = "<0>Denetim Günlüğü</0> (ENTERPRISE) - Güvenlik"
+customMetadata = "<0>Özel Meta Veriler</0> (PRO) - Genel"
+databaseConfiguration = "<0>Veritabanı Yapılandırması</0> (ENTERPRISE) - Veritabanı"
 message = "Premium ve Kurumsal özellikler artık ilgili bölümlerinde düzenlenmiştir:"
 title = "Premium Özellikler Dağıtıldı"
 
@@ -1512,6 +1538,33 @@ user = "Kullanıcı"
 usernameInfo = "Kullanıcı adı yalnızca harf, rakam ve aşağıdaki özel karakterleri @._+- içerebilir veya geçerli bir e-posta adresi olmalıdır."
 webOnlyUser = "Sadece Web Kullanıcısı"
 
+[agents]
+auto_redaction_description = "Kişisel verileri otomatik olarak karart"
+auto_redaction_name = "Otomatik Karartma"
+back_to_tools = "Araçlara geri dön"
+coming_soon = "Çok yakında"
+compliance_description = "Belgeleri uyumluluk için denetle"
+compliance_name = "Uyumluluk Kontrolü"
+data_extraction_description = "Tabloları ve yapılandırılmış verileri çıkar"
+data_extraction_name = "Veri Çıkarma"
+doc_summary_description = "Uzun belgeleri özetle"
+doc_summary_name = "Özetleyici"
+form_filler_description = "PDF formlarını akıllı şekilde doldur"
+form_filler_name = "Form Doldurucu"
+fullscreen_title = "Stirling Ajanları"
+pdf_to_markdown_description = "PDF'leri temiz Markdown'a dönüştür"
+pdf_to_markdown_name = "PDF'den Markdown'a"
+section_title = "Ajanlar"
+show_less = "Daha az göster"
+start_chat = "Sohbete başla"
+stirling_description = "Genel amaçlı PDF asistanınız"
+stirling_full_name = "Stirling Genel Ajan"
+stirling_long_description = "Araçları çalıştırabilen, PDF'ler oluşturabilen ve belgelerinizden içgörüler çıkarabilen genel amaçlı PDF asistanı."
+stirling_name = "Stirling"
+stirling_running = "Çalışıyor..."
+stirling_tooltip = "Stirling ajanı"
+view_all = "Tüm ajanları görüntüle"
+
 [analytics]
 disable = "Analizi Devre Dışı Bırak"
 enable = "Analizi Etkinleştir"
@@ -1771,6 +1824,10 @@ insufficientPermissions = "Bu işlemi gerçekleştirmek için izniniz yok."
 pleaseLoginAgain = "Lütfen tekrar giriş yapın."
 sessionExpired = "Oturum Süresi Doldu"
 
+[auth.displayName]
+guest = "Konuk"
+user = "Kullanıcı"
+
 [auto-rename]
 description = "PDF içeriğinizden başlığı otomatik olarak bulur ve dosya adı olarak kullanır."
 header = "PDF'i Otomatik Yeniden Adlandır"
@@ -1862,6 +1919,13 @@ label = "{{title}} için menüyü aç"
 
 [automate.files]
 placeholder = "Bu otomasyonla işlenecek dosyaları seçin"
+
+[automate.folderScanWarning]
+advice = "Dosyayı yine de indirebilirsiniz (ör. incelemek veya elle düzenlemek için), ancak arka uç çalışmadan önce desteklenmeyen adımların kaldırılması gerekir."
+cancel = "İptal"
+confirm = "Yine de dışa aktar"
+intro = "Klasör tarama arka uçta çalışır, bu nedenle yalnızca bir arka uç uç noktasına sahip araçları çalıştırabilir. Bu otomasyondaki aşağıdaki adım(lar) buna sahip değil ve işlem hattı çalıştığında başarısız olacak:"
+title = "Bazı adımlar klasör taramada çalıştırılamıyor"
 
 [automate.importModal]
 cancel = "İptal"
@@ -2094,11 +2158,31 @@ placeholder = "Sayfa sayısı"
 title = "Son N Sayfa"
 
 [bulkSelection.operators]
-and = "AND: & veya \"and\" — her iki koşulu da gerektirir (örn., 1-50 & even)"
-comma = "Virgül: , veya | — seçimleri birleştirir (örn., 1-10, 20)"
-not = "NOT: ! veya \"not\" — sayfaları hariç tutar (örn., 3n & not 30)"
 text = "AND virgülden daha yüksek önceliğe sahiptir. NOT, belge aralığı içinde uygulanır."
 title = "Operatörler"
+
+[bulkSelection.operators.and]
+title = "Seçimleri birleştir (iki koşul da doğru olmalı)"
+
+[bulkSelection.operators.descriptions]
+and = "VE: & veya \"and\" - her iki koşulu da gerektirir (ör. 1-50 & even)"
+comma = "Virgül: , veya | - seçimleri birleştirir (ör. 1-10, 20)"
+not = "DEĞİL: ! veya \"not\" - sayfaları hariç tutar (ör. 3n & not 30)"
+
+[bulkSelection.operators.even]
+title = "Tüm çift numaralı sayfaları seç (2, 4, 6, 8...)"
+
+[bulkSelection.operators.not]
+title = "Seçimden çıkar"
+
+[bulkSelection.operators.odd]
+title = "Tüm tek numaralı sayfaları seç (1, 3, 5, 7...)"
+
+[bulkSelection.operators.or]
+title = "Seçime ekle (koşullardan herhangi biri doğru olabilir)"
+
+[bulkSelection.pageSelection]
+title = "Sayfa Seçimi"
 
 [bulkSelection.range]
 fromPlaceholder = "Başlangıç"
@@ -2684,6 +2768,22 @@ title = "İzinleri Değiştir"
 [changePermissions.tooltip.warning]
 text = "Bu izinlerin değiştirilemez olmasını sağlamak için, sahip parolasını ayarlamak üzere Parola Ekle aracını kullanın."
 
+[chat]
+resize = "Sohbet panelini yeniden boyutlandır"
+
+[chat.actions]
+copy = "Mesajı kopyala"
+
+[chat.header]
+agentMenu = "Stirling ajan seçenekleri"
+clearChat = "Sohbeti temizle"
+settings = "Ajan ayarları"
+
+[chat.input]
+attach = "Dosya ekle"
+placeholder = "Ne yapmak istiyorsunuz?"
+send = "Mesaj gönder"
+
 [chat.progress]
 analyzing = "İsteğiniz analiz ediliyor..."
 calling_engine = "Yapay zekâ düşünüyor..."
@@ -2699,6 +2799,32 @@ whole_doc_read_done = "Belge okuma tamamlandı..."
 whole_doc_read_started = "Belge okunuyor..."
 whole_doc_slice_done = "Belge okunuyor... (%{{percent}} tamamlandı)"
 
+[chat.quickActions]
+browseYourFiles = "Dosyalarınıza göz at"
+compressMany = "Bu belgeleri sıkıştır"
+compressOne = "Bu belgeyi sıkıştır"
+convertMany = "Bu belgeleri PDF'ye dönüştür"
+convertOne = "Bu belgeyi PDF'ye dönüştür"
+fileSummary_one = "Çalışma tezgahında 1 dosya ({{types}})"
+fileSummary_other = "Çalışma tezgahında {{count}} dosya ({{types}})"
+heading = "Başlarken"
+mergeMany = "Bu {{count}} belgeyi tek bir dosyada birleştir"
+moreFiles = "+{{count}} daha"
+openFromComputer = "Bilgisayardan aç"
+removeFile = "{{name}} öğesini kaldır"
+rotateMany = "Bu belgeleri döndür"
+rotateOne = "Bu belgeyi döndür"
+splitOne = "Bu belgeyi böl"
+
+[chat.responses]
+cannot_continue = "Bir şeyler ters gitti ve devam edemiyorum."
+cannot_do = "Bunu yapamıyorum."
+done = "Tamamlandı."
+need_clarification = "Lütfen isteğinizi netleştirir misiniz?"
+not_found = "İstenen bilgiyi bulamadım."
+processing = "İşleniyor ({{outcome}})..."
+unsupported_capability = "Desteklenmeyen özellik: {{capability}}"
+
 [chat.toolsUsed]
 summary = "{{count}} araç çalıştırıldı"
 summary_one = "1 araç çalıştırıldı"
@@ -2707,6 +2833,9 @@ unknownTool = "Bilinmeyen araç"
 
 [cloudBadge]
 tooltip = "Bu işlem bulut kredilerinizi kullanacak"
+
+[color.eyeDropper]
+tooltip = "Ekrandan renk seç"
 
 [colorPicker]
 title = "Renk seçin"
@@ -2799,6 +2928,7 @@ selectBaseFirst = "Önce orijinal PDF'yi seçin"
 filesMissing = "Seçili dosyalar bulunamadı. Lütfen yeniden seçin."
 generic = "Bu dosyalar karşılaştırılamıyor."
 selectRequired = "Bir orijinal ve bir düzenlenmiş belge seçin."
+title = "Karşılaştırma başarısız"
 
 [compare.large.file]
 message = "Verilen belgelerden biri veya her ikisi işlenemeyecek kadar büyük"
@@ -2864,6 +2994,7 @@ title = "Hâlâ çalışıyor…"
 
 [compare.status]
 complete = "Karşılaştırma hazır"
+error = "Karşılaştırma başarısız"
 extracting = "Metin çıkarılıyor..."
 processing = "Farklar analiz ediliyor..."
 
@@ -2929,6 +3060,10 @@ title = "Sıkıştırma Yöntemi"
 [compress.selectText.1]
 1 = "1-3 PDF sıkıştırma,</br> 4-6 hafif görüntü sıkıştırma,</br> 7-9 yoğun görüntü sıkıştırma görüntü kalitesini ciddi ölçüde düşürür"
 _value = "Sıkıştırma Ayarları"
+
+[compress.settings]
+desiredSize = "İstenen Dosya Boyutu"
+desiredSizePlaceholder = "Boyutu girin"
 
 [compress.tooltip.description]
 text = "Sıkıştırma, dosya boyutunu azaltmanın kolay bir yoludur. Hedef boyut girmek ve kaliteyi bizim ayarlamamız için Dosya Boyutu'nu seçin. Sıkıştırma gücünü elle ayarlamak için Kalite'yi seçin."
@@ -3404,6 +3539,29 @@ title = "Ayarlar Açıldı"
 message = "Stirling PDF artık varsayılan PDF düzenleyiciniz"
 title = "Varsayılan Uygulama Ayarlandı"
 
+[desktopUpdate]
+downloading = "Güncelleme indiriliyor..."
+installing = "Güncelleme yükleniyor..."
+installingWarning = "Kurulumu tamamlamak için uygulama otomatik olarak kapanacaktır."
+installNow = "Şimdi Yükle"
+readyToRestart = "Güncelleme Hazır"
+restartMessage = "Güncelleme yüklendi. Bitirmek için uygulamayı yeniden başlatın."
+restartNow = "Şimdi Yeniden Başlat"
+updateFailed = "Güncelleme Başarısız"
+updateFailedMessage = "Güncelleme indirilemedi veya yüklenemedi."
+
+[desktopUpdate.blocked]
+docsLink = "Kurulum belgelerini görüntüle"
+message = "Stirling-PDF bu makinede kendini güncelleme iznine sahip değil."
+title = "Yönetici izinleri gerekli"
+
+[dropdownList]
+searchPlaceholder = "Ara..."
+
+[editableSecretField]
+edit = "Düzenle"
+editSecretValue = "Gizli değeri düzenle"
+
 [editTableOfContents]
 submit = "İçindekileri uygula"
 
@@ -3490,6 +3648,9 @@ tabTitle = "Ana hat çalışma alanı"
 [editTableOfContents.workbench.empty]
 description = "Çalışma alanını yüklemek için İçindekileri Düzenle aracını seçin."
 title = "Düzenlemeye başlamak için aracı açın"
+
+[emptyFilesState]
+upload = "Yükle"
 
 [encryptedPdfUnlock]
 description = "Bu PDF parola korumalı. Çalışmaya devam edebilmek için parolayı girin."
@@ -3605,6 +3766,10 @@ title = "Ayarlar"
 [extractPages.tooltip]
 description = "Seçilen sayfaları sırası korunarak yeni bir PDF'ye çıkarır."
 
+[fileCard]
+openInFileEditor = "Dosya Düzenleyicide aç"
+viewInViewer = "Görüntüleyicide görüntüle"
+
 [fileChooser]
 click = "Seç"
 dragAndDrop = "Sürükle & Bırak"
@@ -3613,6 +3778,9 @@ dragAndDropPDF = "PDF dosyasını Sürükle & Bırak"
 extractPDF = "PDF Çıkarılıyor..."
 hoveredDragAndDrop = "Dosya(lar)ı buraya sürükleyip bırakın"
 or = "veya"
+
+[fileDropdownMenu]
+closeFile = "Dosyayı kapat"
 
 [fileEditor]
 addFiles = "Dosya Ekle"
@@ -3771,12 +3939,250 @@ expand = "Kenar çubuğunu genişlet"
 files = "Dosyalar"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive yapılandırılmamış"
+leaveMyFiles = "Dosyalarımdan çık"
+myFiles = "Dosyalarım"
 noFiles = "Henüz dosya yok"
 openFileManager = "Dosya yöneticisini aç"
 openFromComputer = "Bilgisayardan aç"
 openSettings = "Ayarları aç"
 search = "Ara"
 searchPlaceholder = "Dosyalarda ara..."
+
+[fileSidebar.fileItem]
+closeViewer = "Görüntüleyiciyi kapat"
+openInViewer = "Görüntüleyicide aç"
+
+[filesPage]
+addToWorkspace = "Çalışma alanına ekle"
+addToWorkspaceCount = "{{count}} öğeyi çalışma alanına ekle"
+allFiles = "Tüm dosyalar"
+back = "Geri"
+backToFolder = "{{folder}} klasörüne geri dön"
+backToMyFiles = "Dosyalarıma geri dön"
+breadcrumbs = "Klasör yolu"
+cancel = "İptal"
+clearSearch = "Aramayı temizle"
+clearSelection = "Seçimi temizle"
+closeDetails = "Ayrıntıları kapat"
+create = "Oluştur"
+cycleBlocked = "Bir klasörü kendi alt klasörlerinden birine taşıyamazsınız."
+delete = "Sil"
+deleteFolder = "Klasörü sil"
+deleteFolderBody = "\"{{name}}\" klasörü silinsin mi?"
+deleteFolderConfirm = "\"{{name}}\" klasörü silinsin mi? İçindeki dosyalar Tüm dosyalar'a taşınacaktır. {{count}} dosya etkilenecek."
+deleteFolderContents = "Klasör içindeki {{count}} dosyayı da sil"
+deleteFolderContentsWarning = "Dosyalar kalıcı olarak kaldırılacak ve kurtarılamaz."
+deleteFolderError = "Klasör silinemedi. Tekrar deneyin."
+deleteFolderKeepHint = "İçindeki dosyalar Tüm dosyalar'a taşınacaktır."
+deleteFolderTitle = "Klasör silinsin mi?"
+deselectAll = "Seçimi temizle"
+details = "Ayrıntılar"
+detailsCount = "{{count}} dosya seçildi"
+dismissError = "Kapat"
+download = "İndir"
+downloadAll = "Tümünü indir"
+downloadVersion = "Bu sürümü indir"
+dropOverlay = "Yüklemek için dosyaları bırakın"
+dropOverlaySub = "Dosyalar Yerel'de başlar. Onları bir klasöre düzenlemek için 'Taşı' veya 'Buluta kaydet'i kullanın."
+file = "Dosya"
+fileMenu = "Dosya eylemleri"
+folder = "Klasör"
+folderItems = "{{count}} öğe"
+folderMenu = "Klasör eylemleri"
+inPath = "{{path}} içinde"
+inWorkspace = "Açık"
+inWorkspaceAria = "Zaten çalışma alanında"
+loading = "Yükleniyor…"
+localFoldersUnavailable = "Klasörler yalnızca bulutta - düzenlemek için bir dosyayı buluta kaydedin."
+moreActions = "Diğer klasör eylemleri"
+moveLocalToCloudBlocked = "Yalnızca yerel dosyalar bulut klasörlerine taşınamaz. Önce bunları buluta kaydedin."
+moveSkippedRemote = "{{count}} dosya sunucuda taşınamadı (izin yok veya zaten silinmiş)."
+moveTo = "Şuraya taşı…"
+myFiles = "Dosyalarım"
+newFolder = "Yeni klasör"
+newFolderStorageDisabled = "Sunucu klasör depolaması etkin değil. Yöneticinizden açmasını isteyin."
+newFolderTabUnavailable = "Klasör oluşturmak için Tümü veya Bulut'a geçin."
+newRootFolder = "Kökte yeni klasör"
+offlineNoFolderEdits = "Sunucu klasör eşitlemesi kullanılamıyor - klasör değişiklikleri devre dışı. Oturum açmayı ve depolama yapılandırmasını kontrol edin."
+open = "Aç"
+openInWorkbench = "Çalışma tezgahında aç"
+openVersionInWorkspace = "Çalışma alanında aç"
+originFilter = "Kaynağa göre filtrele"
+quickView = "Hızlı bakış"
+refresh = "Sunucudan yenile"
+remove = "Sil"
+removeConfirm = "{{count}} dosya silinsin mi? Bu geri alınamaz."
+removeVersion = "Bu sürümü sil"
+rename = "Yeniden adlandır"
+renameFolder = "Klasörü yeniden adlandır"
+resizeFolderTree = "Klasör ağacını yeniden boyutlandır (yön tuşları, büyük adımlar için Shift; otomatik sığdırmak için çift tıklayın)"
+save = "Kaydet"
+saveToServer = "Sunucuya kaydet"
+saveToServerDisabledHint = "Bu sunucuda sunucuya kaydetme etkin değil. Yöneticinizden etkinleştirmesini isteyin."
+search = "Ara"
+searchPlaceholder = "Bu klasörde ve alt klasörlerde ara"
+selectAll = "Tümünü seç"
+selectAllHint = "Tümünü seçmek için tıklayın. İpucu: Tek tek dosya eklemek için Ctrl (veya Cmd) basılı tutun, aralık seçmek için Shift."
+selectedCount = "{{count}} seçildi"
+selectFile = "{{name}} dosyasını seç"
+shareDisabledHint = "Bu sunucuda dosya paylaşımı etkin değil. Yöneticinizden etkinleştirmesini isteyin."
+shareManage = "Paylaşımı yönet"
+showDetails = "Ayrıntıları göster"
+summary = "{{count}} öğe"
+syncFailed = "Klasör eşitlemesi başarısız: {{message}}"
+syncPartial = "Klasör eşitlemesi kısmi: {{total}} klasörün {{failed}} tanesi birleştirilemedi."
+tree = "Klasörler"
+upload = "Yükle"
+uploadedToLocal = "Yüklenen dosyalar Yerel'de başlar. Onları bir klasöre koymak için 'Buluta kaydet'i kullanın."
+uploadFromMobile = "Mobil'den yükle"
+versionActions = "Sürüm eylemleri"
+versionCollapse = "Ara sürümleri daralt"
+versionOrigin = "Orijinal yükleme"
+versionsCount = "{{count}} sürüm"
+versionShowHidden = "Önceki {{count}} sürümü göster"
+viewVersion = "Bu sürümü görüntüle"
+
+[filesPage.appearance]
+colour = "Renk"
+icon = "Simge"
+title = "Görünüm"
+useColour = "Renk {{c}} kullan"
+
+[filesPage.column]
+modified = "Değiştirildi"
+name = "Ad"
+size = "Boyut"
+type = "Tür"
+
+[filesPage.empty]
+hint = "PDF'leri yüklemek için bu sayfanın herhangi bir yerine bırakın veya dosyalarınızı düzenlemek için Yeni klasör düğmesini kullanın."
+newFolderCta = "Klasör oluştur"
+title = "Bu klasör boş"
+uploadCta = "Dosya yükle"
+
+[filesPage.empty.cloud]
+hint = "Başlamak için bir dosya yükleyin veya düzenlemek için bir klasör oluşturun."
+offlineHint = "Bulut kitaplığınızı yüklemek için yeniden bağlanın."
+offlineTitle = "Önbelleğe alınmış bulut dosyası yok"
+title = "Henüz bulut dosyası yok"
+
+[filesPage.empty.local]
+hint = "Yüklemeden kaydedilen dosyalar burada kalır. Eklemek için bir dosya bırakın."
+title = "Yalnızca yerel dosya yok"
+
+[filesPage.empty.recent]
+hint = "Açtığınız veya düzenlediğiniz dosyalar burada görünecek."
+title = "Henüz değiştirilen yok"
+
+[filesPage.empty.shared]
+hint = "Biri bir dosyayı bağlantıyla paylaştığında burada görünür."
+title = "Sizinle hiçbir şey paylaşılmadı"
+
+[filesPage.empty.sharedByMe]
+hint = "Burada görmek için herhangi bir dosyanızdan bir paylaşım bağlantısı oluşturun veya bir ekip arkadaşını davet edin."
+title = "Henüz herhangi bir dosya paylaşmadınız"
+
+[filesPage.error]
+actionFailed = "{{action}} gerçekleştirilemedi."
+actionFailedDetail = "{{action}} gerçekleştirilemedi: {{message}}"
+deleteFolderFailed = "Klasör silinemedi."
+deleteFolderFailedDetail = "Klasör silinemedi: {{message}}"
+folderAppearanceFailed = "Klasör görünümü güncellenemedi."
+folderAppearanceFailedDetail = "Klasör görünümü güncellenemedi: {{message}}"
+moveFilesFailed = "Dosyalar taşınamadı."
+moveFilesFailedDetail = "Dosyalar taşınamadı: {{message}}"
+moveFolderFailed = "Klasör taşınamadı."
+moveFolderFailedDetail = "Klasör taşınamadı: {{message}}"
+removeFilesFailed = "Dosyalar silinemedi."
+removeFilesFailedDetail = "Dosyalar silinemedi: {{message}}"
+uploadFilesFailed = "Dosyalar yüklenemedi."
+uploadFilesFailedDetail = "Dosyalar yüklenemedi: {{message}}"
+
+[filesPage.field]
+added = "Eklendi"
+count = "Dosyalar"
+folder = "Klasör"
+modified = "Değiştirildi"
+name = "Ad"
+size = "Boyut"
+toolHistory = "Araç geçmişi"
+toolHistoryAtVersion = "Kümülatif araç zinciri"
+totalSize = "Toplam boyut"
+type = "Tür"
+versionHistory = "Sürüm yolculuğu"
+
+[filesPage.folderName]
+cancel = "İptal"
+error = "Klasör kaydedilemedi. Tekrar deneyin."
+label = "Klasör adı"
+placeholder = "Klasör adı"
+
+[filesPage.moveDialog]
+cancel = "İptal"
+confirm = "Buraya taşı"
+error = "Taşınamadı. Tekrar deneyin."
+hint = "Bir hedef klasör seçin. İpucu: Soldaki ağaçta dosyaları klasörlerin üzerine sürükleyip bırakabilirsiniz."
+newFolderCancel = "Vazgeç"
+newFolderCreate = "Oluştur"
+newFolderError = "Klasör oluşturulamadı. Tekrar deneyin."
+newFolderLabel = "Yeni klasör adı"
+newFolderPlaceholder = "Klasör adı"
+newFolderToggle = "Yeni klasör oluştur…"
+title = "Klasöre taşı"
+
+[filesPage.origin]
+all = "Tüm kaynaklar"
+cloud = "Bulut"
+cloudHint = "Stirling sunucusunda depolanır"
+local = "Yerel"
+localHint = "Sadece bu tarayıcıda depolanır"
+shared = "Paylaşılan"
+sharedHint = "Bağlantıyla sizinle paylaşılmış"
+
+[filesPage.sort]
+modifiedAsc = "En eskiden"
+modifiedDesc = "En yeniden"
+nameAsc = "Ad A→Z"
+nameDesc = "Ad Z→A"
+sizeAsc = "En küçük önce"
+sizeDesc = "En büyük önce"
+
+[filesPage.syncError]
+client = "Klasör eşitlemesi başarısız."
+network = "Sunucuya ulaşılamadı."
+server = "Klasör eşitlemesi sırasında sunucu hatası."
+
+[filesPage.tabName]
+local = "Yerel"
+recent = "Son"
+shared = "Benimle paylaşılan"
+sharedByMe = "Benim paylaştıklarım"
+
+[filesPage.tabs]
+all = "Tümü"
+ariaLabel = "Dosya görünümleri"
+cloud = "Bulut"
+local = "Yerel"
+recent = "Son"
+shared = "Benimle paylaşılan"
+sharedByMe = "Benim paylaştıklarım"
+
+[filesPage.treeMenu]
+actions = "{{name}} için klasör eylemleri"
+collapse = "Klasörü daralt"
+delete = "Klasörü sil"
+expand = "Klasörü genişlet"
+newSubfolder = "Yeni alt klasör"
+rename = "Yeniden adlandır"
+
+[filesPage.typeFilter]
+allTypes = "Tüm türler"
+label = "Türe göre filtrele"
+
+[filesPage.viewMode]
+grid = "Izgara görünümü"
+label = "Görünüm modu"
+list = "Liste görünümü"
 
 [fileToPDF]
 credit = "Bu hizmet dosya dönüşümü için LibreOffice ve Unoconv'u kullanır."
@@ -3891,6 +4297,15 @@ title = "PDF'leri Düzleştirme Hakkında"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[formFill]
+flattenAfterFilling = "Doldurduktan sonra düzleştir"
+rescanFields = "Alanları yeniden tara"
+rescanFormFields = "Form alanlarını yeniden tara"
+save = "Kaydet"
+
+[formFill.sidebar]
+close = "Kenar çubuğunu kapat"
 
 [getPdfInfo]
 downloadJson = "JSON İndir"
@@ -4451,6 +4866,11 @@ tags = "biçimlendirme,web-içeriği,dönüşüm,dönüştür"
 title = "HTML'den PDF'e"
 zoom = "Web sitesini görüntülemek için yakınlaştırma düzeyi."
 
+[image.upload]
+hint = "PDF üzerine yerleştirmek için bir PNG, JPG, SVG veya başka bir görsel dosyası yükleyin. Uyum için SVG dosyaları PNG'ye dönüştürülecektir."
+label = "Görsel Yükle"
+placeholder = "Görsel dosyası seç"
+
 [imageToPdf]
 tags = "dönüşüm,img,jpg,fotoğraf,resim"
 
@@ -4468,6 +4888,9 @@ title = "Resimden PDF'e"
 3 = "Çoklu dosya mantığı (Yalnızca birden fazla resimle çalışırken etkinleştirilir)"
 4 = "Tek bir PDF'e birleştir"
 5 = "Ayrı PDF'lere dönüştür"
+
+[infoBanner]
+dismiss = "Kapat"
 
 [invite]
 acceptError = "Hesap oluşturulamadı"
@@ -4804,6 +5227,7 @@ failed = "OCR işlemi başarısız oldu"
 
 [ocr.languagePicker]
 additionalLanguages = "Ek diller mi arıyorsunuz?"
+loading = "Kullanılabilir diller yükleniyor..."
 viewSetupGuide = "Kurulum rehberini görüntüle →"
 
 [ocr.operation]
@@ -4940,6 +5364,10 @@ daysRemainingSingular = "{{days}} gün kaldı"
 title = "30 Günlük Pro Denemeniz"
 trialEnds = "Deneme {{date}} tarihinde bitiyor"
 
+[onboarding.mfa]
+authenticationCode = "Kimlik doğrulama kodu"
+qrCodeLoading = "QR kodunuz oluşturuluyor…"
+
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Oturum açma modunu etkinleştirdiğinizde kullanıcıları yönetebilir, ayarları yapılandırabilir ve sunucu sağlığını izleyebilirsiniz. Sunucunuzdaki ilk <strong>{{freeTierLimit}}</strong> kişi Stirling'i ücretsiz kullanır."
 adminBodyLoginEnabled = "Bir yönetici olarak kullanıcıları yönetebilir, ayarları yapılandırabilir ve sunucu sağlığını izleyebilirsiniz. Sunucunuzdaki ilk <strong>{{freeTierLimit}}</strong> kişi Stirling'i ücretsiz kullanır."
@@ -4949,6 +5377,9 @@ userTitle = "Plan Özeti"
 
 [onboarding.securityCheck]
 message = "Uygulama son zamanlarda önemli değişiklikler geçirdi. Sunucu yöneticinizin dikkatine ihtiyaç duyulabilir. Devam etmek için lütfen rolünüzü doğrulayın."
+roleAdmin = "Yönetici"
+rolePlaceholder = "Rolünüzü onaylayın"
+roleUser = "Kullanıcı"
 
 [onboarding.serverLicense]
 freeBody = "<strong>Open-Core</strong> lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. Kesintisiz ölçeklemek ve yeni <strong>PDF metin düzenleme aracımıza</strong> erken erişim almak için Stirling Server planını öneririz - tam düzenleme ve <strong>sınırsız koltuk</strong> $99/server/ay."
@@ -5074,6 +5505,17 @@ title = "Sayfa Düzenleyici"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
 
+[pageEditor.emptyState]
+body = "Sayfaları düzenlemeye başlamak için dosya ekleyin"
+title = "Yüklü PDF dosyası yok"
+
+[pageEditor.toolbar]
+delete = "Seçileni Sil"
+redo = "Yinele"
+rotateLeft = "Seçileni Sola Döndür"
+rotateRight = "Seçileni Sağa Döndür"
+undo = "Geri Al"
+
 [pageExtracter]
 header = "Sayfaları Çıkar"
 placeholder = "(örneğin 1,2,8 veya 4,7,12-16 ya da 2n-1)"
@@ -5085,12 +5527,14 @@ addBorder = "Kenarlık Ekle"
 borderWidth = "Kenarlık Kalınlığı"
 bottom = "Alt Kenar Boşluğu"
 cols = "Sütunlar"
+colsPlaceholder = "Sütun sayısını girin"
 header = "Çoklu Sayfa Düzeni"
 innerMargin = "İç Kenar Boşluğu"
 left = "Sol Kenar Boşluğu"
 pagesPerSheet = "Sayfa başına sayfalar:"
 right = "Sağ Kenar Boşluğu"
 rows = "Satırlar"
+rowsPlaceholder = "Satır sayısını girin"
 submit = "Gönder"
 tags = "birleştir,kompozit,tek-görünüm,düzenle"
 title = "Çoklu Sayfa Düzeni"
@@ -5131,6 +5575,14 @@ failed = "Çok sayfalı yerleşim oluşturulurken bir hata oluştu."
 innerMarginTooLarge = "Seçili yerleşim için iç kenar boşluğu çok büyük."
 outerHorizontalMarginsTooLarge = "Sol/Sağ kenar boşlukları bu sayfa boyutu için çok büyük."
 outerVerticalMarginsTooLarge = "Üst/Alt kenar boşlukları bu sayfa boyutu için çok büyük."
+
+[pageLayout.margins]
+borderThicknessPlaceholder = "Kenarlık kalınlığını girin"
+bottomPlaceholder = "Alt boşluğu girin"
+innerPlaceholder = "İç boşluğu girin"
+leftPlaceholder = "Sol boşluğu girin"
+rightPlaceholder = "Sağ boşluğu girin"
+topPlaceholder = "Üst boşluğu girin"
 
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Yerleştirilen her sayfanın etrafına çizgiler çizmek için kenarlıkları etkinleştirin. Bu, görsel ayrım veya kırpma için yardımcı olabilir."
@@ -5785,6 +6237,26 @@ pdfTools = "Temel PDF Araçları"
 priority = "Öncelikli Destek"
 title = "Özellik"
 
+[plan.features]
+allPdfOperations = "Tüm PDF işlemleri"
+auditing = "Denetim"
+communitySupport = "Topluluk desteği"
+customPdfMetadata = "Özel PDF meta verileri"
+editingTextInPdfs = "PDF'lerde metin düzenleme"
+externalDatabase = "Harici Veritabanı"
+googleDriveIntegration = "Google Drive entegrasyonu"
+prometheusSupport = "Prometheus Desteği"
+regularUpdates = "Düzenli güncellemeler"
+saml = "SAML"
+secureLoginSupport = "Güvenli Oturum Açma Desteği"
+selfHostedDeployment = "Kendi barındırmalı dağıtım"
+sso = "SSO"
+unlimitedUsers = "Sınırsız kullanıcı"
+upToFiveUsers = "En fazla 5 kullanıcı"
+upToFiveUsersLowercase = "en fazla 5 kullanıcı"
+usageTracking = "Kullanım takibi"
+usersLimitedToSeats = "Kullanıcılar koltuklarla sınırlı"
+
 [plan.free]
 forever = "Sonsuza kadar ücretsiz"
 highlight1 = "Haftalık sınırlı araç kullanımı"
@@ -5792,6 +6264,22 @@ highlight2 = "Tüm araçlara erişim"
 highlight3 = "Topluluk desteği"
 included = "Dahil"
 name = "Ücretsiz"
+
+[plan.highlights]
+advancedIntegrations = "Gelişmiş entegrasyonlar"
+allBasicFeatures = "Tüm temel özellikler"
+cancelAnytime = "İstediğiniz zaman iptal edin"
+customPdfMetadata = "Özel PDF meta verileri"
+editingTextInPdfsCaps = "PDF'lerde metin düzenleme"
+enterpriseFeatures = "Kurumsal özellikler (SAML, Denetim)"
+perSeatLicensing = "Kullanıcı başına lisanslama"
+saveWithAnnualBilling = "Yıllık faturalandırmayla tasarruf edin"
+selfHosted = "Kendi barındırdığınız"
+selfHostedOnInfrastructure = "Kendi altyapınızda barındırılan"
+ssoOAuth = "SSO (OAuth2/OIDC)"
+unlimitedUsers = "Sınırsız kullanıcı"
+upToFiveUsers = "En fazla 5 kullanıcı"
+usageTrackingPrometheus = "Kullanım takibi ve Prometheus"
 
 [plan.licenseWarning]
 body = "{{total}} kullanıcınız var ancak ücretsiz katman sunucu başına yalnızca {{limit}} destekler. Stirling PDF'nin sorunsuz çalışması için yükseltin."
@@ -6103,6 +6591,7 @@ allSessions = "Tüm Oturumlar"
 allTools = "All Tools"
 automate = "Otomatik"
 back = "Geri"
+backToAllTools = "Tüm araçlara geri dön"
 certSign = "Sertifika İmzası"
 completedSessions = "Tamamlanan Oturumlar"
 completedTab = "Tamamlandı"
@@ -6772,6 +7261,9 @@ bullet3 = "Onay iş akışları ve yasal teslim zincirleri için kritiktir"
 description = "Oturumu oluştururken belirttiğiniz sıra, kimin önce imzalayacağını belirler."
 title = "İmza Sırası"
 
+[settings]
+close = "Kapat"
+
 [settings.configuration]
 advanced = "Gelişmiş"
 database = "Veritabanı"
@@ -6856,8 +7348,18 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Güncellemeleri kontrol edin ve sürüm bilgilerini görüntüleyin"
 latestVersion = "En Son Sürüm"
+managedByAdmin = "Yönetici tarafından yönetiliyor"
+modeAuto = "Güncellemeleri otomatik yükle"
+modeDisabled = "Güncellemeleri denetleme"
+modePrompt = "Güncellemeleri yüklemeden önce sor"
 serverNeedsUpdate = "Sunucunun yönetici tarafından güncellenmesi gerekiyor"
 title = "Yazılım Güncellemeleri"
+updateBehavior = "Güncelleme davranışı"
+updateBehaviorDescription = "Güncellemeleri yüklemeden önce sorulmasını, otomatik yüklenmesini veya güncelleme denetimlerinin tamamen atlanmasını seçin."
+updateBehaviorError = "Güncelleme davranışı değiştirilemedi"
+updateBehaviorErrorLocked = "Bu ayar yöneticiniz tarafından kilitlendi."
+updateBehaviorLockedDescription = "Yöneticiniz bu makinede Stirling-PDF'in güncellemeleri nasıl ele alacağını yapılandırdı. Değiştirmek için onlarla iletişime geçin."
+updateBehaviorSaved = "Güncelleme davranışı kaydedildi."
 versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 viewDetails = "Ayrıntıları Görüntüle"
 
@@ -7244,6 +7746,7 @@ sharedDescription = "Tüm kullanıcılar bu imzaları görebilir ve kullanabilir
 sharedHeading = "Paylaşılan İmzalar"
 tempStorageDescription = "İmzalar yalnızca tarayıcınızda saklanır. Tarayıcı verilerini temizlerseniz veya tarayıcı değiştirirseniz kaybolurlar."
 tempStorageTitle = "Geçici tarayıcı depolaması"
+use = "İmzayı kullan"
 
 [sign.saved.status]
 saved = "Kaydedildi"
@@ -7695,6 +8198,7 @@ bulkTitle = "Seçili dosyaları yükle"
 description = "Bu, geçerli dosyayı kendi erişiminiz için sunucu depolamasına yükler."
 errorTitle = "Yükleme başarısız"
 failure = "Yükleme başarısız. Lütfen oturum açma ve depolama ayarlarınızı kontrol edin."
+featureDisabled = "Bu sunucuda sunucuya kaydetme etkin değil."
 fileCount = "{{count}} dosya seçildi"
 fileLabel = "Dosya"
 hint = "Genel bağlantılar ve erişim modları, sunucu ayarlarınız tarafından kontrol edilir."
@@ -7823,8 +8327,17 @@ center = "Orta"
 left = "Sol"
 right = "Sağ"
 
+[textInput]
+clear = "Girişi temizle"
+
 [theme]
 toggle = "Temayı Değiştir"
+
+[time.relative]
+daysAgo = "{{count}}g önce"
+hoursAgo = "{{count}}sa önce"
+justNow = "az önce"
+minutesAgo = "{{count}}dk önce"
 
 [timestampPdf]
 completed = "PDF başarıyla zaman damgalandı"
@@ -7852,6 +8365,10 @@ label = "Bir TSA sunucusu seçin"
 [timestampPdf.steps]
 settings = "Ayarlar"
 
+[toast]
+dismiss = "Kapat"
+toggleDetails = "Ayrıntıları göster/gizle"
+
 [tool]
 endpointUnavailable = "Bu araç sunucunuzda kullanılamıyor."
 endpointUnavailableClickable = "Bu modda kullanılamaz. Oturum açmak için tıklayın."
@@ -7868,13 +8385,18 @@ viewerMode = "Birden çok dosya seçmek için dosya düzenleyiciye geçin."
 [toolPanel]
 allTools = "Tüm araçlar"
 alpha = "Alfa"
+backToAllTools = "Tüm araçlara geri dön"
+backToDefault = "Geri"
 backToTools = "Araçlara geri dön"
 collapse = "Paneli daralt"
 comingSoon = "Yakında:"
 expand = "Paneli genişlet"
+goBack = "Geri dön"
 placeholder = "Başlamak için bir araç seçin"
 premiumFeature = "Premium özellik:"
 search = "Araçlarda ara"
+toolsHeader = "Araçlar"
+viewAllTools = "Tüm araçları görüntüle"
 
 [toolPanel.fullscreen]
 comingSoon = "Yakında:"
@@ -7933,6 +8455,9 @@ verification = "Doğrulama"
 noSearchResults = "Araç bulunamadı"
 noTools = "Kullanılabilir araç yok"
 
+[tooltip]
+close = "Araç ipucunu kapat"
+
 [unlockPDFForms]
 description = "Bu araç PDF form alanlarındaki salt okunur kısıtlamalarını kaldırarak onları düzenlenebilir ve doldurulabilir hale getirir."
 filenamePrefix = "kilidi_acilmis_formlar"
@@ -7951,29 +8476,42 @@ placeholder = "Başlamak için ana görünümde bir PDF dosyası seçin"
 title = "Kilit Açılmış Formlar Sonuçları"
 
 [update]
+allReleases = "Tüm Sürümler"
 availableUpdates = "Kullanılabilir Güncellemeler"
+breaking = "Uyumsuz"
 breakingChanges = "Kırıcı Değişiklikler"
 breakingChangesDefault = "Bu sürüm kırıcı değişiklikler içeriyor."
 breakingChangesDetected = "Kırıcı Değişiklikler Tespit Edildi"
 breakingChangesMessage = "Bazı sürümler kırıcı değişiklikler içerir. Lütfen güncellemeden önce aşağıdaki geçiş kılavuzlarını inceleyin."
 close = "Kapat"
+closeModal = "Güncelleme penceresini kapat"
 current = "Geçerli Sürüm"
+defaultRecommendation = "Bu güncelleme önemli düzeltmeler ve iyileştirmeler içerir."
 downloadLatest = "En Sonu İndir"
+later = "Daha sonra"
 latest = "En Son Sürüm"
 latestStable = "En Son Kararlı"
 loadingDetailedInfo = "Ayrıntılı bilgiler yükleniyor..."
 migrationGuide = "Geçiş Kılavuzu"
 migrationGuides = "Geçiş Kılavuzları"
+migrationGuidesDesc = "Güncellemeden önce önemli değişiklikleri gözden geçirin."
+modalSubtitle = "Stirling PDF'in yeni bir sürümü yüklenmeye hazır."
 modalTitle = "Güncelleme Mevcut"
+notes = "Notlar"
 priorityLabel = "Öncelik"
 recommendedAction = "Önerilen Eylem"
 releaseNotes = "Sürüm Notları"
+showLess = "Daha az sürüm göster"
+showMore = "Tüm {{count}} sürümü göster"
+stable = "KARARLI"
 unableToLoadDetails = "Ayrıntılı bilgiler yüklenemedi."
 updateAvailable = "Güncelleme Mevcut"
 urgentUpdateAvailable = "Acil Güncelleme"
 version = "Sürüm"
+versionHistory = "Sürüm Geçmişi"
 viewAllReleases = "Tüm Sürümleri Görüntüle"
 viewGuide = "Kılavuzu Görüntüle"
+whatsNewIn = "Yeni neler var"
 
 [update.priority]
 low = "Düşük"
@@ -8155,12 +8693,16 @@ enableDarkFilter = "Karanlık Filtresini Etkinleştir"
 enableSepiaFilter = "Sepya Filtresini Etkinleştir"
 firstPage = "İlk Sayfa"
 lastPage = "Son Sayfa"
+moreOptions = "Daha fazla"
 nextPage = "Sonraki Sayfa"
 onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+pageNavigation = "Sayfa gezintisi"
 previousPage = "Önceki Sayfa"
 resetZoom = "Yakınlaştırmayı sıfırla"
 singlePageView = "Tek Sayfa Görünümü"
 unknownFile = "Bilinmeyen dosya"
+view = "Görünüm"
+zoom = "Yakınlaştır"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
 
@@ -8198,6 +8740,9 @@ typeInsertText = "Metin Ekle"
 typeReplaceText = "Metni Değiştir"
 viewComment = "Yorumu görüntüle"
 
+[viewer.error]
+noFileProvided = "Hata: Görüntüleyiciye dosya sağlanmadı"
+
 [viewer.formBar]
 apply = "Değişiklikleri Uygula"
 dismiss = "Kapat"
@@ -8206,6 +8751,9 @@ hasFieldsDesc = "Bu PDF doldurulabilir alanlar içeriyor"
 title = "Form Alanları"
 unsavedBadge = "Kaydedilmemiş"
 unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
+
+[viewer.link]
+delete = "Bağlantıyı sil"
 
 [viewer.nonPdf]
 columnDefault = "Sütun {{index}}"
@@ -8221,6 +8769,19 @@ loading = "Yükleniyor..."
 renderMarkdown = "Markdown'u işle"
 sortedBy = "Sıralama ölçütü: {{column}}"
 textStats = "{{lines}} satır · {{size}}"
+
+[viewer.redaction]
+removeMark = "Bu işareti kaldır"
+
+[viewer.search]
+clear = "Aramayı temizle"
+close = "Aramayı kapat"
+next = "Sonraki sonuç"
+previous = "Önceki sonuç"
+resultsOf = "/ {{total}}"
+
+[viewer.signature]
+delete = "İmzayı sil"
 
 [viewPdf]
 header = "PDF Görüntüle"
@@ -8469,6 +9030,37 @@ toggleLayers = "Katmanları göster/gizle"
 toggleSidebar = "Kenar çubuğunu göster/gizle"
 toggleTheme = "Temayı değiştir"
 viewer = "Görüntüleyici"
+
+[workflow.participant]
+accessExpired = "Bu belgeye erişiminizin süresi doldu."
+certificateFile = "Sertifika Dosyası"
+certificateFilePlaceholder = "Sertifika dosyasını seçin"
+certificatePassword = "Sertifika Parolası"
+certificateType = "Sertifika Türü"
+certTypeJks = "JKS Anahtar Deposu"
+certTypeP12 = "P12/PKCS12 Sertifikası"
+certTypeServer = "Sunucu Sertifikası (varsa)"
+completedDeclined = "Bu belgeyi reddettiniz."
+completedSigned = "Bu belgeyi imzaladınız."
+decline = "Reddet"
+downloadDocument = "Belgeyi indir"
+dueDate = "Son Tarih: {{date}}"
+errorTitle = "Hata"
+from = "Kimden: {{name}}"
+loadingSession = "Oturum yükleniyor..."
+location = "Konum"
+locationPlaceholder = "örn. San Francisco, CA"
+pageNumber = "Sayfa Numarası (isteğe bağlı)"
+reason = "Gerekçe"
+reasonPlaceholder = "örn. Belge onayı"
+sessionNotFound = "Oturum bulunamadı veya erişim reddedildi."
+signDocument = "Belgeyi imzala"
+statusDeclined = "Reddedildi"
+statusNotified = "Bilgilendirildi"
+statusPending = "Beklemede"
+statusSigned = "İmzalandı"
+statusViewed = "Görüntülendi"
+submitSignature = "İmzayı gönder"
 
 [workspace]
 title = "Çalışma Alanı"

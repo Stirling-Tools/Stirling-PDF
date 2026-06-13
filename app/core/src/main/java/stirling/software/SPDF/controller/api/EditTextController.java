@@ -39,7 +39,9 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
+import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
+
+import tools.jackson.core.type.TypeReference;
 
 /**
  * Find/replace text editing for PDFs. Round-trips through {@link PdfJsonConversionService}: the
@@ -73,7 +75,7 @@ public class EditTextController {
         binder.registerCustomEditor(
                 List.class,
                 "edits",
-                new StringToArrayListPropertyEditor<>(EditTextOperation.class));
+                new JsonListPropertyEditor<>(new TypeReference<List<EditTextOperation>>() {}));
     }
 
     @AutoJobPostMapping(

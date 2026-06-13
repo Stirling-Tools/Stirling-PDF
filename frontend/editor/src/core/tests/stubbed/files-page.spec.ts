@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
+import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
 /** Stubbed coverage for the /files page UI invariants. */
 
@@ -34,63 +35,70 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
   await page.route("**/api/v1/storage/files", (route: Route) =>
     route.fulfill({ json: serverFiles }),
   );
-  await page.addInitScript((records) => {
-    const open = window.indexedDB.open("stirling-pdf-files", 4);
-    open.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      // Create both `files` and `folders` stores on this DB.
-      if (!db.objectStoreNames.contains("files")) {
-        const store = db.createObjectStore("files", { keyPath: "id" });
-        store.createIndex("name", "name", { unique: false });
-        store.createIndex("folderId", "folderId", { unique: false });
-        store.createIndex("originalFileId", "originalFileId", {
-          unique: false,
-        });
-      }
-      if (!db.objectStoreNames.contains("folders")) {
-        const fStore = db.createObjectStore("folders", { keyPath: "id" });
-        fStore.createIndex("parentFolderId", "parentFolderId", {
-          unique: false,
-        });
-        fStore.createIndex("name", "name", { unique: false });
-      }
-    };
-    open.onsuccess = () => {
-      const db = open.result;
-      const tx = db.transaction("files", "readwrite");
-      const store = tx.objectStore("files");
-      const now = Date.now();
-      for (const f of records) {
-        store.put({
-          id: f.id,
-          fileId: f.id,
-          quickKey: f.id,
-          name: f.name,
-          type: "application/pdf",
-          size: 1024,
-          lastModified: now,
-          createdAt: now,
-          // Placeholder; opening would need real bytes.
-          data: new ArrayBuffer(8),
-          thumbnail: null,
-          isLeaf: true,
-          versionNumber: f.versionNumber ?? 1,
-          originalFileId: f.id,
-          parentFileId: null,
-          toolHistory: f.toolHistory ?? [],
-          folderId: null,
-          remoteStorageId: f.remoteStorageId,
-          remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
-          remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
-          remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
-          remoteAccessRole: f.remoteStorageId ? "owner" : null,
-          remoteSharedViaLink: false,
-          remoteHasShareLinks: false,
-          remoteShareToken: null,
-        });
-      }
-    };
-  }, files);
+  await page.addInitScript(
+    ({ records, dbVersion }) => {
+      const open = window.indexedDB.open("stirling-pdf-files", dbVersion);
+      open.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        // Create both `files` and `folders` stores on this DB.
+        if (!db.objectStoreNames.contains("files")) {
+          const store = db.createObjectStore("files", { keyPath: "id" });
+          store.createIndex("name", "name", { unique: false });
+          store.createIndex("folderId", "folderId", { unique: false });
+          store.createIndex("originalFileId", "originalFileId", {
+            unique: false,
+          });
+        }
+        if (!db.objectStoreNames.contains("folders")) {
+          const fStore = db.createObjectStore("folders", { keyPath: "id" });
+          fStore.createIndex("parentFolderId", "parentFolderId", {
+            unique: false,
+          });
+          fStore.createIndex("name", "name", { unique: false });
+        }
+      };
+      open.onsuccess = () => {
+        const db = open.result;
+        // Yield the connection if the app ever needs to upgrade, and drop it
+        // once the writes commit, so the seed never blocks the app's open.
+        db.onversionchange = () => db.close();
+        const tx = db.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        const now = Date.now();
+        for (const f of records) {
+          store.put({
+            id: f.id,
+            fileId: f.id,
+            quickKey: f.id,
+            name: f.name,
+            type: "application/pdf",
+            size: 1024,
+            lastModified: now,
+            createdAt: now,
+            // Placeholder; opening would need real bytes.
+            data: new ArrayBuffer(8),
+            thumbnail: null,
+            isLeaf: true,
+            versionNumber: f.versionNumber ?? 1,
+            originalFileId: f.id,
+            parentFileId: null,
+            toolHistory: f.toolHistory ?? [],
+            folderId: null,
+            remoteStorageId: f.remoteStorageId,
+            remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
+            remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
+            remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
+            remoteAccessRole: f.remoteStorageId ? "owner" : null,
+            remoteSharedViaLink: false,
+            remoteHasShareLinks: false,
+            remoteShareToken: null,
+          });
+        }
+        tx.oncomplete = () => db.close();
+      };
+    },
+    { records: files, dbVersion: DATABASE_CONFIGS.FILES.version },
+  );
 }
 
 /** Stub the storage + config endpoints hit on mount. */
@@ -120,12 +128,16 @@ async function stubStorageApis(
   );
 }
 
-/** Navigate to /files and wait for at least one seeded card. */
+/** Navigate to /files and wait for at least one real (non-skeleton) card.
+ *  `.files-page-card` also matches the loading-state skeleton placeholders, and
+ *  their parent grid carries `aria-busy="true"` which intercepts pointer events
+ *  -- so waiting for any `.files-page-card` races the skeleton→real transition
+ *  and causes flaky timeouts on slower CI runners. */
 async function gotoFilesPage(page: Page): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".files-page-card").first()).toBeVisible({
-    timeout: 5_000,
-  });
+  await expect(
+    page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+  ).toBeVisible({ timeout: 10_000 });
 }
 
 test.describe("Files page", () => {
