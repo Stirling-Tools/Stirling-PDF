@@ -23,7 +23,7 @@ class AdditionalLanguageJsControllerTest {
         LanguageService lang = mock(LanguageService.class);
         // LinkedHashSet for deterministic order in the array
         when(lang.getSupportedLanguages())
-                .thenReturn(new LinkedHashSet<>(List.of("de_DE", "en_GB")));
+                .thenReturn(new LinkedHashSet<>(List.of("de_DE", "en_US")));
 
         MockMvc mvc =
                 MockMvcBuilders.standaloneSetup(new AdditionalLanguageJsController(lang)).build();
@@ -36,9 +36,9 @@ class AdditionalLanguageJsControllerTest {
                                 .string(
                                         containsString(
                                                 "const supportedLanguages ="
-                                                        + " [\"de_DE\",\"en_GB\"];")))
+                                                        + " [\"de_DE\",\"en_US\"];")))
                 .andExpect(content().string(containsString("function getDetailedLanguageCode()")))
-                .andExpect(content().string(containsString("return \"en_GB\";")));
+                .andExpect(content().string(containsString("return \"en_US\";")));
 
         verify(lang, times(1)).getSupportedLanguages();
     }

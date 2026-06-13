@@ -188,7 +188,7 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "true"
                 SECURITY_ENABLELOGIN: "false"
-                SYSTEM_DEFAULTLOCALE: en-GB
+                SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF V2"
                 UI_HOMEDESCRIPTION: "V2 Frontend/Backend Split"
                 UI_APPNAMENAVBAR: "V2 Deployment"

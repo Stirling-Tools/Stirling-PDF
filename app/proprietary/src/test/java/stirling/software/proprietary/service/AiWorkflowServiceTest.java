@@ -57,6 +57,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.policy.engine.PolicyExecutor;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -107,18 +108,20 @@ class AiWorkflowServiceTest {
                 .when(fileIdStrategy.idFor(any(MultipartFile.class)))
                 .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
+        PolicyExecutor policyExecutor =
+                new PolicyExecutor(
+                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
         service =
                 new AiWorkflowService(
                         pdfDocumentFactory,
                         aiEngineClient,
                         pdfContentExtractor,
                         objectMapper,
-                        internalApiClient,
                         fileStorage,
-                        toolMetadataService,
                         tempFileManager,
                         fileIdStrategy,
                         endpointResolver,
+                        policyExecutor,
                         null,
                         new ApplicationProperties());
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
@@ -434,6 +437,35 @@ class AiWorkflowServiceTest {
         assertEquals(1, ids.get());
         // No tool endpoint should be called — content goes directly to file storage.
         verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void convertMarkdownRunsDeterministicConversionAndReturnsMdFile() throws IOException {
+        MockMultipartFile input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
+        when(fileIdStrategy.idFor(any())).thenReturn("doc-1");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"convert_markdown",
+                  "reason":"PDF to Markdown requested.",
+                  "filesToIngest":[{"id":"doc-1","name":"multi-column-test_lorem.pdf"}]
+                }
+                """);
+        when(toolMetadataService.shouldUnpackZipResponse("/api/v1/convert/pdf/markdown"))
+                .thenReturn(false);
+        stubEndpoint(
+                "/api/v1/convert/pdf/markdown",
+                pdfResource("# Title", "multi-column-test_lorem.md"));
+        AtomicInteger ids = stubFileStorage();
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "convert to markdown"));
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        assertEquals(1, result.getResultFiles().size());
+        // Extension changes (pdf -> md), so the converter's response filename wins.
+        assertEquals("multi-column-test_lorem.md", result.getResultFiles().get(0).getFileName());
+        assertEquals(1, ids.get());
+        verify(internalApiClient, times(1)).post(eq("/api/v1/convert/pdf/markdown"), any());
     }
 
     @Test

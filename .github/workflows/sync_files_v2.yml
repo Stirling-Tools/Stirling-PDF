@@ -62,7 +62,7 @@ jobs:
 
       - name: Sync translation TOML files
         run: |
-          python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-GB/translation.toml" --branch main
+          python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
 
       - name: pre-commit run
         run: |
@@ -100,7 +100,7 @@ jobs:
             This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
-            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
+            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-US/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
             - **Format**: TOML

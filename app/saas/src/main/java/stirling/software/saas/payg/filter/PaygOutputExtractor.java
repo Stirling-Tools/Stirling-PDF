@@ -49,8 +49,12 @@ public class PaygOutputExtractor {
     /** {@code %PDF-} in ASCII. */
     private static final byte[] PDF_MAGIC = {0x25, 0x50, 0x44, 0x46, 0x2D};
 
+    /** {@code PK\x03\x04} — local file header for any non-empty ZIP. */
+    private static final byte[] ZIP_MAGIC = {0x50, 0x4B, 0x03, 0x04};
+
     private static final String ZIP_CONTENT_TYPE = "application/zip";
     private static final String PDF_CONTENT_TYPE = "application/pdf";
+    private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
 
     private final TempFileManager tempFileManager;
 
@@ -74,14 +78,78 @@ public class PaygOutputExtractor {
             return List.of();
         }
         String mediaType = stripParameters(contentType);
+
         if (PDF_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
-            // Wrapper-owned path. Don't claim ownership.
+            // Wrapper-owned path. Don't claim ownership. Magic-byte check protects against tools
+            // that emit application/pdf for non-PDF payloads (mirrors the ZIP-entry path below).
+            if (!isPdfMagic(bodyPath)) {
+                log.debug(
+                        "Response advertised application/pdf but content does not start with"
+                                + " %PDF- magic bytes; skipping OUTPUT recording. body={}",
+                        bodyPath);
+                return List.of();
+            }
             return List.of(new ExtractedPdf(bodyPath, null));
         }
         if (ZIP_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
             return extractZip(bodyPath);
         }
+        // Stirling-PDF tool endpoints sometimes set Content-Type to application/octet-stream (or
+        // no header at all) even when the body is a real PDF or ZIP — Spring's default
+        // StreamingResponseBody path doesn't always negotiate content type. When the declared
+        // Content-Type is missing or generic, sniff magic bytes in a single head-read so we don't
+        // open the body twice on the common negative path.
+        if (mediaType == null || OCTET_STREAM_CONTENT_TYPE.equalsIgnoreCase(mediaType)) {
+            BodyMagic magic = sniffMagic(bodyPath);
+            if (magic == BodyMagic.PDF) {
+                return List.of(new ExtractedPdf(bodyPath, null));
+            }
+            if (magic == BodyMagic.ZIP) {
+                return extractZip(bodyPath);
+            }
+        }
         return List.of();
+    }
+
+    /** Discriminator returned by {@link #sniffMagic(Path)}. */
+    private enum BodyMagic {
+        PDF,
+        ZIP,
+        NEITHER
+    }
+
+    /**
+     * Single-pass magic-byte sniff used by the generic Content-Type branch. Opens {@code path}
+     * once, reads enough bytes to compare against both PDF and ZIP magics, returns the first match
+     * (or {@link BodyMagic#NEITHER} if neither matched / read failed). Replaces two consecutive
+     * {@link #isMagic} calls that would have opened the file twice on the common negative path.
+     */
+    private BodyMagic sniffMagic(Path path) {
+        int needed = Math.max(PDF_MAGIC.length, ZIP_MAGIC.length);
+        byte[] head = new byte[needed];
+        int read;
+        try (InputStream in = Files.newInputStream(path)) {
+            read = in.read(head);
+        } catch (IOException e) {
+            log.debug("Magic-byte sniff failed for {}", path, e);
+            return BodyMagic.NEITHER;
+        }
+        if (read >= PDF_MAGIC.length && startsWith(head, PDF_MAGIC)) {
+            return BodyMagic.PDF;
+        }
+        if (read >= ZIP_MAGIC.length && startsWith(head, ZIP_MAGIC)) {
+            return BodyMagic.ZIP;
+        }
+        return BodyMagic.NEITHER;
+    }
+
+    private static boolean startsWith(byte[] buf, byte[] prefix) {
+        for (int i = 0; i < prefix.length; i++) {
+            if (buf[i] != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private List<ExtractedPdf> extractZip(Path bodyPath) {
@@ -126,20 +194,25 @@ public class PaygOutputExtractor {
     }
 
     private boolean isPdfMagic(Path path) {
-        byte[] head = new byte[PDF_MAGIC.length];
+        return isMagic(path, PDF_MAGIC);
+    }
+
+    /** Returns true if the first {@code magic.length} bytes of {@code path} equal {@code magic}. */
+    private boolean isMagic(Path path, byte[] magic) {
+        byte[] head = new byte[magic.length];
         try (InputStream in = Files.newInputStream(path)) {
             int read = in.read(head);
-            if (read != PDF_MAGIC.length) {
+            if (read != magic.length) {
                 return false;
             }
-            for (int i = 0; i < PDF_MAGIC.length; i++) {
-                if (head[i] != PDF_MAGIC[i]) {
+            for (int i = 0; i < magic.length; i++) {
+                if (head[i] != magic[i]) {
                     return false;
                 }
             }
             return true;
         } catch (IOException e) {
-            log.debug("PDF magic-byte check failed for {}", path, e);
+            log.debug("Magic-byte check failed for {}", path, e);
             return false;
         }
     }
