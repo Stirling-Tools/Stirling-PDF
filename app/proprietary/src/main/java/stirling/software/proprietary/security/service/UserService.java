@@ -175,6 +175,7 @@ public class UserService implements UserServiceInterface {
         return apiKey;
     }
 
+    @Transactional
     public User addApiKeyToUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
         User user = saveUser(userOpt, generateApiKey());
@@ -225,6 +226,7 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByApiKey(apiKey).isPresent();
     }
 
+    @Transactional
     public Optional<User> getUserByApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey);
     }
@@ -392,6 +394,7 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -414,6 +417,7 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changeUserEnabled(User user, Boolean enbeled)
             throws SQLException, UnsupportedProviderException {
         user.setEnabled(enbeled);
@@ -479,6 +483,7 @@ public class UserService implements UserServiceInterface {
      * @throws SQLException If a database error occurs
      * @throws UnsupportedProviderException If an unsupported provider is specified
      */
+    @Transactional
     public User saveUserCore(SaveUserRequest request)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
 
