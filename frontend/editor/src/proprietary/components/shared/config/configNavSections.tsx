@@ -17,6 +17,7 @@ import AdminLegalSection from "@app/components/shared/config/configSections/Admi
 import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
 import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
 import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
+import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
@@ -70,10 +71,6 @@ export const useConfigNavSections = (
     const enableLoginTooltip = t(
       "settings.tooltips.enableLoginFirst",
       "Enable login mode first",
-    );
-    const requiresEnterpriseTooltip = t(
-      "settings.tooltips.requiresEnterprise",
-      "Requires Enterprise license",
     );
 
     // Workspace
@@ -141,6 +138,14 @@ export const useConfigNavSections = (
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
         {
+          key: "adminMcp",
+          label: t("settings.configuration.mcp", "MCP Server"),
+          icon: "smart-toy-rounded",
+          component: <AdminMcpSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
           key: "adminDatabase",
           label: t("settings.configuration.database", "Database"),
           icon: "storage-rounded",
@@ -199,10 +204,10 @@ export const useConfigNavSections = (
           label: t("settings.licensingAnalytics.audit", "Audit"),
           icon: "fact-check-rounded",
           component: <AdminAuditSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin
-            ? enableLoginTooltip
-            : requiresEnterpriseTooltip,
+          // Non-Enterprise users can still click in: AdminAuditSection
+          // renders a demo preview when `!hasEnterpriseLicense`.
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
         {
           key: "adminUsage",
@@ -212,10 +217,9 @@ export const useConfigNavSections = (
           ),
           icon: "analytics-rounded",
           component: <AdminUsageSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin
-            ? enableLoginTooltip
-            : requiresEnterpriseTooltip,
+          // Same demo-preview story as adminAudit above.
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
       ],
     });
@@ -441,20 +445,22 @@ export const createConfigNavSections = (
           label: "Audit",
           icon: "fact-check-rounded",
           component: <AdminAuditSection />,
-          disabled: !runningEE || requiresLogin,
+          // Non-Enterprise users can click in to see the demo preview.
+          disabled: requiresLogin,
           disabledTooltip: requiresLogin
             ? "Enable login mode first"
-            : "Requires Enterprise license",
+            : undefined,
         },
         {
           key: "adminUsage",
           label: "Usage Analytics",
           icon: "analytics-rounded",
           component: <AdminUsageSection />,
-          disabled: !runningEE || requiresLogin,
+          // Non-Enterprise users can click in to see the demo preview.
+          disabled: requiresLogin,
           disabledTooltip: requiresLogin
             ? "Enable login mode first"
-            : "Requires Enterprise license",
+            : undefined,
         },
       ],
     });

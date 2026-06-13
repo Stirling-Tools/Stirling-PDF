@@ -104,44 +104,44 @@ const AddFileCard = ({
             }}
             onMouseLeave={() => setIsUploadHover(false)}
           >
-            <Button
-              style={{
-                backgroundColor: "var(--landing-button-bg)",
-                color: "var(--landing-button-color)",
-                border: "1px solid var(--landing-button-border)",
-                borderRadius: "2rem",
-                height: "38px",
-                paddingLeft: isUploadHover ? 0 : "1rem",
-                paddingRight: isUploadHover ? 0 : "1rem",
-                width: isUploadHover ? "58px" : "calc(100% - 58px - 0.6rem)",
-                minWidth: isUploadHover ? "58px" : undefined,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "width .5s ease, padding .5s ease",
-              }}
-              onClick={handleOpenFilesModal}
-              onMouseEnter={() => setIsUploadHover(false)}
-            >
-              <LocalIcon
-                icon="add"
-                width="1.5rem"
-                height="1.5rem"
-                className="text-[var(--accent-interactive)]"
-              />
-              {!isUploadHover && (
+            {!isUploadHover && (
+              <Button
+                style={{
+                  backgroundColor: "var(--landing-button-bg)",
+                  color: "var(--landing-button-color)",
+                  border: "1px solid var(--landing-button-border)",
+                  borderRadius: "2rem",
+                  height: "38px",
+                  paddingLeft: "1rem",
+                  paddingRight: "1rem",
+                  width: "calc(100% - 58px - 0.6rem)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "width .5s ease, padding .5s ease",
+                }}
+                onClick={handleOpenFilesModal}
+                onMouseEnter={() => setIsUploadHover(false)}
+              >
+                <LocalIcon
+                  icon="add"
+                  width="1.5rem"
+                  height="1.5rem"
+                  className="text-[var(--accent-interactive)]"
+                />
                 <span>{t("landing.addFiles", "Add Files")}</span>
-              )}
-            </Button>
+              </Button>
+            )}
             <Button
-              aria-label="Upload"
+              aria-label={t("addFileCard.upload", "Upload")}
+              title={terminology.uploadFromComputer}
               style={{
                 backgroundColor: "var(--landing-button-bg)",
                 color: "var(--landing-button-color)",
                 border: "1px solid var(--landing-button-border)",
                 borderRadius: "1rem",
                 height: "38px",
-                width: isUploadHover ? "calc(100% - 58px - 0.6rem)" : "58px",
+                width: isUploadHover ? "100%" : "58px",
                 minWidth: "58px",
                 paddingLeft: isUploadHover ? "1rem" : 0,
                 paddingRight: isUploadHover ? "1rem" : 0,
@@ -149,6 +149,7 @@ const AddFileCard = ({
                 alignItems: "center",
                 justifyContent: "center",
                 transition: "width .5s ease, padding .5s ease",
+                overflow: "hidden",
               }}
               onClick={handleNativeUploadClick}
               onMouseEnter={() => setIsUploadHover(true)}
@@ -157,10 +158,18 @@ const AddFileCard = ({
                 icon={icons.uploadIconName}
                 width="1.25rem"
                 height="1.25rem"
-                style={{ color: "var(--accent-interactive)" }}
+                style={{ color: "var(--accent-interactive)", flexShrink: 0 }}
               />
               {isUploadHover && (
-                <span style={{ marginLeft: ".5rem" }}>
+                <span
+                  style={{
+                    marginLeft: ".5rem",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    minWidth: 0,
+                  }}
+                >
                   {terminology.uploadFromComputer}
                 </span>
               )}
