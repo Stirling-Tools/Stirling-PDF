@@ -94,5 +94,12 @@ public class FormFieldWithCoordinates {
 
         @Schema(description = "Font size in PDF points")
         private Float fontSize;
+
+        @Schema(
+                description =
+                        "CropBox height in PDF points. Lets the frontend reverse the backend's"
+                                + " Y-flip when sending new widget coordinates back for"
+                                + " create/modify operations.")
+        private Float cropBoxHeight;
     }
 }

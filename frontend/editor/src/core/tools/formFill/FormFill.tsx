@@ -26,6 +26,7 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
+  SegmentedControl,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
@@ -49,7 +50,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import PostAddIcon from "@mui/icons-material/PostAdd";
-import FileCopyIcon from "@mui/icons-material/FileCopy";
 import BuildCircleIcon from "@mui/icons-material/BuildCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -57,64 +57,20 @@ import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
 } from "@app/tools/formFill/formApi";
+import type { FormMode } from "@app/tools/formFill/types";
+import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
+import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
 // ---------------------------------------------------------------------------
 
-type FormMode = "fill" | "make" | "batch" | "modify";
-
 interface ModeTabDef {
   id: FormMode;
   label: string;
   icon: React.ReactNode;
-  ready: boolean;
 }
-
-const _MODE_TABS: ModeTabDef[] = [
-  {
-    id: "fill",
-    label: "Fill",
-    icon: <EditNoteIcon className={styles.modeTabIcon} />,
-    ready: true,
-  },
-  {
-    id: "make",
-    label: "Create",
-    icon: <PostAddIcon className={styles.modeTabIcon} />,
-    ready: false,
-  },
-  {
-    id: "batch",
-    label: "Batch",
-    icon: <FileCopyIcon className={styles.modeTabIcon} />,
-    ready: false,
-  },
-  {
-    id: "modify",
-    label: "Modify",
-    icon: <BuildCircleIcon className={styles.modeTabIcon} />,
-    ready: false,
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Coming-soon placeholder for unimplemented tabs
-// ---------------------------------------------------------------------------
-
-// ComingSoonPlaceholder — re-enable when mode tabs are exposed
-// function ComingSoonPlaceholder({ mode }: { mode: ModeTabDef }) {
-//   return (
-//     <div className={styles.comingSoon}>
-//       <DescriptionIcon className={styles.comingSoonIcon} />
-//       <div className={styles.comingSoonTitle}>{mode.label} Forms</div>
-//       <div className={styles.comingSoonDesc}>
-//         This feature is coming soon. Stay tuned!
-//       </div>
-//     </div>
-//   );
-// }
 
 // ---------------------------------------------------------------------------
 // Main FormFill component
@@ -132,18 +88,36 @@ const FormFill = (_props: BaseToolProps) => {
     setValue,
     setActiveField,
     validateForm,
+    mode,
+    setMode,
   } = useFormFill();
+
+  const MODE_TABS: ModeTabDef[] = useMemo(
+    () => [
+      {
+        id: "fill",
+        label: t("formFill.mode.fill", "Fill"),
+        icon: <EditNoteIcon className={styles.modeTabIcon} />,
+      },
+      {
+        id: "create",
+        label: t("formFill.mode.create", "Create"),
+        icon: <PostAddIcon className={styles.modeTabIcon} />,
+      },
+      {
+        id: "modify",
+        label: t("formFill.mode.modify", "Modify"),
+        icon: <BuildCircleIcon className={styles.modeTabIcon} />,
+      },
+    ],
+    [t],
+  );
 
   const allValues = useAllFormValues();
   const { validationErrors } = formState;
 
   const { scrollActions } = useViewer();
 
-  // Mode system is temporarily restricted to 'fill' only.
-  // Other modes (make, batch, modify) are defined above but not yet exposed in the UI.
-  // When ready, uncomment the SegmentedControl and mode state below.
-  // const [mode, setMode] = useState<FormMode>('fill');
-  const mode: FormMode = "fill";
   const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -384,7 +358,7 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root}>
-      {/* ---- Mode selection (commented out until additional modes are implemented) ----
+      {/* ---- Mode selection ---- */}
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
@@ -409,10 +383,16 @@ const FormFill = (_props: BaseToolProps) => {
           }}
         />
       </div>
-      ---- */}
 
-      {/* ---- Coming-soon for non-ready tabs (hidden while mode tabs are disabled) ---- */}
-      {/* !currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} /> */}
+      {/* ---- Create mode ---- */}
+      {mode === "create" && (
+        <FormFieldCreatePanel currentFile={currentFile as File | Blob | null} />
+      )}
+
+      {/* ---- Modify mode ---- */}
+      {mode === "modify" && (
+        <FormFieldModifyPanel currentFile={currentFile as File | Blob | null} />
+      )}
 
       {/* ---- Fill Form content ---- */}
       {mode === "fill" && (

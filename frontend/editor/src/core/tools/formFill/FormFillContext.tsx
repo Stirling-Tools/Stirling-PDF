@@ -34,11 +34,22 @@ import type {
   FormField,
   FormFillState,
   WidgetCoordinates,
+  FormMode,
+  CreatableFieldType,
+  NewFieldDefinition,
+  ModifyFieldDefinition,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
+import { applyFieldEdits } from "@app/tools/formFill/formApi";
+import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+
+/** A field queued for creation, with a client-side id for list keys. */
+export interface PendingField extends NewFieldDefinition {
+  id: string;
+}
 
 // ---------------------------------------------------------------------------
 // FormValuesStore — external store for field values (outside React state)
@@ -205,6 +216,56 @@ export interface FormFillContextValue {
   setProviderMode: (mode: "pdflib" | "pdfbox") => void;
   /** The file ID that the current form fields belong to (null if no fields loaded) */
   forFileId: string | null;
+
+  // -------------------------------------------------------------------------
+  // Structural editing (create / modify modes)
+  // -------------------------------------------------------------------------
+
+  /** Current tool mode. */
+  mode: FormMode;
+  /** Switch mode. Switching clears the other mode's uncommitted working state. */
+  setMode: (mode: FormMode) => void;
+
+  // --- Create mode ---
+  /** Field type currently armed for placement (null = not placing). */
+  creationType: CreatableFieldType | null;
+  setCreationType: (type: CreatableFieldType | null) => void;
+  /** Fields drawn but not yet committed to the PDF. */
+  pendingFields: PendingField[];
+  /** Queue a new field (id + default name auto-assigned). Returns the new id. */
+  addPendingField: (
+    field: Omit<NewFieldDefinition, "name"> & { name?: string },
+  ) => string;
+  updatePendingField: (id: string, patch: Partial<NewFieldDefinition>) => void;
+  removePendingField: (id: string) => void;
+  clearPendingFields: () => void;
+  /** POST queued fields to the backend; resolves to the updated PDF blob. */
+  commitNewFields: (file: File | Blob) => Promise<Blob>;
+
+  // --- Modify mode ---
+  /** Field currently selected for editing in modify mode. */
+  selectedFieldName: string | null;
+  setSelectedField: (name: string | null) => void;
+  /** Staged (uncommitted) property/geometry changes, keyed by original field name. */
+  modifiedFields: Record<string, ModifyFieldDefinition>;
+  /** Merge a partial change for a field into the staged set. */
+  stageModification: (
+    targetName: string,
+    patch: Partial<ModifyFieldDefinition>,
+  ) => void;
+  /** Discard staged changes for a single field. */
+  clearModification: (targetName: string) => void;
+  /** Field names marked for deletion. */
+  deletedFieldNames: string[];
+  /** Toggle a field's deletion mark. */
+  toggleFieldDeleted: (name: string) => void;
+  /** Discard all staged modifications and deletions. */
+  clearModifications: () => void;
+  /** POST staged modifications + deletions; resolves to the updated PDF blob. */
+  commitModifications: (file: File | Blob) => Promise<Blob>;
+
+  /** True when create or modify mode has uncommitted work. */
+  hasUncommittedChanges: boolean;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -306,6 +367,28 @@ export function FormFillProvider({
   // This prevents full context re-renders on every keystroke.
   const [valuesStore] = useState(() => new FormValuesStore());
 
+  // --- Structural editing state (create / modify modes) ---
+  const [mode, setModeState] = useState<FormMode>("fill");
+  const [creationType, setCreationType] = useState<CreatableFieldType | null>(
+    null,
+  );
+  const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
+  const [selectedFieldName, setSelectedField] = useState<string | null>(null);
+  const [modifiedFields, setModifiedFields] = useState<
+    Record<string, ModifyFieldDefinition>
+  >({});
+  const [deletedFieldNames, setDeletedFieldNames] = useState<string[]>([]);
+  // Monotonic counter for client-side pending-field ids and default names.
+  const pendingCounterRef = useRef(0);
+
+  const clearEditingState = useCallback(() => {
+    setCreationType(null);
+    setPendingFields([]);
+    setSelectedField(null);
+    setModifiedFields({});
+    setDeletedFieldNames([]);
+  }, []);
+
   const fetchFields = useCallback(
     async (file: File | Blob, fileId?: string) => {
       // Increment version so any in-flight fetch for a previous file is discarded.
@@ -321,6 +404,11 @@ export function FormFillProvider({
       setForFileId(null);
       valuesStore.reset({});
       dispatch({ type: "RESET" });
+      // NOTE: deliberately do NOT clear create/modify editing state here.
+      // EmbedPdfViewer re-fetches fields on provider switch and file load, and
+      // those background fetches must not wipe a user's in-progress drawn
+      // fields or staged edits. Editing state is cleared on explicit mode
+      // switch (setMode) and reset() instead.
       dispatch({ type: "FETCH_START" });
       try {
         let fields = await providerRef.current.fetchFields(file);
@@ -332,8 +420,10 @@ export function FormFillProvider({
           return;
         }
 
-        // When the pdfbox provider is active the backend doesn't return signature fields
-        // (they're not fillable). Fetch them via pdflib so their appearances still render.
+        // The pdfbox backend returns signature fields, but without a rendered
+        // appearance. Fetch the rendered signature appearances via pdfium and
+        // MERGE them by name — enrich an existing backend entry rather than
+        // appending a duplicate (otherwise a signature shows up twice).
         if (providerModeRef.current === "pdfbox") {
           try {
             // Convert File/Blob to ArrayBuffer for pdfiumService
@@ -341,9 +431,7 @@ export function FormFillProvider({
             const sigFields =
               await fetchSignatureFieldsWithAppearances(arrayBuffer);
             if (fetchVersionRef.current !== version) return; // stale check after async
-            if (sigFields.length > 0) {
-              fields = [...fields, ...sigFields];
-            }
+            fields = mergeSignatureAppearances(fields, sigFields);
           } catch (e) {
             console.warn(
               "[FormFill] Failed to extract signature appearances for pdfbox mode:",
@@ -478,7 +566,132 @@ export function FormFillProvider({
     setForFileId(null);
     valuesStore.reset({});
     dispatch({ type: "RESET" });
-  }, [valuesStore]);
+    clearEditingState();
+  }, [valuesStore, clearEditingState]);
+
+  // --- Mode switching ---
+  const setMode = useCallback(
+    (next: FormMode) => {
+      setModeState((prev) => {
+        if (prev === next) return prev;
+        // Leaving a mode discards its uncommitted working state so the user
+        // doesn't carry half-drawn fields or staged edits between modes.
+        clearEditingState();
+        return next;
+      });
+    },
+    [clearEditingState],
+  );
+
+  // --- Create mode ---
+  const addPendingField = useCallback(
+    (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
+      const seq = ++pendingCounterRef.current;
+      const id = `pending-${seq}`;
+      const defaultName = field.name?.trim() || `Field_${seq}`;
+      // Choice/radio fields need options to be useful — seed a sensible default
+      // so the field isn't empty and the options editor has something to show.
+      const needsOptions =
+        field.type === "combobox" ||
+        field.type === "listbox" ||
+        field.type === "radio";
+      const options =
+        field.options ?? (needsOptions ? ["Option 1", "Option 2"] : undefined);
+      setPendingFields((prev) => [
+        ...prev,
+        { ...field, name: defaultName, options, id } as PendingField,
+      ]);
+      return id;
+    },
+    [],
+  );
+
+  const updatePendingField = useCallback(
+    (id: string, patch: Partial<NewFieldDefinition>) => {
+      setPendingFields((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      );
+    },
+    [],
+  );
+
+  const removePendingField = useCallback((id: string) => {
+    setPendingFields((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  const clearPendingFields = useCallback(() => {
+    setPendingFields([]);
+    setCreationType(null);
+  }, []);
+
+  const commitNewFields = useCallback(
+    async (file: File | Blob): Promise<Blob> => {
+      // Strip the client-side id before sending to the backend.
+      const definitions: NewFieldDefinition[] = pendingFields.map(
+        ({ id: _id, ...rest }) => rest,
+      );
+      const blob = await applyFieldEdits(file, { add: definitions });
+      setPendingFields([]);
+      setCreationType(null);
+      return blob;
+    },
+    [pendingFields],
+  );
+
+  // --- Modify mode ---
+  const stageModification = useCallback(
+    (targetName: string, patch: Partial<ModifyFieldDefinition>) => {
+      setModifiedFields((prev) => ({
+        ...prev,
+        [targetName]: { ...prev[targetName], targetName, ...patch },
+      }));
+    },
+    [],
+  );
+
+  const clearModification = useCallback((targetName: string) => {
+    setModifiedFields((prev) => {
+      if (!(targetName in prev)) return prev;
+      const { [targetName]: _removed, ...rest } = prev;
+      return rest;
+    });
+  }, []);
+
+  const toggleFieldDeleted = useCallback((name: string) => {
+    setDeletedFieldNames((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+    );
+  }, []);
+
+  const clearModifications = useCallback(() => {
+    setModifiedFields({});
+    setDeletedFieldNames([]);
+    setSelectedField(null);
+  }, []);
+
+  const commitModifications = useCallback(
+    async (file: File | Blob): Promise<Blob> => {
+      // Apply property/geometry changes (for fields not being deleted) and the
+      // deletions in a single backend round-trip.
+      const updates = Object.values(modifiedFields).filter(
+        (m) => !deletedFieldNames.includes(m.targetName),
+      );
+      const blob = await applyFieldEdits(file, {
+        modify: updates,
+        delete: deletedFieldNames,
+      });
+      setModifiedFields({});
+      setDeletedFieldNames([]);
+      setSelectedField(null);
+      return blob;
+    },
+    [modifiedFields, deletedFieldNames],
+  );
+
+  const hasUncommittedChanges =
+    pendingFields.length > 0 ||
+    Object.keys(modifiedFields).length > 0 ||
+    deletedFieldNames.length > 0;
 
   const fieldsByPage = useMemo(() => {
     const map = new Map<number, FormField[]>();
@@ -508,6 +721,27 @@ export function FormFillProvider({
       activeProviderName: providerRef.current.name,
       setProviderMode,
       forFileId,
+      // editing
+      mode,
+      setMode,
+      creationType,
+      setCreationType,
+      pendingFields,
+      addPendingField,
+      updatePendingField,
+      removePendingField,
+      clearPendingFields,
+      commitNewFields,
+      selectedFieldName,
+      setSelectedField,
+      modifiedFields,
+      stageModification,
+      clearModification,
+      deletedFieldNames,
+      toggleFieldDeleted,
+      clearModifications,
+      commitModifications,
+      hasUncommittedChanges,
     }),
     [
       state,
@@ -524,6 +758,24 @@ export function FormFillProvider({
       providerMode,
       setProviderMode,
       forFileId,
+      mode,
+      setMode,
+      creationType,
+      pendingFields,
+      addPendingField,
+      updatePendingField,
+      removePendingField,
+      clearPendingFields,
+      commitNewFields,
+      selectedFieldName,
+      modifiedFields,
+      stageModification,
+      clearModification,
+      deletedFieldNames,
+      toggleFieldDeleted,
+      clearModifications,
+      commitModifications,
+      hasUncommittedChanges,
     ],
   );
 
