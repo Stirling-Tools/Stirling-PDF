@@ -82,7 +82,15 @@ public class SamlSpServlet extends HttpServlet {
                                     "authType", AuthenticationType.SSO.toString(),
                                     "role", user.getRolesAsString()));
             response.addCookie(jwtCookie(jwt, request));
-            response.sendRedirect(baseUrl(request) + "/");
+            // Deliver the issued app JWT in the URL fragment of /auth/callback, matching the
+            // original
+            // Spring SSO contract the React frontend was built against. AuthCallback.tsx reads
+            // "#access_token=...", stores it in localStorage, and validates via /api/v1/auth/me;
+            // springAuthClient.getSession() returns null with no localStorage token, so a bare
+            // redirect to "/" (cookie only) leaves the SPA unauthenticated. The cookie is retained
+            // for
+            // cookie-based API access. The JWT is base64url (URL-fragment-safe), so no encoding.
+            response.sendRedirect(baseUrl(request) + "/auth/callback#access_token=" + jwt);
         } catch (Exception e) {
             log.error("SAML ACS validation failed", e);
             redirectToLogin(request, response, "saml_validation_failed");

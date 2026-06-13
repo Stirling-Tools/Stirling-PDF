@@ -6,6 +6,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -225,6 +228,25 @@ public class ProprietaryUIDataController {
                             keycloak.getClientName());
                 }
             }
+
+            // The detailed Keycloak provider config (issuer/clientId/clientSecret) is read directly
+            // from MicroProfile config by the custom OAuth2 flow (OAuth2LoginController /
+            // OAuth2CallbackServlet) rather than bound into ApplicationProperties, so the
+            // object-tree
+            // checks above never see it. Detect it from config the same way the flow does -
+            // otherwise
+            // the login page offers no SSO button even though the backend is fully wired for the
+            // round-trip.
+            Config mpConfig = ConfigProvider.getConfig();
+            if (nonBlank(mpConfig, "security.oauth2.client.keycloak.issuer")
+                    && nonBlank(mpConfig, "security.oauth2.client.keycloak.clientId")) {
+                String keycloakName =
+                        mpConfig.getOptionalValue(
+                                        "security.oauth2.client.keycloak.clientName", String.class)
+                                .filter(name -> !name.isBlank())
+                                .orElse("Keycloak");
+                providerList.putIfAbsent("/oauth2/authorization/keycloak", keycloakName);
+            }
         }
 
         SAML2 saml2 = securityProps.getSaml2();
@@ -255,6 +277,12 @@ public class ProprietaryUIDataController {
         data.setDefaultLocale(applicationProperties.getSystem().getDefaultLocale());
 
         return Response.ok(data).build();
+    }
+
+    private static boolean nonBlank(Config config, String key) {
+        return config.getOptionalValue(key, String.class)
+                .filter(value -> !value.isBlank())
+                .isPresent();
     }
 
     @GET

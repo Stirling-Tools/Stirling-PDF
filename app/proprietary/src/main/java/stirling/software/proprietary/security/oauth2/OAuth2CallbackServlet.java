@@ -112,7 +112,17 @@ public class OAuth2CallbackServlet extends HttpServlet {
                                     "authType", AuthenticationType.OAUTH2.toString(),
                                     "role", user.getRolesAsString()));
             response.addCookie(jwtCookie(jwt, request));
-            response.sendRedirect(baseUrl(request) + "/");
+            // Match the original Spring SSO contract the React frontend was built against: the
+            // issued
+            // app JWT is delivered in the URL fragment of /auth/callback. AuthCallback.tsx reads
+            // "#access_token=...", stores it in localStorage, and validates it via /api/v1/auth/me;
+            // springAuthClient.getSession() returns null when no localStorage token exists, so a
+            // bare
+            // redirect to "/" (relying only on the cookie) leaves the SPA unauthenticated. The
+            // cookie
+            // above is retained for cookie-based API access; the fragment is what drives the SPA
+            // session. The JWT is base64url (URL-fragment-safe), so no extra encoding is needed.
+            response.sendRedirect(baseUrl(request) + "/auth/callback#access_token=" + jwt);
         } catch (Exception e) {
             log.error("OAuth2 callback failed", e);
             redirectToLogin(request, response, "oauth2_failed");

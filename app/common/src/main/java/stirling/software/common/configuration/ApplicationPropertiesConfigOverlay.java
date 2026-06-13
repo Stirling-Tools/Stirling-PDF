@@ -62,6 +62,15 @@ public class ApplicationPropertiesConfigOverlay {
                     config,
                     "security.saml2.autoCreateUser",
                     security.getSaml2()::setAutoCreateUser);
+            // provider/registrationId drive the SAML login button on /login
+            // (ProprietaryUIDataController
+            // reads them off ApplicationProperties); without these the button path is
+            // "/saml2/authenticate/null" and the SSO option never renders.
+            applyString(config, "security.saml2.provider", security.getSaml2()::setProvider);
+            applyString(
+                    config,
+                    "security.saml2.registrationId",
+                    security.getSaml2()::setRegistrationId);
         }
         if (security.getOauth2() != null) {
             applyBoolean(config, "security.oauth2.enabled", security.getOauth2()::setEnabled);
@@ -69,6 +78,20 @@ public class ApplicationPropertiesConfigOverlay {
                     config,
                     "security.oauth2.autoCreateUser",
                     security.getOauth2()::setAutoCreateUser);
+        }
+
+        // Premium/enterprise license. LicenseKeyChecker.evaluateLicense() short-circuits when
+        // premium.enabled is false and otherwise reads premium.key, so both must be overlaid from
+        // config (PREMIUM_ENABLED / PREMIUM_KEY env) before the StartupEvent license evaluation
+        // runs
+        // - otherwise the license never loads (type stays NORMAL) and premium-gated features (SAML
+        // SSO button, audit, teams) stay disabled. This overlay's StartupEvent observer has
+        // @Priority(APPLICATION) (2000), ahead of LicenseKeyChecker.onApplicationReady (default
+        // 2500),
+        // so the re-evaluation there sees the bound values.
+        if (applicationProperties.getPremium() != null) {
+            applyBoolean(config, "premium.enabled", applicationProperties.getPremium()::setEnabled);
+            applySecret(config, "premium.key", applicationProperties.getPremium()::setKey);
         }
     }
 
@@ -89,6 +112,20 @@ public class ApplicationPropertiesConfigOverlay {
                         value -> {
                             setter.accept(value);
                             log.info("Applied config override {}={}", key, value);
+                        });
+    }
+
+    /**
+     * Like {@link #applyString} but never logs the value - used for secrets (e.g. the premium
+     * license key) so they don't leak into logs or CI artifacts.
+     */
+    private void applySecret(
+            Config config, String key, java.util.function.Consumer<String> setter) {
+        config.getOptionalValue(key, String.class)
+                .ifPresent(
+                        value -> {
+                            setter.accept(value);
+                            log.info("Applied config override {}=<redacted>", key);
                         });
     }
 }
