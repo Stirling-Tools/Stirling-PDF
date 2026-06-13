@@ -485,8 +485,12 @@ public class ApplicationProperties {
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
-        private int loginAttemptCount;
-        private long loginResetTimeMinutes;
+        // Defaults mirror settings.yml.template. These primitives are not bound from the template
+        // by the current Quarkus config path, so an unset 0 means "lock after 0 attempts" (every
+        // login blocked, and the lockout never accumulates a window) - same class of bug as
+        // maxDPI=0. See the settings.yml binding TODO.
+        private int loginAttemptCount = 5;
+        private long loginResetTimeMinutes = 120;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
