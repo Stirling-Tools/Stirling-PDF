@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
 import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
+import stirling.software.proprietary.security.annotation.DenyDemoUser;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.SignatureService;
 
@@ -58,9 +59,7 @@ public class SignatureController {
      * Save a new signature for the authenticated user. Enforces storage limits and authentication
      * requirements.
      */
-    // TODO: Migration required - replace @PreAuthorize("isAuthenticated() &&
-    // !hasAuthority('ROLE_DEMO_USER')") with a Quarkus authentication policy + DEMO_USER runtime
-    // guard.
+    @DenyDemoUser
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -97,9 +96,7 @@ public class SignatureController {
      * List all signatures accessible to the authenticated user. Includes both personal and shared
      * signatures.
      */
-    // TODO: Migration required - replace @PreAuthorize("isAuthenticated() &&
-    // !hasAuthority('ROLE_DEMO_USER')") with a Quarkus authentication policy + DEMO_USER runtime
-    // guard.
+    @DenyDemoUser
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listSignatures() {
@@ -117,8 +114,7 @@ public class SignatureController {
      * Update a signature label. Users can update labels for their own personal signatures and for
      * shared signatures.
      */
-    // TODO: Migration required - replace @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") with a
-    // DEMO_USER runtime guard against the current identity's roles.
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/{signatureId}/label")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -155,8 +151,7 @@ public class SignatureController {
      * Delete a signature owned by the authenticated user. Users can delete their own personal
      * signatures. Admins can also delete shared signatures.
      */
-    // TODO: Migration required - replace @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") with a
-    // DEMO_USER runtime guard against the current identity's roles.
+    @DenyDemoUser
     @DELETE
     @jakarta.ws.rs.Path("/{signatureId}")
     public Response deleteSignature(@PathParam("signatureId") String signatureId) {

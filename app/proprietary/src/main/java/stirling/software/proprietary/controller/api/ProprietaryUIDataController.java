@@ -41,6 +41,7 @@ import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.security.annotation.DenyDemoUser;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -434,9 +435,7 @@ public class ProprietaryUIDataController {
 
     @GET
     @Path("/account")
-    // TODO: Migration required - Spring "!hasAuthority('ROLE_DEMO_USER')" (negated authority) has
-    // no @RolesAllowed equivalent. Enforce the DEMO_USER exclusion via a Quarkus
-    // SecurityIdentity check below / an augmentor, or quarkus.http.auth.* policy.
+    @DenyDemoUser
     @Operation(summary = "Get account page data")
     public Response getAccountData() {
         if (securityIdentity == null || securityIdentity.isAnonymous()) {

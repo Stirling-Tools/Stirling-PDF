@@ -27,6 +27,7 @@ import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.annotation.DenyDemoUser;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
@@ -69,10 +70,7 @@ public class AuthController {
      * @param response HTTP response to set JWT cookie
      * @return User and session information
      */
-    // TODO: Migration required - Spring @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") was a
-    // negated SpEL authority check with no direct JAX-RS @RolesAllowed equivalent. Enforce the
-    // "not a demo user" rule via a SecurityIdentity check in-method, a SecurityIdentityAugmentor,
-    // or a quarkus.http.auth.* policy.
+    @DenyDemoUser
     @POST
     @Path("/login")
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -270,8 +268,7 @@ public class AuthController {
      *
      * @return Current authenticated user information
      */
-    // TODO: Migration required - Spring @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") negated
-    // authority check has no direct @RolesAllowed equivalent; enforce via SecurityIdentity/policy.
+    @DenyDemoUser
     @GET
     @Path("/me")
     public Response getCurrentUser() {
@@ -308,8 +305,7 @@ public class AuthController {
      * @param response HTTP response
      * @return Success message
      */
-    // TODO: Migration required - Spring @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") negated
-    // authority check has no direct @RolesAllowed equivalent; enforce via SecurityIdentity/policy.
+    @DenyDemoUser
     @POST
     @Path("/logout")
     public Response logout(@Context HttpHeaders httpHeaders) {
@@ -349,8 +345,7 @@ public class AuthController {
      * @param response HTTP response to set new JWT cookie
      * @return New token information
      */
-    // TODO: Migration required - Spring @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") negated
-    // authority check has no direct @RolesAllowed equivalent; enforce via SecurityIdentity/policy.
+    @DenyDemoUser
     @POST
     @Path("/refresh")
     public Response refresh(@Context HttpHeaders httpHeaders) {
@@ -468,10 +463,7 @@ public class AuthController {
         }
     }
 
-    // TODO: Migration required - Spring @PreAuthorize("isAuthenticated() &&
-    // !hasAuthority('ROLE_DEMO_USER')") combined an authenticated check with a negated authority.
-    // The authenticated portion is enforced below via securityIdentity; the "not demo user"
-    // portion needs a SecurityIdentity check/augmentor or quarkus.http.auth.* policy.
+    @DenyDemoUser
     @GET
     @Path("/mfa/setup")
     public Response setupMfa() {
@@ -511,9 +503,7 @@ public class AuthController {
         }
     }
 
-    // TODO: Migration required - Spring @PreAuthorize("isAuthenticated() &&
-    // !hasAuthority('ROLE_DEMO_USER')") - authenticated check enforced via securityIdentity below;
-    // the "not demo user" portion needs a SecurityIdentity check/augmentor or quarkus.http.auth.*.
+    @DenyDemoUser
     @POST
     @Path("/mfa/enable")
     public Response enableMfa(MfaCodeRequest request) {
@@ -571,9 +561,7 @@ public class AuthController {
         }
     }
 
-    // TODO: Migration required - Spring @PreAuthorize("isAuthenticated() &&
-    // !hasAuthority('ROLE_DEMO_USER')") - authenticated check enforced via securityIdentity below;
-    // the "not demo user" portion needs a SecurityIdentity check/augmentor or quarkus.http.auth.*.
+    @DenyDemoUser
     @POST
     @Path("/mfa/disable")
     public Response disableMfa(MfaCodeRequest request) {
@@ -634,9 +622,7 @@ public class AuthController {
         }
     }
 
-    // TODO: Migration required - Spring @PreAuthorize("isAuthenticated() &&
-    // !hasAuthority('ROLE_DEMO_USER')") - authenticated check enforced via securityIdentity below;
-    // the "not demo user" portion needs a SecurityIdentity check/augmentor or quarkus.http.auth.*.
+    @DenyDemoUser
     @POST
     @Path("/mfa/setup/cancel")
     public Response cancelMfaSetup() {

@@ -42,6 +42,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.annotation.DenyDemoUser;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
@@ -87,9 +88,7 @@ public class UserController {
     // formOrQuery / formOrQueryLong / formOrQueryBool.
     @Context UriInfo uriInfo;
 
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") is not a simple
-    // role check, so it cannot be expressed via @RolesAllowed. Re-implement the DEMO_USER exclusion
-    // as a runtime check against the current identity's roles (e.g. via SecurityIdentity).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -188,8 +187,7 @@ public class UserController {
         return userMap;
     }
 
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") needs a runtime
-    // DEMO_USER guard (see note on register()).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/change-username")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
@@ -267,8 +265,7 @@ public class UserController {
                 .build();
     }
 
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") needs a runtime
-    // DEMO_USER guard (see note on register()).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/change-password-on-login")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
@@ -355,8 +352,7 @@ public class UserController {
                 .build();
     }
 
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") needs a runtime
-    // DEMO_USER guard (see note on register()).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/change-password")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
@@ -418,8 +414,7 @@ public class UserController {
      * @throws UnsupportedProviderException If the operation is not supported for the user's
      *     provider.
      */
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") needs a runtime
-    // DEMO_USER guard (see note on register()).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/updateUserSettings")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -945,8 +940,7 @@ public class UserController {
         return Response.ok(Map.of("message", "User deleted successfully")).build();
     }
 
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") needs a runtime
-    // DEMO_USER guard (see note on register()).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/get-api-key")
     public Response getApiKey() {
@@ -966,8 +960,7 @@ public class UserController {
         return Response.ok(Map.of("apiKey", apiKey)).build();
     }
 
-    // TODO: Migration required - @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')") needs a runtime
-    // DEMO_USER guard (see note on register()).
+    @DenyDemoUser
     @POST
     @jakarta.ws.rs.Path("/update-api-key")
     public Response updateApiKey() {
