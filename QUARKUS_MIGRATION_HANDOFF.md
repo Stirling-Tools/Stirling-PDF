@@ -13,14 +13,19 @@
   public `Stirling-Tools/Stirling-PDF` repo; do not push without the owner's say-so).
 - **Default flavor (`proprietary`):** compiles, Quarkus-augments, boots, and serves real traffic in
   Docker. ✅
-- **Cucumber API e2e (full-tool Docker image, login disabled):** **183 / 258 scenarios pass**, 80
-  skipped (all JWT/login — expected with login off), 75 failed *as of the last full measured run*.
-  Two more fixes (`transferTo` + `maxDPI`, commit `a30d524ec`) landed after that run and should move
-  several more to green but were **not yet re-measured** (the re-run was interrupted).
+- **Cucumber API e2e (full-tool Docker image):** baselines, newest first:
+  - **Run 2 (login off, this session's fixes, no JWT mechanism): 223 / 258 pass**, 35 failed, 80
+    skipped. Up from the prior **183 / 258** baseline (+40). Eliminated buckets: split
+    `PDF corrupted` 8→0, `FileAlreadyExists` 8→0, `Admin login failed (500)` 17→0.
+  - **Run 3 (login off + `V2=true` + the new JWT Bearer mechanism): the 80 JWT/admin scenarios now
+    RUN (0 skipped)** because the `login → /me` probe passes. See §6.E / "Session 2". Final tally
+    recorded in §9.
 - **Stack:** Quarkus 3.33.2 LTS, **Java 25** (mandatory — see §2), Hibernate ORM Panache,
   quarkus-rest (RESTEasy Reactive), quarkus-oidc, quarkus-undertow (servlet, for filters), OpenSAML 5.
 - **`saas` flavor:** compiles but full augmentation has ~28 CDI issues (design-level follow-up).
-- **SAML/SSO + JWT login flows:** not working yet (see §7).
+- **JWT Bearer login:** ✅ now works end-to-end (token issue + validate → `SecurityIdentity`, role
+  mapping, `@RolesAllowed`). **SAML/SSO + OIDC login:** still not wired (see §6.F). The default e2e
+  Docker image + build helper are committed at `docker/quarkus/` (see §3.3).
 
 ---
 
@@ -157,7 +162,54 @@ runs behave) — it will need the Dockerfile fixes from §6 before it works on Q
 
 ## 4. Bugs FIXED this session (with the *why*, so you can spot siblings)
 
-All committed on `migration/run-01`. Newest first:
+### Session 2 (branch `claude/happy-chaplygin-906fe7`, fast-forwarded from `migration/run-01`)
+
+Newest first. These took the login-off suite **183 → 223** and then wired JWT so the **80 skipped
+JWT/admin scenarios run** (run 3, §9):
+
+1. **JWT Bearer → `SecurityIdentity` was never populated** → every user-scoped endpoint that reads
+   `SecurityIdentity.getPrincipal()` (folders, files, `/me`, user/team settings…) failed, and the
+   `environment.py` probe (`login → /me`) failed so ~80 scenarios auto-skipped. Added a custom
+   `HttpAuthenticationMechanism` + `IdentityProvider` in
+   `app/proprietary/.../security/identity/` (`JwtBearerAuthenticationMechanism`,
+   `JwtTokenIdentityProvider`): extract `Authorization: Bearer`, validate via the existing
+   `JwtService` (jjwt + keystore), build a `QuarkusSecurityIdentity` and map the `role` claim
+   (`ROLE_ADMIN` → also add `ADMIN` so `@RolesAllowed("ADMIN")` matches). Returns no identity when
+   no Bearer is present, so the X-API-KEY / login-off open-endpoint path is unaffected. **This is the
+   IdentityProvider that ~10 `// TODO: Migration required` comments across the security/storage code
+   asked for.** Run with `V2=true`.
+2. **No admin user was ever created** → all logins failed "No user found: admin". `InitialSecuritySetup`
+   was a Spring `@Component` (eagerly constructed, `@PostConstruct` ran every boot); the migration
+   made it a lazy `@ApplicationScoped` whose `@PostConstruct` never ran. Restored eager init via
+   `@Observes StartupEvent`. **Pattern: any migrated `@PostConstruct`-on-`@ApplicationScoped` startup
+   bean with no injector is dead code — grep for them.**
+3. **Eager init then exposed two latent bugs** (both real, both now fixed):
+   - `@Produces @ApplicationScoped DataSource` → Arc generated the client proxy in the JDK-sealed
+     `javax.sql` package → `NoClassDefFoundError` on first use. Fix: `@Singleton` (pseudo-scope, no
+     proxy). **Audit other `@Produces @ApplicationScoped` whose return type is a `java.*`/`javax.*`
+     type.**
+   - Panache `persist()` in the `StartupEvent` observer ran with no transaction (Spring Data wrapped
+     `save()` implicitly). Fix: `@Transactional` on the observer.
+4. **Login returned 500 instead of 401** for unknown user / bad password. `CustomUserDetailsService`
+   threw `IllegalArgumentException`, but `AuthController` catches the migration shim
+   `stirling.software.common.security.UsernameNotFoundException`. Made the service throw the shim
+   type. **Sibling: the locked-account path still throws `IllegalStateException` — wire it similarly
+   when needed.**
+5. **`@Transactional` missing on policy-store reads** (`JpaPolicyStore.all()`,
+   `findByTriggerType()`) → the scheduled folder-watch/schedule triggers threw
+   `ContextNotActiveException` off-request (§6.C). The reads are reached via the CDI proxy so a
+   method-level `@Transactional` applies even from the background virtual-thread executor.
+6. **Split scenarios sent a duplicate `fileInput` text part** (`| fileInput | fileInput |` in
+   `general.feature`) alongside the file part; Quarkus `@RestForm FileUpload` bound the *text* part
+   ("fileInput", 9 bytes) → "PDF corrupted". Spring ignored the stray part. Removed the redundant
+   rows (the file is already attached via the generate step). **Real clients send one part, so this
+   is a test artifact, not a server tolerance gap worth chasing.**
+7. **e2e Docker build is now first-class:** `docker/quarkus/Dockerfile` (+ `README.md`,
+   `build-and-run.sh`) layers the runner-jar on the base image, and `.dockerignore` re-includes
+   `app/core/build/*-runner.jar` (it was excluded by `**/build/`, so a clean `docker build` had been
+   silently relying on BuildKit cache).
+
+### Session 1
 
 1. **`MultipartFile.transferTo` didn't overwrite** (`a30d524ec`).
    `app/common/.../model/MultipartFile.java` + `.../model/multipart/FileUploadMultipartFile.java`
@@ -388,18 +440,32 @@ grep -rn "TODO: Migration required" app/*/src/main --include=*.java | wc -l
 
 ---
 
-## 9. Last measured cucumber result (full-tool image, login off) — baseline to beat
+## 9. Measured cucumber results — newest first
 
+**Run 3 — login off + `V2=true` + JWT Bearer mechanism (Session 2):**
 ```
-12 features passed, 9 failed, 4 skipped
+17 features passed, 8 failed, 0 skipped
+272 scenarios passed, 66 failed, 0 skipped     <-- 0 skipped: all JWT/admin scenarios now run
+```
+The JWT mechanism unskipped all 80 and added +49 passing over run 2 with no regressions. Remaining
+66 failures, biggest buckets:
+- **~38 = login-lockout cascade (FIXED, pending re-measure).** `loginAttemptCount` defaulted to 0
+  (template = 5) → admin locked after one failed-login test → every later admin scenario blocked
+  ("Admin login failed" 21×, "Folder list returned" 17×). Fixed the primitive default (same as
+  maxDPI). **Re-run to confirm; expect ~300+.**
+- 10×(200→403) feature-gated/disabled (mostly not bugs).
+- 5×(200→401) + 2×(401→403) — auth scenarios asserting specific codes; triage individually.
+- 3×(200→500) — real per-endpoint bugs (e.g. `user/get-api-key`). Triage via container logs.
+
+**Run 2 — login off, Session 2 fixes, no JWT mechanism:**
+```
+16 features passed, 5 failed, 4 skipped
+223 scenarios passed, 35 failed, 80 skipped
+```
+
+**Run 1 — original baseline (login off):**
+```
 183 scenarios passed, 75 failed, 80 skipped
-1430 steps passed, 75 failed, 490 skipped
 ```
-Failure breakdown at that point: 22×(200→500), 10×(200→403 = disabled/feature-gated, mostly not
-bugs), 5×(200→400 multipart binding), 8×FileAlreadyExists (NOW FIXED via transferTo),
-8×app/json-instead-of-pdf (job failures, overlap with the temp-file + 500 buckets), 3×feature-not-
-enabled (mobile-scanner — config). The `maxDPI=0` (15 DPI failures) and `transferTo` fixes landed
-after this run — **re-run §3.3/§3.4 to get the new number** (expected meaningfully higher).
 
-Skips (80) are entirely the JWT/login/admin/audit/team/signature scenarios that require login+V2 —
-see §6.E.
+Trajectory this session: **183 → 223 (boot/login/test fixes) → 272 (JWT mechanism), 0 skipped.**
