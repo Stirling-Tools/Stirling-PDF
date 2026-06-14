@@ -1,5 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
+import {
+  mockAppApis,
+  seedCookieConsent,
+  skipOnboarding,
+} from "@app/tests/helpers/api-stubs";
 
 // ---------------------------------------------------------------------------
 // Test fixtures — pre-generated keystores in test-fixtures/certs/
@@ -88,6 +93,9 @@ async function uploadCertFile(page: Page, filePath: string) {
 // ---------------------------------------------------------------------------
 test.describe("Certificate Validation — ParticipantView", () => {
   test.beforeEach(async ({ page }) => {
+    await seedCookieConsent(page);
+    await skipOnboarding(page);
+    await mockAppApis(page);
     await mockParticipantApis(page);
   });
 
