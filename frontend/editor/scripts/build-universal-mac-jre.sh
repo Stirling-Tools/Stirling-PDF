@@ -48,11 +48,18 @@ X64_JRE="$WORK_DIR/jre-x86_64"
 run_jlink() {
   local java_home="$1"
   local out="$2"
+  local compress
+  if "$java_home/bin/jlink" --help 2>&1 | grep -q 'zip-\[0-9\]'; then
+    compress="zip-6"
+  else
+    compress="2"
+  fi
+
   "$java_home/bin/jlink" \
     --module-path "$java_home/jmods" \
     --add-modules "$JLINK_MODULES" \
     --strip-debug \
-    --compress=zip-6 \
+    --compress="$compress" \
     --no-header-files \
     --no-man-pages \
     --output "$out"

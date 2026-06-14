@@ -3,7 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,9 +34,9 @@ class PrintFileControllerTest {
     @Test
     void printFile_absolutePath_throwsException() {
         PrintFileRequest request = new PrintFileRequest();
-        String absPath = Paths.get("/etc/passwd").toString();
+        String absPath = Path.of("/etc/passwd").toString();
         // Only test on systems where /etc/passwd is absolute
-        if (Paths.get(absPath).isAbsolute()) {
+        if (Path.of(absPath).isAbsolute()) {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput", absPath, "application/pdf", "data".getBytes());
