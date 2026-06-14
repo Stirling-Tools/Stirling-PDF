@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionLaunch;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,16 +36,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -52,17 +49,6 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SanitizeControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -156,52 +142,31 @@ class SanitizeControllerTest {
         @DisplayName("Should remove JavaScript from PDF")
         void testRemoveJavaScript() throws Exception {
             byte[] jsBytes = createPdfWithJavaScript();
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, jsBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(true);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(jsBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(jsBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, true, false, false, false, false, false);
 
-            assertNotNull(response.getBody());
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getEntity());
+            assertEquals(200, response.getStatus());
         }
 
         @Test
         @DisplayName("Should not remove JavaScript when flag is false")
         void testSkipJavaScriptRemoval() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(simplePdfBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, false, false, false, false, false);
+            assertNotNull(response.getEntity());
         }
     }
 
@@ -213,25 +178,15 @@ class SanitizeControllerTest {
         @DisplayName("Should remove links from PDF")
         void testRemoveLinks() throws Exception {
             byte[] linkBytes = createPdfWithLinks();
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, linkBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(true);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(linkBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(linkBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
-            assertTrue(drainBody(response).length > 0);
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, false, false, false, true, false);
+            assertNotNull(response.getEntity());
         }
     }
 
@@ -243,50 +198,29 @@ class SanitizeControllerTest {
         @DisplayName("Should remove document info metadata")
         void testRemoveMetadata() throws Exception {
             byte[] metaBytes = createPdfWithMetadata();
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, metaBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(true);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(metaBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(metaBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, false, false, true, false, false);
+            assertNotNull(response.getEntity());
         }
 
         @Test
         @DisplayName("Should remove XMP metadata")
         void testRemoveXMPMetadata() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(true);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(simplePdfBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, false, true, false, false, false);
+            assertNotNull(response.getEntity());
         }
     }
 
@@ -297,27 +231,15 @@ class SanitizeControllerTest {
         @Test
         @DisplayName("Should remove fonts from PDF")
         void testRemoveFonts() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(true);
+            FileUpload pdfFile = TestFileUploads.pdf(simplePdfBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, false, false, false, false, true);
+            assertNotNull(response.getEntity());
         }
     }
 
@@ -329,125 +251,73 @@ class SanitizeControllerTest {
         @DisplayName("Should apply all sanitization options at once")
         void testAllOptionsEnabled() throws Exception {
             byte[] jsBytes = createPdfWithJavaScript();
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, jsBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(true);
-            request.setRemoveEmbeddedFiles(true);
-            request.setRemoveXMPMetadata(true);
-            request.setRemoveMetadata(true);
-            request.setRemoveLinks(true);
-            request.setRemoveFonts(true);
+            FileUpload pdfFile = TestFileUploads.pdf(jsBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(jsBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
-            assertTrue(drainBody(response).length > 0);
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, true, true, true, true, true, true);
+            assertNotNull(response.getEntity());
         }
 
         @Test
         @DisplayName("Should handle all options disabled")
         void testAllOptionsDisabled() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(simplePdfBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, false, false, false, false, false);
+            assertNotNull(response.getEntity());
         }
 
         @Test
         @DisplayName("Should handle null boolean flags (treated as false)")
         void testNullFlags() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            // All flags left null
+            FileUpload pdfFile = TestFileUploads.pdf(simplePdfBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, null, null, null, null, null, null);
+            assertNotNull(response.getEntity());
         }
 
         @Test
         @DisplayName("Should remove embedded files from PDF")
         void testRemoveEmbeddedFiles() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(false);
-            request.setRemoveEmbeddedFiles(true);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile = TestFileUploads.pdf(simplePdfBytes);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
-            assertNotNull(response.getBody());
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, false, true, false, false, false, false);
+            assertNotNull(response.getEntity());
         }
 
         @Test
         @DisplayName("Should produce valid PDF with filename suffix")
         void testOutputFilename() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
-
-            SanitizePdfRequest request = new SanitizePdfRequest();
-            request.setFileInput(pdfFile);
-            request.setRemoveJavaScript(true);
-            request.setRemoveEmbeddedFiles(false);
-            request.setRemoveXMPMetadata(false);
-            request.setRemoveMetadata(false);
-            request.setRemoveLinks(false);
-            request.setRemoveFonts(false);
+            FileUpload pdfFile =
+                    TestFileUploads.of(simplePdfBytes, "document.pdf", "application/pdf");
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
+            Response response =
+                    sanitizeController.sanitizePDF(
+                            pdfFile, null, true, false, false, false, false, false);
             assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(200, response.getStatus());
         }
     }
 }

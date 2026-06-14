@@ -11,14 +11,11 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.cluster.ClusterBackplane;
 import stirling.software.common.cluster.JobStore;
@@ -27,8 +24,8 @@ import stirling.software.common.cluster.JobStoreEntry.JobState;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.common.testsupport.ReflectionTestUtils;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
 class TaskManagerTest {
 
     @Mock private FileStorage fileStorage;
@@ -93,7 +90,7 @@ class TaskManagerTest {
         taskManager.createTask(jobId);
         String fileId = "file-id";
         String originalFileName = "test.pdf";
-        String contentType = MediaType.APPLICATION_PDF_VALUE;
+        String contentType = "application/pdf";
         long fileSize = 1024L;
 
         // Mock the fileStorage.getFileSize() call
@@ -201,8 +198,7 @@ class TaskManagerTest {
         // 2. Create completed successful job with file
         String successFileJobId = "success-file-job";
         taskManager.createTask(successFileJobId);
-        taskManager.setFileResult(
-                successFileJobId, "file-id", "test.pdf", MediaType.APPLICATION_PDF_VALUE);
+        taskManager.setFileResult(successFileJobId, "file-id", "test.pdf", "application/pdf");
 
         // 3. Create completed successful job without file
         String successJobId = "success-job";
@@ -255,7 +251,7 @@ class TaskManagerTest {
                 ResultFile.builder()
                         .fileId("file-id")
                         .fileName("test.pdf")
-                        .contentType(MediaType.APPLICATION_PDF_VALUE)
+                        .contentType("application/pdf")
                         .fileSize(1024L)
                         .build();
         ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));

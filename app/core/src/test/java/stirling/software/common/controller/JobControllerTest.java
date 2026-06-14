@@ -5,20 +5,17 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpSession;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.cluster.ClusterBackplane;
 import stirling.software.common.cluster.JobStore;
@@ -27,8 +24,16 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
+import stirling.software.common.testsupport.ReflectionTestUtils;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * Migration: {@link JobController} now returns {@code jakarta.ws.rs.core.Response} (not Spring
+ * {@code ResponseEntity}); authorization is driven by a CDI {@code Instance<JobOwnershipService>}
+ * (not an {@code HttpSession} "userJobIds" attribute), and the sticky/ownership guard reads the
+ * cluster {@link JobStore}. With ownership disabled (unresolvable JobOwnershipService) every job is
+ * accessible, matching the security-disabled contract. The JobStore is stubbed to return {@code
+ * Optional.empty()} so the sticky-410 guard is a no-op on these single-node unit paths.
+ */
 class JobControllerTest {
 
     @Mock private TaskManager taskManager;
@@ -45,17 +50,33 @@ class JobControllerTest {
 
     @Mock private JobStore jobStore;
 
-    private MockHttpSession session;
-
     @InjectMocks private JobController controller;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        // Sticky-410 guard short-circuits to "not peer-owned" when the JobStore has no entry.
+        lenient().when(jobStore.get(anyString())).thenReturn(Optional.empty());
+        // @Inject Instance<> fields are not populated by Mockito; default them to unresolvable
+        // (security disabled / no sticky recorder) so validateJobAccess() and the guard don't NPE.
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", unresolvable());
+        ReflectionTestUtils.setField(controller, "stickyMissRecorder", unresolvable());
+    }
 
-        // Setup mock session for tests
-        session = new MockHttpSession();
-        when(request.getSession()).thenReturn(session);
+    @SuppressWarnings("unchecked")
+    private static <T> Instance<T> unresolvable() {
+        Instance<T> instance = mock(Instance.class);
+        lenient().when(instance.isResolvable()).thenReturn(false);
+        return instance;
+    }
+
+    /** Wrap a JobOwnershipService in a resolvable CDI Instance (security enabled). */
+    @SuppressWarnings("unchecked")
+    private Instance<JobOwnershipService> resolvableOwnership() {
+        Instance<JobOwnershipService> instance = mock(Instance.class);
+        when(instance.isResolvable()).thenReturn(true);
+        when(instance.get()).thenReturn(jobOwnershipService);
+        return instance;
     }
 
     @Test
@@ -67,11 +88,11 @@ class JobControllerTest {
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
 
         // Act
-        ResponseEntity<?> response = controller.getJobStatus(jobId);
+        Response response = controller.getJobStatus(jobId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResult, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(mockResult, response.getEntity());
     }
 
     @Test
@@ -86,13 +107,13 @@ class JobControllerTest {
         when(jobQueue.getJobPosition(jobId)).thenReturn(3);
 
         // Act
-        ResponseEntity<?> response = controller.getJobStatus(jobId);
+        Response response = controller.getJobStatus(jobId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        Map<String, Object> responseBody = (Map<String, Object>) response.getEntity();
         assertEquals(mockResult, responseBody.get("jobResult"));
 
         @SuppressWarnings("unchecked")
@@ -108,10 +129,10 @@ class JobControllerTest {
         when(taskManager.getJobResult(jobId)).thenReturn(null);
 
         // Act
-        ResponseEntity<?> response = controller.getJobStatus(jobId);
+        Response response = controller.getJobStatus(jobId);
 
         // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -127,11 +148,11 @@ class JobControllerTest {
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
 
         // Act
-        ResponseEntity<?> response = controller.getJobResult(jobId);
+        Response response = controller.getJobResult(jobId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(resultObject, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(resultObject, response.getEntity());
     }
 
     @Test
@@ -140,7 +161,7 @@ class JobControllerTest {
         String jobId = "test-job-id";
         String fileId = "file-id";
         String originalFileName = "test.pdf";
-        String contentType = MediaType.APPLICATION_PDF_VALUE;
+        String contentType = "application/pdf";
         byte[] fileContent = "Test file content".getBytes();
 
         JobResult mockResult = new JobResult();
@@ -152,14 +173,13 @@ class JobControllerTest {
         when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
 
         // Act
-        ResponseEntity<?> response = controller.getJobResult(jobId);
+        Response response = controller.getJobResult(jobId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
-        assertTrue(
-                response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
-        assertEquals(fileContent, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(contentType, response.getHeaderString("Content-Type"));
+        assertTrue(response.getHeaderString("Content-Disposition").contains(originalFileName));
+        assertEquals(fileContent, response.getEntity());
     }
 
     @Test
@@ -175,11 +195,11 @@ class JobControllerTest {
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
 
         // Act
-        ResponseEntity<?> response = controller.getJobResult(jobId);
+        Response response = controller.getJobResult(jobId);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains(errorMessage));
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains(errorMessage));
     }
 
     @Test
@@ -194,11 +214,11 @@ class JobControllerTest {
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
 
         // Act
-        ResponseEntity<?> response = controller.getJobResult(jobId);
+        Response response = controller.getJobResult(jobId);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("not complete"));
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("not complete"));
     }
 
     @Test
@@ -208,10 +228,10 @@ class JobControllerTest {
         when(taskManager.getJobResult(jobId)).thenReturn(null);
 
         // Act
-        ResponseEntity<?> response = controller.getJobResult(jobId);
+        Response response = controller.getJobResult(jobId);
 
         // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -220,7 +240,7 @@ class JobControllerTest {
         String jobId = "test-job-id";
         String fileId = "file-id";
         String originalFileName = "test.pdf";
-        String contentType = MediaType.APPLICATION_PDF_VALUE;
+        String contentType = "application/pdf";
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);
@@ -230,74 +250,30 @@ class JobControllerTest {
         when(fileStorage.retrieveBytes(fileId)).thenThrow(new RuntimeException("File not found"));
 
         // Act
-        ResponseEntity<?> response = controller.getJobResult(jobId);
+        Response response = controller.getJobResult(jobId);
 
         // Assert
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Error retrieving file"));
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Error retrieving file"));
     }
 
-    /*
-     * @Test void testGetJobStats() { // Arrange JobStats mockStats =
-     * JobStats.builder() .totalJobs(10) .activeJobs(3) .completedJobs(7) .build();
-     *
-     * when(taskManager.getJobStats()).thenReturn(mockStats);
-     *
-     * // Act ResponseEntity<?> response = controller.getJobStats();
-     *
-     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-     * assertEquals(mockStats, response.getBody()); }
-     *
-     * @Test void testCleanupOldJobs() { // Arrange when(taskManager.getJobStats())
-     * .thenReturn(JobStats.builder().totalJobs(10).build())
-     * .thenReturn(JobStats.builder().totalJobs(7).build());
-     *
-     * // Act ResponseEntity<?> response = controller.cleanupOldJobs();
-     *
-     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-     *
-     * @SuppressWarnings("unchecked") Map<String, Object> responseBody =
-     * (Map<String, Object>) response.getBody(); assertEquals("Cleanup complete",
-     * responseBody.get("message")); assertEquals(3,
-     * responseBody.get("removedJobs")); assertEquals(7,
-     * responseBody.get("remainingJobs"));
-     *
-     * verify(taskManager).cleanupOldJobs(); }
-     *
-     * @Test void testGetQueueStats() { // Arrange Map<String, Object>
-     * mockQueueStats = Map.of( "queuedJobs", 5, "queueCapacity", 10,
-     * "resourceStatus", "OK" );
-     *
-     * when(jobQueue.getQueueStats()).thenReturn(mockQueueStats);
-     *
-     * // Act ResponseEntity<?> response = controller.getQueueStats();
-     *
-     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-     * assertEquals(mockQueueStats, response.getBody());
-     * verify(jobQueue).getQueueStats(); }
-     */
     @Test
     void testCancelJob_InQueue() {
         // Arrange
         String jobId = "job-in-queue";
-
-        // Setup user session with job authorization
-        java.util.Set<String> userJobIds = new java.util.HashSet<>();
-        userJobIds.add(jobId);
-        session.setAttribute("userJobIds", userJobIds);
 
         when(jobQueue.isJobQueued(jobId)).thenReturn(true);
         when(jobQueue.getJobPosition(jobId)).thenReturn(2);
         when(jobQueue.cancelJob(jobId)).thenReturn(true);
 
         // Act
-        ResponseEntity<?> response = controller.cancelJob(jobId);
+        Response response = controller.cancelJob(jobId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        Map<String, Object> responseBody = (Map<String, Object>) response.getEntity();
         assertEquals("Job cancelled successfully", responseBody.get("message"));
         assertTrue((Boolean) responseBody.get("wasQueued"));
         assertEquals(2, responseBody.get("queuePosition"));
@@ -314,22 +290,17 @@ class JobControllerTest {
         jobResult.setJobId(jobId);
         jobResult.setComplete(false);
 
-        // Setup user session with job authorization
-        java.util.Set<String> userJobIds = new java.util.HashSet<>();
-        userJobIds.add(jobId);
-        session.setAttribute("userJobIds", userJobIds);
-
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
 
         // Act
-        ResponseEntity<?> response = controller.cancelJob(jobId);
+        Response response = controller.cancelJob(jobId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        Map<String, Object> responseBody = (Map<String, Object>) response.getEntity();
         assertEquals("Job cancelled successfully", responseBody.get("message"));
         assertFalse((Boolean) responseBody.get("wasQueued"));
         assertEquals("n/a", responseBody.get("queuePosition"));
@@ -343,19 +314,14 @@ class JobControllerTest {
         // Arrange
         String jobId = "non-existent-job";
 
-        // Setup user session with job authorization
-        java.util.Set<String> userJobIds = new java.util.HashSet<>();
-        userJobIds.add(jobId);
-        session.setAttribute("userJobIds", userJobIds);
-
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(null);
 
         // Act
-        ResponseEntity<?> response = controller.cancelJob(jobId);
+        Response response = controller.cancelJob(jobId);
 
         // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -366,52 +332,39 @@ class JobControllerTest {
         jobResult.setJobId(jobId);
         jobResult.setComplete(true);
 
-        // Setup user session with job authorization
-        java.util.Set<String> userJobIds = new java.util.HashSet<>();
-        userJobIds.add(jobId);
-        session.setAttribute("userJobIds", userJobIds);
-
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
 
         // Act
-        ResponseEntity<?> response = controller.cancelJob(jobId);
+        Response response = controller.cancelJob(jobId);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        Map<String, Object> responseBody = (Map<String, Object>) response.getEntity();
         assertEquals("Cannot cancel job that is already complete", responseBody.get("message"));
     }
 
     @Test
-    void testCancelJob_Unauthorized() {
-        // Note: This test validates authorization when security is enabled.
-        // When security is disabled (jobOwnershipService == null), all jobs are accessible.
-        // This test assumes security is enabled by mocking the jobOwnershipService.
-
+    void testCancelJob_SecurityDisabledAllowsAccess() {
+        // With ownership disabled (unresolvable JobOwnershipService), all jobs are accessible.
         String jobId = "unauthorized-job";
         JobResult jobResult = new JobResult();
         jobResult.setJobId(jobId);
         jobResult.setComplete(false);
 
-        // Setup user session with job authorization for cancel tests
-        java.util.Set<String> userJobIds = new java.util.HashSet<>();
-        userJobIds.add(jobId);
-        session.setAttribute("userJobIds", userJobIds);
-
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
 
         // Act - without security enabled, this will succeed
-        ResponseEntity<?> response = controller.cancelJob(jobId);
+        Response response = controller.cancelJob(jobId);
 
         // Assert - when security is disabled, all jobs are accessible
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        Map<String, Object> responseBody = (Map<String, Object>) response.getEntity();
         assertEquals("Job cancelled successfully", responseBody.get("message"));
 
         verify(taskManager).setError(jobId, "Job was cancelled by user");
@@ -421,13 +374,13 @@ class JobControllerTest {
     void testDownloadFile_ForbiddenWhenFileOwnedByAnotherUser() throws Exception {
         String fileId = "file-id";
 
-        ReflectionTestUtils.setField(controller, "jobOwnershipService", jobOwnershipService);
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", resolvableOwnership());
         when(taskManager.findJobKeyByFileId(fileId)).thenReturn("other-user:job-id");
         when(jobOwnershipService.validateJobAccess("other-user:job-id")).thenReturn(false);
 
-        ResponseEntity<?> response = controller.downloadFile(fileId);
+        Response response = controller.downloadFile(fileId);
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
         verify(fileStorage, never()).retrieveBytes(eq(fileId));
     }
 
@@ -435,13 +388,13 @@ class JobControllerTest {
     void testGetFileMetadata_ForbiddenWhenFileOwnedByAnotherUser() throws Exception {
         String fileId = "file-id";
 
-        ReflectionTestUtils.setField(controller, "jobOwnershipService", jobOwnershipService);
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", resolvableOwnership());
         when(taskManager.findJobKeyByFileId(fileId)).thenReturn("other-user:job-id");
         when(jobOwnershipService.validateJobAccess("other-user:job-id")).thenReturn(false);
 
-        ResponseEntity<?> response = controller.getFileMetadata(fileId);
+        Response response = controller.getFileMetadata(fileId);
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
         verify(fileStorage, never()).getFileSize(eq(fileId));
     }
 }

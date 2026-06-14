@@ -11,17 +11,18 @@ import java.nio.file.Files;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -33,7 +34,7 @@ class UnlockPDFFormsControllerTest {
 
     private UnlockPDFFormsController controller;
 
-    private MockMultipartFile mockPdfFile;
+    private FileUpload mockPdfFile;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -51,11 +52,8 @@ class UnlockPDFFormsControllerTest {
                         });
         controller = new UnlockPDFFormsController(pdfDocumentFactory, tempFileManager);
         mockPdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        "application/pdf",
-                        new byte[] {0x25, 0x50, 0x44, 0x46});
+                TestFileUploads.of(
+                        new byte[] {0x25, 0x50, 0x44, 0x46}, "test.pdf", "application/pdf");
     }
 
     @Test
@@ -64,14 +62,11 @@ class UnlockPDFFormsControllerTest {
         document.addPage(new PDPage());
         when(pdfDocumentFactory.load(any(PDFFile.class))).thenReturn(document);
 
-        PDFFile file = new PDFFile();
-        file.setFileInput(mockPdfFile);
-
-        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
+        Response response = controller.unlockPDFForms(mockPdfFile, null);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
@@ -82,13 +77,10 @@ class UnlockPDFFormsControllerTest {
         document.getDocumentCatalog().setAcroForm(acroForm);
         when(pdfDocumentFactory.load(any(PDFFile.class))).thenReturn(document);
 
-        PDFFile file = new PDFFile();
-        file.setFileInput(mockPdfFile);
-
-        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
+        Response response = controller.unlockPDFForms(mockPdfFile, null);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
@@ -96,10 +88,7 @@ class UnlockPDFFormsControllerTest {
         when(pdfDocumentFactory.load(any(PDFFile.class)))
                 .thenThrow(new java.io.IOException("Failed to load"));
 
-        PDFFile file = new PDFFile();
-        file.setFileInput(mockPdfFile);
-
-        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
+        Response response = controller.unlockPDFForms(mockPdfFile, null);
 
         // Controller catches exceptions and returns null
         assertNull(response);
@@ -111,13 +100,10 @@ class UnlockPDFFormsControllerTest {
         document.addPage(new PDPage());
         when(pdfDocumentFactory.load(any(PDFFile.class))).thenReturn(document);
 
-        PDFFile file = new PDFFile();
-        file.setFileInput(mockPdfFile);
-
-        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
+        Response response = controller.unlockPDFForms(mockPdfFile, null);
 
         assertNotNull(response);
-        String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
+        String contentDisposition = response.getHeaderString("Content-Disposition");
         assertNotNull(contentDisposition);
         assertTrue(contentDisposition.contains("unlocked_forms"));
     }
@@ -130,10 +116,7 @@ class UnlockPDFFormsControllerTest {
         document.getDocumentCatalog().setAcroForm(acroForm);
         when(pdfDocumentFactory.load(any(PDFFile.class))).thenReturn(document);
 
-        PDFFile file = new PDFFile();
-        file.setFileInput(mockPdfFile);
-
-        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
+        Response response = controller.unlockPDFForms(mockPdfFile, null);
 
         assertNotNull(response);
         assertTrue(acroForm.getNeedAppearances());

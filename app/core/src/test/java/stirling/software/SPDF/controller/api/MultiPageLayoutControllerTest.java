@@ -1,14 +1,18 @@
 package stirling.software.SPDF.controller.api;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,28 +22,30 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class MultiPageLayoutControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+    private static byte[] drainBody(Response response) throws IOException {
+        Object entity = response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else if (entity instanceof StreamingOutput streaming) {
+            streaming.write(baos);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
     }
@@ -49,8 +55,8 @@ class MultiPageLayoutControllerTest {
 
     @InjectMocks private MultiPageLayoutController controller;
 
-    private MockMultipartFile fileWithExt;
-    private MockMultipartFile fileNoExt;
+    private FileUpload fileWithExt;
+    private FileUpload fileNoExt;
 
     @BeforeEach
     void setup() throws Exception {
@@ -66,23 +72,33 @@ class MultiPageLayoutControllerTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
-        fileWithExt =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
-        fileNoExt =
-                new MockMultipartFile("fileInput", "name", "application/pdf", new byte[] {4, 5, 6});
+        fileWithExt = TestFileUploads.of(new byte[] {1, 2, 3}, "test.pdf", "application/pdf");
+        fileNoExt = TestFileUploads.of(new byte[] {4, 5, 6}, "name", "application/pdf");
     }
 
     @Test
     @DisplayName("Rejects non-2/3 and non-perfect-square pagesPerSheet")
     void invalidPagesPerSheetThrows() {
-        MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
-        req.setPagesPerSheet(5);
-        req.setAddBorder(Boolean.TRUE);
-        req.setFileInput(fileWithExt);
-
         Assertions.assertThrows(
-                IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
+                IllegalArgumentException.class,
+                () ->
+                        controller.mergeMultiplePagesIntoOne(
+                                fileWithExt,
+                                null,
+                                null,
+                                5,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                Boolean.TRUE));
     }
 
     @Test
@@ -90,23 +106,35 @@ class MultiPageLayoutControllerTest {
     void perfectSquareNoPages() throws Exception {
         PDDocument source = new PDDocument();
         PDDocument target = new PDDocument();
-        Mockito.when(pdfDocumentFactory.load(fileWithExt)).thenReturn(source);
+        Mockito.when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(source);
         Mockito.when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source))
                 .thenReturn(target);
 
-        MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
-        req.setPagesPerSheet(4);
-        req.setAddBorder(Boolean.FALSE);
-        req.setFileInput(fileWithExt);
+        Response resp =
+                controller.mergeMultiplePagesIntoOne(
+                        fileWithExt,
+                        null,
+                        null,
+                        4,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Boolean.FALSE);
 
-        ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
-        Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
-        Assertions.assertEquals(MediaType.APPLICATION_PDF, resp.getHeaders().getContentType());
-        Assertions.assertNotNull(resp.getBody());
+        Assertions.assertEquals(200, resp.getStatus());
+        Assertions.assertEquals("application/pdf", resp.getMediaType().toString());
+        Assertions.assertNotNull(resp.getEntity());
         Assertions.assertTrue(drainBody(resp).length > 0);
-        Assertions.assertEquals(
-                "test_multi_page_layout.pdf",
-                resp.getHeaders().getContentDisposition().getFilename());
+        Assertions.assertTrue(
+                resp.getHeaderString("Content-Disposition").contains("test_multi_page_layout.pdf"));
     }
 
     @Test
@@ -115,19 +143,32 @@ class MultiPageLayoutControllerTest {
         PDDocument source = new PDDocument();
         source.addPage(new PDPage());
         PDDocument target = new PDDocument();
-        Mockito.when(pdfDocumentFactory.load(fileWithExt)).thenReturn(source);
+        Mockito.when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(source);
         Mockito.when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source))
                 .thenReturn(target);
 
-        MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
-        req.setPagesPerSheet(2);
-        req.setAddBorder(Boolean.TRUE);
-        req.setFileInput(fileWithExt);
+        Response resp =
+                controller.mergeMultiplePagesIntoOne(
+                        fileWithExt,
+                        null,
+                        null,
+                        2,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Boolean.TRUE);
 
-        ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
-        Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
-        Assertions.assertEquals(MediaType.APPLICATION_PDF, resp.getHeaders().getContentType());
-        Assertions.assertNotNull(resp.getBody());
+        Assertions.assertEquals(200, resp.getStatus());
+        Assertions.assertEquals("application/pdf", resp.getMediaType().toString());
+        Assertions.assertNotNull(resp.getEntity());
         Assertions.assertTrue(drainBody(resp).length > 0);
     }
 
@@ -136,20 +177,31 @@ class MultiPageLayoutControllerTest {
     void threeUpWithNameNoExtension() throws Exception {
         PDDocument source = new PDDocument();
         PDDocument target = new PDDocument();
-        Mockito.when(pdfDocumentFactory.load(fileNoExt)).thenReturn(source);
+        Mockito.when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(source);
         Mockito.when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source))
                 .thenReturn(target);
 
-        MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
-        req.setMode("CUSTOM");
-        req.setCols(3);
-        req.setRows(1);
-        req.setAddBorder(Boolean.TRUE);
-        req.setFileInput(fileNoExt);
+        // mode=CUSTOM, cols=3, rows=1
+        Response resp =
+                controller.mergeMultiplePagesIntoOne(
+                        fileNoExt,
+                        null,
+                        "CUSTOM",
+                        null,
+                        null,
+                        null,
+                        1,
+                        3,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Boolean.TRUE);
 
-        ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
-        Assertions.assertEquals(
-                "name_multi_page_layout.pdf",
-                resp.getHeaders().getContentDisposition().getFilename());
+        Assertions.assertTrue(
+                resp.getHeaderString("Content-Disposition").contains("name_multi_page_layout.pdf"));
     }
 }

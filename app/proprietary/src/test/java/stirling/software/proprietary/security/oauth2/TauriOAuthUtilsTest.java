@@ -1,13 +1,30 @@
 package stirling.software.proprietary.security.oauth2;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+
 class TauriOAuthUtilsTest {
+
+    // Production reads from jakarta.servlet.http.HttpServletRequest (getParameter / getCookies).
+    // Spring's MockHttpServletRequest is gone, so we drive the request with a plain Mockito mock
+    // and stub only the accessors TauriOAuthUtils actually calls.
+    private static HttpServletRequest requestWithState(String state) {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(state);
+        return request;
+    }
+
+    private static HttpServletRequest requestWithCookies(Cookie... cookies) {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getCookies()).thenReturn(cookies);
+        return request;
+    }
 
     @Test
     void extractNonceFromState_validState() {
@@ -45,8 +62,7 @@ class TauriOAuthUtilsTest {
 
     @Test
     void extractNonceFromRequest_validRequest() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setParameter("state", "tauri:abc:nonce-123");
+        HttpServletRequest request = requestWithState("tauri:abc:nonce-123");
 
         String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
         assertEquals("nonce-123", nonce);
@@ -54,23 +70,21 @@ class TauriOAuthUtilsTest {
 
     @Test
     void isTauriState_validTauriState() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setParameter("state", "tauri:original-state");
+        HttpServletRequest request = requestWithState("tauri:original-state");
 
         assertTrue(TauriOAuthUtils.isTauriState(request));
     }
 
     @Test
     void isTauriState_notTauriState() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setParameter("state", "regular-state");
+        HttpServletRequest request = requestWithState("regular-state");
 
         assertFalse(TauriOAuthUtils.isTauriState(request));
     }
 
     @Test
     void isTauriState_noState() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        HttpServletRequest request = requestWithState(null);
 
         assertFalse(TauriOAuthUtils.isTauriState(request));
     }
@@ -112,25 +126,23 @@ class TauriOAuthUtilsTest {
 
     @Test
     void extractRedirectPathFromCookie_noCookies() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        HttpServletRequest request = requestWithCookies((Cookie[]) null);
         assertNull(TauriOAuthUtils.extractRedirectPathFromCookie(request));
     }
 
     @Test
     void extractRedirectPathFromCookie_withCookie() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setCookies(
-                new jakarta.servlet.http.Cookie(
-                        TauriOAuthUtils.SPA_REDIRECT_COOKIE, "/auth/callback"));
+        HttpServletRequest request =
+                requestWithCookies(
+                        new Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "/auth/callback"));
 
         assertEquals("/auth/callback", TauriOAuthUtils.extractRedirectPathFromCookie(request));
     }
 
     @Test
     void extractRedirectPathFromCookie_emptyCookie() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setCookies(
-                new jakarta.servlet.http.Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, ""));
+        HttpServletRequest request =
+                requestWithCookies(new Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, ""));
 
         assertNull(TauriOAuthUtils.extractRedirectPathFromCookie(request));
     }
