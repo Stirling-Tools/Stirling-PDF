@@ -64,19 +64,19 @@ export async function uploadFiles(
 /**
  * Some tools (Merge in particular) park the workbench in `viewer` mode after
  * upload, which keeps the run button disabled. The UI exposes a "Go to file
- * editor" affordance to switch out of viewer mode; this helper clicks it
- * when present and is a no-op otherwise.
+ * editor" affordance to switch out of viewer mode; this helper clicks the
+ * file-editor segment when present and is a no-op otherwise.
  */
 export async function switchToEditorIfViewerMode(page: Page): Promise<void> {
-  const goToEditor = page.getByRole("button", {
-    name: /go to file editor/i,
-  });
-  if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-    // This button is sometimes re-mounted during viewer->editor transitions,
-    // especially in WebKit. Dispatching the click directly avoids Playwright's
-    // actionability retry loop getting stuck on a detached node.
-    await goToEditor.dispatchEvent("click");
+  const viewSwitcher = page.locator('[data-tour="view-switcher"]');
+  const viewButtons = viewSwitcher.getByRole("button");
+  const buttonCount = await viewButtons.count().catch(() => 0);
+  if (buttonCount < 2) {
+    return;
   }
+
+  // The file-editor option is the last segment in the shared switcher.
+  await viewButtons.last().click({ timeout: 1_000 });
 }
 
 /**
