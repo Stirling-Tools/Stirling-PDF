@@ -564,6 +564,7 @@ export default function Login() {
   return (
     <AuthLayout>
       <div className="auth-logo-block">
+        <h1 className="auth-visually-hidden">{t("login.title", "Sign in")}</h1>
         <img
           src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
           alt="Stirling PDF"

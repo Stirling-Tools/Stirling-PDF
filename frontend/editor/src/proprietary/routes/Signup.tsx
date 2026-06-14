@@ -92,6 +92,7 @@ export default function Signup() {
   return (
     <AuthLayout>
       <div className="auth-logo-block">
+        <h1 className="auth-visually-hidden">{t("signup.title", "Create an account")}</h1>
         <img
           src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
           alt="Stirling PDF"
