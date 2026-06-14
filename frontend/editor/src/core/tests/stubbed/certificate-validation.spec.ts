@@ -77,13 +77,10 @@ async function selectCertType(page: Page, label: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: upload a file into the Mantine <FileInput> via its hidden native input.
+// Helper: upload a file into the Mantine <FileInput> via the hidden native input.
 // ---------------------------------------------------------------------------
 async function uploadCertFile(page: Page, filePath: string) {
-  await page
-    .getByTestId("cert-file-input")
-    .locator('input[type="file"]')
-    .setInputFiles(filePath);
+  await page.locator('input[type="file"]').first().setInputFiles(filePath);
 }
 
 // ---------------------------------------------------------------------------
