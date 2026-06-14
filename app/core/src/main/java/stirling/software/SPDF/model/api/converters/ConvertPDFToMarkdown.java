@@ -16,7 +16,6 @@ import stirling.software.SPDF.config.swagger.MarkdownConversionResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.pdf.PdfMarkdownConverter;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -38,9 +37,9 @@ public class ConvertPDFToMarkdown {
             summary = "Convert PDF to Markdown",
             description =
                     "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
+    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PdfToMarkdownRequest request)
             throws Exception {
-        MultipartFile inputFile = file.getFileInput();
+        MultipartFile inputFile = request.getFileInput();
 
         String originalName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String baseName =
@@ -52,7 +51,7 @@ public class ConvertPDFToMarkdown {
         try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
             inputFile.transferTo(tempInput.getFile());
             try (PdfDocument doc = PdfDocument.open(tempInput.getPath())) {
-                markdown = new PdfMarkdownConverter().convert(doc);
+                markdown = new PdfMarkdownConverter().convert(doc, request.isIncludeImages());
             }
         }
 

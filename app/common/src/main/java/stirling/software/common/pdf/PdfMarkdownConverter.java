@@ -1,13 +1,20 @@
 package stirling.software.common.pdf;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
+
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
@@ -30,6 +37,7 @@ import stirling.software.jpdfium.text.TextWord;
  * bullets) back into the line they belong to. Column layout and tables are derived from line/word
  * geometry directly.
  */
+@Slf4j
 public class PdfMarkdownConverter {
 
     private static final Pattern SOFT_HYPHEN = Pattern.compile("(\\w+)-\\n([a-z])");
@@ -38,6 +46,10 @@ public class PdfMarkdownConverter {
     private static final float GLYPH_WIDTH = 7.5f;
 
     public String convert(PdfDocument doc) throws IOException {
+        return convert(doc, false);
+    }
+
+    public String convert(PdfDocument doc, boolean includeImages) throws IOException {
         List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
         float medianSize = HeadingDetector.medianFontSize(allPageText);
         float medianHeight = HeadingDetector.medianLineHeight(allPageText);
@@ -60,7 +72,7 @@ public class PdfMarkdownConverter {
             // their host lines so paragraph assembly sees faithful, complete lines.
             List<Line> lines = stitchGlyphs(rawLines);
             if (lines.isEmpty()) {
-                emitImages(doc, pageIndex, output);
+                emitImages(doc, pageIndex, output, includeImages);
                 prevPageTrailingTableHeader = null;
                 continue;
             }
@@ -138,7 +150,7 @@ public class PdfMarkdownConverter {
                 }
             }
 
-            emitImages(doc, pageIndex, pageItems);
+            emitImages(doc, pageIndex, pageItems, includeImages);
 
             if (pageItems.isEmpty()) {
                 continue;
@@ -853,15 +865,32 @@ public class PdfMarkdownConverter {
 
     // --- Page-level emission helpers ---------------------------------------
 
-    private static void emitImages(PdfDocument doc, int pageIndex, List<Object> pageItems)
+    private static void emitImages(
+            PdfDocument doc, int pageIndex, List<Object> pageItems, boolean includeImages)
             throws IOException {
         try (PdfPage page = doc.page(pageIndex)) {
             List<ExtractedImage> images =
                     PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
             for (ExtractedImage img : images) {
-                pageItems.add(describeImage(img));
+                pageItems.add(includeImages ? embedImage(img) : describeImage(img));
             }
         }
+    }
+
+    private static String embedImage(ExtractedImage img) {
+        try {
+            BufferedImage buffered = img.toBufferedImage();
+            if (buffered != null) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                if (ImageIO.write(buffered, "png", out)) {
+                    String data = Base64.getEncoder().encodeToString(out.toByteArray());
+                    return "![image](data:image/png;base64," + data + ")";
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to embed image, using placeholder instead: {}", e.getMessage());
+        }
+        return describeImage(img);
     }
 
     /**
