@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +44,14 @@ public class ReactRoutingController {
     private boolean loggedMissingIndex = false;
     private String cachedSaasLandingHtml;
     private boolean saasLandingExists = false;
+
+    // Per-route prerendered SPA pages (e.g. /compress -> compress.html), generated at
+    // build time with their own OG/social-preview tags baked in. Served here so the
+    // Docker/self-hosted deployment matches the static (Cloudflare Pages) one. The
+    // value is the processed HTML; PRERENDER_MISS marks paths with no prerendered file
+    // so we don't hit the filesystem again. Lazily populated, hence concurrent.
+    private static final String PRERENDER_MISS = "";
+    private final Map<String, String> prerenderedPages = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -106,23 +116,7 @@ public class ReactRoutingController {
             }
 
             try (InputStream inputStream = resource.getInputStream()) {
-                String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-                // Replace %BASE_URL% with the actual context path for base href
-                String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
-                html = html.replace("%BASE_URL%", baseUrl);
-                // Also rewrite any existing <base> tag (Vite may have baked one in)
-                html =
-                        BASE_HREF_PATTERN
-                                .matcher(html)
-                                .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
-
-                // Inject context path as a global variable for API calls
-                String contextPathScript =
-                        "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
-                html = html.replace("</head>", contextPathScript + "</head>");
-
-                return html;
+                return processHtml(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
             }
         } catch (Exception ex) {
             if (!loggedMissingIndex) {
@@ -205,14 +199,113 @@ public class ReactRoutingController {
     @GetMapping(
             "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
     public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
-        return serveIndexHtml(request);
+        return servePrerenderedOrIndex(request);
     }
 
     @GetMapping(
             "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
+        return servePrerenderedOrIndex(request);
+    }
+
+    // --- Build-time prerendered SPA pages --------------------------------------
+
+    /**
+     * Serve the build-time prerendered page for this route if one exists (e.g. {@code /compress} ->
+     * {@code compress.html}, which has its own OG/social-preview tags baked in), otherwise fall
+     * back to the generic SPA shell. This mirrors how a static host (Cloudflare Pages) serves the
+     * same prerendered files, so crawlers get per-tool previews on every deployment without any
+     * server-side rendering.
+     */
+    private ResponseEntity<String> servePrerenderedOrIndex(HttpServletRequest request) {
+        String html = getPrerenderedHtml(appRelativePath(request));
+        if (html != null) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(html);
+        }
         return serveIndexHtml(request);
+    }
+
+    private String getPrerenderedHtml(String relPath) {
+        // Prerendered files exist per route: flat (compress.html) and nested
+        // (settings/people.html). Dynamic/param routes (/share/{token}, ...) have no
+        // file and fall through to the generic SPA shell.
+        if (relPath == null || relPath.length() < 2) {
+            return null;
+        }
+        String slug = relPath.substring(1);
+        // Defensive: every path segment must be a clean token (no traversal, no dots).
+        for (String segment : slug.split("/")) {
+            if (!segment.matches("[A-Za-z0-9_-]+")) {
+                return null;
+            }
+        }
+        String cached = prerenderedPages.get(slug);
+        if (cached != null) {
+            return cached.isEmpty() ? null : cached;
+        }
+        try {
+            Resource resource = getStaticResource(slug + ".html");
+            if (resource == null || !resource.exists()) {
+                prerenderedPages.put(slug, PRERENDER_MISS);
+                return null;
+            }
+            try (InputStream in = resource.getInputStream()) {
+                String html = processHtml(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+                prerenderedPages.put(slug, html);
+                return html;
+            }
+        } catch (Exception ex) {
+            log.debug("Failed to read prerendered page {}.html: {}", slug, ex.getMessage());
+            prerenderedPages.put(slug, PRERENDER_MISS);
+            return null;
+        }
+    }
+
+    private String processHtml(String rawHtml) {
+        // Replace %BASE_URL% with the actual context path for base href
+        String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
+        String html = rawHtml.replace("%BASE_URL%", baseUrl);
+        // Also rewrite any existing <base> tag (Vite may have baked one in)
+        html =
+                BASE_HREF_PATTERN
+                        .matcher(html)
+                        .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
+        // Inject context path as a global variable for API calls
+        String contextPathScript =
+                "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
+        return html.replace("</head>", contextPathScript + "</head>");
+    }
+
+    private Resource getStaticResource(String name) {
+        Path external = Path.of(InstallationPathConfig.getStaticPath(), name);
+        if (Files.exists(external) && Files.isReadable(external)) {
+            return new FileSystemResource(external.toFile());
+        }
+        ClassPathResource cp = new ClassPathResource("static/" + name);
+        return cp.exists() ? cp : null;
+    }
+
+    private String appRelativePath(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (uri == null || uri.isEmpty()) {
+            return "/";
+        }
+        String ctx = request.getContextPath();
+        if (ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)) {
+            uri = uri.substring(ctx.length());
+        }
+        if (uri.isEmpty()) {
+            return "/";
+        }
+        // Normalize trailing slash (except root) so "/compress/" matches "/compress"
+        if (uri.length() > 1 && uri.endsWith("/")) {
+            uri = uri.substring(0, uri.length() - 1);
+        }
+        return uri;
     }
 
     private String buildFallbackHtml() {
