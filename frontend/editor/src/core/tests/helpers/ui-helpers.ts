@@ -37,10 +37,9 @@ export async function waitForModalClose(
 }
 
 /**
- * Upload one or more files through the FileSidebar's "Open from computer"
- * action. The button is always rendered (collapsed or expanded sidebar) and
- * triggers the hidden `data-testid="file-input"` native picker directly -
- * there is no modal to wait for under the post-refactor design.
+ * Upload one or more files through the FileSidebar's hidden native input.
+ * The sidebar button is still the user-facing entry point, but tests drive
+ * the input directly to avoid Firefox file-picker side effects.
  *
  * `setInputFiles` doesn't await the input's async onChange (which writes to
  * IndexedDB via `addFiles`), so without a sync point a caller that follows
@@ -53,7 +52,6 @@ export async function uploadFiles(
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
-  await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
   // Sync point: wait until at least one file lands in the sidebar's file
   // list. The list only renders once `addFiles` has resolved (which awaits

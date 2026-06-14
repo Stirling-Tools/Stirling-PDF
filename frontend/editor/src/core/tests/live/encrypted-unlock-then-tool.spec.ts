@@ -31,7 +31,6 @@ test.describe("Encrypted PDF: unlock then merge", () => {
     await page.goto("/merge");
     await page.waitForLoadState("domcontentloaded");
 
-    await page.getByTestId("files-button").click();
     await page
       .locator('[data-testid="file-input"]')
       .setInputFiles([ENCRYPTED_PDF, SAMPLE_PDF]);

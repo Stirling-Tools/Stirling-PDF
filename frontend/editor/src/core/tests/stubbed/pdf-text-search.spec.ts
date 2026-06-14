@@ -16,9 +16,8 @@ test.describe("Reader - in-document text search", () => {
     await page.goto("/read");
     await page.waitForLoadState("domcontentloaded");
 
-    // Upload a PDF first so the reader has content. `files-button` now
-    // triggers the native picker directly - no modal flow involved.
-    await page.getByTestId("files-button").click();
+    // Upload a PDF first so the reader has content. Drive the hidden input
+    // directly to avoid Firefox file-picker side effects.
     await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
 
     // The WorkbenchBar exposes a "Search PDF" button (aria-label="Search PDF")
