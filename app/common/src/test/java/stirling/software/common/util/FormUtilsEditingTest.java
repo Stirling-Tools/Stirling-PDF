@@ -296,6 +296,42 @@ class FormUtilsEditingTest {
     }
 
     @Test
+    void extractFormFields_prefersFieldNameOverFirstOptionForChoiceLabel() throws IOException {
+        // A radio group named "Choice" with options Yes/No must be labelled
+        // "Choice" (its name), not "Yes" (its first option). Otherwise the label
+        // shown in the viewer disagrees with the field name shown in the editor.
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document, PDRectangle.A4);
+            FormUtils.addNewFields(
+                    document,
+                    List.of(
+                            newField(
+                                    "radio",
+                                    "Choice",
+                                    60,
+                                    700,
+                                    16,
+                                    16,
+                                    List.of("Yes", "No"),
+                                    null,
+                                    null)));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            FormUtils.FormFieldInfo choice =
+                    FormUtils.extractFormFields(reloaded).stream()
+                            .filter(f -> "Choice".equals(f.name()))
+                            .findFirst()
+                            .orElse(null);
+            assertNotNull(choice, "radio field should be extracted");
+            assertEquals(
+                    "Choice", choice.label(), "field name should win over the first option value");
+        }
+    }
+
+    @Test
     void addNewFields_createsCombTextField() throws IOException {
         byte[] saved;
         try (PDDocument document = new PDDocument()) {
