@@ -319,12 +319,6 @@ public class ApplicationProperties {
 
         /** Optional override dir; blank uses {@code <configs>/models/form-detection}. */
         private String modelDir = "";
-
-        /** Page rasterizer used for detection: {@code pdfbox} (default) or {@code jpdfium}. */
-        private String rasterizer = "pdfbox";
-
-        /** Default detection confidence threshold (0-1). */
-        private float confThreshold = 0.25f;
     }
 
     /**

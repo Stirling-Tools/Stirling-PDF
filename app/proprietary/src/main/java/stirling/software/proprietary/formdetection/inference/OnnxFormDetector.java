@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
@@ -30,6 +31,7 @@ import ai.onnxruntime.OrtSession;
  */
 @Slf4j
 @Service
+@ConditionalOnClass(name = "ai.onnxruntime.OrtEnvironment")
 @RequiredArgsConstructor
 public class OnnxFormDetector {
 

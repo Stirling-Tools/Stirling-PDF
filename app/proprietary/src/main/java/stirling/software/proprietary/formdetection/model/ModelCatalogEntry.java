@@ -23,7 +23,6 @@ public class ModelCatalogEntry {
     private String displayName;
     private String description;
     private String license;
-    private String paramsLabel;
     private long sizeBytes;
 
     /** Direct download URL of the .onnx. Blank = not yet available (install is rejected). */
@@ -31,8 +30,6 @@ public class ModelCatalogEntry {
 
     /** Lower-hex SHA-256 of the .onnx. Blank = not yet available (install is rejected). */
     private String sha256;
-
-    private String note;
 
     // --- Pre-processing (parity-critical, mirrored by the browser) ---------------
     /** Square model input edge in pixels. */

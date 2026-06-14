@@ -26,7 +26,6 @@ const MODEL_STATUS_NOT_INSTALLED = {
       displayName: "CommonForms FFDNet-S",
       description: "Small form-field detector",
       license: "CC-BY-4.0",
-      paramsLabel: "small",
       sizeBytes: 0,
       onnxUrl: "",
       sha256: "",

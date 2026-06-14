@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,7 @@ import stirling.software.proprietary.formdetection.service.FormDetectionModelMan
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/ai/form-detection")
+@ConditionalOnClass(name = "ai.onnxruntime.OrtEnvironment")
 @RequiredArgsConstructor
 @Tag(name = "Auto Form Detection")
 public class FormDetectionController {

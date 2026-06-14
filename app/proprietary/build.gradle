@@ -78,8 +78,17 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.13.2'
 
-    // ONNX Runtime (Java) for Auto Form Detection server-side inference.
-    implementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    // ONNX Runtime (Java) for SERVER-SIDE Auto Form Detection inference.
+    // Compiled against everywhere so the module always builds, but the multi-platform native
+    // (~42MB) is only BUNDLED when explicitly requested via -PbundleOnnxRuntime=true - i.e. the
+    // Docker server image (which then slims it to one Linux arch, ~8MB). Desktop/local/core builds
+    // ship WITHOUT it: server-side detection cleanly reports "unavailable" and the in-browser
+    // (onnxruntime-web) engine handles detection instead. Tests always get it.
+    compileOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    testImplementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    if ((project.findProperty('bundleOnnxRuntime') ?: 'false').toString().toBoolean()) {
+        runtimeOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    }
 
     api 'io.micrometer:micrometer-registry-prometheus'
 

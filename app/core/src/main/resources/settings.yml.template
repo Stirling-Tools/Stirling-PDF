@@ -369,8 +369,6 @@ formDetection:
   executionMode: auto # Where detection runs: 'auto' (browser first, server fallback), 'browser' (in-browser WASM only, PDF never leaves the device), or 'server' (backend inference)
   activeModelId: "" # Id of the installed Auto Form Detection model (set automatically after an admin installs one)
   modelDir: "" # Optional override directory for downloaded .onnx models; blank uses <configs>/models/form-detection
-  rasterizer: pdfbox # How pages are rendered for detection: 'pdfbox' (default) or 'jpdfium'
-  confThreshold: 0.25 # Default detection confidence threshold (0-1)
 
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a

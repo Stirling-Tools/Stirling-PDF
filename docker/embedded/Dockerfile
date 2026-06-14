@@ -47,6 +47,7 @@ RUN STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
       -PprototypesMode=${PROTOTYPES_BUILD} \
+      -PbundleOnnxRuntime=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
@@ -56,9 +57,9 @@ WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
-# Slim ONNX Runtime to the target Linux arch only (~88MB jar -> ~6MB). Docker-build only;
-# local/desktop builds keep every platform so cross-platform dev still works. The detection
-# model itself is unaffected - it is still downloaded on demand at runtime.
+# Slim the bundled ONNX Runtime (included only via -PbundleOnnxRuntime above) to the target Linux
+# arch (~42MB jar -> ~8MB). Docker server image only; desktop/local builds don't bundle it at all.
+# The detection model itself is unaffected - it is still downloaded on demand at runtime.
 COPY scripts/slim-onnxruntime.sh /tmp/slim-onnxruntime.sh
 RUN apt-get update \
     && apt-get install -y --no-install-recommends zip \

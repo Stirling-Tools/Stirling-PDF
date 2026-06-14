@@ -7,11 +7,9 @@ export interface FormDetectionCatalogEntry {
   displayName: string;
   description: string;
   license: string;
-  paramsLabel: string;
   sizeBytes: number;
   onnxUrl: string;
   sha256: string;
-  note?: string;
   // Pipeline spec (parity with the backend ModelCatalogEntry) - drives the in-browser engine.
   inputSize: number;
   resizeMode?: string;
