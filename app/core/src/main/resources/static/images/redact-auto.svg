@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+        <symbol id="icon-redact-auto" viewBox="0 0 24 24">  <g id="Layer_2" data-name="Layer 2">
+    <g id="Layer_1-2" data-name="Layer 1">
+      <rect width="24" height="24" style="fill: none"/>
+      <g>
+        <path d="M17.541,15.64258a.91793.91793,0,0,1,.55469-.18555h1.1084a.91586.91586,0,0,1,.55469.18555,1.30889,1.30889,0,0,1,.40429.499,1.57206,1.57206,0,0,1,.15039.68457v5.47754H19.2041V20.21094H18.0957v2.09277H16.9873V16.82617a1.55843,1.55843,0,0,1,.15039-.68457A1.2979,1.2979,0,0,1,17.541,15.64258Zm1.66309,1.10547H18.0957v2.17187h1.1084Z" style="fill: currentColor"/>
+        <path d="M5.68653,22.30351a2.00588,2.00588,0,0,1-2-2v-16A1.92585,1.92585,0,0,1,4.274,2.891a1.92585,1.92585,0,0,1,1.4125-.5875h8l6,6v5.66931h-2V9.30351h-5v-5h-7v16h9.74021v2Z" style="fill: currentColor"/>
+        <rect x="7.69809" y="10.43189" width="4.33778" height="0.79501" style="fill: currentColor"/>
+        <rect x="7.69809" y="12.16889" width="7.31192" height="1.21288" style="fill: currentColor"/>
+        <rect x="7.69809" y="17.14555" width="7.31192" height="1.21288" style="fill: currentColor"/>
+        <rect x="7.69809" y="14.32375" width="7.31192" height="0.57517" style="fill: currentColor"/>
+        <rect x="7.69809" y="15.79848" width="5.25578" height="0.4475" style="fill: currentColor"/>
+      </g>
+    </g>
+  </g>
+    </symbol>
+</svg>
