@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
@@ -52,7 +58,26 @@ import type {
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 
+// Blob URL cache: keyed by `filename-size`. Capped at 10 entries so long
+// sessions with many distinct PDFs don't accumulate unbounded object URLs.
+const BLOB_CACHE_MAX = 10;
 const globalBlobUrlCache = new Map<string, string>();
+
+function cacheBlobUrl(key: string, url: string): void {
+  // Evict the oldest entry when at capacity
+  if (globalBlobUrlCache.size >= BLOB_CACHE_MAX) {
+    const oldestKey = globalBlobUrlCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      const oldUrl = globalBlobUrlCache.get(oldestKey);
+      globalBlobUrlCache.delete(oldestKey);
+      // Only revoke if it's not the URL we're about to add
+      if (oldUrl && oldUrl !== url) {
+        URL.revokeObjectURL(oldUrl);
+      }
+    }
+  }
+  globalBlobUrlCache.set(key, url);
+}
 
 // Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
 const VIEWPORT_GAP = 56;
@@ -465,13 +490,13 @@ const LazyPageContent = ({
         setIsVisible(entry.isIntersecting);
       },
       {
-        rootMargin: "600px", // Pre-render pages within 600px margin to avoid flashes
+        rootMargin: "300px", // Pre-render pages within 300px margin to avoid flashes and save DOM node memory
       },
     );
 
     observer.observe(el);
     return () => {
-      observer.unobserve(el);
+      observer.disconnect();
     };
   }, []);
 
@@ -495,6 +520,153 @@ const LazyPageContent = ({
     </div>
   );
 };
+
+// Module-scope memoized component that renders all layers for a single PDF page.
+// Lifting it out of LocalEmbedPDF means React can skip re-rendering individual
+// pages when the parent re-renders for unrelated state (e.g. commentAuthorName).
+interface PageContentProps {
+  documentId: string;
+  pageIndex: number;
+  width: number;
+  height: number;
+  pdfRenderMode: "normal" | "dark" | "sepia";
+  enableFormFill: boolean;
+  enableAnnotations: boolean;
+  enableRedaction: boolean;
+  showBakedAnnotations: boolean;
+  file: File | Blob | undefined;
+  fileId: string | null | undefined;
+}
+
+const PageContent = React.memo(function PageContent({
+  documentId,
+  pageIndex,
+  width,
+  height,
+  pdfRenderMode,
+  enableFormFill,
+  enableAnnotations,
+  enableRedaction,
+  showBakedAnnotations,
+  file,
+  fileId,
+}: PageContentProps) {
+  return (
+    <Rotate
+      key={`${documentId}-${pageIndex}`}
+      documentId={documentId}
+      pageIndex={pageIndex}
+    >
+      <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+        <div
+          data-page-index={pageIndex}
+          data-page-width={width}
+          data-page-height={height}
+          style={{
+            width,
+            height,
+            position: "relative",
+            overflow: "hidden",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            MozUserSelect: "none",
+            msUserSelect: "none",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+          }}
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          onDrop={(e) => e.preventDefault()}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          <LazyPageContent pageIndex={pageIndex} width={width} height={height}>
+            <TiledPageBackground
+              documentId={documentId}
+              pageIndex={pageIndex}
+              pdfRenderMode={pdfRenderMode}
+            />
+
+            <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
+
+            <div
+              className="pdf-selection-layer"
+              style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+            >
+              <SelectionLayer
+                documentId={documentId}
+                pageIndex={pageIndex}
+                background="var(--pdf-selection-bg)"
+              />
+            </div>
+            <TextSelectionHandler
+              documentId={documentId}
+              pageIndex={pageIndex}
+            />
+
+            {/* ButtonAppearanceOverlay, renders PDF-native button visuals as bitmaps */}
+            {enableFormFill && file && (
+              <ButtonAppearanceOverlay
+                pageIndex={pageIndex}
+                pdfSource={file}
+                pageWidth={width}
+                pageHeight={height}
+              />
+            )}
+
+            {/* FormFieldOverlay for interactive form filling */}
+            {enableFormFill && (
+              <FormFieldOverlay
+                documentId={documentId}
+                pageIndex={pageIndex}
+                pageWidth={width}
+                pageHeight={height}
+                fileId={fileId}
+              />
+            )}
+
+            {/* SignatureFieldOverlay, bitmaps of digital-signature appearances */}
+            {file && (
+              <SignatureFieldOverlay
+                documentId={documentId}
+                pageIndex={pageIndex}
+                pdfSource={file}
+                pageWidth={width}
+                pageHeight={height}
+              />
+            )}
+
+            {/* AnnotationLayer, for annotation editing and annotation-based redactions */}
+            {(enableAnnotations || enableRedaction) && (
+              <AnnotationLayer
+                documentId={documentId}
+                pageIndex={pageIndex}
+                selectionOutline={{ color: "#007ACC" }}
+                selectionMenu={(props) => (
+                  <AnnotationSelectionMenu {...props} />
+                )}
+                style={
+                  !showBakedAnnotations
+                    ? { opacity: 0, pointerEvents: "none" }
+                    : undefined
+                }
+              />
+            )}
+
+            {enableRedaction && (
+              <RedactionLayer
+                documentId={documentId}
+                pageIndex={pageIndex}
+                selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+              />
+            )}
+
+            {/* LinkLayer, uses EmbedPDF annotation state for link rendering */}
+            <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+          </LazyPageContent>
+        </div>
+      </PagePointerProvider>
+    </Rotate>
+  );
+});
 
 const TiledPageBackground = ({
   documentId,
@@ -529,6 +701,33 @@ const TiledPageBackground = ({
     </div>
   );
 };
+
+// DocumentScroller binds documentId to the renderPageFactory so that the
+// Scroller's renderPage prop stays referentially stable across parent
+// re-renders that don't touch the feature flags or file reference.
+interface DocumentScrollerProps {
+  documentId: string;
+  renderPageFactory: (
+    documentId: string,
+  ) => (props: {
+    width: number;
+    height: number;
+    pageIndex: number;
+  }) => React.ReactNode;
+}
+
+const DocumentScroller = React.memo(function DocumentScroller({
+  documentId,
+  renderPageFactory,
+}: DocumentScrollerProps) {
+  const renderPage = useCallback(
+    (props: { width: number; height: number; pageIndex: number }) =>
+      renderPageFactory(documentId)(props),
+    [documentId, renderPageFactory],
+  );
+
+  return <Scroller documentId={documentId} renderPage={renderPage} />;
+});
 
 export function LocalEmbedPDF({
   file,
@@ -580,7 +779,7 @@ export function LocalEmbedPDF({
       let objectUrl = globalBlobUrlCache.get(fileStableKey);
       if (!objectUrl) {
         objectUrl = URL.createObjectURL(file);
-        globalBlobUrlCache.set(fileStableKey, objectUrl);
+        cacheBlobUrl(fileStableKey, objectUrl);
       }
       setPdfUrl(objectUrl);
     }
@@ -710,6 +909,47 @@ export function LocalEmbedPDF({
 
   // Retrieve the global engine instance from context
   const { engine, isLoading, error } = useEngineContext();
+
+  // renderPageFactory creates a stable per-page renderer that closes over
+  // feature flags and file reference. Only recreates when those actually change.
+  // DocumentScroller (below) binds documentId and produces the final renderPage
+  // callback that Scroller expects, keeping documentId in the right closure.
+  const renderPageFactory = useCallback(
+    (documentId: string) =>
+      ({
+        width,
+        height,
+        pageIndex,
+      }: {
+        width: number;
+        height: number;
+        pageIndex: number;
+      }) => (
+        <PageContent
+          key={`${documentId}-${pageIndex}`}
+          documentId={documentId}
+          pageIndex={pageIndex}
+          width={width}
+          height={height}
+          pdfRenderMode={pdfRenderMode}
+          enableFormFill={enableFormFill}
+          enableAnnotations={enableAnnotations}
+          enableRedaction={enableRedaction}
+          showBakedAnnotations={showBakedAnnotations}
+          file={file}
+          fileId={fileId}
+        />
+      ),
+    [
+      enableAnnotations,
+      enableRedaction,
+      enableFormFill,
+      showBakedAnnotations,
+      pdfRenderMode,
+      file,
+      fileId,
+    ],
+  );
 
   // Early return if no file or URL provided
   if (!file && !url) {
@@ -940,147 +1180,9 @@ export function LocalEmbedPDF({
                         contain: "strict",
                       }}
                     >
-                      <Scroller
+                      <DocumentScroller
                         documentId={documentId}
-                        renderPage={({ width, height, pageIndex }) => {
-                          return (
-                            <Rotate
-                              key={`${documentId}-${pageIndex}`}
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            >
-                              <PagePointerProvider
-                                documentId={documentId}
-                                pageIndex={pageIndex}
-                              >
-                                <div
-                                  data-page-index={pageIndex}
-                                  data-page-width={width}
-                                  data-page-height={height}
-                                  style={{
-                                    width,
-                                    height,
-                                    position: "relative",
-                                    overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
-                                    userSelect: "none",
-                                    WebkitUserSelect: "none",
-                                    MozUserSelect: "none",
-                                    msUserSelect: "none",
-                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                                  }}
-                                  draggable={false}
-                                  onDragStart={(e) => e.preventDefault()}
-                                  onDrop={(e) => e.preventDefault()}
-                                  onDragOver={(e) => e.preventDefault()}
-                                >
-                                  <LazyPageContent
-                                    pageIndex={pageIndex}
-                                    width={width}
-                                    height={height}
-                                  >
-                                    <TiledPageBackground
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      pdfRenderMode={pdfRenderMode}
-                                    />
-
-                                    <CustomSearchLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                    />
-
-                                    <div
-                                      className="pdf-selection-layer"
-                                      style={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        pointerEvents: "none",
-                                      }}
-                                    >
-                                      <SelectionLayer
-                                        documentId={documentId}
-                                        pageIndex={pageIndex}
-                                        background="var(--pdf-selection-bg)"
-                                      />
-                                    </div>
-                                    <TextSelectionHandler
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                    />
-
-                                    {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
-                                    {enableFormFill && file && (
-                                      <ButtonAppearanceOverlay
-                                        pageIndex={pageIndex}
-                                        pdfSource={file}
-                                        pageWidth={width}
-                                        pageHeight={height}
-                                      />
-                                    )}
-
-                                    {/* FormFieldOverlay for interactive form filling */}
-                                    {enableFormFill && (
-                                      <FormFieldOverlay
-                                        documentId={documentId}
-                                        pageIndex={pageIndex}
-                                        pageWidth={width}
-                                        pageHeight={height}
-                                        fileId={fileId}
-                                      />
-                                    )}
-
-                                    {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
-                                    {file && (
-                                      <SignatureFieldOverlay
-                                        documentId={documentId}
-                                        pageIndex={pageIndex}
-                                        pdfSource={file}
-                                        pageWidth={width}
-                                        pageHeight={height}
-                                      />
-                                    )}
-
-                                    {/* AnnotationLayer for annotation editing and annotation-based redactions */}
-                                    {(enableAnnotations || enableRedaction) && (
-                                      <AnnotationLayer
-                                        documentId={documentId}
-                                        pageIndex={pageIndex}
-                                        selectionOutline={{ color: "#007ACC" }}
-                                        selectionMenu={(props) => (
-                                          <AnnotationSelectionMenu {...props} />
-                                        )}
-                                        style={
-                                          !showBakedAnnotations
-                                            ? {
-                                                opacity: 0,
-                                                pointerEvents: "none",
-                                              }
-                                            : undefined
-                                        }
-                                      />
-                                    )}
-
-                                    {enableRedaction && (
-                                      <RedactionLayer
-                                        documentId={documentId}
-                                        pageIndex={pageIndex}
-                                        selectionMenu={(props) => (
-                                          <RedactionSelectionMenu {...props} />
-                                        )}
-                                      />
-                                    )}
-
-                                    {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
-                                    <LinkLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                    />
-                                  </LazyPageContent>
-                                </div>
-                              </PagePointerProvider>
-                            </Rotate>
-                          );
-                        }}
+                        renderPageFactory={renderPageFactory}
                       />
                     </Viewport>
                   </GlobalPointerProvider>

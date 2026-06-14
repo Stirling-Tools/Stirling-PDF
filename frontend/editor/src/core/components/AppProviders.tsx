@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import "@app/debug/memoryTelemetry";
 import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";

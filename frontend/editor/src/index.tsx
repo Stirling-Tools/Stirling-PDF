@@ -16,6 +16,9 @@ import "@app/i18n"; // Initialize i18next
 import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 import { BASE_PATH } from "@app/constants/app";
+import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
+
+startEagerWasmCompilation();
 
 if (typeof window !== "undefined") {
   const originalDPR = window.devicePixelRatio;

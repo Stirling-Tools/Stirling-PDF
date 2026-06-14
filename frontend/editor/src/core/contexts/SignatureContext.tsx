@@ -4,6 +4,7 @@ import React, {
   useState,
   ReactNode,
   useCallback,
+  useEffect,
   useRef,
 } from "react";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
@@ -38,6 +39,7 @@ interface SignatureActions {
   redo: () => void;
   storeImageData: (id: string, data: string) => void;
   getImageData: (id: string) => string | undefined;
+  clearImageDataStore: () => void;
   setSignaturesApplied: (applied: boolean) => void;
   setPlacementPreviewSize: (
     size: { width: number; height: number } | null,
@@ -73,6 +75,18 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   const annotationApiRef = useRef<AnnotationAPI>(null);
   const historyApiRef = useRef<HistoryAPI>(null);
   const imageDataStore = useRef<Map<string, string>>(new Map());
+
+  // Revoke any stored blob URLs and clear the image data store on unmount
+  useEffect(() => {
+    return () => {
+      imageDataStore.current.forEach((data) => {
+        if (data.startsWith("blob:")) {
+          URL.revokeObjectURL(data);
+        }
+      });
+      imageDataStore.current.clear();
+    };
+  }, []);
 
   // Actions
   const setSignatureConfig = useCallback((config: SignParameters | null) => {
@@ -143,6 +157,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     return imageDataStore.current.get(id);
   }, []);
 
+  const clearImageDataStore = useCallback(() => {
+    imageDataStore.current.clear();
+  }, []);
+
   const setSignaturesApplied = useCallback((applied: boolean) => {
     setState((prev) => ({
       ...prev,
@@ -192,6 +210,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     redo,
     storeImageData,
     getImageData,
+    clearImageDataStore,
     setSignaturesApplied,
     setPlacementPreviewSize,
   };

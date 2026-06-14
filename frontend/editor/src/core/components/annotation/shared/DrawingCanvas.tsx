@@ -93,54 +93,65 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (autoOpen) openModal();
   }, [autoOpen]);
 
-  const trimCanvas = (canvas: HTMLCanvasElement): string => {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return canvas.toDataURL("image/png");
+  const trimCanvasToBlob = (
+    canvas: HTMLCanvasElement,
+  ): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        canvas.toBlob(resolve, "image/png");
+        return;
+      }
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = imageData.data;
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imageData.data;
 
-    let minX = canvas.width,
-      minY = canvas.height,
-      maxX = 0,
-      maxY = 0;
+      let minX = canvas.width,
+        minY = canvas.height,
+        maxX = 0,
+        maxY = 0;
 
-    // Find bounds of non-transparent pixels
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const alpha = pixels[(y * canvas.width + x) * 4 + 3];
-        if (alpha > 0) {
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
+      // Find bounds of non-transparent pixels
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+          if (alpha > 0) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
         }
       }
-    }
 
-    const trimWidth = maxX - minX + 1;
-    const trimHeight = maxY - minY + 1;
+      const trimWidth = maxX - minX + 1;
+      const trimHeight = maxY - minY + 1;
 
-    // Create trimmed canvas
-    const trimmedCanvas = document.createElement("canvas");
-    trimmedCanvas.width = trimWidth;
-    trimmedCanvas.height = trimHeight;
-    const trimmedCtx = trimmedCanvas.getContext("2d");
-    if (trimmedCtx) {
-      trimmedCtx.drawImage(
-        canvas,
-        minX,
-        minY,
-        trimWidth,
-        trimHeight,
-        0,
-        0,
-        trimWidth,
-        trimHeight,
-      );
-    }
+      if (trimWidth <= 0 || trimHeight <= 0) {
+        canvas.toBlob(resolve, "image/png");
+        return;
+      }
 
-    return trimmedCanvas.toDataURL("image/png");
+      // Create trimmed canvas
+      const trimmedCanvas = document.createElement("canvas");
+      trimmedCanvas.width = trimWidth;
+      trimmedCanvas.height = trimHeight;
+      const trimmedCtx = trimmedCanvas.getContext("2d");
+      if (trimmedCtx) {
+        trimmedCtx.drawImage(
+          canvas,
+          minX,
+          minY,
+          trimWidth,
+          trimHeight,
+          0,
+          0,
+          trimWidth,
+          trimHeight,
+        );
+      }
+      trimmedCanvas.toBlob(resolve, "image/png");
+    });
   };
 
   const renderPreview = (dataUrl: string) => {
@@ -166,15 +177,30 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     img.src = dataUrl;
   };
 
-  const closeModal = () => {
+  const closeModal = async () => {
     if (padRef.current && !padRef.current.isEmpty()) {
       const canvas = modalCanvasRef.current;
       if (canvas) {
-        const trimmedPng = trimCanvas(canvas);
-        const untrimmedPng = canvas.toDataURL("image/png");
-        setSavedSignatureData(untrimmedPng); // Save untrimmed for restoration
-        onSignatureDataChange(trimmedPng);
-        renderPreview(trimmedPng);
+        const trimmedBlob = await trimCanvasToBlob(canvas);
+        if (trimmedBlob) {
+          const trimmedUrl = URL.createObjectURL(trimmedBlob);
+
+          // Get untrimmed PNG as blob for restoration
+          canvas.toBlob((untrimmedBlob) => {
+            if (untrimmedBlob) {
+              const untrimmedUrl = URL.createObjectURL(untrimmedBlob);
+              setSavedSignatureData((prev) => {
+                if (prev && prev.startsWith("blob:")) {
+                  setTimeout(() => URL.revokeObjectURL(prev), 0);
+                }
+                return untrimmedUrl;
+              });
+            }
+          }, "image/png");
+
+          onSignatureDataChange(trimmedUrl);
+          renderPreview(trimmedUrl);
+        }
 
         if (onDrawingComplete) {
           onDrawingComplete();
@@ -204,7 +230,12 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         );
       }
     }
-    setSavedSignatureData(null); // Clear saved signature
+    setSavedSignatureData((prev) => {
+      if (prev && prev.startsWith("blob:")) {
+        setTimeout(() => URL.revokeObjectURL(prev), 0);
+      }
+      return null;
+    });
     onSignatureDataChange(null);
   };
 
@@ -237,13 +268,30 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     if (!initialSignatureData) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      setSavedSignatureData(null);
+      setSavedSignatureData((prev) => {
+        if (prev && prev.startsWith("blob:")) {
+          setTimeout(() => URL.revokeObjectURL(prev), 0);
+        }
+        return null;
+      });
       return;
     }
 
     renderPreview(initialSignatureData);
     setSavedSignatureData(initialSignatureData);
   }, [initialSignatureData]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      setSavedSignatureData((prev) => {
+        if (prev && prev.startsWith("blob:")) {
+          setTimeout(() => URL.revokeObjectURL(prev), 0);
+        }
+        return null;
+      });
+    };
+  }, []);
 
   return (
     <>

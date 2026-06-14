@@ -204,6 +204,7 @@ const EmbedPdfViewerContent = ({
     historyApiRef,
     signatureConfig,
     isPlacementMode,
+    clearImageDataStore,
   } = useSignature();
 
   // Track whether there are unsaved annotation changes in this viewer session.
@@ -350,6 +351,14 @@ const EmbedPdfViewerContent = ({
     ? (`${currentFile.name || "blob"}-${currentFile.size}-${currentFile.lastModified || ""}` as FileId)
     : null;
   const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
+
+  // Clear signature image store when the active document changes or viewer unmounts
+  useEffect(() => {
+    clearImageDataStore();
+    return () => {
+      clearImageDataStore();
+    };
+  }, [currentFileStableId, clearImageDataStore]);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
