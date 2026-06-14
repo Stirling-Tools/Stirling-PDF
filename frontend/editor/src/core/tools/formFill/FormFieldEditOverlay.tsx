@@ -34,6 +34,7 @@ import {
 } from "@app/tools/formFill/formSnapUtils";
 import { usePageScale, getLocalPoint } from "@app/tools/formFill/usePageScale";
 import { SnapGuides } from "@app/tools/formFill/SnapGuides";
+import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 
 interface FormFieldEditOverlayProps {
   documentId: string;
@@ -62,6 +63,7 @@ const HANDLE_SIZE = 9;
 interface Interaction {
   kind: "move" | "resize";
   handle?: HandleId;
+  fieldName: string;
   startX: number;
   startY: number;
   startRect: PixelRect;
@@ -187,9 +189,13 @@ export function FormFieldEditOverlay({
   );
 
   const beginInteraction = useCallback(
-    (e: React.PointerEvent, kind: "move" | "resize", handle?: HandleId) => {
-      if (!selectedField) return;
-      const rect = fieldRect(selectedField);
+    (
+      e: React.PointerEvent,
+      field: FormField,
+      kind: "move" | "resize",
+      handle?: HandleId,
+    ) => {
+      const rect = fieldRect(field);
       if (!rect) return;
       e.stopPropagation();
       e.preventDefault();
@@ -198,13 +204,14 @@ export function FormFieldEditOverlay({
       interactionRef.current = {
         kind,
         handle,
+        fieldName: field.name,
         startX: p.x,
         startY: p.y,
         startRect: rect,
       };
       setLiveRect(rect);
     },
-    [selectedField, fieldRect, localPoint],
+    [fieldRect, localPoint],
   );
 
   const handlePointerMove = useCallback(
@@ -276,12 +283,20 @@ export function FormFieldEditOverlay({
       }
       const rect = liveRect;
       setLiveRect(null);
-      if (!it || !rect || !selectedField) return;
+      if (!it || !rect) return;
+      // A plain click (select) produces no movement — don't stage a no-op change
+      // that would mark the field dirty.
+      const moved =
+        Math.abs(rect.left - it.startRect.left) > 0.5 ||
+        Math.abs(rect.top - it.startRect.top) > 0.5 ||
+        Math.abs(rect.width - it.startRect.width) > 0.5 ||
+        Math.abs(rect.height - it.startRect.height) > 0.5;
+      if (!moved) return;
       const clamped = clampPixelRect(rect, pageWidth, pageHeight);
       const pdf = roundPdfRect(
         pixelsToBackendRect(clamped, scaleX, scaleY, pageHeightPts),
       );
-      stageModification(selectedField.name, {
+      stageModification(it.fieldName, {
         pageIndex,
         x: pdf.x,
         y: pdf.y,
@@ -291,7 +306,6 @@ export function FormFieldEditOverlay({
     },
     [
       liveRect,
-      selectedField,
       pageWidth,
       pageHeight,
       scaleX,
@@ -391,13 +405,20 @@ export function FormFieldEditOverlay({
     <div
       ref={rootRef}
       data-testid={`form-edit-overlay-${pageIndex}`}
-      onPointerDown={() => setSelectedField(null)}
+      onPointerDown={(e) => {
+        // Clicking empty space deselects. preventDefault stops the underlying
+        // PDF text layer from starting a text selection.
+        e.preventDefault();
+        setSelectedField(null);
+      }}
       onPointerMove={handlePointerMove}
       onPointerUp={endInteraction}
       style={{
         position: "absolute",
         inset: 0,
         pointerEvents: "auto",
+        userSelect: "none",
+        WebkitUserSelect: "none",
         zIndex: 5,
       }}
     >
@@ -416,12 +437,13 @@ export function FormFieldEditOverlay({
             onPointerDown={(e) => {
               if (isDeleted) return;
               e.stopPropagation();
-              if (field.name !== selectedFieldName) {
+              const singleWidget = (field.widgets?.length ?? 0) === 1;
+              // Select and (for single-widget fields) start moving in one
+              // gesture — no need to click first then drag. A click without
+              // movement just selects (endInteraction ignores zero-delta).
+              if (field.name !== selectedFieldName)
                 setSelectedField(field.name);
-                return;
-              }
-              // Already selected → start a move (single-widget fields only).
-              if (selectedSingleWidget) beginInteraction(e, "move");
+              if (singleWidget) beginInteraction(e, field, "move");
             }}
             style={{
               position: "absolute",
@@ -430,20 +452,20 @@ export function FormFieldEditOverlay({
               width: rect.width,
               height: rect.height,
               border: isDeleted
-                ? "1.5px dashed #ef4444"
+                ? `1.5px dashed ${FORM_COLORS.danger}`
                 : isSelected
-                  ? "2px solid #2563eb"
-                  : "1.5px solid rgba(37,99,235,0.5)",
+                  ? `2px solid ${FORM_COLORS.accent}`
+                  : `1.5px solid ${FORM_COLORS.neutralBorder}`,
               background: isDeleted
-                ? "rgba(239,68,68,0.12)"
+                ? FORM_COLORS.dangerFill
                 : isSelected
-                  ? "rgba(37,99,235,0.10)"
-                  : "rgba(37,99,235,0.04)",
+                  ? FORM_COLORS.accentFill
+                  : FORM_COLORS.neutralFill,
               borderRadius: 2,
               boxSizing: "border-box",
               cursor: isDeleted
                 ? "not-allowed"
-                : isSelected && selectedSingleWidget
+                : (field.widgets?.length ?? 0) === 1
                   ? "move"
                   : "pointer",
               textDecoration: isDeleted ? "line-through" : undefined,
@@ -457,11 +479,15 @@ export function FormFieldEditOverlay({
                 fontSize: 10,
                 lineHeight: "14px",
                 padding: "0 4px",
-                background: isDeleted ? "#ef4444" : "#2563eb",
+                background: isDeleted
+                  ? FORM_COLORS.danger
+                  : isSelected
+                    ? FORM_COLORS.accent
+                    : FORM_COLORS.neutralChip,
                 color: "#fff",
                 borderRadius: 2,
                 whiteSpace: "nowrap",
-                opacity: isSelected || isDeleted ? 1 : 0.7,
+                opacity: isSelected || isDeleted ? 1 : 0.75,
               }}
             >
               {field.label || field.name}
@@ -480,7 +506,10 @@ export function FormFieldEditOverlay({
             <div
               key={h.id}
               data-testid={`form-edit-handle-${h.id}`}
-              onPointerDown={(e) => beginInteraction(e, "resize", h.id)}
+              onPointerDown={(e) =>
+                selectedField &&
+                beginInteraction(e, selectedField, "resize", h.id)
+              }
               style={{
                 position: "absolute",
                 left: pos.x - HANDLE_SIZE / 2,
@@ -488,7 +517,7 @@ export function FormFieldEditOverlay({
                 width: HANDLE_SIZE,
                 height: HANDLE_SIZE,
                 background: "#fff",
-                border: "1.5px solid #2563eb",
+                border: `1.5px solid ${FORM_COLORS.accent}`,
                 borderRadius: 2,
                 cursor: h.cursor,
                 boxSizing: "border-box",

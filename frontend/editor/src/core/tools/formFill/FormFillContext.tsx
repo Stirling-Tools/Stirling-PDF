@@ -588,7 +588,20 @@ export function FormFillProvider({
     (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
       const seq = ++pendingCounterRef.current;
       const id = `pending-${seq}`;
-      const defaultName = field.name?.trim() || `Field_${seq}`;
+      // Friendly, readable default names that match how the viewer labels
+      // fields, instead of cryptic "Field_5".
+      const TYPE_DEFAULT_NAME: Record<string, string> = {
+        text: "Text field",
+        checkbox: "Checkbox",
+        combobox: "Dropdown",
+        listbox: "List",
+        radio: "Radio group",
+        button: "Button",
+        signature: "Signature",
+      };
+      const defaultName =
+        field.name?.trim() ||
+        `${TYPE_DEFAULT_NAME[field.type] ?? "Field"} ${seq}`;
       // Choice/radio fields need options to be useful — seed a sensible default
       // so the field isn't empty and the options editor has something to show.
       const needsOptions =

@@ -103,8 +103,7 @@ export function FormFieldCreatePanel({
               <Button
                 key={type}
                 size="xs"
-                variant={armed ? "filled" : "light"}
-                color={FIELD_TYPE_COLOR[type]}
+                variant={armed ? "filled" : "default"}
                 leftSection={FIELD_TYPE_ICON[type]}
                 onClick={() => setCreationType(armed ? null : type)}
                 data-testid={`form-create-type-${type}`}

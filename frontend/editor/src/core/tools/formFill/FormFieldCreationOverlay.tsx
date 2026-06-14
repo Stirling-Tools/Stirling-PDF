@@ -34,6 +34,7 @@ import {
 } from "@app/tools/formFill/formSnapUtils";
 import { usePageScale, getLocalPoint } from "@app/tools/formFill/usePageScale";
 import { SnapGuides } from "@app/tools/formFill/SnapGuides";
+import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 
 interface FormFieldCreationOverlayProps {
   documentId: string;
@@ -55,16 +56,6 @@ const DEFAULT_SIZE_PTS: Record<CreatableFieldType, { w: number; h: number }> = {
   radio: { w: 16, h: 16 },
   button: { w: 120, h: 28 },
   signature: { w: 200, h: 60 },
-};
-
-const TYPE_COLOR: Record<CreatableFieldType, string> = {
-  text: "#3b82f6",
-  checkbox: "#10b981",
-  combobox: "#8b5cf6",
-  listbox: "#f59e0b",
-  radio: "#0ea5e9",
-  button: "#f97316",
-  signature: "#6366f1",
 };
 
 export function FormFieldCreationOverlay({
@@ -258,13 +249,14 @@ export function FormFieldCreationOverlay({
         inset: 0,
         pointerEvents: active ? "auto" : "none",
         cursor: active ? "crosshair" : "default",
+        userSelect: "none",
+        WebkitUserSelect: "none",
         zIndex: 5,
       }}
     >
       {/* Already-queued fields on this page */}
       {pendingOnPage.map((pf) => {
         const r = backendRectToPixels(pf, scaleX, scaleY, pageHeightPts);
-        const color = TYPE_COLOR[pf.type];
         return (
           <div
             key={pf.id}
@@ -274,8 +266,8 @@ export function FormFieldCreationOverlay({
               top: r.top,
               width: r.width,
               height: r.height,
-              border: `1.5px dashed ${color}`,
-              background: `${color}1a`,
+              border: `1.5px dashed ${FORM_COLORS.accent}`,
+              background: FORM_COLORS.accentFill,
               borderRadius: 2,
               pointerEvents: "none",
               boxSizing: "border-box",
@@ -289,7 +281,7 @@ export function FormFieldCreationOverlay({
                 fontSize: 10,
                 lineHeight: "14px",
                 padding: "0 4px",
-                background: color,
+                background: FORM_COLORS.accent,
                 color: "#fff",
                 borderRadius: 2,
                 whiteSpace: "nowrap",
@@ -310,8 +302,8 @@ export function FormFieldCreationOverlay({
             top: dragRect.top,
             width: dragRect.width,
             height: dragRect.height,
-            border: `2px dashed ${TYPE_COLOR[creationType]}`,
-            background: `${TYPE_COLOR[creationType]}22`,
+            border: `2px dashed ${FORM_COLORS.accent}`,
+            background: FORM_COLORS.accentFill,
             pointerEvents: "none",
             boxSizing: "border-box",
           }}

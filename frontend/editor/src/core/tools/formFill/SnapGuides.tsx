@@ -4,8 +4,9 @@
  */
 import React from "react";
 import type { SnapGuide } from "@app/tools/formFill/formSnapUtils";
+import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 
-const GUIDE_COLOR = "#ec4899";
+const GUIDE_COLOR = FORM_COLORS.guide;
 
 export function SnapGuides({ guides }: { guides: SnapGuide[] }) {
   return (
