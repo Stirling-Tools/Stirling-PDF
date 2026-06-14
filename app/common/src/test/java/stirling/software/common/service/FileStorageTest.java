@@ -9,25 +9,32 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.enterprise.inject.Instance;
 
 import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * MIGRATION (Spring -> Quarkus): {@code FileStorage} now takes a CDI {@code
+ * Instance<JobOwnershipService>} (was {@code Optional<JobOwnershipService>}) and the {@code
+ * MultipartFile}/{@code Resource} types are the migration shims. Ownership enforcement is skipped
+ * here by supplying a non-resolvable {@code Instance}, matching the previous {@code
+ * Optional.empty()} behaviour. Method signatures and assertions are otherwise unchanged.
+ */
 class FileStorageTest {
+
+    private static final String APPLICATION_PDF = "application/pdf";
 
     @TempDir Path tempDir;
 
@@ -37,6 +44,13 @@ class FileStorageTest {
 
     private MultipartFile mockFile;
 
+    @SuppressWarnings("unchecked")
+    private static Instance<JobOwnershipService> noJobOwnershipService() {
+        Instance<JobOwnershipService> instance = mock(Instance.class);
+        lenient().when(instance.isResolvable()).thenReturn(false);
+        return instance;
+    }
+
     @BeforeEach
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
@@ -44,12 +58,12 @@ class FileStorageTest {
                 new FileStorage(
                         fileOrUploadService,
                         new LocalDiskFileStore(tempDir.toString()),
-                        Optional.empty());
+                        noJobOwnershipService());
 
         // Create a mock MultipartFile
         mockFile = mock(MultipartFile.class);
-        when(mockFile.getOriginalFilename()).thenReturn("test.pdf");
-        when(mockFile.getContentType()).thenReturn(MediaType.APPLICATION_PDF_VALUE);
+        lenient().when(mockFile.getOriginalFilename()).thenReturn("test.pdf");
+        lenient().when(mockFile.getContentType()).thenReturn(APPLICATION_PDF);
     }
 
     @Test
@@ -57,6 +71,8 @@ class FileStorageTest {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
         when(mockFile.getInputStream()).thenReturn(new ByteArrayInputStream(fileContent));
+        // Force the stream path (no file-backed Resource fast path) by returning null resource.
+        when(mockFile.getResource()).thenReturn(null);
 
         // Act
         String fileId = fileStorage.storeFile(mockFile);
@@ -194,7 +210,8 @@ class FileStorageTest {
     void storeFromResource_happyPath_persistsContent() throws IOException {
         // Arrange
         byte[] payload = "resource-body-bytes".getBytes(StandardCharsets.UTF_8);
-        Resource resource = new ByteArrayResource(payload);
+        Resource resource =
+                new InputStreamResource(new ByteArrayInputStream(payload), "whatever.pdf");
 
         // Act
         String fileId = fileStorage.storeFromResource(resource, "whatever.pdf");
@@ -208,11 +225,11 @@ class FileStorageTest {
     @Test
     void storeFromResource_failureCleansUpPartialFile() throws IOException {
         // Arrange: a Resource whose getInputStream returns a stream that throws after
-        // emitting a few bytes. The finally block in storeFromResource should remove
-        // the partial file on disk.
+        // emitting a few bytes. The FileStore.store finally block must remove the partial
+        // file on disk when the copy fails mid-stream.
         byte[] head = "partial".getBytes(StandardCharsets.UTF_8);
         Resource flakyResource =
-                new ByteArrayResource(head) {
+                new Resource() {
                     @Override
                     public InputStream getInputStream() {
                         return new InputStream() {
@@ -238,6 +255,26 @@ class FileStorageTest {
                             }
                         };
                     }
+
+                    @Override
+                    public boolean exists() {
+                        return true;
+                    }
+
+                    @Override
+                    public String getFilename() {
+                        return "n.pdf";
+                    }
+
+                    @Override
+                    public long contentLength() {
+                        return head.length;
+                    }
+
+                    @Override
+                    public java.io.File getFile() throws IOException {
+                        throw new IOException("not file-backed");
+                    }
                 };
 
         // Snapshot dir contents before the call so we can detect any lingering file.
@@ -250,8 +287,8 @@ class FileStorageTest {
         assertThrows(
                 IOException.class, () -> fileStorage.storeFromResource(flakyResource, "n.pdf"));
 
-        // Assert: no partial file lingers under the storage directory - the finally
-        // branch's deleteIfExists must have cleaned it up.
+        // Assert: no partial file lingers under the storage directory - the FileStore.store
+        // failure branch's deleteIfExists must have cleaned it up.
         long filesAfter;
         try (Stream<Path> s = Files.list(tempDir)) {
             filesAfter = s.count();
@@ -259,6 +296,6 @@ class FileStorageTest {
         assertEquals(
                 filesBefore,
                 filesAfter,
-                "partial file must be cleaned up by storeFromResource finally block");
+                "partial file must be cleaned up by FileStore.store finally block");
     }
 }

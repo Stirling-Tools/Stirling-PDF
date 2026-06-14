@@ -10,15 +10,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
@@ -27,6 +26,13 @@ import stirling.software.common.service.MobileScannerService.SessionInfo;
 
 @ExtendWith(MockitoExtension.class)
 class MobileScannerControllerTest {
+
+    private static final int OK = Response.Status.OK.getStatusCode();
+    private static final int FORBIDDEN = Response.Status.FORBIDDEN.getStatusCode();
+    private static final int NOT_FOUND = Response.Status.NOT_FOUND.getStatusCode();
+    private static final int BAD_REQUEST = Response.Status.BAD_REQUEST.getStatusCode();
+    private static final int INTERNAL_SERVER_ERROR =
+            Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
 
     @Mock private MobileScannerService mobileScannerService;
     @Mock private ApplicationProperties applicationProperties;
@@ -49,6 +55,23 @@ class MobileScannerControllerTest {
         when(systemProps.isEnableMobileScanner()).thenReturn(false);
     }
 
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> body(Response response) {
+        return (Map<String, Object>) response.getEntity();
+    }
+
+    /**
+     * Build a RESTEasy Reactive {@link FileUpload} stub. The controller maps each upload via {@code
+     * FileUploadMultipartFile.of(List)}, which only inspects {@code fileName()} to pick the file
+     * part, so that is all that needs stubbing for these tests.
+     */
+    private static FileUpload upload(String fileName) {
+        FileUpload upload = mock(FileUpload.class);
+        // lenient: some paths (e.g. the IOException case) reject before fileName() is read.
+        lenient().when(upload.fileName()).thenReturn(fileName);
+        return upload;
+    }
+
     // --- createSession tests ---
 
     @Test
@@ -57,20 +80,20 @@ class MobileScannerControllerTest {
         SessionInfo sessionInfo = new SessionInfo("test-session", 1000L, 601000L, 600000L);
         when(mobileScannerService.createSession("test-session")).thenReturn(sessionInfo);
 
-        ResponseEntity<Map<String, Object>> response = controller.createSession("test-session");
+        Response response = controller.createSession("test-session");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody().get("success"));
-        assertEquals("test-session", response.getBody().get("sessionId"));
+        assertEquals(OK, response.getStatus());
+        assertEquals(true, body(response).get("success"));
+        assertEquals("test-session", body(response).get("sessionId"));
     }
 
     @Test
     void createSession_whenDisabled_returnsForbidden() {
         disableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response = controller.createSession("test-session");
+        Response response = controller.createSession("test-session");
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(FORBIDDEN, response.getStatus());
     }
 
     @Test
@@ -79,9 +102,9 @@ class MobileScannerControllerTest {
         when(mobileScannerService.createSession("bad!id"))
                 .thenThrow(new IllegalArgumentException("Invalid session ID"));
 
-        ResponseEntity<Map<String, Object>> response = controller.createSession("bad!id");
+        Response response = controller.createSession("bad!id");
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(BAD_REQUEST, response.getStatus());
     }
 
     // --- validateSession tests ---
@@ -92,10 +115,10 @@ class MobileScannerControllerTest {
         SessionInfo sessionInfo = new SessionInfo("test-session", 1000L, 601000L, 600000L);
         when(mobileScannerService.validateSession("test-session")).thenReturn(sessionInfo);
 
-        ResponseEntity<Map<String, Object>> response = controller.validateSession("test-session");
+        Response response = controller.validateSession("test-session");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody().get("valid"));
+        assertEquals(OK, response.getStatus());
+        assertEquals(true, body(response).get("valid"));
     }
 
     @Test
@@ -103,19 +126,19 @@ class MobileScannerControllerTest {
         enableMobileScanner();
         when(mobileScannerService.validateSession("nonexistent")).thenReturn(null);
 
-        ResponseEntity<Map<String, Object>> response = controller.validateSession("nonexistent");
+        Response response = controller.validateSession("nonexistent");
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(false, response.getBody().get("valid"));
+        assertEquals(NOT_FOUND, response.getStatus());
+        assertEquals(false, body(response).get("valid"));
     }
 
     @Test
     void validateSession_whenDisabled_returnsForbidden() {
         disableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response = controller.validateSession("test-session");
+        Response response = controller.validateSession("test-session");
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(FORBIDDEN, response.getStatus());
     }
 
     // --- uploadFiles tests ---
@@ -123,53 +146,44 @@ class MobileScannerControllerTest {
     @Test
     void uploadFiles_withFiles_returnsOk() throws Exception {
         enableMobileScanner();
-        List<MultipartFile> files =
-                List.of(
-                        new MockMultipartFile(
-                                "files", "scan.jpg", "image/jpeg", new byte[] {1, 2, 3}));
+        List<FileUpload> files = List.of(upload("scan.jpg"));
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.uploadFiles("test-session", files);
+        Response response = controller.uploadFiles("test-session", files);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody().get("success"));
-        assertEquals(1, response.getBody().get("filesUploaded"));
+        assertEquals(OK, response.getStatus());
+        assertEquals(true, body(response).get("success"));
+        assertEquals(1, body(response).get("filesUploaded"));
     }
 
     @Test
     void uploadFiles_withNullFiles_returnsBadRequest() {
         enableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response = controller.uploadFiles("test-session", null);
+        Response response = controller.uploadFiles("test-session", null);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(BAD_REQUEST, response.getStatus());
     }
 
     @Test
     void uploadFiles_withEmptyFiles_returnsBadRequest() {
         enableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.uploadFiles("test-session", Collections.emptyList());
+        Response response = controller.uploadFiles("test-session", Collections.emptyList());
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(BAD_REQUEST, response.getStatus());
     }
 
     @Test
     void uploadFiles_whenIOException_returns500() throws Exception {
         enableMobileScanner();
-        List<MultipartFile> files =
-                List.of(
-                        new MockMultipartFile(
-                                "files", "scan.jpg", "image/jpeg", new byte[] {1, 2, 3}));
+        List<FileUpload> files = List.of(upload("scan.jpg"));
         doThrow(new IOException("Disk full"))
                 .when(mobileScannerService)
                 .uploadFiles(eq("test-session"), any());
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.uploadFiles("test-session", files);
+        Response response = controller.uploadFiles("test-session", files);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(INTERNAL_SERVER_ERROR, response.getStatus());
     }
 
     // --- getSessionFiles tests ---
@@ -180,10 +194,10 @@ class MobileScannerControllerTest {
         List<FileMetadata> files = List.of(new FileMetadata("scan.jpg", 1234L, "image/jpeg"));
         when(mobileScannerService.getSessionFiles("test-session")).thenReturn(files);
 
-        ResponseEntity<Map<String, Object>> response = controller.getSessionFiles("test-session");
+        Response response = controller.getSessionFiles("test-session");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().get("count"));
+        assertEquals(OK, response.getStatus());
+        assertEquals(1, body(response).get("count"));
     }
 
     // --- deleteSession tests ---
@@ -192,9 +206,9 @@ class MobileScannerControllerTest {
     void deleteSession_whenEnabled_returnsOk() {
         enableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response = controller.deleteSession("test-session");
+        Response response = controller.deleteSession("test-session");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(OK, response.getStatus());
         verify(mobileScannerService).deleteSession("test-session");
     }
 
@@ -202,8 +216,8 @@ class MobileScannerControllerTest {
     void deleteSession_whenDisabled_returnsForbidden() {
         disableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response = controller.deleteSession("test-session");
+        Response response = controller.deleteSession("test-session");
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(FORBIDDEN, response.getStatus());
     }
 }

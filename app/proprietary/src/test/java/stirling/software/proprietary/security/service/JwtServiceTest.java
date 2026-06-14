@@ -26,25 +26,32 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@link JwtService#generateToken(Authentication, java.util.Map)}
+ * takes the {@code stirling.software.common.security.Authentication} shim (was Spring Security's
+ * {@code org.springframework.security.core.Authentication}). Its principal is resolved against the
+ * {@code UserDetails} shim, so the mocked principal is a {@link UserDetails} (was the {@code User}
+ * JPA entity, which does not implement the shim).
+ */
 @ExtendWith(MockitoExtension.class)
 class JwtServiceTest {
 
     @Mock private Authentication authentication;
 
-    @Mock private User userDetails;
+    @Mock private UserDetails userDetails;
 
     @Mock private HttpServletRequest request;
 
@@ -174,7 +181,7 @@ class JwtServiceTest {
     @Test
     void testExtractUsername() throws Exception {
         String username = "testuser";
-        User user = mock(User.class);
+        UserDetails user = mock(UserDetails.class);
         Map<String, Object> claims = Map.of("sub", "testuser", "authType", "WEB");
 
         when(keystoreService.getActiveKey()).thenReturn(testVerificationKey);

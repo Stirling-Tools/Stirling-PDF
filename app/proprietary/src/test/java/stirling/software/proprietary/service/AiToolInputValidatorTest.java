@@ -7,60 +7,70 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
+
+/**
+ * MIGRATION (Spring -> Quarkus): {@link AiToolInputValidator} validates the {@code
+ * stirling.software.common.model.MultipartFile} shim (was Spring's {@code
+ * org.springframework.web.multipart.MultipartFile}) and signals failures with a JAX-RS {@link
+ * WebApplicationException} carrying a {@link Response.Status} (was Spring's {@code
+ * ResponseStatusException} / {@code HttpStatus}).
+ */
 class AiToolInputValidatorTest {
 
     @Test
     void acceptsValidPdfUpload() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "a.pdf", "application/pdf", new byte[] {1, 2});
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
+                        "fileInput", "a.pdf", "application/pdf", new byte[] {1, 2});
         assertDoesNotThrow(() -> AiToolInputValidator.validatePdfUpload(file));
     }
 
     @Test
     void rejectsNullFile() {
-        ResponseStatusException ex =
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> AiToolInputValidator.validatePdfUpload(null));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), ex.getResponse().getStatus());
     }
 
     @Test
     void rejectsEmptyFile() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "a.pdf", "application/pdf", new byte[0]);
-        ResponseStatusException ex =
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("fileInput", "a.pdf", "application/pdf", new byte[0]);
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> AiToolInputValidator.validatePdfUpload(file));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), ex.getResponse().getStatus());
     }
 
     @Test
     void rejectsNonPdfContentType() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "a.txt", "text/plain", new byte[] {1, 2});
-        ResponseStatusException ex =
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("fileInput", "a.txt", "text/plain", new byte[] {1, 2});
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> AiToolInputValidator.validatePdfUpload(file));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), ex.getResponse().getStatus());
     }
 
     @Test
     void rejectsMissingContentType() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "a.pdf", null, new byte[] {1, 2});
-        ResponseStatusException ex =
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("fileInput", "a.pdf", null, new byte[] {1, 2});
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> AiToolInputValidator.validatePdfUpload(file));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), ex.getResponse().getStatus());
     }
 
     @Test
@@ -71,10 +81,12 @@ class AiToolInputValidatorTest {
         when(file.getContentType()).thenReturn("application/pdf");
         when(file.getSize()).thenReturn(AiToolInputValidator.MAX_INPUT_FILE_BYTES + 1);
 
-        ResponseStatusException ex =
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> AiToolInputValidator.validatePdfUpload(file));
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, ex.getStatusCode());
+        assertEquals(
+                Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode(),
+                ex.getResponse().getStatus());
     }
 }

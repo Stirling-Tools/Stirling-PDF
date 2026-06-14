@@ -4,14 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.env.StandardEnvironment;
+
+import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -22,8 +25,11 @@ import stirling.software.proprietary.policy.model.Policy;
 /**
  * Tests for {@link FolderAccessGuard}: folder access is fail-closed, confined to the configured
  * allowed roots, never reaches Stirling's own config directory, and is off entirely under SaaS.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): the guard now reads the active profile from MicroProfile {@link
+ * Config} ({@code config.unwrap(SmallRyeConfig.class).getProfiles()}) instead of Spring's {@code
+ * StandardEnvironment.setActiveProfiles(...)}. The {@code Config} is mocked accordingly.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
 class FolderAccessGuardTest {
 
     @TempDir Path tempDir;
@@ -31,9 +37,18 @@ class FolderAccessGuardTest {
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
-        StandardEnvironment environment = new StandardEnvironment();
-        environment.setActiveProfiles(activeProfiles);
-        return new FolderAccessGuard(properties, environment);
+        return new FolderAccessGuard(properties, configWithProfiles(activeProfiles));
+    }
+
+    /**
+     * A {@link Config} whose unwrapped {@link SmallRyeConfig} reports the given active profiles.
+     */
+    private static Config configWithProfiles(String... activeProfiles) {
+        SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
+        when(smallRyeConfig.getProfiles()).thenReturn(List.of(activeProfiles));
+        Config config = mock(Config.class);
+        when(config.unwrap(SmallRyeConfig.class)).thenReturn(smallRyeConfig);
+        return config;
     }
 
     @Test

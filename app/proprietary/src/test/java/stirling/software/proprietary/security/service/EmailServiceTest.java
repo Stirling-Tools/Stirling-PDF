@@ -1,30 +1,36 @@
 package stirling.software.proprietary.security.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.web.multipart.MultipartFile;
+
+import io.quarkus.mailer.Mail;
+import io.quarkus.mailer.Mailer;
 
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.proprietary.security.model.api.Email;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * MIGRATION (Spring -> Quarkus): {@link EmailService} now sends via the Quarkus {@link Mailer} (was
+ * Spring's {@code JavaMailSender} + {@code MimeMessage}) and the attachment is the {@code
+ * stirling.software.common.model.MultipartFile} shim (was Spring's {@code
+ * org.springframework.web.multipart.MultipartFile}). Recipient validation now runs before
+ * attachment validation, but the thrown {@code MessagingException} messages are unchanged.
+ */
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
 
-    @Mock private JavaMailSender mailSender;
+    @Mock private Mailer mailer;
 
     @Mock private ApplicationProperties applicationProperties;
 
@@ -35,7 +41,7 @@ public class EmailServiceTest {
     @InjectMocks private EmailService emailService;
 
     @Test
-    void testSendEmailWithAttachment() throws MessagingException {
+    void testSendEmailWithAttachment() throws Exception {
         // Mock the values returned by ApplicationProperties
         when(applicationProperties.getMail()).thenReturn(mailProperties);
         when(mailProperties.getFrom()).thenReturn("no-reply@stirling-software.com");
@@ -49,18 +55,14 @@ public class EmailServiceTest {
 
         // Mock MultipartFile behavior
         when(fileInput.getOriginalFilename()).thenReturn("testFile.txt");
-
-        // Mock MimeMessage
-        MimeMessage mimeMessage = mock(MimeMessage.class);
-
-        // Configure mailSender to return the mocked MimeMessage
-        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(fileInput.getContentType()).thenReturn("text/plain");
+        when(fileInput.getBytes()).thenReturn(new byte[] {1, 2, 3});
 
         // Call the service method
         emailService.sendEmailWithAttachment(email);
 
-        // Verify that the email was sent using mailSender
-        verify(mailSender).send(mimeMessage);
+        // Verify that the email was sent using the Quarkus Mailer
+        verify(mailer).send(any(Mail.class));
     }
 
     @Test
@@ -145,7 +147,7 @@ public class EmailServiceTest {
 
         try {
             emailService.sendEmailWithAttachment(email);
-            fail("Expected MailSendException to be thrown");
+            fail("Expected MessagingException to be thrown");
         } catch (MessagingException e) {
             assertEquals("Invalid Addresses", e.getMessage());
         }
@@ -161,7 +163,7 @@ public class EmailServiceTest {
 
         try {
             emailService.sendEmailWithAttachment(email);
-            fail("Expected MailSendException to be thrown");
+            fail("Expected MessagingException to be thrown");
         } catch (MessagingException e) {
             assertEquals("Invalid Addresses", e.getMessage());
         }

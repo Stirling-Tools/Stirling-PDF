@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
+
+import jakarta.enterprise.inject.Instance;
 
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
@@ -25,8 +25,11 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * PDF category tools must not fake success: a bad/missing op returns the operation list, a valid
  * scoped op delegates to the executor, and a missing scope is refused.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): the category tool's collaborators are now injected as CDI
+ * {@link Instance} (resolved via {@code isResolvable()}/{@code get()}) instead of Spring's {@code
+ * ObjectProvider} ({@code getIfAvailable()}).
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
 class CategoryToolDispatchTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -55,11 +58,13 @@ class CategoryToolDispatchTest {
         when(catalog.findByOperationId("compress-pdf")).thenReturn(Optional.of(meta));
         when(catalog.enabledOps(OperationCategory.MISC)).thenReturn(List.of(meta));
         @SuppressWarnings("unchecked")
-        ObjectProvider<McpToolCatalog> catalogProvider = mock(ObjectProvider.class);
-        when(catalogProvider.getIfAvailable()).thenReturn(catalog);
+        Instance<McpToolCatalog> catalogProvider = mock(Instance.class);
+        when(catalogProvider.isResolvable()).thenReturn(true);
+        when(catalogProvider.get()).thenReturn(catalog);
         @SuppressWarnings("unchecked")
-        ObjectProvider<McpOperationExecutor> executorProvider = mock(ObjectProvider.class);
-        when(executorProvider.getIfAvailable()).thenReturn(executor);
+        Instance<McpOperationExecutor> executorProvider = mock(Instance.class);
+        when(executorProvider.isResolvable()).thenReturn(true);
+        when(executorProvider.get()).thenReturn(executor);
         return new StirlingMiscTool(mapper, catalogProvider, executorProvider);
     }
 

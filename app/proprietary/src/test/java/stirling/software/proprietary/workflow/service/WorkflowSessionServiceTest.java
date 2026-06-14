@@ -19,13 +19,14 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Storage;
 import stirling.software.common.model.ApplicationProperties.Storage.Signing;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -55,6 +56,7 @@ class WorkflowSessionServiceTest {
     @Mock private ObjectMapper objectMapper;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private MetadataEncryptionService metadataEncryptionService;
+    @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
 
     @InjectMocks private WorkflowSessionService service;
 
@@ -97,7 +99,6 @@ class WorkflowSessionServiceTest {
         sessionWithParticipant("s1", participant);
 
         when(metadataEncryptionService.encrypt(any())).thenReturn("enc:pw");
-        when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         SignDocumentRequest req = new SignDocumentRequest();
         req.setCertType("SERVER");
@@ -106,7 +107,7 @@ class WorkflowSessionServiceTest {
 
         ArgumentCaptor<WorkflowParticipant> captor =
                 ArgumentCaptor.forClass(WorkflowParticipant.class);
-        verify(workflowParticipantRepository).save(captor.capture());
+        verify(workflowParticipantRepository).persist(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(ParticipantStatus.SIGNED);
     }
 
@@ -121,7 +122,6 @@ class WorkflowSessionServiceTest {
         sessionWithParticipant("s2", participant);
 
         when(metadataEncryptionService.encrypt("secret")).thenReturn("enc:secret");
-        when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         SignDocumentRequest req = new SignDocumentRequest();
         req.setCertType("USER_CERT");
@@ -131,7 +131,7 @@ class WorkflowSessionServiceTest {
 
         ArgumentCaptor<WorkflowParticipant> captor =
                 ArgumentCaptor.forClass(WorkflowParticipant.class);
-        verify(workflowParticipantRepository).save(captor.capture());
+        verify(workflowParticipantRepository).persist(captor.capture());
 
         Map<String, Object> meta = captor.getValue().getParticipantMetadata();
         assertThat(meta).containsKey("certificateSubmission");
@@ -155,7 +155,6 @@ class WorkflowSessionServiceTest {
         sessionWithParticipant("s3", participant);
 
         when(metadataEncryptionService.encrypt(any())).thenReturn("enc:pw");
-        when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         SignDocumentRequest req = new SignDocumentRequest();
         req.setCertType("SERVER");
@@ -164,7 +163,7 @@ class WorkflowSessionServiceTest {
 
         ArgumentCaptor<WorkflowParticipant> captor =
                 ArgumentCaptor.forClass(WorkflowParticipant.class);
-        verify(workflowParticipantRepository).save(captor.capture());
+        verify(workflowParticipantRepository).persist(captor.capture());
 
         Map<String, Object> meta = captor.getValue().getParticipantMetadata();
         // Owner-configured appearance settings must survive the sign operation
@@ -188,11 +187,11 @@ class WorkflowSessionServiceTest {
         req.setCertType("SERVER");
 
         assertThatThrownBy(() -> service.signDocument("s4", user, req))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
 
-        verify(workflowParticipantRepository, never()).save(any());
+        verify(workflowParticipantRepository, never()).persist(any(WorkflowParticipant.class));
     }
 
     @Test
@@ -206,11 +205,11 @@ class WorkflowSessionServiceTest {
         req.setCertType("SERVER");
 
         assertThatThrownBy(() -> service.signDocument("s5", user, req))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
 
-        verify(workflowParticipantRepository, never()).save(any());
+        verify(workflowParticipantRepository, never()).persist(any(WorkflowParticipant.class));
     }
 
     @Test
@@ -226,11 +225,11 @@ class WorkflowSessionServiceTest {
         req.setCertType("SERVER");
 
         assertThatThrownBy(() -> service.signDocument("s6", intruder, req))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.FORBIDDEN.getStatusCode());
 
-        verify(workflowParticipantRepository, never()).save(any());
+        verify(workflowParticipantRepository, never()).persist(any(WorkflowParticipant.class));
     }
 
     // -------------------------------------------------------------------------
@@ -252,42 +251,42 @@ class WorkflowSessionServiceTest {
         request.setWorkflowType(WorkflowType.SIGNING);
 
         assertThatThrownBy(() -> service.createSession(user("owner"), null, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
     void createSession_emptyFile_throwsBadRequest() {
-        MockMultipartFile empty =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+        ByteArrayMultipartFile empty =
+                new ByteArrayMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
 
         assertThatThrownBy(() -> service.createSession(user("owner"), empty, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
     void createSession_nullWorkflowType_throwsBadRequest() {
-        MockMultipartFile file =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(null);
 
         assertThatThrownBy(() -> service.createSession(user("owner"), file, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
     void createSession_validRequest_sessionSavedWithOwnerAndInProgressStatus() throws IOException {
         User owner = user("alice");
-        MockMultipartFile file =
-                new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[] {1, 2});
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("file", "doc.pdf", "application/pdf", new byte[] {1, 2});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
         request.setDocumentName("My Doc");
@@ -304,15 +303,14 @@ class WorkflowSessionServiceTest {
         StoredFile savedFile = new StoredFile();
         when(storedFileRepository.save(any())).thenReturn(savedFile);
 
-        WorkflowSession savedSession = new WorkflowSession();
-        savedSession.setSessionId("s-abc");
-        savedSession.setParticipants(new ArrayList<>());
-        when(workflowSessionRepository.save(any())).thenReturn(savedSession);
-
+        // WorkflowSessionRepository is a Panache repository: createSession builds and persist()s
+        // its
+        // own session (persist is void), then returns that same instance - there is no save() that
+        // returns a different entity, so no stub is needed; the captor receives the built session.
         WorkflowSession result = service.createSession(owner, file, request);
 
         ArgumentCaptor<WorkflowSession> captor = ArgumentCaptor.forClass(WorkflowSession.class);
-        verify(workflowSessionRepository).save(captor.capture());
+        verify(workflowSessionRepository).persist(captor.capture());
         assertThat(captor.getValue().getOwner()).isEqualTo(owner);
         assertThat(captor.getValue().getStatus()).isEqualTo(WorkflowStatus.IN_PROGRESS);
         assertThat(result).isNotNull();
@@ -321,8 +319,9 @@ class WorkflowSessionServiceTest {
     @Test
     void createSession_documentNameFromRequest() throws IOException {
         User owner = user("alice");
-        MockMultipartFile file =
-                new MockMultipartFile("file", "original.pdf", "application/pdf", new byte[] {1});
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
+                        "file", "original.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
         request.setDocumentName("Custom Name");
@@ -337,23 +336,20 @@ class WorkflowSessionServiceTest {
                                 .build());
         when(storedFileRepository.save(any())).thenReturn(new StoredFile());
 
-        WorkflowSession savedSession = new WorkflowSession();
-        savedSession.setSessionId("s-1");
-        savedSession.setParticipants(new ArrayList<>());
-        when(workflowSessionRepository.save(any())).thenReturn(savedSession);
-
+        // Panache persist() (void) builds and saves the session in place; no stub needed.
         service.createSession(owner, file, request);
 
         ArgumentCaptor<WorkflowSession> captor = ArgumentCaptor.forClass(WorkflowSession.class);
-        verify(workflowSessionRepository).save(captor.capture());
+        verify(workflowSessionRepository).persist(captor.capture());
         assertThat(captor.getValue().getDocumentName()).isEqualTo("Custom Name");
     }
 
     @Test
     void createSession_documentNameFallsBackToOriginalFilename() throws IOException {
         User owner = user("alice");
-        MockMultipartFile file =
-                new MockMultipartFile("file", "uploaded.pdf", "application/pdf", new byte[] {1});
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
+                        "file", "uploaded.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
         request.setDocumentName(null);
@@ -368,15 +364,11 @@ class WorkflowSessionServiceTest {
                                 .build());
         when(storedFileRepository.save(any())).thenReturn(new StoredFile());
 
-        WorkflowSession savedSession = new WorkflowSession();
-        savedSession.setSessionId("s-2");
-        savedSession.setParticipants(new ArrayList<>());
-        when(workflowSessionRepository.save(any())).thenReturn(savedSession);
-
+        // Panache persist() (void) builds and saves the session in place; no stub needed.
         service.createSession(owner, file, request);
 
         ArgumentCaptor<WorkflowSession> captor = ArgumentCaptor.forClass(WorkflowSession.class);
-        verify(workflowSessionRepository).save(captor.capture());
+        verify(workflowSessionRepository).persist(captor.capture());
         assertThat(captor.getValue().getDocumentName()).isEqualTo("uploaded.pdf");
     }
 
@@ -403,9 +395,9 @@ class WorkflowSessionServiceTest {
         when(workflowSessionRepository.findBySessionId("missing")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getSessionForOwner("missing", user("alice")))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
@@ -421,9 +413,9 @@ class WorkflowSessionServiceTest {
         when(workflowSessionRepository.findBySessionId("s2")).thenReturn(Optional.of(session));
 
         assertThatThrownBy(() -> service.getSessionForOwner("s2", intruder))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.FORBIDDEN.getStatusCode());
     }
 
     // -------------------------------------------------------------------------
@@ -442,9 +434,9 @@ class WorkflowSessionServiceTest {
         service.deleteSession("s3", owner);
 
         verify(workflowSessionRepository).delete(session);
-        // session.save() must NOT be called — that would UPDATE original_file_id to NULL,
-        // violating the NOT NULL constraint; the row is simply deleted instead
-        verify(workflowSessionRepository, never()).save(any());
+        // session must NOT be persist()ed — that would UPDATE original_file_id to NULL, violating
+        // the NOT NULL constraint; the row is simply deleted instead
+        verify(workflowSessionRepository, never()).persist(any(WorkflowSession.class));
     }
 
     @Test
@@ -492,9 +484,9 @@ class WorkflowSessionServiceTest {
         when(workflowSessionRepository.findBySessionId("s3c")).thenReturn(Optional.of(session));
 
         assertThatThrownBy(() -> service.deleteSession("s3c", owner))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
 
         verify(workflowSessionRepository, never()).delete(any());
     }
@@ -537,9 +529,9 @@ class WorkflowSessionServiceTest {
         when(workflowSessionRepository.findBySessionId("s5")).thenReturn(Optional.of(session));
 
         assertThatThrownBy(() -> service.deleteSession("s5", other))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.FORBIDDEN.getStatusCode());
 
         verify(workflowSessionRepository, never()).delete(any());
     }

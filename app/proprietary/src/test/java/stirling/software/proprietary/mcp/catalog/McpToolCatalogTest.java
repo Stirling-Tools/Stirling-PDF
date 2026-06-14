@@ -10,13 +10,8 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
@@ -24,36 +19,28 @@ import stirling.software.common.model.ApplicationProperties;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-/** Catalog tests: DELETE/GET exclusion and disabled-PDF-op AI fall-through. */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * Catalog tests: DELETE/GET exclusion and disabled-PDF-op AI fall-through.
+ *
+ * <p>MIGRATION (Spring MVC -> Quarkus): {@code McpToolCatalog} no longer takes a Spring {@code
+ * ApplicationContext} (endpoint discovery via {@code RequestMappingHandlerMapping} was removed -
+ * see the class TODO), so the constructor is now {@code (EndpointConfiguration,
+ * ApplicationProperties, ObjectMapper)}. The {@code isInvocableMethod(Set<RequestMethod>)} helper
+ * was removed along with the Spring-MVC discovery path, so that test is dropped (no current
+ * production method to assert). The allow/block-list filtering and the disabled-op fall-through
+ * behaviour are unchanged and remain fully covered.
+ */
 class McpToolCatalogTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    void isInvocableMethod_excludesDeleteAndGet() {
-        assertTrue(McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.POST)));
-        assertTrue(McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.PUT)));
-        // DELETE/GET handlers must never be cataloged as runnable tools.
-        assertFalse(McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.DELETE)));
-        assertFalse(McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.GET)));
-        // Empty method set (matches all verbs) is not invocable.
-        assertFalse(McpToolCatalog.isInvocableMethod(Set.of()));
-        // Multi-verb mapping including POST stays invocable.
-        assertTrue(
-                McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.POST, RequestMethod.DELETE)));
-    }
-
-    @Test
     void findByOperationId_disabledPdfOp_doesNotFallThroughToAi() throws Exception {
-        ApplicationContext ctx = mock(ApplicationContext.class);
-        when(ctx.getBeansOfType(RequestMappingHandlerMapping.class)).thenReturn(Map.of());
         EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
         // The PDF op's endpoint is disabled.
         when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(false);
 
-        McpToolCatalog catalog =
-                new McpToolCatalog(ctx, endpoints, new ApplicationProperties(), mapper);
+        McpToolCatalog catalog = new McpToolCatalog(endpoints, new ApplicationProperties(), mapper);
 
         ObjectNode schema = mapper.createObjectNode();
         OperationMeta pdf =
@@ -154,11 +141,9 @@ class McpToolCatalogTest {
     }
 
     private McpToolCatalog catalogWithEndpointsEnabled(ApplicationProperties props) {
-        ApplicationContext ctx = mock(ApplicationContext.class);
-        when(ctx.getBeansOfType(RequestMappingHandlerMapping.class)).thenReturn(Map.of());
         EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
         when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(true);
-        return new McpToolCatalog(ctx, endpoints, props, mapper);
+        return new McpToolCatalog(endpoints, props, mapper);
     }
 
     private OperationMeta miscOp(String id) {

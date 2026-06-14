@@ -7,16 +7,21 @@ import static org.mockito.Mockito.*;
 import java.util.Date;
 import java.util.Optional;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 
+import stirling.software.common.security.PersistentRememberMeToken;
 import stirling.software.proprietary.security.model.PersistentLogin;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * MIGRATION (Spring -> Quarkus): {@link JPATokenRepositoryImpl} now consumes/produces the {@code
+ * stirling.software.common.security.PersistentRememberMeToken} shim (was Spring Security's {@code
+ * org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken}). The
+ * backing repository is a Panache repository, so lookups go through {@code findByIdOptional} and
+ * writes through {@code persist} (was Spring Data {@code findById} / {@code save}).
+ */
 class JPATokenRepositoryImplTest {
 
     private final PersistentLoginRepository persistentLoginRepository =
@@ -38,7 +43,7 @@ class JPATokenRepositoryImplTest {
             tokenRepository.createNewToken(token);
 
             ArgumentCaptor<PersistentLogin> captor = ArgumentCaptor.forClass(PersistentLogin.class);
-            verify(persistentLoginRepository).save(captor.capture());
+            verify(persistentLoginRepository).persist(captor.capture());
 
             PersistentLogin saved = captor.getValue();
             assertEquals("series123", saved.getSeries());
@@ -61,24 +66,26 @@ class JPATokenRepositoryImplTest {
             existing.setToken("oldToken");
             existing.setLastUsed(new Date().toInstant());
 
-            when(persistentLoginRepository.findById("series123")).thenReturn(Optional.of(existing));
+            when(persistentLoginRepository.findByIdOptional("series123"))
+                    .thenReturn(Optional.of(existing));
 
             Date newDate = new Date();
             tokenRepository.updateToken("series123", "newToken", newDate);
 
             assertEquals("newToken", existing.getToken());
             assertEquals(newDate.toInstant(), existing.getLastUsed());
-            verify(persistentLoginRepository).save(existing);
+            verify(persistentLoginRepository).persist(existing);
         }
 
         @Test
         @DisplayName("should do nothing if token not found")
         void shouldDoNothingIfNotFound() {
-            when(persistentLoginRepository.findById("unknownSeries")).thenReturn(Optional.empty());
+            when(persistentLoginRepository.findByIdOptional("unknownSeries"))
+                    .thenReturn(Optional.empty());
 
             tokenRepository.updateToken("unknownSeries", "newToken", new Date());
 
-            verify(persistentLoginRepository, never()).save(any());
+            verify(persistentLoginRepository, never()).persist(any(PersistentLogin.class));
         }
     }
 
@@ -96,7 +103,8 @@ class JPATokenRepositoryImplTest {
             login.setToken("tokenXYZ");
             login.setLastUsed(date.toInstant());
 
-            when(persistentLoginRepository.findById("series123")).thenReturn(Optional.of(login));
+            when(persistentLoginRepository.findByIdOptional("series123"))
+                    .thenReturn(Optional.of(login));
 
             PersistentRememberMeToken result = tokenRepository.getTokenForSeries("series123");
 
@@ -110,7 +118,8 @@ class JPATokenRepositoryImplTest {
         @Test
         @DisplayName("should return null if token not found")
         void shouldReturnNullIfNotFound() {
-            when(persistentLoginRepository.findById("series123")).thenReturn(Optional.empty());
+            when(persistentLoginRepository.findByIdOptional("series123"))
+                    .thenReturn(Optional.empty());
 
             PersistentRememberMeToken result = tokenRepository.getTokenForSeries("series123");
 

@@ -21,10 +21,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,9 +33,9 @@ class MergeControllerTest {
 
     @InjectMocks private MergeController mergeController;
 
-    private MockMultipartFile mockFile1;
-    private MockMultipartFile mockFile2;
-    private MockMultipartFile mockFile3;
+    private MultipartFile mockFile1;
+    private MultipartFile mockFile2;
+    private MultipartFile mockFile3;
     private PDDocument mockMergedDocument;
     private PDDocumentCatalog mockCatalog;
     private PDPage mockPage1;
@@ -45,23 +44,14 @@ class MergeControllerTest {
     @BeforeEach
     void setUp() {
         mockFile1 =
-                new MockMultipartFile(
-                        "file1",
-                        "document1.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content 1".getBytes());
+                new ByteArrayMultipartFile(
+                        "file1", "document1.pdf", "application/pdf", "PDF content 1".getBytes());
         mockFile2 =
-                new MockMultipartFile(
-                        "file2",
-                        "document2.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content 2".getBytes());
+                new ByteArrayMultipartFile(
+                        "file2", "document2.pdf", "application/pdf", "PDF content 2".getBytes());
         mockFile3 =
-                new MockMultipartFile(
-                        "file3",
-                        "chapter3.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content 3".getBytes());
+                new ByteArrayMultipartFile(
+                        "file3", "chapter3.pdf", "application/pdf", "PDF content 3".getBytes());
 
         PDDocument mockDocument = mock(PDDocument.class);
         mockMergedDocument = mock(PDDocument.class);
@@ -206,12 +196,9 @@ class MergeControllerTest {
     @Test
     void testAddTableOfContents_FilenameWithoutExtension_UsesFullName() throws Exception {
         // Given
-        MockMultipartFile fileWithoutExtension =
-                new MockMultipartFile(
-                        "file",
-                        "document_no_ext",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+        MultipartFile fileWithoutExtension =
+                new ByteArrayMultipartFile(
+                        "file", "document_no_ext", "application/pdf", "PDF content".getBytes());
         MultipartFile[] files = {fileWithoutExtension};
 
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);

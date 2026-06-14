@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -31,12 +32,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
@@ -56,6 +56,11 @@ import tools.jackson.databind.json.JsonMapper;
  * steps, multi-input vs per-file dispatch, ZIP unpacking, structured-list parameter encoding,
  * progress callbacks, and timeout propagation. External collaborators are mocked; {@link
  * TempFileManager} is real so ZIP extraction exercises real code.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): {@link InternalApiClient} now takes a {@code
+ * Map<String,List<Object>>} body (was Spring {@code MultiValueMap}) and returns a {@link Response}
+ * (was {@code ResponseEntity<Resource>}); file parts are the {@link Resource} shim (was Spring's
+ * {@code org.springframework.core.io.Resource}).
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyExecutorTest {
@@ -190,11 +195,9 @@ class PolicyExecutorTest {
                 PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                 PolicyProgressListener.NOOP);
 
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<Map<String, List<Object>>> bodyCaptor = bodyCaptor();
         verify(internalApiClient).post(eq(editText), bodyCaptor.capture());
-        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+        Map<String, List<Object>> body = bodyCaptor.getValue();
 
         List<Object> edits = body.get("edits");
         assertNotNull(edits);
@@ -221,11 +224,9 @@ class PolicyExecutorTest {
                 inputs,
                 PolicyProgressListener.NOOP);
 
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<Map<String, List<Object>>> bodyCaptor = bodyCaptor();
         verify(internalApiClient).post(eq(addStamp), bodyCaptor.capture());
-        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+        Map<String, List<Object>> body = bodyCaptor.getValue();
         // The document goes to fileInput; the supporting image is bound to its named field and is
         // not part of the document stream.
         assertEquals(1, body.get("fileInput").size());
@@ -339,19 +340,19 @@ class PolicyExecutorTest {
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
-        when(internalApiClient.post(eq(endpoint), any())).thenReturn(ResponseEntity.ok(body));
+        when(internalApiClient.post(eq(endpoint), any())).thenReturn(Response.ok(body).build());
     }
 
-    private static ByteArrayResource pdf(String content, String filename) {
-        return new ByteArrayResource(content.getBytes()) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static ArgumentCaptor<Map<String, List<Object>>> bodyCaptor() {
+        return (ArgumentCaptor) ArgumentCaptor.forClass(Map.class);
     }
 
-    private static ByteArrayResource zip(String filename, List<Entry> entries) throws IOException {
+    private static Resource pdf(String content, String filename) {
+        return new ByteArrayBackedResource(content.getBytes(), filename);
+    }
+
+    private static Resource zip(String filename, List<Entry> entries) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
             for (Entry entry : entries) {
@@ -360,19 +361,48 @@ class PolicyExecutorTest {
                 zos.closeEntry();
             }
         }
-        byte[] zipBytes = baos.toByteArray();
-        return new ByteArrayResource(zipBytes) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-
-            @Override
-            public InputStream getInputStream() {
-                return new ByteArrayInputStream(zipBytes);
-            }
-        };
+        return new ByteArrayBackedResource(baos.toByteArray(), filename);
     }
 
     private record Entry(String name, String content) {}
+
+    /**
+     * In-memory {@link Resource} with a stable filename, repeatable reads, and a real {@code
+     * contentLength()} (so the executor's empty-body / ZIP handling works). Replaces the Spring
+     * {@code ByteArrayResource} the test used pre-migration.
+     */
+    private static final class ByteArrayBackedResource implements Resource {
+        private final byte[] bytes;
+        private final String filename;
+
+        ByteArrayBackedResource(byte[] bytes, String filename) {
+            this.bytes = bytes;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public long contentLength() {
+            return bytes.length;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("not file-backed");
+        }
+    }
 }

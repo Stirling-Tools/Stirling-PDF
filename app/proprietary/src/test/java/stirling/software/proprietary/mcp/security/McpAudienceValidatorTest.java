@@ -2,17 +2,21 @@ package stirling.software.proprietary.mcp.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.Jwt;
 
-/** RFC 8707 audience validator: token {@code aud} must list the resource id; blank fails closed. */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+import stirling.software.proprietary.mcp.security.McpAudienceValidator.Result;
+
+/**
+ * RFC 8707 audience validator: token {@code aud} must list the resource id; blank fails closed.
+ *
+ * <p>MIGRATION (Spring Security -> Quarkus): {@code McpAudienceValidator} no longer depends on
+ * Spring Security's {@code OAuth2TokenValidator<Jwt>}. It now takes the raw {@code aud} claim as a
+ * {@code List<String>} and returns a plain {@code Result} record (replacing {@code
+ * OAuth2TokenValidatorResult}). Tests call the audience-check logic directly; the assertions are
+ * preserved against the new {@code Result} API.
+ */
 class McpAudienceValidatorTest {
 
     private static final String RESOURCE = "http://localhost:8080/mcp";
@@ -21,46 +25,33 @@ class McpAudienceValidatorTest {
 
     @Test
     void matchingAudience_isAccepted() {
-        Jwt token = tokenWithAudience(List.of(RESOURCE));
-        OAuth2TokenValidatorResult result = validator.validate(token);
-        assertThat(result.hasErrors()).isFalse();
+        Result result = validator.validate(List.of(RESOURCE));
+        assertThat(result.valid()).isTrue();
     }
 
     @Test
     void multiAudienceIncludingResource_isAccepted() {
-        Jwt token = tokenWithAudience(List.of("https://other.example.com", RESOURCE));
-        OAuth2TokenValidatorResult result = validator.validate(token);
-        assertThat(result.hasErrors()).isFalse();
+        Result result = validator.validate(List.of("https://other.example.com", RESOURCE));
+        assertThat(result.valid()).isTrue();
     }
 
     @Test
     void wrongAudience_isRejected() {
-        Jwt token = tokenWithAudience(List.of("https://other.example.com"));
-        OAuth2TokenValidatorResult result = validator.validate(token);
-        assertThat(result.hasErrors()).isTrue();
-        assertThat(result.getErrors()).anyMatch(e -> e.getErrorCode().equals("invalid_token"));
+        Result result = validator.validate(List.of("https://other.example.com"));
+        assertThat(result.valid()).isFalse();
+        assertThat(result.errorCode()).isEqualTo("invalid_token");
     }
 
     @Test
     void missingAudienceClaim_isRejected() {
-        Jwt token = tokenWithAudience(null);
-        OAuth2TokenValidatorResult result = validator.validate(token);
-        assertThat(result.hasErrors()).isTrue();
+        Result result = validator.validate(null);
+        assertThat(result.valid()).isFalse();
     }
 
     @Test
     void blankResourceId_failsClosed_rejectingEvenMatchingTokens() {
         McpAudienceValidator blank = new McpAudienceValidator("");
-        OAuth2TokenValidatorResult result = blank.validate(tokenWithAudience(List.of(RESOURCE)));
-        assertThat(result.hasErrors()).isTrue();
-    }
-
-    private static Jwt tokenWithAudience(List<String> audience) {
-        return new Jwt(
-                "header.payload.signature",
-                Instant.now(),
-                Instant.now().plusSeconds(60),
-                Map.of("alg", "RS256"),
-                audience == null ? Map.of("sub", "u1") : Map.of("sub", "u1", "aud", audience));
+        Result result = blank.validate(List.of(RESOURCE));
+        assertThat(result.valid()).isFalse();
     }
 }

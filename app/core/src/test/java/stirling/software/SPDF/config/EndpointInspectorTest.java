@@ -1,26 +1,25 @@
 package stirling.software.SPDF.config;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 class EndpointInspectorTest {
 
-    private ApplicationContext applicationContext;
     private EndpointInspector inspector;
 
     @BeforeEach
     void setUp() {
-        applicationContext = mock(ApplicationContext.class);
-        inspector = new EndpointInspector(applicationContext);
+        // MIGRATION: EndpointInspector no longer takes a Spring ApplicationContext. Under Quarkus
+        // it has no runtime-queryable handler-mapping registry (the Spring
+        // RequestMappingHandlerMapping enumeration is gone - see
+        // EndpointInspector.discoverEndpoints
+        // TODO), so it is constructed no-arg and discovery falls back to the common wildcard set.
+        inspector = new EndpointInspector();
     }
 
     @Test
@@ -70,8 +69,9 @@ class EndpointInspectorTest {
 
     @Test
     void discoverEndpointsAddsFallbackWhenNoMappingsFound() {
-        when(applicationContext.getBeansOfType(RequestMappingHandlerMapping.class))
-                .thenReturn(new HashMap<>());
+        // A fresh inspector (no endpoints injected) triggers discovery on first access, which
+        // falls back to the common wildcard endpoints (preserving the prior Spring behavior when
+        // no handler mappings were found).
         Set<String> endpoints = inspector.getValidGetEndpoints();
         assertTrue(endpoints.contains("/"));
         assertTrue(endpoints.contains("/**"));
@@ -91,13 +91,9 @@ class EndpointInspectorTest {
 
     /**
      * Helper to inject endpoints directly into the inspector's validGetEndpoints field and mark
-     * endpoints as discovered.
+     * endpoints as discovered, bypassing the (now fallback-only) discovery pass.
      */
     private void addEndpoints(String... endpoints) throws Exception {
-        // First trigger discovery with empty context so fallback doesn't interfere
-        when(applicationContext.getBeansOfType(RequestMappingHandlerMapping.class))
-                .thenReturn(new HashMap<>());
-
         Field validGetEndpointsField =
                 EndpointInspector.class.getDeclaredField("validGetEndpoints");
         validGetEndpointsField.setAccessible(true);

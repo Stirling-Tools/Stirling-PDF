@@ -4,28 +4,38 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
+
+import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
-/** Tests for {@link FolderOutputSink}: outputs are written to the configured directory on disk. */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * Tests for {@link FolderOutputSink}: outputs are written to the configured directory on disk.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): {@link FolderAccessGuard} now reads active profiles from
+ * MicroProfile {@link Config} (was Spring {@code StandardEnvironment}); output files are the {@link
+ * Resource} shim (was Spring's {@code org.springframework.core.io.Resource}).
+ */
 class FolderOutputSinkTest {
 
     @TempDir Path tempDir;
@@ -36,7 +46,7 @@ class FolderOutputSinkTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        sink = new FolderOutputSink(new FolderAccessGuard(properties, new StandardEnvironment()));
+        sink = new FolderOutputSink(new FolderAccessGuard(properties, configWithNoProfiles()));
     }
 
     @Test
@@ -96,12 +106,55 @@ class FolderOutputSinkTest {
         assertFalse(Files.exists(tempDir.resolve("escape.pdf")));
     }
 
-    private static ByteArrayResource named(String filename, String content) {
-        return new ByteArrayResource(content.getBytes()) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
+    /** A {@link Config} whose unwrapped {@link SmallRyeConfig} reports no active profile. */
+    private static Config configWithNoProfiles() {
+        SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
+        when(smallRyeConfig.getProfiles()).thenReturn(List.of());
+        Config config = mock(Config.class);
+        when(config.unwrap(SmallRyeConfig.class)).thenReturn(smallRyeConfig);
+        return config;
+    }
+
+    private static Resource named(String filename, String content) {
+        return new ByteArrayBackedResource(content.getBytes(), filename);
+    }
+
+    /**
+     * In-memory {@link Resource} with a stable filename (replaces Spring's {@code
+     * ByteArrayResource}).
+     */
+    private static final class ByteArrayBackedResource implements Resource {
+        private final byte[] bytes;
+        private final String filename;
+
+        ByteArrayBackedResource(byte[] bytes, String filename) {
+            this.bytes = bytes;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public long contentLength() {
+            return bytes.length;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("not file-backed");
+        }
     }
 }

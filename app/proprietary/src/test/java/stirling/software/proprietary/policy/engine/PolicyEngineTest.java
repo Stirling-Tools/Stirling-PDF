@@ -15,6 +15,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,11 +31,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
@@ -60,6 +63,10 @@ import tools.jackson.databind.json.JsonMapper;
  * outputs and progress with {@link TaskManager}, and surfaces terminal state via {@link
  * PolicyRunRegistry}. The step executor and inline sink are real (with mocked collaborators) so the
  * full run path is exercised.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): {@link InternalApiClient} now returns a {@link Response} (was
+ * {@code ResponseEntity<Resource>}) and file parts are the {@link Resource} shim (was Spring's
+ * {@code org.springframework.core.io.Resource}).
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyEngineTest {
@@ -240,15 +247,49 @@ class PolicyEngineTest {
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
-        when(internalApiClient.post(eq(endpoint), any())).thenReturn(ResponseEntity.ok(body));
+        when(internalApiClient.post(eq(endpoint), any())).thenReturn(Response.ok(body).build());
     }
 
-    private static ByteArrayResource pdf(String content, String filename) {
-        return new ByteArrayResource(content.getBytes()) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
+    private static Resource pdf(String content, String filename) {
+        return new ByteArrayBackedResource(content.getBytes(), filename);
+    }
+
+    /**
+     * In-memory {@link Resource} with a stable filename and repeatable reads (replaces the Spring
+     * {@code ByteArrayResource} used pre-migration).
+     */
+    private static final class ByteArrayBackedResource implements Resource {
+        private final byte[] bytes;
+        private final String filename;
+
+        ByteArrayBackedResource(byte[] bytes, String filename) {
+            this.bytes = bytes;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public long contentLength() {
+            return bytes.length;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("not file-backed");
+        }
     }
 }

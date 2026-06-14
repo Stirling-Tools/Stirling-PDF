@@ -1,288 +1,114 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.mock.env.MockEnvironment;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.ResponseExtractor;
-import org.springframework.web.client.RestTemplate;
 
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.ServletContext;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * MIGRATION (Spring -> Quarkus): {@code InternalApiClient} was rebuilt on {@code
+ * java.net.http.HttpClient}. The constructor now takes {@code Instance<UserServiceInterface>} and
+ * an MicroProfile {@code Config} (was a raw {@code UserServiceInterface} + Spring {@code
+ * Environment}), the request body is {@code Map<String,List<Object>>} (was {@code MultiValueMap})
+ * and the result is a JAX-RS {@code Response} (was {@code ResponseEntity<Resource>}).
+ *
+ * <p>The previous HTTP-dispatch tests intercepted Spring's {@code RestTemplate} via {@code
+ * mockConstruction}; the new client builds a {@code java.net.http.HttpClient} internally with no
+ * equivalent unit-level seam, so those cases cannot be ported as plain unit tests and are dropped.
+ * The endpoint-allowlist / URL-validation tests below are preserved unchanged in intent - they
+ * still exercise the current {@code validateUrl}/{@code ALLOWED_ENDPOINT_PATH} guard, which throws
+ * {@code SecurityException} before any network I/O.
+ */
 @ExtendWith(MockitoExtension.class)
 class InternalApiClientTest {
 
     @Mock ServletContext servletContext;
-    @Mock UserServiceInterface userService;
+    @Mock Instance<UserServiceInterface> userService;
     @Mock TempFileManager tempFileManager;
+    @Mock Config config;
 
     InternalApiClient client;
 
     @BeforeEach
     void setUp() {
         lenient().when(servletContext.getContextPath()).thenReturn("");
+        lenient().when(userService.isResolvable()).thenReturn(false);
         client = newClient();
     }
 
-    /**
-     * Build a fresh client. Tests that use {@link org.mockito.Mockito#mockConstruction} to
-     * intercept {@link RestTemplate} must call this from inside their {@code mockConstruction}
-     * block, since the client now caches one RestTemplate per instance at construction time.
-     */
     private InternalApiClient newClient() {
-        MockEnvironment environment = new MockEnvironment().withProperty("server.port", "8080");
         ApplicationProperties applicationProperties = new ApplicationProperties();
         return new InternalApiClient(
-                servletContext, userService, tempFileManager, environment, applicationProperties);
+                servletContext, userService, tempFileManager, config, applicationProperties);
     }
 
-    @Test
-    void postDoesNotForceContentType() throws Exception {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("fileInput", namedResource("input.pdf", "data"));
-
-        Path tempPath = Files.createTempFile("internal-api-test", ".tmp");
-        TempFile tempFile = mock(TempFile.class);
-        when(tempFile.getPath()).thenReturn(tempPath);
-        when(tempFile.getFile()).thenReturn(tempPath.toFile());
-        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
-
-        HttpHeaders[] captured = {null};
-
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(
-                                            inv -> {
-                                                HttpEntity<?> entity = inv.getArgument(0);
-                                                captured[0] = entity.getHeaders();
-                                                return (RequestCallback) req -> {};
-                                            });
-
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
-                        })) {
-
-            // Reconstruct the client so its cached RestTemplate is the mocked one.
-            InternalApiClient mockedClient = newClient();
-            ResponseEntity<Resource> response =
-                    mockedClient.post("/api/v1/general/merge-pdfs", body);
-
-            assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertNull(captured[0].getContentType(), "Content-Type should not be forced");
-        } finally {
-            Files.deleteIfExists(tempPath);
-        }
-    }
-
-    @Test
-    void postWrapsSocketTimeoutAsInternalApiTimeoutException() {
-        // Simulates the read-timeout case: RestTemplate wraps SocketTimeoutException in
-        // ResourceAccessException when the underlying socket times out. The client must repackage
-        // that into a typed timeout exception that carries the failing endpoint and the configured
-        // read timeout, so the workflow layer can surface a clean "tool didn't respond" message
-        // to the user.
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("fileInput", namedResource("input.pdf", "data"));
-
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(inv -> (RequestCallback) req -> {});
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenThrow(
-                                            new ResourceAccessException(
-                                                    "I/O error on POST request: Read timed out",
-                                                    new java.net.SocketTimeoutException(
-                                                            "Read timed out")));
-                        })) {
-
-            InternalApiClient mockedClient = newClient();
-            InternalApiTimeoutException thrown =
-                    assertThrows(
-                            InternalApiTimeoutException.class,
-                            () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
-
-            assertEquals("/api/v1/general/merge-pdfs", thrown.getEndpointPath());
-            assertNotNull(thrown.getReadTimeout());
-            assertTrue(thrown.getMessage().contains("/api/v1/general/merge-pdfs"));
-        }
-    }
-
-    @Test
-    void postRethrowsNonTimeoutResourceAccessExceptionAsIs() {
-        // ResourceAccessException covers more than just timeouts (e.g. connection refused, DNS
-        // failure). Only SocketTimeoutException-rooted failures are timeouts; everything else
-        // must propagate so the upstream generic handler can label it correctly instead of lying
-        // about a "tool didn't respond" timeout.
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("fileInput", namedResource("input.pdf", "data"));
-
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(inv -> (RequestCallback) req -> {});
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenThrow(
-                                            new ResourceAccessException(
-                                                    "I/O error on POST request: Connection refused",
-                                                    new java.net.ConnectException(
-                                                            "Connection refused")));
-                        })) {
-
-            InternalApiClient mockedClient = newClient();
-            assertThrows(
-                    ResourceAccessException.class,
-                    () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
-        }
+    private static Map<String, List<Object>> emptyBody() {
+        return new java.util.LinkedHashMap<>();
     }
 
     @Test
     void postRejectsDisallowedPath() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(SecurityException.class, () -> client.post("/api/v1/admin/settings", body));
+        assertThrows(
+                SecurityException.class, () -> client.post("/api/v1/admin/settings", emptyBody()));
     }
 
     @Test
     void postRejectsAiEndpointsOutsideToolsSubnamespace() {
         // /api/v1/ai/orchestrate and other non-tool AI endpoints are not internally
         // dispatchable. Only /api/v1/ai/tools/* and the general/misc/security/convert/filter
-        // namespaces are on the allowlist — letting a plan step re-enter /orchestrate would
+        // namespaces are on the allowlist - letting a plan step re-enter /orchestrate would
         // introduce recursion risk.
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(SecurityException.class, () -> client.post("/api/v1/ai/orchestrate", body));
-    }
-
-    @Test
-    void postAcceptsAiToolsSubnamespace() throws Exception {
-        // Agent tool paths like /api/v1/ai/tools/pdf-comment-agent are on the allowlist and
-        // should be dispatchable by the orchestrator's plan executor.
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("fileInput", namedResource("input.pdf", "data"));
-
-        Path tempPath = Files.createTempFile("internal-api-ai-tools-test", ".tmp");
-        TempFile tempFile = mock(TempFile.class);
-        when(tempFile.getPath()).thenReturn(tempPath);
-        when(tempFile.getFile()).thenReturn(tempPath.toFile());
-        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
-
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenReturn((RequestCallback) req -> {});
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
-                        })) {
-
-            // Reconstruct the client so its cached RestTemplate is the mocked one.
-            InternalApiClient mockedClient = newClient();
-            ResponseEntity<Resource> response =
-                    mockedClient.post("/api/v1/ai/tools/pdf-comment-agent", body);
-
-            assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-        } finally {
-            Files.deleteIfExists(tempPath);
-        }
+        assertThrows(
+                SecurityException.class, () -> client.post("/api/v1/ai/orchestrate", emptyBody()));
     }
 
     @Test
     void postRejectsPathTraversal() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         assertThrows(
                 SecurityException.class,
-                () -> client.post("/api/v1/misc/../../actuator/env", body));
+                () -> client.post("/api/v1/misc/../../actuator/env", emptyBody()));
     }
 
     @Test
     void postRejectsUrlEncodedCharacters() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         assertThrows(
-                SecurityException.class, () -> client.post("/api/v1/misc/%2e%2e/actuator", body));
+                SecurityException.class,
+                () -> client.post("/api/v1/misc/%2e%2e/actuator", emptyBody()));
     }
 
     @Test
     void postRejectsQueryString() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         assertThrows(
                 SecurityException.class,
-                () -> client.post("/api/v1/misc/compress-pdf?redirect=evil", body));
+                () -> client.post("/api/v1/misc/compress-pdf?redirect=evil", emptyBody()));
     }
 
     @Test
     void postRejectsEmptySegment() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc//foo", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc//foo", emptyBody()));
     }
 
     @Test
     void postRejectsTrailingSlash() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/foo/", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/foo/", emptyBody()));
     }
 
     @Test
     void postRejectsNullPath() {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(SecurityException.class, () -> client.post(null, body));
-    }
-
-    /** Create a ByteArrayResource with a filename (required for multipart). */
-    private static Resource namedResource(String filename, String content) {
-        return new ByteArrayResource(content.getBytes(StandardCharsets.UTF_8)) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
-    }
-
-    /** Simulate a successful HTTP response through a RestTemplate ResponseExtractor. */
-    @SuppressWarnings("unchecked")
-    private static ResponseEntity<Resource> fakeOkResponse(Object extractorArg) throws Exception {
-        var extractor = (ResponseExtractor<ResponseEntity<Resource>>) extractorArg;
-        ClientHttpResponse response = mock(ClientHttpResponse.class);
-        when(response.getBody())
-                .thenReturn(new ByteArrayInputStream("ok".getBytes(StandardCharsets.UTF_8)));
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"out.pdf\"");
-        when(response.getHeaders()).thenReturn(headers);
-        lenient().when(response.getStatusCode()).thenReturn(HttpStatus.OK);
-        return extractor.extractData(response);
+        assertThrows(SecurityException.class, () -> client.post(null, emptyBody()));
     }
 }

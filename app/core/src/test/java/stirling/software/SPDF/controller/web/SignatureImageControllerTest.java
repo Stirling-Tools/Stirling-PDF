@@ -7,14 +7,23 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 
+/**
+ * Unit tests for {@link SignatureImageController}.
+ *
+ * <p>Migrated off Spring: {@code getSignature} returns {@code jakarta.ws.rs.core.Response}
+ * (asserted via {@code getStatus()}/{@code getEntity()}/{@code getMediaType()}), and the optional
+ * personal signature and user services are injected as CDI {@code Instance<>} handles. A {@code
+ * null} collaborator (community mode) is modelled as an unresolvable {@code Instance}.
+ */
 class SignatureImageControllerTest {
 
     private SharedSignatureService sharedSignatureService;
@@ -28,6 +37,20 @@ class SignatureImageControllerTest {
         userService = mock(UserServiceInterface.class);
     }
 
+    /**
+     * Wrap a (possibly null) collaborator in a CDI {@link Instance} handle. A null service yields
+     * an unresolvable handle, matching the controller's "optional bean absent" branch.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> Instance<T> instanceOf(T service) {
+        Instance<T> instance = mock(Instance.class);
+        when(instance.isResolvable()).thenReturn(service != null);
+        if (service != null) {
+            when(instance.get()).thenReturn(service);
+        }
+        return instance;
+    }
+
     // --- PNG content type (default) ---
 
     @Test
@@ -36,13 +59,14 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("sig.png")).thenReturn(data);
 
         SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+                new SignatureImageController(
+                        sharedSignatureService, instanceOf(null), instanceOf(null));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.png");
+        Response response = controller.getSignature("sig.png");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
-        assertArrayEquals(data, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.valueOf("image/png"), response.getMediaType());
+        assertArrayEquals(data, (byte[]) response.getEntity());
     }
 
     // --- JPEG content type ---
@@ -53,12 +77,13 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("sig.jpg")).thenReturn(data);
 
         SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+                new SignatureImageController(
+                        sharedSignatureService, instanceOf(null), instanceOf(null));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.jpg");
+        Response response = controller.getSignature("sig.jpg");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.IMAGE_JPEG, response.getHeaders().getContentType());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.valueOf("image/jpeg"), response.getMediaType());
     }
 
     @Test
@@ -67,11 +92,12 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("sig.jpeg")).thenReturn(data);
 
         SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+                new SignatureImageController(
+                        sharedSignatureService, instanceOf(null), instanceOf(null));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.jpeg");
+        Response response = controller.getSignature("sig.jpeg");
 
-        assertEquals(MediaType.IMAGE_JPEG, response.getHeaders().getContentType());
+        assertEquals(MediaType.valueOf("image/jpeg"), response.getMediaType());
     }
 
     // --- Personal signature found ---
@@ -85,12 +111,14 @@ class SignatureImageControllerTest {
 
         SignatureImageController controller =
                 new SignatureImageController(
-                        sharedSignatureService, personalSignatureService, userService);
+                        sharedSignatureService,
+                        instanceOf(personalSignatureService),
+                        instanceOf(userService));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.png");
+        Response response = controller.getSignature("sig.png");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(personalData, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertArrayEquals(personalData, (byte[]) response.getEntity());
         // Shared service should not be called since personal was found
         verify(sharedSignatureService, never()).getSharedSignatureBytes(anyString());
     }
@@ -107,12 +135,14 @@ class SignatureImageControllerTest {
 
         SignatureImageController controller =
                 new SignatureImageController(
-                        sharedSignatureService, personalSignatureService, userService);
+                        sharedSignatureService,
+                        instanceOf(personalSignatureService),
+                        instanceOf(userService));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.png");
+        Response response = controller.getSignature("sig.png");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(sharedData, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertArrayEquals(sharedData, (byte[]) response.getEntity());
     }
 
     // --- Personal throws exception, falls back to shared ---
@@ -127,12 +157,14 @@ class SignatureImageControllerTest {
 
         SignatureImageController controller =
                 new SignatureImageController(
-                        sharedSignatureService, personalSignatureService, userService);
+                        sharedSignatureService,
+                        instanceOf(personalSignatureService),
+                        instanceOf(userService));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.png");
+        Response response = controller.getSignature("sig.png");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(sharedData, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertArrayEquals(sharedData, (byte[]) response.getEntity());
     }
 
     // --- Not found in any location ---
@@ -143,11 +175,12 @@ class SignatureImageControllerTest {
                 .thenThrow(new IOException("not found"));
 
         SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+                new SignatureImageController(
+                        sharedSignatureService, instanceOf(null), instanceOf(null));
 
-        ResponseEntity<byte[]> response = controller.getSignature("missing.png");
+        Response response = controller.getSignature("missing.png");
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     // --- No personal service (community mode) ---
@@ -158,12 +191,13 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("sig.png")).thenReturn(sharedData);
 
         SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+                new SignatureImageController(
+                        sharedSignatureService, instanceOf(null), instanceOf(null));
 
-        ResponseEntity<byte[]> response = controller.getSignature("sig.png");
+        Response response = controller.getSignature("sig.png");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(sharedData, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertArrayEquals(sharedData, (byte[]) response.getEntity());
     }
 
     // --- Case insensitive extension check ---
@@ -174,10 +208,11 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("SIG.JPG")).thenReturn(data);
 
         SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+                new SignatureImageController(
+                        sharedSignatureService, instanceOf(null), instanceOf(null));
 
-        ResponseEntity<byte[]> response = controller.getSignature("SIG.JPG");
+        Response response = controller.getSignature("SIG.JPG");
 
-        assertEquals(MediaType.IMAGE_JPEG, response.getHeaders().getContentType());
+        assertEquals(MediaType.valueOf("image/jpeg"), response.getMediaType());
     }
 }
