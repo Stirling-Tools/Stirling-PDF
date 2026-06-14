@@ -154,13 +154,6 @@ async function settle(page: Page, ms = 350): Promise<void> {
   await page.waitForTimeout(ms);
 }
 
-async function waitForFilesPageSeed(page: Page): Promise<void> {
-  await page.waitForFunction(
-    () => localStorage.getItem("stirling-pdf-files-page-seeded") === "1",
-    { timeout: 15_000 },
-  );
-}
-
 test.describe("Files page screenshots", () => {
   test.use({ autoGoto: false, viewport: { width: 1600, height: 900 } });
 
@@ -483,7 +476,6 @@ test.describe("Files page screenshots", () => {
       { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await waitForFilesPageSeed(page);
     await page.waitForLoadState("domcontentloaded");
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
@@ -501,7 +493,6 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await waitForFilesPageSeed(page);
     await page.waitForLoadState("domcontentloaded");
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
@@ -531,7 +522,6 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.goto("/files", { waitUntil: "domcontentloaded" });
-    await waitForFilesPageSeed(page);
     await page.waitForLoadState("domcontentloaded");
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
