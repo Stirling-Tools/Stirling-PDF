@@ -63,6 +63,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "bookletImposition",
   "pdfTextEditor",
   "formFill",
+  "autoFormDetection",
 ] as const;
 
 export const CORE_SUPER_TOOL_IDS = ["multiTool", "read", "automate"] as const;

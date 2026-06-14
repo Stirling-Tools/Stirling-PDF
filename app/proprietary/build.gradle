@@ -7,6 +7,12 @@ ext {
     jwtVersion = '0.13.0'
     awsSdkVersion = '2.44.12'
     testcontainersMinioVersion = '1.21.4'
+    // CPU build; self-extracting natives for linux/win/mac x64+arm64. Keep major.minor aligned
+    // with the frontend onnxruntime-web pin so the same .onnx runs identically on both paths.
+    // Must be >=1.21 to load opset-22 models: the FFDNet exports are stamped ai.onnx opset 22,
+    // which 1.19/1.20 hard-reject (ORT_FAIL "support is till opset 21"). 1.26.0 matches the
+    // onnxruntime build the upstream CommonForms inference reference runs on.
+    onnxruntimeVersion = '1.26.0'
 }
 
 bootRun {
@@ -71,6 +77,9 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
     implementation 'com.google.code.gson:gson:2.13.2'
+
+    // ONNX Runtime (Java) for Auto Form Detection server-side inference.
+    implementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
 
     api 'io.micrometer:micrometer-registry-prometheus'
 

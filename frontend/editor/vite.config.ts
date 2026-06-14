@@ -199,6 +199,13 @@ export default defineConfig(async ({ mode }) => {
             src: "../node_modules/pdfjs-dist/standard_fonts/*",
             dest: "pdfjs/standard_fonts",
           },
+          {
+            // onnxruntime-web CPU SIMD runtime + loader for the in-browser Auto Form
+            // Detection engine. Single-thread (the app sets no COOP/COEP); the heavier
+            // WebGPU/JSEP and asyncify variants are intentionally not copied.
+            src: "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.{wasm,mjs}",
+            dest: "ort",
+          },
         ],
       }),
       compressStaticCopyPlugin(),

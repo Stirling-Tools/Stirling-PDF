@@ -22,6 +22,7 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import AdminFormDetectionSection from "@app/components/shared/config/configSections/AdminFormDetectionSection";
 
 interface FeaturesSettingsData {
   serverCertificate?: {
@@ -355,6 +356,8 @@ export default function AdminFeaturesSection() {
             </div>
           </Stack>
         </Paper>
+
+        <AdminFormDetectionSection />
       </Stack>
 
       <SettingsStickyFooter

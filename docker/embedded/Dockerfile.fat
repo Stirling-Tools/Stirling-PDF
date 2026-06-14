@@ -52,6 +52,13 @@ WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
+# Slim ONNX Runtime to the target Linux arch only (~88MB jar -> ~6MB). Docker-build only.
+COPY scripts/slim-onnxruntime.sh /tmp/slim-onnxruntime.sh
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends zip \
+    && rm -rf /var/lib/apt/lists/* \
+    && sh /tmp/slim-onnxruntime.sh /layers/dependencies
+
 
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}

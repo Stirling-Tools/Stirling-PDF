@@ -62,6 +62,7 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "jszip": "^3.10.1",
     "license-report": "^6.8.0",
+    "onnxruntime-web": "1.26.0",
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
