@@ -14,6 +14,7 @@ interface SeedFile {
 
 /** Seed IDB + register the cloud entries with the server stub. */
 async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
+  const seedKey = "stirling-pdf-files-page-seeded";
   // Build the server-side view from the cloud entries so reconcileServerFiles
   // sees them as still-existing on the server (otherwise they get detached).
   const serverFiles = files
@@ -36,7 +37,10 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
     route.fulfill({ json: serverFiles }),
   );
   await page.addInitScript(
-    ({ records, dbVersion }) => {
+    ({ records, dbVersion, seedKey }) => {
+      if (window.localStorage.getItem(seedKey) === "1") {
+        return;
+      }
       const open = window.indexedDB.open("stirling-pdf-files", dbVersion);
       open.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
@@ -94,10 +98,20 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
             remoteShareToken: null,
           });
         }
-        tx.oncomplete = () => db.close();
+        tx.oncomplete = () => {
+          db.close();
+          window.localStorage.setItem(seedKey, "1");
+          if (location.pathname.startsWith("/files")) {
+            location.reload();
+          }
+        };
       };
     },
-    { records: files, dbVersion: DATABASE_CONFIGS.FILES.version },
+    {
+      records: files,
+      dbVersion: DATABASE_CONFIGS.FILES.version,
+      seedKey,
+    },
   );
 }
 
