@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -75,7 +74,7 @@ public class SPDFApplication {
         Map<String, String> propertyFiles = new HashMap<>();
 
         // External config files
-        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         log.info("Settings file: {}", settingsPath.toString());
         if (Files.exists(settingsPath)) {
             propertyFiles.put(
@@ -84,7 +83,7 @@ public class SPDFApplication {
             log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
         }
 
-        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
         log.info("Custom settings file: {}", customSettingsPath.toString());
         if (Files.exists(customSettingsPath)) {
             String existingLocation =
