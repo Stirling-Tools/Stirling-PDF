@@ -4,16 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.util.CbrUtils;
 
 class CbrUtilsTest {
 
     @Test
     void testIsCbrFile_ValidCbrFile() {
-        MockMultipartFile cbrFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile cbrFile =
+                new ByteArrayMultipartFile(
                         "file",
                         "test.cbr",
                         "application/x-rar-compressed",
@@ -24,8 +24,8 @@ class CbrUtilsTest {
 
     @Test
     void testIsCbrFile_ValidRarFile() {
-        MockMultipartFile rarFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile rarFile =
+                new ByteArrayMultipartFile(
                         "file",
                         "test.rar",
                         "application/x-rar-compressed",
@@ -36,16 +36,17 @@ class CbrUtilsTest {
 
     @Test
     void testIsCbrFile_InvalidFile() {
-        MockMultipartFile textFile =
-                new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
+        ByteArrayMultipartFile textFile =
+                new ByteArrayMultipartFile(
+                        "file", "test.txt", "text/plain", "test content".getBytes());
 
         assertFalse(CbrUtils.isCbrFile(textFile));
     }
 
     @Test
     void testIsCbrFile_NoFilename() {
-        MockMultipartFile noNameFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile noNameFile =
+                new ByteArrayMultipartFile(
                         "file", null, "application/x-rar-compressed", "test content".getBytes());
 
         assertFalse(CbrUtils.isCbrFile(noNameFile));
@@ -53,8 +54,8 @@ class CbrUtilsTest {
 
     @Test
     void testIsCbrFile_PdfFile() {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile pdfFile =
+                new ByteArrayMultipartFile(
                         "file", "document.pdf", "application/pdf", "pdf content".getBytes());
 
         assertFalse(CbrUtils.isCbrFile(pdfFile));
@@ -62,16 +63,17 @@ class CbrUtilsTest {
 
     @Test
     void testIsCbrFile_JpegFile() {
-        MockMultipartFile jpegFile =
-                new MockMultipartFile("file", "image.jpg", "image/jpeg", "jpeg content".getBytes());
+        ByteArrayMultipartFile jpegFile =
+                new ByteArrayMultipartFile(
+                        "file", "image.jpg", "image/jpeg", "jpeg content".getBytes());
 
         assertFalse(CbrUtils.isCbrFile(jpegFile));
     }
 
     @Test
     void testIsCbrFile_ZipFile() {
-        MockMultipartFile zipFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile zipFile =
+                new ByteArrayMultipartFile(
                         "file", "archive.zip", "application/zip", "zip content".getBytes());
 
         assertFalse(CbrUtils.isCbrFile(zipFile));
@@ -79,8 +81,8 @@ class CbrUtilsTest {
 
     @Test
     void testIsCbrFile_MixedCaseExtension() {
-        MockMultipartFile cbrFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile cbrFile =
+                new ByteArrayMultipartFile(
                         "file",
                         "test.CBR",
                         "application/x-rar-compressed",
