@@ -1,39 +1,44 @@
 package stirling.software.proprietary.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.SignatureService;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * MIGRATION (Spring -> Quarkus): {@code SignatureController} is now a JAX-RS resource returning
+ * {@link Response}. The handlers RETURN their status codes (forbidden / no-content) rather than
+ * letting Spring map a thrown exception, so the former MockMvc {@code status()} matchers become
+ * {@code resp.getStatus()} assertions. JSON request bodies are passed as the typed DTO / {@code
+ * Map<String,String>} the endpoints declare instead of raw JSON strings.
+ */
 @ExtendWith(MockitoExtension.class)
 class SignatureControllerTest {
 
     @Mock private SignatureService signatureService;
     @Mock private UserService userService;
 
-    private MockMvc mockMvc;
+    private SignatureController controller;
 
     @BeforeEach
     void setUp() {
-        SignatureController controller = new SignatureController(signatureService, userService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        controller = new SignatureController(signatureService, userService);
     }
 
     @Test
@@ -41,19 +46,14 @@ class SignatureControllerTest {
         when(userService.getCurrentUsername()).thenReturn("user1");
         when(userService.isCurrentUserAdmin()).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/proprietary/signatures")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(
-                                        """
-                                        {
-                                          "id": "sig1",
-                                          "scope": "shared",
-                                          "dataUrl": "data:image/png;base64,AAAA"
-                                        }
-                                        """))
-                .andExpect(status().isForbidden());
+        SavedSignatureRequest request = new SavedSignatureRequest();
+        request.setId("sig1");
+        request.setScope("shared");
+        request.setDataUrl("data:image/png;base64,AAAA");
 
+        Response resp = controller.saveSignature(request);
+
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), resp.getStatus());
         verify(signatureService, never()).saveSignature(any(), any());
     }
 
@@ -63,12 +63,9 @@ class SignatureControllerTest {
         when(userService.isCurrentUserAdmin()).thenReturn(false);
         when(signatureService.isSharedSignature("sig123")).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/proprietary/signatures/sig123/label")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"label\":\"new label\"}"))
-                .andExpect(status().isForbidden());
+        Response resp = controller.updateSignatureLabel("sig123", Map.of("label", "new label"));
 
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), resp.getStatus());
         verify(signatureService, never()).updateSignatureLabel(any(), any(), any());
     }
 
@@ -78,12 +75,9 @@ class SignatureControllerTest {
         when(userService.isCurrentUserAdmin()).thenReturn(false);
         when(signatureService.isSharedSignature("sig123")).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/proprietary/signatures/sig123/label")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"label\":\"new label\"}"))
-                .andExpect(status().isNoContent());
+        Response resp = controller.updateSignatureLabel("sig123", Map.of("label", "new label"));
 
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), resp.getStatus());
         verify(signatureService).updateSignatureLabel(eq("user1"), eq("sig123"), eq("new label"));
     }
 }

@@ -1,26 +1,26 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.security.Principal;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
@@ -35,14 +35,16 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * Migration (Spring MockMvc -> direct JAX-RS calls): {@code UserController} now returns {@code
+ * jakarta.ws.rs.core.Response}; the caller identity is read from an injected JAX-RS {@code
+ * SecurityContext} (was a Spring {@code Authentication}/{@code Principal} method parameter) and the
+ * optional {@code EmailService} became a CDI {@code Instance<EmailService>}. Each test invokes the
+ * controller method directly and asserts the status code / entity map. The {@code securityContext}
+ * field is assigned a per-test mock (package-private, no CDI container).
+ */
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
-
-    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Mock private UserService userService;
     @Mock private SessionPersistentRegistry sessionRegistry;
@@ -53,7 +55,7 @@ class UserControllerTest {
     @Mock private LoginAttemptService loginAttemptService;
 
     private ApplicationProperties applicationProperties;
-    private MockMvc mockMvc;
+    private UserController controller;
 
     @BeforeEach
     void setUp() {
@@ -61,17 +63,36 @@ class UserControllerTest {
         applicationProperties.getPremium().setMaxUsers(10);
         applicationProperties.getMail().setEnabled(true);
 
-        UserController controller =
+        controller =
                 new UserController(
                         userService,
                         sessionRegistry,
                         applicationProperties,
                         teamRepository,
                         userRepository,
-                        Optional.of(emailService),
+                        emailServiceInstance(),
                         licenseSettingsService,
                         loginAttemptService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Instance<EmailService> emailServiceInstance() {
+        Instance<EmailService> instance = mock(Instance.class);
+        lenient().when(instance.isResolvable()).thenReturn(true);
+        lenient().when(instance.get()).thenReturn(emailService);
+        return instance;
+    }
+
+    private void authenticateAs(String username) {
+        SecurityContext securityContext = mock(SecurityContext.class);
+        Principal principal = () -> username;
+        lenient().when(securityContext.getUserPrincipal()).thenReturn(principal);
+        controller.securityContext = securityContext;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> body(Response response) {
+        return (Map<String, Object>) response.getEntity();
     }
 
     @Test
@@ -81,12 +102,10 @@ class UserControllerTest {
         payload.setPassword("pw");
         when(userService.usernameExistsIgnoreCase("existing@example.com")).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/user/register")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("User already exists"));
+        Response response = controller.register(payload);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("User already exists", body(response).get("error"));
 
         verify(userService, never()).saveUserCore(any());
     }
@@ -110,12 +129,12 @@ class UserControllerTest {
         savedUser.setEnabled(false);
         when(userService.saveUserCore(any())).thenReturn(savedUser);
 
-        mockMvc.perform(
-                        post("/api/v1/user/register")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.user.username").value("new@example.com"));
+        Response response = controller.register(payload);
+
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> user = (Map<String, Object>) body(response).get("user");
+        assertEquals("new@example.com", user.get("username"));
     }
 
     @Test
@@ -124,31 +143,31 @@ class UserControllerTest {
         user.setUsername("admin");
         when(userService.usernameExistsIgnoreCase("admin")).thenReturn(true);
         when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(user));
-        Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "pw");
+        authenticateAs("admin");
 
-        mockMvc.perform(
-                        post("/api/v1/user/admin/changeUserEnabled/admin")
-                                .param("enabled", "false")
-                                .principal(authentication))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Cannot disable your own account."));
+        Response response = controller.changeUserEnabled("admin", false);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("Cannot disable your own account.", body(response).get("error"));
     }
 
     @Test
-    void changePasswordRejectsMissingUser() throws Exception {
-        Authentication authentication = new UsernamePasswordAuthenticationToken("ghost", "pw");
+    void deleteUserRejectsMissingUser() throws Exception {
+        authenticateAs("ghost");
         when(userService.usernameExistsIgnoreCase("ghost")).thenReturn(false);
 
-        mockMvc.perform(post("/api/v1/user/admin/deleteUser/ghost").principal(authentication))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("User not found."));
+        Response response = controller.deleteUser("ghost");
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals("User not found.", body(response).get("error"));
     }
 
     @Test
-    void unlockUserCallsResetAttemptsAndReturnsOk() throws Exception {
-        mockMvc.perform(post("/api/v1/user/admin/unlockUser/lockeduser"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("User account unlocked successfully"));
+    void unlockUserCallsResetAttemptsAndReturnsOk() {
+        Response response = controller.unlockUser("lockeduser");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("User account unlocked successfully", body(response).get("message"));
 
         verify(loginAttemptService).resetAttempts("lockeduser");
     }

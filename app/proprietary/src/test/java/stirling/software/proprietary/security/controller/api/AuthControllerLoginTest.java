@@ -1,31 +1,31 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import io.quarkus.security.identity.SecurityIdentity;
+import io.vertx.core.http.HttpServerRequest;
+
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
@@ -41,17 +41,21 @@ import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * Migration (Spring MockMvc -> direct JAX-RS calls): {@code AuthController} now returns {@code
+ * jakarta.ws.rs.core.Response}. {@code /login} binds a typed {@code UsernameAndPassMfa} body plus
+ * the Vert.x {@code HttpServerRequest} and JAX-RS {@code HttpHeaders} (for IP / User-Agent); {@code
+ * /refresh} reads the bearer token from the {@code Authorization} header via {@code HttpHeaders}
+ * (replacing {@code jwtService.extractToken(HttpServletRequest)}); and {@code /me} reads the caller
+ * from the injected Quarkus {@code SecurityIdentity} (replacing {@code SecurityContextHolder}). The
+ * controller has no constructor (field injection only), so the collaborators and config are
+ * assigned directly. {@code applicationProperties.setSecurity(securityProperties)} keeps the same
+ * Jwt config visible through both injection points.
+ */
 @ExtendWith(MockitoExtension.class)
 class AuthControllerLoginTest {
 
-    private final ObjectMapper objectMapper = JsonMapper.builder().build();
-
-    private MockMvc mockMvc;
-    private ApplicationProperties.Security securityProperties;
+    private static final String USERNAME = "user@example.com";
 
     @Mock private UserService userService;
     @Mock private JwtServiceInterface jwtService;
@@ -60,6 +64,10 @@ class AuthControllerLoginTest {
     @Mock private MfaService mfaService;
     @Mock private TotpService totpService;
     @Mock private RefreshRateLimitService refreshRateLimitService;
+    @Mock private SecurityIdentity securityIdentity;
+
+    private ApplicationProperties.Security securityProperties;
+    private AuthController controller;
 
     @BeforeEach
     void setUp() {
@@ -71,238 +79,238 @@ class AuthControllerLoginTest {
         ApplicationProperties applicationProperties = new ApplicationProperties();
         applicationProperties.setSecurity(securityProperties);
 
-        AuthController controller =
-                new AuthController(
-                        userService,
-                        jwtService,
-                        userDetailsService,
-                        loginAttemptService,
-                        mfaService,
-                        totpService,
-                        refreshRateLimitService,
-                        securityProperties,
-                        applicationProperties,
-                        new stirling.software.proprietary.service.AiUserDataService(null));
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        controller = new AuthController();
+        // @Inject fields are not populated without a CDI container; wire them directly.
+        controller.userService = userService;
+        controller.jwtService = jwtService;
+        controller.userDetailsService = userDetailsService;
+        controller.loginAttemptService = loginAttemptService;
+        controller.mfaService = mfaService;
+        controller.totpService = totpService;
+        controller.refreshRateLimitService = refreshRateLimitService;
+        controller.securityProperties = securityProperties;
+        controller.applicationProperties = applicationProperties;
+        controller.securityIdentity = securityIdentity;
+    }
+
+    /** Vert.x request whose remote address is unknown (controller treats this as a null IP). */
+    private HttpServerRequest webRequest() {
+        HttpServerRequest request = mock(HttpServerRequest.class);
+        lenient().when(request.remoteAddress()).thenReturn(null);
+        return request;
+    }
+
+    /** JAX-RS headers with no User-Agent and, optionally, a bearer Authorization header. */
+    private HttpHeaders headers(String bearerToken) {
+        HttpHeaders httpHeaders = mock(HttpHeaders.class);
+        lenient().when(httpHeaders.getHeaderString("User-Agent")).thenReturn(null);
+        lenient()
+                .when(httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION))
+                .thenReturn(bearerToken == null ? null : "Bearer " + bearerToken);
+        return httpHeaders;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> body(Response response) {
+        return (Map<String, Object>) response.getEntity();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> nested(Response response, String key) {
+        return (Map<String, Object>) body(response).get(key);
     }
 
     @Test
-    void loginRejectsWhenUserPassDisabled() throws Exception {
+    void loginRejectsWhenUserPassDisabled() {
         securityProperties.setLoginMethod(
                 ApplicationProperties.Security.LoginMethods.OAUTH2.toString());
         UsernameAndPassMfa payload = buildPayload(null);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isForbidden())
-                .andExpect(
-                        jsonPath("$.error")
-                                .value(
-                                        "Username/password authentication is not enabled. Please use the configured authentication method."));
+        Response response = controller.login(payload, webRequest(), headers(null));
+
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+        assertEquals(
+                "Username/password authentication is not enabled. Please use the configured"
+                        + " authentication method.",
+                body(response).get("error"));
 
         verify(userDetailsService, never()).loadUserByUsername(any());
     }
 
     @Test
-    void loginBlockedAccountReturnsUnauthorized() throws Exception {
+    void loginBlockedAccountReturnsUnauthorized() {
         UsernameAndPassMfa payload = buildPayload(null);
-        when(loginAttemptService.isBlocked("user@example.com")).thenReturn(true);
+        when(loginAttemptService.isBlocked(USERNAME)).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(
-                        jsonPath("$.error")
-                                .value("Account is locked due to too many failed attempts"));
+        Response response = controller.login(payload, webRequest(), headers(null));
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals(
+                "Account is locked due to too many failed attempts", body(response).get("error"));
 
         verify(loginAttemptService, never()).loginSucceeded(any());
     }
 
     @Test
-    void loginRequiresMfaCodeWhenEnabled() throws Exception {
+    void loginRequiresMfaCodeWhenEnabled() {
         UsernameAndPassMfa payload = buildPayload(null);
         User user = buildUser();
-        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(user);
         when(userService.isPasswordCorrect(user, "pw")).thenReturn(true);
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("mfa_required"));
+        Response response = controller.login(payload, webRequest(), headers(null));
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("mfa_required", body(response).get("error"));
 
         verify(loginAttemptService, never()).loginSucceeded(any());
     }
 
     @Test
-    void loginFailsWhenPasswordIncorrect() throws Exception {
+    void loginFailsWhenPasswordIncorrect() {
         UsernameAndPassMfa payload = buildPayload(null);
         User user = buildUser();
-        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(user);
         when(userService.isPasswordCorrect(user, "pw")).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Invalid username or password"));
+        Response response = controller.login(payload, webRequest(), headers(null));
 
-        verify(loginAttemptService).loginFailed("user@example.com");
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("Invalid username or password", body(response).get("error"));
+
+        verify(loginAttemptService).loginFailed(USERNAME);
     }
 
     @Test
-    void loginSucceedsAndGeneratesToken() throws Exception {
+    void loginSucceedsAndGeneratesToken() {
         UsernameAndPassMfa payload = buildPayload(null);
         User user = buildUser();
-        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(user);
         when(userService.isPasswordCorrect(user, "pw")).thenReturn(true);
         when(mfaService.isMfaEnabled(user)).thenReturn(false);
-        when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
-                .thenReturn("token-123");
+        when(jwtService.generateToken(eq(USERNAME), any(Map.class))).thenReturn("token-123");
 
-        mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.session.access_token").value("token-123"))
-                .andExpect(jsonPath("$.user.username").value("user@example.com"));
+        Response response = controller.login(payload, webRequest(), headers(null));
 
-        verify(loginAttemptService).loginSucceeded("user@example.com");
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("token-123", nested(response, "session").get("access_token"));
+        assertEquals(USERNAME, nested(response, "user").get("username"));
+
+        verify(loginAttemptService).loginSucceeded(USERNAME);
     }
 
     @Test
-    void refreshReturnsUnauthorizedWhenTokenMissing() throws Exception {
-        when(jwtService.extractToken(any())).thenReturn(null);
-        mockMvc.perform(post("/api/v1/auth/refresh"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("No token found"));
+    void refreshReturnsUnauthorizedWhenTokenMissing() {
+        Response response = controller.refresh(headers(null));
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("No token found", body(response).get("error"));
     }
 
     @Test
-    void refreshReturnsNewTokenWhenValid() throws Exception {
+    void refreshReturnsNewTokenWhenValid() {
         User user = buildUser();
-        when(jwtService.extractToken(any())).thenReturn("old");
         Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", "user@example.com");
+        claims.put("sub", USERNAME);
         claims.put("exp", new Date(System.currentTimeMillis() + 60_000));
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
         // Rate limiting is not checked for valid tokens, so no stub needed
-        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
-        when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
-                .thenReturn("new-token");
+        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(user);
+        when(jwtService.generateToken(eq(USERNAME), any(Map.class))).thenReturn("new-token");
 
-        mockMvc.perform(post("/api/v1/auth/refresh"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user").exists())
-                .andExpect(jsonPath("$.session.access_token").value("new-token"))
-                .andExpect(
-                        jsonPath("$.session.expires_in")
-                                .value(3600)); // 60 minutes * 60 = 3600 seconds
+        Response response = controller.refresh(headers("old"));
 
-        // clearRefreshAttempts is intentionally not called - tokens expire naturally after grace
-        // period
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(USERNAME, nested(response, "user").get("username"));
+        assertEquals("new-token", nested(response, "session").get("access_token"));
+        assertEquals(3600L, nested(response, "session").get("expires_in")); // 60 minutes * 60
     }
 
     @Test
-    void refreshRejectsTokenExpiredBeyondGrace() throws Exception {
-        when(jwtService.extractToken(any())).thenReturn("old");
+    void refreshRejectsTokenExpiredBeyondGrace() {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", "user@example.com");
-        claims.put(
-                "exp",
-                new Date(
-                        System.currentTimeMillis()
-                                - (10 * 60_000))); // 10 minutes ago, beyond 5 minute grace
+        claims.put("sub", USERNAME);
+        // 10 minutes ago, beyond the 5 minute grace
+        claims.put("exp", new Date(System.currentTimeMillis() - (10 * 60_000)));
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
 
-        mockMvc.perform(post("/api/v1/auth/refresh"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Token refresh failed"));
+        Response response = controller.refresh(headers("old"));
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("Token refresh failed", body(response).get("error"));
 
         verify(userDetailsService, never()).loadUserByUsername(any());
         verify(refreshRateLimitService, never()).isRefreshAllowed(any(), any(Long.class));
     }
 
     @Test
-    void refreshAcceptsTokenExpiredWithinGrace() throws Exception {
+    void refreshAcceptsTokenExpiredWithinGrace() {
         User user = buildUser();
-        when(jwtService.extractToken(any())).thenReturn("old");
         Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", "user@example.com");
-        claims.put(
-                "exp",
-                new Date(
-                        System.currentTimeMillis()
-                                - 60_000)); // 1 minute ago, within 5 minute grace
+        claims.put("sub", USERNAME);
+        // 1 minute ago, within the 5 minute grace
+        claims.put("exp", new Date(System.currentTimeMillis() - 60_000));
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
         when(refreshRateLimitService.isRefreshAllowed(any(), any(Long.class))).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
-        when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
-                .thenReturn("new-token");
+        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(user);
+        when(jwtService.generateToken(eq(USERNAME), any(Map.class))).thenReturn("new-token");
 
-        mockMvc.perform(post("/api/v1/auth/refresh"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.session.access_token").value("new-token"));
+        Response response = controller.refresh(headers("old"));
 
-        // clearRefreshAttempts is intentionally not called - tokens expire naturally after grace
-        // period
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("new-token", nested(response, "session").get("access_token"));
     }
 
     @Test
-    void refreshRejectsWhenRateLimitExceeded() throws Exception {
-        when(jwtService.extractToken(any())).thenReturn("old");
+    void refreshRejectsWhenRateLimitExceeded() {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", "user@example.com");
+        claims.put("sub", USERNAME);
         claims.put("exp", new Date(System.currentTimeMillis() - 60_000)); // 1 minute ago
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
         when(refreshRateLimitService.isRefreshAllowed(any(), any(Long.class))).thenReturn(false);
 
-        mockMvc.perform(post("/api/v1/auth/refresh"))
-                .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.error").value("Too many refresh attempts"))
-                .andExpect(jsonPath("$.max_attempts").exists());
+        Response response = controller.refresh(headers("old"));
+
+        assertEquals(429, response.getStatus());
+        assertEquals("Too many refresh attempts", body(response).get("error"));
+        org.junit.jupiter.api.Assertions.assertNotNull(body(response).get("max_attempts"));
 
         verify(userDetailsService, never()).loadUserByUsername(any());
         verify(refreshRateLimitService, never()).clearRefreshAttempts(any());
     }
 
     @Test
-    void getCurrentUserReturnsUnauthorizedWhenAnonymous() throws Exception {
-        SecurityContextHolder.clearContext();
+    void getCurrentUserReturnsUnauthorizedWhenAnonymous() {
+        when(securityIdentity.isAnonymous()).thenReturn(true);
 
-        mockMvc.perform(get("/api/v1/auth/me"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Not authenticated"));
+        Response response = controller.getCurrentUser();
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("Not authenticated", body(response).get("error"));
     }
 
     @Test
-    void getCurrentUserReturnsUserDetails() throws Exception {
+    void getCurrentUserReturnsUserDetails() {
         User user = buildUser();
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn(USERNAME);
+        when(securityIdentity.isAnonymous()).thenReturn(false);
+        when(securityIdentity.getPrincipal()).thenReturn(principal);
+        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(user);
 
-        mockMvc.perform(get("/api/v1/auth/me"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.username").value("user@example.com"))
-                .andExpect(
-                        jsonPath("$.user.authenticationType")
-                                .value(AuthenticationType.WEB.name().toLowerCase()));
+        Response response = controller.getCurrentUser();
 
-        SecurityContextHolder.clearContext();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(USERNAME, nested(response, "user").get("username"));
+        assertEquals(
+                AuthenticationType.WEB.name().toLowerCase(),
+                nested(response, "user").get("authenticationType"));
     }
 
     private User buildUser() {
         User user = new User();
-        user.setUsername("user@example.com");
+        user.setUsername(USERNAME);
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
 
@@ -314,7 +322,7 @@ class AuthControllerLoginTest {
 
     private UsernameAndPassMfa buildPayload(String mfaCode) {
         UsernameAndPassMfa payload = new UsernameAndPassMfa();
-        payload.setUsername("user@example.com");
+        payload.setUsername(USERNAME);
         payload.setPassword("pw");
         payload.setMfaCode(mfaCode);
         return payload;

@@ -1,136 +1,122 @@
 package stirling.software.proprietary.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver;
-import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
 
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Controller tests for {@link PdfCommentAgentController}. The orchestrator is mocked so the test
- * never hits the engine or real filesystem.
+ * MIGRATION (Spring -> Quarkus): {@code PdfCommentAgentController} is a JAX-RS resource taking a
+ * RESTEasy Reactive {@code FileUpload} + form {@code prompt} and returning {@link Response}. Tests
+ * call the handler directly with a {@link TestFileUploads} stub for the upload.
+ *
+ * <p>The orchestrator is mocked so the test never hits the engine or real filesystem. Validation
+ * errors are now signalled by {@code WebApplicationException} (was Spring {@code
+ * ResponseStatusException}); the controller lets them propagate, so the error-path tests assert the
+ * thrown status rather than a MockMvc {@code status()} matcher. The former "missing required form
+ * param" tests (previously enforced by Spring's {@code DefaultHandlerExceptionResolver}) are kept
+ * as direct-call equivalents: a missing file arrives as {@code null} and the controller fails fast
+ * before reaching the orchestrator; a missing prompt is rejected by the orchestrator with 400.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
 @ExtendWith(MockitoExtension.class)
 class PdfCommentAgentControllerTest {
 
     @Mock private PdfCommentAgentOrchestrator orchestrator;
 
-    private MockMvc mockMvc;
+    private PdfCommentAgentController controller;
 
     @BeforeEach
     void setUp() {
-        PdfCommentAgentController controller =
-                new PdfCommentAgentController(orchestrator, JsonMapper.builder().build());
-        mockMvc =
-                MockMvcBuilders.standaloneSetup(controller)
-                        // standaloneSetup's defaults don't handle ResponseStatusException; wire up
-                        // both the ResponseStatusException resolver (for orchestrator 400s) and
-                        // DefaultHandlerExceptionResolver (so missing @RequestParam still 400s).
-                        .setHandlerExceptionResolvers(
-                                new ResponseStatusExceptionResolver(),
-                                new DefaultHandlerExceptionResolver())
-                        .build();
+        controller = new PdfCommentAgentController();
+        controller.orchestrator = orchestrator;
+        controller.objectMapper = JsonMapper.builder().build();
     }
 
     @Test
     void acceptsValidPdfAndReturnsAnnotatedBytes() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "input.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "%PDF-1.4\n%%EOF".getBytes());
+        FileUpload pdfFile =
+                TestFileUploads.of("%PDF-1.4\n%%EOF".getBytes(), "input.pdf", "application/pdf");
 
         byte[] annotatedBytes = "%PDF-1.4\n<annotated>\n%%EOF".getBytes();
         AnnotatedPdf stub = new AnnotatedPdf(annotatedBytes, "input-commented.pdf", 2, 2, "ok");
         when(orchestrator.applyComments(any(MultipartFile.class), eq("flag dates")))
                 .thenReturn(stub);
 
-        mockMvc.perform(
-                        multipart("/api/v1/ai/tools/pdf-comment-agent")
-                                .file(pdfFile)
-                                .param("prompt", "flag dates"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-                .andExpect(
-                        header().string(
-                                        "Content-Disposition",
-                                        org.hamcrest.Matchers.containsString(
-                                                "input-commented.pdf")))
-                .andExpect(content().bytes(annotatedBytes));
+        Response resp = controller.pdfCommentAgent(pdfFile, "flag dates");
+
+        assertEquals(200, resp.getStatus());
+        assertEquals("application/pdf", resp.getMediaType().toString());
+        assertTrue(resp.getHeaderString("Content-Disposition").contains("input-commented.pdf"));
+        assertArrayEquals(annotatedBytes, (byte[]) resp.getEntity());
 
         verify(orchestrator).applyComments(any(MultipartFile.class), eq("flag dates"));
     }
 
     @Test
     void propagatesOrchestratorBadRequestForNonPdfUpload() throws Exception {
-        // The controller delegates validation to the orchestrator; a ResponseStatusException
-        // thrown by the orchestrator should propagate to Spring as a 400.
-        MockMultipartFile notPdf =
-                new MockMultipartFile(
-                        "fileInput", "input.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        // The controller delegates validation to the orchestrator; a WebApplicationException
+        // thrown by the orchestrator should propagate as a 400.
+        FileUpload notPdf = TestFileUploads.of("hello".getBytes(), "input.txt", "text/plain");
         when(orchestrator.applyComments(any(MultipartFile.class), eq("whatever")))
                 .thenThrow(
-                        new ResponseStatusException(
-                                HttpStatus.BAD_REQUEST,
-                                "Only application/pdf uploads are supported"));
+                        new WebApplicationException(
+                                "Only application/pdf uploads are supported",
+                                Response.Status.BAD_REQUEST));
 
-        mockMvc.perform(
-                        multipart("/api/v1/ai/tools/pdf-comment-agent")
-                                .file(notPdf)
-                                .param("prompt", "whatever"))
-                .andExpect(status().isBadRequest());
+        WebApplicationException ex =
+                assertThrows(
+                        WebApplicationException.class,
+                        () -> controller.pdfCommentAgent(notPdf, "whatever"));
+        assertEquals(400, ex.getResponse().getStatus());
 
         verify(orchestrator).applyComments(any(MultipartFile.class), eq("whatever"));
     }
 
     @Test
     void rejectsMissingFileInput() throws Exception {
-        mockMvc.perform(multipart("/api/v1/ai/tools/pdf-comment-agent").param("prompt", "test"))
-                .andExpect(status().is4xxClientError());
+        // A missing @RestForm FileUpload binds as null; the controller dereferences it before
+        // reaching the orchestrator, so it fails fast and never invokes applyComments.
+        assertThrows(NullPointerException.class, () -> controller.pdfCommentAgent(null, "test"));
 
-        verify(orchestrator, never()).applyComments(any(), anyString());
+        verify(orchestrator, never()).applyComments(any(), any());
     }
 
     @Test
     void rejectsMissingPromptParameter() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "input.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "%PDF-1.4\n%%EOF".getBytes());
+        // Prompt validation now lives in the orchestrator (throws 400 "Prompt is required").
+        FileUpload pdfFile =
+                TestFileUploads.of("%PDF-1.4\n%%EOF".getBytes(), "input.pdf", "application/pdf");
+        when(orchestrator.applyComments(any(MultipartFile.class), eq(null)))
+                .thenThrow(
+                        new WebApplicationException(
+                                "Prompt is required", Response.Status.BAD_REQUEST));
 
-        mockMvc.perform(multipart("/api/v1/ai/tools/pdf-comment-agent").file(pdfFile))
-                .andExpect(status().is4xxClientError());
-
-        verify(orchestrator, never()).applyComments(any(), anyString());
+        WebApplicationException ex =
+                assertThrows(
+                        WebApplicationException.class,
+                        () -> controller.pdfCommentAgent(pdfFile, null));
+        assertEquals(400, ex.getResponse().getStatus());
     }
 }

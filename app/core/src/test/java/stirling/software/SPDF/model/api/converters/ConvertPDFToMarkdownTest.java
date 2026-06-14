@@ -1,50 +1,40 @@
 package stirling.software.SPDF.model.api.converters;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.pdf.PdfMarkdownConverter;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.jpdfium.PdfDocument;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@code ConvertPDFToMarkdown} is a JAX-RS resource returning {@link
+ * Response}; the handler binds a RESTEasy Reactive {@code FileUpload} (stubbed via {@link
+ * TestFileUploads}) and the {@code TempFile} now takes a {@code TempFileManager} (intercepted by
+ * the existing {@code MockedConstruction<TempFile>}, so a {@code null} manager is fine).
+ *
+ * <p>The former MockMvc + {@code @RestControllerAdvice} setup is dropped: the success path is read
+ * straight off {@code Response} (status / content-type / body bytes), and the error path - which
+ * the controller propagates rather than mapping to 500 itself - is asserted with {@code
+ * assertThrows}.
+ */
 class ConvertPDFToMarkdownTest {
-
-    private MockMvc mockMvc() {
-        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null))
-                .setControllerAdvice(new GlobalErrorHandler())
-                .build();
-    }
-
-    @RestControllerAdvice
-    static class GlobalErrorHandler {
-        @ExceptionHandler(Exception.class)
-        ResponseEntity<Resource> handle(Exception ex) {
-            String message = ex.getMessage();
-            byte[] body = message != null ? message.getBytes(StandardCharsets.UTF_8) : new byte[0];
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ByteArrayResource(body));
-        }
-    }
 
     @Test
     void pdfToMarkdownReturnsMarkdownBytes() throws Exception {
@@ -70,15 +60,15 @@ class ConvertPDFToMarkdownTest {
             PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
             docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
 
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "input.pdf", "application/pdf", new byte[] {1, 2, 3});
+            FileUpload file =
+                    TestFileUploads.of(new byte[] {1, 2, 3}, "input.pdf", "application/pdf");
 
-            mockMvc()
-                    .perform(multipart("/api/v1/convert/pdf/markdown").file(file))
-                    .andExpect(status().isOk())
-                    .andExpect(header().string("Content-Type", "text/markdown"))
-                    .andExpect(content().bytes(md));
+            ConvertPDFToMarkdown controller = new ConvertPDFToMarkdown(null);
+            Response resp = controller.processPdfToMarkdown(file, null);
+
+            assertEquals(200, resp.getStatus());
+            assertEquals("text/markdown", resp.getMediaType().toString());
+            assertArrayEquals(md, (byte[]) resp.getEntity());
         }
     }
 
@@ -105,13 +95,17 @@ class ConvertPDFToMarkdownTest {
             PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
             docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
 
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "x.pdf", "application/pdf", new byte[] {0x01});
+            FileUpload file = TestFileUploads.of(new byte[] {0x01}, "x.pdf", "application/pdf");
 
-            mockMvc()
-                    .perform(multipart("/api/v1/convert/pdf/markdown").file(file))
-                    .andExpect(status().isInternalServerError());
+            ConvertPDFToMarkdown controller = new ConvertPDFToMarkdown(null);
+
+            // The converter failure propagates out of the handler (no controller-level mapping to
+            // 500); JAX-RS would surface it as a 500 at the HTTP boundary.
+            RuntimeException ex =
+                    assertThrows(
+                            RuntimeException.class,
+                            () -> controller.processPdfToMarkdown(file, null));
+            assertEquals("boom", ex.getMessage());
         }
     }
 }

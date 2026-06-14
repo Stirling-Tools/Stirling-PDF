@@ -1,27 +1,30 @@
 package stirling.software.proprietary.workflow.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.InputStream;
 import java.util.Optional;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.service.PdfSigningService;
+import stirling.software.common.testsupport.TestFileUploads;
+import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
@@ -44,6 +47,12 @@ import tools.jackson.databind.ObjectMapper;
  *
  * Here both layers run together against real .p12 / .jks files, so any field-name mismatch, routing
  * bug, or wiring issue between controller and validator is caught.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): the former standalone-MockMvc setup is replaced by direct calls
+ * on the JAX-RS handler (returns {@link Response}); the controller is wired by assigning its
+ * package-private {@code @Inject} fields. Certificate uploads are supplied as RESTEasy Reactive
+ * {@code FileUpload} stubs via {@link TestFileUploads}, and the {@code valid}/{@code error} fields
+ * are read off the {@code CertificateValidationResponse} entity.
  */
 @ExtendWith(MockitoExtension.class)
 class CertificateValidationIntegrationTest {
@@ -56,7 +65,7 @@ class CertificateValidationIntegrationTest {
     // Mock PdfSigningService so the test-sign step succeeds without a real PDF engine
     @Mock private PdfSigningService pdfSigningService;
 
-    private MockMvc mockMvc;
+    private WorkflowParticipantController controller;
 
     private static final String TOKEN = "integration-test-token";
 
@@ -66,15 +75,12 @@ class CertificateValidationIntegrationTest {
         CertificateSubmissionValidator realValidator =
                 new CertificateSubmissionValidator(pdfSigningService);
 
-        WorkflowParticipantController controller =
-                new WorkflowParticipantController(
-                        workflowSessionService,
-                        participantRepository,
-                        new ObjectMapper(),
-                        metadataEncryptionService,
-                        realValidator);
-
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        controller = new WorkflowParticipantController();
+        controller.workflowSessionService = workflowSessionService;
+        controller.participantRepository = participantRepository;
+        controller.objectMapper = new ObjectMapper();
+        controller.metadataEncryptionService = metadataEncryptionService;
+        controller.certificateSubmissionValidator = realValidator;
 
         // Return a non-expired participant for all tests
         WorkflowParticipant participant = new WorkflowParticipant();
@@ -108,96 +114,91 @@ class CertificateValidationIntegrationTest {
         }
     }
 
-    private static MockMultipartFile p12Part(String filename) throws Exception {
-        return new MockMultipartFile(
-                "p12File", filename, "application/octet-stream", loadCert(filename));
+    private static FileUpload p12Part(String filename) throws Exception {
+        return TestFileUploads.of(loadCert(filename), filename, "application/octet-stream");
     }
 
-    private static MockMultipartFile jksPart(String filename) throws Exception {
-        return new MockMultipartFile(
-                "jksFile", filename, "application/octet-stream", loadCert(filename));
+    private static FileUpload jksPart(String filename) throws Exception {
+        return TestFileUploads.of(loadCert(filename), filename, "application/octet-stream");
+    }
+
+    private static CertificateValidationResponse body(Response resp) {
+        return (CertificateValidationResponse) resp.getEntity();
     }
 
     // ---- tests ----
 
     @Test
     void validP12_returnsValidTrueWithSubjectName() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("valid-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "testpass"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(true))
-                .andExpect(jsonPath("$.subjectName").isNotEmpty())
-                .andExpect(jsonPath("$.notAfter").isNotEmpty());
+        Response resp =
+                controller.validateCertificate(
+                        TOKEN, "P12", "testpass", p12Part("valid-test.p12"), null);
+
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse info = body(resp);
+        assertTrue(info.valid());
+        assertNotNull(info.subjectName());
+        assertFalse(info.subjectName().isEmpty());
+        assertNotNull(info.notAfter());
+        assertFalse(info.notAfter().isEmpty());
     }
 
     @Test
     void wrongPassword_returnsValidFalseWithErrorMessage() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("valid-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "wrongpassword"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error")
-                                .value("Invalid certificate password or corrupt keystore file"));
+        Response resp =
+                controller.validateCertificate(
+                        TOKEN, "P12", "wrongpassword", p12Part("valid-test.p12"), null);
+
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse info = body(resp);
+        assertFalse(info.valid());
+        assertEquals("Invalid certificate password or corrupt keystore file", info.error());
     }
 
     @Test
     void expiredP12_returnsValidFalseWithExpiryMessage() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("expired-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "testpass"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error").value(org.hamcrest.Matchers.containsString("expired")));
+        Response resp =
+                controller.validateCertificate(
+                        TOKEN, "P12", "testpass", p12Part("expired-test.p12"), null);
+
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse info = body(resp);
+        assertFalse(info.valid());
+        assertNotNull(info.error());
+        assertTrue(info.error().contains("expired"));
     }
 
     @Test
     void notYetValidP12_returnsValidFalseWithNotYetValidMessage() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("not-yet-valid-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "testpass"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error")
-                                .value(org.hamcrest.Matchers.containsString("not yet valid")));
+        Response resp =
+                controller.validateCertificate(
+                        TOKEN, "P12", "testpass", p12Part("not-yet-valid-test.p12"), null);
+
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse info = body(resp);
+        assertFalse(info.valid());
+        assertNotNull(info.error());
+        assertTrue(info.error().contains("not yet valid"));
     }
 
     @Test
     void validJks_returnsValidTrueWithSubjectName() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(jksPart("valid-test.jks"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "JKS")
-                                .param("password", "jkspass"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(true))
-                .andExpect(jsonPath("$.subjectName").isNotEmpty());
+        Response resp =
+                controller.validateCertificate(
+                        TOKEN, "JKS", "jkspass", null, jksPart("valid-test.jks"));
+
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse info = body(resp);
+        assertTrue(info.valid());
+        assertNotNull(info.subjectName());
+        assertFalse(info.subjectName().isEmpty());
     }
 
     @Test
     void serverCertType_returnsValidTrueWithoutFileUpload() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .param("participantToken", TOKEN)
-                                .param("certType", "SERVER"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(true));
+        Response resp = controller.validateCertificate(TOKEN, "SERVER", null, null, null);
+
+        assertEquals(200, resp.getStatus());
+        assertTrue(body(resp).valid());
     }
 }

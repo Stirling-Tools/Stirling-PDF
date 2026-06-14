@@ -1,27 +1,29 @@
 package stirling.software.proprietary.security.controller.api;
 
-import static org.hamcrest.Matchers.startsWith;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriInfo;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
@@ -34,7 +36,15 @@ import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+/**
+ * Migration (Spring MockMvc -> direct JAX-RS calls): {@code InviteLinkController} now returns
+ * {@code jakarta.ws.rs.core.Response}, reads the admin caller from an injected JAX-RS {@code
+ * SecurityContext} (was a Spring {@code Principal} parameter), persists via the Panache repository
+ * ({@code persist(...)} replaces {@code save(...)}) and resolves the optional {@code EmailService}
+ * through a CDI {@code Instance}. The controller has no constructor (field injection only), so the
+ * collaborators are assigned directly. Each test invokes the endpoint and asserts the status /
+ * entity map.
+ */
 @ExtendWith(MockitoExtension.class)
 class InviteLinkControllerTest {
 
@@ -45,8 +55,9 @@ class InviteLinkControllerTest {
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
 
     private ApplicationProperties applicationProperties;
-    private MockMvc mockMvc;
-    private Principal adminPrincipal;
+    private InviteLinkController controller;
+    private SecurityContext adminSecurityContext;
+    private UriInfo uriInfo;
 
     @BeforeEach
     void setUp() {
@@ -55,59 +66,79 @@ class InviteLinkControllerTest {
         applicationProperties.getMail().setInviteLinkExpiryHours(24);
         applicationProperties.getSystem().setFrontendUrl("https://frontend.example.com");
 
-        adminPrincipal = () -> "admin";
+        controller = new InviteLinkController();
+        // @Inject fields are not populated without a CDI container; wire them directly.
+        controller.inviteTokenRepository = inviteTokenRepository;
+        controller.teamRepository = teamRepository;
+        controller.userService = userService;
+        controller.applicationProperties = applicationProperties;
+        controller.emailService = emailServiceInstance();
+        controller.userLicenseSettingsService = userLicenseSettingsService;
 
-        InviteLinkController controller =
-                new InviteLinkController(
-                        inviteTokenRepository,
-                        teamRepository,
-                        userService,
-                        applicationProperties,
-                        Optional.of(emailService),
-                        userLicenseSettingsService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        Principal adminPrincipal = () -> "admin";
+        adminSecurityContext = mock(SecurityContext.class);
+        lenient().when(adminSecurityContext.getUserPrincipal()).thenReturn(adminPrincipal);
+        // No configured-URL fallback is taken in these tests (frontendUrl is always set), so
+        // UriInfo
+        // is never read; a bare mock satisfies the @Context parameter.
+        uriInfo = mock(UriInfo.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Instance<EmailService> emailServiceInstance() {
+        Instance<EmailService> instance = mock(Instance.class);
+        lenient().when(instance.isResolvable()).thenReturn(true);
+        lenient().when(instance.get()).thenReturn(emailService);
+        return instance;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> body(Response response) {
+        return (Map<String, Object>) response.getEntity();
+    }
+
+    private Response generate(String email) {
+        return controller.generateInviteLink(
+                email, null, null, null, null, null, adminSecurityContext, uriInfo);
     }
 
     @Test
-    void generateInviteLinkRejectsWhenInvitesDisabled() throws Exception {
+    void generateInviteLinkRejectsWhenInvitesDisabled() {
         applicationProperties.getMail().setEnableInvites(false);
 
-        mockMvc.perform(post("/api/v1/invite/generate").principal(adminPrincipal))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Email invites are not enabled"));
+        Response response = generate(null);
 
-        verify(inviteTokenRepository, never()).save(any());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("Email invites are not enabled", body(response).get("error"));
+
+        verify(inviteTokenRepository, never()).persist(any(InviteToken.class));
     }
 
     @Test
-    void generateInviteLinkRejectsInvalidEmail() throws Exception {
+    void generateInviteLinkRejectsInvalidEmail() {
         applicationProperties.getMail().setEnableInvites(true);
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "not-an-email"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Invalid email address"));
+        Response response = generate("not-an-email");
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("Invalid email address", body(response).get("error"));
     }
 
     @Test
-    void generateInviteLinkBlocksOnLicenseLimit() throws Exception {
+    void generateInviteLinkBlocksOnLicenseLimit() {
         applicationProperties.getPremium().setEnabled(true);
         when(userService.getTotalUsersCount()).thenReturn(1L);
         when(inviteTokenRepository.countActiveInvites(any(LocalDateTime.class))).thenReturn(0L);
         when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(1);
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "new@ex.com"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(startsWith("License limit reached")));
+        Response response = generate("new@ex.com");
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertThat((String) body(response).get("error")).startsWith("License limit reached");
     }
 
     @Test
-    void generateInviteLinkAllowedOnServerLicense() throws Exception {
+    void generateInviteLinkAllowedOnServerLicense() {
         // SERVER license has raw maxUsers=0, but calculateMaxAllowedUsers() returns
         // Integer.MAX_VALUE
         applicationProperties.getPremium().setEnabled(true);
@@ -122,15 +153,13 @@ class InviteLinkControllerTest {
         when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "new@ex.com"))
-                .andExpect(status().isOk());
+        Response response = generate("new@ex.com");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
 
     @Test
-    void generateInviteLinkBuildsFrontendUrl() throws Exception {
+    void generateInviteLinkBuildsFrontendUrl() {
         Team defaultTeam = new Team();
         defaultTeam.setId(5L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
@@ -139,30 +168,28 @@ class InviteLinkControllerTest {
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
         when(inviteTokenRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "new@example.com"))
-                .andExpect(status().isOk())
-                .andExpect(
-                        jsonPath("$.inviteUrl")
-                                .value(startsWith("https://frontend.example.com/invite/")))
-                .andExpect(jsonPath("$.email").value("new@example.com"));
+        Response response = generate("new@example.com");
 
-        verify(inviteTokenRepository).save(any());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertThat((String) body(response).get("inviteUrl"))
+                .startsWith("https://frontend.example.com/invite/");
+        assertEquals("new@example.com", body(response).get("email"));
+
+        verify(inviteTokenRepository).persist(any(InviteToken.class));
     }
 
     @Test
-    void validateInviteTokenReturnsNotFoundWhenExpired() throws Exception {
+    void validateInviteTokenReturnsNotFoundWhenExpired() {
         InviteToken expired = new InviteToken();
         expired.setToken("abc");
         expired.setExpiresAt(LocalDateTime.now().minusHours(1));
         expired.setRole(Role.USER.getRoleId());
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(expired));
 
-        mockMvc.perform(get("/api/v1/invite/validate/abc"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Invalid invite link"));
+        Response response = controller.validateInviteToken("abc");
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals("Invalid invite link", body(response).get("error"));
     }
 
     @Test
@@ -176,15 +203,13 @@ class InviteLinkControllerTest {
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/invite/accept/abc")
-                                .param("email", "new@example.com")
-                                .param("password", "password123"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Account created successfully"))
-                .andExpect(jsonPath("$.username").value("new@example.com"));
+        Response response = controller.acceptInvite("abc", "new@example.com", "password123");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("Account created successfully", body(response).get("message"));
+        assertEquals("new@example.com", body(response).get("username"));
 
         verify(userService).saveUserCore(any());
-        verify(inviteTokenRepository).save(invite);
+        verify(inviteTokenRepository).persist(invite);
     }
 }
