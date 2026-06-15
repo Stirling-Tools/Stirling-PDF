@@ -13,11 +13,7 @@ export const RESET_MS = 380;
 const RESET_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
 export const RESET_TRANSITION = `transform ${RESET_MS}ms ${RESET_EASING}, width ${RESET_MS}ms ${RESET_EASING}, height ${RESET_MS}ms ${RESET_EASING}`;
 
-// Resize handle strips sit half-inside / half-outside the 1px border.
-// zIndex: 1 ensures they appear above ChatFABWindow's stacking context
-// (which is created by the CSS open/close transform), so the resize cursor
-// is visible on hover — not just during active drag.
-// Corners get a 14×14 zone; edges get a 6px-wide strip.
+// Handle strips straddle the border; zIndex:1 lifts them above ChatFABWindow's transform stacking context.
 export const RESIZE_HANDLES = {
   top: { top: -3, left: 14, right: 14, height: 6, zIndex: 1 },
   bottom: { bottom: -3, left: 14, right: 14, height: 6, zIndex: 1 },
@@ -40,10 +36,7 @@ export function defaultPanelPos(
   };
 }
 
-// Keep the panel inside the overlay with a consistent gap on every side.
-// When the overlay is smaller than the panel plus both gaps, max falls below
-// the gap; the Math.min/Math.max pair then pins the panel to the top-left gap
-// so the header (drag handle + close button) always stays reachable.
+// Clamps pos to [gap, max] on each axis; pins to top-left gap when the overlay is too small so the header stays reachable.
 export function clampToOverlay(
   pos: { x: number; y: number },
   size: { width: number; height: number },
