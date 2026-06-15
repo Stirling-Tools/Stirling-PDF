@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useFileState } from "@app/contexts/file/fileHooks";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { isMacLike } from "@app/utils/hotkeys";
+import { handleCustomTabShortcuts } from "@app/extensions/workspaceTabShortcuts";
 
 // Announcer state for aria-live
 export interface TabShortcutsState {
@@ -54,18 +55,11 @@ export function useWorkspaceTabShortcuts(): TabShortcutsState {
       }
 
       const isMac = isMacLike();
-      const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI__;
 
-      let nextTab = false;
-      let prevTab = false;
-
-      if (isTauri) {
-        if (e.key === "Tab" && e.ctrlKey && !e.shiftKey) {
-          nextTab = true;
-        } else if (e.key === "Tab" && e.ctrlKey && e.shiftKey) {
-          prevTab = true;
-        }
-      }
+      // Let extensions provide custom shortcuts first (e.g., desktop overrides)
+      const customShortcuts = handleCustomTabShortcuts(e);
+      let nextTab = customShortcuts.nextTab;
+      let prevTab = customShortcuts.prevTab;
 
       if (isMac) {
         if (e.key === "ArrowRight" && e.metaKey && e.altKey) {
@@ -75,11 +69,13 @@ export function useWorkspaceTabShortcuts(): TabShortcutsState {
         }
       }
 
-      // Web defaults (and fallback for Desktop if they want it)
-      if (e.key === "PageDown" && e.altKey) {
-        nextTab = true;
-      } else if (e.key === "PageUp" && e.altKey) {
-        prevTab = true;
+      // Web defaults (fallback)
+      if (!nextTab && !prevTab) {
+        if (e.key === "PageDown" && e.altKey) {
+          nextTab = true;
+        } else if (e.key === "PageUp" && e.altKey) {
+          prevTab = true;
+        }
       }
 
       if (nextTab) {
