@@ -1006,10 +1006,7 @@ public class UserController {
         }
 
         List<UserSummaryDTO> users =
-                source.stream()
-                        .filter(User::isEnabled)
-                        .map(this::toUserSummaryDTO)
-                        .toList();
+                source.stream().filter(User::isEnabled).map(this::toUserSummaryDTO).toList();
 
         return ResponseEntity.ok(users);
     }
