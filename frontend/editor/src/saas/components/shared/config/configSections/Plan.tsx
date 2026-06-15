@@ -14,6 +14,7 @@ import AvailablePlansSection from "@app/components/shared/config/configSections/
 import ApiPackagesSection from "@app/components/shared/config/configSections/plan/ApiPackagesSection";
 import ActivePlanSection from "@app/components/shared/config/configSections/plan/ActivePlanSection";
 import { useAuth } from "@app/auth/UseSession";
+import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
 
 const Plan: React.FC = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -178,6 +179,10 @@ const Plan: React.FC = () => {
             searchable
             clearable={true}
             w={300}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_OVER_SETTINGS_MODAL,
+            }}
           />
         </Group>
       </div>
