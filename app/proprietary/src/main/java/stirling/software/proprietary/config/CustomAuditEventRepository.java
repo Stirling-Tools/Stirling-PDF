@@ -61,17 +61,34 @@ public class CustomAuditEventRepository implements AuditEventRepository {
 
             PersistentAuditEvent ent =
                     PersistentAuditEvent.builder()
-                            .principal(ev.getPrincipal())
+                            .principal(safePrincipal(ev.getPrincipal()))
                             .type(ev.getType())
                             .data(auditEventData)
                             .timestamp(ev.getTimestamp())
                             .build();
             repo.save(ent);
         } catch (Exception e) {
-            log.error(
-                    "Failed to persist audit event (fail-open); principal={}",
-                    ev.getPrincipal(),
-                    e);
+            log.error("Failed to persist audit event (fail-open); type={}", ev.getType(), e);
         }
+    }
+
+    /**
+     * Width of the {@code principal} column; values are capped so an oversized one can't fail the
+     * insert.
+     */
+    private static final int PRINCIPAL_MAX_LENGTH = 255;
+
+    /**
+     * A rejected MCP bearer auth surfaces the raw JWT as the Spring principal; never persist a
+     * credential (or anything wider than the column) into the audit log.
+     */
+    private static String safePrincipal(String principal) {
+        if (principal == null || principal.isBlank()) {
+            return "anonymous";
+        }
+        if (principal.startsWith("eyJ") || principal.length() > PRINCIPAL_MAX_LENGTH) {
+            return "[redacted-token]";
+        }
+        return principal;
     }
 }
