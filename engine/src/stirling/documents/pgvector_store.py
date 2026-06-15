@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 
 import psycopg
+from pgvector import Vector
 from pgvector.psycopg import register_vector_async
 from psycopg_pool import AsyncConnectionPool
 
@@ -68,8 +69,11 @@ class PgVectorStore(DocumentStore):
             self._initialized = True
 
     async def _bootstrap_schema(self) -> None:
-        # Uses a dedicated non-pool connection: pooled connections register the
-        # vector type on checkout, which fails until the extension exists.
+        # The `vector` type must exist before the pool's configure hook
+        # (register_vector_async) can resolve it, and on a fresh database it doesn't
+        # yet. Create the extension + schema on a raw, non-pool connection that hasn't
+        # registered the type; _ensure_ready then opens the pool, whose configure hook
+        # registers the now-existing type per connection.
         async with await psycopg.AsyncConnection.connect(self._dsn) as conn:
             async with conn.cursor() as cur:
                 await cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -230,7 +234,7 @@ class PgVectorStore(DocumentStore):
                             metadata = EXCLUDED.metadata,
                             embedding = EXCLUDED.embedding
                         """,
-                        (doc.id, collection, owner_id, doc.text, json.dumps(doc.metadata), emb),
+                        (doc.id, collection, owner_id, doc.text, json.dumps(doc.metadata), Vector(emb)),
                     )
                 await conn.commit()
 
@@ -307,6 +311,7 @@ class PgVectorStore(DocumentStore):
                 owner_id = await self._readable_owner_for(cur, collection, principals)
                 if owner_id is None:
                     return []
+                query_vec = Vector(query_embedding)
                 await cur.execute(
                     """
                     SELECT id, text, metadata, 1 - (embedding <=> %s) AS score
@@ -315,7 +320,7 @@ class PgVectorStore(DocumentStore):
                     ORDER BY embedding <=> %s
                     LIMIT %s
                     """,
-                    (query_embedding, collection, owner_id, query_embedding, top_k),
+                    (query_vec, collection, owner_id, query_vec, top_k),
                 )
                 rows = await cur.fetchall()
 

@@ -1009,7 +1009,7 @@ public class UserController {
                 source.stream()
                         .filter(User::isEnabled)
                         .map(this::toUserSummaryDTO)
-                        .collect(java.util.stream.Collectors.toList());
+                        .toList();
 
         return ResponseEntity.ok(users);
     }
