@@ -6,6 +6,11 @@ import { expectConsole } from "@app/tests/failOnConsole";
 // Exercise the error-interceptor logic against a hand-rolled axios-like
 // client; transitive imports are mocked out so this is a pure unit test.
 
+const { getAccessTokenMock } = vi.hoisted(() => ({
+  getAccessTokenMock: vi.fn(),
+}));
+
+vi.mock("@app/auth/session", () => ({ getAccessToken: getAccessTokenMock }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("@core/services/apiClientSetup", () => ({
   setupApiInterceptors: vi.fn(),
@@ -50,7 +55,10 @@ vi.mock("@app/i18n", () => ({
   default: { t: (_key: string, fallback: string) => fallback || _key },
 }));
 
-import { setupApiInterceptors } from "@app/services/apiClientSetup";
+import {
+  setupApiInterceptors,
+  getAuthHeaders,
+} from "@app/services/apiClientSetup";
 
 type Interceptor = (value: unknown) => unknown;
 
@@ -175,5 +183,19 @@ describe("desktop apiClientSetup - 401 silent-path", () => {
       },
     });
     expect(events).toHaveLength(0);
+  });
+});
+
+describe("desktop getAuthHeaders (raw fetch / AI SSE stream)", () => {
+  beforeEach(() => getAccessTokenMock.mockReset());
+
+  test("attaches the Tauri-store JWT as a Bearer header", async () => {
+    getAccessTokenMock.mockResolvedValue("jwt-123");
+    expect(await getAuthHeaders()).toEqual({ Authorization: "Bearer jwt-123" });
+  });
+
+  test("returns no header when there is no token", async () => {
+    getAccessTokenMock.mockResolvedValue(null);
+    expect(await getAuthHeaders()).toEqual({});
   });
 });

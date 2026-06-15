@@ -1,11 +1,6 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { alert } from "@app/components/toast";
-import {
-  setupApiInterceptors as coreSetup,
-  getAuthHeaders,
-} from "@core/services/apiClientSetup";
-
-export { getAuthHeaders };
+import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";
@@ -18,6 +13,21 @@ import {
 } from "@app/constants/connection";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import i18n from "@app/i18n";
+
+/**
+ * Auth headers for raw fetch() calls (the AI SSE stream) — desktop variant.
+ *
+ * Core's getAuthHeaders returns {} and proprietary's reads the JWT from
+ * localStorage, but desktop keeps its JWT in the Tauri secure store. So this
+ * pulls the token via getAccessToken() (mirroring the axios request interceptor,
+ * including waiting out an in-flight refresh) — without it the orchestrate
+ * stream hits the SaaS backend with no Authorization header and 401s.
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  await authService.awaitRefreshIfInProgress();
+  const token = await getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
