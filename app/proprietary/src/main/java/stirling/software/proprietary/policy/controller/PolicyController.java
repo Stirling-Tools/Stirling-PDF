@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -34,11 +33,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
+import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -47,7 +51,6 @@ import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.store.PolicyStore;
-import stirling.software.proprietary.policy.trigger.ManualTrigger;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 
 import tools.jackson.core.JacksonException;
@@ -71,15 +74,15 @@ import tools.jackson.databind.ObjectMapper;
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
 public class PolicyController {
 
-    private final ManualTrigger manualTrigger;
+    private final PolicyRunner policyRunner;
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
+    private final PolicyValidator policyValidator;
+    private final FolderAccessGuard folderAccessGuard;
+    private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
-
-    /** SSE emitter timeout, generous enough for long multi-step runs on large files. */
-    @Value("${stirling.policies.streamTimeoutMs:1800000}")
-    private long streamTimeoutMs;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -95,7 +98,8 @@ public class PolicyController {
             throws IOException {
         PipelineDefinition definition = parseDefinition(json);
         PolicyInputs inputs = collectInputs(request);
-        String runId = manualTrigger.fire(definition, inputs, PolicyProgressListener.NOOP).runId();
+        String runId =
+                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
@@ -112,10 +116,11 @@ public class PolicyController {
         PipelineDefinition definition = parseDefinition(json);
         PolicyInputs inputs = collectInputs(request);
 
-        SseEmitter emitter = new SseEmitter(streamTimeoutMs);
+        SseEmitter emitter =
+                new SseEmitter(applicationProperties.getPolicies().getStreamTimeoutMs());
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
-        PolicyRunHandle handle = manualTrigger.fire(definition, inputs, streamListener(emitter));
+        PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));
         // Close the stream with a terminal event once the run finishes. whenComplete runs on the
         // engine's worker thread after the run is done, so this never races the step events.
         handle.completion()
@@ -155,7 +160,34 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody String json) {
-        return ResponseEntity.ok(policyStore.save(parsePolicy(json)));
+        Policy policy = parsePolicy(json);
+        requireAuthorizedForFolderAccess(policy);
+        try {
+            policyValidator.validate(policy);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+        return ResponseEntity.ok(policyStore.save(policy));
+    }
+
+    /**
+     * A policy that reads from or writes to a server folder grants whoever saves it access to that
+     * path, so restrict it to administrators on multi-user deployments. Single-user deployments
+     * (login disabled, e.g. desktop) trust the local operator. The {@link FolderAccessGuard} still
+     * enforces SaaS-off and the path allowlist during validation regardless of who saves.
+     */
+    private void requireAuthorizedForFolderAccess(Policy policy) {
+        if (!folderAccessGuard.usesFolderAccess(policy)) {
+            return;
+        }
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            return;
+        }
+        if (!userService.isCurrentUserAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Folder sources and outputs may only be configured by an administrator");
+        }
     }
 
     @GetMapping
@@ -199,7 +231,7 @@ public class PolicyController {
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
         PolicyInputs inputs = collectInputs(request);
-        String runId = manualTrigger.run(policy, inputs, PolicyProgressListener.NOOP).runId();
+        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 

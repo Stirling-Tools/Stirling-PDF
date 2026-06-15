@@ -31,20 +31,13 @@ public class RefreshRateLimitService {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
     }
 
-    private static class RefreshAttempt {
-        private final AtomicInteger count = new AtomicInteger(0);
-        private final Instant firstAttempt = Instant.now();
+    private record RefreshAttempt(AtomicInteger count, Instant firstAttempt) {
+        RefreshAttempt() {
+            this(new AtomicInteger(0), Instant.now());
+        }
 
         int incrementAndGet() {
             return count.incrementAndGet();
-        }
-
-        Instant getFirstAttempt() {
-            return firstAttempt;
-        }
-
-        int getCount() {
-            return count.get();
         }
     }
 
@@ -72,7 +65,7 @@ public class RefreshRateLimitService {
 
         // Clean up if outside grace window
         Instant cutoff = Instant.now().minusMillis(graceWindowMillis);
-        if (attempt.getFirstAttempt().isBefore(cutoff)) {
+        if (attempt.firstAttempt().isBefore(cutoff)) {
             attempts.remove(tokenHash);
         }
 
@@ -98,15 +91,9 @@ public class RefreshRateLimitService {
                         ? configuredMinutes
                         : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
         Instant cutoff = Instant.now().minusMillis(graceMinutes * 60000L);
-        int removed =
-                attempts.entrySet().stream()
-                        .filter(entry -> entry.getValue().getFirstAttempt().isBefore(cutoff))
-                        .mapToInt(
-                                entry -> {
-                                    attempts.remove(entry.getKey());
-                                    return 1;
-                                })
-                        .sum();
+        int beforeSize = attempts.size();
+        attempts.entrySet().removeIf(entry -> entry.getValue().firstAttempt().isBefore(cutoff));
+        int removed = beforeSize - attempts.size();
 
         if (removed > 0) {
             log.debug("Cleaned up {} expired refresh tracking entries", removed);

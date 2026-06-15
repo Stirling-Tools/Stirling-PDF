@@ -10,9 +10,11 @@ export function useChat() {
     isOpen: false,
     isLoading: false,
     progress: null,
+    progressLog: [] as never[],
     toggleOpen: () => {},
     setOpen: (_open: boolean) => {},
     sendMessage: async (_content: string) => {},
+    cancelMessage: () => {},
     clearChat: () => {},
   };
 }

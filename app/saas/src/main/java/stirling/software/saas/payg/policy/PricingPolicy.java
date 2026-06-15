@@ -74,6 +74,20 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
+     * Free-tier allowance — doc units a team on this policy can consume per cycle before they must
+     * add a card. {@code 0} (default) means no free tier; the team is blocked at 402 from their
+     * very first tool call until they pay. New-signup defaults will set this to a sensible positive
+     * value; the special launch policy used by the day-1 legacy migration script can override with
+     * a different size if product wants the original 10 customers to feel special.
+     *
+     * <p>Enforced by {@code PaygTeamUsageService} (PR-SB-4) on every tool call, gated on {@code
+     * payg_team_extensions.payg_subscription_id IS NULL} — teams with an active subscription bypass
+     * this check entirely.
+     */
+    @Column(name = "free_tier_units_per_cycle", nullable = false)
+    private Long freeTierUnitsPerCycle = 0L;
+
+    /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
      * JobSource}. Self-hosted teams typically get a higher limit via a per-team policy override.
      *

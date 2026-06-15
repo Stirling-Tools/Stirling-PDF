@@ -293,7 +293,7 @@ jobs:
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
-                SYSTEM_DEFAULTLOCALE: en-GB
+                SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
                 UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Embedded Architecture"
                 UI_APPNAMENAVBAR: "V2 PR#${{ needs.check-pr.outputs.pr_number }}"
