@@ -13,6 +13,8 @@
 // or a raw "<svg…>" string. Theme is fully customizable (see THEME / the CLI flags below).
 // After adding images, run `node scripts/generate-og-metadata.mjs` so they get picked up.
 
+/* global document, getComputedStyle */ // used inside page.evaluate (browser context)
+
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -179,7 +181,9 @@ export async function renderOgCard({
       try {
         await document.fonts.load(`${weight} 80px "${family}"`);
         await document.fonts.ready;
-      } catch {}
+      } catch {
+        /* best-effort font preload */
+      }
       // The title wraps within its max-width. Shrink only if it would exceed
       // maxLines lines, so long names wrap to 2 lines instead of spilling off.
       let size = parseFloat(getComputedStyle(el).fontSize);
