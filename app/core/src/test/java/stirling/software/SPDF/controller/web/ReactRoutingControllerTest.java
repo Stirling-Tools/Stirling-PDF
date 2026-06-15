@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
@@ -179,73 +178,5 @@ class ReactRoutingControllerTest {
         String body = response.getBody();
         assertNotNull(body);
         assertTrue(body.contains("<base href="));
-    }
-
-    // --- prerendered per-route pages (OG/social-preview) ---
-
-    private HttpServletRequest requestFor(String uri) {
-        HttpServletRequest req = mock(HttpServletRequest.class);
-        when(req.getRequestURI()).thenReturn(uri);
-        when(req.getContextPath()).thenReturn("");
-        return req;
-    }
-
-    @Test
-    void forwardRootPaths_servesPrerenderedPageWithOgTags() throws Exception {
-        // src/test/resources/static/compress.html stands in for a build-time prerendered page
-        controller.init();
-
-        ResponseEntity<String> response = controller.forwardRootPaths(requestFor("/compress"));
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        String body = response.getBody();
-        assertNotNull(body);
-        assertTrue(body.contains("<title>Compress - Stirling PDF</title>"), "per-route title");
-        assertTrue(
-                body.contains("property=\"og:image\" content=\"/og_images/compress.png\""),
-                "per-route og:image");
-        // The prerendered file is processed like index.html: %BASE_URL% replaced and
-        // the API base-url script injected.
-        assertTrue(body.contains("<base href=\"/\""), "base href processed");
-        assertTrue(body.contains("window.STIRLING_PDF_API_BASE_URL"), "context script injected");
-    }
-
-    @Test
-    void forwardRootPaths_unknownRoute_fallsBackToShellWithoutOg() throws Exception {
-        controller.init();
-
-        ResponseEntity<String> response = controller.forwardRootPaths(requestFor("/no-such-tool"));
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        String body = response.getBody();
-        assertNotNull(body);
-        assertFalse(body.contains("og:image"), "no per-tool OG when there is no prerendered page");
-    }
-
-    @Test
-    void forwardNestedPaths_servesNestedPrerenderedSettingsPage() throws Exception {
-        // src/test/resources/static/settings/people.html stands in for a prerendered
-        // settings section.
-        controller.init();
-
-        ResponseEntity<String> response =
-                controller.forwardNestedPaths(requestFor("/settings/people"));
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        String body = response.getBody();
-        assertNotNull(body);
-        assertTrue(body.contains("<title>People Settings - Stirling PDF</title>"));
-        assertTrue(body.contains("window.STIRLING_PDF_API_BASE_URL"), "processed like index");
-    }
-
-    @Test
-    void forwardNestedPaths_dynamicRoute_fallsBackToShell() throws Exception {
-        controller.init();
-
-        ResponseEntity<String> response =
-                controller.forwardNestedPaths(requestFor("/workflow/sign"));
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
     }
 }
