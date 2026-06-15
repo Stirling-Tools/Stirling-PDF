@@ -1,19 +1,8 @@
 /**
- * Team-session auth seam (@app/auth/teamSession).
- *
- * The cloud/ layer is the SHARED hosted experience consumed by BOTH the saas
- * (web) and desktop (Tauri) leaves, so it must stay platform-portable: it can't
- * reach the Supabase web client ({@code @app/auth/supabase}) or the full
- * SaaS-only {@code useAuth()} (which exposes credit/session refreshers the
- * desktop/proprietary auth context does not). {@link SaaSTeamContext} needs
- * exactly two things from auth, so it consumes them through this narrow seam
- * instead of importing either platform auth surface directly.
- *
- * This module is the DEFAULT + the shared TypeScript contract. Real builds
- * shadow it: saas/auth/teamSession.ts wires the Supabase web session + the
- * anonymous check + the credit/session refresh; desktop/auth/teamSession.ts
- * wires authService. The cloud default reports "no team access" and a no-op
- * refresh, which is only reached by the cloud-standalone typecheck.
+ * Team-session auth seam (@app/auth/teamSession). {@link SaaSTeamContext} needs
+ * just two things from auth (can-use-teams + a post-membership refresh), so it
+ * consumes them through this narrow seam rather than reaching a platform auth
+ * surface directly. Default reports no access; saas/ and desktop/ shadow it.
  */
 
 /**
