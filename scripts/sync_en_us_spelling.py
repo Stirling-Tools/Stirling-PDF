@@ -66,44 +66,104 @@ def add(uk: str, us: str) -> None:
 # --- -our / -or family (colour -> color) ---------------------------------- #
 # us = uk with the single 'our' turned into 'or'.
 _OUR = [
-    "colour", "colours", "coloured", "colouring", "colourful", "colourless",
-    "colourise", "colourised", "colouriser",
-    "favour", "favours", "favoured", "favouring", "favourite", "favourites",
-    "favourable", "favourably", "favouritism",
-    "behaviour", "behaviours", "behavioural",
-    "neighbour", "neighbours", "neighbouring",
-    "labour", "labours", "laboured", "labouring",
-    "honour", "honours", "honoured", "honouring", "honourable",
-    "humour", "humours", "humoured",
-    "flavour", "flavours", "flavoured", "flavouring",
-    "harbour", "harbours",
-    "rumour", "rumours", "rumoured",
-    "vapour", "vapours",
-    "odour", "odours",
-    "valour", "splendour", "armour", "armoured",
-    "saviour", "saviours",
-    "endeavour", "endeavours", "endeavoured",
-    "parlour", "savour", "savoured", "savouring", "savoury",
-    "candour", "demeanour", "rigour", "vigour",
+    "colour",
+    "colours",
+    "coloured",
+    "colouring",
+    "colourful",
+    "colourless",
+    "colourise",
+    "colourised",
+    "colouriser",
+    "favour",
+    "favours",
+    "favoured",
+    "favouring",
+    "favourite",
+    "favourites",
+    "favourable",
+    "favourably",
+    "favouritism",
+    "behaviour",
+    "behaviours",
+    "behavioural",
+    "neighbour",
+    "neighbours",
+    "neighbouring",
+    "labour",
+    "labours",
+    "laboured",
+    "labouring",
+    "honour",
+    "honours",
+    "honoured",
+    "honouring",
+    "honourable",
+    "humour",
+    "humours",
+    "humoured",
+    "flavour",
+    "flavours",
+    "flavoured",
+    "flavouring",
+    "harbour",
+    "harbours",
+    "rumour",
+    "rumours",
+    "rumoured",
+    "vapour",
+    "vapours",
+    "odour",
+    "odours",
+    "valour",
+    "splendour",
+    "armour",
+    "armoured",
+    "saviour",
+    "saviours",
+    "endeavour",
+    "endeavours",
+    "endeavoured",
+    "parlour",
+    "savour",
+    "savoured",
+    "savouring",
+    "savoury",
+    "candour",
+    "demeanour",
+    "rigour",
+    "vigour",
 ]
 for w in _OUR:
     add(w, w.replace("our", "or"))
 
 # --- -re / -er family (centre -> center) ---------------------------------- #
 _RE = {
-    "centre": "center", "centres": "centers", "centred": "centered",
+    "centre": "center",
+    "centres": "centers",
+    "centred": "centered",
     "centring": "centering",
-    "metre": "meter", "metres": "meters",          # length unit; ‘meter’ device excluded above
-    "litre": "liter", "litres": "liters",
-    "fibre": "fiber", "fibres": "fibers",
+    "metre": "meter",
+    "metres": "meters",  # length unit; ‘meter’ device excluded above
+    "litre": "liter",
+    "litres": "liters",
+    "fibre": "fiber",
+    "fibres": "fibers",
     # NB: ‘calibre’ is omitted -- in this codebase it is the proper noun
     # ‘Calibre’ (the e-book conversion tool), not the British ‘caliber’.
-    "sombre": "somber", "spectre": "specter", "lustre": "luster",
-    "theatre": "theater", "theatres": "theaters",
-    "centimetre": "centimeter", "centimetres": "centimeters",
-    "millimetre": "millimeter", "millimetres": "millimeters",
-    "kilometre": "kilometer", "kilometres": "kilometers",
-    "manoeuvre": "maneuver", "manoeuvres": "maneuvers",
+    "sombre": "somber",
+    "spectre": "specter",
+    "lustre": "luster",
+    "theatre": "theater",
+    "theatres": "theaters",
+    "centimetre": "centimeter",
+    "centimetres": "centimeters",
+    "millimetre": "millimeter",
+    "millimetres": "millimeters",
+    "kilometre": "kilometer",
+    "kilometres": "kilometers",
+    "manoeuvre": "maneuver",
+    "manoeuvres": "maneuvers",
 }
 for uk, us in _RE.items():
     add(uk, us)
@@ -111,13 +171,46 @@ for uk, us in _RE.items():
 # --- -ise / -isation family (organise -> organize) ------------------------ #
 # Generate the regular inflections from a list of stems (the part before 'se').
 _ISE_STEMS = [
-    "organi", "recogni", "customi", "optimi", "authori", "reali", "finali",
-    "initiali", "normali", "synchroni", "summari", "prioriti", "personali",
-    "capitali", "categori", "standardi", "visuali", "apologi", "utili",
-    "locali", "digiti", "moderni", "centrali", "minimi", "maximi", "emphasi",
-    "characteri", "stabili", "generali", "specifi? ".strip(),
-    "sterili", "neutrali", "saniti", "tokeni", "serie? ".strip(),
-    "alphabeti", "synthesi", "memori", "itemi", "colouri",
+    "organi",
+    "recogni",
+    "customi",
+    "optimi",
+    "authori",
+    "reali",
+    "finali",
+    "initiali",
+    "normali",
+    "synchroni",
+    "summari",
+    "prioriti",
+    "personali",
+    "capitali",
+    "categori",
+    "standardi",
+    "visuali",
+    "apologi",
+    "utili",
+    "locali",
+    "digiti",
+    "moderni",
+    "centrali",
+    "minimi",
+    "maximi",
+    "emphasi",
+    "characteri",
+    "stabili",
+    "generali",
+    "specifi? ".strip(),
+    "sterili",
+    "neutrali",
+    "saniti",
+    "tokeni",
+    "serie? ".strip(),
+    "alphabeti",
+    "synthesi",
+    "memori",
+    "itemi",
+    "colouri",
 ]
 _ISE_STEMS = [s for s in _ISE_STEMS if s and not s.endswith("?")]
 _ISE_SUFFIXES = ["se", "ses", "sed", "sing", "ser", "sers", "sation", "sations"]
@@ -129,23 +222,36 @@ for stem in _ISE_STEMS:
 # because it collides with the noun ‘analyses’ (identical in both locales), and
 # ‘analysis/analyses’ which are spelled the same on both sides.
 for uk, us in {
-    "analyse": "analyze", "analysed": "analyzed", "analysing": "analyzing",
+    "analyse": "analyze",
+    "analysed": "analyzed",
+    "analysing": "analyzing",
     "analyser": "analyzer",
-    "paralyse": "paralyze", "paralysed": "paralyzed", "paralysing": "paralyzing",
-    "catalyse": "catalyze", "catalysed": "catalyzed",
+    "paralyse": "paralyze",
+    "paralysed": "paralyzed",
+    "paralysing": "paralyzing",
+    "catalyse": "catalyze",
+    "catalysed": "catalyzed",
 }.items():
     add(uk, us)
 
 # --- doubled-l family (cancelled -> canceled) ----------------------------- #
 _LL = {
-    "cancelled": "canceled", "cancelling": "canceling",
-    "labelled": "labeled", "labelling": "labeling",
-    "modelled": "modeled", "modelling": "modeling",
-    "signalled": "signaled", "signalling": "signaling",
-    "travelled": "traveled", "travelling": "traveling", "traveller": "traveler",
+    "cancelled": "canceled",
+    "cancelling": "canceling",
+    "labelled": "labeled",
+    "labelling": "labeling",
+    "modelled": "modeled",
+    "modelling": "modeling",
+    "signalled": "signaled",
+    "signalling": "signaling",
+    "travelled": "traveled",
+    "travelling": "traveling",
+    "traveller": "traveler",
     "travellers": "travelers",
-    "fuelled": "fueled", "fuelling": "fueling",
-    "marvellous": "marvelous", "counsellor": "counselor",
+    "fuelled": "fueled",
+    "fuelling": "fueling",
+    "marvellous": "marvelous",
+    "counsellor": "counselor",
     "jewellery": "jewelry",
 }
 for uk, us in _LL.items():
@@ -153,12 +259,18 @@ for uk, us in _LL.items():
 
 # single-l where US doubles it (enrol -> enroll, fulfil -> fulfill)
 _L_TO_LL = {
-    "enrol": "enroll", "enrols": "enrolls", "enrolment": "enrollment",
+    "enrol": "enroll",
+    "enrols": "enrolls",
+    "enrolment": "enrollment",
     "enrolments": "enrollments",
-    "fulfil": "fulfill", "fulfils": "fulfills", "fulfilment": "fulfillment",
+    "fulfil": "fulfill",
+    "fulfils": "fulfills",
+    "fulfilment": "fulfillment",
     "fulfilments": "fulfillments",
-    "instalment": "installment", "instalments": "installments",
-    "skilful": "skillful", "wilful": "willful",
+    "instalment": "installment",
+    "instalments": "installments",
+    "skilful": "skillful",
+    "wilful": "willful",
 }
 for uk, us in _L_TO_LL.items():
     add(uk, us)
@@ -167,9 +279,12 @@ for uk, us in _L_TO_LL.items():
 # Only the unambiguous noun forms; verb/adjective forms ‘licensed/licensing’
 # are identical in both and are left alone.
 _CE = {
-    "licence": "license", "licences": "licenses",
-    "defence": "defense", "defences": "defenses",
-    "offence": "offense", "offences": "offenses",
+    "licence": "license",
+    "licences": "licenses",
+    "defence": "defense",
+    "defences": "defenses",
+    "offence": "offense",
+    "offences": "offenses",
     "pretence": "pretense",
 }
 for uk, us in _CE.items():
@@ -178,27 +293,42 @@ for uk, us in _CE.items():
 # --- -ogue (catalogue -> catalog) ----------------------------------------- #
 # Note: ‘dialogue/dialog’ and ‘analogue/analog’ are excluded (UI terminology).
 _OGUE = {
-    "catalogue": "catalog", "catalogues": "catalogs",
-    "catalogued": "cataloged", "cataloguing": "cataloging",
+    "catalogue": "catalog",
+    "catalogues": "catalogs",
+    "catalogued": "cataloged",
+    "cataloguing": "cataloging",
 }
 for uk, us in _OGUE.items():
     add(uk, us)
 
 # --- miscellaneous irregulars --------------------------------------------- #
 _MISC = {
-    "grey": "gray", "greys": "grays", "greyed": "grayed", "greying": "graying",
+    "grey": "gray",
+    "greys": "grays",
+    "greyed": "grayed",
+    "greying": "graying",
     "greyscale": "grayscale",
-    "mould": "mold", "moulds": "molds",
-    "sceptical": "skeptical", "sceptic": "skeptic", "scepticism": "skepticism",
+    "mould": "mold",
+    "moulds": "molds",
+    "sceptical": "skeptical",
+    "sceptic": "skeptic",
+    "scepticism": "skepticism",
     "aluminium": "aluminum",
-    "artefact": "artifact", "artefacts": "artifacts",
-    "speciality": "specialty", "specialities": "specialties",
-    "judgement": "judgment", "judgements": "judgments",
-    "acknowledgement": "acknowledgment", "acknowledgements": "acknowledgments",
-    "kerb": "curb", "kerbs": "curbs",
-    "tyre": "tire", "tyres": "tires",
+    "artefact": "artifact",
+    "artefacts": "artifacts",
+    "speciality": "specialty",
+    "specialities": "specialties",
+    "judgement": "judgment",
+    "judgements": "judgments",
+    "acknowledgement": "acknowledgment",
+    "acknowledgements": "acknowledgments",
+    "kerb": "curb",
+    "kerbs": "curbs",
+    "tyre": "tire",
+    "tyres": "tires",
     "sulphur": "sulfur",
-    "enquiry": "inquiry", "enquiries": "inquiries",
+    "enquiry": "inquiry",
+    "enquiries": "inquiries",
     "ageing": "aging",
     "cancelled": "canceled",  # belt & braces (also in _LL)
     # NB: while/whilst, toward/towards, among/amongst are deliberately omitted.
@@ -219,6 +349,7 @@ for uk, us in uk_to_us.items():
 # Case-preserving whole-word replacement.
 # --------------------------------------------------------------------------- #
 
+
 def _match_case(template: str, replacement: str) -> str:
     if template.isupper():
         return replacement.upper()
@@ -230,7 +361,7 @@ def _match_case(template: str, replacement: str) -> str:
 # Literal technical tokens that must never be respelled, even though they look
 # like convertible words. These are protocol/identifier strings, not prose.
 PROTECTED = re.compile(
-    r"Authorization(?=\s*:)"        # the HTTP "Authorization:" header
+    r"Authorization(?=\s*:)"  # the HTTP "Authorization:" header
     r"|Authorization\s+header",
     re.IGNORECASE,
 )
@@ -242,7 +373,9 @@ def make_converter(mapping: dict[str, str]):
         return lambda text: (text, [])
     # Longest-first so multi-word/longer forms win; \b ensures whole words.
     pattern = re.compile(
-        r"\b(" + "|".join(re.escape(w) for w in sorted(mapping, key=len, reverse=True)) + r")\b",
+        r"\b("
+        + "|".join(re.escape(w) for w in sorted(mapping, key=len, reverse=True))
+        + r")\b",
         re.IGNORECASE,
     )
 
@@ -346,7 +479,9 @@ def fix_en_gb(dry_run: bool) -> int:
     return changed
 
 
-def parse_structured(path: Path) -> tuple[list[tuple[str, str]], list[str], dict[str, list[tuple[str, str]]]]:
+def parse_structured(
+    path: Path,
+) -> tuple[list[tuple[str, str]], list[str], dict[str, list[tuple[str, str]]]]:
     """Return (top_level_kvs, section_order, {section: kvs}) preserving file order."""
     top: list[tuple[str, str]] = []
     order: list[str] = []
@@ -365,7 +500,9 @@ def parse_structured(path: Path) -> tuple[list[tuple[str, str]], list[str], dict
             continue
         kv = KV_RE.match(s)
         if kv:
-            (top if section == "" else sections[section]).append((kv.group(1), kv.group(2)))
+            (top if section == "" else sections[section]).append(
+                (kv.group(1), kv.group(2))
+            )
     return top, order, sections
 
 
@@ -417,7 +554,9 @@ def sync_en_us(dry_run: bool) -> int:
         # en-US-only keys that belong to this (shared) section
         for k, v in us_sections.get(name, []):
             if k not in gb_section_keys:
-                _insert_ci(merged, (k, uk_to_us_convert(v)[0]), lambda kv: kv[0].lower())
+                _insert_ci(
+                    merged, (k, uk_to_us_convert(v)[0]), lambda kv: kv[0].lower()
+                )
         out_sections.append((name, merged))
 
     # en-US-only sections (absent from en-GB): insert by ci header order
@@ -434,8 +573,10 @@ def sync_en_us(dry_run: bool) -> int:
         lines.append(f"[{name}]")
         lines.extend(f'{k} = "{v}"' for k, v in kvs)
 
-    print(f"en-US: +{len(added)} key(s) from en-GB, "
-          f"{len(us_only)} en-US-only key(s) preserved (British->American applied).")
+    print(
+        f"en-US: +{len(added)} key(s) from en-GB, "
+        f"{len(us_only)} en-US-only key(s) preserved (British->American applied)."
+    )
     for k in added:
         print(f"  [en-US] + {k}")
     if not dry_run:
@@ -445,7 +586,9 @@ def sync_en_us(dry_run: bool) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--dry-run", action="store_true", help="report changes without writing")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="report changes without writing"
+    )
     args = ap.parse_args()
 
     if not EN_US.exists() or not EN_GB.exists():
