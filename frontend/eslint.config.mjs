@@ -216,7 +216,6 @@ export default defineConfig(
       "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
