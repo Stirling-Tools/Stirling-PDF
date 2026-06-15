@@ -77,24 +77,14 @@ public class McpSecurityConfig {
     }
 
     @PostConstruct
-    void warnIfMisconfigured() {
-        ApplicationProperties.Mcp mcp = applicationProperties.getMcp();
-        if (isApiKeyMode()) {
-            log.info(
-                    "MCP auth mode = apikey: clients authenticate with a Stirling per-user API key"
-                            + " (X-API-KEY header). No OAuth issuer required.");
-        } else {
-            if (mcp.getAuth().getIssuerUri().isBlank()) {
-                log.warn(
-                        "MCP enabled but mcp.auth.issuer-uri is blank - JWT decoder will reject"
-                                + " every token (fail-closed). Set mcp.auth.issuer-uri and"
-                                + " mcp.auth.resource-id before exposing /mcp to clients.");
-            }
-            if (mcp.getAuth().getResourceId().isBlank()) {
-                log.warn(
-                        "MCP enabled but mcp.auth.resource-id is blank - audience validator will"
-                                + " reject every token. Set this to the public URL of the MCP"
-                                + " endpoint (RFC 8707).");
+    void validateConfigOnStartup() {
+        log.info("MCP server enabled - validating configuration:");
+        for (McpConfigValidator.Finding finding :
+                McpConfigValidator.validate(applicationProperties.getMcp())) {
+            if (finding.severity() == McpConfigValidator.Severity.WARN) {
+                log.warn("MCP config: {}", finding.message());
+            } else {
+                log.info("MCP config: {}", finding.message());
             }
         }
     }
