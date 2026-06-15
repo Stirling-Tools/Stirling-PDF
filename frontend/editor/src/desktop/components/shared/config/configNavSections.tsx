@@ -1,9 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import {
-  useConfigNavSections as useProprietaryConfigNavSections,
-  createConfigNavSections as createProprietaryConfigNavSections,
-} from "@proprietary/components/shared/config/configNavSections";
+import { useConfigNavSections as useProprietaryConfigNavSections } from "@proprietary/components/shared/config/configNavSections";
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
 import {
@@ -136,47 +133,4 @@ export const useConfigNavSections = (
   }
 
   return result;
-};
-
-/**
- * Deprecated: Use useConfigNavSections hook instead
- * Desktop extension of createConfigNavSections that adds connection settings
- */
-export const createConfigNavSections = (
-  isAdmin: boolean = false,
-  runningEE: boolean = false,
-  loginEnabled: boolean = false,
-): ConfigNavSection[] => {
-  console.warn(
-    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
-  );
-
-  // Get the proprietary sections (includes core Preferences + admin sections)
-  const sections = createProprietaryConfigNavSections(
-    isAdmin,
-    runningEE,
-    loginEnabled,
-  );
-
-  // Add Connection section at the beginning (after Preferences)
-  sections.splice(1, 0, {
-    title: "Connection",
-    items: [
-      {
-        key: "connectionMode",
-        label: "Connection Mode",
-        icon: "desktop-cloud-rounded",
-        component: <ConnectionSettings />,
-      },
-    ],
-  });
-
-  // Add Plan & Billing section (after Connection Mode). Uses the shared cloud
-  // Plan item so this deprecated path matches the hook above.
-  sections.splice(2, 0, {
-    title: "Plan & Billing",
-    items: [createCloudPlanNavItem()],
-  });
-
-  return sections;
 };
