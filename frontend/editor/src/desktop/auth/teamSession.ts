@@ -22,15 +22,16 @@
  */
 import { useEffect, useState } from "react";
 import { authService } from "@app/services/authService";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
 import type { TeamAuth } from "@cloud/auth/teamSession";
 
 export type { TeamAuth } from "@cloud/auth/teamSession";
 
 export function useTeamAuth(): TeamAuth {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Pessimistic: don't hit team endpoints until we KNOW we're in SaaS mode.
-  const [isSaaSMode, setIsSaaSMode] = useState(false);
+  // Pessimistic SaaS-mode check (starts false) so no team fetch slips through on
+  // cold start before the mode resolves. Shared with the Policies gate.
+  const isSaaSMode = useConfirmedSaaSMode();
 
   useEffect(() => {
     // subscribeToAuth immediately notifies the listener of the current state,
@@ -38,15 +39,6 @@ export function useTeamAuth(): TeamAuth {
     return authService.subscribeToAuth((status) => {
       setIsAuthenticated(status === "authenticated");
     });
-  }, []);
-
-  useEffect(() => {
-    void connectionModeService
-      .getCurrentMode()
-      .then((mode) => setIsSaaSMode(mode === "saas"));
-    return connectionModeService.subscribeToModeChanges((cfg) =>
-      setIsSaaSMode(cfg.mode === "saas"),
-    );
   }, []);
 
   return {

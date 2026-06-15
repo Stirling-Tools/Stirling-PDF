@@ -12,11 +12,14 @@
  * section and mounting PolicyAutoRunController, so this one override covers both.
  */
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
+import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
 
 export * from "@proprietary/components/policies/PoliciesSidebar";
 
 export function usePoliciesEnabled(): boolean {
-  // useSaaSMode() is true only when the desktop app is in SaaS connection mode.
-  return POLICIES_ENABLED && useSaaSMode();
+  // Pessimistic SaaS-mode check (starts false): this gate also controls whether
+  // PolicyAutoRunController mounts, and that fires GET /api/v1/policies on mount.
+  // useSaaSMode()'s optimistic-true default would leak that request against the
+  // local/self-hosted backend on cold start before the mode resolves.
+  return POLICIES_ENABLED && useConfirmedSaaSMode();
 }
