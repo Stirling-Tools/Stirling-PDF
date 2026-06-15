@@ -12,9 +12,9 @@ import SaasOnboardingModal from "@app/components/onboarding/SaasOnboardingModal"
  * the desktop app, so pitching its own download makes no sense.
  *
  * Differences from the saas bootstrap:
- * - No trial-status polling. The desktop {@code useAuth} (proprietary) exposes
- *   no trial/pro fields; the cloud flow reads the live wallet itself to decide
- *   which slides to show, so we just wait for a non-anonymous signed-in user.
+ * - The desktop {@code useAuth} (proprietary) exposes no pro/wallet fields; the
+ *   cloud flow reads the live wallet itself to decide which slides to show, so
+ *   we just wait for a non-anonymous signed-in user.
  * - Gated on {@code connectionMode === "saas"} so it never fires in local or
  *   self-hosted mode (where there is no SaaS wallet/team to onboard).
  *
