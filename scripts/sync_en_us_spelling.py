@@ -100,7 +100,6 @@ _RE = {
     # ‘Calibre’ (the e-book conversion tool), not the British ‘caliber’.
     "sombre": "somber", "spectre": "specter", "lustre": "luster",
     "theatre": "theater", "theatres": "theaters",
-    "metre": "meter",
     "centimetre": "centimeter", "centimetres": "centimeters",
     "millimetre": "millimeter", "millimetres": "millimeters",
     "kilometre": "kilometer", "kilometres": "kilometers",
