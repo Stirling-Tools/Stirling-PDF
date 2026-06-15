@@ -6,7 +6,7 @@ import { ChatFABButton } from "@shared/components/ChatFABButton";
 import { ChatFABWindow } from "@shared/components/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { Z_INDEX_CHAT_FAB_OVERLAY } from "@app/styles/zIndex";
 import "@app/components/chat/ChatFAB.css";
 
@@ -53,8 +53,9 @@ export function ChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
   const { isLoading } = useChat();
-  const { config } = useAppConfig();
-  const enabled = Boolean(config?.aiEngineEnabled);
+  // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
+  // from the local app-config. Either way the AI engine drives FAB visibility.
+  const enabled = useAiEngineEnabled();
 
   // Detect loading → done transition. If the FAB is closed when the agent
   // finishes, show the tick badge until the user opens the panel.
