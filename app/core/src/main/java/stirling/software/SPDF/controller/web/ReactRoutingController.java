@@ -203,13 +203,13 @@ public class ReactRoutingController {
     // (Real storage endpoints live under /api/v1/storage/files, already
     // excluded by the leading `api` token in the same regex.)
     @GetMapping(
-            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
+            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|logo|Login|og_images|samples)[^\\.]*$}")
     public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
         return serveIndexHtml(request);
     }
 
     @GetMapping(
-            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
+            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
         return serveIndexHtml(request);

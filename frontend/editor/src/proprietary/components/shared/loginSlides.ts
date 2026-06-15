@@ -1,6 +1,4 @@
 import { BASE_PATH } from "@app/constants/app";
-import { getLogoFolder } from "@app/constants/logo";
-import type { LogoVariant } from "@app/services/preferencesService";
 import type { TFunction } from "i18next";
 
 export type LoginCarouselSlide = {
@@ -13,12 +11,8 @@ export type LoginCarouselSlide = {
   tiltMaxDeg?: number;
 };
 
-export const buildLoginSlides = (
-  variant: LogoVariant | null | undefined,
-  t: TFunction,
-): LoginCarouselSlide[] => {
-  const folder = getLogoFolder(variant);
-  const heroImage = `${BASE_PATH}/${folder}/Firstpage.png`;
+export const buildLoginSlides = (t: TFunction): LoginCarouselSlide[] => {
+  const heroImage = `${BASE_PATH}/logo/Firstpage.png`;
 
   return [
     {

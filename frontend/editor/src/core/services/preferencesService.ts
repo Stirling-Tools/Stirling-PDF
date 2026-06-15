@@ -4,8 +4,6 @@ import {
 } from "@app/constants/toolPanel";
 import { type ThemeMode, getSystemTheme } from "@app/constants/theme";
 
-export type LogoVariant = "modern" | "classic";
-
 export type PdfRenderMode = "normal" | "dark" | "sepia";
 
 export type StartupView = "tools" | "read" | "automate";
@@ -36,7 +34,6 @@ export interface UserPreferences {
   hasSeenCookieBanner: boolean;
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
-  logoVariant: LogoVariant | null;
   pdfRenderMode: PdfRenderMode;
 }
 
@@ -55,7 +52,6 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hasSeenCookieBanner: false,
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
-  logoVariant: null,
   pdfRenderMode: "normal",
 };
 

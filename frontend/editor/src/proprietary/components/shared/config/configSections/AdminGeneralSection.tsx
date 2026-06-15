@@ -12,7 +12,6 @@ import {
   Group,
   MultiSelect,
   Badge,
-  SegmentedControl,
   Select,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
@@ -25,7 +24,6 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
-import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
 import {
   supportedLanguages,
@@ -38,7 +36,6 @@ interface GeneralSettingsData {
   ui: {
     appNameNavbar?: string;
     languages?: string[];
-    logoStyle?: "modern" | "classic";
     hideDisabledTools?: {
       googleDrive?: boolean;
       mobileQRScanner?: boolean;
@@ -83,7 +80,6 @@ export default function AdminGeneralSection() {
     closeRestartModal,
     restartServer,
   } = useRestartServer();
-  const { preferences, updatePreference } = usePreferences();
   const { markClean } = useUnsavedChanges();
   const languageOptions = useMemo(
     () =>
@@ -200,7 +196,6 @@ export default function AdminGeneralSection() {
         // UI settings
         "ui.appNameNavbar": settings.ui?.appNameNavbar,
         "ui.languages": settings.ui?.languages,
-        "ui.logoStyle": settings.ui?.logoStyle,
         "ui.hideDisabledTools.googleDrive":
           settings.ui?.hideDisabledTools?.googleDrive,
         "ui.hideDisabledTools.mobileQRScanner":
@@ -338,14 +333,6 @@ export default function AdminGeneralSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
-  // Sync local preference with server setting on initial load
-  useEffect(() => {
-    if (loading || !loginEnabled || !settings.ui?.logoStyle) return;
-
-    // This ensures localStorage always reflects the server's authoritative value
-    updatePreference("logoVariant", settings.ui.logoStyle);
-  }, [loading, loginEnabled, settings.ui?.logoStyle, updatePreference]);
-
   // Handle hash navigation for deep linking to specific fields
   useEffect(() => {
     if (location.hash && !loading) {
@@ -367,31 +354,6 @@ export default function AdminGeneralSection() {
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
 
-  // Show the server setting when loaded (for admin config), otherwise show user's preference
-  // Note: User's preference in localStorage is separate and takes precedence in the app via useLogoVariant hook
-  const logoStyleValue = loginEnabled
-    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "classic")
-    : (preferences.logoVariant ?? "classic");
-
-  const handleLogoStyleChange = (value: string) => {
-    const nextValue = value === "modern" ? "modern" : "classic";
-
-    // Only update local settings state - don't update the actual preference until save
-    // When login is disabled, update preference immediately since there's no server to save to
-    if (!loginEnabled) {
-      updatePreference("logoVariant", nextValue);
-      return;
-    }
-
-    setSettings({
-      ...settings,
-      ui: {
-        ...settings.ui,
-        logoStyle: nextValue,
-      },
-    });
-  };
-
   const handleSave = async () => {
     // Block save if login is disabled
     if (!validateLoginEnabled()) {
@@ -403,11 +365,6 @@ export default function AdminGeneralSection() {
       markSaved();
 
       await saveSettings();
-
-      // Update local preference after successful save so the app reflects the saved logo style
-      if (settings.ui?.logoStyle) {
-        updatePreference("logoVariant", settings.ui.logoStyle);
-      }
 
       markClean();
       showRestartModal();
@@ -478,85 +435,6 @@ export default function AdminGeneralSection() {
                 }
                 placeholder="Stirling PDF"
                 disabled={!loginEnabled}
-              />
-            </div>
-
-            <div>
-              <Text size="sm" fw={500} mb={4}>
-                <Group gap="xs">
-                  <span>
-                    {t("admin.settings.general.logoStyle.label", "Logo Style")}
-                  </span>
-                  <PendingBadge show={isFieldPending("ui.logoStyle")} />
-                </Group>
-              </Text>
-              <Text size="xs" c="dimmed" mb="xs">
-                {t(
-                  "admin.settings.general.logoStyle.description",
-                  "Choose between the modern minimalist logo or the classic S icon",
-                )}
-              </Text>
-              <SegmentedControl
-                value={logoStyleValue}
-                onChange={handleLogoStyleChange}
-                data={[
-                  {
-                    value: "classic",
-                    label: (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          padding: "0.25rem 0",
-                        }}
-                      >
-                        <img
-                          src="classic-logo/favicon.ico"
-                          alt={t(
-                            "admin.settings.general.logoStyle.classicAlt",
-                            "Classic logo",
-                          )}
-                          style={{ width: "24px", height: "24px" }}
-                        />
-                        <span>
-                          {t(
-                            "admin.settings.general.logoStyle.classic",
-                            "Classic",
-                          )}
-                        </span>
-                      </div>
-                    ),
-                  },
-                  {
-                    value: "modern",
-                    label: (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          padding: "0.25rem 0",
-                        }}
-                      >
-                        <img
-                          src="modern-logo/StirlingPDFLogoNoTextLight.svg"
-                          alt={t(
-                            "admin.settings.general.logoStyle.modernAlt",
-                            "Modern logo",
-                          )}
-                          style={{ width: "24px", height: "24px" }}
-                        />
-                        <span>
-                          {t(
-                            "admin.settings.general.logoStyle.modern",
-                            "Modern",
-                          )}
-                        </span>
-                      </div>
-                    ),
-                  },
-                ]}
               />
             </div>
 

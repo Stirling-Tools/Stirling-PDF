@@ -4,7 +4,7 @@ import { SlideConfig } from "@app/types/types";
 import { createLightSlideBackground } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import styles from "@app/components/onboarding/slides/SaasOnboardingSlides.module.css";
 
-// Stirling logo red (sampled from modern-logo/logo512.png)
+// Stirling logo red (sampled from logo/logo512.png)
 const FREE_EDITOR_BACKGROUND = createLightSlideBackground(
   [142, 49, 49],
   "#F8E0E0",
