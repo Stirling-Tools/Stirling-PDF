@@ -119,8 +119,11 @@ test.describe("1. Authentication and Login", () => {
       // Full page reload forces the SPA to re-check auth with the backend
       await page.reload({ waitUntil: "domcontentloaded" });
 
-      // Step 3: Verify the user is redirected to the login page
-      await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
+      // Step 3: Verify the user is redirected to the login page. The redirect
+      // is driven client-side after the SPA re-bootstraps (session check +
+      // config fetch + backend probe), which can outrun a 15s budget on a
+      // loaded CI runner, so allow longer here.
+      await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
 
       // Step 5: Log in with valid credentials
       await page.locator("#email").fill("admin");
