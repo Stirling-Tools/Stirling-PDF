@@ -10,32 +10,21 @@
  * loud (only the cloud-standalone typecheck reaches them).
  */
 
-/** Plan identifier for subscription checkouts. */
-export type PlanID = "pro" | null;
-
 /**
- * Parameters for {@link createCheckoutSession}, covering both billing flows:
- *  - the legacy {@code create-checkout} subscription flow (see StripeCheckoutSaas), and
- *  - the PAYG {@code create-checkout-session} flow (see StripeCheckoutPanel),
- *    keyed off {@link teamId} — the edge function runs outside Spring Security
- *    and can't resolve the team from the JWT alone.
- *
- * The platform impl supplies the return URL itself (browser origin on web,
- * deep-link scheme on desktop), so it is intentionally NOT part of this shape.
+ * Parameters for {@link createCheckoutSession}, which drives the PAYG
+ * {@code create-checkout-session} edge function (see StripeCheckoutPanel). The
+ * function runs outside Spring Security, so it needs the caller's {@link teamId}
+ * (it can't resolve the team from the JWT alone). The platform impl supplies the
+ * return URL itself (browser origin on web, deep-link scheme on desktop), so it
+ * is intentionally NOT part of this shape.
  */
 export interface CheckoutParams {
-  /** Plan to subscribe to. */
-  plan?: PlanID;
-  /** Whether this checkout converts an existing trial into a paid subscription. */
-  isTrialConversion?: boolean;
-  /** The caller's team id. When present, drives the PAYG create-checkout-session flow. */
-  teamId?: number;
-  /** Lower-case 3-letter ISO currency (e.g. {@code "gbp"}). Selects the Stripe Price for the PAYG flow. */
+  /** The caller's team id. Required — scopes the PAYG subscription. */
+  teamId: number;
+  /** Lower-case 3-letter ISO currency (e.g. {@code "gbp"}). Selects the Stripe Price. */
   currency?: string;
-  /** Billing email for the PAYG Checkout Session; maps to Stripe {@code customer_email} when the team has no customer yet. */
+  /** Billing email for the Checkout Session; maps to Stripe {@code customer_email} when the team has no customer yet. */
   billingOwnerEmail?: string | null;
-  /** Stripe UI mode: {@code "embedded"} returns a clientSecret; {@code "hosted"} returns a url. Defaults to embedded. */
-  uiMode?: "embedded" | "hosted";
 }
 
 /**
@@ -58,13 +47,12 @@ export interface PortalSession {
 }
 
 /**
- * Optional parameters for {@link createPortalSession}. The PAYG portal edge
- * function needs the caller's {@code teamId} (runs outside Spring Security);
- * omitting it falls back to the legacy {@code manage-billing} portal.
+ * Parameters for {@link createPortalSession}. The PAYG portal edge function
+ * needs the caller's {@code teamId} (runs outside Spring Security).
  */
 export interface PortalParams {
   /** The caller's team id; required by the PAYG portal edge function. */
-  teamId?: number | null;
+  teamId: number;
 }
 
 /** Create a Stripe Checkout Session via the SaaS billing backend (platform impl required). */
@@ -76,7 +64,7 @@ export async function createCheckoutSession(
 
 /** Mint a Stripe Customer Portal session via the SaaS billing backend (platform impl required). */
 export async function createPortalSession(
-  _params?: PortalParams,
+  _params: PortalParams,
 ): Promise<PortalSession> {
   throw new Error("billing: platform impl required");
 }
