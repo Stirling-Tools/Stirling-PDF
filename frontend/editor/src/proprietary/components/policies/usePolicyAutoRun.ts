@@ -47,6 +47,33 @@ import {
 const POLL_MS = 2000;
 const MAX_POLLS = 75;
 
+/** Consecutive "run not found" responses before giving up. The run state lives
+ *  in memory on the server, so a restart or a second instance behind the load
+ *  balancer makes a live run's status return 404 — and it won't come back. We
+ *  tolerate a brief blip (e.g. a poll racing a just-dispatched run, or one hop
+ *  to an instance that hasn't seen it) then fail, rather than polling forever. */
+const MAX_NOT_FOUND = 3;
+
+/** A 404 from the run-status endpoint, across the web (axios) and desktop
+ *  (tauri http client → {@code code: "ERR_NOT_FOUND"}) builds. */
+function isRunNotFound(err: unknown): boolean {
+  const e = err as
+    | { code?: string; status?: number; response?: { status?: number } }
+    | null
+    | undefined;
+  return (
+    e?.code === "ERR_NOT_FOUND" ||
+    e?.status === 404 ||
+    e?.response?.status === 404
+  );
+}
+
+/** Mark a run terminal-failed so it stops being polled (and re-polled on reload)
+ *  and the activity feed offers Retry, instead of the file enforcing forever. */
+function failRun(runId: string, message: string): void {
+  updateRun(runId, { status: "FAILED", error: message, errorCode: null });
+}
+
 /** How long to wait for an upload's bytes to land in IndexedDB before giving up
  *  (20 × 250ms ≈ 5s). The stub can surface in the file list a beat before its
  *  bytes are committed, so a too-eager fetch would otherwise miss the file. */
@@ -333,18 +360,31 @@ export async function runPolicyOnFile(
  * run was blocked. Only runs polled this session fire it (terminal runs aren't re-polled), so a
  * persisted failed run never re-triggers a modal on reload.
  */
-async function poll(
+export async function poll(
   runId: string,
   onTerminal?: (view: PolicyRunView) => void,
 ): Promise<void> {
+  let notFoundStreak = 0;
   for (let i = 0; i < MAX_POLLS; i++) {
     await delay(POLL_MS);
     let view;
     try {
       view = await getPolicyRun(runId);
-    } catch {
-      continue; // transient — keep trying within the cap.
+    } catch (err) {
+      // The server lost the run's (in-memory) state — a restart, or a poll that
+      // hopped to an instance without it. Tolerate a brief blip, then fail so
+      // the file stops enforcing forever; the user can retry.
+      if (isRunNotFound(err)) {
+        if (++notFoundStreak >= MAX_NOT_FOUND) {
+          failRun(runId, "The enforcement run could no longer be found.");
+          return;
+        }
+      } else {
+        notFoundStreak = 0; // a non-404 error doesn't confirm the run is gone.
+      }
+      continue; // keep trying within the cap.
     }
+    notFoundStreak = 0;
     updateRun(runId, {
       status: view.status,
       outputs: view.outputs,
@@ -356,4 +396,7 @@ async function poll(
       return;
     }
   }
+  // Cap reached without a terminal status — stop here and fail it, so the file
+  // doesn't enforce forever and reloads don't re-poll it.
+  failRun(runId, "Enforcement timed out — the run didn't finish in time.");
 }
