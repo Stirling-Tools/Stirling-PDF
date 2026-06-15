@@ -183,7 +183,7 @@ export async function mockAppApis(
 
   // Current user — anonymous by default, configurable for authenticated flows
   await page.route("**/api/v1/auth/me", (route: Route) =>
-    route.fulfill({ json: user }),
+    route.fulfill({ json: { user } }),
   );
 
   // Tool availability — every tool enabled unless overridden
