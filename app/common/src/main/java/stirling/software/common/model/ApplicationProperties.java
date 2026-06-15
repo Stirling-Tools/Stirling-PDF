@@ -319,6 +319,14 @@ public class ApplicationProperties {
 
         /** Optional override dir; blank uses {@code <configs>/models/form-detection}. */
         private String modelDir = "";
+
+        /**
+         * Read-only dir of models baked into the image (e.g. the Docker server image pre-downloads
+         * FFDNet-S here). On startup any {@code <catalogId>.onnx} found here is copied into the
+         * writable model dir if not already present, and activated if no model is active - so the
+         * feature works out-of-the-box. Blank (default) disables seeding.
+         */
+        private String preinstalledModelDir = "";
     }
 
     /**

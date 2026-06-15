@@ -20,6 +20,15 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
+# Pre-download the default Auto Form Detection model (FFDNet-S, ~37MB) so the feature works
+# out-of-the-box - especially important for this air-gapped fat image (no runtime internet).
+# Verified by checksum; seeded into the writable configs model dir at startup.
+ARG FORM_DETECTION_MODEL_URL=https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/main/FFDNet-S.onnx
+ARG FORM_DETECTION_MODEL_SHA256=93bccf47c048f9f947f9b1b52d002edf144a8a583dae39f164d9e5725321acc0
+RUN mkdir -p /preinstalled-models \
+    && curl -fSL "${FORM_DETECTION_MODEL_URL}" -o /preinstalled-models/ffdnet-s.onnx \
+    && echo "${FORM_DETECTION_MODEL_SHA256}  /preinstalled-models/ffdnet-s.onnx" | sha256sum -c -
+
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
@@ -79,6 +88,9 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
+# Pre-bundled default detection model; FormDetectionModelManager seeds it into /configs on startup.
+COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
+
 # Fonts go to system dir, root ownership is correct (world-readable)
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
@@ -101,6 +113,7 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 
 # Environment variables
 ENV VERSION_TAG=$VERSION_TAG \
+    FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
     STIRLING_AOT_ENABLE="false" \
     STIRLING_JVM_PROFILE="balanced" \
     _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \

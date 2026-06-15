@@ -88,6 +88,13 @@ stirling/
 customFiles/
 configs/
 
+# Local dev runtime dirs created by bootRun under the module dir (hold the locked H2 DB,
+# downloaded models, logs); never build input. Root-level patterns above don't match these.
+**/configs/
+app/core/customFiles/
+app/core/logs/
+app/core/pipeline/
+
 # Claude Code workspace
 .claude/
 

@@ -92,6 +92,7 @@ public class FormDetectionModelManager {
     @PostConstruct
     void init() {
         sweepTempFiles();
+        seedPreinstalledModels();
         Optional<Path> active = getActiveModelFile();
         if (active.isPresent()) {
             activeSha = getActiveEntry().map(ModelCatalogEntry::getSha256).orElse(null);
@@ -415,6 +416,58 @@ public class FormDetectionModelManager {
 
     private Path modelDir() {
         return Paths.get(runtimePathConfig.getFormDetectionModelPath());
+    }
+
+    /**
+     * Copy any image-baked models (see {@code formDetection.preinstalledModelDir}) into the
+     * writable model dir if not already present, and activate one when nothing is active yet. Lets
+     * the Docker server image ship with FFDNet-S ready without an admin install. No-op when the dir
+     * is unset or missing (desktop/local).
+     */
+    private void seedPreinstalledModels() {
+        String preDir = applicationProperties.getFormDetection().getPreinstalledModelDir();
+        if (StringUtils.isBlank(preDir)) {
+            return;
+        }
+        Path src = Paths.get(preDir);
+        if (!Files.isDirectory(src)) {
+            return;
+        }
+        Path dir = modelDir();
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            log.warn("Cannot create model dir to seed pre-installed models: {}", e.getMessage());
+            return;
+        }
+        if (!isWritable(dir)) {
+            log.warn("Model dir {} not writable; skipping pre-installed model seeding", dir);
+            return;
+        }
+        try (DirectoryStream<Path> models = Files.newDirectoryStream(src, "*.onnx")) {
+            for (Path p : models) {
+                String fn = p.getFileName().toString();
+                String id = fn.substring(0, fn.length() - ".onnx".length());
+                if (!SAFE_ID.matcher(id).matches() || catalog.getById(id).isEmpty()) {
+                    continue;
+                }
+                Path target = dir.resolve(id + ".onnx");
+                if (!Files.exists(target)) {
+                    Files.copy(p, target, StandardCopyOption.COPY_ATTRIBUTES);
+                    log.info("Seeded pre-installed Auto Form Detection model '{}'", id);
+                }
+                if (StringUtils.isBlank(activeModelId())) {
+                    applicationProperties.getFormDetection().setActiveModelId(id);
+                    try {
+                        GeneralUtils.saveKeyToSettings("formDetection.activeModelId", id);
+                    } catch (IOException e) {
+                        log.warn("Could not persist seeded activeModelId: {}", e.getMessage());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.warn("Failed to seed pre-installed models from {}: {}", src, e.getMessage());
+        }
     }
 
     private void sweepTempFiles() {
