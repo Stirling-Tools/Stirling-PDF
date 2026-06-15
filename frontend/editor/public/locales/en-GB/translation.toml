@@ -2747,7 +2747,7 @@ summary = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
 [cloudBadge]
-tooltip = "Runs in the cloud — included, no extra charge"
+tooltip = "Runs in the cloud (included, no extra charge)"
 
 [color.eyeDropper]
 tooltip = "Pick colour from screen"
