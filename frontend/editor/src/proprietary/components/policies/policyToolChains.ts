@@ -3,8 +3,6 @@
  * config page shows (one section per tool). Tools can be configured + toggled
  * on/off, but not added or removed. Each id is a frontend tool-registry key (and
  * maps to that tool's backend endpoint via the registry's operationConfig).
- *
- * Only Security is wired today; other categories follow.
  */
 export const POLICY_TOOL_CHAINS: Record<string, string[]> = {
   // Security: redact PII + watermark + sanitize (strips JS). Which are enabled

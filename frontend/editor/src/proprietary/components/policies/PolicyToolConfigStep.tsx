@@ -39,8 +39,8 @@ interface PolicyToolConfigStepProps {
   initialOperations: AutomationOperation[];
   /**
    * The preset's default operations. Their params seed any tool whose saved
-   * value is still at the tool's own default — so e.g. a policy saved before the
-   * PII patterns existed inherits them rather than running with an empty list.
+   * value is still at the tool's own default — so e.g. a policy saved with the
+   * PII list at its default inherits the preset patterns rather than running empty.
    */
   presetOperations: AutomationOperation[];
   /** Used to name the built pipeline definition. */

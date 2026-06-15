@@ -20,17 +20,17 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Read-only accessor for the Stripe Sync Engine schema ({@code stripe.*}). Gives the PAYG layer the
  * team's real billing window and the per-document rate of the Price its subscription bills against
- * — both live in Stripe, mirrored into Postgres by the sync engine, and are NOT duplicated in
- * {@code stirling_pdf} (design §10: money lives in Stripe).
+ * - both live in Stripe, mirrored into Postgres by the sync engine, and are NOT duplicated in
+ * {@code stirling_pdf} (money lives in Stripe).
  *
  * <p>PAYG prices are plain {@code per_unit} metered prices, so {@code stripe.prices.unit_amount}
- * carries the rate directly. The free grant is deliberately NOT in Stripe — it's the one-time
+ * carries the rate directly. The free grant is deliberately NOT in Stripe - it's the one-time
  * {@code pricing_policy.free_tier_units} pool, applied app-side (free units are never metered),
  * because un-subscribed teams get the same grant and have no Stripe Price at all.
  *
  * <p>Defensive by construction: the {@code stripe} schema only exists where the sync engine has run
- * (dev + prod Supabase, not unit-test H2). Any {@link DataAccessException} — missing schema,
- * missing row, connectivity blip — degrades to {@link Optional#empty()} with a WARN so callers fall
+ * (dev + prod Supabase, not unit-test H2). Any {@link DataAccessException} - missing schema,
+ * missing row, connectivity blip - degrades to {@link Optional#empty()} with a WARN so callers fall
  * back to calendar-month windows rather than 500ing the wallet endpoint.
  */
 @Slf4j
@@ -60,13 +60,13 @@ public class StripeSubscriptionDao {
             BigDecimal perDocMinor) {}
 
     /**
-     * The per-document rate of a Price looked up directly (not via a subscription) — used to price
+     * The per-document rate of a Price looked up directly (not via a subscription) - used to price
      * the cap estimate for un-subscribed teams, whose default policy points at Stripe Prices that
      * carry the same {@code unit_amount} they'd be billed at on subscribing.
      *
      * @param priceId the resolved Stripe Price id
      * @param currency lower-case ISO 4217 of that Price
-     * @param perDocMinor per-document rate in minor units (may be fractional); never null — a row
+     * @param perDocMinor per-document rate in minor units (may be fractional); never null - a row
      *     with no usable amount is filtered out rather than returned with a null rate
      */
     public record PriceRate(String priceId, String currency, BigDecimal perDocMinor) {}
@@ -130,12 +130,12 @@ public class StripeSubscriptionDao {
 
     /**
      * Per-document rate of the active {@code stripe.prices} row with the given {@code lookupKey} in
-     * {@code currency} — the elegant mirror of {@link #findBilling}, reading the same synced table
+     * {@code currency} - the elegant mirror of {@link #findBilling}, reading the same synced table
      * by Stripe Price {@code lookup_key} instead of via a subscription. The PAYG layer uses this to
      * price the cap estimate for an un-subscribed team: there's no subscription to read a rate off,
      * but the PAYG Price (lookup key {@code plan:processor}) carries the very rate they'd be billed
      * at. We resolve by lookup_key rather than the default policy's price ids because those aren't
-     * seeded — the lookup key is the stable, env-agnostic handle (same one the price-lookup edge
+     * seeded - the lookup key is the stable, env-agnostic handle (same one the price-lookup edge
      * function uses).
      *
      * <p>Empty when the {@code stripe} schema is absent (H2 unit tests), no active matching row

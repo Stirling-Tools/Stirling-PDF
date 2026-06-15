@@ -20,8 +20,8 @@ function makeEntry(name: string, tags: string): ToolRegistryEntry {
   };
 }
 
-// Real names and tags from the en-GB translations; these tools previously
-// polluted results for partial queries like "rotat" and "rotate"
+// Real names and tags from the en-GB translations, chosen because they share
+// letters with "rotat"/"rotate" and stress the partial-query filtering.
 const registry: Partial<ToolRegistry> = {
   rotate: makeEntry(
     "Rotate",
@@ -72,9 +72,8 @@ describe("filterToolRegistryByQuery", () => {
   });
 
   it("only returns Rotate for every prefix of 'rotate'", () => {
-    // Regression: "rotat" used to also pull in Redact, Annotate, Compare and
-    // Adjust Colours/Contrast, and "rotate" additionally Scanner Effect,
-    // Change Metadata, Add Password and Air-gapped Setup
+    // Prefixes of "rotate" must not leak tools that merely share letters
+    // (Redact, Annotate, Compare, Adjust Colours/Contrast, etc.).
     expect(idsFor("rota")).toEqual(["rotate"]);
     expect(idsFor("rotat")).toEqual(["rotate"]);
     expect(idsFor("rotate")).toEqual(["rotate"]);

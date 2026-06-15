@@ -303,9 +303,9 @@ public class PaygWalletController {
         } else {
             long capMinor = CapMoneyUnits.usdToCents(req.capUsd());
             policy.setCapSourceMoney(capMinor);
-            // Derived document allowance (design §10: store both the money intent and the unit
-            // translation). The live snapshot recomputes from cap_source_money + current rate;
-            // this stored value is the enforcement fallback when the rate is unreachable.
+            // Derived document allowance: store both the money intent and the unit translation.
+            // The live snapshot recomputes from cap_source_money + current rate; this stored value
+            // is the enforcement fallback when the rate is unreachable.
             TeamBillingContext billing = billingService.forTeam(teamId);
             Optional<Long> docCap = billingService.docCapForMoney(billing, capMinor);
             if (docCap.isPresent()) {

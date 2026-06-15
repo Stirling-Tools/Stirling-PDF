@@ -1,5 +1,5 @@
 /**
- * Auto-run controller (Phase B): every enabled policy enforces on every uploaded
+ * Auto-run controller: every enabled policy enforces on every uploaded
  * file. Watches the session's files and, for each (active policy × not-yet-run
  * file), fires a real backend run (`POST /api/v1/policies/{id}/run`) and polls it
  * to completion, recording progress in {@link policyRunStore} for the activity
