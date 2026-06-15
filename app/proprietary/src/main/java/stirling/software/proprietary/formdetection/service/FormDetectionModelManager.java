@@ -59,6 +59,25 @@ public class FormDetectionModelManager {
     private static final Pattern SAFE_ID = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Pattern SHA256_HEX = Pattern.compile("[0-9a-f]{64}");
 
+    /**
+     * Whether the server-side ONNX engine is bundled in this build (the onnxruntime jar is only
+     * included via {@code -PbundleOnnxRuntime=true}, e.g. the Docker server image). The frontend
+     * uses this to disable the "Server" execution mode when it isn't available.
+     */
+    private static final boolean SERVER_ENGINE_AVAILABLE = isOnnxRuntimePresent();
+
+    private static boolean isOnnxRuntimePresent() {
+        try {
+            Class.forName(
+                    "ai.onnxruntime.OrtEnvironment",
+                    false,
+                    FormDetectionModelManager.class.getClassLoader());
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     private final RuntimePathConfig runtimePathConfig;
     private final ModelCatalogService catalog;
     private final ApplicationProperties applicationProperties;
@@ -363,7 +382,8 @@ public class FormDetectionModelManager {
                 isWritable(dir),
                 catalog.getAll(),
                 isFeatureEnabled(),
-                applicationProperties.getFormDetection().getExecutionMode());
+                applicationProperties.getFormDetection().getExecutionMode(),
+                SERVER_ENGINE_AVAILABLE);
     }
 
     public Optional<Path> getActiveModelFile() {

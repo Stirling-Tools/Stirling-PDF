@@ -45,6 +45,7 @@ export interface FormDetectionModelStatus {
   catalog: FormDetectionCatalogEntry[];
   enabled: boolean;
   executionMode: FormDetectionExecutionMode;
+  serverEngineAvailable: boolean;
 }
 
 const STATUS_URL = "/api/v1/ai/form-detection-model/status";

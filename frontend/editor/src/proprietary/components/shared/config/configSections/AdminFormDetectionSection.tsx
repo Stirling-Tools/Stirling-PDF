@@ -55,6 +55,7 @@ export default function AdminFormDetectionSection() {
   const enabled = status?.enabled ?? true;
   const executionMode: FormDetectionExecutionMode =
     status?.executionMode ?? "auto";
+  const serverEngineAvailable = status?.serverEngineAvailable ?? true;
 
   const catalog = status?.catalog ?? [];
   const selectData = useMemo(
@@ -196,9 +197,18 @@ export default function AdminFormDetectionSection() {
                   {
                     label: t("admin.formDetection.engine.server", "Server"),
                     value: "server",
+                    disabled: !serverEngineAvailable,
                   },
                 ]}
               />
+              {!serverEngineAvailable ? (
+                <Text size="xs" c="dimmed" mt={6}>
+                  {t(
+                    "admin.formDetection.engine.serverUnavailable",
+                    "The server engine is not bundled in this build, so detection runs in the browser. Use Auto or Browser.",
+                  )}
+                </Text>
+              ) : null}
             </div>
 
             {inFlight ? (

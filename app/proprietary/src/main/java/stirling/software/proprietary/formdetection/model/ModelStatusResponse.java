@@ -40,4 +40,7 @@ public class ModelStatusResponse {
 
     /** Where detection runs: auto | browser | server. */
     private String executionMode;
+
+    /** True if the server-side ONNX engine is bundled in this build (else only browser works). */
+    private boolean serverEngineAvailable;
 }
