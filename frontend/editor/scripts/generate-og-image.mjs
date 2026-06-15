@@ -49,7 +49,7 @@ export const THEME = {
   iconBox: 120,
   iconBoxRadius: 26,
   iconBoxFill: "rgba(0,0,0,0.07)",
-  iconSize: 66,
+  iconSize: 80,
   // text
   textColor: "#ffffff",
   titleSize: 70,
