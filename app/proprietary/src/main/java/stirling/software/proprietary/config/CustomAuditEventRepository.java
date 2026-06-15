@@ -1,6 +1,10 @@
 package stirling.software.proprietary.config;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -72,23 +76,36 @@ public class CustomAuditEventRepository implements AuditEventRepository {
         }
     }
 
-    /**
-     * Width of the {@code principal} column; values are capped so an oversized one can't fail the
-     * insert.
-     */
+    /** Width of the {@code principal} column; longer values are hashed so the insert can't fail. */
     private static final int PRINCIPAL_MAX_LENGTH = 255;
 
     /**
-     * A rejected MCP bearer auth surfaces the raw JWT as the Spring principal; never persist a
-     * credential (or anything wider than the column) into the audit log.
+     * Keep the principal within the column width and never store a token-shaped value verbatim;
+     * hash those so distinct callers stay distinguishable in the audit trail without persisting a
+     * secret.
      */
-    private static String safePrincipal(String principal) {
+    static String safePrincipal(String principal) {
         if (principal == null || principal.isBlank()) {
             return "anonymous";
         }
+        // A JWT ("eyJ..."), or any over-long value, is hashed rather than stored as-is.
         if (principal.startsWith("eyJ") || principal.length() > PRINCIPAL_MAX_LENGTH) {
-            return "[redacted-token]";
+            return "token:" + sha256Prefix(principal);
         }
         return principal;
+    }
+
+    /**
+     * First 8 bytes of the SHA-256 digest as hex: stable per value, one-way, collision-safe enough.
+     */
+    private static String sha256Prefix(String value) {
+        try {
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest, 0, 8);
+        } catch (NoSuchAlgorithmException e) {
+            return "unhashable";
+        }
     }
 }
