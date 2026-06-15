@@ -25,6 +25,9 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
 
 tasks:
   # ============================================================
