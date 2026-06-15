@@ -81,7 +81,17 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // - SaaS backend: Needs auth token
         // - Self-hosted backend: Needs auth token
         const isRemote = await operationRouter.isSelfHostedMode();
-        const isSaaSBackendRequest = baseUrl === STIRLING_SAAS_BACKEND_API_URL;
+        // A request targets the SaaS backend either because operationRouter
+        // routed a relative path there, OR because the caller passed an absolute
+        // SaaS URL. The latter matters for the AI result-file download: it hits
+        // ${getAiBaseUrl()}/api/v1/general/files/..., and /api/v1/general/*
+        // normally routes local-first — so without this it would reach the cloud
+        // engine with no token and 401. Check the FINAL url (post-prefixing).
+        const saasBase = STIRLING_SAAS_BACKEND_API_URL ?? "";
+        const finalUrl = extendedConfig.url ?? "";
+        const isSaaSBackendRequest =
+          baseUrl === STIRLING_SAAS_BACKEND_API_URL ||
+          (saasBase !== "" && finalUrl.startsWith(saasBase));
         const needsAuth = isRemote || isSaaSBackendRequest;
 
         // Tag request so error handler can identify SaaS backend errors without URL matching
