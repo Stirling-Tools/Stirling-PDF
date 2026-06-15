@@ -21,9 +21,7 @@ export type {
   CheckoutSession,
   PortalParams,
   PortalSession,
-  PurchaseType,
   PlanID,
-  CreditsPack,
 } from "@cloud/services/billing";
 
 /**
@@ -33,9 +31,9 @@ export type {
  * When {@code teamId} is supplied we drive the PAYG
  * {@code create-checkout-session} edge function (subscription with metered
  * overage — see StripeCheckoutPanel); otherwise we use the legacy
- * {@code create-checkout} flow (subscription / credits — see
- * StripeCheckoutSaas). Both use the browser origin / current location as the
- * return URL so Stripe returns the user to the current site.
+ * {@code create-checkout} subscription flow (see StripeCheckoutSaas). Both use
+ * the browser origin / current location as the return URL so Stripe returns the
+ * user to the current site.
  */
 export async function createCheckoutSession(
   params: CheckoutParams,
@@ -64,8 +62,7 @@ export async function createCheckoutSession(
     if (data?.client_secret) {
       return {
         clientSecret: data.client_secret,
-        mock:
-          Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+        mock: Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
       };
     }
     if (data?.url) {
@@ -76,10 +73,9 @@ export async function createCheckoutSession(
 
   const { data, error } = await supabase.functions.invoke("create-checkout", {
     body: {
-      purchase_type: params.purchaseType,
+      purchase_type: "subscription",
       ui_mode: params.uiMode ?? "embedded",
       plan: params.plan ?? null,
-      credits_pack: params.creditsPack ?? null,
       callback_base_url: window.location.origin,
       trial_conversion: params.isTrialConversion ?? false,
     },

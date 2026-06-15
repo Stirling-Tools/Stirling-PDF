@@ -114,9 +114,7 @@ export default function TrialExpiredBootstrap() {
           <StripeCheckout
             opened={checkoutOpened}
             onClose={handleCheckoutClose}
-            purchaseType="subscription"
             planId="pro"
-            creditsPack={null}
             planName="Pro"
             onSuccess={handleCheckoutSuccess}
             onError={(error) =>

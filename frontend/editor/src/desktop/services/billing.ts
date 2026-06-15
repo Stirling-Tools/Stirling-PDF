@@ -27,9 +27,7 @@ export type {
   CheckoutSession,
   PortalParams,
   PortalSession,
-  PurchaseType,
   PlanID,
-  CreditsPack,
 } from "@cloud/services/billing";
 
 /**
@@ -57,8 +55,8 @@ async function requireToken(): Promise<string> {
  * When {@code teamId} is supplied we drive the PAYG
  * {@code create-checkout-session} edge function (subscription with metered
  * overage — see StripeCheckoutPanel); otherwise we use the legacy
- * {@code create-checkout} flow (subscription / credits — see
- * StripeCheckoutSaas). The Tauri webview has no CSP, so embedded checkout works
+ * {@code create-checkout} subscription flow (see StripeCheckoutSaas). The Tauri
+ * webview has no CSP, so embedded checkout works
  * — the moved component mounts the Stripe iframe when a clientSecret comes
  * back, falling back to opening the hosted url in the system browser otherwise.
  */
@@ -91,8 +89,7 @@ export async function createCheckoutSession(
     if (data?.client_secret) {
       return {
         clientSecret: data.client_secret,
-        mock:
-          Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+        mock: Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
       };
     }
     if (data?.url) {
@@ -101,20 +98,16 @@ export async function createCheckoutSession(
     throw new Error("Edge function returned no client_secret");
   }
 
-  const { data, error } = await supabase.functions.invoke(
-    "create-checkout",
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      body: {
-        purchase_type: params.purchaseType,
-        ui_mode: params.uiMode ?? "embedded",
-        plan: params.plan ?? null,
-        credits_pack: params.creditsPack ?? null,
-        callback_base_url: DESKTOP_BILLING_RETURN_URL,
-        trial_conversion: params.isTrialConversion ?? false,
-      },
+  const { data, error } = await supabase.functions.invoke("create-checkout", {
+    headers: { Authorization: `Bearer ${token}` },
+    body: {
+      purchase_type: "subscription",
+      ui_mode: params.uiMode ?? "embedded",
+      plan: params.plan ?? null,
+      callback_base_url: DESKTOP_BILLING_RETURN_URL,
+      trial_conversion: params.isTrialConversion ?? false,
     },
-  );
+  });
 
   if (error) {
     throw new Error(error.message || "Failed to create checkout session");

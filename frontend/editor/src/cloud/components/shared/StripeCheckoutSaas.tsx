@@ -13,8 +13,6 @@ import {
 import { openExternal } from "@app/platform/openExternal";
 import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
 
-export type PurchaseType = "subscription" | "credits";
-export type CreditsPack = "xsmall" | "small" | "medium" | "large" | null;
 export type PlanID = "pro" | null;
 
 interface StripeCheckoutProps {
@@ -22,8 +20,6 @@ interface StripeCheckoutProps {
   onClose: () => void;
   // Saas-specific props
   planId?: PlanID;
-  purchaseType?: PurchaseType;
-  creditsPack?: CreditsPack;
   planName?: string;
   planPrice?: number;
   currency?: string;
@@ -51,9 +47,7 @@ type CheckoutState = {
   clientSecret?: string;
   error?: string;
   sessionParams?: {
-    purchaseType: PurchaseType;
     planId: PlanID;
-    creditsPack: CreditsPack;
   };
 };
 
@@ -61,8 +55,6 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   opened,
   onClose,
   planId,
-  purchaseType,
-  creditsPack,
   planName,
   isTrialConversion,
   onSuccess,
@@ -85,10 +77,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       setState({ status: "loading" });
 
       const session = await createCheckoutSession({
-        purchaseType,
         uiMode: "embedded",
         plan: planId,
-        creditsPack,
         isTrialConversion: isTrialConversion || false,
       });
 
@@ -109,9 +99,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         status: "ready",
         clientSecret: session.clientSecret,
         sessionParams: {
-          purchaseType: purchaseType!,
           planId: planId!,
-          creditsPack: creditsPack!,
         },
       });
     } catch (err) {
@@ -154,16 +142,9 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       const needsNewSession =
         state.status === "idle" ||
         !state.sessionParams ||
-        state.sessionParams.purchaseType !== purchaseType ||
-        state.sessionParams.planId !== planId ||
-        state.sessionParams.creditsPack !== creditsPack;
+        state.sessionParams.planId !== planId;
 
       if (needsNewSession) {
-        console.log("Creating new checkout session:", {
-          purchaseType,
-          planId,
-          creditsPack,
-        });
         startCheckoutSession();
       }
     } else if (!opened) {
@@ -175,7 +156,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         sessionParams: undefined,
       });
     }
-  }, [opened, purchaseType, planId, creditsPack]);
+  }, [opened, planId]);
 
   const renderContent = () => {
     switch (state.status) {
