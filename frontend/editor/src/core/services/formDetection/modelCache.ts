@@ -28,7 +28,9 @@ async function verify(bytes: ArrayBuffer, expectedSha?: string): Promise<void> {
  * Return the active model bytes, from the Cache API when present (and checksum-valid) or by
  * downloading from the backend. The cache key is the checksum, so a model swap naturally misses.
  */
-export async function loadModelBytes(expectedSha?: string): Promise<ArrayBuffer> {
+export async function loadModelBytes(
+  expectedSha?: string,
+): Promise<ArrayBuffer> {
   const cacheKey = `${MODEL_FILE_URL}#${expectedSha ?? "nosha"}`;
   // Cache API is unavailable in non-secure contexts; degrade to a plain download in that case.
   const cache = await caches.open(CACHE_NAME).catch(() => null);

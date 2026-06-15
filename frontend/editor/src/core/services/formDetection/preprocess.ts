@@ -2,7 +2,10 @@
 // counterpart of Yolo.preprocess. The resize uses a 2D canvas (bilinear-ish); the normalisation
 // step is split out as a pure function so it can be unit-tested against the Java golden vectors.
 
-import { ModelPipelineSpec, Preprocessed } from "@app/services/formDetection/types";
+import {
+  ModelPipelineSpec,
+  Preprocessed,
+} from "@app/services/formDetection/types";
 
 function clampByte(v: number): number {
   return Math.max(0, Math.min(255, Math.round(v)));
@@ -89,8 +92,9 @@ export function preprocess(
   src.height = srcH;
   const sctx = src.getContext("2d");
   if (!sctx) throw new Error("2D canvas context unavailable");
-  const buf =
-    rgba instanceof Uint8ClampedArray ? rgba : new Uint8ClampedArray(rgba);
+  // Copy into a fresh ArrayBuffer-backed array: ImageData's type rejects the
+  // Uint8ClampedArray<ArrayBufferLike> form (TS 5.7 typed-array generics).
+  const buf = new Uint8ClampedArray(rgba);
   sctx.putImageData(new ImageData(buf, srcW, srcH), 0, 0);
 
   ctx.imageSmoothingEnabled = true;

@@ -46,7 +46,8 @@ export async function renderPages(
   const pdfjs = window.pdfjsLib;
   if (!pdfjs) throw new Error("PDF.js is not available in this build");
 
-  const data = pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes);
+  const data =
+    pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes);
   const pdf = await pdfjs.getDocument({ data }).promise;
   const pages: RasterPage[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {

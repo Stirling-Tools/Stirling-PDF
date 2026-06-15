@@ -105,9 +105,7 @@ test.describe("Auto Form Detection tool", () => {
     await page.goto("/");
 
     const configBtn = page.locator('[data-testid="config-button"]').first();
-    if (
-      !(await configBtn.isVisible({ timeout: 5_000 }).catch(() => false))
-    ) {
+    if (!(await configBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
       test.skip(true, "Config button not rendered for admin on this build");
       return;
     }
@@ -119,8 +117,8 @@ test.describe("Auto Form Detection tool", () => {
     // not as its own nav entry - navigate there first.
     await dialog.getByText("Features", { exact: true }).first().click();
 
-    await expect(
-      dialog.getByText(/AI Form Detection/i).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(dialog.getByText(/AI Form Detection/i).first()).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

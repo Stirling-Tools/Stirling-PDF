@@ -133,7 +133,9 @@ export default function AdminFormDetectionSection() {
             </Text>
             <Switch
               checked={enabled}
-              onChange={(e) => doSetConfig({ enabled: e.currentTarget.checked })}
+              onChange={(e) =>
+                doSetConfig({ enabled: e.currentTarget.checked })
+              }
               disabled={configBusy || (loading && !status)}
               size="sm"
               aria-label={t(
@@ -155,9 +157,7 @@ export default function AdminFormDetectionSection() {
         ) : (
           <Stack gap="sm">
             <Group gap="xs">
-              <Text fw={500}>
-                {t("admin.formDetection.status", "Status")}:
-              </Text>
+              <Text fw={500}>{t("admin.formDetection.status", "Status")}:</Text>
               <Badge color={badgeColor(st)} variant="light" size="sm">
                 {st ?? "unknown"}
               </Badge>
@@ -182,7 +182,9 @@ export default function AdminFormDetectionSection() {
               <SegmentedControl
                 value={executionMode}
                 onChange={(v) =>
-                  doSetConfig({ executionMode: v as FormDetectionExecutionMode })
+                  doSetConfig({
+                    executionMode: v as FormDetectionExecutionMode,
+                  })
                 }
                 disabled={configBusy || !enabled}
                 data={[
@@ -267,7 +269,9 @@ export default function AdminFormDetectionSection() {
                       "1. On a machine with internet, download the model file:",
                     )}
                   </Text>
-                  <Code block>{`curl -L -o ${selectedEntry.id}.onnx "${selectedEntry.onnxUrl}"`}</Code>
+                  <Code
+                    block
+                  >{`curl -L -o ${selectedEntry.id}.onnx "${selectedEntry.onnxUrl}"`}</Code>
                   <Text size="xs">
                     {t(
                       "admin.formDetection.airgap.step2",
@@ -276,7 +280,10 @@ export default function AdminFormDetectionSection() {
                   </Text>
                   <Code block>
                     {selectedEntry.sha256 ||
-                      t("admin.formDetection.airgap.noSha", "(checksum not set)")}
+                      t(
+                        "admin.formDetection.airgap.noSha",
+                        "(checksum not set)",
+                      )}
                   </Code>
                   <Text size="xs">
                     {t(
@@ -284,7 +291,9 @@ export default function AdminFormDetectionSection() {
                       "3. Copy it onto the Stirling-PDF server into the model directory:",
                     )}
                   </Text>
-                  <Code block>{`<configs>/models/form-detection/${selectedEntry.id}.onnx`}</Code>
+                  <Code
+                    block
+                  >{`<configs>/models/form-detection/${selectedEntry.id}.onnx`}</Code>
                   <Text size="xs" c="dimmed">
                     {t(
                       "admin.formDetection.airgap.step4",

@@ -43,12 +43,24 @@ const pre: Preprocessed = {
 // nc_first layout [channels=6][anchors=3], data[c*anchors + a]
 // box A (cx5,cy5,w4,h4) twice (overlapping) + box B (cx8,cy8,w2,h2)
 const data = [
-  5, 5, 8, // cx
-  5, 5, 8, // cy
-  4, 4, 2, // w
-  4, 4, 2, // h
-  0.9, 0.8, 0.7, // text score
-  0.1, 0.1, 0.1, // choice score
+  5,
+  5,
+  8, // cx
+  5,
+  5,
+  8, // cy
+  4,
+  4,
+  2, // w
+  4,
+  4,
+  2, // h
+  0.9,
+  0.8,
+  0.7, // text score
+  0.1,
+  0.1,
+  0.1, // choice score
 ];
 const out: RawOutput = { data, d1: 6, d2: 3 };
 

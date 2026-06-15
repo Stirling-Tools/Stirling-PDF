@@ -1,7 +1,12 @@
 // Pure decode/NMS/un-projection - a 1:1 port of Yolo.decode in the backend. Kept free of any
 // browser API so it can be unit-tested for parity against the Java golden output.
 
-import { Detection, ModelPipelineSpec, Preprocessed, RawOutput } from "@app/services/formDetection/types";
+import {
+  Detection,
+  ModelPipelineSpec,
+  Preprocessed,
+  RawOutput,
+} from "@app/services/formDetection/types";
 
 function at(
   data: Float32Array | number[],
@@ -30,7 +35,11 @@ function iou(a: Detection, b: Detection): number {
   return union <= 0 ? 0 : inter / union;
 }
 
-function nms(dets: Detection[], mode: string, iouThreshold: number): Detection[] {
+function nms(
+  dets: Detection[],
+  mode: string,
+  iouThreshold: number,
+): Detection[] {
   if (dets.length < 2 || (mode ?? "").toLowerCase() === "none") {
     return dets;
   }
@@ -78,7 +87,8 @@ export function decode(
     let bestClass = -1;
     let bestScore = 0;
     for (let c = 0; c < numClasses; c++) {
-      const s = at(data, ncFirst, anchors, channels, classOffset + c, a) * objScore;
+      const s =
+        at(data, ncFirst, anchors, channels, classOffset + c, a) * objScore;
       if (s > bestScore) {
         bestScore = s;
         bestClass = c;
@@ -100,7 +110,14 @@ export function decode(
     ow = Math.max(0, Math.min(ow, pre.srcW - cxl));
     oh = Math.max(0, Math.min(oh, pre.srcH - cyl));
     if (ow <= 0 || oh <= 0) continue;
-    dets.push({ classId: bestClass, score: bestScore, x: cxl, y: cyl, w: ow, h: oh });
+    dets.push({
+      classId: bestClass,
+      score: bestScore,
+      x: cxl,
+      y: cyl,
+      w: ow,
+      h: oh,
+    });
   }
   return nms(dets, spec.nms, spec.iou);
 }

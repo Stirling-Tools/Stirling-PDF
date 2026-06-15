@@ -59,9 +59,8 @@ async function browserDetect(
 ): Promise<File> {
   // Lazy-load the in-browser engine (onnxruntime-web + the ~12MB wasm) only when browser-mode
   // detection actually runs - it is never pulled into the initial bundle or loaded on the homepage.
-  const { runBrowserDetection } = await import(
-    "@app/services/formDetection/runBrowserPipeline"
-  );
+  const { runBrowserDetection } =
+    await import("@app/services/formDetection/runBrowserPipeline");
   const bytes = await file.arrayBuffer();
   const { appliedPdf } = await runBrowserDetection(
     bytes,

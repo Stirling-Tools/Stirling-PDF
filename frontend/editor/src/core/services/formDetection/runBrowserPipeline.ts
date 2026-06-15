@@ -8,7 +8,10 @@ import { applyFields } from "@app/services/formDetection/applyFields";
 import { toPdfPoints } from "@app/services/formDetection/coordinateMapping";
 import { decode } from "@app/services/formDetection/decode";
 import { loadModelBytes } from "@app/services/formDetection/modelCache";
-import { getSession, runInference } from "@app/services/formDetection/onnxSession";
+import {
+  getSession,
+  runInference,
+} from "@app/services/formDetection/onnxSession";
 import { renderPages } from "@app/services/formDetection/pdfRender";
 import { preprocess } from "@app/services/formDetection/preprocess";
 import { DetectedField, resolveSpec } from "@app/services/formDetection/types";

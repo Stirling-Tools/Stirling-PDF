@@ -65,7 +65,9 @@ export interface DetectedField {
 }
 
 /** Resolve a catalog entry's pipeline spec, applying the same defaults the backend uses. */
-export function resolveSpec(entry: FormDetectionCatalogEntry): ModelPipelineSpec {
+export function resolveSpec(
+  entry: FormDetectionCatalogEntry,
+): ModelPipelineSpec {
   return {
     inputSize: entry.inputSize > 0 ? entry.inputSize : 1216,
     resizeMode: entry.resizeMode ?? "letterbox",
