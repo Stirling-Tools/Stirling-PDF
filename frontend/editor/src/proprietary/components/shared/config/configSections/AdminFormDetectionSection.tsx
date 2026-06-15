@@ -297,7 +297,7 @@ export default function AdminFormDetectionSection() {
                   <Text size="xs" c="dimmed">
                     {t(
                       "admin.formDetection.airgap.step4",
-                      "4. Set formDetection.activeModelId to this model's id in settings.yml, then restart (an installed model is auto-detected on boot). <configs> is the configs volume (e.g. /configs in Docker). Alternatively, point the Install button at an internal mirror using an override URL + checksum.",
+                      "4. Set formDetection.activeModelId to this model's id in settings.yml, then restart (an installed model is auto-detected on boot). <configs> is the configs volume (e.g. /configs in Docker). The Docker image also pre-bundles this model, so it is ready with no download.",
                     )}
                   </Text>
                 </Stack>

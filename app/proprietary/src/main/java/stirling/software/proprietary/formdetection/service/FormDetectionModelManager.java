@@ -156,17 +156,18 @@ public class FormDetectionModelManager {
      * @throws IllegalArgumentException unknown/invalid model id or bad checksum format
      * @throws IllegalStateException no URL/checksum configured, or an install is already running
      */
-    public synchronized void startInstall(String modelId, String overrideUrl, String overrideSha) {
+    public synchronized void startInstall(String modelId) {
+        if (!SAFE_ID.matcher(modelId).matches()) {
+            throw new IllegalArgumentException("Invalid model id: " + modelId);
+        }
         ModelCatalogEntry entry =
                 catalog.getById(modelId)
                         .orElseThrow(
                                 () -> new IllegalArgumentException("Unknown model id: " + modelId));
-        if (!SAFE_ID.matcher(modelId).matches()) {
-            throw new IllegalArgumentException("Invalid model id: " + modelId);
-        }
-        String url = StringUtils.isNotBlank(overrideUrl) ? overrideUrl : entry.getOnnxUrl();
-        String rawSha = StringUtils.isNotBlank(overrideSha) ? overrideSha : entry.getSha256();
-        String sha = rawSha == null ? null : rawSha.toLowerCase(Locale.ROOT);
+        // URL + checksum come ONLY from the bundled catalog (trusted constants), never from the
+        // request, so an admin cannot point the download at an arbitrary host (avoids SSRF).
+        String url = entry.getOnnxUrl();
+        String sha = entry.getSha256() == null ? null : entry.getSha256().toLowerCase(Locale.ROOT);
         if (StringUtils.isBlank(url) || StringUtils.isBlank(sha)) {
             throw new IllegalStateException(
                     "Model '" + modelId + "' has no download URL/checksum configured yet");
@@ -339,7 +340,11 @@ public class FormDetectionModelManager {
         if (StringUtils.isBlank(id) || !SAFE_ID.matcher(id).matches()) {
             return;
         }
-        Path file = modelDir().resolve(id + ".onnx");
+        Path base = modelDir().toAbsolutePath().normalize();
+        Path file = base.resolve(id + ".onnx").normalize();
+        if (!file.startsWith(base)) {
+            return; // path-traversal guard (SAFE_ID already blocks it; this also satisfies CodeQL)
+        }
         try {
             Files.deleteIfExists(file);
         } catch (IOException e) {

@@ -100,7 +100,7 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(dir, entry("http://127.0.0.1:" + port + "/model.onnx", modelSha), ep);
 
-        m.startInstall("test-model", null, null);
+        m.startInstall("test-model");
         awaitState(m, "ready", 5000);
 
         Path onnx = dir.resolve("test-model.onnx");
@@ -117,7 +117,7 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(dir, entry("http://127.0.0.1:" + port + "/model.onnx", "0".repeat(64)), ep);
 
-        m.startInstall("test-model", null, null);
+        m.startInstall("test-model");
         awaitState(m, "failed", 5000);
 
         assertFalse(Files.exists(dir.resolve("test-model.onnx")), "no model on mismatch");
@@ -147,9 +147,9 @@ class FormDetectionModelManagerTest {
                         entry("http://127.0.0.1:" + port + "/gated.onnx", modelSha),
                         Mockito.mock(EndpointConfiguration.class));
 
-        m.startInstall("test-model", null, null); // begins, blocks in handler
+        m.startInstall("test-model"); // begins, blocks in handler
         // installing flag is set synchronously before the worker thread spawns
-        assertThrows(IllegalStateException.class, () -> m.startInstall("test-model", null, null));
+        assertThrows(IllegalStateException.class, () -> m.startInstall("test-model"));
         gate.countDown();
         awaitState(m, "ready", 5000);
     }
@@ -158,7 +158,7 @@ class FormDetectionModelManagerTest {
     void rejectsBlankUrl(@TempDir Path dir) {
         FormDetectionModelManager m =
                 manager(dir, entry("", ""), Mockito.mock(EndpointConfiguration.class));
-        assertThrows(IllegalStateException.class, () -> m.startInstall("test-model", null, null));
+        assertThrows(IllegalStateException.class, () -> m.startInstall("test-model"));
     }
 
     @Test
@@ -168,19 +168,6 @@ class FormDetectionModelManagerTest {
                         dir,
                         entry("http://127.0.0.1:" + port + "/model.onnx", modelSha),
                         Mockito.mock(EndpointConfiguration.class));
-        assertThrows(IllegalArgumentException.class, () -> m.startInstall("unknown", null, null));
-    }
-
-    @Test
-    void overrideUrlAndShaWork(@TempDir Path dir) throws Exception {
-        EndpointConfiguration ep = Mockito.mock(EndpointConfiguration.class);
-        // catalog entry has blank url/sha; admin supplies overrides at install time
-        FormDetectionModelManager m = manager(dir, entry("", ""), ep);
-
-        m.startInstall("test-model", "http://127.0.0.1:" + port + "/model.onnx", modelSha);
-        awaitState(m, "ready", 5000);
-
-        assertTrue(Files.exists(dir.resolve("test-model.onnx")));
-        assertTrue(m.isReady());
+        assertThrows(IllegalArgumentException.class, () -> m.startInstall("unknown"));
     }
 }

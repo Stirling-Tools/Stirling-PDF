@@ -72,7 +72,7 @@ class FormDetectionModelControllerTest {
         Mockito.when(manager.status()).thenReturn(notInstalled());
         Mockito.doThrow(new IllegalStateException("An install is already in progress"))
                 .when(manager)
-                .startInstall(Mockito.eq("ffdnet-s"), Mockito.any(), Mockito.any());
+                .startInstall(Mockito.eq("ffdnet-s"));
 
         mvc(manager)
                 .perform(

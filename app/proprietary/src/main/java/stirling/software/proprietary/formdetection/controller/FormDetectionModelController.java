@@ -52,7 +52,7 @@ public class FormDetectionModelController {
             return ResponseEntity.badRequest().body(s);
         }
         try {
-            manager.startInstall(request.getModelId(), request.getOnnxUrl(), request.getSha256());
+            manager.startInstall(request.getModelId());
             return ResponseEntity.accepted().body(manager.status());
         } catch (IllegalStateException e) {
             ModelStatusResponse s = manager.status();
@@ -115,11 +115,5 @@ public class FormDetectionModelController {
     @Data
     public static class InstallRequest {
         private String modelId;
-
-        /** Optional override download URL (admin self-hosted export); falls back to the catalog. */
-        private String onnxUrl;
-
-        /** Optional override SHA-256; falls back to the catalog. */
-        private String sha256;
     }
 }
