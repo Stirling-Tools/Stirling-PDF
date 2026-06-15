@@ -40,8 +40,8 @@ describe("getToolOgImage (client resolver)", () => {
     );
   });
 
-  it("falls back to the default image for tools without art or null", () => {
-    expect(getToolOgImage("", "timestampPdf")).toBe("/og_images/home.png");
+  it("falls back to the default image for an unknown tool id or null", () => {
+    expect(getToolOgImage("", "noSuchToolId")).toBe("/og_images/home.png");
     expect(getToolOgImage("", null)).toBe("/og_images/home.png");
   });
 
