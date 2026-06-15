@@ -38,6 +38,7 @@ interface RulerMeasurementLayerProps {
   } | null;
   firstPoint?: RulerPoint | null;
   cursor?: RulerPoint | null;
+  pageContentRef?: React.Ref<SVGGElement>;
   onSelect: (id: string | null) => void;
   onDelete: (id: string) => void;
   onHoverChange: (id: string | null) => void;
@@ -748,6 +749,7 @@ export function RulerMeasurementLayer({
   liveLine,
   firstPoint,
   cursor,
+  pageContentRef,
   onSelect,
   onDelete,
   onHoverChange,
@@ -803,33 +805,46 @@ export function RulerMeasurementLayer({
 
   return (
     <>
-      {orderedMeasurements.map((item) => {
-        const { measurement, startS, endS, distPts, measureScale } = item;
-        return (
-          <MeasurementLine
-            key={measurement.id}
-            id={measurement.id}
-            startS={startS}
-            endS={endS}
-            distPts={distPts}
-            isSelected={
-              !isInteractionPassthroughActive && selectedId === measurement.id
-            }
-            isHovered={
-              !isInteractionPassthroughActive && hoveredId === measurement.id
-            }
-            onSelect={onSelect}
-            onDelete={onDelete}
-            onHoverChange={onHoverChange}
-            measureScale={measureScale}
-            zoom={zoom}
-            showIdleLabel={getShouldShowIdleLabel(measurement.id)}
-            expandLabelOnHover={labelVisibilityMode !== "showAll"}
-            isInteractionPassthroughActive={isInteractionPassthroughActive}
-            labels={measurementLineLabels}
+      <g ref={pageContentRef}>
+        {orderedMeasurements.map((item) => {
+          const { measurement, startS, endS, distPts, measureScale } = item;
+          return (
+            <MeasurementLine
+              key={measurement.id}
+              id={measurement.id}
+              startS={startS}
+              endS={endS}
+              distPts={distPts}
+              isSelected={
+                !isInteractionPassthroughActive && selectedId === measurement.id
+              }
+              isHovered={
+                !isInteractionPassthroughActive && hoveredId === measurement.id
+              }
+              onSelect={onSelect}
+              onDelete={onDelete}
+              onHoverChange={onHoverChange}
+              measureScale={measureScale}
+              zoom={zoom}
+              showIdleLabel={getShouldShowIdleLabel(measurement.id)}
+              expandLabelOnHover={labelVisibilityMode !== "showAll"}
+              isInteractionPassthroughActive={isInteractionPassthroughActive}
+              labels={measurementLineLabels}
+            />
+          );
+        })}
+
+        {firstPoint && (
+          <circle
+            cx={firstPoint.x}
+            cy={firstPoint.y}
+            r={RULER_DOT_RADIUS}
+            fill="#1e88e5"
+            stroke="white"
+            strokeWidth={2}
           />
-        );
-      })}
+        )}
+      </g>
 
       {liveLine && (
         <LiveLine
@@ -837,17 +852,6 @@ export function RulerMeasurementLayer({
           endS={liveLine.endS}
           zoom={zoom}
           measureScale={liveLine.measureScale}
-        />
-      )}
-
-      {firstPoint && (
-        <circle
-          cx={firstPoint.x}
-          cy={firstPoint.y}
-          r={RULER_DOT_RADIUS}
-          fill="#1e88e5"
-          stroke="white"
-          strokeWidth={2}
         />
       )}
 

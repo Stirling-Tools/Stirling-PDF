@@ -1,4 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  restorePosition,
+  transformPosition,
+  transformSize,
+  type Rotation,
+  type Size,
+} from "@embedpdf/models";
 import { useViewer } from "@app/contexts/ViewerContext";
 import type {
   MeasureScale,
@@ -53,6 +66,93 @@ interface RulerOverlayProps {
 
 function dist(a: Point, b: Point): number {
   return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+}
+
+function normalizeRotation(rotation: number | null | undefined): Rotation {
+  const value =
+    typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
+  return (((Math.round(value) % 4) + 4) % 4) as Rotation;
+}
+
+function getPageRotation(pageEl: HTMLElement): Rotation {
+  return normalizeRotation(Number(pageEl.dataset.pageRotation));
+}
+
+function getEffectivePageRotation(
+  pageEl: HTMLElement,
+  documentRotation: Rotation,
+): Rotation {
+  return normalizeRotation(getPageRotation(pageEl) + documentRotation);
+}
+
+function getPageNaturalSize(
+  pageEl: HTMLElement,
+  pageRect: DOMRect,
+  zoom: number,
+  rotation: Rotation,
+): Size {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  const dataWidth = Number(pageEl.dataset.pageWidth);
+  const dataHeight = Number(pageEl.dataset.pageHeight);
+
+  if (
+    Number.isFinite(dataWidth) &&
+    dataWidth > 0 &&
+    Number.isFinite(dataHeight) &&
+    dataHeight > 0
+  ) {
+    return {
+      width: dataWidth / safeZoom,
+      height: dataHeight / safeZoom,
+    };
+  }
+
+  const visualWidth = pageRect.width / safeZoom;
+  const visualHeight = pageRect.height / safeZoom;
+  return rotation % 2 === 0
+    ? { width: visualWidth, height: visualHeight }
+    : { width: visualHeight, height: visualWidth };
+}
+
+function clampToPage(point: Point, pageSize: Size): Point {
+  return {
+    x: Math.max(0, Math.min(pageSize.width, point.x)),
+    y: Math.max(0, Math.min(pageSize.height, point.y)),
+  };
+}
+
+function clientPointToPagePoint(
+  pageEl: HTMLElement,
+  clientX: number,
+  clientY: number,
+  zoom: number,
+  rotation: Rotation,
+): Point {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  const pageRect = pageEl.getBoundingClientRect();
+  const pageSize = getPageNaturalSize(pageEl, pageRect, safeZoom, rotation);
+  const rotatedDisplaySize = transformSize(pageSize, rotation, safeZoom);
+  const displayPoint = {
+    x: clientX - pageRect.left,
+    y: clientY - pageRect.top,
+  };
+
+  return clampToPage(
+    restorePosition(rotatedDisplaySize, displayPoint, rotation, safeZoom),
+    pageSize,
+  );
+}
+
+function pagePointToDisplayPoint(
+  pageEl: HTMLElement,
+  pageRect: DOMRect,
+  point: Point,
+  zoom: number,
+  rotation: Rotation,
+): Point {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  const pageSize = getPageNaturalSize(pageEl, pageRect, safeZoom, rotation);
+  return transformPosition(pageSize, point, rotation, safeZoom);
 }
 
 /**
@@ -159,6 +259,7 @@ function nearestPageDocPt(
   cursor: Point,
   container: HTMLElement,
   zoom: number,
+  documentRotation: Rotation,
   pageIndex: number,
 ): { screenPt: Point; docPt: PagePoint } | null {
   const pageEl = container.querySelector(
@@ -168,6 +269,7 @@ function nearestPageDocPt(
 
   const cr = container.getBoundingClientRect();
   const r = pageEl.getBoundingClientRect();
+  const effectiveRotation = getEffectivePageRotation(pageEl, documentRotation);
 
   // Page bounds in SVG (container-relative) space
   const left = r.left - cr.left;
@@ -178,17 +280,20 @@ function nearestPageDocPt(
   // Nearest point on this rect to the cursor (SVG space)
   const cx = Math.max(left, Math.min(right, cursor.x));
   const cy = Math.max(top, Math.min(bottom, cursor.y));
+  const docPoint = clientPointToPagePoint(
+    pageEl,
+    cr.left + cx,
+    cr.top + cy,
+    zoom,
+    effectiveRotation,
+  );
 
-  // Convert SVG-space point (cx, cy) → page-relative viewport → PDF points:
-  //   viewport position of cx = cr.left + cx
-  //   page-relative position  = (cr.left + cx) - r.left
-  //   PDF units               = page-relative / zoom
   return {
     screenPt: { x: cx, y: cy },
     docPt: {
       pageIndex,
-      x: (cr.left + cx - r.left) / zoom,
-      y: (cr.top + cy - r.top) / zoom,
+      x: docPoint.x,
+      y: docPoint.y,
     },
   };
 }
@@ -236,6 +341,14 @@ export const RulerOverlay = React.forwardRef<
 
   const scrollElRef = useRef<HTMLElement | null>(null);
   const scrollCleanupRef = useRef<(() => void) | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const rulerPageContentRef = useRef<SVGGElement | null>(null);
+  const renderedScrollRef = useRef({ left: 0, top: 0 });
+  const isActiveRef = useRef(isActive);
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
+
   const firstPtRef = useRef<PagePoint | null>(null);
   useEffect(() => {
     firstPtRef.current = firstPt;
@@ -300,7 +413,8 @@ export const RulerOverlay = React.forwardRef<
 
   // ── Zoom ──────────────────────────────────────────────────────────────────
   const viewer = useViewer();
-  const { registerImmediateZoomUpdate } = viewer;
+  const { registerImmediateRotationUpdate, registerImmediateZoomUpdate } =
+    viewer;
 
   const [zoom, setZoom] = useState<number>(() => {
     try {
@@ -315,6 +429,19 @@ export const RulerOverlay = React.forwardRef<
     zoomRef.current = zoom;
   }, [zoom]);
 
+  const [rotation, setRotation] = useState<Rotation>(() => {
+    try {
+      return normalizeRotation(viewer.getRotationState().rotation);
+    } catch {
+      return normalizeRotation(0);
+    }
+  });
+
+  const rotationRef = useRef<Rotation>(rotation);
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation]);
+
   useEffect(() => {
     return registerImmediateZoomUpdate((pct) => {
       const newZoom = pct / 100;
@@ -325,6 +452,15 @@ export const RulerOverlay = React.forwardRef<
       requestAnimationFrame(() => setScrollVersion((n) => n + 1));
     });
   }, [registerImmediateZoomUpdate]);
+
+  useEffect(() => {
+    return registerImmediateRotationUpdate((nextRotation) => {
+      const normalizedRotation = normalizeRotation(nextRotation);
+      rotationRef.current = normalizedRotation;
+      setRotation(normalizedRotation);
+      requestAnimationFrame(() => setScrollVersion((n) => n + 1));
+    });
+  }, [registerImmediateRotationUpdate]);
 
   // ── Layout change tracking (menu close, sidebar toggle, etc.) ──────────────
   // Monitor PDF container for layout changes and force re-render so measurements
@@ -350,15 +486,55 @@ export const RulerOverlay = React.forwardRef<
   }, [containerRef]);
 
   // ── Scroll tracking ────────────────────────────────────────────────────────
-  // We only need re-renders on scroll; getBoundingClientRect gives us accurate
-  // positions without needing to know the scroll offset ourselves.
+  // Native scrolling moves the PDF pages before React re-renders this fixed
+  // overlay. Translate page-anchored SVG content immediately, then let the next
+  // frame render exact coordinates from getBoundingClientRect.
+
+  useLayoutEffect(() => {
+    const scrollEl = scrollElRef.current;
+    if (scrollEl) {
+      renderedScrollRef.current = {
+        left: scrollEl.scrollLeft,
+        top: scrollEl.scrollTop,
+      };
+    }
+    rulerPageContentRef.current?.removeAttribute("transform");
+  });
 
   const attachScrollEl = useCallback((el: HTMLElement) => {
     scrollCleanupRef.current?.();
     scrollElRef.current = el;
-    const handler = () => setScrollVersion((n) => n + 1);
+    const handler = () => {
+      if (!isActiveRef.current && measurementsRef.current.length === 0) {
+        return;
+      }
+
+      const dx = renderedScrollRef.current.left - el.scrollLeft;
+      const dy = renderedScrollRef.current.top - el.scrollTop;
+      if (dx !== 0 || dy !== 0) {
+        rulerPageContentRef.current?.setAttribute(
+          "transform",
+          `translate(${dx} ${dy})`,
+        );
+      }
+
+      if (scrollRafRef.current !== null) {
+        return;
+      }
+
+      scrollRafRef.current = requestAnimationFrame(() => {
+        scrollRafRef.current = null;
+        setScrollVersion((n) => n + 1);
+      });
+    };
     el.addEventListener("scroll", handler, { passive: true });
-    scrollCleanupRef.current = () => el.removeEventListener("scroll", handler);
+    scrollCleanupRef.current = () => {
+      el.removeEventListener("scroll", handler);
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -395,6 +571,8 @@ export const RulerOverlay = React.forwardRef<
   // ── Imperative handle ──────────────────────────────────────────────────────
   React.useImperativeHandle(ref, () => ({
     clearAll: (silent = false) => {
+      firstPtRef.current = null;
+      cursorDocRef.current = null;
       replaceMeasurements([], !silent);
       setFirstPt(null);
       setCursorS(null);
@@ -428,6 +606,8 @@ export const RulerOverlay = React.forwardRef<
   // ── Reset when deactivated ─────────────────────────────────────────────────
   useEffect(() => {
     if (!isActive) {
+      firstPtRef.current = null;
+      cursorDocRef.current = null;
       setFirstPt(null);
       setCursorS(null);
       setCursorDoc(null);
@@ -441,7 +621,7 @@ export const RulerOverlay = React.forwardRef<
     const wasCalibrationActive = wasCalibrationActiveRef.current;
     wasCalibrationActiveRef.current = isCalibrationActive;
 
-    if (wasCalibrationActive && !isCalibrationActive) {
+    if (wasCalibrationActive !== isCalibrationActive) {
       firstPtRef.current = null;
       cursorDocRef.current = null;
       setFirstPt(null);
@@ -503,12 +683,22 @@ export const RulerOverlay = React.forwardRef<
       const pageEl = findPageAtClientPoint(el, e.clientX, e.clientY);
       if (!pageEl) return null;
       const pageIndex = parseInt(pageEl.dataset.pageIndex ?? "0", 10);
-      const r = pageEl.getBoundingClientRect();
       const z = zoomRef.current;
+      const effectiveRotation = getEffectivePageRotation(
+        pageEl,
+        rotationRef.current,
+      );
+      const docPoint = clientPointToPagePoint(
+        pageEl,
+        e.clientX,
+        e.clientY,
+        z,
+        effectiveRotation,
+      );
       return {
         pageIndex,
-        x: (e.clientX - r.left) / z,
-        y: (e.clientY - r.top) / z,
+        x: docPoint.x,
+        y: docPoint.y,
       };
     };
 
@@ -534,6 +724,7 @@ export const RulerOverlay = React.forwardRef<
           screenPt,
           el,
           zoomRef.current,
+          rotationRef.current,
           firstPtRef.current.pageIndex,
         );
         if (result) {
@@ -583,6 +774,7 @@ export const RulerOverlay = React.forwardRef<
       if (prev.pageIndex !== nextPoint.pageIndex) {
         // Reset first point so user can start fresh on same page
         firstPtRef.current = null;
+        cursorDocRef.current = null;
         setFirstPt(null);
         setCursorS(null);
         setCursorDoc(null);
@@ -617,6 +809,8 @@ export const RulerOverlay = React.forwardRef<
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        firstPtRef.current = null;
+        cursorDocRef.current = null;
         setFirstPt(null);
         setCursorS(null);
         setCursorDoc(null);
@@ -678,9 +872,17 @@ export const RulerOverlay = React.forwardRef<
     if (!pageEl) return null;
     const pageRect = pageEl.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
+    const effectiveRotation = getEffectivePageRotation(pageEl, rotation);
+    const displayPoint = pagePointToDisplayPoint(
+      pageEl,
+      pageRect,
+      pt,
+      zoom,
+      effectiveRotation,
+    );
     return {
-      x: pageRect.left - containerRect.left + pt.x * zoom,
-      y: pageRect.top - containerRect.top + pt.y * zoom,
+      x: pageRect.left - containerRect.left + displayPoint.x,
+      y: pageRect.top - containerRect.top + displayPoint.y,
     };
   };
 
@@ -767,6 +969,7 @@ export const RulerOverlay = React.forwardRef<
         liveLine={liveLine}
         firstPoint={isActive ? firstPtS : null}
         cursor={isActive ? cursorS : null}
+        pageContentRef={rulerPageContentRef}
         onSelect={setSelectedId}
         onDelete={deleteMeasurement}
         onHoverChange={setHoveredId}

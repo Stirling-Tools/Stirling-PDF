@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
-import { EmbedPDF } from "@embedpdf/core/react";
+import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -120,6 +120,59 @@ interface LocalEmbedPDFProps {
   isSignMode?: boolean;
   /** Controls CSS filter applied only to rendered PDF canvas tiles */
   pdfRenderMode?: "normal" | "dark" | "sepia";
+}
+
+interface ViewerPageContainerProps {
+  documentId: string;
+  pageIndex: number;
+  width: number;
+  height: number;
+  children: React.ReactNode;
+}
+
+function normalizePageRotation(rotation: number | null | undefined): number {
+  const value =
+    typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
+  return ((Math.round(value) % 4) + 4) % 4;
+}
+
+function ViewerPageContainer({
+  documentId,
+  pageIndex,
+  width,
+  height,
+  children,
+}: ViewerPageContainerProps) {
+  const documentState = useDocumentState(documentId);
+  const pageRotation = normalizePageRotation(
+    documentState?.document?.pages?.[pageIndex]?.rotation,
+  );
+
+  return (
+    <div
+      data-page-index={pageIndex}
+      data-page-width={width}
+      data-page-height={height}
+      data-page-rotation={pageRotation}
+      style={{
+        width,
+        height,
+        position: "relative",
+        overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+      }}
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
+      onDrop={(e) => e.preventDefault()}
+      onDragOver={(e) => e.preventDefault()}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function LocalEmbedPDF({
@@ -939,25 +992,11 @@ export function LocalEmbedPDF({
                                 documentId={documentId}
                                 pageIndex={pageIndex}
                               >
-                                <div
-                                  data-page-index={pageIndex}
-                                  data-page-width={width}
-                                  data-page-height={height}
-                                  style={{
-                                    width,
-                                    height,
-                                    position: "relative",
-                                    overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
-                                    userSelect: "none",
-                                    WebkitUserSelect: "none",
-                                    MozUserSelect: "none",
-                                    msUserSelect: "none",
-                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                                  }}
-                                  draggable={false}
-                                  onDragStart={(e) => e.preventDefault()}
-                                  onDrop={(e) => e.preventDefault()}
-                                  onDragOver={(e) => e.preventDefault()}
+                                <ViewerPageContainer
+                                  documentId={documentId}
+                                  pageIndex={pageIndex}
+                                  width={width}
+                                  height={height}
                                 >
                                   <div
                                     style={{
@@ -1069,7 +1108,7 @@ export function LocalEmbedPDF({
                                     documentId={documentId}
                                     pageIndex={pageIndex}
                                   />
-                                </div>
+                                </ViewerPageContainer>
                               </PagePointerProvider>
                             </Rotate>
                           );

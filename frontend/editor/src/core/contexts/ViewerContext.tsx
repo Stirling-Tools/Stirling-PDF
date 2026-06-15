@@ -168,6 +168,9 @@ export interface ViewerContextType {
   registerImmediatePanUpdate: (
     callback: (isPanning: boolean) => void,
   ) => () => void;
+  registerImmediateRotationUpdate: (
+    callback: (rotation: number) => void,
+  ) => () => void;
 
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (
@@ -180,6 +183,7 @@ export interface ViewerContextType {
     isDualPage?: boolean,
   ) => void;
   triggerImmediatePanUpdate: (isPanning: boolean) => void;
+  triggerImmediateRotationUpdate: (rotation: number) => void;
 
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: ScrollActions;
@@ -305,6 +309,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     register: registerImmediatePanUpdate,
     trigger: triggerImmediatePanInternal,
   } = useImmediateNotifier<[boolean]>();
+  const {
+    register: registerImmediateRotationUpdate,
+    trigger: triggerImmediateRotationInternal,
+  } = useImmediateNotifier<[number]>();
 
   const triggerImmediateZoomUpdate = useCallback(
     (percent: number) => {
@@ -332,6 +340,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       triggerImmediatePanInternal(isPanning);
     },
     [triggerImmediatePanInternal],
+  );
+
+  const triggerImmediateRotationUpdate = useCallback(
+    (rotation: number) => {
+      triggerImmediateRotationInternal(rotation);
+    },
+    [triggerImmediateRotationInternal],
   );
 
   const registerBridge = useCallback(
@@ -594,10 +609,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
     registerImmediatePanUpdate,
+    registerImmediateRotationUpdate,
     triggerImmediateScrollUpdate,
     triggerImmediateZoomUpdate,
     triggerImmediateSpreadUpdate,
     triggerImmediatePanUpdate,
+    triggerImmediateRotationUpdate,
 
     // Actions
     scrollActions,
