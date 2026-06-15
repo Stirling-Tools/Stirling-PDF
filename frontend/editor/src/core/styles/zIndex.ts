@@ -9,7 +9,9 @@ export const Z_INDEX_CONFIG_MODAL = 1400;
 // Modal layered directly over the settings/config modal (e.g. the Stripe
 // checkout modal). Consumed by the shared cloud/ checkout component, so it
 // lives in the core base both the saas and cloud cascades resolve.
-export const Z_INDEX_OVER_SETTINGS_MODAL = 1400;
+// Must be strictly ABOVE the config modal (1400); 1450 is taken by the cookie
+// preferences modal, so sit above the whole settings cluster (below 2000).
+export const Z_INDEX_OVER_SETTINGS_MODAL = 1500;
 
 export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 

@@ -216,6 +216,7 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   if (!prev) return next;
   if (
     prev.status !== next.status ||
+    prev.teamId !== next.teamId ||
     prev.role !== next.role ||
     prev.billingPeriodStart !== next.billingPeriodStart ||
     prev.billingPeriodEnd !== next.billingPeriodEnd ||

@@ -4,6 +4,7 @@ import {
   classifyPaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
+import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 
 /**
  * Desktop override of handleHttpError.
@@ -24,7 +25,19 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
   // which the mounted UsageLimitModalHost handles.
   const paygKind = classifyPaygError(error);
   if (paygKind !== null) {
-    handlePaygError(paygKind, error);
+    if (paygKind === "SIGNUP_REQUIRED") {
+      // Desktop has no web signup-page bootstrap (handlePaygError's
+      // payg:signupRequired event has no desktop listener). The desktop account
+      // flow is the SignInModal, so open that directly for an anonymous user who
+      // hit a billable endpoint.
+      try {
+        window.dispatchEvent(new Event(OPEN_SIGN_IN_EVENT));
+      } catch {
+        // non-browser env (tests / SSR) — no-op.
+      }
+    } else {
+      handlePaygError(paygKind, error);
+    }
     return true; // Suppress generic toast — modal handles it.
   }
 
