@@ -181,8 +181,7 @@ class UserControllerTest {
 
     @Test
     void listUsersDefaultScopeIsOrgWide() throws Exception {
-        // Default scope is "org" (set in ApplicationProperties). Returns every enabled user via
-        // findAll(), and must NOT consult the per-team query or look the caller up by name.
+        // Default "org" scope returns every enabled user via findAll(), no team lookup.
         Team alpha = team(1L, "alpha");
         when(userRepository.findAll())
                 .thenReturn(
@@ -265,8 +264,7 @@ class UserControllerTest {
 
     @Test
     void listUsersFailsClosedOnUnrecognisedScope() throws Exception {
-        // Any non-"org" value (typo, garbage, or a saas pin that failed to apply) must restrict to
-        // the caller's team rather than leaking the whole instance.
+        // Any non-"org" value must restrict to the caller's team, not leak the instance.
         applicationProperties.getStorage().getSigning().setUserListScope("tewm");
         Team alpha = team(3L, "alpha");
         when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
@@ -298,8 +296,7 @@ class UserControllerTest {
 
     @Test
     void listUsersFailsClosedOnNullScope() throws Exception {
-        // Defensive: a null value (should never happen given the "org" default, but guards against
-        // an unbound binding) must also restrict to the caller's team rather than leak org-wide.
+        // A null value must also fail closed to the caller's team.
         applicationProperties.getStorage().getSigning().setUserListScope(null);
         Team alpha = team(9L, "alpha");
         when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
@@ -335,8 +332,7 @@ class UserControllerTest {
 
     @Test
     void signingUserListScopeDefaultsToOrg() {
-        // Guards self-host backward-compat: the default must stay "org" so existing single-tenant
-        // deployments keep their org-wide picker. The saas profile is what flips it to "team".
+        // Self-host backward-compat: default must stay "org" (saas profile flips it to "team").
         assertEquals(
                 "org", new ApplicationProperties().getStorage().getSigning().getUserListScope());
     }

@@ -290,7 +290,7 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
-    userListScope: org # Scope of the signing-workflow user picker (GET /api/v1/user/users). 'org' (default): every enabled user on the instance - correct for single-tenant self-host. 'team': only users in the caller's team - required for multi-tenant SaaS so unrelated tenants don't see each other's emails. SaaS profile pins this to 'team'. Read independently of signing.enabled; fail-closed (any non-'org' value restricts to the team).
+    userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
   fileReadiness:

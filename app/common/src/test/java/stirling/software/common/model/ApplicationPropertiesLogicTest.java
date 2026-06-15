@@ -33,8 +33,7 @@ class ApplicationPropertiesLogicTest {
 
     @Test
     void storageSigning_userListScope_defaultsToOrg_andIsSettable() {
-        // Self-host backward-compat: the signing user-picker scope must default to "org" (whole
-        // instance). The saas profile is what pins it to "team"; the field must remain settable.
+        // Self-host backward-compat: scope must default to "org" (saas profile pins "team").
         ApplicationProperties.Storage.Signing signing = new ApplicationProperties.Storage.Signing();
 
         assertFalse(signing.isEnabled());

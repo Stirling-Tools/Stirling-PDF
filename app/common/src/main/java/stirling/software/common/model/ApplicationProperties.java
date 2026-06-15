@@ -997,20 +997,8 @@ public class ApplicationProperties {
         public static class Signing {
             private boolean enabled = false;
 
-            /**
-             * Scope of the signing-workflow user picker ({@code GET /api/v1/user/users}). {@code
-             * org} (default) returns every enabled user on the instance - correct for single-tenant
-             * self-host where the whole org shares one Stirling instance. {@code team} restricts
-             * the response to users in the caller's team - required for multi-tenant SaaS so
-             * unrelated customers never see each other's emails. The saas profile pins this to
-             * {@code team}.
-             *
-             * <p>Read independently of {@link #enabled}: the picker endpoint is not gated by the
-             * group-signing feature toggle, so this scope applies whenever login is on.
-             *
-             * <p>Fail-closed: only the literal {@code org} opens the list org-wide; any other or
-             * unrecognised value restricts to the caller's team.
-             */
+            // Signing user-picker scope: 'org' (default) = whole instance, anything else =
+            // caller's team only (fail-closed). The saas profile pins 'team'.
             private String userListScope = "org";
         }
     }
