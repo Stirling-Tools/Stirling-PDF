@@ -1,6 +1,7 @@
 package stirling.software.proprietary.mcp.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -68,5 +69,83 @@ class McpConfigValidatorTest {
                 findings.stream().noneMatch(f -> f.severity() == McpConfigValidator.Severity.WARN),
                 "complete config must have no warnings");
         assertTrue(findings.stream().anyMatch(f -> f.message().contains("look complete")));
+    }
+
+    @Test
+    void acceptedAudiencesCoverBlankResourceId() {
+        ApplicationProperties.Mcp mcp = newMcp();
+        mcp.getAuth().setIssuerUri("https://issuer.example.com");
+        mcp.getAuth().setResourceId("");
+        mcp.getAuth().setAcceptedAudiences(List.of("authenticated"));
+        mcp.getAuth().setUsernameClaim("email");
+        mcp.setScopesEnabled(false);
+
+        List<McpConfigValidator.Finding> findings = McpConfigValidator.validate(mcp);
+
+        assertFalse(
+                hasWarn(findings, "fails closed"),
+                "accepted-audiences must satisfy audience binding without a resource id");
+        assertTrue(
+                findings.stream().anyMatch(f -> f.message().contains("accepted-audiences=")),
+                "configured accepted-audiences should be surfaced");
+    }
+
+    @Test
+    void strictAudienceHintsAtAcceptedAudiencesEscapeHatch() {
+        ApplicationProperties.Mcp mcp = newMcp();
+        mcp.getAuth().setIssuerUri("https://issuer.example.com");
+        mcp.getAuth().setResourceId("https://host.example.com/mcp");
+        mcp.getAuth().setUsernameClaim("email");
+        mcp.setScopesEnabled(false);
+
+        List<McpConfigValidator.Finding> findings = McpConfigValidator.validate(mcp);
+
+        assertTrue(
+                findings.stream().anyMatch(f -> f.message().contains("accepted-audiences")),
+                "should point coarse-audience IdPs at accepted-audiences");
+    }
+
+    @Test
+    void unrecognizedModeWarnsAboutOAuthFallback() {
+        ApplicationProperties.Mcp mcp = newMcp();
+        mcp.getAuth().setMode("api-key"); // near-miss typo that silently runs the OAuth chain
+
+        assertTrue(hasWarn(McpConfigValidator.validate(mcp), "is not recognized"));
+    }
+
+    @Test
+    void requireExistingAccountFalseWarnsAboutOpenAccess() {
+        ApplicationProperties.Mcp mcp = newMcp();
+        mcp.getAuth().setIssuerUri("https://issuer.example.com");
+        mcp.getAuth().setResourceId("https://host.example.com/mcp");
+        mcp.getAuth().setUsernameClaim("email");
+        mcp.getAuth().setRequireExistingAccount(false);
+
+        assertTrue(hasWarn(McpConfigValidator.validate(mcp), "require-existing-account=false"));
+    }
+
+    @Test
+    void nonUrlResourceIdWarns() {
+        ApplicationProperties.Mcp mcp = newMcp();
+        mcp.getAuth().setIssuerUri("https://issuer.example.com");
+        mcp.getAuth().setResourceId("localhost:8080/mcp"); // missing scheme
+
+        assertTrue(hasWarn(McpConfigValidator.validate(mcp), "is not an http(s) URL"));
+    }
+
+    @Test
+    void allowListIsFlaggedAndOverlapWithBlockListWarns() {
+        ApplicationProperties.Mcp mcp = newMcp();
+        mcp.getAuth().setIssuerUri("https://issuer.example.com");
+        mcp.getAuth().setResourceId("https://host.example.com/mcp");
+        mcp.setAllowedOperations(List.of("merge-pdfs", "split-pdf"));
+        mcp.setBlockedOperations(List.of("split-pdf"));
+
+        List<McpConfigValidator.Finding> findings = McpConfigValidator.validate(mcp);
+
+        assertTrue(
+                findings.stream().anyMatch(f -> f.message().contains("strict allow-list")),
+                "an allow-list should be surfaced");
+        assertTrue(hasWarn(findings, "blocked wins"), "allowed+blocked overlap should warn");
     }
 }

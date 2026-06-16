@@ -37,6 +37,18 @@ public final class McpConfigValidator {
             return findings;
         }
 
+        // Anything that isn't exactly "apikey" runs the OAuth chain (mirrors isApiKeyMode()).
+        String mode = auth.getMode();
+        if (mode != null && !mode.isBlank() && !"oauth".equalsIgnoreCase(mode.trim())) {
+            findings.add(
+                    warn(
+                            "mcp.auth.mode='"
+                                    + mode
+                                    + "' is not recognized (expected 'oauth' or 'apikey'); it falls"
+                                    + " back to the OAuth chain, which rejects every token unless"
+                                    + " issuer-uri and resource-id are set. A near-miss like"
+                                    + " 'api-key' is NOT treated as API-key mode."));
+        }
         findings.add(info("auth mode = oauth - running as an OAuth2 resource server for /mcp."));
 
         if (isBlank(auth.getIssuerUri())) {
@@ -54,19 +66,52 @@ public final class McpConfigValidator {
                                     + "' does not look like an http(s) URL."));
         }
 
-        if (isBlank(auth.getResourceId())) {
+        boolean hasResourceId = !isBlank(auth.getResourceId());
+        boolean hasAcceptedAudiences =
+                auth.getAcceptedAudiences().stream().anyMatch(a -> !isBlank(a));
+
+        if (!hasResourceId && !hasAcceptedAudiences) {
             findings.add(
                     warn(
-                            "mcp.auth.resource-id is not set: the audience validator rejects every"
-                                    + " token (RFC 8707). Set it to this server's public /mcp URL (e.g."
-                                    + " https://your-host/mcp)."));
-        } else if (!auth.getResourceId().endsWith("/mcp")) {
-            findings.add(
-                    warn(
-                            "mcp.auth.resource-id='"
-                                    + auth.getResourceId()
-                                    + "' does not end in /mcp: it must match the public URL clients"
-                                    + " call and the audience your IdP puts in the token."));
+                            "neither mcp.auth.resource-id nor mcp.auth.accepted-audiences is set: the"
+                                    + " audience validator fails closed and rejects every token (RFC"
+                                    + " 8707). Set resource-id to this server's public /mcp URL, or"
+                                    + " accepted-audiences to the audience your IdP actually mints."));
+        } else {
+            if (hasResourceId && !looksLikeUrl(auth.getResourceId())) {
+                findings.add(
+                        warn(
+                                "mcp.auth.resource-id='"
+                                        + auth.getResourceId()
+                                        + "' is not an http(s) URL: the token aud must match it"
+                                        + " exactly (scheme, host and port included)."));
+            } else if (hasResourceId && !auth.getResourceId().endsWith("/mcp")) {
+                findings.add(
+                        warn(
+                                "mcp.auth.resource-id='"
+                                        + auth.getResourceId()
+                                        + "' does not end in /mcp: it must match the public URL"
+                                        + " clients call and the audience your IdP puts in the"
+                                        + " token."));
+            }
+            if (hasAcceptedAudiences) {
+                findings.add(
+                        info(
+                                "mcp.auth.accepted-audiences="
+                                        + auth.getAcceptedAudiences()
+                                        + " - tokens whose aud matches any of these are accepted, the"
+                                        + " escape hatch for IdPs that can't mint a resource-specific"
+                                        + " audience (e.g. an Entra ID app id, or Supabase's"
+                                        + " aud=authenticated)."));
+            } else {
+                findings.add(
+                        info(
+                                "audience binding is strict (token aud must equal"
+                                        + " mcp.auth.resource-id). If your IdP can't mint that - e.g."
+                                        + " Entra ID issues aud=<client-id> - set"
+                                        + " mcp.auth.accepted-audiences to the audience it actually"
+                                        + " emits."));
+            }
         }
 
         if (isBlank(auth.getJwksUri())) {
@@ -85,6 +130,15 @@ public final class McpConfigValidator {
                                     + " or 'preferred_username', or provision accounts keyed by sub."));
         }
 
+        if (!auth.isRequireExistingAccount()) {
+            findings.add(
+                    warn(
+                            "mcp.auth.require-existing-account=false: any token your IdP signs can"
+                                    + " invoke MCP tools even if its subject has no Stirling account. Set"
+                                    + " it true unless you intend open access for every IdP-valid"
+                                    + " token."));
+        }
+
         if (mcp.isScopesEnabled()) {
             findings.add(
                     info(
@@ -93,8 +147,31 @@ public final class McpConfigValidator {
                                     + " mcp.scopes-enabled=false if it can only issue coarse tokens."));
         }
 
+        List<String> allowed = mcp.getAllowedOperations();
+        List<String> blocked = mcp.getBlockedOperations();
+        if (allowed != null && !allowed.isEmpty()) {
+            findings.add(
+                    info(
+                            "mcp.allowed-operations is a strict allow-list of "
+                                    + allowed.size()
+                                    + " operation(s); every other tool is hidden, so a wrong or"
+                                    + " typo'd id silently exposes nothing."));
+            List<String> shadowed =
+                    blocked == null
+                            ? List.of()
+                            : allowed.stream().filter(blocked::contains).toList();
+            if (!shadowed.isEmpty()) {
+                findings.add(
+                        warn(
+                                "mcp operation(s) "
+                                        + shadowed
+                                        + " are in both allowed-operations and blocked-operations;"
+                                        + " blocked wins, so they are hidden."));
+            }
+        }
+
         if (findings.stream().noneMatch(f -> f.severity() == Severity.WARN)) {
-            findings.add(info("OAuth settings look complete (issuer + resource-id set)."));
+            findings.add(info("OAuth settings look complete."));
         }
 
         return findings;
