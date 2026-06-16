@@ -25,20 +25,10 @@
   flex-shrink: 0;
 }
 
-.chat-panel__agent-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 9999px;
-  background: var(--mantine-color-body);
-  cursor: pointer;
-  transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
+/* The agent pill renders via the shared PanelHeaderPill (see PanelHeaderPill.css
+   for its visual styling). This class only carries the view-transition name so
+   the pill still morphs in/out with the chat panel. */
+.chat-panel__agent-pill-vt {
   view-transition-name: stirling-agent;
 }
 
@@ -48,89 +38,6 @@
 ::view-transition-new(stirling-agent) {
   animation-duration: 220ms;
   animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.chat-panel__agent-pill:hover {
-  background: var(--mantine-color-default-hover);
-}
-
-.chat-panel__agent-pill-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 9999px;
-  background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
-  flex-shrink: 0;
-  position: relative;
-}
-
-/* Running / in-progress status dot, anchored to the agent pill icon. */
-.agent-status-dot {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--mantine-color-blue-5);
-  border: 1.5px solid var(--mantine-color-body);
-  animation: agent-dot-pulse 2.4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes agent-dot-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .agent-status-dot {
-    animation: none;
-  }
-}
-
-.chat-panel__agent-pill--loading {
-  border-color: color-mix(
-    in srgb,
-    var(--mantine-color-blue-5) 60%,
-    var(--border-subtle)
-  );
-}
-
-[data-mantine-color-scheme="dark"] .chat-panel__agent-pill--loading {
-  border-color: color-mix(
-    in srgb,
-    var(--mantine-color-blue-4) 55%,
-    var(--border-subtle)
-  );
-}
-
-/* Dark-mode: let the pill blend into the rail. Just a thin border, no fill —
-   so it doesn't read as a clashing lighter card on the dark toolbar. */
-[data-mantine-color-scheme="dark"] .chat-panel__agent-pill {
-  background: transparent;
-  border-color: var(--border-subtle);
-}
-
-[data-mantine-color-scheme="dark"] .chat-panel__agent-pill:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-[data-mantine-color-scheme="dark"] .chat-panel__agent-pill-icon {
-  background: color-mix(
-    in srgb,
-    var(--mantine-color-blue-filled) 18%,
-    transparent
-  );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
 }
 
 /* Same treatment for the input pill and quick-action cards. */

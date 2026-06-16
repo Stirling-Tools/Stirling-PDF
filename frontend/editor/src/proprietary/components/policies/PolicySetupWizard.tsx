@@ -1,9 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { PanelHeader } from "@shared/components/PanelHeader";
-import { ROW_ACCENT } from "@app/components/policies/policyStatus";
+import { PanelHeaderPill } from "@app/components/shared/PanelHeaderPill";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { Input } from "@shared/components/Input";
@@ -157,9 +155,8 @@ export function PolicySetupWizard({
   if (!canConfigure) {
     return (
       <div className="pol-detail">
-        <PanelHeader
+        <PanelHeaderPill
           icon={category.icon}
-          iconAccent={ROW_ACCENT[category.id] ?? "blue"}
           title={
             isEdit
               ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
@@ -169,7 +166,8 @@ export function PolicySetupWizard({
                   label: t(`policies.catalog.${category.id}`, category.label),
                 })
           }
-          onBack={onCancel}
+          onClose={onCancel}
+          closeLabel={t("policies.wizard.close", "Close")}
         />
         <div className="pol-scroll">
           <EmptyState
@@ -297,9 +295,8 @@ export function PolicySetupWizard({
 
   return (
     <div className="pol-detail">
-      <PanelHeader
+      <PanelHeaderPill
         icon={category.icon}
-        iconAccent={ROW_ACCENT[category.id] ?? "blue"}
         title={
           isEdit
             ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
@@ -309,23 +306,17 @@ export function PolicySetupWizard({
                 label: t(`policies.catalog.${category.id}`, category.label),
               })
         }
-        subtitle={t("policies.wizard.stepOf", "Step {{step}} of {{total}}", {
-          step,
-          total: TOTAL_STEPS,
-        })}
-        onBack={back}
-        actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={t("cancel", "Cancel")}
-            onClick={onCancel}
-            leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
-          />
-        }
+        onClose={onCancel}
+        closeLabel={t("cancel", "Cancel")}
       />
 
       <div className="pol-steps">
+        <span className="pol-step-label">
+          {t("policies.wizard.stepOf", "Step {{step}} of {{total}}", {
+            step,
+            total: TOTAL_STEPS,
+          })}
+        </span>
         <StepIndicator total={TOTAL_STEPS} current={step} />
       </div>
 

@@ -165,11 +165,11 @@ describe("Policies right-sidebar surface", () => {
     expect(await screen.findByText("No activity yet")).toBeInTheDocument();
   });
 
-  it("returns to the list via the back button", () => {
+  it("returns to the list via the close button", () => {
     renderHost();
     fireEvent.click(screen.getByText("Security"));
     expect(screen.getByText("Enforces")).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText("Back"));
+    fireEvent.click(screen.getByLabelText("Close"));
     expect(screen.getByText("Policies")).toBeInTheDocument();
   });
 });

@@ -9,8 +9,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import { PanelHeader } from "@shared/components/PanelHeader";
-import { ROW_ACCENT } from "@app/components/policies/policyStatus";
+import { PanelHeaderPill } from "@app/components/shared/PanelHeaderPill";
 import { Card } from "@shared/components/Card";
 import { ChipFlow } from "@shared/components/ChipFlow";
 import { StatusBadge } from "@shared/components/StatusBadge";
@@ -130,11 +129,11 @@ export function PolicyDetailPanel({
   };
   return (
     <div className="pol-detail">
-      <PanelHeader
+      <PanelHeaderPill
         icon={category.icon}
-        iconAccent={ROW_ACCENT[category.id] ?? "blue"}
         title={t(`policies.catalog.${category.id}`, category.label)}
-        onBack={onBack}
+        onClose={onBack}
+        closeLabel={t("policies.detail.close", "Close")}
         actions={
           <StatusBadge
             tone={isPaused ? "warning" : "success"}
