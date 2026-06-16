@@ -1,5 +1,5 @@
 /**
- * External store for real backend policy runs (Phase B: auto-run on upload).
+ * External store for real backend policy runs (auto-run on upload).
  *
  * The auto-run controller fires a backend run for each enabled policy × each
  * newly-uploaded file and records it here; the detail view's activity feed reads

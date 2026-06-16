@@ -29,13 +29,13 @@ function defaultState(): PolicyState {
     // Enforce on upload by default; export enforcement is the alternative.
     runOn: "upload",
     // Every catalog category is a shipped, built-in policy → default (not
-    // deletable). User-created policies (later) will set this false.
+    // deletable).
     isDefault: true,
   };
 }
 
-/** An obsolete reviewer email from earlier development, scrubbed from persisted
- *  state on read so it can re-default to the real signed-in user. */
+/** An obsolete reviewer email scrubbed from persisted state on read so it can
+ *  re-default to the real signed-in user. */
 const STALE_REVIEWER_EMAIL = "matt@stirlingpdf.com";
 
 /** Read the full policy state, seeding + healing any missing categories. */

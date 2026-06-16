@@ -21,9 +21,8 @@ describe("scoreMatch", () => {
   });
 
   it("rejects unrelated words that share half their letters", () => {
-    // Regression: the old fallback accepted 50% relative Levenshtein
-    // similarity, so longer queries matched more junk (rotate vs update is
-    // edit distance 3 of 6)
+    // Unrelated words can share many letters (rotate vs update is edit
+    // distance 3 of 6) but must not be treated as a fuzzy match.
     expect(isFuzzyMatch("rotate", "update")).toBe(false);
     expect(isFuzzyMatch("rotate", "create")).toBe(false);
     expect(isFuzzyMatch("rotate", "private")).toBe(false);

@@ -10,8 +10,8 @@
  *   - the per-category breakdown comes from {@code categoryBreakdown}
  *     (wallet_category_summary view)
  *   - money-equivalent display and the units↔money cap preview need
- *     stripe.prices via Sync Engine (design §13 / PR-C2) and are deliberately
- *     absent until that ships
+ *     stripe.prices via Sync Engine and are deliberately absent until that
+ *     ships
  *   - the activity feed renders {@code wallet.recent}, which is {@code []} in
  *     V1 — so it shows a real empty state, not fabricated rows
  */
@@ -437,10 +437,9 @@ const GATE_CAP_BEHAVIOR: { gate: Gate; staysAtCap: boolean }[] = [
 ];
 
 /**
- * Folded-in "what happens at the cap" — previously its own GatesCard, now a
- * collapsed disclosure rendered inside the cap card(s) to save vertical space.
- * Mirrors the {@link DocHelp} toggle pattern; default-collapsed so it costs no
- * height until the user opens it.
+ * Collapsed "what happens at the cap" disclosure rendered inside the cap
+ * card(s) to save vertical space. Mirrors the {@link DocHelp} toggle pattern;
+ * default-collapsed so it costs no height until the user opens it.
  */
 function CapReachedHelp() {
   const { t } = useTranslation();
@@ -488,7 +487,7 @@ function CapReachedHelp() {
 
 /**
  * Leader-only roster of each teammate's billable usage this period. Display-only — per-member
- * sub-cap enforcement isn't shipped (see the follow-ups note), so there's no cap control here.
+ * sub-cap enforcement isn't shipped, so there's no cap control here.
  */
 function MemberUsage({ members }: { members: Wallet["members"] }) {
   const { t } = useTranslation();
