@@ -5,10 +5,10 @@ import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
-import wordmarkLight from "@portal/assets/stirling-pdf-logo-light.svg";
-import wordmarkDark from "@portal/assets/stirling-pdf-logo-dark.svg";
-import markLight from "@portal/assets/stirling-mark-light.svg";
-import markDark from "@portal/assets/stirling-mark-dark.svg";
+import wordmarkLight from "@shared/assets/stirling-pdf-logo-light.svg";
+import wordmarkDark from "@shared/assets/stirling-pdf-logo-dark.svg";
+import markLight from "@shared/assets/stirling-mark-light.svg";
+import markDark from "@shared/assets/stirling-mark-dark.svg";
 import {
   HomeIcon,
   SourcesIcon,
