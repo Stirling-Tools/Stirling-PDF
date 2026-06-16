@@ -124,7 +124,7 @@ export function AuditTab() {
             description="Workspace activity will appear here as it happens."
           />
         )}
-        {data && (
+        {!isEmpty && data && (
           <Table
             columns={cols}
             rows={rows}

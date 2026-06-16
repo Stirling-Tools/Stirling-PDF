@@ -167,7 +167,7 @@ export function DeploymentsTab() {
               description="Deployed regions appear here once your workspace is provisioned."
             />
           )}
-          {data && data.regions.length > 0 && (
+          {!isEmpty && data && data.regions.length > 0 && (
             <Table columns={regionCols} rows={data.regions} rowKey={(r) => r.code} />
           )}
         </Card>
