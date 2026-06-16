@@ -18,9 +18,21 @@ const getRun = vi.mocked(getPolicyRun);
 const update = vi.mocked(updateRun);
 
 const POLL_MS = 2000;
-const MAX_POLLS = 75;
+// Must match the poll loop's budget formula (stepCount × per-step timeout + grace).
+// With the 2-step `view()` below that's 2 × 300_000 + 30_000 = 630_000ms.
+const STEP_TIMEOUT_MS = 300_000;
+const POLL_GRACE_MS = 30_000;
+const STEP_COUNT = 2;
+const BUDGET_MS = STEP_COUNT * STEP_TIMEOUT_MS + POLL_GRACE_MS;
 const view = (status: string) =>
-  ({ runId: "r1", status, outputs: [], error: null }) as never;
+  ({
+    runId: "r1",
+    status,
+    currentStep: 1,
+    stepCount: STEP_COUNT,
+    outputs: [],
+    error: null,
+  }) as never;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -44,8 +56,8 @@ describe("policy run poll loop", () => {
       "r1",
       expect.objectContaining({ status: "FAILED" }),
     );
-    // It gave up early — far short of the full poll cap.
-    expect(getRun.mock.calls.length).toBeLessThan(MAX_POLLS);
+    // It gave up after the not-found streak, not after the full time budget.
+    expect(getRun.mock.calls.length).toBe(3);
   });
 
   it("also detects 404 via axios-style response.status", async () => {
@@ -89,14 +101,43 @@ describe("policy run poll loop", () => {
     expect(statuses).not.toContain("FAILED");
   });
 
-  it("marks FAILED when the run never reaches a terminal state within the cap", async () => {
+  it("marks FAILED when the run never reaches a terminal state within the budget", async () => {
     getRun.mockResolvedValue(view("RUNNING"));
     const p = poll("r1");
-    await tick(MAX_POLLS);
+    // Advance past the full step-count-derived budget in one go.
+    await vi.advanceTimersByTimeAsync(BUDGET_MS + POLL_MS);
     await p;
     expect(update).toHaveBeenLastCalledWith(
       "r1",
       expect.objectContaining({ status: "FAILED" }),
+    );
+  });
+
+  it("keeps polling a long run for the whole step budget (no premature giveup)", async () => {
+    getRun.mockResolvedValue(view("RUNNING"));
+    const p = poll("r1");
+    // 200s in: a single step may run up to the per-step timeout, so the run is
+    // still legitimately in flight and must keep being polled, not failed.
+    await tick(100);
+    expect(update).not.toHaveBeenCalledWith(
+      "r1",
+      expect.objectContaining({ status: "FAILED" }),
+    );
+    // Let it run out so the dangling promise doesn't leak into other tests.
+    await vi.advanceTimersByTimeAsync(BUDGET_MS);
+    await p;
+  });
+
+  it("records pipeline progress (currentStep/stepCount) while running", async () => {
+    getRun
+      .mockResolvedValueOnce(view("RUNNING"))
+      .mockResolvedValue(view("COMPLETED"));
+    const p = poll("r1");
+    await tick(2);
+    await p;
+    expect(update).toHaveBeenCalledWith(
+      "r1",
+      expect.objectContaining({ currentStep: 1, stepCount: STEP_COUNT }),
     );
   });
 

@@ -35,17 +35,41 @@ import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import { usePolicies } from "@app/hooks/usePolicies";
 import {
   dispatchKey,
+  getRun,
   isDispatched,
   markDispatched,
   recordRunStart,
+  removeRun,
   updateRun,
   usePolicyRuns,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
 
-/** Poll cadence + cap for a single run's status (≈2.5 min worst case). */
+/** Status poll cadence. */
 const POLL_MS = 2000;
-const MAX_POLLS = 75;
+
+/** The server aborts any single tool step that runs longer than its internal-API
+ *  read timeout, then fails the run — so a run can legitimately stay in flight
+ *  for up to this long per step. The client must keep polling at least that long,
+ *  or it abandons a run the server is still working on (which reads as a hang). */
+const STEP_TIMEOUT_MS = 300_000;
+
+/** Slack on top of the per-step budget: queueing before the first step starts and
+ *  output handling after the last one finishes. */
+const POLL_GRACE_MS = 30_000;
+
+/** Step count assumed before the first status report reveals the real pipeline
+ *  length — only governs the budget for those first couple of polls. */
+const DEFAULT_STEP_COUNT = 4;
+
+/** errorCode the backend sets when a run is rejected at admission (job queue full under load).
+ *  Transient, not a real processing failure — we back off and retry rather than surfacing it. */
+const POLICY_QUEUE_FULL = "POLICY_QUEUE_FULL";
+
+/** Auto-retry budget + exponential backoff for a queue-rejected run, to ride out a busy period
+ *  before giving up to a manual retry. Delays are BASE × 2^attempt (≈4s, 8s … 64s, ~2min total). */
+const MAX_QUEUE_RETRIES = 5;
+const QUEUE_RETRY_BASE_MS = 4000;
 
 /** Consecutive "run not found" responses before giving up. The run state lives
  *  in memory on the server, so a restart or a second instance behind the load
@@ -108,13 +132,65 @@ export function usePolicyAutoRun(): void {
   // run so a folder-watch burst opens the modal once, not once per file.
   const firedLimitModal = useRef<Set<string>>(new Set());
 
-  const onRunFinished = useCallback((view: PolicyRunView) => {
-    const code = view.errorCode;
-    if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
-    if (firedLimitModal.current.has(view.runId)) return;
-    firedLimitModal.current.add(view.runId);
-    dispatchPaygLimitReached(view.errorSubscribed ?? null);
+  // Latest policies, read from inside the stable retry callback (which has no deps).
+  const policiesRef = useRef(policies);
+  policiesRef.current = policies;
+  // Per-file (dispatchKey) count of consecutive queue-rejection retries, so backoff escalates and
+  // eventually gives up. Survives the run-id changing on each retry; reset on any real outcome.
+  const queueRetries = useRef<Map<string, number>>(new Map());
+
+  // A queue-rejected run is just backpressure — drop the rejected record and fire a fresh run in
+  // its place after a growing backoff (one feed row, not a new one per attempt). Once the budget is
+  // spent, leave the last failure standing so the activity feed offers a manual Retry.
+  const scheduleQueueRetry = useCallback((runId: string) => {
+    const rec = getRun(runId);
+    if (!rec) return;
+    const key = dispatchKey(rec.categoryId, rec.fileId);
+    const attempts = queueRetries.current.get(key) ?? 0;
+    const backendId = policiesRef.current[rec.categoryId]?.backendId;
+    if (attempts >= MAX_QUEUE_RETRIES || !backendId) {
+      queueRetries.current.delete(key);
+      return;
+    }
+    queueRetries.current.set(key, attempts + 1);
+    // Soft-label the row as busy through the backoff window (it's still FAILED underneath).
+    updateRun(runId, { retrying: true });
+    setTimeout(
+      () => {
+        removeRun(runId);
+        void runPolicyOnFile(
+          rec.categoryId,
+          backendId,
+          rec.fileId as FileId,
+          rec.fileName,
+        );
+      },
+      QUEUE_RETRY_BASE_MS * 2 ** attempts,
+    );
   }, []);
+
+  const onRunFinished = useCallback(
+    (view: PolicyRunView) => {
+      // Transient admission rejection (queue full): back off and retry instead of failing.
+      if (view.errorCode === POLICY_QUEUE_FULL) {
+        scheduleQueueRetry(view.runId);
+        return;
+      }
+      // Any genuine terminal outcome clears the file's retry budget so a later run starts fresh.
+      const finished = getRun(view.runId);
+      if (finished) {
+        queueRetries.current.delete(
+          dispatchKey(finished.categoryId, finished.fileId),
+        );
+      }
+      const code = view.errorCode;
+      if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
+      if (firedLimitModal.current.has(view.runId)) return;
+      firedLimitModal.current.add(view.runId);
+      dispatchPaygLimitReached(view.errorSubscribed ?? null);
+    },
+    [scheduleQueueRetry],
+  );
 
   // Dispatch: for each active policy × each session file not yet run, fire a run.
   useEffect(() => {
@@ -355,7 +431,7 @@ export async function runPolicyOnFile(
 }
 
 /**
- * Poll a run's status until it reaches a terminal state (or the cap). Calls {@code onTerminal} once
+ * Poll a run's status until it reaches a terminal state (or the budget). Calls {@code onTerminal} once
  * with the final view when it terminates — the caller uses that to pop the usage-limit modal when a
  * run was blocked. Only runs polled this session fire it (terminal runs aren't re-polled), so a
  * persisted failed run never re-triggers a modal on reload.
@@ -365,7 +441,13 @@ export async function poll(
   onTerminal?: (view: PolicyRunView) => void,
 ): Promise<void> {
   let notFoundStreak = 0;
-  for (let i = 0; i < MAX_POLLS; i++) {
+  // Sized to the server's worst case: each step may run up to STEP_TIMEOUT_MS
+  // before the server itself aborts it, so the budget tracks the real pipeline
+  // length (learned from the first status report) rather than a flat cap that
+  // would quit while a long step is still legitimately running.
+  let budgetMs = DEFAULT_STEP_COUNT * STEP_TIMEOUT_MS + POLL_GRACE_MS;
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < budgetMs) {
     await delay(POLL_MS);
     let view;
     try {
@@ -382,11 +464,16 @@ export async function poll(
       } else {
         notFoundStreak = 0; // a non-404 error doesn't confirm the run is gone.
       }
-      continue; // keep trying within the cap.
+      continue; // keep trying within the budget.
     }
     notFoundStreak = 0;
+    if (view.stepCount > 0) {
+      budgetMs = view.stepCount * STEP_TIMEOUT_MS + POLL_GRACE_MS;
+    }
     updateRun(runId, {
       status: view.status,
+      currentStep: view.currentStep,
+      stepCount: view.stepCount,
       outputs: view.outputs,
       error: view.error,
       errorCode: view.errorCode ?? null,
@@ -396,7 +483,7 @@ export async function poll(
       return;
     }
   }
-  // Cap reached without a terminal status — stop here and fail it, so the file
-  // doesn't enforce forever and reloads don't re-poll it.
+  // Budget exhausted without a terminal status — stop here and fail it, so the
+  // file doesn't enforce forever and reloads don't re-poll it.
   failRun(runId, "Enforcement timed out — the run didn't finish in time.");
 }
