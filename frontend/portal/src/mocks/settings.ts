@@ -51,7 +51,11 @@ const REGIONS: RegionOption[] = [
   { value: "us-west-2", label: "US West (Oregon)" },
   { value: "eu-west-1", label: "EU West (Ireland)" },
   { value: "eu-central-1", label: "EU Central (Frankfurt)" },
-  { value: "ap-southeast-2", label: "Asia Pacific (Sydney)", enterpriseOnly: true },
+  {
+    value: "ap-southeast-2",
+    label: "Asia Pacific (Sydney)",
+    enterpriseOnly: true,
+  },
   { value: "ca-central-1", label: "Canada (Central)", enterpriseOnly: true },
 ];
 

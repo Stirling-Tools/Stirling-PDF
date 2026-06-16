@@ -18,7 +18,11 @@ export function ApiClientPanel({ d }: { d: ApiClientDetail }) {
           <span>Rate-limit window</span>
           <strong>{pct(d.rateUsedPct)} used</strong>
         </div>
-        <ProgressBar value={d.rateUsedPct} thresholded label="Rate-limit usage" />
+        <ProgressBar
+          value={d.rateUsedPct}
+          thresholded
+          label="Rate-limit usage"
+        />
       </div>
 
       <div className="portal-sources__detail-section">

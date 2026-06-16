@@ -30,7 +30,9 @@ export function WebhookPanel({ d }: { d: WebhookDetail }) {
       </div>
 
       <div className="portal-sources__detail-section">
-        <span className="portal-sources__detail-heading">Recent deliveries</span>
+        <span className="portal-sources__detail-heading">
+          Recent deliveries
+        </span>
         <div className="portal-sources__endpoints">
           {d.recentDeliveries.map((r, i) => (
             <div key={i} className="portal-sources__endpoint">

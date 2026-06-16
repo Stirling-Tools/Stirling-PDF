@@ -100,10 +100,22 @@ export function AuditTab() {
 
       {data && (
         <section className="portal-infra__metrics">
-          <MetricCard label="Total events · 24h" value={data.summary.totalEvents.toLocaleString()} />
-          <MetricCard label="Processing" value={data.summary.processing.toLocaleString()} />
-          <MetricCard label="Elevation" value={data.summary.elevation.toLocaleString()} />
-          <MetricCard label="Config" value={data.summary.config.toLocaleString()} />
+          <MetricCard
+            label="Total events · 24h"
+            value={data.summary.totalEvents.toLocaleString()}
+          />
+          <MetricCard
+            label="Processing"
+            value={data.summary.processing.toLocaleString()}
+          />
+          <MetricCard
+            label="Elevation"
+            value={data.summary.elevation.toLocaleString()}
+          />
+          <MetricCard
+            label="Config"
+            value={data.summary.config.toLocaleString()}
+          />
         </section>
       )}
 

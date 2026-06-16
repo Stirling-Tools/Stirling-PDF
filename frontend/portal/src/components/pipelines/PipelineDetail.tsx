@@ -6,7 +6,10 @@ import {
   StatusBadge,
 } from "@shared/components";
 import type { Pipeline, SchemaDrift } from "@portal/api/pipelines";
-import { STAGE_ACCENT, STAGE_COLOR_VAR } from "@portal/components/pipelines/stageAccent";
+import {
+  STAGE_ACCENT,
+  STAGE_COLOR_VAR,
+} from "@portal/components/pipelines/stageAccent";
 import { compact, pct } from "@portal/components/pipelines/format";
 
 function DriftRow({ drift }: { drift: SchemaDrift }) {
@@ -16,7 +19,9 @@ function DriftRow({ drift }: { drift: SchemaDrift }) {
         className="portal-pipelines__drift-dot"
         style={{
           background:
-            drift.severity === "warning" ? "var(--color-amber)" : "var(--color-blue)",
+            drift.severity === "warning"
+              ? "var(--color-amber)"
+              : "var(--color-blue)",
         }}
         aria-hidden
       />
@@ -74,11 +79,15 @@ export function PipelineDetail({ pipeline }: PipelineDetailProps) {
                     style={{ background: STAGE_COLOR_VAR[accent] }}
                     aria-hidden
                   />
-                  <span className="portal-pipelines__stage-name">{stage.label}</span>
+                  <span className="portal-pipelines__stage-name">
+                    {stage.label}
+                  </span>
                 </div>
                 <div className="portal-pipelines__stage-chips">
                   {stage.ops.length === 0 ? (
-                    <span className="portal-pipelines__stage-empty">No ops</span>
+                    <span className="portal-pipelines__stage-empty">
+                      No ops
+                    </span>
                   ) : (
                     stage.ops.map((op) => (
                       <Chip key={op} tone={accent} size="sm">

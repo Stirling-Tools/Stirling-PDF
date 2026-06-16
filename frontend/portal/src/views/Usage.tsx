@@ -46,7 +46,13 @@ export function Usage() {
           </p>
         </div>
         <StatusBadge
-          tone={tier === "enterprise" ? "purple" : tier === "pro" ? "info" : "neutral"}
+          tone={
+            tier === "enterprise"
+              ? "purple"
+              : tier === "pro"
+                ? "info"
+                : "neutral"
+          }
           size="md"
         >
           {summary?.planName ?? "—"}
@@ -59,7 +65,10 @@ export function Usage() {
 
       <div className="portal-usage__row">
         {summary ? (
-          <CurrentPlanCard summary={summary} onUpgrade={() => openUpgrade(null)} />
+          <CurrentPlanCard
+            summary={summary}
+            onUpgrade={() => openUpgrade(null)}
+          />
         ) : (
           <Card padding="loose">
             <Skeleton width="10rem" height="1.25rem" />

@@ -96,7 +96,8 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
                 key={t}
                 type="button"
                 className={
-                  "portal-sources__type-card" + (type === t ? " is-selected" : "")
+                  "portal-sources__type-card" +
+                  (type === t ? " is-selected" : "")
                 }
                 onClick={() => setType(t)}
               >
@@ -113,14 +114,14 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
       {step === 1 && (
         <div className="portal-sources__wizard-body">
           <p className="portal-sources__wizard-lead">
-            Configure your <strong>{SOURCE_TYPE_META[type].label}</strong>. Point
-            it at Stirling and attach a default pipeline — every document this
-            source ingests runs through it automatically.
+            Configure your <strong>{SOURCE_TYPE_META[type].label}</strong>.
+            Point it at Stirling and attach a default pipeline — every document
+            this source ingests runs through it automatically.
           </p>
           <CodeBlock code={CONNECT_SNIPPET} caption="quickstart.sh" />
           <p className="portal-sources__wizard-note">
-            Scopes, rate limits and IP allowlists can be tuned after the source is
-            connected.
+            Scopes, rate limits and IP allowlists can be tuned after the source
+            is connected.
           </p>
         </div>
       )}

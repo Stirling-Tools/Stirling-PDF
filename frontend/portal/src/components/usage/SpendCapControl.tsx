@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Button, Card, ProgressBar, Slider, StatusBadge } from "@shared/components";
+import {
+  Button,
+  Card,
+  ProgressBar,
+  Slider,
+  StatusBadge,
+} from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import type { BillingSummary } from "@portal/api/usage";
 import { USD } from "@portal/components/usage/format";
@@ -31,8 +37,8 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
       <Card padding="loose" className="portal-usage__cap-card">
         <h2 className="portal-usage__section-title">Spend controls</h2>
         <p className="portal-usage__section-sub">
-          Spend is governed by your committed-volume contract. Overage terms
-          and alert thresholds are managed with your account team.
+          Spend is governed by your committed-volume contract. Overage terms and
+          alert thresholds are managed with your account team.
         </p>
         <div className="portal-usage__cap-meta">
           <StatusBadge tone="purple" size="sm">

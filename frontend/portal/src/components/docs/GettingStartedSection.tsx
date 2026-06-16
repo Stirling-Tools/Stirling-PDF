@@ -58,8 +58,8 @@ export function GettingStartedSection({
 
       <Card className="portal-docs__callout" accent="blue" padding="loose">
         <strong>Next:</strong> wire the same call into a pipeline to chain
-        validation, redaction, and delivery — or expose it to an agent over
-        MCP. See <em>Playbooks</em> for copy-paste recipes.
+        validation, redaction, and delivery — or expose it to an agent over MCP.
+        See <em>Playbooks</em> for copy-paste recipes.
       </Card>
     </DocsSection>
   );

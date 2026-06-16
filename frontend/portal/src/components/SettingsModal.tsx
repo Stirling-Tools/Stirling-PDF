@@ -27,33 +27,35 @@ interface SettingsModalProps {
 }
 
 /** Display copy for each notification category, keyed by the snapshot id. */
-const NOTIFICATION_COPY: Record<string, { label: string; description: string }> =
-  {
-    "pipeline-failures": {
-      label: "Pipeline failures",
-      description: "A run errors out or a step times out.",
-    },
-    "pipeline-success": {
-      label: "Pipeline completions",
-      description: "Every successful pipeline run finishes.",
-    },
-    "usage-alerts": {
-      label: "Usage & quota alerts",
-      description: "You approach a plan limit or rate cap.",
-    },
-    "weekly-digest": {
-      label: "Weekly digest",
-      description: "A Monday summary of volume and health.",
-    },
-    "security-alerts": {
-      label: "Security alerts",
-      description: "New API keys, sign-ins, or permission changes.",
-    },
-    "product-updates": {
-      label: "Product updates",
-      description: "New operations, sources, and release notes.",
-    },
-  };
+const NOTIFICATION_COPY: Record<
+  string,
+  { label: string; description: string }
+> = {
+  "pipeline-failures": {
+    label: "Pipeline failures",
+    description: "A run errors out or a step times out.",
+  },
+  "pipeline-success": {
+    label: "Pipeline completions",
+    description: "Every successful pipeline run finishes.",
+  },
+  "usage-alerts": {
+    label: "Usage & quota alerts",
+    description: "You approach a plan limit or rate cap.",
+  },
+  "weekly-digest": {
+    label: "Weekly digest",
+    description: "A Monday summary of volume and health.",
+  },
+  "security-alerts": {
+    label: "Security alerts",
+    description: "New API keys, sign-ins, or permission changes.",
+  },
+  "product-updates": {
+    label: "Product updates",
+    description: "New operations, sources, and release notes.",
+  },
+};
 
 const TABS: TabItem<SettingsTab>[] = [
   { key: "profile", label: "Profile" },
@@ -238,7 +240,12 @@ function ProfilePanel({
   return (
     <div className="portal-settings__section">
       <div className="portal-settings__identity">
-        <Avatar src={avatarUrl} name={name || "Account"} size="lg" tone="blue" />
+        <Avatar
+          src={avatarUrl}
+          name={name || "Account"}
+          size="lg"
+          tone="blue"
+        />
         <div className="portal-settings__identity-meta">
           <div className="portal-settings__identity-name">
             {name || "Account"}

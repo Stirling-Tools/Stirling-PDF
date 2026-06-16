@@ -23,7 +23,9 @@ export const Free: Story = { args: { plan: free, isCurrent: false } };
 
 export const Pro: Story = { args: { plan: pro, isCurrent: false } };
 
-export const Enterprise: Story = { args: { plan: enterprise, isCurrent: false } };
+export const Enterprise: Story = {
+  args: { plan: enterprise, isCurrent: false },
+};
 
 // The active plan is outlined and its CTA disabled.
 export const Current: Story = { args: { plan: pro, isCurrent: true } };

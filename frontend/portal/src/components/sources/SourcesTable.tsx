@@ -72,7 +72,9 @@ export function SourcesTable({
       {
         key: "lastEvent",
         header: "Last event",
-        render: (s) => <span className="portal-sources__muted">{s.lastEvent}</span>,
+        render: (s) => (
+          <span className="portal-sources__muted">{s.lastEvent}</span>
+        ),
       },
       {
         key: "owner",

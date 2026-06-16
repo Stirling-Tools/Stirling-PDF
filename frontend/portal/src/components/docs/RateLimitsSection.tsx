@@ -21,7 +21,9 @@ export function RateLimitsSection({ rateLimit }: { rateLimit: RateLimit }) {
         </Card>
         <Card padding="default">
           <div className="portal-docs__limit-label">Concurrency</div>
-          <div className="portal-docs__limit-value">{rateLimit.concurrency}</div>
+          <div className="portal-docs__limit-value">
+            {rateLimit.concurrency}
+          </div>
         </Card>
       </div>
       <CodeBlock

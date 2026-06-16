@@ -8,7 +8,10 @@ import {
   type OpKind,
   type PipelineOp,
 } from "@shared/data/ops";
-import { OP_KIND_ACCENT, STAGE_COLOR_VAR } from "@portal/components/pipelines/stageAccent";
+import {
+  OP_KIND_ACCENT,
+  STAGE_COLOR_VAR,
+} from "@portal/components/pipelines/stageAccent";
 
 const COMPOSER_STEPS = ["Source", "Operations", "Routing"] as const;
 
@@ -126,7 +129,11 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
             </Button>
           )}
           {isLast ? (
-            <Button variant="gradient" onClick={deploy} trailingIcon={<span aria-hidden>→</span>}>
+            <Button
+              variant="gradient"
+              onClick={deploy}
+              trailingIcon={<span aria-hidden>→</span>}
+            >
               Deploy pipeline
             </Button>
           ) : (
@@ -149,11 +156,14 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               <button
                 type="button"
                 className={
-                  "portal-pipelines__option" + (source === "any" ? " is-selected" : "")
+                  "portal-pipelines__option" +
+                  (source === "any" ? " is-selected" : "")
                 }
                 onClick={() => setSource("any")}
               >
-                <span className="portal-pipelines__option-label">Any source</span>
+                <span className="portal-pipelines__option-label">
+                  Any source
+                </span>
                 <span className="portal-pipelines__option-desc">
                   Accept documents from every connected channel
                 </span>
@@ -163,12 +173,17 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                   key={opt.id}
                   type="button"
                   className={
-                    "portal-pipelines__option" + (source === opt.id ? " is-selected" : "")
+                    "portal-pipelines__option" +
+                    (source === opt.id ? " is-selected" : "")
                   }
                   onClick={() => setSource(opt.id)}
                 >
-                  <span className="portal-pipelines__option-label">{opt.label}</span>
-                  <span className="portal-pipelines__option-desc">{opt.desc}</span>
+                  <span className="portal-pipelines__option-label">
+                    {opt.label}
+                  </span>
+                  <span className="portal-pipelines__option-desc">
+                    {opt.desc}
+                  </span>
                 </button>
               ))}
             </div>
@@ -191,7 +206,12 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                     const op = lookupPickerOp(id);
                     const accent = op ? OP_KIND_ACCENT[op.kind] : "purple";
                     return (
-                      <Chip key={id} tone={accent} size="sm" onRemove={() => toggleOp(id)}>
+                      <Chip
+                        key={id}
+                        tone={accent}
+                        size="sm"
+                        onRemove={() => toggleOp(id)}
+                      >
                         {op?.label ?? id}
                       </Chip>
                     );
@@ -201,7 +221,9 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
             </div>
 
             <div className="portal-pipelines__agents">
-              <span className="portal-pipelines__agents-label">Quick-add bundles</span>
+              <span className="portal-pipelines__agents-label">
+                Quick-add bundles
+              </span>
               <div className="portal-pipelines__agents-row">
                 {PIPELINE_AGENTS.map((agent) => (
                   <Chip
@@ -222,7 +244,9 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                   <div className="portal-pipelines__library-head">
                     <span
                       className="portal-pipelines__library-pip"
-                      style={{ background: STAGE_COLOR_VAR[OP_KIND_ACCENT[kind]] }}
+                      style={{
+                        background: STAGE_COLOR_VAR[OP_KIND_ACCENT[kind]],
+                      }}
                       aria-hidden
                     />
                     {OP_KIND_LABEL[kind]}
@@ -263,8 +287,12 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                   }
                   onClick={() => setDestination(opt.id)}
                 >
-                  <span className="portal-pipelines__option-label">{opt.label}</span>
-                  <span className="portal-pipelines__option-desc">{opt.desc}</span>
+                  <span className="portal-pipelines__option-label">
+                    {opt.label}
+                  </span>
+                  <span className="portal-pipelines__option-desc">
+                    {opt.desc}
+                  </span>
                 </button>
               ))}
             </div>
@@ -279,7 +307,9 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                 />
                 <span>
                   <strong>Email on failure</strong>
-                  <span>Notify the on-call list when error rate trips its bound</span>
+                  <span>
+                    Notify the on-call list when error rate trips its bound
+                  </span>
                 </span>
               </label>
               <label className="portal-pipelines__alert">
@@ -301,7 +331,9 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                 />
                 <span>
                   <strong>Route low-confidence to review</strong>
-                  <span>Send docs under the confidence bound to a human queue</span>
+                  <span>
+                    Send docs under the confidence bound to a human queue
+                  </span>
                 </span>
               </label>
             </div>

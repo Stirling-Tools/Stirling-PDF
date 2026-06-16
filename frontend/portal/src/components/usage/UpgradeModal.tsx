@@ -17,7 +17,10 @@ interface UpgradeCopy {
  * the cap sees urgency; a pro user is nudged toward a committed plan; an
  * enterprise user is routed to their account team for bespoke terms.
  */
-function upgradeCopy(currentTier: Tier, target: PlanOption | null): UpgradeCopy {
+function upgradeCopy(
+  currentTier: Tier,
+  target: PlanOption | null,
+): UpgradeCopy {
   // Cap-reached: free user pushed to pay-as-you-go.
   if (currentTier === "free") {
     return {

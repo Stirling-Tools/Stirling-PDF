@@ -26,9 +26,30 @@ const OVER_CAP: StorageConfig = {
   quotaGb: 2000,
   retention: "180",
   providers: [
-    { id: "stirling", name: "Stirling Cloud", kind: "stirling", connected: true, detail: "Primary vault · us-east-1", usedGb: 1532 },
-    { id: "s3", name: "Amazon S3", kind: "s3", connected: true, detail: "s3://acme-prod-archive · WORM", usedGb: 388 },
-    { id: "azure", name: "Azure Blob", kind: "azure", connected: false, detail: "Not connected", usedGb: 0 },
+    {
+      id: "stirling",
+      name: "Stirling Cloud",
+      kind: "stirling",
+      connected: true,
+      detail: "Primary vault · us-east-1",
+      usedGb: 1532,
+    },
+    {
+      id: "s3",
+      name: "Amazon S3",
+      kind: "s3",
+      connected: true,
+      detail: "s3://acme-prod-archive · WORM",
+      usedGb: 388,
+    },
+    {
+      id: "azure",
+      name: "Azure Blob",
+      kind: "azure",
+      connected: false,
+      detail: "Not connected",
+      usedGb: 0,
+    },
   ],
 };
 
@@ -37,7 +58,9 @@ export const OverThreshold: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/storage", () => HttpResponse.json(OVER_CAP)),
+        http.get("/v1/infrastructure/storage", () =>
+          HttpResponse.json(OVER_CAP),
+        ),
       ],
     },
   },

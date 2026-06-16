@@ -5,7 +5,11 @@ import { USD, formatBillingDate } from "@portal/components/usage/format";
 import "@portal/views/Usage.css";
 
 /** Headline billing KPIs: docs processed, cost, the tier-relevant cap figure, and renewal. */
-export function BillingKpiStrip({ summary }: { summary: BillingSummary | null }) {
+export function BillingKpiStrip({
+  summary,
+}: {
+  summary: BillingSummary | null;
+}) {
   const { tier } = useTier();
 
   // Overage is meaningless on free (gated) / enterprise (committed) — surface
@@ -41,7 +45,9 @@ export function BillingKpiStrip({ summary }: { summary: BillingSummary | null })
         label="Docs this period"
         value={summary ? summary.docsThisPeriod.toLocaleString() : "—"}
         description={
-          summary ? `of ${summary.includedDocs.toLocaleString()} included` : undefined
+          summary
+            ? `of ${summary.includedDocs.toLocaleString()} included`
+            : undefined
         }
       />
       <MetricCard

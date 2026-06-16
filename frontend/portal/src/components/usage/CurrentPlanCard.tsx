@@ -56,7 +56,11 @@ export function CurrentPlanCard({
         </div>
         <StatusBadge
           tone={
-            tier === "enterprise" ? "purple" : tier === "pro" ? "info" : "neutral"
+            tier === "enterprise"
+              ? "purple"
+              : tier === "pro"
+                ? "info"
+                : "neutral"
           }
           size="sm"
         >

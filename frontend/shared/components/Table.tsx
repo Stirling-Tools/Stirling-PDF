@@ -70,7 +70,9 @@ export function Table<T>({
               <tr
                 key={rowKey(row)}
                 className={
-                  interactive ? "sui-table__row sui-table__row--interactive" : "sui-table__row"
+                  interactive
+                    ? "sui-table__row sui-table__row--interactive"
+                    : "sui-table__row"
                 }
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 tabIndex={interactive ? 0 : undefined}

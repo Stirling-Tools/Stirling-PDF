@@ -289,23 +289,81 @@ export interface SecurityConfig {
 }
 
 const CERTS_FULL: ComplianceCert[] = [
-  { id: "soc2", name: "SOC 2 Type II", status: "certified", detail: "Audited Apr 2026 · Coalfire" },
-  { id: "iso", name: "ISO 27001", status: "certified", detail: "Cert #IS-774201 · valid to 2027" },
-  { id: "hipaa", name: "HIPAA", status: "certified", detail: "BAA available · PHI-eligible" },
-  { id: "gdpr", name: "GDPR", status: "certified", detail: "EU SCCs · DPA on file" },
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    status: "certified",
+    detail: "Audited Apr 2026 · Coalfire",
+  },
+  {
+    id: "iso",
+    name: "ISO 27001",
+    status: "certified",
+    detail: "Cert #IS-774201 · valid to 2027",
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    status: "certified",
+    detail: "BAA available · PHI-eligible",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    status: "certified",
+    detail: "EU SCCs · DPA on file",
+  },
 ];
 
 const CERTS_FREE: ComplianceCert[] = [
-  { id: "soc2", name: "SOC 2 Type II", status: "certified", detail: "Inherited — Stirling platform" },
-  { id: "iso", name: "ISO 27001", status: "certified", detail: "Inherited — Stirling platform" },
-  { id: "hipaa", name: "HIPAA", status: "not-started", detail: "Requires a paid plan + BAA" },
-  { id: "gdpr", name: "GDPR", status: "in-progress", detail: "Standard EU processing terms" },
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    status: "certified",
+    detail: "Inherited — Stirling platform",
+  },
+  {
+    id: "iso",
+    name: "ISO 27001",
+    status: "certified",
+    detail: "Inherited — Stirling platform",
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    status: "not-started",
+    detail: "Requires a paid plan + BAA",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    status: "in-progress",
+    detail: "Standard EU processing terms",
+  },
 ];
 
 const IP_ALLOWLIST: IpAllowEntry[] = [
-  { id: "ip-1", label: "Corp VPN egress", cidr: "52.14.0.0/16", addedBy: "maria.chen", added: "Feb 11, 2026" },
-  { id: "ip-2", label: "Data centre — IAD", cidr: "18.221.0.0/16", addedBy: "devon.park", added: "Jan 4, 2026" },
-  { id: "ip-3", label: "On-call jump host", cidr: "203.0.113.7/32", addedBy: "maria.chen", added: "Dec 19, 2025" },
+  {
+    id: "ip-1",
+    label: "Corp VPN egress",
+    cidr: "52.14.0.0/16",
+    addedBy: "maria.chen",
+    added: "Feb 11, 2026",
+  },
+  {
+    id: "ip-2",
+    label: "Data centre — IAD",
+    cidr: "18.221.0.0/16",
+    addedBy: "devon.park",
+    added: "Jan 4, 2026",
+  },
+  {
+    id: "ip-3",
+    label: "On-call jump host",
+    cidr: "203.0.113.7/32",
+    addedBy: "maria.chen",
+    added: "Dec 19, 2025",
+  },
 ];
 
 export function securityFor(tier: Tier): SecurityConfig {
@@ -358,9 +416,30 @@ export interface StorageConfig {
 }
 
 const PROVIDERS_FULL: StorageProvider[] = [
-  { id: "stirling", name: "Stirling Cloud", kind: "stirling", connected: true, detail: "Primary vault · us-east-1", usedGb: 612 },
-  { id: "s3", name: "Amazon S3", kind: "s3", connected: true, detail: "s3://acme-prod-archive · WORM", usedGb: 388 },
-  { id: "azure", name: "Azure Blob", kind: "azure", connected: false, detail: "Not connected", usedGb: 0 },
+  {
+    id: "stirling",
+    name: "Stirling Cloud",
+    kind: "stirling",
+    connected: true,
+    detail: "Primary vault · us-east-1",
+    usedGb: 612,
+  },
+  {
+    id: "s3",
+    name: "Amazon S3",
+    kind: "s3",
+    connected: true,
+    detail: "s3://acme-prod-archive · WORM",
+    usedGb: 388,
+  },
+  {
+    id: "azure",
+    name: "Azure Blob",
+    kind: "azure",
+    connected: false,
+    detail: "Not connected",
+    usedGb: 0,
+  },
 ];
 
 export function storageFor(tier: Tier): StorageConfig {
@@ -413,18 +492,126 @@ export interface AuditEvent {
 }
 
 const AUDIT_EVENTS_ALL: AuditEvent[] = [
-  { id: "a-1", timestamp: "10:42:18", category: "processing", action: "Pipeline run completed", actor: "ci-bot", target: "COI Compliance", status: "success", latencyMs: 412 },
-  { id: "a-2", timestamp: "10:38:02", category: "auth", action: "API key authenticated", actor: "sk_live_a3f8…", target: "us-east-1 gateway", status: "success", latencyMs: 9 },
-  { id: "a-3", timestamp: "10:31:55", category: "elevation", action: "Admin role assumed", actor: "maria.chen", target: "Security settings", status: "warning", latencyMs: 21 },
-  { id: "a-4", timestamp: "10:24:40", category: "config", action: "Retention policy changed", actor: "devon.park", target: "30d → 90d", status: "info", latencyMs: 14 },
-  { id: "a-5", timestamp: "10:19:07", category: "security", action: "IP allowlist updated", actor: "maria.chen", target: "203.0.113.7/32", status: "info", latencyMs: 11 },
-  { id: "a-6", timestamp: "10:12:33", category: "auth", action: "Failed key authentication", actor: "sk_live_d901…", target: "us-west-2 gateway", status: "danger", latencyMs: 6 },
-  { id: "a-7", timestamp: "10:04:51", category: "processing", action: "Redaction job queued", actor: "ci-bot", target: "Prior Auth batch", status: "success", latencyMs: 188 },
-  { id: "a-8", timestamp: "09:58:12", category: "elevation", action: "Key rotation requested", actor: "devon.park", target: "Ops · admin (legacy)", status: "warning", latencyMs: 33 },
-  { id: "a-9", timestamp: "09:51:44", category: "security", action: "Access policy set to HYOK", actor: "maria.chen", target: "Document encryption", status: "info", latencyMs: 27 },
-  { id: "a-10", timestamp: "09:43:20", category: "config", action: "Region added", actor: "ci-bot", target: "eu-west-1", status: "success", latencyMs: 240 },
-  { id: "a-11", timestamp: "09:36:08", category: "processing", action: "Schema drift flagged", actor: "extract-engine", target: "Invoice v3", status: "warning", latencyMs: 95 },
-  { id: "a-12", timestamp: "09:28:55", category: "auth", action: "SSO session started", actor: "devon.park", target: "Okta · acme.com", status: "success", latencyMs: 18 },
+  {
+    id: "a-1",
+    timestamp: "10:42:18",
+    category: "processing",
+    action: "Pipeline run completed",
+    actor: "ci-bot",
+    target: "COI Compliance",
+    status: "success",
+    latencyMs: 412,
+  },
+  {
+    id: "a-2",
+    timestamp: "10:38:02",
+    category: "auth",
+    action: "API key authenticated",
+    actor: "sk_live_a3f8…",
+    target: "us-east-1 gateway",
+    status: "success",
+    latencyMs: 9,
+  },
+  {
+    id: "a-3",
+    timestamp: "10:31:55",
+    category: "elevation",
+    action: "Admin role assumed",
+    actor: "maria.chen",
+    target: "Security settings",
+    status: "warning",
+    latencyMs: 21,
+  },
+  {
+    id: "a-4",
+    timestamp: "10:24:40",
+    category: "config",
+    action: "Retention policy changed",
+    actor: "devon.park",
+    target: "30d → 90d",
+    status: "info",
+    latencyMs: 14,
+  },
+  {
+    id: "a-5",
+    timestamp: "10:19:07",
+    category: "security",
+    action: "IP allowlist updated",
+    actor: "maria.chen",
+    target: "203.0.113.7/32",
+    status: "info",
+    latencyMs: 11,
+  },
+  {
+    id: "a-6",
+    timestamp: "10:12:33",
+    category: "auth",
+    action: "Failed key authentication",
+    actor: "sk_live_d901…",
+    target: "us-west-2 gateway",
+    status: "danger",
+    latencyMs: 6,
+  },
+  {
+    id: "a-7",
+    timestamp: "10:04:51",
+    category: "processing",
+    action: "Redaction job queued",
+    actor: "ci-bot",
+    target: "Prior Auth batch",
+    status: "success",
+    latencyMs: 188,
+  },
+  {
+    id: "a-8",
+    timestamp: "09:58:12",
+    category: "elevation",
+    action: "Key rotation requested",
+    actor: "devon.park",
+    target: "Ops · admin (legacy)",
+    status: "warning",
+    latencyMs: 33,
+  },
+  {
+    id: "a-9",
+    timestamp: "09:51:44",
+    category: "security",
+    action: "Access policy set to HYOK",
+    actor: "maria.chen",
+    target: "Document encryption",
+    status: "info",
+    latencyMs: 27,
+  },
+  {
+    id: "a-10",
+    timestamp: "09:43:20",
+    category: "config",
+    action: "Region added",
+    actor: "ci-bot",
+    target: "eu-west-1",
+    status: "success",
+    latencyMs: 240,
+  },
+  {
+    id: "a-11",
+    timestamp: "09:36:08",
+    category: "processing",
+    action: "Schema drift flagged",
+    actor: "extract-engine",
+    target: "Invoice v3",
+    status: "warning",
+    latencyMs: 95,
+  },
+  {
+    id: "a-12",
+    timestamp: "09:28:55",
+    category: "auth",
+    action: "SSO session started",
+    actor: "devon.park",
+    target: "Okta · acme.com",
+    status: "success",
+    latencyMs: 18,
+  },
 ];
 
 export interface AuditSummary {
@@ -452,7 +639,8 @@ export function auditLogFor(tier: Tier): AuditLogResponse {
   const scale = tier === "free" ? 1 : tier === "pro" ? 21 : 86;
   const summary: AuditSummary = {
     totalEvents: events.length * scale,
-    processing: events.filter((e) => e.category === "processing").length * scale,
+    processing:
+      events.filter((e) => e.category === "processing").length * scale,
     elevation: events.filter((e) => e.category === "elevation").length * scale,
     config: events.filter((e) => e.category === "config").length * scale,
   };

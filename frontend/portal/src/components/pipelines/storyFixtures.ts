@@ -20,9 +20,17 @@ export const HEALTHY_PIPELINE: Pipeline = {
   },
   stages: [
     { key: "ingest", label: "Ingest", ops: ["Parse", "Classify", "Extract"] },
-    { key: "validate", label: "Validate", ops: ["Schema validate", "Confidence bounds"] },
+    {
+      key: "validate",
+      label: "Validate",
+      ops: ["Schema validate", "Confidence bounds"],
+    },
     { key: "modify", label: "Modify", ops: ["PDF → CSV"] },
-    { key: "secure", label: "Secure", ops: ["Redact PII", "Encryption at rest"] },
+    {
+      key: "secure",
+      label: "Secure",
+      ops: ["Redact PII", "Encryption at rest"],
+    },
     { key: "route", label: "Route / Store", ops: ["Primary store", "Notify"] },
   ],
   golden: { passing: 42, total: 42, lastRun: "1h ago" },

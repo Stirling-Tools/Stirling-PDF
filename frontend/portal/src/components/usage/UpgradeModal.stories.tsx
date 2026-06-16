@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { UpgradeModal } from "@portal/components/usage/UpgradeModal";
 import { PLAN_OPTIONS } from "@portal/mocks/usage";
 
-const enterprisePlan = PLAN_OPTIONS.find((p) => p.tier === "enterprise") ?? null;
+const enterprisePlan =
+  PLAN_OPTIONS.find((p) => p.tier === "enterprise") ?? null;
 
 const meta: Meta<typeof UpgradeModal> = {
   title: "Portal/Usage/UpgradeModal",

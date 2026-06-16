@@ -46,7 +46,9 @@ export function BillingHistoryTable() {
       key: "date",
       header: "Date",
       render: (r) => (
-        <span className="portal-usage__hist-date">{formatBillingDate(r.date)}</span>
+        <span className="portal-usage__hist-date">
+          {formatBillingDate(r.date)}
+        </span>
       ),
       width: "9rem",
     },
@@ -69,7 +71,9 @@ export function BillingHistoryTable() {
       render: (r) => (
         <span
           className={
-            r.amount < 0 ? "portal-usage__hist-credit" : "portal-usage__hist-amount"
+            r.amount < 0
+              ? "portal-usage__hist-credit"
+              : "portal-usage__hist-amount"
           }
         >
           {r.amount < 0

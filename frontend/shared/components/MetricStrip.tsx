@@ -14,7 +14,9 @@ export interface MetricStripProps {
 export function MetricStrip({ children, className }: MetricStripProps) {
   return (
     <div
-      className={["sui-metric-strip", className ?? ""].filter(Boolean).join(" ")}
+      className={["sui-metric-strip", className ?? ""]
+        .filter(Boolean)
+        .join(" ")}
     >
       {children}
     </div>

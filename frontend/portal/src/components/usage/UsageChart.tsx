@@ -1,10 +1,7 @@
 import { useMemo } from "react";
 import { EmptyState, Skeleton } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import {
-  fetchBillingUsage,
-  type UsageSeriesResponse,
-} from "@portal/api/usage";
+import { fetchBillingUsage, type UsageSeriesResponse } from "@portal/api/usage";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import "@portal/components/UsageAreaChart.css";
 

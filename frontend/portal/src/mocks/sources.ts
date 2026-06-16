@@ -520,7 +520,11 @@ export function kpisFor(tier: Tier): SourcesKpi[] {
 
   if (tier === "enterprise") {
     return [
-      { value: agentsActive, delta: 0.25, description: `${agents.length} total` },
+      {
+        value: agentsActive,
+        delta: 0.25,
+        description: `${agents.length} total`,
+      },
       { value: 42, delta: 0.09, description: "Eval scenarios" },
       { value: "96.4%", deltaDirection: "up", delta: 0.012 },
       { value: docs24h.toLocaleString(), delta: 0.14 },

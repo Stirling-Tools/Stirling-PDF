@@ -228,34 +228,90 @@ const RATE_LIMITS: Record<Tier, RateLimit> = {
 };
 
 const ERRORS: ApiErrorRow[] = [
-  { code: "400", tone: "amber", meaning: "Malformed request or unsupported file type." },
+  {
+    code: "400",
+    tone: "amber",
+    meaning: "Malformed request or unsupported file type.",
+  },
   { code: "401", tone: "red", meaning: "Missing or invalid API key." },
-  { code: "402", tone: "amber", meaning: "Quota exhausted — upgrade or wait for reset." },
+  {
+    code: "402",
+    tone: "amber",
+    meaning: "Quota exhausted — upgrade or wait for reset.",
+  },
   { code: "422", tone: "amber", meaning: "Document failed schema validation." },
   { code: "429", tone: "amber", meaning: "Rate limited. Honour Retry-After." },
-  { code: "500", tone: "red", meaning: "Internal error — safe to retry with backoff." },
+  {
+    code: "500",
+    tone: "red",
+    meaning: "Internal error — safe to retry with backoff.",
+  },
 ];
 
 const SDKS: Sdk[] = [
-  { name: "Python", icon: "🐍", install: "pip install stirling", lang: "bash", status: "ga" },
-  { name: "Node / TypeScript", icon: "⬢", install: "npm install @stirling/sdk", lang: "bash", status: "ga" },
-  { name: "Go", icon: "◉", install: "go get github.com/stirling/stirling-go", lang: "bash", status: "ga" },
-  { name: "Ruby", icon: "◆", install: "gem install stirling", lang: "bash", status: "ga" },
-  { name: "Java", icon: "☕", install: "implementation 'com.stirling:sdk:1.x'", lang: "bash", status: "ga" },
-  { name: ".NET", icon: "◈", install: "dotnet add package Stirling", lang: "bash", status: "beta" },
+  {
+    name: "Python",
+    icon: "🐍",
+    install: "pip install stirling",
+    lang: "bash",
+    status: "ga",
+  },
+  {
+    name: "Node / TypeScript",
+    icon: "⬢",
+    install: "npm install @stirling/sdk",
+    lang: "bash",
+    status: "ga",
+  },
+  {
+    name: "Go",
+    icon: "◉",
+    install: "go get github.com/stirling/stirling-go",
+    lang: "bash",
+    status: "ga",
+  },
+  {
+    name: "Ruby",
+    icon: "◆",
+    install: "gem install stirling",
+    lang: "bash",
+    status: "ga",
+  },
+  {
+    name: "Java",
+    icon: "☕",
+    install: "implementation 'com.stirling:sdk:1.x'",
+    lang: "bash",
+    status: "ga",
+  },
+  {
+    name: ".NET",
+    icon: "◈",
+    install: "dotnet add package Stirling",
+    lang: "bash",
+    status: "beta",
+  },
   // PHP client predates the typed-response rewrite; pinned, no new endpoints.
-  { name: "PHP", icon: "🐘", install: "composer require stirling/stirling-php:^0.9", lang: "bash", status: "deprecated" },
+  {
+    name: "PHP",
+    icon: "🐘",
+    install: "composer require stirling/stirling-php:^0.9",
+    lang: "bash",
+    status: "deprecated",
+  },
 ];
 
 const COMPONENTS: EmbedComponent[] = [
   {
     name: "<DocumentViewer />",
-    blurb: "Render any extracted document with field overlays and confidence highlighting.",
+    blurb:
+      "Render any extracted document with field overlays and confidence highlighting.",
     tag: "React",
   },
   {
     name: "<UploadDropzone />",
-    blurb: "Drag-and-drop ingestion with client-side type detection and progress.",
+    blurb:
+      "Drag-and-drop ingestion with client-side type detection and progress.",
     tag: "React",
   },
   {
@@ -273,25 +329,34 @@ const COMPONENTS: EmbedComponent[] = [
 const PLAYBOOKS: Playbook[] = [
   {
     title: "Invoice → ERP sync",
-    blurb: "Extract invoices from an inbox and post matched line items to your ledger.",
-    steps: ["Email source", "Extract /v1/invoice", "Three-way match", "POST to ERP"],
+    blurb:
+      "Extract invoices from an inbox and post matched line items to your ledger.",
+    steps: [
+      "Email source",
+      "Extract /v1/invoice",
+      "Three-way match",
+      "POST to ERP",
+    ],
     accent: "blue",
   },
   {
     title: "PII redaction at scale",
-    blurb: "Sweep a document set for PII and write redacted copies to cold storage.",
+    blurb:
+      "Sweep a document set for PII and write redacted copies to cold storage.",
     steps: ["S3 source", "Detect PII", "Redact", "Store to bucket"],
     accent: "purple",
   },
   {
     title: "Compliance evidence pack",
-    blurb: "Bundle SOC 2 and audit reports into a verified, timestamped archive.",
+    blurb:
+      "Bundle SOC 2 and audit reports into a verified, timestamped archive.",
     steps: ["Batch upload", "Classify", "Validate schema", "Sign & archive"],
     accent: "green",
   },
   {
     title: "Agent document tool",
-    blurb: "Expose extraction as an MCP tool your agent can call deterministically.",
+    blurb:
+      "Expose extraction as an MCP tool your agent can call deterministically.",
     steps: ["Define tool", "Bind endpoint", "Run evals", "Ship to agent"],
     accent: "purple",
   },
@@ -300,22 +365,26 @@ const PLAYBOOKS: Playbook[] = [
 const SKILLS: AgentSkill[] = [
   {
     name: "Extract & validate",
-    blurb: "Pull structured fields and enforce the endpoint schema in one call.",
+    blurb:
+      "Pull structured fields and enforce the endpoint schema in one call.",
     ops: "extract · validate",
   },
   {
     name: "PII sweep",
-    blurb: "Detect and redact personal data before a document leaves your tenant.",
+    blurb:
+      "Detect and redact personal data before a document leaves your tenant.",
     ops: "detect-pii · redact",
   },
   {
     name: "Trust & verify",
-    blurb: "Check signatures, hashes, and tamper evidence on inbound documents.",
+    blurb:
+      "Check signatures, hashes, and tamper evidence on inbound documents.",
     ops: "verify-signature · checksum",
   },
   {
     name: "Compliance pack",
-    blurb: "Classify, validate, and archive regulatory documents with an audit trail.",
+    blurb:
+      "Classify, validate, and archive regulatory documents with an audit trail.",
     ops: "classify · validate · archive",
   },
   {

@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Banner, Button, Drawer, EmptyState, StatusBadge } from "@shared/components";
+import {
+  Banner,
+  Button,
+  Drawer,
+  EmptyState,
+  StatusBadge,
+} from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -37,8 +43,8 @@ export function Pipelines() {
         <div>
           <h1 className="portal-pipelines__title">Pipelines</h1>
           <p className="portal-pipelines__sub">
-            Document workflows composed from typed operations — deployed, versioned,
-            and continuously validated against a golden set.
+            Document workflows composed from typed operations — deployed,
+            versioned, and continuously validated against a golden set.
           </p>
         </div>
         <Button
@@ -68,8 +74,9 @@ export function Pipelines() {
 
       {tier === "enterprise" && evals && (
         <Banner tone="info" title="Shadow + comparative evals active">
-          {evals.shadowCount} pipeline{evals.shadowCount === 1 ? "" : "s"} running a
-          shadow eval, {evals.comparativeCount} in a comparative run. {evals.detail}
+          {evals.shadowCount} pipeline{evals.shadowCount === 1 ? "" : "s"}{" "}
+          running a shadow eval, {evals.comparativeCount} in a comparative run.{" "}
+          {evals.detail}
         </Banner>
       )}
 
@@ -109,7 +116,10 @@ export function Pipelines() {
         {selected && <PipelineDetail pipeline={selected} />}
       </Drawer>
 
-      <PipelineComposer open={composerOpen} onClose={() => setComposerOpen(false)} />
+      <PipelineComposer
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
+      />
     </div>
   );
 }

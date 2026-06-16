@@ -13,7 +13,10 @@ export function ErrorsSection({ errors }: { errors: ApiErrorRow[] }) {
       <div className="portal-docs__errors">
         {errors.map((e) => (
           <div key={e.code} className="portal-docs__error-row">
-            <StatusBadge tone={e.tone === "red" ? "danger" : "warning"} size="sm">
+            <StatusBadge
+              tone={e.tone === "red" ? "danger" : "warning"}
+              size="sm"
+            >
               {e.code}
             </StatusBadge>
             <span>{e.meaning}</span>

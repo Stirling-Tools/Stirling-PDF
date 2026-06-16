@@ -11,7 +11,11 @@ import "@portal/views/Sources.css";
 
 export function AgentPanel({ d }: { d: AgentDetail }) {
   const errorTone =
-    d.errorRate >= 0.05 ? "danger" : d.errorRate >= 0.02 ? "warning" : "success";
+    d.errorRate >= 0.05
+      ? "danger"
+      : d.errorRate >= 0.02
+        ? "warning"
+        : "success";
   return (
     <div className="portal-sources__detail">
       <div className="portal-sources__stat-grid">
@@ -43,7 +47,9 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
       </div>
 
       <div className="portal-sources__detail-section">
-        <span className="portal-sources__detail-heading">Assigned pipelines</span>
+        <span className="portal-sources__detail-heading">
+          Assigned pipelines
+        </span>
         <div className="portal-sources__chips">
           {d.assignedPipelines.map((p) => (
             <Chip key={p} tone="blue" size="sm">

@@ -57,7 +57,11 @@ const regionCols: TableColumn<DeploymentRegion>[] = [
     key: "status",
     header: "Status",
     render: (r) => (
-      <StatusBadge tone={REGION_TONE[r.status]} size="sm" pulse={r.status === "healthy"}>
+      <StatusBadge
+        tone={REGION_TONE[r.status]}
+        size="sm"
+        pulse={r.status === "healthy"}
+      >
         {titleCase(r.status)}
       </StatusBadge>
     ),
@@ -71,7 +75,9 @@ const regionCols: TableColumn<DeploymentRegion>[] = [
     key: "uptime",
     header: "Uptime",
     align: "right",
-    render: (r) => <span className="portal-infra__mono">{pct(r.uptime, 3)}</span>,
+    render: (r) => (
+      <span className="portal-infra__mono">{pct(r.uptime, 3)}</span>
+    ),
   },
   {
     key: "instances",
@@ -84,7 +90,9 @@ const regionCols: TableColumn<DeploymentRegion>[] = [
     header: "Throughput",
     align: "right",
     render: (r) => (
-      <span className="portal-infra__mono">{r.throughput.toLocaleString()}/min</span>
+      <span className="portal-infra__mono">
+        {r.throughput.toLocaleString()}/min
+      </span>
     ),
   },
   {
@@ -168,7 +176,11 @@ export function DeploymentsTab() {
             />
           )}
           {!isEmpty && data && data.regions.length > 0 && (
-            <Table columns={regionCols} rows={data.regions} rowKey={(r) => r.code} />
+            <Table
+              columns={regionCols}
+              rows={data.regions}
+              rowKey={(r) => r.code}
+            />
           )}
         </Card>
       </section>
@@ -181,7 +193,11 @@ export function DeploymentsTab() {
         <Card padding="none">
           {isLoading && <TableSkeleton rows={4} cols={6} />}
           {data && data.recent.length > 0 && (
-            <Table columns={deployCols} rows={data.recent} rowKey={(d) => d.id} />
+            <Table
+              columns={deployCols}
+              rows={data.recent}
+              rowKey={(d) => d.id}
+            />
           )}
         </Card>
       </section>

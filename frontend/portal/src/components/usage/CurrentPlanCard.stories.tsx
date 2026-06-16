@@ -26,7 +26,11 @@ export const FreeApproachingCap: Story = {
 // Free, cap reached — danger banner, processing paused.
 export const FreeCapReached: Story = {
   args: {
-    summary: { ...buildBillingSummary("free"), docsThisPeriod: 500, capReached: true },
+    summary: {
+      ...buildBillingSummary("free"),
+      docsThisPeriod: 500,
+      capReached: true,
+    },
   },
   globals: { tier: "free" },
 };

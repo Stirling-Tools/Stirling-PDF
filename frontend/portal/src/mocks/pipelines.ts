@@ -251,7 +251,8 @@ const CONTRACT_REVIEW: Pipeline = {
 const KYC_PROCESSOR: Pipeline = {
   id: "pl-kyc",
   name: "KYC Processor",
-  blurb: "Identity-document intake → authenticity + sanctions → compliance archive",
+  blurb:
+    "Identity-document intake → authenticity + sanctions → compliance archive",
   status: "healthy",
   source: "Scheduled import",
   destination: "Compliance archive",

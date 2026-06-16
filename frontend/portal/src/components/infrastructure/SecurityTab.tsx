@@ -19,18 +19,23 @@ import {
   type SecurityConfig,
 } from "@portal/api/infrastructure";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { CERT_LABEL, CERT_TONE } from "@portal/components/infrastructure/infraFormat";
+import {
+  CERT_LABEL,
+  CERT_TONE,
+} from "@portal/components/infrastructure/infraFormat";
 
 const ACCESS_OPTS: RadioOption<AccessPolicy>[] = [
   {
     value: "stirling",
     label: "Stirling-held keys",
-    description: "Stirling manages encryption keys. Simplest — zero key ops on your side.",
+    description:
+      "Stirling manages encryption keys. Simplest — zero key ops on your side.",
   },
   {
     value: "byok",
     label: "Bring your own key (BYOK)",
-    description: "Supply a key from your own KMS. Stirling encrypts with it but can still read.",
+    description:
+      "Supply a key from your own KMS. Stirling encrypts with it but can still read.",
   },
   {
     value: "hyok",
@@ -41,7 +46,11 @@ const ACCESS_OPTS: RadioOption<AccessPolicy>[] = [
 
 const RESIDENCY_OPTS: RadioOption<DataResidency>[] = [
   { value: "us", label: "United States", description: "us-east-1 · us-west-2" },
-  { value: "eu", label: "European Union", description: "eu-west-1 · GDPR data boundary" },
+  {
+    value: "eu",
+    label: "European Union",
+    description: "eu-west-1 · GDPR data boundary",
+  },
   { value: "apac", label: "Asia Pacific", description: "ap-southeast-1" },
 ];
 

@@ -27,7 +27,10 @@ const RETENTION_OPTS = [
   { value: "never", label: "Never delete" },
 ];
 
-const PROVIDER_GLYPH: Record<StorageConfig["providers"][number]["kind"], string> = {
+const PROVIDER_GLYPH: Record<
+  StorageConfig["providers"][number]["kind"],
+  string
+> = {
   stirling: "◆",
   s3: "▣",
   azure: "▤",

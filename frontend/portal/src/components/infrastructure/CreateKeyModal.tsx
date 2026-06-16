@@ -16,7 +16,13 @@ const PERMISSION_OPTS: ApiKeyPermission[] = ["Read", "Write", "Admin"];
 // returned by POST /v1/infrastructure/api-keys — it is never persisted server-side.
 const DEMO_NEW_KEY_SECRET = "sk_live_demo_key_rotate_in_prod";
 
-export function CreateKeyModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function CreateKeyModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [name, setName] = useState("");
   const [perms, setPerms] = useState<ApiKeyPermission[]>(["Read"]);
   const [ips, setIps] = useState("");
@@ -81,7 +87,11 @@ export function CreateKeyModal({ open, onClose }: { open: boolean; onClose: () =
     >
       {created ? (
         <div className="portal-infra__stack">
-          <CodeBlock code={DEMO_NEW_KEY_SECRET} lang="bash" caption="Secret key" />
+          <CodeBlock
+            code={DEMO_NEW_KEY_SECRET}
+            lang="bash"
+            caption="Secret key"
+          />
           <Banner
             tone="warning"
             description="Store this in a secrets manager. Stirling only ever stores a hash — there is no way to recover it later."

@@ -12,9 +12,30 @@ interface Region {
 }
 
 const REGIONS: Region[] = [
-  { id: "1", name: "US East", code: "us-east-1", status: "healthy", docs: 12481, latency: "41 ms" },
-  { id: "2", name: "US West", code: "us-west-2", status: "healthy", docs: 8210, latency: "63 ms" },
-  { id: "3", name: "EU West", code: "eu-west-1", status: "degraded", docs: 3044, latency: "190 ms" },
+  {
+    id: "1",
+    name: "US East",
+    code: "us-east-1",
+    status: "healthy",
+    docs: 12481,
+    latency: "41 ms",
+  },
+  {
+    id: "2",
+    name: "US West",
+    code: "us-west-2",
+    status: "healthy",
+    docs: 8210,
+    latency: "63 ms",
+  },
+  {
+    id: "3",
+    name: "EU West",
+    code: "eu-west-1",
+    status: "degraded",
+    docs: 3044,
+    latency: "190 ms",
+  },
 ];
 
 const COLUMNS: TableColumn<Region>[] = [
@@ -22,18 +43,28 @@ const COLUMNS: TableColumn<Region>[] = [
   {
     key: "code",
     header: "Code",
-    render: (r) => <code style={{ fontFamily: "var(--font-mono)" }}>{r.code}</code>,
+    render: (r) => (
+      <code style={{ fontFamily: "var(--font-mono)" }}>{r.code}</code>
+    ),
   },
   {
     key: "status",
     header: "Status",
     render: (r) => (
-      <StatusBadge tone={r.status === "healthy" ? "success" : "warning"} size="sm">
+      <StatusBadge
+        tone={r.status === "healthy" ? "success" : "warning"}
+        size="sm"
+      >
         {r.status}
       </StatusBadge>
     ),
   },
-  { key: "docs", header: "Docs 24h", align: "right", render: (r) => r.docs.toLocaleString() },
+  {
+    key: "docs",
+    header: "Docs 24h",
+    align: "right",
+    render: (r) => r.docs.toLocaleString(),
+  },
   { key: "latency", header: "P95", align: "right", render: (r) => r.latency },
 ];
 
@@ -48,7 +79,9 @@ type Story = StoryObj<typeof Table>;
 
 /** Presentational table — columns own their cell renderers; pass pre-sorted rows. */
 export const Basic: Story = {
-  render: () => <Table<Region> columns={COLUMNS} rows={REGIONS} rowKey={(r) => r.id} />,
+  render: () => (
+    <Table<Region> columns={COLUMNS} rows={REGIONS} rowKey={(r) => r.id} />
+  ),
 };
 
 /** With `onRowClick`, rows become focusable + hoverable (keyboard: Enter/Space). */
