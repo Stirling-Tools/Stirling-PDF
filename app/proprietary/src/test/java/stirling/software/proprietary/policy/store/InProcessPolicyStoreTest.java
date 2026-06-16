@@ -28,7 +28,7 @@ class InProcessPolicyStoreTest {
 
     @Test
     void savedPolicyGetsAnIdAndIsRetrievable() {
-        Policy saved = store.save(policy(null, "compress", "manual", true));
+        Policy saved = store.save(policy(null, "compress", null, true));
 
         assertNotNull(saved.id());
         assertFalse(saved.id().isBlank());
@@ -37,7 +37,7 @@ class InProcessPolicyStoreTest {
 
     @Test
     void savingWithAnExistingIdUpdatesInPlace() {
-        Policy created = store.save(policy(null, "before", "manual", true));
+        Policy created = store.save(policy(null, "before", null, true));
 
         store.save(
                 new Policy(
@@ -45,7 +45,7 @@ class InProcessPolicyStoreTest {
                         "after",
                         "owner",
                         true,
-                        TriggerConfig.manual(),
+                        null,
                         List.of(),
                         OutputSpec.inline()));
 
@@ -55,19 +55,20 @@ class InProcessPolicyStoreTest {
 
     @Test
     void findByTriggerTypeReturnsOnlyEnabledMatches() {
-        store.save(policy(null, "watch", "folder", true));
-        store.save(policy(null, "watch-disabled", "folder", false));
         store.save(policy(null, "nightly", "schedule", true));
+        store.save(policy(null, "nightly-disabled", "schedule", false));
+        store.save(policy(null, "hooked", "webhook", true));
+        store.save(policy(null, "on-demand", null, true)); // manual-only: no trigger
 
-        List<Policy> folder = store.findByTriggerType("folder");
+        List<Policy> scheduled = store.findByTriggerType("schedule");
 
-        assertEquals(1, folder.size());
-        assertEquals("watch", folder.get(0).name());
+        assertEquals(1, scheduled.size());
+        assertEquals("nightly", scheduled.get(0).name());
     }
 
     @Test
     void deleteRemovesThePolicy() {
-        Policy saved = store.save(policy(null, "p", "manual", true));
+        Policy saved = store.save(policy(null, "p", null, true));
 
         assertTrue(store.delete(saved.id()));
         assertTrue(store.get(saved.id()).isEmpty());
@@ -75,12 +76,14 @@ class InProcessPolicyStoreTest {
     }
 
     private static Policy policy(String id, String name, String triggerType, boolean enabled) {
+        TriggerConfig trigger =
+                triggerType == null ? null : new TriggerConfig(triggerType, Map.of());
         return new Policy(
                 id,
                 name,
                 "owner",
                 enabled,
-                new TriggerConfig(triggerType, Map.of()),
+                trigger,
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

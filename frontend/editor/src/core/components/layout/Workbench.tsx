@@ -17,6 +17,7 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import { ChatFAB } from "@app/components/chat/ChatFAB";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -62,6 +63,10 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
+  // Custom workbench views (e.g. Watched Folders) manage their own content and may
+  // have no workbench files, but still need the bar's view switcher so users can
+  // navigate back out.
+  const isCustomViewActive = !isBaseWorkbench(currentView);
 
   // Enable bar transitions after first paint so the initial hidden state shows
   // without animating (landing page on load shouldn't animate the bar up).
@@ -205,7 +210,7 @@ export default function Workbench() {
           ?.hideTopControls && (
           <div
             className={styles.workbenchBarWrapper}
-            data-hidden={String(!hasFiles)}
+            data-hidden={String(!hasFiles && !isCustomViewActive)}
             data-no-transition={String(!barTransitionEnabled)}
           >
             <div className={styles.workbenchBarInner}>
@@ -220,6 +225,9 @@ export default function Workbench() {
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
+
+      {/* Floating AI chat button + panel */}
+      <ChatFAB />
 
       {/* Main content area */}
       <Box

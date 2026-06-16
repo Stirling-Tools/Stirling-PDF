@@ -26,10 +26,10 @@ vi.mock("react-i18next", () => ({
 // Mock i18n module to avoid initialization
 vi.mock("@app/i18n", () => ({
   updateSupportedLanguages: vi.fn(),
-  supportedLanguages: { "en-GB": "English" },
+  supportedLanguages: { "en-US": "English (US)" },
   rtlLanguages: [],
   default: {
-    language: "en-GB",
+    language: "en-US",
     changeLanguage: vi.fn(),
     options: {},
   },
