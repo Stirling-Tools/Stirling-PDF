@@ -206,9 +206,7 @@ export default defineConfig(
       ],
     },
   },
-  // Stricter rules that not all sub-folders are conformant to yet.
-  // Keep this non-type-aware: `parserOptions.project`/`projectService` here OOMs
-  // the lint step (builds the whole TS program); tsc covers type correctness.
+  // Stricter rules that not all sub-folders are conformant to yet
   {
     files: srcGlobs,
     ignores: [
@@ -220,8 +218,15 @@ export default defineConfig(
       "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
     ],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
     },
   },
   // Config for browser scripts
