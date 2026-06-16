@@ -202,8 +202,6 @@
   --icon-sign-color: #ffffff;
   --icon-automate-bg: #a576e3;
   --icon-automate-color: #ffffff;
-  --icon-watchedFolders-bg: #f59e0b;
-  --icon-watchedFolders-color: #ffffff;
   --icon-files-bg: #d3e7f7;
   --icon-files-color: #0a8bff;
   --icon-activity-bg: #d3e7f7;
@@ -537,8 +535,6 @@
   --icon-sign-color: #eaeaea;
   --icon-automate-bg: #4b525a;
   --icon-automate-color: #eaeaea;
-  --icon-watchedFolders-bg: #4b525a;
-  --icon-watchedFolders-color: #eaeaea;
   --icon-files-bg: #4b525a;
   --icon-files-color: #eaeaea;
   --icon-activity-bg: #4b525a;
@@ -889,6 +885,7 @@
   align-items: center;
   height: 32px;
   padding: 0 4px;
+  box-sizing: border-box;
   pointer-events: auto;
   white-space: nowrap;
   user-select: none;
@@ -934,11 +931,15 @@
   cursor: pointer;
   transition: all 0.12s ease;
   white-space: nowrap;
-  line-height: 1;
+  line-height: 1.25;
   border-radius: 9999px;
 }
 
 .pdf-link-toolbar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
   transition: color 0.12s ease;
 }
 
@@ -983,6 +984,10 @@
 
 .pdf-link-toolbar-btn--go:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.pdf-link-toolbar-btn--go {
+  min-width: 0;
 }
 
 .pdf-link-toolbar-sep {
