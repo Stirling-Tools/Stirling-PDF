@@ -54,7 +54,6 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Home | `GET /v1/regions/health` | — | `fetchRegionHealth` | `RegionHealth[]` |
 | Home | `GET /v1/onboarding` | — | `fetchOnboarding` | `OnboardingStep[]` |
 | Users | `GET /v1/users` | `tier` | `fetchUsers` | `UsersResponse` |
-| Documents | `GET /v1/endpoints` | `vertical?` | `fetchVerticals` | `Vertical[]` |
 | Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
 | Pipelines | `GET /v1/pipelines` · `POST /v1/pipelines/:id/promote-to-policy` | `tier` | `fetchPipelines` · `promoteToPolicy` | `PipelinesResponse` |
 | Policies | `GET /v1/policies` | `tier` | `fetchPolicies` | `PoliciesResponse` |
