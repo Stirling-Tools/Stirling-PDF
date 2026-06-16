@@ -20,30 +20,54 @@
   border-bottom: 1px solid var(--color-sidebar-divider);
 }
 
-.portal-sidebar__wordmark {
+/* Editor "Stirling PDF" wordmark logo (theme-switched in Sidebar.tsx) */
+.portal-sidebar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.portal-sidebar__brand-logo {
+  height: 1.5rem;
+  width: auto;
+  display: block;
+}
+/* TEMP: "portal" suffix styled to read as part of the wordmark */
+.portal-sidebar__logo-suffix {
   font-family: var(--font-brand);
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-logo-text);
-  letter-spacing: 0.02em;
+  color: var(--color-text-3);
+  letter-spacing: 0.01em;
 }
 
-.portal-sidebar__workspace {
+/* App switcher (down-arrow → Portal / Editor) */
+.portal-sidebar__app-switch {
   margin-left: auto;
+  display: flex;
+}
+.portal-sidebar__app-switch-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
   border-radius: var(--radius-sm);
   color: var(--color-text-4);
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
 }
-.portal-sidebar__workspace:hover {
+.portal-sidebar__app-switch-btn:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-2);
+}
+.portal-sidebar__app-icon {
+  width: 1rem;
+  height: 1.0625rem;
+  display: block;
 }
 
 /* Nav body */
