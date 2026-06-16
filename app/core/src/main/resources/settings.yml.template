@@ -290,6 +290,7 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+    userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
   fileReadiness:

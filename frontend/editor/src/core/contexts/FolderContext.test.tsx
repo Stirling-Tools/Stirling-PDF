@@ -39,6 +39,31 @@ vi.mock("@app/services/folderSyncService", () => ({
   },
 }));
 
+// FolderProvider only pulls from the server for a confirmed, non-anonymous
+// user (guests have no cloud storage). Mock useAuth as a signed-in user so the
+// pull runs; the guest-skip path is covered by its own test below.
+const { mockAuth } = vi.hoisted(() => ({
+  mockAuth: {
+    user: { id: "test-user", is_anonymous: false } as Record<
+      string,
+      unknown
+    > | null,
+    isAnonymous: false,
+  },
+}));
+vi.mock("@app/auth/UseSession", () => ({
+  useAuth: () => ({
+    user: mockAuth.user,
+    isAnonymous: mockAuth.isAnonymous,
+    session: null,
+    displayName: null,
+    loading: false,
+    error: null,
+    signOut: vi.fn(),
+    refreshSession: vi.fn(),
+  }),
+}));
+
 // Stateful IDB mock - the revision-driven refresh re-reads getAllFolders
 // after every state change, so a stateless [] mock would clobber pull results.
 const { mockIdb } = vi.hoisted(() => ({
@@ -133,6 +158,9 @@ describe("FolderContext sync-banner gating", () => {
     mockList.mockReset();
     mockUpdate.mockReset();
     mockDelete.mockReset();
+    // Default each test to a signed-in, non-anonymous user so the pull runs.
+    mockAuth.user = { id: "test-user", is_anonymous: false };
+    mockAuth.isAnonymous = false;
   });
 
   test("401 (unauthorized) does NOT surface a banner", async () => {
@@ -184,6 +212,28 @@ describe("FolderContext sync-banner gating", () => {
     expect(screen.getByTestId("error").textContent).toBe("<null>");
     expect(screen.getByTestId("reachable").textContent).toBe("false");
   });
+
+  test("guest (anonymous) session does NOT pull from the server", async () => {
+    // Guests have no cloud storage; pulling would 401 and (historically)
+    // surface a toast. The provider must make no folder request at all.
+    mockAuth.user = { id: "guest", is_anonymous: true };
+    mockAuth.isAnonymous = true;
+    mockList.mockResolvedValue([]);
+    render(
+      <MemoryRouter>
+        <FolderProvider>
+          <Probe />
+        </FolderProvider>
+      </MemoryRouter>,
+    );
+    // Let mount effects run; the pull must never fire.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(mockList).not.toHaveBeenCalled();
+    expect(screen.getByTestId("reachable").textContent).toBe("false");
+  });
 });
 
 /** Per-folder mutation 404 = silent cleanup (drop subtree, no banner, pull). */
@@ -194,6 +244,9 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockDelete.mockReset();
     // Reset the stateful IDB mock so each test starts with an empty cache.
     mockIdb.folders = [];
+    // Signed-in, non-anonymous user so pullFromServer runs.
+    mockAuth.user = { id: "test-user", is_anonymous: false };
+    mockAuth.isAnonymous = false;
   });
 
   function makeFolder(name: string, parentFolderId: FolderId | null = null) {

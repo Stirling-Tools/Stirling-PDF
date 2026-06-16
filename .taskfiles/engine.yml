@@ -1,12 +1,5 @@
 version: '3'
 
-vars:
-  # Engine-specific names to avoid overriding the root Taskfile's FIND_FREE_PORT_*
-  # vars (Task merges included-file vars into the global scope).
-  # Paths are relative to the engine/ include dir.
-  ENGINE_FIND_FREE_PORT_SH: "bash ../scripts/find-free-port.sh"
-  ENGINE_FIND_FREE_PORT_PS: "powershell -NoProfile -File ../scripts/find-free-port.ps1"
-
 tasks:
   install:
     desc: "Install engine dependencies"
@@ -36,24 +29,7 @@ tasks:
     ignore_error: true
     dir: src
     vars:
-      # When PORT is provided (e.g. from dev:all), use it directly.
-      # With ENGINE_PORT_PROBE=false (Docker), use the fixed STIRLING_ENGINE_PORT
-      # (default 5001) without probing. Otherwise probe for a free port from 5001.
-      PORT:
-        sh: |
-          if [ -n "{{.PORT}}" ]; then
-            echo "{{.PORT}}"
-          elif [ -f /.dockerenv ] || [ "${ENGINE_PORT_PROBE:-true}" = "false" ]; then
-            # Never probe in a container: the port is fixed and the probe script
-            # isn't shipped in the image. /.dockerenv auto-detects Docker; the
-            # ENGINE_PORT_PROBE=false flag forces fixed-port mode anywhere else.
-            # The probe is a dev-only convenience for avoiding local port clashes.
-            echo "${STIRLING_ENGINE_PORT:-5001}"
-          elif [ "{{OS}}" = "windows" ]; then
-            {{.ENGINE_FIND_FREE_PORT_PS}} 5001
-          else
-            {{.ENGINE_FIND_FREE_PORT_SH}} 5001
-          fi
+      PORT: '{{.PORT | default "5001"}}'
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
@@ -65,24 +41,7 @@ tasks:
     ignore_error: true
     dir: src
     vars:
-      # When PORT is provided (e.g. from dev:all), use it directly.
-      # With ENGINE_PORT_PROBE=false (Docker), use the fixed STIRLING_ENGINE_PORT
-      # (default 5001) without probing. Otherwise probe for a free port from 5001.
-      PORT:
-        sh: |
-          if [ -n "{{.PORT}}" ]; then
-            echo "{{.PORT}}"
-          elif [ -f /.dockerenv ] || [ "${ENGINE_PORT_PROBE:-true}" = "false" ]; then
-            # Never probe in a container: the port is fixed and the probe script
-            # isn't shipped in the image. /.dockerenv auto-detects Docker; the
-            # ENGINE_PORT_PROBE=false flag forces fixed-port mode anywhere else.
-            # The probe is a dev-only convenience for avoiding local port clashes.
-            echo "${STIRLING_ENGINE_PORT:-5001}"
-          elif [ "{{OS}}" = "windows" ]; then
-            {{.ENGINE_FIND_FREE_PORT_PS}} 5001
-          else
-            {{.ENGINE_FIND_FREE_PORT_SH}} 5001
-          fi
+      PORT: '{{.PORT | default "5001"}}'
     env:
       PYTHONUNBUFFERED: "1"
     cmds:

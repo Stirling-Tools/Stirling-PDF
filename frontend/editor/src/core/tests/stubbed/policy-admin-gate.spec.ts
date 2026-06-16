@@ -16,7 +16,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
  */
 
 const LOCKED_TITLE = "Managed by your organization";
-const LOCKED_DESC = "Contact an admin to change this policy.";
+const LOCKED_DESC = "Contact a team leader to change this policy.";
 
 /** Open the Security policy from the right-sidebar Policies list. */
 async function openSecurityPolicy(page: import("@playwright/test").Page) {

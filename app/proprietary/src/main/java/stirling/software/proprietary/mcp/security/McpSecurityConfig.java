@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.OAuth2ProtectedResourceMetadata;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
@@ -201,46 +202,34 @@ public class McpSecurityConfig {
                                         .protectedResourceMetadata(
                                                 prm ->
                                                         prm.protectedResourceMetadataCustomizer(
-                                                                builder -> {
-                                                                    if (!auth.getResourceId()
-                                                                            .isBlank()) {
-                                                                        builder.resource(
-                                                                                auth
-                                                                                        .getResourceId());
-                                                                    }
-                                                                    if (!auth.getIssuerUri()
-                                                                            .isBlank()) {
-                                                                        builder.authorizationServer(
-                                                                                auth
-                                                                                        .getIssuerUri());
-                                                                    }
-                                                                    // Only advertise the granular
-                                                                    // tool scopes when we actually
-                                                                    // enforce them. When scopes are
-                                                                    // disabled (e.g. the IdP only
-                                                                    // mints coarse tokens, like
-                                                                    // Supabase), advertising scopes
-                                                                    // the authorization server
-                                                                    // can't
-                                                                    // issue makes spec-compliant
-                                                                    // clients request them and get
-                                                                    // rejected with
-                                                                    // invalid_request.
-                                                                    if (applicationProperties
-                                                                            .getMcp()
-                                                                            .isScopesEnabled()) {
-                                                                        builder.scope(
-                                                                                "mcp.tools.read");
-                                                                        builder.scope(
-                                                                                "mcp.tools.write");
-                                                                    }
-                                                                }))
+                                                                builder ->
+                                                                        buildResourceMetadata(
+                                                                                builder, auth)))
                                         .jwt(
                                                 jwt ->
                                                         jwt.decoder(mcpJwtDecoder)
                                                                 .jwtAuthenticationConverter(
                                                                         mcpJwtAuthenticationConverter())));
         return http.build();
+    }
+
+    /** Populate the RFC 9728 protected-resource metadata document from the configured auth. */
+    private void buildResourceMetadata(
+            OAuth2ProtectedResourceMetadata.Builder builder, ApplicationProperties.Mcp.Auth auth) {
+        if (!auth.getResourceId().isBlank()) {
+            builder.resource(auth.getResourceId());
+        }
+        if (!auth.getIssuerUri().isBlank()) {
+            builder.authorizationServer(auth.getIssuerUri());
+        }
+        // Only advertise the granular tool scopes when we actually enforce them. When scopes are
+        // disabled (e.g. the IdP only mints coarse tokens, like Supabase), advertising scopes the
+        // authorization server can't issue makes spec-compliant clients request them and get
+        // rejected with invalid_request.
+        if (applicationProperties.getMcp().isScopesEnabled()) {
+            builder.scope("mcp.tools.read");
+            builder.scope("mcp.tools.write");
+        }
     }
 
     @Bean

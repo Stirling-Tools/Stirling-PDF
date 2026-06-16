@@ -34,8 +34,8 @@
  * implements (web supabase client vs Tauri fetch). The seam drives the
  * {@code create-checkout-session} edge function.
  *
- * <p>The edge function (SaaS PR #300) is the canonical place Stripe Checkout
- * Sessions get created — it uses the Stripe Sync Engine tables, has dedicated
+ * <p>The edge function is the canonical place Stripe Checkout
+ * Sessions get created - it uses the Stripe Sync Engine tables, has dedicated
  * unit tests, and shares Stripe SDK / secret-key plumbing with the metering +
  * webhook edge functions. Routing through Java would have meant a useless
  * proxy hop + a second Stripe SDK to maintain.
@@ -162,10 +162,10 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     // React 18 strict-mode dev mounts effects twice. We use `cancelled` to
     // discard the first mount's response (its setState calls become no-ops),
     // and the second mount's response wins. We deliberately do NOT short-
-    // circuit the second mount with a ref — earlier versions did that and
-    // ran into the trap where mount 1 was cancelled but the live mount
-    // never re-fetched, leaving `loading` stuck at true. Two network calls
-    // in dev is an acceptable cost; prod has no strict mode → single fetch.
+    // circuit the second mount with a ref: that traps mount 1 as cancelled
+    // while the live mount never re-fetches, leaving `loading` stuck at true.
+    // Two network calls in dev is an acceptable cost; prod has no strict mode
+    // -> single fetch.
     let cancelled = false;
     async function createSession() {
       try {

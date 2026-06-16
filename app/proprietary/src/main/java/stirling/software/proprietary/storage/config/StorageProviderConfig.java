@@ -3,7 +3,6 @@ package stirling.software.proprietary.storage.config;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -58,8 +57,8 @@ public class StorageProviderConfig {
             }
             basePathValue = InstallationPathConfig.getPath() + "storage";
         }
-        Path basePath = Paths.get(basePathValue).toAbsolutePath().normalize();
-        Path installRoot = Paths.get(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
+        Path basePath = Path.of(basePathValue).toAbsolutePath().normalize();
+        Path installRoot = Path.of(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
         if (!basePath.startsWith(installRoot)) {
             // Warn rather than hard-fail: admins may legitimately point storage at an external
             // volume, but an unexpected path could indicate a misconfiguration or traversal

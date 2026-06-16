@@ -19,9 +19,9 @@ public class RestartHelper {
             Map<String, String> cli = parseArgs(args);
 
             long pid = Long.parseLong(req(cli, "pid"));
-            Path appJar = Paths.get(req(cli, "app")).toAbsolutePath().normalize();
+            Path appJar = Path.of(req(cli, "app")).toAbsolutePath().normalize();
             String javaBin = cli.getOrDefault("java", "java");
-            Path argsFile = cli.containsKey("argsFile") ? Paths.get(cli.get("argsFile")) : null;
+            Path argsFile = cli.containsKey("argsFile") ? Path.of(cli.get("argsFile")) : null;
             long backoffMs = Long.parseLong(cli.getOrDefault("backoffMs", "1000"));
 
             if (!Files.isRegularFile(appJar)) {
