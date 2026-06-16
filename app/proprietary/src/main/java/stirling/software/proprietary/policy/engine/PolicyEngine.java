@@ -59,6 +59,10 @@ public class PolicyEngine {
     // files. See ResourceMonitor#shouldQueueJob(int).
     private static final int RUN_RESOURCE_WEIGHT = 50;
 
+    // errorCode marking a run that was never admitted (job queue full under load). Transient: the
+    // client treats it as "busy" and retries, rather than as a terminal processing failure.
+    private static final String QUEUE_FULL_CODE = "POLICY_QUEUE_FULL";
+
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;
     private final PolicyRunRegistry registry;
@@ -239,7 +243,8 @@ public class PolicyEngine {
         if (!completion.isDone()) {
             String message = "Policy run could not be queued: " + ex.getMessage();
             log.error("Policy run {} was not admitted: {}", run.getRunId(), ex.getMessage());
-            run.fail(message);
+            // Transient admission rejection, not a processing failure (see QUEUE_FULL_CODE).
+            run.failWithCode(message, QUEUE_FULL_CODE, null);
             taskManager.setError(run.getRunId(), message);
             completion.complete(run);
         }
