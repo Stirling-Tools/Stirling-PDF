@@ -17,10 +17,15 @@ export const STATUS_LABEL: Record<PolicyRowStatus, string> = {
   setup: "Set up",
 };
 
+/**
+ * Per-category accent colour. The single source of truth shared by: the list
+ * icons (which render colourless at rest and reveal this colour on hover/focus),
+ * and a file's post-run glow + shield badge (via usePolicyFileBadges' ACCENT_VAR).
+ */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
   ingestion: "blue",
-  security: "blue",
-  compliance: "blue",
-  routing: "blue",
-  retention: "blue",
+  security: "purple",
+  compliance: "green",
+  routing: "amber",
+  retention: "red",
 };
