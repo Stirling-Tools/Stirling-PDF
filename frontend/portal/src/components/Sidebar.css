@@ -20,24 +20,24 @@
   border-bottom: 1px solid var(--color-sidebar-divider);
 }
 
-/* Editor "Stirling PDF" wordmark logo (theme-switched in Sidebar.tsx) */
+/* Stirling brand mark (theme-switched in Sidebar.tsx) + product wordmark */
 .portal-sidebar__brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.4rem;
 }
-.portal-sidebar__brand-logo {
-  height: 1.5rem;
+.portal-sidebar__brand-mark {
+  height: 1.375rem;
   width: auto;
   display: block;
 }
-/* TEMP: "portal" suffix styled to read as part of the wordmark */
 .portal-sidebar__logo-suffix {
   font-family: var(--font-brand);
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--color-text-3);
+  color: var(--color-text-1);
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 /* App switcher (down-arrow → Portal / Editor) */

@@ -5,8 +5,6 @@ import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
-import wordmarkLight from "@shared/assets/stirling-pdf-logo-light.svg";
-import wordmarkDark from "@shared/assets/stirling-pdf-logo-dark.svg";
 import markLight from "@shared/assets/stirling-mark-light.svg";
 import markDark from "@shared/assets/stirling-mark-dark.svg";
 import {
@@ -144,11 +142,13 @@ export function Sidebar() {
       <div className="portal-sidebar__logo">
         <span className="portal-sidebar__brand">
           <img
-            className="portal-sidebar__brand-logo"
-            src={theme === "dark" ? wordmarkDark : wordmarkLight}
-            alt="Stirling PDF"
+            className="portal-sidebar__brand-mark"
+            src={theme === "dark" ? markDark : markLight}
+            alt="Stirling"
           />
-          <span className="portal-sidebar__logo-suffix">portal</span>
+          <span className="portal-sidebar__logo-suffix">
+            Stirling Processor
+          </span>
         </span>
 
         <Dropdown.Root align="end" className="portal-sidebar__app-switch">
