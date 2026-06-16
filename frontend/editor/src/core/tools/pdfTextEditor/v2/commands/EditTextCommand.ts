@@ -94,9 +94,14 @@ export class EditTextCommand implements Command {
   private paragraphPlan: ParagraphEditPlan | null = null;
   private paragraphInsertedPtrs: number[] = [];
   private prevParagraphSlots: ParagraphLineSlot[] = [];
-  /** Set when the apply path took the paragraph-append shortcut. */
+  /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
+    /** Matched lines translated to a new baseline (reversed on revert). */
+    moves: Array<{ ptr: number; dy: number }>;
+    /** Fresh objects emitted for new/changed lines (removed on revert). */
     createdPtrs: number[];
+    /** Deleted lines, re-emitted as fallback on revert. */
+    removed: Array<{ text: string; x: number; y: number; fontSize: number }>;
     prev: RunModelSnapshot;
   } | null = null;
 
@@ -171,30 +176,45 @@ export class EditTextCommand implements Command {
       }
     }
 
-    // PARAGRAPH APPEND PATH. The user pressed Enter at the end of a paragraph
-    // and typed more (nextText starts with the whole prevText + new lines).
-    // The overlay path would re-typeset the WHOLE paragraph in a fallback
-    // font, destroying the font + layout of every UNEDITED line. Instead keep
-    // every existing glyph object untouched and emit ONLY the appended lines;
-    // ReflowWrapCommand (fired on blur) re-lines the paragraph. This works for
-    // soft- AND hard-wrapped paragraphs because it never maps lines to slots.
+    // PARAGRAPH LINE ADD/REMOVE PATH. Typing or deleting a newline changes
+    // the paragraph's line count; planParagraphEdit bails on that and the
+    // overlay path would re-typeset the WHOLE paragraph in a fallback font,
+    // destroying the font + layout of every UNEDITED line. Instead diff the
+    // lines (LCS): each unchanged line keeps its existing glyph objects
+    // (translated to its new baseline, fonts intact); only new/changed lines
+    // are emitted fresh. ReflowWrapCommand re-lines the paragraph on blur.
     if (
       this.partialPlan === null &&
       this.paragraphPlan === null &&
       this.lineEdit === null &&
       this.prevText !== null &&
       this.prevText.length > 0 &&
-      run.paragraphLineSlots.length >= 1 &&
-      this.nextText.length > this.prevText.length &&
-      this.nextText.startsWith(this.prevText) &&
-      /\r?\n/.test(this.nextText.slice(this.prevText.length))
+      run.paragraphLineSlots.length >= 1
     ) {
-      this.applyParagraphAppend(doc, page, run);
-      run.text = this.nextText;
-      run.dirty = true;
-      page.markDirty();
-      page.markNeedsGenerate();
-      return;
+      const prevLines = this.prevText.split(/\r?\n/);
+      const nextLines = this.nextText.split(/\r?\n/);
+      if (prevLines.length !== nextLines.length) {
+        if (run.paragraphLineSlots.length === prevLines.length) {
+          // Slots map 1:1 to lines (a grow-mode paragraph) - diff per line.
+          this.applyParagraphLineEdit(doc, page, run, prevLines, nextLines);
+          run.text = this.nextText;
+          run.dirty = true;
+          page.markDirty();
+          page.markNeedsGenerate();
+          return;
+        }
+        if (this.nextText.startsWith(this.prevText)) {
+          // Soft-wrapped paragraph (slots != lines): can't diff per line, but
+          // a pure append still keeps every existing object and only adds the
+          // new lines at the end.
+          this.applyParagraphAppend(doc, page, run);
+          run.text = this.nextText;
+          run.dirty = true;
+          page.markDirty();
+          page.markNeedsGenerate();
+          return;
+        }
+      }
     }
 
     // SURGICAL DIFF PATH (single-line). Skipped when:
@@ -451,9 +471,18 @@ export class EditTextCommand implements Command {
     if (!run || this.prevText === null) return;
     const m = doc.module;
 
-    // Paragraph-append revert: drop the freshly-emitted appended lines and
-    // restore the pre-edit run model. Existing objects were never touched.
+    // Paragraph line add/remove revert: move matched lines back to their
+    // original baselines, drop the freshly-emitted new/changed lines, re-emit
+    // any deleted lines, then restore the pre-edit run model.
     if (this.lineEdit) {
+      for (let i = this.lineEdit.moves.length - 1; i >= 0; i--) {
+        const mv = this.lineEdit.moves[i];
+        try {
+          m.FPDFPageObj_Transform(mv.ptr, 1, 0, 0, 1, 0, -mv.dy);
+        } catch {
+          /* best-effort */
+        }
+      }
       for (const ptr of this.lineEdit.createdPtrs) {
         if (!ptr) continue;
         try {
@@ -463,6 +492,26 @@ export class EditTextCommand implements Command {
         }
       }
       restoreRunModel(run, this.lineEdit.prev);
+      if (this.lineEdit.removed.length > 0) {
+        const fallbackFamily = helveticaVariantFor(
+          this.prevFontId ?? run.fontId,
+        );
+        for (const rem of this.lineEdit.removed) {
+          const ptrs = emitTextLine({
+            doc,
+            page,
+            text: rem.text,
+            x: rem.x,
+            y: rem.y,
+            fontSize: rem.fontSize,
+            fill: run.fill,
+            originalFontPtr: 0,
+            fallbackFamily,
+          });
+          patchSlotPtrsByBaseline(m, run, rem.y, ptrs, rem.text);
+        }
+        reflattenLeafArrays(run);
+      }
       run.text = this.prevText;
       run.dirty = true;
       this.lineEdit = null;
@@ -498,7 +547,7 @@ export class EditTextCommand implements Command {
       for (let s = 0; s < this.prevParagraphSlots.length; s++) {
         const prevSlot = this.prevParagraphSlots[s];
         const entry = this.paragraphPlan.perSlot.find((e) => e.slotIdx === s);
-        if (entry) {
+        if (entry && entry.plan) {
           for (const op of entry.plan.ops) {
             if (op.type === "modify" && op.subRunIdx !== undefined) {
               setObjText(
@@ -509,8 +558,14 @@ export class EditTextCommand implements Command {
             }
           }
         }
+        // A fresh-emit slot (plan === null) had ALL its original objects
+        // removed during apply, so re-emit every one of them on revert.
         const removed = new Set(
-          entry ? entry.plan.removePtrs.map((r) => r.ptr) : [],
+          entry
+            ? entry.plan
+              ? entry.plan.removePtrs.map((r) => r.ptr)
+              : prevSlot.mergedFromPtrs
+            : [],
         );
         lines.push({
           baselineY: prevSlot.baselineY,
@@ -648,6 +703,169 @@ export class EditTextCommand implements Command {
   }
 
   /**
+   * Apply a paragraph edit that changed the LINE COUNT (Enter typed or a
+   * newline deleted) where slots map 1:1 to lines. Diffs prev vs next lines
+   * (LCS): each unchanged line keeps its existing glyph objects (translated
+   * to its new baseline, font intact); new/changed lines are emitted fresh;
+   * deleted lines' objects are removed. ReflowWrap re-lines on blur.
+   */
+  private applyParagraphLineEdit(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+    prevLines: string[],
+    nextLines: string[],
+  ): void {
+    const m = doc.module;
+    const slots = run.paragraphLineSlots;
+    const lineHeight =
+      run.paragraphLineHeight > 0
+        ? run.paragraphLineHeight
+        : run.fontSize * 1.2;
+    const topBaseline = slots[0]?.baselineY ?? run.matrix.f;
+    const leftX = slots[0]?.matrixE ?? run.matrix.e;
+    const fallbackFamily = helveticaVariantFor(this.prevFontId ?? run.fontId);
+    const match = lineLCS(prevLines, nextLines);
+
+    this.lineEdit = {
+      moves: [],
+      createdPtrs: [],
+      removed: [],
+      prev: snapshotRunModel(run),
+    };
+
+    const newSlots: ParagraphLineSlot[] = [];
+    const newLeaf: number[] = [];
+    const newLeafContainers: number[] = [];
+    const newMemberPtrs: number[] = [];
+    const newMemberFs: number[] = [];
+    const usedPrev = new Set<number>();
+    let cursor = 0;
+    for (let i = 0; i < nextLines.length; i++) {
+      const text = nextLines[i];
+      const y = topBaseline - i * lineHeight;
+      const prevIdx = match.get(i);
+      let slot: ParagraphLineSlot;
+      if (prevIdx !== undefined && slots[prevIdx]) {
+        // Unchanged line: keep its objects, translate to the new baseline.
+        usedPrev.add(prevIdx);
+        const src = slots[prevIdx];
+        const dy = y - src.baselineY;
+        if (Math.abs(dy) > 0.001) {
+          for (const ptr of src.mergedFromPtrs) {
+            if (!ptr) continue;
+            try {
+              m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, 0, dy);
+            } catch {
+              /* best-effort - stale ptr */
+            }
+            this.lineEdit.moves.push({ ptr, dy });
+          }
+        }
+        slot = cloneSlot(src);
+        slot.baselineY = y;
+        for (const ptr of src.mergedFromPtrs) {
+          if (ptr) {
+            newLeaf.push(ptr);
+            newLeafContainers.push(src.containerPtr);
+          }
+        }
+        newMemberPtrs.push(src.mergedFromPtrs[0] ?? 0);
+        newMemberFs.push(y);
+      } else if (text.length === 0) {
+        slot = emptySlot(y, leftX, run, fallbackFamily);
+        newMemberPtrs.push(0);
+        newMemberFs.push(y);
+      } else {
+        // New / changed line: emit fresh (only this line loses its font).
+        const ptrs = emitTextLine({
+          doc,
+          page,
+          text,
+          x: leftX,
+          y,
+          fontSize: run.fontSize,
+          fill: run.fill,
+          originalFontPtr: 0,
+          fallbackFamily,
+        });
+        this.lineEdit.createdPtrs.push(...ptrs);
+        for (const p of ptrs) {
+          newLeaf.push(p);
+          newLeafContainers.push(0);
+        }
+        newMemberPtrs.push(ptrs[0] ?? 0);
+        newMemberFs.push(y);
+        slot = buildSlotForLine(
+          m,
+          ptrs,
+          text,
+          y,
+          leftX,
+          run,
+          `base14:${fallbackFamily}`,
+        );
+      }
+      slot.startChar = cursor;
+      slot.endChar = cursor + text.length;
+      cursor += text.length + 1;
+      newSlots.push(slot);
+    }
+
+    // Remove objects of any prev line no next line reused.
+    for (let j = 0; j < slots.length; j++) {
+      if (usedPrev.has(j)) continue;
+      const src = slots[j];
+      if (prevLines[j]) {
+        this.lineEdit.removed.push({
+          text: prevLines[j],
+          x: src.mergedFromBounds[0]?.x ?? src.matrixE,
+          y: src.baselineY,
+          fontSize: src.fontSize,
+        });
+      }
+      for (const ptr of src.mergedFromPtrs) {
+        if (!ptr) continue;
+        try {
+          m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+        } catch {
+          /* best-effort */
+        }
+      }
+    }
+
+    // Write the model, PRESERVING matched lines' original objects.
+    run.paragraphLineSlots = newSlots;
+    run.paragraphLeafPtrs = newLeaf;
+    run.paragraphLeafContainers = newLeafContainers;
+    run.paragraphMemberPtrs = newMemberPtrs;
+    run.paragraphMemberContainers = newMemberPtrs.map(() => 0);
+    run.paragraphMemberFs = newMemberFs;
+    run.paragraphLineHeight = lineHeight;
+    run.matrix = { ...run.matrix, e: leftX, f: topBaseline };
+    if (newLeaf[0]) run.pdfiumObjPtr = newLeaf[0];
+    const s0 = newSlots[0];
+    if (s0) {
+      run.mergedFromPtrs = [...s0.mergedFromPtrs];
+      run.mergedFromTexts = [...s0.mergedFromTexts];
+      run.mergedFromBounds = s0.mergedFromBounds.map((b) => ({ ...b }));
+      run.mergedFromCharStarts = [...s0.mergedFromCharStarts];
+    }
+    let maxRight = leftX;
+    for (const s of newSlots) {
+      for (const b of s.mergedFromBounds) {
+        if (b.right > maxRight) maxRight = b.right;
+      }
+    }
+    run.bounds = {
+      x: leftX,
+      y: topBaseline - (newSlots.length - 1) * lineHeight - run.fontSize * 0.25,
+      width: Math.max(0, maxRight - leftX),
+      height: newSlots.length * lineHeight + run.fontSize * 0.25,
+    };
+  }
+
+  /**
    * Apply a paragraph edit that APPENDED lines (Enter + text at the end).
    * Keeps every existing glyph object untouched - preserving the font and
    * layout of all original text - and emits only the appended lines. The
@@ -672,7 +890,9 @@ export class EditTextCommand implements Command {
     const fallbackFamily = helveticaVariantFor(this.prevFontId ?? run.fontId);
 
     this.lineEdit = {
+      moves: [],
       createdPtrs: [],
+      removed: [],
       prev: snapshotRunModel(run),
     };
 
@@ -1086,4 +1306,76 @@ function restoreRunModel(run: TextRun, snap: RunModelSnapshot): void {
   run.paragraphLeafContainers = [...snap.paragraphLeafContainers];
   run.paragraphLineSlots = snap.paragraphLineSlots.map(cloneSlot);
   run.pdfiumObjPtr = snap.pdfiumObjPtr;
+}
+
+/** LCS over lines: maps next-line index -> matched prev-line index. */
+function lineLCS(a: string[], b: string[]): Map<number, number> {
+  const m = a.length;
+  const n = b.length;
+  const dp: Int32Array[] = new Array(m + 1);
+  for (let i = 0; i <= m; i++) dp[i] = new Int32Array(n + 1);
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  const map = new Map<number, number>();
+  let i = m;
+  let j = n;
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) {
+      map.set(j - 1, i - 1);
+      i--;
+      j--;
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  return map;
+}
+
+/** Rebuild the flat leaf arrays from the run's slots. */
+function reflattenLeafArrays(run: TextRun): void {
+  const leaf: number[] = [];
+  const leafContainers: number[] = [];
+  for (const s of run.paragraphLineSlots) {
+    for (const p of s.mergedFromPtrs) {
+      leaf.push(p);
+      leafContainers.push(s.containerPtr);
+    }
+  }
+  run.paragraphLeafPtrs = leaf;
+  run.paragraphLeafContainers = leafContainers;
+}
+
+/** Replace a restored slot (matched by baseline) with re-emitted objects. */
+function patchSlotPtrsByBaseline(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  run: TextRun,
+  baselineY: number,
+  ptrs: number[],
+  text: string,
+): void {
+  const idx = run.paragraphLineSlots.findIndex(
+    (s) => Math.abs(s.baselineY - baselineY) < 1,
+  );
+  if (idx < 0) return;
+  const old = run.paragraphLineSlots[idx];
+  const rebuilt = buildSlotForLine(
+    m,
+    ptrs,
+    text,
+    baselineY,
+    old.matrixE,
+    run,
+    old.fontId,
+  );
+  rebuilt.startChar = old.startChar;
+  rebuilt.endChar = old.endChar;
+  run.paragraphLineSlots[idx] = rebuilt;
 }

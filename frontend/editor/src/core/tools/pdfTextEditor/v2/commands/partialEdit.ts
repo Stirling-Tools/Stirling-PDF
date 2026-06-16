@@ -60,6 +60,43 @@ function objBoundsLR(
 }
 
 /**
+ * Map freshly-emitted line objects back to their words, building the slot's
+ * mergedFrom* arrays (one entry per ptr with its word text / char-start /
+ * real PDFium bounds). emitTextLine emits one object per whitespace word.
+ */
+function buildSlotMerged(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  ptrs: number[],
+  text: string,
+  leftX: number,
+): {
+  ptrs: number[];
+  texts: string[];
+  bounds: Array<{ x: number; right: number }>;
+  charStarts: number[];
+} {
+  const outPtrs: number[] = [];
+  const texts: string[] = [];
+  const bounds: Array<{ x: number; right: number }> = [];
+  const charStarts: number[] = [];
+  const words: Array<{ text: string; start: number }> = [];
+  const re = /\S+/g;
+  let wm: RegExpExecArray | null;
+  while ((wm = re.exec(text)) !== null) {
+    words.push({ text: wm[0], start: wm.index });
+  }
+  for (let i = 0; i < ptrs.length; i++) {
+    const w = words[i];
+    const b = objBoundsLR(m, ptrs[i], leftX);
+    outPtrs.push(ptrs[i]);
+    texts.push(w ? w.text : "");
+    bounds.push({ x: b.x, right: b.right });
+    charStarts.push(w ? w.start : text.length);
+  }
+  return { ptrs: outPtrs, texts, bounds, charStarts };
+}
+
+/**
  * Astral characters (emoji, math symbols, CJK ext-B) are two UTF-16 code
  * units. The LCS + char->sub-run maps below index by code unit, so they
  * could split a surrogate pair across keep/drop or different sub-runs and
@@ -885,8 +922,18 @@ export function applyPartialEditPlan(
  *     the caller falls back to overlay so we never half-apply
  */
 export interface ParagraphEditPlan {
-  /** Per-slot per-line plan, parallel to `run.paragraphLineSlots`. */
-  perSlot: Array<{ slotIdx: number; plan: PartialEditPlan; nextLine: string }>;
+  /**
+   * Per-slot per-line plan, parallel to `run.paragraphLineSlots`. A null
+   * `plan` means "re-emit this whole line fresh" - used when the line can't
+   * be partially edited (an empty line that gained text, or a per-line LCS
+   * that failed). Only THAT line loses its source font; every other line
+   * keeps its original objects.
+   */
+  perSlot: Array<{
+    slotIdx: number;
+    plan: PartialEditPlan | null;
+    nextLine: string;
+  }>;
   /** Snapshot of the rep's slots for revert. */
   prevSlots: ParagraphLineSlot[];
 }
@@ -908,7 +955,7 @@ export function planParagraphEdit(
 
   const perSlot: Array<{
     slotIdx: number;
-    plan: PartialEditPlan;
+    plan: PartialEditPlan | null;
     nextLine: string;
   }> = [];
 
@@ -917,18 +964,21 @@ export function planParagraphEdit(
     const prevLine = prevLines[i];
     const nextLine = nextLines[i];
     if (prevLine === nextLine) continue;
-    // Slots without sub-run data can't be partially edited - they're
-    // single-PDFium-object lines. We could route them through SetText
-    // directly, but bailing keeps the implementation small and the
-    // overlay path handles the whole paragraph atomically.
-    if (slot.mergedFromPtrs.length === 0) return null;
+    // A slot with no sub-run objects can't be partially edited (e.g. an
+    // empty line the user just typed the first character into). Re-emit
+    // ONLY this line fresh - every other line keeps its original objects.
+    if (slot.mergedFromPtrs.length === 0) {
+      perSlot.push({ slotIdx: i, plan: null, nextLine });
+      continue;
+    }
 
     // Build a synthetic mini-TextRun view of the slot so the existing
     // planPartialEdit / applyPartialEditPlan code can operate on it.
     const slotView = makeSlotView(run, slot, prevLine);
     const plan = planPartialEdit(slotView, prevLine, nextLine);
-    if (!plan) return null;
-    perSlot.push({ slotIdx: i, plan, nextLine });
+    // Per-line LCS couldn't model the change - re-emit just this line
+    // rather than failing the whole paragraph to the overlay re-emit.
+    perSlot.push({ slotIdx: i, plan: plan ?? null, nextLine });
   }
 
   if (perSlot.length === 0) return null;
@@ -953,13 +1003,20 @@ export function applyParagraphEditPlan(
   paraPlan: ParagraphEditPlan,
   nextText: string,
 ): ParagraphEditApplyResult {
+  const m = doc.module;
   const lines = nextText.split("\n");
   const newSlots: ParagraphLineSlot[] = run.paragraphLineSlots.map((s) =>
     cloneSlot(s),
   );
-  const planBySlot = new Map<number, { plan: PartialEditPlan }>();
+  const planBySlot = new Map<
+    number,
+    { plan: PartialEditPlan | null; nextLine: string }
+  >();
   for (const entry of paraPlan.perSlot) {
-    planBySlot.set(entry.slotIdx, { plan: entry.plan });
+    planBySlot.set(entry.slotIdx, {
+      plan: entry.plan,
+      nextLine: entry.nextLine,
+    });
   }
 
   const allInsertedPtrs: number[] = [];
@@ -978,6 +1035,55 @@ export function applyParagraphEditPlan(
         if (first.x < minX) minX = first.x;
         if (last.right > maxRight) maxRight = last.right;
       }
+      continue;
+    }
+
+    if (planEntry.plan === null) {
+      // Fresh-emit line: this line couldn't be partially edited (empty line
+      // that gained text, or an LCS that failed). Remove its old objects and
+      // re-emit it in the fallback font; every OTHER line is untouched.
+      const leftX = slot.mergedFromBounds[0]?.x ?? slot.matrixE;
+      for (const ptr of slot.mergedFromPtrs) {
+        if (!ptr) continue;
+        try {
+          m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+        } catch {
+          /* best-effort */
+        }
+      }
+      const fallbackFamily = helveticaVariantFor(run.fontId);
+      if (lineText.length > 0) {
+        const ptrs = emitTextLine({
+          doc,
+          page,
+          text: lineText,
+          x: leftX,
+          y: slot.baselineY,
+          fontSize: slot.fontSize,
+          fill: run.fill,
+          originalFontPtr: 0,
+          fallbackFamily,
+        });
+        const built = buildSlotMerged(m, ptrs, lineText, leftX);
+        slot.mergedFromPtrs = built.ptrs;
+        slot.mergedFromTexts = built.texts;
+        slot.mergedFromBounds = built.bounds;
+        slot.mergedFromCharStarts = built.charStarts;
+        slot.fontId = `base14:${fallbackFamily}`;
+        slot.fontSubset = false;
+        slot.containerPtr = 0;
+        allInsertedPtrs.push(...ptrs);
+        for (const b of built.bounds) {
+          if (b.x < minX) minX = b.x;
+          if (b.right > maxRight) maxRight = b.right;
+        }
+      } else {
+        slot.mergedFromPtrs = [];
+        slot.mergedFromTexts = [];
+        slot.mergedFromBounds = [];
+        slot.mergedFromCharStarts = [];
+      }
+      slot.endChar = slot.startChar + lineText.length;
       continue;
     }
 

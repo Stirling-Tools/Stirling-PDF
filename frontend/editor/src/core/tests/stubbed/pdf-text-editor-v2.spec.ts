@@ -6165,3 +6165,224 @@ test.describe("PDF text editor v2 - bug-fix regressions", () => {
     expect(after!.text).toContain("NEWLINEBBB");
   });
 });
+
+/**
+ * A battery of paragraph-edit shapes, each asserting that UNEDITED text keeps
+ * its original glyph objects (i.e. its source font + layout is untouched) and
+ * the visual line count matches what was typed. Covers the variety the user
+ * hit: append one/many lines, press-Enter-then-type, type at end, mid-
+ * paragraph insert/delete, and undo.
+ */
+test.describe("PDF text editor v2 - paragraph edit variety", () => {
+  interface Info {
+    id: string;
+    leaf: number[];
+    slots: number;
+    text: string;
+  }
+  async function intro(page: import("@playwright/test").Page): Promise<Info> {
+    const info = await page.evaluate(() => {
+      const s = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = s.doc
+        .page(1)
+        .runs.find((x: { text: string }) =>
+          /Stirling\s+PDF\s+is\s+a\s+robust/.test(x.text),
+        );
+      if (!r) return null;
+      return {
+        id: r.id as string,
+        leaf: [...r.paragraphLeafPtrs] as number[],
+        slots: r.paragraphLineSlots.length as number,
+        text: r.text as string,
+      };
+    });
+    if (!info) throw new Error("intro paragraph not found");
+    return info;
+  }
+  async function byId(
+    page: import("@playwright/test").Page,
+    id: string,
+  ): Promise<Info> {
+    return (await page.evaluate((rid: string) => {
+      const s = (window as unknown as { __v2_editor_store: any })
+        .__v2_editor_store;
+      const r = s.doc.page(1).runs.find((x: { id: string }) => x.id === rid);
+      return {
+        id: r.id as string,
+        leaf: [...r.paragraphLeafPtrs] as number[],
+        slots: r.paragraphLineSlots.length as number,
+        text: r.text as string,
+      };
+    }, id)) as Info;
+  }
+  async function caretEndInsert(
+    page: import("@playwright/test").Page,
+    id: string,
+    text: string,
+  ): Promise<void> {
+    await page.evaluate(
+      ({ id, text }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="v2-run-${id}"]`,
+        )!;
+        el.focus();
+        const sel = window.getSelection()!;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("insertText", false, text);
+      },
+      { id, text },
+    );
+    await page.waitForTimeout(200);
+  }
+  async function replaceAll(
+    page: import("@playwright/test").Page,
+    id: string,
+    full: string,
+  ): Promise<void> {
+    await page.evaluate(
+      ({ id, full }) => {
+        const el = document.querySelector<HTMLDivElement>(
+          `[data-testid="v2-run-${id}"]`,
+        )!;
+        el.focus();
+        const sel = window.getSelection()!;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("insertText", false, full);
+      },
+      { id, full },
+    );
+    await page.waitForTimeout(250);
+  }
+  const keptAll = (before: Info, after: Info): number =>
+    before.leaf.filter((p) => new Set(after.leaf).has(p)).length;
+
+  async function load(page: import("@playwright/test").Page): Promise<void> {
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(STIRLING_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(700);
+  }
+
+  test("append one line + one char in a single insert", async ({ page }) => {
+    await load(page);
+    const before = await intro(page);
+    await caretEndInsert(page, before.id, "\nZ");
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots + 1);
+    expect(keptAll(before, after)).toBe(before.leaf.length);
+    expect(after.text.endsWith("Z")).toBe(true);
+  });
+
+  test("press Enter, then type a single char (two input events)", async ({
+    page,
+  }) => {
+    await load(page);
+    const before = await intro(page);
+    await caretEndInsert(page, before.id, "\n");
+    await caretEndInsert(page, before.id, "Z");
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots + 1);
+    expect(
+      keptAll(before, after),
+      "typing into a freshly-added empty line must not re-font the paragraph",
+    ).toBe(before.leaf.length);
+    expect(after.text.endsWith("Z")).toBe(true);
+  });
+
+  test("append several lines", async ({ page }) => {
+    await load(page);
+    const before = await intro(page);
+    await caretEndInsert(page, before.id, "\nZZZ\nQQQ\nRRR");
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots + 3);
+    expect(keptAll(before, after)).toBe(before.leaf.length);
+    expect(after.text).toContain("ZZZ");
+    expect(after.text).toContain("RRR");
+  });
+
+  test("type at the end of an existing line (no newline) keeps every object", async ({
+    page,
+  }) => {
+    await load(page);
+    const before = await intro(page);
+    await caretEndInsert(page, before.id, "ZZZ");
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots);
+    expect(keptAll(before, after)).toBe(before.leaf.length);
+    expect(after.text).toContain("ZZZ");
+  });
+
+  test("insert a line in the MIDDLE keeps the other lines' objects", async ({
+    page,
+  }) => {
+    await load(page);
+    const before = await intro(page);
+    const lines = before.text.split("\n");
+    const full = [lines[0], "MIDLINE", ...lines.slice(1)].join("\n");
+    await replaceAll(page, before.id, full);
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots + 1);
+    expect(
+      keptAll(before, after),
+      "every original line survives a mid-paragraph insert",
+    ).toBe(before.leaf.length);
+    expect(after.text).toContain("MIDLINE");
+  });
+
+  test("delete a middle line keeps the surviving lines' objects", async ({
+    page,
+  }) => {
+    await load(page);
+    const before = await intro(page);
+    const lines = before.text.split("\n");
+    if (lines.length < 3) {
+      test.skip(true, "intro paragraph has < 3 lines");
+      return;
+    }
+    const full = [lines[0], ...lines.slice(2)].join("\n");
+    await replaceAll(page, before.id, full);
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots - 1);
+    // Pure delete: no new objects, surviving lines keep theirs.
+    const beforeSet = new Set(before.leaf);
+    expect(after.leaf.every((p) => beforeSet.has(p))).toBe(true);
+    expect(after.leaf.length).toBeLessThan(before.leaf.length);
+    expect(after.leaf.length).toBeGreaterThan(0);
+  });
+
+  test("undo after appending a line restores the original objects", async ({
+    page,
+  }) => {
+    await load(page);
+    const before = await intro(page);
+    await caretEndInsert(page, before.id, "\nZZZ");
+    // A single insert with a newline fires several input events (so several
+    // history commands); undo them all to fully revert.
+    for (let k = 0; k < 12; k++) {
+      const canUndo = await page.evaluate(
+        () =>
+          (window as unknown as { __v2_editor_store: any }).__v2_editor_store
+            .history.canUndo,
+      );
+      if (!canUndo) break;
+      await page.getByTestId("v2-undo").click();
+      await page.waitForTimeout(120);
+    }
+    const after = await byId(page, before.id);
+    expect(after.slots).toBe(before.slots);
+    expect(keptAll(before, after)).toBe(before.leaf.length);
+    expect(after.text).toBe(before.text);
+  });
+});
