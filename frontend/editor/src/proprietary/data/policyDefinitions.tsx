@@ -24,7 +24,7 @@ import type {
 
 const ICON_SX = { fontSize: "1rem" } as const;
 
-/** The 5 policy categories, in the prototype's narrative order. */
+/** The 5 policy categories, in display order. */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
@@ -69,7 +69,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
  * PII presets for the redact step: a label + the regex the /auto-redact endpoint
  * matches (via `wordsToRedact` + `useRegex`). Patterns are precise — validated
  * (SSN areas, card IINs, ABA prefixes), context- or separator-anchored — to keep
- * false positives down and avoid the backtracking the old broad patterns risked.
+ * false positives down and avoid catastrophic backtracking.
  */
 export const PII_PRESETS: { value: string; label: string; pattern: string }[] =
   [
@@ -137,7 +137,7 @@ export const DEFAULT_PII_PATTERNS: string[] = [
   PII_PRESETS[1].pattern, // cards
 ];
 
-/** Per-category narrative + editable fields (from the prototype's POLICY_CONFIG). */
+/** Per-category narrative + editable fields. */
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
     summary:
@@ -149,7 +149,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     scopeLabel: "All PDFs on this device",
     // Policy-level controls only — the per-tool params (OCR level, extract
-    // tables, naming, normalize, rotate…) now live in the Workflow step.
+    // tables, naming, normalize, rotate...) live in the Workflow step.
     fields: [
       {
         label: "Min confidence",

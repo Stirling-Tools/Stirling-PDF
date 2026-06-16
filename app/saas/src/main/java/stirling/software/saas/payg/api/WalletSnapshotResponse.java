@@ -82,8 +82,7 @@ public record WalletSnapshotResponse(
 
     /**
      * One row of the team-members table on the leader's Plan page — display-only per-member usage.
-     * (Per-member sub-caps aren't enforced yet; see the follow-ups note. When they ship, a cap
-     * field returns here.)
+     * (Per-member sub-caps aren't enforced yet. When they ship, a cap field returns here.)
      */
     public record MemberRow(String userId, String name, String email, int spendUnits) {}
 

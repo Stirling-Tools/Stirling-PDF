@@ -75,6 +75,22 @@ function markLoginRedirectFired(): void {
   }
 }
 
+// Reset the throttle when the user establishes a fresh session via interactive
+// login. Otherwise a genuine expiry that happens within the throttle window of
+// the redirect that sent them to /login would be wrongly suppressed, leaving
+// them on a page with silently failing requests. Login dispatches
+// "jwt-available"; token refresh does not (it fires "TOKEN_REFRESHED"), so
+// refresh-driven redirect churn is still dampened by the throttle.
+if (typeof window !== "undefined") {
+  window.addEventListener("jwt-available", () => {
+    try {
+      window.sessionStorage.removeItem(LOGIN_REDIRECT_THROTTLE_KEY);
+    } catch {
+      // sessionStorage unavailable - nothing to clear
+    }
+  });
+}
+
 /**
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise

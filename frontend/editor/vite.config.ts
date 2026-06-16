@@ -1,13 +1,14 @@
-import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
-import { constants, gzip, brotliCompress } from "node:zlib";
+import fs from "node:fs/promises";
+import path, { resolve } from "node:path";
+import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { defineConfig, loadEnv } from "vite";
+import type { PluginOption } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
@@ -96,6 +97,7 @@ export default defineConfig(async ({ mode }) => {
   // this file lived at frontend/, but after the editor was moved under
   // frontend/editor/ the cwd-based lookup would miss editor/.env*.
   const env = loadEnv(mode, import.meta.dirname, "");
+  const parentEnv = loadEnv(mode, resolve(import.meta.dirname, ".."), "");
 
   // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
   const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
@@ -120,6 +122,17 @@ export default defineConfig(async ({ mode }) => {
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  // Allow host header checks to be configured via env so LAN/reverse-proxy
+  // dev setups don't require editing this file for each machine.
+  const allowedHostsRaw =
+    process.env.FRONTEND_ALLOWED_HOSTS ||
+    env.FRONTEND_ALLOWED_HOSTS ||
+    parentEnv.FRONTEND_ALLOWED_HOSTS ||
+    "";
+  const allowedHosts = allowedHostsRaw
+    .split(",")
+    .map((host) => host.trim())
+    .filter(Boolean);
   const backendProxy = {
     target: backendUrl,
     changeOrigin: true,
@@ -214,6 +227,7 @@ export default defineConfig(async ({ mode }) => {
     },
     server: {
       host: true,
+      allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
       // make sure this port matches the devUrl port in tauri.conf.json file
       port: 5173,
       // Tauri expects a fixed port, fail if that port is not available

@@ -5,8 +5,8 @@ describe("policy definitions integrity", () => {
   it("every category has a matching config entry", () => {
     for (const cat of POLICY_CATEGORIES) {
       expect(POLICY_CONFIG[cat.id], `config for ${cat.id}`).toBeDefined();
-      // A category may have no policy-level setting fields (e.g. Security's were
-      // all unwired and removed); fields is required but can be empty.
+      // A category may have no policy-level setting fields; fields is required
+      // but can be empty.
       expect(Array.isArray(POLICY_CONFIG[cat.id].fields)).toBe(true);
       expect(POLICY_CONFIG[cat.id].rules.length).toBeGreaterThan(0);
       // Every preset seeds a real, non-empty pipeline (the category→steps map).

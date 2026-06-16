@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +19,7 @@ public class JarPathUtil {
     public static Path currentJar() {
         try {
             Path jar =
-                    Paths.get(
+                    Path.of(
                                     JarPathUtil.class
                                             .getProtectionDomain()
                                             .getCodeSource()
@@ -61,14 +60,14 @@ public class JarPathUtil {
         }
 
         // Location 2: ./build/libs/ (development build)
-        possibleLocations[1] = Paths.get("build", "libs", "restart-helper.jar").toAbsolutePath();
+        possibleLocations[1] = Path.of("build", "libs", "restart-helper.jar").toAbsolutePath();
 
         // Location 3: app/common/build/libs/ (multi-module build)
         possibleLocations[2] =
-                Paths.get("app", "common", "build", "libs", "restart-helper.jar").toAbsolutePath();
+                Path.of("app", "common", "build", "libs", "restart-helper.jar").toAbsolutePath();
 
         // Location 4: Current working directory
-        possibleLocations[3] = Paths.get("restart-helper.jar").toAbsolutePath();
+        possibleLocations[3] = Path.of("restart-helper.jar").toAbsolutePath();
 
         // Check each location
         for (Path location : possibleLocations) {

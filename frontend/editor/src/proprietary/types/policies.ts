@@ -4,9 +4,8 @@
  * A Policy is conceptually like a Watch Folder (a configured automation that
  * runs over documents) but backend-driven and triggered by *sources/events*
  * (editor save/export, device sweeps, cloud connectors) rather than just a
- * folder. Per-policy state is persisted locally (localStorage) today; server
- * persistence and real enforcement land in a follow-up. Activity + stats shown
- * in the detail view are derived live from the user's real uploaded files.
+ * folder. Per-policy state is persisted locally (localStorage). Activity + stats
+ * shown in the detail view are derived live from the user's real uploaded files.
  */
 
 import type { ReactNode } from "react";

@@ -200,12 +200,12 @@ _ISE_STEMS = [
     "characteri",
     "stabili",
     "generali",
-    "specifi? ".strip(),
+    "specifi? ".strip(),  # codespell:ignore specifi
     "sterili",
     "neutrali",
     "saniti",
     "tokeni",
-    "serie? ".strip(),
+    "serie? ".strip(),  # codespell:ignore serie
     "alphabeti",
     "synthesi",
     "memori",
@@ -213,7 +213,16 @@ _ISE_STEMS = [
     "colouri",
 ]
 _ISE_STEMS = [s for s in _ISE_STEMS if s and not s.endswith("?")]
-_ISE_SUFFIXES = ["se", "ses", "sed", "sing", "ser", "sers", "sation", "sations"]
+_ISE_SUFFIXES = [
+    "se",
+    "ses",
+    "sed",
+    "sing",
+    "ser",  # codespell:ignore ser
+    "sers",
+    "sation",
+    "sations",
+]
 for stem in _ISE_STEMS:
     for suf in _ISE_SUFFIXES:
         add(stem + suf, stem + suf.replace("s", "z", 1))
