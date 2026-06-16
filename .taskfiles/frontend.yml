@@ -240,7 +240,7 @@ tasks:
   # OSS oxc toolchain (oxlint + oxfmt) - evaluation
   # Runs in parallel with the ESLint/Prettier tasks above so the
   # two toolchains can be benchmarked head-to-head before any swap.
-  # Config: frontend/.oxlintrc.json, frontend/.oxfmtrc.json
+  # Config: frontend/oxlint.config.ts, frontend/.oxfmtrc.json
   # ------------------------------------------------------------
 
   lint:oxlint:
