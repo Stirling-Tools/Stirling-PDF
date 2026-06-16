@@ -10,6 +10,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { PanelHeader } from "@app/components/shared/PanelHeader";
+import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { Card } from "@shared/components/Card";
 import { ChipFlow } from "@shared/components/ChipFlow";
 import { StatusBadge } from "@shared/components/StatusBadge";
@@ -131,6 +132,7 @@ export function PolicyDetailPanel({
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
+        accent={ROW_ACCENT[category.id]}
         title={t(`policies.catalog.${category.id}`, category.label)}
         onClose={onBack}
         closeLabel={t("policies.detail.close", "Close")}

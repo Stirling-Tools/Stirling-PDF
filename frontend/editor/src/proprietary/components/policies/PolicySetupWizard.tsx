@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { PanelHeader } from "@app/components/shared/PanelHeader";
+import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { Input } from "@shared/components/Input";
@@ -157,6 +158,7 @@ export function PolicySetupWizard({
       <div className="pol-detail">
         <PanelHeader
           icon={category.icon}
+          accent={ROW_ACCENT[category.id]}
           title={
             isEdit
               ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
@@ -297,6 +299,7 @@ export function PolicySetupWizard({
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
+        accent={ROW_ACCENT[category.id]}
         title={
           isEdit
             ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {

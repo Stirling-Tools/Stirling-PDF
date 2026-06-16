@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { ActionIcon, Menu } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import type { IconBadgeAccent } from "@shared/components/IconBadge";
 import "@app/components/shared/PanelHeader.css";
 
 export interface PanelHeaderMenuItem {
@@ -30,6 +31,11 @@ export interface PanelHeaderProps {
   menuItems?: PanelHeaderMenuItem[];
   /** aria-label for the header when it acts as a menu trigger. */
   menuLabel?: string;
+  /**
+   * Tints the icon badge with a category colour (blue/purple/green/amber/red).
+   * Defaults to the standard blue when omitted (tool + AI chat headers).
+   */
+  accent?: IconBadgeAccent;
   /** Shows a pulsing status dot on the icon + a tinted border (e.g. AI running). */
   loading?: boolean;
   /** Right-aligned content rendered before the close button (e.g. a status badge). */
@@ -54,12 +60,23 @@ export function PanelHeader({
   closeLabel,
   menuItems,
   menuLabel,
+  accent,
   loading = false,
   actions,
   barClassName,
   className,
 }: PanelHeaderProps) {
   const hasMenu = menuItems != null && menuItems.length > 0;
+
+  // Tint the icon badge with the category colour when an accent is given. Inline
+  // so it wins over the default blue treatment in both light and dark mode; the
+  // --color-* tokens are theme-aware and match the badge tint used elsewhere.
+  const iconStyle: CSSProperties | undefined = accent
+    ? {
+        color: `var(--color-${accent})`,
+        background: `color-mix(in srgb, var(--color-${accent}) 14%, transparent)`,
+      }
+    : undefined;
 
   const barClasses = [
     "sui-panelhdr__bar",
@@ -71,7 +88,7 @@ export function PanelHeader({
 
   const barBody = (
     <>
-      <span className="sui-panelhdr__icon">
+      <span className="sui-panelhdr__icon" style={iconStyle}>
         {icon}
         {loading && <span className="sui-panelhdr__dot" />}
       </span>
