@@ -188,10 +188,26 @@ jobs:
           name: backend-log-live-${{ github.run_id }}
           path: .test-state/playwright/backend.log
           retention-days: 7
+      - name: List Playwright output locations (debug)
+        if: always()
+        run: |
+          echo "::group::Playwright output dirs"
+          ls -la frontend/editor/playwright-report 2>/dev/null \
+            || echo "no playwright-report at frontend/editor/"
+          ls -la frontend/editor/test-results 2>/dev/null \
+            || echo "no test-results at frontend/editor/"
+          find frontend/editor -maxdepth 3 -name 'trace.zip' 2>/dev/null || true
+          echo "::endgroup::"
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-live-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          # test-results/ holds the per-test trace.zip (with browser console
+          # logs) + screenshots/video; playwright-report/ is the HTML report.
+          # Upload both so failures are debuggable from the trace viewer.
+          path: |
+            frontend/editor/playwright-report/
+            frontend/editor/test-results/
           retention-days: 7
+          if-no-files-found: warn
