@@ -49,6 +49,8 @@ function formatBytes(bytes: number): string {
 /** Map a run's lifecycle status to an activity row's display status. */
 function activityStatus(run: PolicyRunRecord): PolicyActivityItem["status"] {
   if (run.status === "COMPLETED") return "enforced";
+  // A queue-rejected run awaiting auto-retry is transient backpressure, not a failure.
+  if (run.retrying) return "processing";
   if (run.status === "FAILED" || run.status === "CANCELLED") return "flagged";
   return "processing";
 }
@@ -59,8 +61,15 @@ function activityAction(run: PolicyRunRecord): string {
       return `${formatBytes(run.fileSize)} • enforced`;
     case "flagged":
       return run.error ?? "Enforcement failed";
-    default:
-      return "Enforcing…";
+    default: {
+      if (run.retrying) return "Busy — retrying…";
+      // Show pipeline progress while running, once the status endpoint reports
+      // it — turns a static "Enforcing…" into visible movement on slow steps.
+      const { currentStep, stepCount } = run;
+      return currentStep && stepCount
+        ? `Enforcing… · step ${currentStep}/${stepCount}`
+        : "Enforcing…";
+    }
   }
 }
 

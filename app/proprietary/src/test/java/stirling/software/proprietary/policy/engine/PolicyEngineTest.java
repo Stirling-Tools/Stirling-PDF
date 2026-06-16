@@ -337,6 +337,27 @@ class PolicyEngineTest {
     }
 
     @Test
+    void runRejectedWhenQueueFullCarriesTransientErrorCode() {
+        when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(true);
+        // Admission rejected (queue full): the queued future completes exceptionally.
+        CompletableFuture<Object> rejected = new CompletableFuture<>();
+        rejected.completeExceptionally(
+                new RuntimeException("Job queue full, please try again later"));
+        doReturn(rejected).when(jobQueue).queueJob(anyString(), anyInt(), any(), anyLong());
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        PolicyRun run = registry.get(handle.runId());
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        // Tagged transient so the client backs off and retries instead of hard-failing.
+        assertEquals("POLICY_QUEUE_FULL", run.getErrorCode());
+    }
+
+    @Test
     void resumeIsNotYetImplemented() {
         assertThrows(UnsupportedOperationException.class, () -> engine.resume("any", List.of()));
     }
