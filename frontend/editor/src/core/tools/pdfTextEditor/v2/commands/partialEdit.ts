@@ -33,6 +33,43 @@ export function setObjText(
   }
 }
 
+/** Read a text object's left/right edge in page points. */
+function objBoundsLR(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  ptr: number,
+  fallbackX: number,
+): { x: number; right: number } {
+  const l = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const r = m.pdfium.wasmExports.malloc(4);
+  const t = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
+      return { x: fallbackX, right: fallbackX };
+    }
+    return {
+      x: m.pdfium.getValue(l, "float"),
+      right: m.pdfium.getValue(r, "float"),
+    };
+  } finally {
+    m.pdfium.wasmExports.free(l);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(t);
+  }
+}
+
+/**
+ * Astral characters (emoji, math symbols, CJK ext-B) are two UTF-16 code
+ * units. The LCS + char->sub-run maps below index by code unit, so they
+ * could split a surrogate pair across keep/drop or different sub-runs and
+ * emit a lone surrogate (tofu). Bail to the overlay path, which re-emits
+ * whole words and keeps the pair intact.
+ */
+function hasSurrogatePair(s: string): boolean {
+  return /[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(s);
+}
+
 /**
  * Diff-driven partial editing. For runs that LineGrouper merged from
  * many sub-objects (per-glyph layout common in InDesign/Quark output),
@@ -162,6 +199,7 @@ export function planPartialEdit(
   if (run.mergedFromBounds.length !== run.mergedFromPtrs.length) return null;
   if (nextText.length === 0) return null;
   if (prevText === nextText) return null;
+  if (hasSurrogatePair(prevText) || hasSurrogatePair(nextText)) return null;
 
   const { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
 
@@ -755,28 +793,32 @@ export function applyPartialEditPlan(
         }
         measuredWidth = realRightEdge - anchorX;
       }
-      // Distribute the measured width across the emit ptrs for the
-      // per-chunk model bounds (used by future edits).
-      let runningCursor = anchorX;
-      // Distribute char-start across the ptrs sequentially.
-      let runningCharOffset = 0;
-      const insertCharLen = insertText.length / Math.max(1, ptrs.length);
+      // Map each emitted text object back to the word it rendered, so the
+      // sub-run model stays char-accurate: one entry per ptr with its real
+      // text, char-start (offset of that word within insertText) and PDFium
+      // bounds. emitTextLine emits one object per whitespace-separated word,
+      // in order. Storing the FULL insert string on every ptr (the old
+      // behaviour) corrupted the next edit's integrity check and char map.
+      const insertWords: Array<{ text: string; start: number }> = [];
+      {
+        const wordRe = /\S+/g;
+        let wm: RegExpExecArray | null;
+        while ((wm = wordRe.exec(insertText)) !== null) {
+          insertWords.push({ text: wm[0], start: wm.index });
+        }
+      }
       for (let i = 0; i < ptrs.length; i++) {
-        const sliceWidth = measuredWidth / ptrs.length;
+        const word = insertWords[i];
+        const bnds = objBoundsLR(m, ptrs[i], anchorX);
         newMergedFromPtrs.push(ptrs[i]);
-        newMergedFromTexts.push(insertText);
-        newMergedFromBounds.push({
-          x: runningCursor,
-          right: runningCursor + sliceWidth,
-        });
+        newMergedFromTexts.push(word ? word.text : "");
+        newMergedFromBounds.push({ x: bnds.x, right: bnds.right });
         newMergedFromCharStarts.push(
-          op.startBIdx + Math.round(runningCharOffset),
+          op.startBIdx + (word ? word.start : insertText.length),
         );
-        runningCursor += sliceWidth;
-        runningCharOffset += insertCharLen;
       }
       insertedPtrs.push(...ptrs);
-      if (runningCursor > lastEnd) lastEnd = runningCursor;
+      if (realRightEdge > lastEnd) lastEnd = realRightEdge;
       // Update offset:
       //   * anchored (mixed-replacement): delta vs original sub-run
       //     width. Negative delta shifts subsequent keeps LEFT (close
@@ -856,6 +898,7 @@ export function planParagraphEdit(
 ): ParagraphEditPlan | null {
   if (run.paragraphLineSlots.length < 2) return null;
   if (prevText === nextText) return null;
+  if (hasSurrogatePair(prevText) || hasSurrogatePair(nextText)) return null;
   // Line-count guard: typing Enter or deleting a newline changes the
   // slot count. Bail to overlay for those edits.
   const prevLines = prevText.split("\n");

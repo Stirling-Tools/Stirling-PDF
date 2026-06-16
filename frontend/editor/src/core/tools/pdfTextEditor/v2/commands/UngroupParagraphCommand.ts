@@ -30,6 +30,11 @@ export class UngroupParagraphCommand implements Command {
     this.runId = opts.runId;
   }
 
+  /** Run IDs produced by the split (rep line + one per extra source line). */
+  get resultRunIds(): string[] {
+    return this.createdRunIds;
+  }
+
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const rep = page.findRun(this.runId);

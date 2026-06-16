@@ -77,6 +77,12 @@ export class EditorStore {
   private doc: EditorDocument | null;
   private state: EditorViewState;
   private listeners: Set<(s: EditorViewState) => void>;
+  /** Undo-stack depth at the last save; the doc is dirty when it differs. */
+  private savedUndoDepth = 0;
+  /** True when edits were baked into the stream (e.g. grouping-mode switch). */
+  private bakedDirty = false;
+  /** Monotonic token so a superseded async load can detect it lost the race. */
+  private loadToken = 0;
 
   constructor() {
     this.history = new HistoryStack();
@@ -154,6 +160,10 @@ export class EditorStore {
       this.patch({ groupingMode: mode });
       return;
     }
+    // Re-reading rebuilds run IDs, so the undo history can't survive the
+    // switch and is cleared. Any unsaved edits are baked into the stream
+    // here, so remember the doc stays dirty even though the stack is empty.
+    const wasDirty = this.isDirty();
     for (const page of doc.loadedPages()) {
       if (!page.loaded) continue;
       // Flush deferred edits into the content stream before re-reading
@@ -165,6 +175,8 @@ export class EditorStore {
       PdfiumTextReader.populate(doc, page, mode);
     }
     this.history.clear();
+    this.savedUndoDepth = 0;
+    this.bakedDirty = wasDirty;
     this.selection.clear();
     const pages: PageSnapshot[] = this.state.pages.map((p) => {
       const live = doc.page(p.pageIndex);
@@ -176,13 +188,28 @@ export class EditorStore {
         images: live.images.map((img) => img.snapshot()),
       };
     });
-    this.patch({ groupingMode: mode, pages });
+    this.patch({ groupingMode: mode, pages, dirty: this.isDirty() });
+  }
+
+  /**
+   * Begin a load and return a token. A concurrent/later load increments
+   * the token; the async loader checks `isCurrentLoad(token)` after every
+   * await so a superseded load bails instead of clobbering the new doc.
+   */
+  beginLoad(): number {
+    return ++this.loadToken;
+  }
+
+  isCurrentLoad(token: number): boolean {
+    return this.loadToken === token;
   }
 
   async setDocument(doc: EditorDocument): Promise<void> {
     this.disposeDocumentIfAny();
     this.doc = doc;
     this.history.clear();
+    this.savedUndoDepth = 0;
+    this.bakedDirty = false;
     this.selection.clear();
     this.patch({
       hasDocument: true,
@@ -198,9 +225,18 @@ export class EditorStore {
   clearDocument(): void {
     this.disposeDocumentIfAny();
     this.history.clear();
+    this.savedUndoDepth = 0;
+    this.bakedDirty = false;
     this.selection.clear();
     this.state = INITIAL;
     this.notify();
+  }
+
+  /** Mark the current edit state as saved; clears the dirty indicator. */
+  markSaved(): void {
+    this.savedUndoDepth = this.history.size().undo;
+    this.bakedDirty = false;
+    this.patch({ dirty: false });
   }
 
   /** Apply a command via the history stack, re-snapshot, and notify. */
@@ -208,21 +244,21 @@ export class EditorStore {
     if (!this.doc) return;
     this.history.execute(cmd, this.doc);
     this.resnapshot();
-    this.patch({ dirty: true });
+    this.patch({ dirty: this.isDirty() });
   }
 
   undo(): void {
     if (!this.doc) return;
     this.history.undo(this.doc);
     this.resnapshot();
-    this.patch({ dirty: this.anyDirty() });
+    this.patch({ dirty: this.isDirty() });
   }
 
   redo(): void {
     if (!this.doc) return;
     this.history.redo(this.doc);
     this.resnapshot();
-    this.patch({ dirty: this.anyDirty() });
+    this.patch({ dirty: this.isDirty() });
   }
 
   /** Revert every edit in history; document returns to its load state. */
@@ -230,7 +266,7 @@ export class EditorStore {
     if (!this.doc) return;
     this.history.undoAll(this.doc);
     this.resnapshot();
-    this.patch({ dirty: this.anyDirty() });
+    this.patch({ dirty: this.isDirty() });
   }
 
   /**
@@ -274,9 +310,15 @@ export class EditorStore {
     this.patch({ pages });
   }
 
-  private anyDirty(): boolean {
+  /**
+   * Document-level dirty bit. Derived from the undo-stack depth relative
+   * to the last save (plus a baked-edit flag) rather than per-page
+   * `page.dirty`, because a command's revert can't clear `page.dirty` -
+   * so undoing every edit must still report the doc as clean.
+   */
+  private isDirty(): boolean {
     if (!this.doc) return false;
-    return this.doc.loadedPages().some((p) => p.dirty);
+    return this.bakedDirty || this.history.size().undo !== this.savedUndoDepth;
   }
 
   private patch(partial: Partial<EditorViewState>): void {

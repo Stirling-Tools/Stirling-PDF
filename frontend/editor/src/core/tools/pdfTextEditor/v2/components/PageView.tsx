@@ -99,16 +99,18 @@ export function PageView({
     return () => observer.disconnect();
   }, [page.pageIndex, onFirstVisible]);
 
-  // Near-viewport observer triggers the render with a wide rootMargin
-  // so the bitmap is ready before the page enters the viewport.
-  // Out-of-view pages keep their rendered canvas for instant re-entry.
+  // Near-viewport observer drives rendering with a wide rootMargin so the
+  // bitmap is ready just before the page scrolls in. It tracks BOTH enter
+  // and leave: pages that scroll far away release their (multi-MB) canvas
+  // bitmap and fall back to the placeholder, so memory stays bounded on
+  // long documents instead of accumulating one full-res bitmap per page.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) setNearViewport(true);
+          setNearViewport(entry.isIntersecting);
         }
       },
       { rootMargin: "800px" },
@@ -118,9 +120,18 @@ export function PageView({
   }, []);
 
   useEffect(() => {
-    if (!nearViewport) return;
-    let cancelled = false;
     const canvas = canvasRef.current;
+    if (!nearViewport) {
+      // Far from the viewport: free the bitmap (a 4x-zoom A4 canvas is
+      // ~32MB). The placeholder shows until the page nears view again and
+      // this effect re-renders at the current scale.
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+      return;
+    }
+    let cancelled = false;
     if (!canvas) return;
     setRendering(true);
     setRenderError(null);

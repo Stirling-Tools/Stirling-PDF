@@ -116,22 +116,12 @@ interface CreateTextObjModule {
   ) => number;
 }
 
-/**
- * PDFium normalises consecutive ASCII spaces inside its text-object
- * storage layer (both FPDFText_SetText and FPDFText_SetCharcodes
- * collapse), so "Hello  World" comes back as "Hello World" regardless of
- * how the caller writes it. NBSP padding also fails - base-14 Helvetica
- * maps U+00A0 to 0xFF (ydieresis), rendering visible junk.
- *
- * The only reliable way to preserve runs of spaces is to emit one text
- * object per WORD with explicit x-positioning between them - see
- * `emitTextWithSpacingPreserved` below. `preserveSpaceRuns` is kept as
- * a no-op so the legacy single-object emit path still works for text
- * that has no consecutive spaces.
- */
-function preserveSpaceRuns(text: string): string {
-  return text;
-}
+// NOTE on spaces: PDFium normalises consecutive ASCII spaces inside a
+// single text object (FPDFText_SetText / FPDFText_SetCharcodes both
+// collapse them), and base-14 Helvetica maps NBSP (U+00A0) to 0xFF
+// (ydieresis), which renders as junk. The only reliable way to preserve
+// runs of spaces is to emit one text object per WORD with explicit
+// x-positioning between them - see `splitIntoWordChunks` / `emitTextLine`.
 
 let measureCanvas: HTMLCanvasElement | null = null;
 
@@ -200,12 +190,6 @@ export function splitIntoWordChunks(
       // the next chunk's leading offset rather than emitting an empty
       // text object PDFium would reject.
       leadingGapPt += gapPt;
-    } else if (chunks.length === 0 && leadingGapPt > 0) {
-      // First non-empty chunk absorbs the leading whitespace as a
-      // synthetic gap-before (caller adds it to the start cursor).
-      chunks.push({ text: before, gapAfterPt: gapPt });
-      // leadingGapPt will be applied by emitTextLine via the initial
-      // cursor offset.
     } else {
       chunks.push({ text: before, gapAfterPt: gapPt });
     }
@@ -215,9 +199,8 @@ export function splitIntoWordChunks(
   if (lastIdx < line.length) {
     chunks.push({ text: line.slice(lastIdx), gapAfterPt: 0 });
   }
-  // Tag the first chunk with leading whitespace by mutating its
-  // gapAfterPt is wrong; expose it via a closure-side field instead.
-  // The caller reads `chunks.leadingGapPt` when present.
+  // Leading whitespace is exposed as a side field the caller folds into
+  // the initial cursor (it can't live in any chunk's gapAfterPt).
   (chunks as WordChunk[] & { leadingGapPt?: number }).leadingGapPt =
     leadingGapPt;
   return chunks;
@@ -292,7 +275,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // Fast path: no whitespace at all → one text object holds the whole word.
   const hasAnyWhitespace = /\s/.test(opts.text);
   if (!hasAnyWhitespace) {
-    const ptr = emitWord(preserveSpaceRuns(opts.text), opts.x);
+    const ptr = emitWord(opts.text, opts.x);
     return ptr ? [ptr] : [];
   }
 
@@ -362,9 +345,6 @@ function applyFillAndPos(
   m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, x, y);
   m.FPDFPage_InsertObject(page.pagePtr, ptr);
 }
-
-/** Exported so the in-place writer can use the same NBSP-padding trick. */
-export const preserveConsecutiveSpaces = preserveSpaceRuns;
 
 /** Insert a filled rectangle (cover/background) and return its pointer. */
 export function emitFillRect(

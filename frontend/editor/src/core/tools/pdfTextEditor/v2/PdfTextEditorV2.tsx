@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { useFileManagement } from "@app/contexts/FileContext";
@@ -24,6 +24,7 @@ import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRuns
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
+import { visiblePageNumber } from "@app/tools/pdfTextEditor/v2/util/dom";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
 const WORKBENCH_ID = "custom:pdfTextEditorV2" as const;
@@ -57,19 +58,41 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
 
   const sel = useSelectionActions(store);
 
-  const handleSave = useCallback(() => {
-    if (!store.document) return;
-    const { blob, filename } = exportToBlob(store.document);
-    downloadBlob(blob, filename);
+  // Guards against re-entrant saves while a (synchronous) serialize runs.
+  const savingRef = useRef(false);
+
+  const handleSave = useCallback(async () => {
+    if (!store.document || savingRef.current) return;
+    savingRef.current = true;
+    store.setError(null);
+    try {
+      // Yield once so React can paint the disabled/saving state before the
+      // synchronous PDFium serialize blocks the main thread.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const { blob, filename } = exportToBlob(store.document);
+      downloadBlob(blob, filename);
+      store.markSaved();
+    } catch (err) {
+      // Surface the failure instead of silently dropping it - the user
+      // must not believe a broken save succeeded.
+      store.setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      savingRef.current = false;
+    }
   }, [store]);
 
   const handleSaveToWorkbench = useCallback(async () => {
-    if (!store.document) return;
-    const { blob, filename } = exportToBlob(store.document);
+    if (!store.document || savingRef.current) return;
+    savingRef.current = true;
+    store.setError(null);
     try {
+      const { blob, filename } = exportToBlob(store.document);
       await addFiles([new File([blob], filename, { type: blob.type })]);
+      store.markSaved();
     } catch (err) {
       store.setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      savingRef.current = false;
     }
   }, [store, addFiles]);
 
@@ -78,15 +101,29 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       const doc = store.document;
       if (!doc) return;
       const bitmap = await createImageBitmap(file);
+      // The document may have been reloaded while the bitmap decoded; bail
+      // rather than insert against geometry from the wrong document.
+      if (store.document !== doc) {
+        bitmap.close?.();
+        return;
+      }
       const canvas = document.createElement("canvas");
       canvas.width = bitmap.width;
       canvas.height = bitmap.height;
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) {
+        bitmap.close?.();
+        return;
+      }
       ctx.drawImage(bitmap, 0, 0);
       const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
       bitmap.close?.();
-      const page = state.pages[0];
+      // Insert onto the page currently in view, read from fresh store state
+      // (not a stale render closure), so scrolling to page 10 and inserting
+      // doesn't silently drop the image onto page 1 off-screen.
+      const pages = store.getState().pages;
+      const visibleIndex = visiblePageNumber();
+      const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
       if (!page) return;
       const w = page.width * INSERTED_IMAGE_RATIO;
       const h = w * (bitmap.height / bitmap.width);
@@ -105,7 +142,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         store.selection.selectImage(cmd.insertedImageId);
       }
     },
-    [store, state.pages],
+    [store],
   );
 
   const handleCopySelected = useCallback(() => {
@@ -139,15 +176,26 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     const doc = store.document;
     if (!doc) return;
     const ids = store.selection.value.runIds;
+    // Snapshot the target runs first - dispatching mutates page.runs, and
+    // the ungroup replaces the paragraph run with per-line runs.
+    const targets: Array<{ pageIndex: number; runId: string }> = [];
     for (const pageIdx of doc.loadedPages().map((p) => p.index)) {
       for (const r of doc.page(pageIdx).runs) {
         if (!ids.includes(r.id)) continue;
         if (r.paragraphMemberPtrs.length < 2) continue;
-        store.dispatch(
-          new UngroupParagraphCommand({ pageIndex: pageIdx, runId: r.id }),
-        );
+        targets.push({ pageIndex: pageIdx, runId: r.id });
       }
     }
+    const resultIds: string[] = [];
+    for (const t of targets) {
+      const cmd = new UngroupParagraphCommand(t);
+      store.dispatch(cmd);
+      resultIds.push(...cmd.resultRunIds);
+    }
+    // Reconcile selection against the new run model so the toolbar keeps
+    // acting on real runs instead of the now-removed paragraph ids.
+    if (resultIds.length > 0) store.selection.selectMany(resultIds);
+    else store.selection.clear();
   }, [store]);
 
   const handleMergeSelection = useCallback(() => {
@@ -164,14 +212,16 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         byPage.set(r.pageIndex, list);
       }
     }
+    // Collect every page's new representative, then select them all once -
+    // selecting inside the loop left only the last page's merge selected.
+    const reps: string[] = [];
     for (const [pageIndex, runIds] of byPage) {
       if (runIds.length < 2) continue;
       const cmd = new MergeRunsCommand({ pageIndex, runIds });
       store.dispatch(cmd);
-      if (cmd.representativeRunId) {
-        store.selection.selectOne(cmd.representativeRunId);
-      }
+      if (cmd.representativeRunId) reps.push(cmd.representativeRunId);
     }
+    if (reps.length > 0) store.selection.selectMany(reps);
   }, [store]);
 
   useEditorKeyboardShortcuts({

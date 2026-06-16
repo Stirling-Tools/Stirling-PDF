@@ -12,7 +12,15 @@ export class FindHighlight {
   set(runId: string | null): void {
     if (this.id === runId) return;
     this.id = runId;
-    for (const l of this.listeners) l(this.id);
+    // Snapshot + guard so one throwing/unsubscribing listener can't abort
+    // notification of the rest (see EditorStore.notify for the rationale).
+    for (const l of Array.from(this.listeners)) {
+      try {
+        l(this.id);
+      } catch {
+        /* one listener throwing must not stop the rest */
+      }
+    }
   }
   get(): string | null {
     return this.id;
@@ -82,6 +90,14 @@ export class Selection {
   }
 
   private notify(): void {
-    for (const l of this.listeners) l(this.state);
+    // Snapshot + guard: a subscriber may synchronously unsubscribe others
+    // or throw; iterating the live Set would skip listeners or abort early.
+    for (const l of Array.from(this.listeners)) {
+      try {
+        l(this.state);
+      } catch {
+        /* one listener throwing must not stop the rest */
+      }
+    }
   }
 }

@@ -326,15 +326,16 @@ export function TextRunOverlay({
       data-testid={`v2-run-${run.id}`}
       contentEditable
       suppressContentEditableWarning
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         e.stopPropagation();
         if ((e.ctrlKey || e.metaKey) && onMove) {
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);
           setDragOffset({ x: 0, y: 0 });
           (e.currentTarget as HTMLDivElement).blur();
-          // Live preview: translate the box with the cursor while dragging.
-          const onMouseMove = (ev: MouseEvent) => {
+          // Pointer events (mouse/pen/touch) with a global capture so the
+          // drag keeps tracking even if the cursor leaves the overlay.
+          const onPointerMove = (ev: PointerEvent) => {
             const origin = dragOriginRef.current;
             if (!origin) return;
             setDragOffset({
@@ -342,9 +343,9 @@ export function TextRunOverlay({
               y: ev.clientY - origin.y,
             });
           };
-          const onMouseUp = (ev: MouseEvent) => {
-            window.removeEventListener("mousemove", onMouseMove);
-            window.removeEventListener("mouseup", onMouseUp);
+          const onPointerUp = (ev: PointerEvent) => {
+            window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("pointerup", onPointerUp);
             setDragging(false);
             setDragOffset(null);
             const origin = dragOriginRef.current;
@@ -355,8 +356,8 @@ export function TextRunOverlay({
             if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
             onMove(dx, dy);
           };
-          window.addEventListener("mousemove", onMouseMove);
-          window.addEventListener("mouseup", onMouseUp);
+          window.addEventListener("pointermove", onPointerMove);
+          window.addEventListener("pointerup", onPointerUp);
           return;
         }
         (e.currentTarget as HTMLDivElement).focus();

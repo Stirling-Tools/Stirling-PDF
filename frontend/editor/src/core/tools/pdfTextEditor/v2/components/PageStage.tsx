@@ -36,6 +36,7 @@ export function PageStage() {
   );
   const [draggingFile, setDraggingFile] = useState(false);
   const dragCountRef = useRef(0);
+  const stageRootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
   useEffect(
@@ -43,14 +44,15 @@ export function PageStage() {
     [store],
   );
 
+  // Ctrl/Cmd+wheel zooms the document. Scoped to the stage element (not
+  // window) so it doesn't hijack trackpad pinch / browser zoom elsewhere
+  // on the page and doesn't leave a non-passive wheel handler on window
+  // for the whole component lifetime.
   useEffect(() => {
+    const el = stageRootRef.current;
+    if (!el) return;
     const onWheel = (e: WheelEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
-      const target = e.target as HTMLElement | null;
-      const insideStage =
-        target?.closest('[data-testid="v2-stage"]') ||
-        target?.matches?.('[data-testid="v2-stage"]');
-      if (!insideStage) return;
       e.preventDefault();
       const direction = e.deltaY < 0 ? 1 : -1;
       const current = store.getState().renderScale || 1.5;
@@ -60,9 +62,9 @@ export function PageStage() {
       );
       store.setRenderScale(next);
     };
-    window.addEventListener("wheel", onWheel, { passive: false });
-    return () => window.removeEventListener("wheel", onWheel);
-  }, [store]);
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [store, state.hasDocument, state.loading]);
 
   if (!state.hasDocument && !state.loading) {
     return (
@@ -92,6 +94,7 @@ export function PageStage() {
     <Box
       pos="relative"
       h="100%"
+      ref={stageRootRef}
       onDragEnter={(e) => {
         if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) {
           dragCountRef.current += 1;
@@ -117,6 +120,16 @@ export function PageStage() {
         e.preventDefault();
         dragCountRef.current = 0;
         setDraggingFile(false);
+        // Replacing the open document discards in-progress edits - confirm
+        // first when dirty, so an accidental drop can't silently lose work.
+        if (
+          store.getState().dirty &&
+          !window.confirm(
+            "You have unsaved changes. Replace the open document and discard them?",
+          )
+        ) {
+          return;
+        }
         const input = document.querySelector<HTMLInputElement>(
           '[data-testid="v2-file-input"]',
         );
@@ -198,7 +211,7 @@ export function PageStage() {
       <ScrollArea h="100%" type="auto" data-testid="v2-stage">
         <Box
           py="lg"
-          onMouseDown={() => store.selection.clear()}
+          onPointerDown={() => store.selection.clear()}
           data-testid="v2-pages"
         >
           <Stack gap="lg" align="center">
@@ -221,6 +234,13 @@ export function PageStage() {
                     store.selection.selectImage(imageId)
                   }
                   onEditRun={(pageIndex, runId, nextText) => {
+                    // contentEditable can fire several input events per
+                    // keystroke burst; skip dispatching when nothing changed
+                    // so no-op edits don't pollute the undo history.
+                    const current = store.document
+                      ?.page(pageIndex)
+                      .findRun(runId);
+                    if (current && current.text === nextText) return;
                     store.dispatch(
                       new EditTextCommand({ pageIndex, runId, nextText }),
                     );

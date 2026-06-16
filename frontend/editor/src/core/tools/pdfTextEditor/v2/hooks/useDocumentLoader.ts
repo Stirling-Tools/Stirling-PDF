@@ -26,6 +26,10 @@ const yieldToBrowser = () =>
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
     async (file: File): Promise<void> => {
+      // Each load claims a token. A newer load() bumps it, so this run can
+      // detect after every await that it lost the race and bail - never
+      // disposing or publishing over the document the newer load installed.
+      const token = store.beginLoad();
       store.setLoading(true);
       store.setProgress({
         stage: `Reading ${file.name}`,
@@ -35,6 +39,7 @@ export function useDocumentLoader(store: EditorStore) {
       try {
         await yieldToBrowser();
         const bytes = new Uint8Array(await file.arrayBuffer());
+        if (!store.isCurrentLoad(token)) return;
         store.setProgress({
           stage: "Parsing PDF",
           current: 0,
@@ -42,6 +47,16 @@ export function useDocumentLoader(store: EditorStore) {
         });
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes);
+        if (!store.isCurrentLoad(token)) {
+          // A newer load superseded us before we installed our doc - free
+          // it ourselves (setDocument never took ownership).
+          try {
+            doc.dispose();
+          } catch {
+            /* best-effort */
+          }
+          return;
+        }
         await store.setDocument(doc);
 
         const total = doc.pageCount;
@@ -54,6 +69,10 @@ export function useDocumentLoader(store: EditorStore) {
             total,
           });
           await yieldToBrowser();
+          // The check + synchronous read below run in one tick (no await
+          // between), so a superseding load can only interpose here, before
+          // we touch the possibly-disposed doc.
+          if (!store.isCurrentLoad(token)) return;
           const page = doc.page(i);
           PdfiumTextReader.populate(doc, page, store.groupingMode);
           snapshots.push({
@@ -78,6 +97,7 @@ export function useDocumentLoader(store: EditorStore) {
             images: [],
           });
         }
+        if (!store.isCurrentLoad(token)) return;
         store.publishPages(snapshots);
         store.setProgress({
           stage: "Ready",
@@ -85,14 +105,47 @@ export function useDocumentLoader(store: EditorStore) {
           total,
         });
       } catch (err) {
-        store.setError(err instanceof Error ? err.message : String(err));
+        if (store.isCurrentLoad(token)) {
+          store.setError(err instanceof Error ? err.message : String(err));
+        }
       } finally {
-        store.setLoading(false);
-        store.setProgress(null);
+        // Only the winning load owns the loading/progress UI state.
+        if (store.isCurrentLoad(token)) {
+          store.setLoading(false);
+          store.setProgress(null);
+        }
       }
     },
     [store],
   );
+}
+
+/**
+ * Read EVERY not-yet-loaded page in one pass and publish once. Used by the
+ * find bar so a search covers the whole document, not just the eager/
+ * scrolled-into-view pages (otherwise find silently misses later pages).
+ */
+export function ensureAllPagesRead(store: EditorStore): void {
+  const doc = store.document;
+  if (!doc) return;
+  let any = false;
+  for (const p of store.getState().pages) {
+    const page = doc.page(p.pageIndex);
+    if (page.loaded) continue;
+    PdfiumTextReader.populate(doc, page, store.groupingMode);
+    any = true;
+  }
+  if (!any) return;
+  const next = store.getState().pages.map((p) => {
+    const page = doc.page(p.pageIndex);
+    return {
+      ...p,
+      revision: page.revision,
+      runs: page.runs.map((r) => r.snapshot()),
+      images: page.images.map((img) => img.snapshot()),
+    };
+  });
+  store.publishPages(next);
 }
 
 /**

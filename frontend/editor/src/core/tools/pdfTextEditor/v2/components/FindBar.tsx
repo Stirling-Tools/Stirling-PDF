@@ -9,6 +9,7 @@ import {
 } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
+import { ensureAllPagesRead } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
 import type {
   PageSnapshot,
   TextRunSnapshot,
@@ -28,13 +29,12 @@ interface Match {
 }
 
 /**
- * In-document find. Searches every loaded TextRun snapshot for the
- * query (case-insensitive), tracks the current match, and scrolls /
- * selects it. Triggered from Ctrl+F in PdfTextEditorV2.
+ * In-document find. Searches every TextRun snapshot for the query
+ * (case-insensitive), tracks the current match, and scrolls / selects it.
+ * Triggered from Ctrl+F in PdfTextEditorV2.
  *
- * The sidebar surfaces this; matches that haven't been lazy-loaded yet
- * won't show until the user scrolls past those pages (the
- * `ensurePageRead` hook will populate them on intersection).
+ * On open it calls `ensureAllPagesRead` so the search covers the whole
+ * document, including pages that were still lazy (unscrolled).
  */
 export function FindBar({ store, pages, onClose }: FindBarProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -43,7 +43,10 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
 
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+    // Populate every page up front so find spans the whole document, not
+    // just the eagerly-loaded / scrolled-past pages.
+    ensureAllPagesRead(store);
+  }, [store]);
 
   const matches: Match[] = useMemo(() => {
     if (!query) return [];

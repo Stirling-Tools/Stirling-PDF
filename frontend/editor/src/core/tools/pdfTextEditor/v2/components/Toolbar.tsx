@@ -58,6 +58,15 @@ export function Toolbar({
   disabled,
 }: ToolbarProps) {
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
+  // Reflect the selection's font in the Select instead of always showing the
+  // placeholder. Only base-14 families map to an option; embedded/subset
+  // fonts (and mixed selections) have no matching entry, so show placeholder.
+  const fontValue = (() => {
+    const id = state.fontFamily;
+    if (!id || state.mixed.fontFamily) return null;
+    const family = id.startsWith("base14:") ? id.slice("base14:".length) : id;
+    return FONT_FAMILIES.some((f) => f.value === family) ? family : null;
+  })();
   return (
     <Group
       gap="sm"
@@ -127,7 +136,7 @@ export function Toolbar({
         aria-label="Font family"
         data-testid="v2-font-family"
         data={FONT_FAMILIES}
-        value={null}
+        value={fontValue}
         onChange={(value) => {
           if (value) onChangeFontFamily(value);
         }}

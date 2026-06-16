@@ -28,7 +28,7 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       liveRectRef.current = next;
       setRect(next);
     }
-    function onMouseDown(e: MouseEvent) {
+    function onPointerDown(e: PointerEvent) {
       if (!e.ctrlKey && !e.metaKey) return;
       if (!e.shiftKey) return;
       const target = e.target as HTMLElement | null;
@@ -37,7 +37,7 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       startRef.current = { x: e.clientX, y: e.clientY };
       setLiveRect({ left: e.clientX, top: e.clientY, width: 0, height: 0 });
     }
-    function onMouseMove(e: MouseEvent) {
+    function onPointerMove(e: PointerEvent) {
       const origin = startRef.current;
       if (!origin) return;
       const left = Math.min(origin.x, e.clientX);
@@ -46,7 +46,7 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       const height = Math.abs(e.clientY - origin.y);
       setLiveRect({ left, top, width, height });
     }
-    function onMouseUp() {
+    function onPointerUp() {
       const r = liveRectRef.current;
       const origin = startRef.current;
       startRef.current = null;
@@ -57,13 +57,14 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       if (hits.length === 0) return;
       store.selection.selectMany(hits);
     }
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    // Pointer events cover mouse, pen and touch with one code path.
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
     return () => {
-      window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     };
   }, [store]);
 
