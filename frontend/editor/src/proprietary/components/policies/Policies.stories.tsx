@@ -158,6 +158,6 @@ export const ListSection: Story = {
   ),
 };
 
-// Note: the setup + edit wizard now embeds the Watch Folders automation builder
-// (its Workflow step), which needs the ToolWorkflow context — so the wizard is
+// The setup + edit wizard embeds the Watch Folders automation builder (its
+// Workflow step), which needs the ToolWorkflow context - so the wizard is
 // exercised in-app, not via an isolated story here.

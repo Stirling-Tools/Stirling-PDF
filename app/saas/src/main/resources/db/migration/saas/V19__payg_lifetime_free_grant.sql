@@ -9,8 +9,6 @@
 -- restored on a first-step refund). Because the counter is authoritative, the wallet_ledger is
 -- no longer the source of truth for the grant and its old rows can be pruned after a retention
 -- window (separate future job).
---
--- See notes/payg-lifetime-free-grant-plan-2026-06-11.html.
 
 -- ---------------------------------------------------------------------------------------------
 -- 1. Rename the policy column — it is no longer "per cycle", it's the one-time grant size.

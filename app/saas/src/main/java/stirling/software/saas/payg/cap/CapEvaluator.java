@@ -12,7 +12,7 @@ import stirling.software.saas.payg.model.FeatureSet;
  * effect, and the corresponding enabled {@link FeatureGate}s. No DB access, no caches — the caller
  * (entitlement service) supplies the inputs.
  *
- * <p>State transitions (matching {@code notes/PAYG_DESIGN.md} §3.6):
+ * <p>State transitions:
  *
  * <ul>
  *   <li>{@code capUnits == null} → {@code FULL} / {@link FeatureSet#FULL} unconditionally.
@@ -78,10 +78,7 @@ public final class CapEvaluator {
         return full();
     }
 
-    /**
-     * Default enabled gates for a given feature set. Kept in sync with the design doc §3.7 mapping
-     * table.
-     */
+    /** Default enabled gates for a given feature set. */
     public static List<FeatureGate> gatesFor(FeatureSet set) {
         if (set == null) {
             return List.of();
