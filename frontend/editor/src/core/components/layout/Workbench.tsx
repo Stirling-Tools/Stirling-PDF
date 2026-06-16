@@ -11,6 +11,7 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useWorkspaceTabShortcuts } from "@app/hooks/useWorkspaceTabShortcuts";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -36,6 +37,7 @@ const FileManagerView = lazy(
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
+  const { announcement } = useWorkspaceTabShortcuts();
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
@@ -204,6 +206,11 @@ export default function Workbench() {
           : { backgroundColor: "var(--bg-background)", minWidth: 0 }
       }
     >
+      {/* Accessibility announcer for tab switching */}
+      <div aria-live="polite" className="sr-only" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
+        {announcement}
+      </div>
+
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)

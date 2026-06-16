@@ -341,3 +341,17 @@
     transform: translateY(-50%) scale(1);
   }
 }
+
+/* Keyboard focus highlight */
+.file-sidebar-file-item.keyboard-focus {
+  animation: highlight-tab 0.6s ease-out;
+}
+
+@keyframes highlight-tab {
+  0% {
+    background-color: rgba(59, 130, 246, 0.4);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
