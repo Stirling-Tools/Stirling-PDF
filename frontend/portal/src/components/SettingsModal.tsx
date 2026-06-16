@@ -13,13 +13,26 @@ import {
   type SelectOption,
   type TabItem,
 } from "@shared/components";
-import { useTier } from "@portal/contexts/TierContext";
+import { useTier, type Tier } from "@portal/contexts/TierContext";
 import { useTheme, type Theme } from "@portal/contexts/ThemeContext";
 import { useAsync } from "@portal/hooks/useAsync";
-import { fetchSettings, type SettingsSnapshot } from "@portal/api/settings";
+import {
+  fetchSettings,
+  type ActiveSession,
+  type BetaFeature,
+  type SettingsSnapshot,
+} from "@portal/api/settings";
 import "@portal/components/SettingsModal.css";
 
-type SettingsTab = "profile" | "preferences" | "workspace";
+type SettingsTab = "profile" | "preferences" | "workspace" | "admin";
+
+/** Org-wide auth posture the Admin tab edits, mirrored into local form state. */
+interface SecurityForm {
+  mfaEnforced: boolean;
+  ssoEnabled: boolean;
+  scimEnabled: boolean;
+  sessionTimeoutMins: number;
+}
 
 interface SettingsModalProps {
   open: boolean;
@@ -61,11 +74,20 @@ const TABS: TabItem<SettingsTab>[] = [
   { key: "profile", label: "Profile" },
   { key: "preferences", label: "Preferences" },
   { key: "workspace", label: "Workspace" },
+  { key: "admin", label: "Admin" },
 ];
 
 const THEME_OPTIONS: { value: Theme; label: string; hint: string }[] = [
   { value: "light", label: "Light", hint: "Bright surfaces" },
   { value: "dark", label: "Dark", hint: "Dim surfaces" },
+];
+
+const SESSION_TIMEOUT_OPTIONS: SelectOption[] = [
+  { value: "60", label: "1 hour" },
+  { value: "240", label: "4 hours" },
+  { value: "480", label: "8 hours" },
+  { value: "720", label: "12 hours" },
+  { value: "1440", label: "24 hours" },
 ];
 
 /**
@@ -95,6 +117,13 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     {},
   );
+  const [security, setSecurity] = useState<SecurityForm>({
+    mfaEnforced: false,
+    ssoEnabled: false,
+    scimEnabled: false,
+    sessionTimeoutMins: 480,
+  });
+  const [betaToggles, setBetaToggles] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!snapshot) return;
@@ -104,6 +133,15 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     setRegion(snapshot.workspace.region);
     setNotifications(
       Object.fromEntries(snapshot.notifications.map((n) => [n.id, n.enabled])),
+    );
+    setSecurity({
+      mfaEnforced: snapshot.security.mfaEnforced,
+      ssoEnabled: snapshot.security.ssoEnabled,
+      scimEnabled: snapshot.security.scimEnabled,
+      sessionTimeoutMins: snapshot.security.sessionTimeoutMins,
+    });
+    setBetaToggles(
+      Object.fromEntries(snapshot.betaFeatures.map((f) => [f.id, f.enabled])),
     );
   }, [snapshot]);
 
@@ -131,7 +169,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       onClose={onClose}
       width="lg"
       title="Settings"
-      subtitle="Manage your profile, preferences, and workspace."
+      subtitle="Manage your account, workspace, and organisation controls."
       className="portal-settings"
       footer={
         <>
@@ -193,6 +231,21 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             regionOptions={regionOptions}
             planLabel={snapshot?.workspace.planLabel}
             seats={snapshot?.workspace.seats}
+          />
+        )}
+
+        {tab === "admin" && (
+          <AdminPanel
+            loading={isLoading}
+            tier={tier}
+            security={security}
+            onSecurity={(patch) => setSecurity((s) => ({ ...s, ...patch }))}
+            sessions={snapshot?.security.activeSessions ?? []}
+            betaFeatures={snapshot?.betaFeatures ?? []}
+            betaToggles={betaToggles}
+            onBeta={(id, value) =>
+              setBetaToggles((prev) => ({ ...prev, [id]: value }))
+            }
           />
         )}
       </div>
@@ -465,6 +518,186 @@ function WorkspacePanel({
         <Button variant="outline" size="sm" disabled>
           Manage billing
         </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Admin                                                                    */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+function AdminPanel({
+  loading,
+  tier,
+  security,
+  onSecurity,
+  sessions,
+  betaFeatures,
+  betaToggles,
+  onBeta,
+}: {
+  loading: boolean;
+  tier: Tier;
+  security: SecurityForm;
+  onSecurity: (patch: Partial<SecurityForm>) => void;
+  sessions: ActiveSession[];
+  betaFeatures: BetaFeature[];
+  betaToggles: Record<string, boolean>;
+  onBeta: (id: string, value: boolean) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="portal-settings__section">
+        <Skeleton height="3rem" />
+        <Skeleton height="3rem" />
+        <Skeleton height="5rem" />
+      </div>
+    );
+  }
+
+  // SSO/SCIM are enterprise capabilities; below it they render locked with a
+  // badge rather than disappearing, so the upgrade path stays visible.
+  const isEnterprise = tier === "enterprise";
+
+  return (
+    <div className="portal-settings__section">
+      <div className="portal-settings__group">
+        <div className="portal-settings__group-head">
+          <h3 className="portal-settings__group-title">Authentication</h3>
+          <p className="portal-settings__group-sub">
+            Organisation-wide sign-in and session policy.
+          </p>
+        </div>
+
+        <div className="portal-settings__notifs">
+          <div className="portal-settings__notif-row">
+            <div className="portal-settings__notif-text">
+              <strong>Enforce two-factor (MFA)</strong>
+              <span>Require every member to complete MFA at sign-in.</span>
+            </div>
+            <ToggleSwitch
+              checked={security.mfaEnforced}
+              onChange={(v) => onSecurity({ mfaEnforced: v })}
+            />
+          </div>
+
+          <div className="portal-settings__notif-row">
+            <div className="portal-settings__notif-text">
+              <span className="portal-settings__row-label">
+                <strong>Single sign-on (SAML)</strong>
+                {!isEnterprise && (
+                  <StatusBadge tone="info" size="sm" showDot={false}>
+                    Enterprise
+                  </StatusBadge>
+                )}
+              </span>
+              <span>Federate sign-in through your identity provider.</span>
+            </div>
+            <ToggleSwitch
+              checked={isEnterprise && security.ssoEnabled}
+              disabled={!isEnterprise}
+              onChange={(v) => onSecurity({ ssoEnabled: v })}
+            />
+          </div>
+
+          <div className="portal-settings__notif-row">
+            <div className="portal-settings__notif-text">
+              <span className="portal-settings__row-label">
+                <strong>SCIM provisioning</strong>
+                {!isEnterprise && (
+                  <StatusBadge tone="info" size="sm" showDot={false}>
+                    Enterprise
+                  </StatusBadge>
+                )}
+              </span>
+              <span>Sync members and roles from your directory.</span>
+            </div>
+            <ToggleSwitch
+              checked={isEnterprise && security.scimEnabled}
+              disabled={!isEnterprise}
+              onChange={(v) => onSecurity({ scimEnabled: v })}
+            />
+          </div>
+        </div>
+
+        <FormField
+          label="Session timeout"
+          helperText="Members re-authenticate after this idle period."
+        >
+          <Select
+            value={String(security.sessionTimeoutMins)}
+            onChange={(e) =>
+              onSecurity({ sessionTimeoutMins: Number(e.target.value) })
+            }
+            options={SESSION_TIMEOUT_OPTIONS}
+          />
+        </FormField>
+      </div>
+
+      <div className="portal-settings__group">
+        <div className="portal-settings__group-head">
+          <h3 className="portal-settings__group-title">Active sessions</h3>
+          <p className="portal-settings__group-sub">
+            Devices currently signed in to this account.
+          </p>
+        </div>
+        <div className="portal-settings__notifs">
+          {sessions.map((s) => (
+            <div key={s.id} className="portal-settings__notif-row">
+              <div className="portal-settings__notif-text">
+                <strong>{s.device}</strong>
+                <span>
+                  {s.location} · {s.lastActive}
+                </span>
+              </div>
+              {s.current ? (
+                <StatusBadge tone="success" size="sm">
+                  This device
+                </StatusBadge>
+              ) : (
+                // TODO(backend): DELETE /v1/settings/sessions/{id}
+                <Button variant="ghost" size="sm">
+                  Revoke
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="portal-settings__group">
+        <div className="portal-settings__group-head">
+          <h3 className="portal-settings__group-title">Early access</h3>
+          <p className="portal-settings__group-sub">
+            Opt into features still in preview.
+          </p>
+        </div>
+        <div className="portal-settings__notifs">
+          {betaFeatures.map((f) => {
+            const locked = Boolean(f.enterpriseOnly) && !isEnterprise;
+            return (
+              <div key={f.id} className="portal-settings__notif-row">
+                <div className="portal-settings__notif-text">
+                  <span className="portal-settings__row-label">
+                    <strong>{f.label}</strong>
+                    {locked && (
+                      <StatusBadge tone="info" size="sm" showDot={false}>
+                        Enterprise
+                      </StatusBadge>
+                    )}
+                  </span>
+                  <span>{f.description}</span>
+                </div>
+                <ToggleSwitch
+                  checked={!locked && (betaToggles[f.id] ?? false)}
+                  disabled={locked}
+                  onChange={(v) => onBeta(f.id, v)}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

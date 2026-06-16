@@ -221,6 +221,13 @@
   color: var(--color-text-4);
 }
 
+/* Label paired with a gating badge (e.g. "SCIM provisioning" + Enterprise). */
+.portal-settings__row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 /* ── Workspace plan card ──────────────────────────────────────────────── */
 .portal-settings__plan {
   display: flex;
