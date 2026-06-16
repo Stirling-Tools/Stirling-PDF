@@ -53,12 +53,19 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Home | `GET /v1/activity` | — | `fetchRecentActivity` | `ActivityEvent[]` |
 | Home | `GET /v1/regions/health` | — | `fetchRegionHealth` | `RegionHealth[]` |
 | Home | `GET /v1/onboarding` | — | `fetchOnboarding` | `OnboardingStep[]` |
+| Getting started | `GET /v1/getting-started` | `tier` | `fetchGettingStarted` | `GettingStartedResponse` |
+| Users | `GET /v1/users` | `tier` | `fetchUsers` | `UsersResponse` |
 | Documents | `GET /v1/endpoints` | `vertical?` | `fetchVerticals` | `Vertical[]` |
+| Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
 | Pipelines | `GET /v1/pipelines` | `tier` | `fetchPipelines` | `PipelinesResponse` |
+| Policies | `GET /v1/policies` | `tier` | `fetchPolicies` | `PoliciesResponse` |
+| Agent Builder | `GET /v1/agents` | `tier` | `fetchAgents` | `AgentsResponse` |
 | Sources | `GET /v1/sources` | `tier` | `fetchSources` | `SourcesResponse` |
+| Components | `GET /v1/components` | `tier` | `fetchComponents` | `ComponentsResponse` |
 | Infrastructure | `GET /v1/infrastructure/deployments` | `tier` | `fetchDeployments` | `DeploymentsResponse` |
 | Infrastructure | `GET /v1/infrastructure/api-keys` | `tier` | `fetchApiKeys` | `ApiKey[]` |
 | Infrastructure | `GET /v1/infrastructure/security` | `tier` | `fetchSecurity` | `SecurityConfig` |
+| Infrastructure | `GET /v1/infrastructure/models` | `tier` | `fetchModels` | `ModelsResponse` |
 | Infrastructure | `GET /v1/infrastructure/storage` | `tier` | `fetchStorage` | `StorageConfig` |
 | Infrastructure | `GET /v1/infrastructure/audit-log` | `tier` | `fetchAuditLog` | `AuditLogResponse` |
 | Usage & Billing | `GET /v1/billing/usage` | — | `fetchBillingUsage` | `UsageSeriesResponse` |

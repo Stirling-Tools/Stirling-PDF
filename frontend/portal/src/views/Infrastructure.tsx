@@ -3,16 +3,24 @@ import { Tabs, type TabItem } from "@shared/components";
 import { DeploymentsTab } from "@portal/components/infrastructure/DeploymentsTab";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { SecurityTab } from "@portal/components/infrastructure/SecurityTab";
+import { ModelsTab } from "@portal/components/infrastructure/ModelsTab";
 import { StorageTab } from "@portal/components/infrastructure/StorageTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
 import "@portal/views/Infrastructure.css";
 
-type InfraTab = "deployments" | "api-keys" | "security" | "storage" | "audit";
+type InfraTab =
+  | "deployments"
+  | "api-keys"
+  | "security"
+  | "models"
+  | "storage"
+  | "audit";
 
 const TABS: TabItem<InfraTab>[] = [
   { key: "deployments", label: "Deployments" },
   { key: "api-keys", label: "API Keys" },
   { key: "security", label: "Security" },
+  { key: "models", label: "Models" },
   { key: "storage", label: "Storage" },
   { key: "audit", label: "Audit Logs" },
 ];
@@ -42,6 +50,7 @@ export function Infrastructure() {
         {tab === "deployments" && <DeploymentsTab />}
         {tab === "api-keys" && <ApiKeysTab />}
         {tab === "security" && <SecurityTab />}
+        {tab === "models" && <ModelsTab />}
         {tab === "storage" && <StorageTab />}
         {tab === "audit" && <AuditTab />}
       </div>

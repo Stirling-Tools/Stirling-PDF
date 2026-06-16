@@ -1,10 +1,14 @@
-import type { StatusTone } from "@shared/components";
+import type { ChipTone, StatusTone } from "@shared/components";
 import type {
   ApiKeyStatus,
   AuditCategory,
   AuditStatus,
   CertStatus,
   DeploymentStatus,
+  ModelCostUnit,
+  ModelProvider,
+  ModelStatus,
+  ModelType,
   RegionStatus,
 } from "@portal/api/infrastructure";
 
@@ -84,3 +88,43 @@ export const AUDIT_CAT_TONE: Record<AuditCategory, StatusTone> = {
   processing: "success",
   security: "warning",
 };
+
+export const MODEL_TONE: Record<ModelStatus, StatusTone> = {
+  active: "success",
+  degraded: "warning",
+  disabled: "neutral",
+};
+
+export const MODEL_LABEL: Record<ModelStatus, string> = {
+  active: "Active",
+  degraded: "Degraded",
+  disabled: "Disabled",
+};
+
+export const MODEL_TYPE_LABEL: Record<ModelType, string> = {
+  extraction: "Extraction",
+  classification: "Classification",
+  ocr: "OCR",
+  llm: "LLM",
+};
+
+export const MODEL_TYPE_TONE: Record<ModelType, ChipTone> = {
+  extraction: "blue",
+  classification: "purple",
+  ocr: "green",
+  llm: "amber",
+};
+
+export const MODEL_PROVIDER_LABEL: Record<ModelProvider, string> = {
+  stirling: "Stirling",
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  "on-prem": "On-prem",
+};
+
+/** Render a model's cost with the unit it's billed against. */
+export function modelCost(cost: number, unit: ModelCostUnit): string {
+  if (cost === 0) return "Included";
+  const price = `$${cost.toFixed(unit === "per-call" ? 3 : 2)}`;
+  return unit === "per-call" ? `${price}/call` : `${price}/1k`;
+}

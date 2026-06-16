@@ -3,10 +3,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export type ViewId =
   | "home"
+  | "getting-started"
   | "editor"
+  | "users"
   | "sources"
+  | "agent-builder"
+  | "policies"
   | "pipelines"
   | "documents"
+  | "components"
   | "infrastructure"
   | "usage"
   | "docs"
@@ -14,10 +19,15 @@ export type ViewId =
 
 export const VIEW_LABELS: Record<ViewId, string> = {
   home: "Home",
+  "getting-started": "Getting started",
   editor: "Editor",
+  users: "Users",
   sources: "Sources",
+  "agent-builder": "Agent Builder",
+  policies: "Policies",
   pipelines: "Pipelines",
   documents: "Documents",
+  components: "Components",
   infrastructure: "Infrastructure",
   usage: "Usage & Billing",
   docs: "Developer Docs",
@@ -26,10 +36,15 @@ export const VIEW_LABELS: Record<ViewId, string> = {
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
+  "getting-started": "/getting-started",
   editor: "/editor",
+  users: "/users",
   sources: "/sources",
+  "agent-builder": "/agent-builder",
+  policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
+  components: "/components",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
